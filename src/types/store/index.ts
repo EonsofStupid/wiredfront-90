@@ -1,7 +1,10 @@
-import { UIStore } from './ui';
-import { AuthStore } from './auth';
-import { DataStore } from './data';
-import { SettingsStore } from './settings';
+import type { UIStore } from './ui';
+import type { AuthStore } from './auth';
+import type { DataStore } from './data';
+import type { SettingsStore } from './settings';
+import type { User, NotificationSettings } from './common';
+import type { DashboardMetric } from '../dashboard/metrics';
+import type { DashboardLayout } from '../dashboard/common';
 
 export interface RootStore {
   ui: UIStore;

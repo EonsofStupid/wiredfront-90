@@ -1,5 +1,5 @@
 import { AnalyticsData } from './analytics';
-import { DashboardMetric } from './metrics';
+import type { DashboardMetric } from './metrics';
 
 export interface DashboardData {
   metrics: DashboardMetric[];
@@ -34,4 +34,4 @@ export interface DashboardProps {
   onMetricClick?: (metricId: string) => void;
 }
 
-export { DashboardMetric } from './metrics';
+export type { DashboardMetric };
