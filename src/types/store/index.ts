@@ -4,6 +4,8 @@ import type { DataStore, DataAction } from './data';
 import type { SettingsStore, SettingsAction } from './settings';
 import type { User, NotificationSettings } from './common';
 import type { DashboardMetric, DashboardLayout } from '../dashboard';
+import type { StoreMiddleware } from './middleware';
+import type { StoreSelectors, SelectorHook } from './selectors';
 
 export interface RootStore {
   ui: UIStore;
@@ -12,12 +14,9 @@ export interface RootStore {
   settings: SettingsStore;
 }
 
-export interface StoreSelectors {
-  selectTheme: () => 'light' | 'dark';
-  selectUser: () => User | null;
-  selectMetrics: () => DashboardMetric[];
-  selectDashboardLayout: () => DashboardLayout;
-  selectNotificationSettings: () => NotificationSettings;
+export interface StoreConfig {
+  middleware?: StoreMiddleware;
+  selectors?: StoreSelectors;
 }
 
 export type { 
@@ -30,5 +29,8 @@ export type {
   SettingsStore, 
   SettingsAction,
   User,
-  NotificationSettings
+  NotificationSettings,
+  StoreMiddleware,
+  StoreSelectors,
+  SelectorHook
 };
