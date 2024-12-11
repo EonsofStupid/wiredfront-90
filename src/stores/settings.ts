@@ -2,24 +2,19 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { devtools } from 'zustand/middleware';
 import type { SettingsStore, SettingsAction } from '@/types/store/settings';
-import type { PersistConfig, DevToolsConfig, StorageValue } from '@/types/store/middleware';
+import type { DevToolsConfig } from '@/types/store/middleware';
 
-const persistConfig: PersistConfig<SettingsStore> = {
+const persistConfig = {
   name: 'settings-storage',
   storage: {
-    getItem: (name) => {
+    getItem: (name: string) => {
       const str = localStorage.getItem(name);
-      if (!str) return null;
-      try {
-        return JSON.parse(str) as StorageValue<SettingsStore>;
-      } catch {
-        return null;
-      }
+      return str;
     },
-    setItem: (name, value) => {
-      localStorage.setItem(name, JSON.stringify(value));
+    setItem: (name: string, value: string) => {
+      localStorage.setItem(name, value);
     },
-    removeItem: (name) => {
+    removeItem: (name: string) => {
       localStorage.removeItem(name);
     },
   },

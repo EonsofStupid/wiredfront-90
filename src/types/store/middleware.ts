@@ -6,10 +6,10 @@ export interface StorageValue<T> {
   version?: number;
 }
 
-export interface CustomStateStorage extends StateStorage {
-  getItem: <T>(name: string) => Promise<StorageValue<T> | null> | StorageValue<T> | null;
-  setItem: <T>(name: string, value: StorageValue<T>) => Promise<void> | void;
-  removeItem: (name: string) => Promise<void> | void;
+export interface CustomStateStorage {
+  getItem: (name: string) => string | null | Promise<string | null>;
+  setItem: (name: string, value: string) => void | Promise<void>;
+  removeItem: (name: string) => void | Promise<void>;
 }
 
 export interface PersistConfig<T extends object> {
