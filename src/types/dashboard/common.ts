@@ -33,3 +33,5 @@ export interface DashboardProps {
   refreshInterval?: number;
   onMetricClick?: (metricId: string) => void;
 }
+
+export { DashboardMetric } from './metrics';
