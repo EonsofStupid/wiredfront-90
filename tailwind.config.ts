@@ -29,6 +29,24 @@ export default {
           DEFAULT: "#1A1A1A",
           lighter: "#2B2B2B",
         },
+        border: {
+          DEFAULT: "hsl(var(--border))",
+        },
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        ring: "hsl(var(--ring))",
       },
       animation: {
         "gradient-x": "gradient-x 15s ease infinite",
