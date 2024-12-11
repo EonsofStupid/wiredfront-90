@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { ChevronDown, Activity, Code, Database, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { HighlightedText } from "@/components/ui/highlighted-text";
 
 const Index = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -33,7 +32,7 @@ const Index = () => {
         >
           <div className="neon-border p-8 glass-card mb-8">
             <h1 className="text-6xl md:text-8xl font-bold gradient-text mb-6">
-              <HighlightedText text="wiredFRONT" />
+              wiredFRONT
             </h1>
             <p className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto">
               The future of interface design, today.
@@ -47,7 +46,6 @@ const Index = () => {
           </Link>
         </motion.div>
 
-        {/* Floating Elements */}
         <div className="absolute inset-0 pointer-events-none">
           {[...Array(5)].map((_, i) => (
             <motion.div
@@ -82,7 +80,6 @@ const Index = () => {
         </motion.div>
       </section>
 
-      {/* Features Grid */}
       <section className="container mx-auto px-4 py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => (
