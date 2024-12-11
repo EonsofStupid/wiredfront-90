@@ -1,18 +1,25 @@
+import type { ActionType, BaseAction } from './common';
+
 export interface UIState {
-  theme: 'light' | 'dark';
-  sidebarOpen: boolean;
-  activePanel: string | null;
+  readonly theme: 'light' | 'dark';
+  readonly sidebarOpen: boolean;
+  readonly activePanel: string | null;
 }
 
 export interface UIActions {
-  setTheme: (theme: 'light' | 'dark') => void;
-  toggleSidebar: () => void;
-  setActivePanel: (panelId: string | null) => void;
+  readonly setTheme: (theme: UIState['theme']) => void;
+  readonly toggleSidebar: () => void;
+  readonly setActivePanel: (panelId: string | null) => void;
 }
 
-export type UIStore = UIState & UIActions;
+export type UIStore = Readonly<UIState & UIActions>;
+
+export type UIActionType = 
+  | 'SET_THEME'
+  | 'TOGGLE_SIDEBAR'
+  | 'SET_ACTIVE_PANEL';
 
 export type UIAction = 
-  | { type: 'SET_THEME'; payload: 'light' | 'dark' }
-  | { type: 'TOGGLE_SIDEBAR' }
-  | { type: 'SET_ACTIVE_PANEL'; payload: string | null };
+  | BaseAction<'SET_THEME', UIState['theme']>
+  | BaseAction<'TOGGLE_SIDEBAR'>
+  | BaseAction<'SET_ACTIVE_PANEL', string | null>;
