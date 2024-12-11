@@ -10,10 +10,14 @@ const persistConfig = {
     getItem: (name: string) => {
       const str = localStorage.getItem(name);
       if (!str) return null;
-      return str;
+      try {
+        return JSON.parse(str);
+      } catch {
+        return null;
+      }
     },
-    setItem: (name: string, value: string) => {
-      localStorage.setItem(name, value);
+    setItem: (name: string, value: any) => {
+      localStorage.setItem(name, JSON.stringify(value));
     },
     removeItem: (name: string) => {
       localStorage.removeItem(name);
