@@ -12,15 +12,15 @@ export interface CustomStateStorage extends StateStorage {
   removeItem: (name: string) => Promise<void> | void;
 }
 
-export interface PersistConfig {
+export interface PersistConfig<T extends object> {
   name: string;
   storage?: CustomStateStorage;
   version?: number;
-  migrate?: (persistedState: unknown, version: number) => Promise<Partial<RootStore>> | Partial<RootStore>;
+  migrate?: (persistedState: unknown, version: number) => Promise<T> | T;
   skipHydration?: boolean;
-  onRehydrateStorage?: (state: Partial<RootStore>) => ((state?: Partial<RootStore>, error?: Error) => void) | void;
-  serialize?: (state: StorageValue<Partial<RootStore>>) => string;
-  deserialize?: (str: string) => StorageValue<Partial<RootStore>>;
+  onRehydrateStorage?: (state: T) => ((state?: T, error?: Error) => void) | void;
+  serialize?: (state: StorageValue<T>) => string;
+  deserialize?: (str: string) => StorageValue<T>;
 }
 
 export interface DevToolsConfig {
@@ -30,6 +30,6 @@ export interface DevToolsConfig {
 }
 
 export type StoreMiddleware = {
-  persist?: PersistConfig;
+  persist?: PersistConfig<Partial<RootStore>>;
   devtools?: DevToolsConfig;
 };

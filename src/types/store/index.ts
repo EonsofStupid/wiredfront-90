@@ -19,6 +19,8 @@ export interface StoreConfig {
   selectors?: StoreSelectors;
 }
 
+export type RootAction = UIAction | AuthAction | DataAction | SettingsAction;
+
 export type { 
   UIStore, 
   UIAction,
