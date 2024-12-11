@@ -1,30 +1,42 @@
+// Base type for all action payloads
+export type ActionPayload = unknown;
+
+// Strict type for all action types
+export type ActionType = string;
+
+// Base interface for all actions
+export interface BaseAction<T extends ActionType, P = ActionPayload> {
+  readonly type: T;
+  readonly payload?: P;
+}
+
 export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: UserRole;
-  preferences: UserPreferences;
+  readonly id: string;
+  readonly email: string;
+  readonly name: string;
+  readonly role: UserRole;
+  readonly preferences: Readonly<UserPreferences>;
 }
 
 export interface LoginCredentials {
-  email: string;
-  password: string;
+  readonly email: string;
+  readonly password: string;
 }
 
 export type UserRole = 'admin' | 'user' | 'viewer';
 
 export interface UserPreferences {
-  defaultView: string;
-  refreshInterval: number;
-  notifications: boolean;
-  timezone: string;
+  readonly defaultView: string;
+  readonly refreshInterval: number;
+  readonly notifications: boolean;
+  readonly timezone: string;
 }
 
 export type NotificationType = 'alerts' | 'updates' | 'reports';
 
 export interface NotificationSettings {
-  email: boolean;
-  push: boolean;
-  frequency: 'realtime' | 'daily' | 'weekly';
-  types: NotificationType[];
+  readonly email: boolean;
+  readonly push: boolean;
+  readonly frequency: 'realtime' | 'daily' | 'weekly';
+  readonly types: readonly NotificationType[];
 }
