@@ -12,14 +12,13 @@ export const createAction = <T extends ActionType, P = void>(
   payloadGuard?: (payload: unknown) => payload is P
 ): ActionCreator<T, P> => {
   return ((payload?: P) => {
-    const action: BaseAction<T, P> = { type };
     if (payload !== undefined) {
       if (payloadGuard && !payloadGuard(payload)) {
         throw new TypeError(`Invalid payload for action type: ${type}`);
       }
-      action.payload = payload;
+      return { type, payload } as const;
     }
-    return action;
+    return { type } as const;
   }) as ActionCreator<T, P>;
 };
 
