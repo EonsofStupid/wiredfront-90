@@ -1,10 +1,9 @@
-import type { UIStore } from './ui';
-import type { AuthStore } from './auth';
-import type { DataStore } from './data';
-import type { SettingsStore } from './settings';
+import type { UIStore, UIAction } from './ui';
+import type { AuthStore, AuthAction } from './auth';
+import type { DataStore, DataAction } from './data';
+import type { SettingsStore, SettingsAction } from './settings';
 import type { User, NotificationSettings } from './common';
-import type { DashboardMetric } from '../dashboard/metrics';
-import type { DashboardLayout } from '../dashboard/common';
+import type { DashboardMetric, DashboardLayout } from '../dashboard';
 
 export interface RootStore {
   ui: UIStore;
@@ -21,8 +20,15 @@ export interface StoreSelectors {
   selectNotificationSettings: () => NotificationSettings;
 }
 
-export * from './ui';
-export * from './auth';
-export * from './data';
-export * from './settings';
-export * from './common';
+export type { 
+  UIStore, 
+  UIAction,
+  AuthStore, 
+  AuthAction,
+  DataStore, 
+  DataAction,
+  SettingsStore, 
+  SettingsAction,
+  User,
+  NotificationSettings
+};
