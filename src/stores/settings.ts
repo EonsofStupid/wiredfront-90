@@ -1,12 +1,24 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { devtools } from 'zustand/middleware';
-import type { SettingsStore } from '@/types/store/settings';
+import type { SettingsStore, SettingsAction } from '@/types/store/settings';
 import type { PersistConfig, DevToolsConfig } from '@/types/store/middleware';
 
 const persistConfig: PersistConfig = {
   name: 'settings-storage',
-  storage: localStorage,
+  storage: {
+    getItem: (name) => {
+      const str = localStorage.getItem(name);
+      if (!str) return null;
+      return JSON.parse(str);
+    },
+    setItem: (name, value) => {
+      localStorage.setItem(name, JSON.stringify(value));
+    },
+    removeItem: (name) => {
+      localStorage.removeItem(name);
+    },
+  },
 };
 
 const devtoolsConfig: DevToolsConfig = {
@@ -33,19 +45,28 @@ export const useSettingsStore = create<SettingsStore>()(
           frequency: 'daily',
           types: ['alerts', 'updates'],
         },
-        updatePreferences: (updates) => {
-          set((state) => ({
-            preferences: { ...state.preferences, ...updates },
-          }));
-        },
-        saveDashboardLayout: (layout) => {
-          set({ dashboardLayout: layout });
-        },
-        updateNotifications: (settings) => {
-          set((state) => ({
-            notifications: { ...state.notifications, ...settings },
-          }));
-        },
+        updatePreferences: (updates) => 
+          set(
+            (state) => ({
+              preferences: { ...state.preferences, ...updates },
+            }),
+            false,
+            { type: 'UPDATE_PREFERENCES', payload: updates }
+          ),
+        saveDashboardLayout: (layout) => 
+          set(
+            { dashboardLayout: layout },
+            false,
+            { type: 'SAVE_LAYOUT', payload: layout }
+          ),
+        updateNotifications: (settings) => 
+          set(
+            (state) => ({
+              notifications: { ...state.notifications, ...settings },
+            }),
+            false,
+            { type: 'UPDATE_NOTIFICATIONS', payload: settings }
+          ),
       }),
       persistConfig
     ),

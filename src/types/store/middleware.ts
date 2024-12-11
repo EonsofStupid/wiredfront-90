@@ -1,28 +1,26 @@
-import { StateStorage } from 'zustand/middleware';
+import type { StateStorage } from 'zustand/middleware';
 import type { RootStore } from './index';
 
-// Define the correct storage value type
-type StorageValue<T> = {
+export interface StorageValue<T> {
   state: T;
   version?: number;
-};
+}
 
-// Extend the StateStorage type to ensure proper typing
 export interface CustomStateStorage extends StateStorage {
-  getItem: (name: string) => Promise<string | null> | string | null;
-  setItem: (name: string, value: string) => Promise<void> | void;
+  getItem: <T>(name: string) => Promise<StorageValue<T> | null> | StorageValue<T> | null;
+  setItem: <T>(name: string, value: StorageValue<T>) => Promise<void> | void;
   removeItem: (name: string) => Promise<void> | void;
 }
 
 export interface PersistConfig {
-  name?: string;
+  name: string;
   storage?: CustomStateStorage;
   version?: number;
-  migrate?: (persistedState: unknown, version: number) => Promise<RootStore> | RootStore;
+  migrate?: (persistedState: unknown, version: number) => Promise<Partial<RootStore>> | Partial<RootStore>;
   skipHydration?: boolean;
-  onRehydrateStorage?: (state: RootStore) => ((state?: RootStore, error?: Error) => void) | void;
-  serialize?: (state: StorageValue<RootStore>) => string;
-  deserialize?: (str: string) => StorageValue<RootStore>;
+  onRehydrateStorage?: (state: Partial<RootStore>) => ((state?: Partial<RootStore>, error?: Error) => void) | void;
+  serialize?: (state: StorageValue<Partial<RootStore>>) => string;
+  deserialize?: (str: string) => StorageValue<Partial<RootStore>>;
 }
 
 export interface DevToolsConfig {
