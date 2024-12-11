@@ -12,6 +12,7 @@ export interface PersistConfig<T extends object> {
   migrate?: (persistedState: unknown, version: number) => Promise<T> | T;
   skipHydration?: boolean;
   onRehydrateStorage?: (state: T) => ((state?: T, error?: Error) => void) | void;
+  partialize?: (state: T) => Partial<T>;
 }
 
 export interface DevToolsConfig {

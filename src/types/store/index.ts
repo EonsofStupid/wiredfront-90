@@ -14,8 +14,8 @@ export interface RootStore {
   settings: SettingsStore;
 }
 
-export interface StoreConfig {
-  persist?: PersistConfig<unknown>;
+export interface StoreConfig<T extends object> {
+  persist?: PersistConfig<T>;
   devtools?: DevToolsConfig;
   selectors?: StoreSelectors;
 }
