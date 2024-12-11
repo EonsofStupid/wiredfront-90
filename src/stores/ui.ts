@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { devtools } from 'zustand/middleware';
 import type { UIStore, UIAction } from '@/types/store/ui';
-import type { PersistConfig, DevToolsConfig } from '@/types/store/middleware';
+import type { PersistConfig, DevToolsConfig, StorageValue } from '@/types/store/middleware';
 
 const persistConfig: PersistConfig<UIStore> = {
   name: 'ui-storage',
@@ -10,10 +10,14 @@ const persistConfig: PersistConfig<UIStore> = {
     getItem: (name) => {
       const str = localStorage.getItem(name);
       if (!str) return null;
-      return str;
+      try {
+        return JSON.parse(str) as StorageValue<UIStore>;
+      } catch {
+        return null;
+      }
     },
     setItem: (name, value) => {
-      localStorage.setItem(name, value);
+      localStorage.setItem(name, JSON.stringify(value));
     },
     removeItem: (name) => {
       localStorage.removeItem(name);
