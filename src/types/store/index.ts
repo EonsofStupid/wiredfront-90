@@ -4,7 +4,7 @@ import type { DataStore, DataAction } from './data';
 import type { SettingsStore, SettingsAction } from './settings';
 import type { User, NotificationSettings } from './common';
 import type { DashboardMetric, DashboardLayout } from '../dashboard';
-import type { StoreMiddleware } from './middleware';
+import type { DevToolsConfig, PersistConfig } from './middleware';
 import type { StoreSelectors, SelectorHook } from './selectors';
 
 export interface RootStore {
@@ -15,7 +15,8 @@ export interface RootStore {
 }
 
 export interface StoreConfig {
-  middleware?: StoreMiddleware;
+  persist?: PersistConfig<unknown>;
+  devtools?: DevToolsConfig;
   selectors?: StoreSelectors;
 }
 
@@ -32,7 +33,7 @@ export type {
   SettingsAction,
   User,
   NotificationSettings,
-  StoreMiddleware,
+  DevToolsConfig,
   StoreSelectors,
   SelectorHook
 };
