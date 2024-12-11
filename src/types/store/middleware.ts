@@ -28,8 +28,3 @@ export interface DevToolsConfig {
   name?: string;
   anonymousActionType?: string;
 }
-
-export type StoreMiddleware = {
-  persist?: PersistConfig<Partial<RootStore>>;
-  devtools?: DevToolsConfig;
-};

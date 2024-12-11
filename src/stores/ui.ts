@@ -9,6 +9,7 @@ const persistConfig = {
   storage: {
     getItem: (name: string) => {
       const str = localStorage.getItem(name);
+      if (!str) return null;
       return str;
     },
     setItem: (name: string, value: string) => {
@@ -18,6 +19,11 @@ const persistConfig = {
       localStorage.removeItem(name);
     },
   },
+  partialize: (state: UIStore) => ({
+    theme: state.theme,
+    sidebarOpen: state.sidebarOpen,
+    activePanel: state.activePanel,
+  }),
 };
 
 const devtoolsConfig: DevToolsConfig = {
