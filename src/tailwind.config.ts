@@ -1,6 +1,6 @@
 import type { Config } from "tailwindcss";
 import { colors } from "./styles/theme/colors";
-import { animations } from "./styles/theme/animations";
+import { textAnimations } from "./styles/theme/textAnimations";
 
 export default {
   darkMode: ["class"],
@@ -21,7 +21,7 @@ export default {
     },
     extend: {
       colors,
-      ...animations,
+      ...textAnimations,
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",

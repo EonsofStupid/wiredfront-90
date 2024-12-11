@@ -35,21 +35,39 @@
 
   /* Text highlight effect */
   [data-highlight] {
-    transition: color 0.3s ease;
+    display: inline-block;
     cursor: default;
-  }
-
-  [data-highlight]:hover {
-    animation: text-highlight 0.5s ease-out forwards;
   }
 
   [data-highlight] span {
     display: inline-block;
     transition: color 0.3s ease;
+    position: relative;
+    color: inherit;
   }
 
   [data-highlight]:hover span {
-    animation: text-highlight 0.5s ease-out forwards;
+    animation: none;
+  }
+
+  [data-highlight]:hover span:nth-child(1) { animation-delay: 0s; }
+  [data-highlight]:hover span:nth-child(2) { animation-delay: 0.05s; }
+  [data-highlight]:hover span:nth-child(3) { animation-delay: 0.1s; }
+  [data-highlight]:hover span:nth-child(4) { animation-delay: 0.15s; }
+  [data-highlight]:hover span:nth-child(5) { animation-delay: 0.2s; }
+  [data-highlight]:hover span:nth-child(6) { animation-delay: 0.25s; }
+  [data-highlight]:hover span:nth-child(7) { animation-delay: 0.3s; }
+  [data-highlight]:hover span:nth-child(8) { animation-delay: 0.35s; }
+  [data-highlight]:hover span:nth-child(9) { animation-delay: 0.4s; }
+  [data-highlight]:hover span:nth-child(10) { animation-delay: 0.45s; }
+  /* Add more if needed for longer words */
+
+  [data-highlight]:hover span {
+    animation: text-highlight-in 0.5s ease-out forwards;
+  }
+
+  [data-highlight]:not(:hover) span {
+    animation: text-highlight-out 0.5s ease-out forwards;
   }
 }
 
@@ -141,6 +159,24 @@
 
   .section-padding {
     @apply py-20 px-6 md:px-12 lg:px-24;
+  }
+}
+
+@keyframes text-highlight-in {
+  0% {
+    color: inherit;
+  }
+  100% {
+    color: theme('colors.neon.pink');
+  }
+}
+
+@keyframes text-highlight-out {
+  0% {
+    color: theme('colors.neon.pink');
+  }
+  100% {
+    color: inherit;
   }
 }
 
