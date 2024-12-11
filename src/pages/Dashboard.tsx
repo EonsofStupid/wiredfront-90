@@ -1,8 +1,11 @@
 import { motion } from "framer-motion";
 import { Activity, Code, Database, Settings, Search, User, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DashboardProps, DashboardMetric } from "@/types/dashboard/common";
+import { MetricsPanel } from "@/types/dashboard/metrics";
+import { AnalyticsPanel } from "@/types/dashboard/analytics";
 
-const Dashboard = () => {
+const Dashboard: React.FC<DashboardProps> = ({ initialData, refreshInterval = 30000 }) => {
   return (
     <div className="min-h-screen bg-dark grid-bg">
       {/* Header */}
