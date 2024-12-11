@@ -1,5 +1,5 @@
-import { DashboardMetric } from '../dashboard/metrics';
-import { AnalyticsData } from '../dashboard/analytics';
+import type { DashboardMetric } from '../dashboard/metrics';
+import type { AnalyticsData } from '../dashboard/analytics';
 
 export interface DataStore {
   metrics: Record<string, DashboardMetric>;

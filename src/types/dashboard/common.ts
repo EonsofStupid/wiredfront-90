@@ -1,4 +1,4 @@
-import { AnalyticsData } from './analytics';
+import type { AnalyticsData } from './analytics';
 import type { DashboardMetric } from './metrics';
 
 export interface DashboardData {

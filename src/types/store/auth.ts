@@ -1,4 +1,4 @@
-import { User, LoginCredentials } from './common';
+import type { User, LoginCredentials } from './common';
 
 export interface AuthStore {
   user: User | null;

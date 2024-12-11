@@ -1,5 +1,5 @@
-import { UserPreferences, NotificationSettings } from './common';
-import { DashboardLayout } from '../dashboard/common';
+import type { UserPreferences, NotificationSettings } from './common';
+import type { DashboardLayout } from '../dashboard/common';
 
 export interface SettingsStore {
   preferences: UserPreferences;
