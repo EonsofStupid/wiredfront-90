@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import { colors } from "./src/styles/theme/colors";
 
 export default {
   darkMode: ["class"],
@@ -18,34 +19,7 @@ export default {
       },
     },
     extend: {
-      colors: {
-        neon: {
-          pink: "#FF007F",
-          blue: "#00FFFF",
-          violet: "#9D00FF",
-          teal: "#00E0D6",
-        },
-        dark: {
-          DEFAULT: "#1A1A1A",
-          lighter: "#2B2B2B",
-        },
-        border: "hsl(var(--border))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        ring: "hsl(var(--ring))",
-      },
+      colors,
       animation: {
         "gradient-x": "gradient-x 15s ease infinite",
         "gradient-y": "gradient-y 15s ease infinite",

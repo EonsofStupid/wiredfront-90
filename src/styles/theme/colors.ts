@@ -4,7 +4,7 @@ export const colors = {
     blue: "#00FFFF",
     violet: "#9D00FF",
     teal: "#00E0D6",
-    highlight: "#ff0088",
+    highlight: "#ff0088", // Added highlight color
   },
   dark: {
     DEFAULT: "#1A1A1A",
