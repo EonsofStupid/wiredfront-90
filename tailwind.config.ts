@@ -29,9 +29,7 @@ export default {
           DEFAULT: "#1A1A1A",
           lighter: "#2B2B2B",
         },
-        border: {
-          DEFAULT: "hsl(var(--border))",
-        },
+        border: "hsl(var(--border))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
@@ -95,9 +93,10 @@ export default {
           "50%": { opacity: "0.6" },
         },
       },
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic": "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
     },
   },

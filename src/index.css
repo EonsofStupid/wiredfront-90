@@ -6,30 +6,22 @@
   :root {
     --background: 0 0% 10%;
     --foreground: 0 0% 98%;
-    
     --card: 0 0% 15%;
     --card-foreground: 0 0% 98%;
-    
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    
     --primary: 0 0% 98%;
     --primary-foreground: 240 5.9% 10%;
-    
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
-    
     --accent: 240 3.7% 15.9%;
     --accent-foreground: 0 0% 98%;
-    
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    
     --ring: 240 4.9% 83.9%;
+    --radius: 0.5rem;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
@@ -81,30 +73,33 @@
 
   .neon-border {
     @apply relative rounded-xl overflow-hidden;
-    &::before {
-      content: '';
-      position: absolute;
-      inset: -2px;
-      background: linear-gradient(45deg, 
-        theme('colors.neon.blue'), 
-        theme('colors.neon.pink'), 
-        theme('colors.neon.violet'),
-        theme('colors.neon.teal')
-      );
-      animation: rotate 4s linear infinite;
-    }
-    &::after {
-      content: '';
-      position: absolute;
-      inset: 2px;
-      background: theme('colors.dark.DEFAULT');
-      border-radius: inherit;
-      z-index: 0;
-    }
-    & > * {
-      position: relative;
-      z-index: 1;
-    }
+  }
+
+  .neon-border::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(45deg, 
+      theme('colors.neon.blue'), 
+      theme('colors.neon.pink'), 
+      theme('colors.neon.violet'),
+      theme('colors.neon.teal')
+    );
+    animation: rotate 4s linear infinite;
+  }
+
+  .neon-border::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: theme('colors.dark.DEFAULT');
+    border-radius: inherit;
+    z-index: 0;
+  }
+
+  .neon-border > * {
+    position: relative;
+    z-index: 1;
   }
 
   .grid-bg {
@@ -112,6 +107,20 @@
     background-image: 
       linear-gradient(to right, theme('colors.neon.blue/0.1') 1px, transparent 1px),
       linear-gradient(to bottom, theme('colors.neon.pink/0.1') 1px, transparent 1px);
+  }
+
+  .section-padding {
+    @apply py-20 px-6 md:px-12 lg:px-24;
+  }
+
+  .fade-in {
+    opacity: 0;
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  .slide-in {
+    transform: translateX(-100%);
+    animation: slideIn 0.5s ease-out forwards;
   }
 }
 
@@ -121,5 +130,17 @@
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  to {
+    transform: translateX(0);
   }
 }
