@@ -4,6 +4,7 @@ export * from './data';
 export * from './middleware';
 export * from './common';
 export * from './actions';
+export * from './guards';
 
 // Re-export core types without conflicts
 export type {
@@ -16,16 +17,4 @@ export type {
   RedisConfig,
 } from './core';
 
-// Re-export guards without conflicts
-export {
-  isUser,
-  isValidAction,
-  hasPayload,
-} from './guards';
-
 export type { StoreSelector, StoreSelectors } from './selectors';
-
-export interface RootStore {
-  version: string;
-  lastUpdated: number;
-}
