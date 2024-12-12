@@ -6,6 +6,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -15,23 +16,32 @@ serve(async (req) => {
     const secret = Deno.env.get(secretName)
     
     if (!secret) {
-      throw new Error(`Secret ${secretName} not found`)
+      console.error(`Secret ${secretName} not found`)
+      return new Response(
+        JSON.stringify({ error: `Secret ${secretName} not found` }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 404 
+        }
+      )
     }
 
+    console.log(`Successfully retrieved secret: ${secretName}`)
     return new Response(
       JSON.stringify({ secret }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      },
+        status: 200 
+      }
     )
   } catch (error) {
+    console.error('Error processing request:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      },
+        status: 400 
+      }
     )
   }
 })
