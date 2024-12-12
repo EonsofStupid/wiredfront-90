@@ -28,6 +28,18 @@ export const generateAIResponse = async (
         });
         if (hfError) throw hfError;
         return hfResponse.text;
+      case "mistral":
+        const { data: mistralResponse, error: mistralError } = await supabase.functions.invoke("generate-with-mistral", {
+          body: { prompt }
+        });
+        if (mistralError) throw mistralError;
+        return mistralResponse.text;
+      case "cohere":
+        const { data: cohereResponse, error: cohereError } = await supabase.functions.invoke("generate-with-cohere", {
+          body: { prompt }
+        });
+        if (cohereError) throw cohereError;
+        return cohereResponse.text;
       default:
         throw new Error("Provider not supported");
     }
