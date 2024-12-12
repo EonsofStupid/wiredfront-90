@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { HfInference } from 'https://esm.sh/@huggingface/inference@2.3.2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,27 +15,22 @@ serve(async (req) => {
   try {
     const { prompt } = await req.json()
 
-    const response = await fetch('https://api-inference.huggingface.co/models/mistralai/Mixtral-8x7B-Instruct-v0.1', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('HUGGING_FACE_ACCESS_TOKEN')}`,
-        'Content-Type': 'application/json',
+    const hf = new HfInference(Deno.env.get('HUGGING_FACE_ACCESS_TOKEN'))
+    const result = await hf.textGeneration({
+      model: 'mistralai/Mixtral-8x7B-Instruct-v0.1',
+      inputs: prompt,
+      parameters: {
+        max_new_tokens: 1000,
+        temperature: 0.7,
       },
-      body: JSON.stringify({
-        inputs: prompt,
-        parameters: {
-          max_new_tokens: 1000,
-          temperature: 0.7,
-        },
-      }),
     })
 
-    const data = await response.json()
     return new Response(
-      JSON.stringify({ text: data[0].generated_text }),
+      JSON.stringify({ text: result.generated_text }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
+    console.error('Error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
