@@ -12,7 +12,7 @@ export const AITaskPanel = ({ onClose }: AITaskPanelProps) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="glass-card p-6 space-y-6"
+      className="glass-card-enhanced p-6 space-y-6"
     >
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold gradient-text">AI Assistant</h2>
@@ -60,7 +60,7 @@ const TaskCard = ({ icon: Icon, title, description }: TaskCardProps) => {
   return (
     <motion.div
       whileHover={{ scale: 1.05 }}
-      className="glass-card p-4 cursor-pointer"
+      className="glass-card-interactive p-4"
     >
       <Icon className="h-6 w-6 mb-2 text-neon-blue" />
       <h3 className="font-semibold mb-1">{title}</h3>

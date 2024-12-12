@@ -20,12 +20,12 @@ export const FeatureCard = ({ icon: Icon, title, description, capabilities, inde
         delay: index * 0.1,
         hover: { type: "spring", stiffness: 300, damping: 10 }
       }}
-      className="glass-effect glass-effect-hover p-6 md:p-8 group cursor-pointer gpu-accelerated"
+      className="glass-card-interactive p-6 md:p-8 group"
     >
       <div className="text-neon-blue mb-4 transition-transform duration-300 group-hover:scale-110">
         <Icon className="w-8 md:w-10 h-8 md:h-10" />
       </div>
-      <h3 className="gradient-text-enhanced text-xl md:text-2xl font-semibold mb-3">
+      <h3 className="gradient-text text-xl md:text-2xl font-semibold mb-3">
         {title}
       </h3>
       <p className="text-base md:text-lg text-gray-400">{description}</p>
