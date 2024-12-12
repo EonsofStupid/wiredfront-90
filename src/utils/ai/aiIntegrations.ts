@@ -1,5 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
-import { pipeline } from "@huggingface/transformers";
+import { pipeline, type Pipeline } from "@huggingface/transformers";
 
 export type AIModel = {
   id: string;
@@ -19,7 +18,10 @@ export type AIResponse = {
 };
 
 // Initialize HuggingFace pipeline
-export const initializeHFPipeline = async (task: string, model: string) => {
+export const initializeHFPipeline = async (
+  task: "text-classification" | "feature-extraction" | "sentiment-analysis",
+  model = "onnx-community/distilbert-base-uncased"
+) => {
   try {
     return await pipeline(task, model, { device: "webgpu" });
   } catch (error) {
@@ -31,7 +33,7 @@ export const initializeHFPipeline = async (task: string, model: string) => {
 // Process text with HuggingFace
 export const processWithHuggingFace = async (
   text: string,
-  task = "text-classification",
+  task: "text-classification" | "feature-extraction" | "sentiment-analysis" = "text-classification",
   model = "onnx-community/distilbert-base-uncased"
 ) => {
   try {
