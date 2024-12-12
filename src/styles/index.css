@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Base Imports - Critical First */
+/* Critical Base Styles */
 @import './base/reset.css';
 @import './components/layout.css';
 @import './components/glass.css';
@@ -38,12 +38,12 @@
 }
 
 .layer-floating {
-  @apply fixed;
+  @apply fixed pointer-events-none;
   z-index: var(--z-floating);
 }
 
 .layer-overlay {
-  @apply fixed;
+  @apply fixed pointer-events-none;
   z-index: var(--z-overlay);
 }
 
@@ -56,4 +56,19 @@
 .optimize-animation {
   @apply transition-transform transition-opacity;
   backface-visibility: hidden;
+}
+
+/* Enhanced Glass Effects */
+.glass-effect {
+  @apply backdrop-blur-lg bg-dark-lighter/30 border border-white/10;
+  transform-style: preserve-3d;
+}
+
+.glass-effect-hover {
+  @apply transition-all duration-300;
+}
+
+.glass-effect-hover:hover {
+  @apply backdrop-blur-xl bg-dark-lighter/40 border-white/20;
+  transform: translateY(-2px);
 }
