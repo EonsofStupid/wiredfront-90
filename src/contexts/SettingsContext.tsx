@@ -4,6 +4,15 @@ import type { SettingsContextValue, UserPreferences } from "@/types/settings";
 
 const SettingsContext = createContext<SettingsContextValue | undefined>(undefined);
 
+const defaultPreferences: UserPreferences = {
+  theme: 'system',
+  language: 'en',
+  defaultView: 'dashboard',
+  refreshInterval: 30000,
+  notifications: true,
+  timezone: 'UTC'
+};
+
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const { preferences, updatePreferences: updateStore } = useSettingsStore();
 
@@ -12,14 +21,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   }, [updateStore]);
 
   const resetPreferences = useCallback(() => {
-    updateStore({
-      theme: 'system',
-      language: 'en',
-      defaultView: 'dashboard',
-      refreshInterval: 30000,
-      notifications: true,
-      timezone: 'UTC'
-    });
+    updateStore(defaultPreferences);
   }, [updateStore]);
 
   return (
