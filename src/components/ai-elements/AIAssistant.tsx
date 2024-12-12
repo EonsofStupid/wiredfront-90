@@ -14,6 +14,7 @@ export const AIAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [input, setInput] = useState("");
   const [response, setResponse] = useState("");
   const [mode, setMode] = useState<AIMode>("chat");
@@ -22,7 +23,12 @@ export const AIAssistant = () => {
   const constraintsRef = useRef(null);
   const { toast } = useToast();
 
+  const handleDragStart = () => {
+    setIsDragging(true);
+  };
+
   const handleDragEnd = (_e: any, info: any) => {
+    setIsDragging(false);
     setPosition({ x: position.x + info.offset.x, y: position.y + info.offset.y });
   };
 
@@ -56,22 +62,28 @@ export const AIAssistant = () => {
         <motion.div
           drag
           dragMomentum={false}
-          dragConstraints={{
-            top: 0,
-            left: 0,
-            right: window.innerWidth - 400, // Adjust based on assistant width
-            bottom: window.innerHeight - 600, // Adjust based on assistant height
-          }}
-          dragElastic={0}
+          dragConstraints={constraintsRef}
+          dragElastic={0.1}
+          onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
           animate={{
             x: position.x,
             y: position.y,
+            scale: isDragging ? 1.02 : 1,
+            backgroundColor: isDragging ? '#b0f542' : 'transparent',
           }}
-          className={`fixed bottom-8 right-8 w-96 pointer-events-auto z-50
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 30
+          }}
+          className={`fixed bottom-8 right-8 w-[450px] pointer-events-auto z-50
             ${isMinimized ? 'h-auto' : 'h-[600px]'}`}
         >
-          <div className="ai-assistant glass-card neon-border w-full h-full overflow-hidden rounded-lg shadow-xl">
+          <div 
+            className={`ai-assistant glass-card neon-border w-full h-full overflow-hidden rounded-lg shadow-xl transition-all duration-300
+              ${isDragging ? 'shadow-[0_0_30px_rgba(176,245,66,0.3)]' : ''}`}
+          >
             <div className="cursor-move bg-dark-lighter/30 hover:bg-dark-lighter/50 h-6" />
             
             <AIHeader
@@ -81,7 +93,7 @@ export const AIAssistant = () => {
             />
 
             {!isMinimized && (
-              <div className="p-4 space-y-4 h-[calc(100%-3rem)] overflow-y-auto">
+              <div className="custom-scrollbar p-4 space-y-4 h-[calc(100%-3rem)] overflow-y-auto">
                 <AIModeSelector mode={mode} onModeChange={setMode} />
                 <AIProviderSelector
                   provider={provider}
