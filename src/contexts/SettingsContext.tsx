@@ -24,14 +24,21 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     updateStore(defaultPreferences);
   }, [updateStore]);
 
+  const contextValue: SettingsContextValue = {
+    preferences: {
+      theme: preferences.theme || defaultPreferences.theme,
+      language: preferences.language || defaultPreferences.language,
+      defaultView: preferences.defaultView || defaultPreferences.defaultView,
+      refreshInterval: preferences.refreshInterval || defaultPreferences.refreshInterval,
+      notifications: preferences.notifications ?? defaultPreferences.notifications,
+      timezone: preferences.timezone || defaultPreferences.timezone
+    },
+    updatePreferences,
+    resetPreferences,
+  };
+
   return (
-    <SettingsContext.Provider
-      value={{
-        preferences,
-        updatePreferences,
-        resetPreferences,
-      }}
-    >
+    <SettingsContext.Provider value={contextValue}>
       {children}
     </SettingsContext.Provider>
   );
