@@ -48,6 +48,45 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_tasks: {
+        Row: {
+          created_at: string | null
+          id: string
+          prompt: string
+          provider: Database["public"]["Enums"]["ai_provider"]
+          result: string | null
+          status: string
+          task_id: string
+          type: Database["public"]["Enums"]["task_type"]
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          prompt: string
+          provider: Database["public"]["Enums"]["ai_provider"]
+          result?: string | null
+          status: string
+          task_id: string
+          type: Database["public"]["Enums"]["task_type"]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          prompt?: string
+          provider?: Database["public"]["Enums"]["ai_provider"]
+          result?: string | null
+          status?: string
+          task_id?: string
+          type?: Database["public"]["Enums"]["task_type"]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -63,6 +102,7 @@ export type Database = {
         | "anthropic"
         | "mistral"
         | "cohere"
+      task_type: "code" | "analysis" | "automation" | "data"
     }
     CompositeTypes: {
       [_ in never]: never

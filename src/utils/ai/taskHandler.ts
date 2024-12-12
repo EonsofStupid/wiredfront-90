@@ -16,16 +16,19 @@ export const processTask = async (task: Task) => {
   try {
     const response = await generateAIResponse(task.provider, task.prompt);
     
-    // Log task completion in Supabase
-    await supabase.from("ai_tasks").insert({
-      task_id: task.id,
-      type: task.type,
-      prompt: task.prompt,
-      provider: task.provider,
-      status: "completed",
-      result: response
-    });
+    const { data, error } = await supabase
+      .from('ai_tasks')
+      .insert({
+        task_id: task.id,
+        type: task.type,
+        prompt: task.prompt,
+        provider: task.provider === 'openai' ? 'chatgpt' : task.provider, // Map openai to chatgpt for DB compatibility
+        status: 'completed',
+        result: response,
+        user_id: (await supabase.auth.getUser()).data.user?.id
+      });
 
+    if (error) throw error;
     return response;
   } catch (error) {
     console.error("Task processing error:", error);
