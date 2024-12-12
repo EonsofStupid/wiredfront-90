@@ -2,11 +2,11 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { motion } from "framer-motion";
 
-interface AISwirlProps {
+interface CyberNebulaProps {
   onExpand: () => void;
 }
 
-export const AISwirl = ({ onExpand }: AISwirlProps) => {
+export const CyberNebula = ({ onExpand }: CyberNebulaProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -17,13 +17,13 @@ export const AISwirl = ({ onExpand }: AISwirlProps) => {
 
     // Initialize Three.js scene
     sceneRef.current = new THREE.Scene();
-    cameraRef.current = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    cameraRef.current = new THREE.PerspectiveCamera(75, window.innerWidth / 200, 0.1, 1000);
     rendererRef.current = new THREE.WebGLRenderer({ 
       alpha: true,
       antialias: true 
     });
     
-    rendererRef.current.setSize(80, 80);
+    rendererRef.current.setSize(window.innerWidth, 200);
     containerRef.current.appendChild(rendererRef.current.domElement);
 
     // Create enhanced swirl geometry
@@ -97,10 +97,9 @@ export const AISwirl = ({ onExpand }: AISwirlProps) => {
     <motion.div
       ref={containerRef}
       onClick={onExpand}
-      className="fixed bottom-4 right-4 cursor-pointer"
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.95 }}
-      style={{ width: 80, height: 80 }}
+      className="fixed top-0 left-0 w-full h-[200px] cursor-pointer"
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
     />
   );
 };
