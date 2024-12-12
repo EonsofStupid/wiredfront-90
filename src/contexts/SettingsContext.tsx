@@ -1,11 +1,11 @@
 import { createContext, useContext, useCallback } from "react";
 import { useSettingsStore } from "@/stores";
-import type { SettingsContextValue, UserPreferences } from "@/types/settings";
+import type { SettingsContextValue, UserPreferences, ThemeMode } from "@/types/settings";
 
 const SettingsContext = createContext<SettingsContextValue | undefined>(undefined);
 
 const defaultPreferences: UserPreferences = {
-  theme: 'system',
+  theme: 'system' as ThemeMode,
   language: 'en',
   defaultView: 'dashboard',
   refreshInterval: 30000,
