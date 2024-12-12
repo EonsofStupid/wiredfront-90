@@ -24,14 +24,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     updateStore(defaultPreferences);
   }, [updateStore]);
 
-  const preferences: UserPreferences = {
-    theme: storePreferences?.theme ?? defaultPreferences.theme,
-    language: storePreferences?.language ?? defaultPreferences.language,
-    defaultView: storePreferences?.defaultView ?? defaultPreferences.defaultView,
-    refreshInterval: storePreferences?.refreshInterval ?? defaultPreferences.refreshInterval,
-    notifications: storePreferences?.notifications ?? defaultPreferences.notifications,
-    timezone: storePreferences?.timezone ?? defaultPreferences.timezone,
-  };
+  const preferences = {
+    ...defaultPreferences,
+    ...storePreferences,
+  } as UserPreferences;
 
   return (
     <SettingsContext.Provider

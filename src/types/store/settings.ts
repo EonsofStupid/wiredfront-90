@@ -19,20 +19,20 @@ export interface CacheSettings {
 }
 
 export interface SettingsState {
-  readonly preferences: Readonly<UserPreferences>;
-  readonly dashboardLayout: Readonly<DashboardLayout>;
-  readonly notifications: Readonly<NotificationSettings>;
-  readonly cache: Readonly<CacheSettings>;
+  preferences: UserPreferences;
+  dashboardLayout: DashboardLayout;
+  notifications: NotificationSettings;
+  cache: CacheSettings;
 }
 
 export interface SettingsActions {
-  readonly updatePreferences: (updates: Partial<UserPreferences>) => void;
-  readonly saveDashboardLayout: (layout: DashboardLayout) => void;
-  readonly updateNotifications: (settings: Partial<NotificationSettings>) => void;
-  readonly updateCacheSettings: (settings: Partial<CacheSettings>) => void;
+  updatePreferences: (updates: Partial<UserPreferences>) => void;
+  saveDashboardLayout: (layout: DashboardLayout) => void;
+  updateNotifications: (settings: Partial<NotificationSettings>) => void;
+  updateCacheSettings: (settings: Partial<CacheSettings>) => void;
 }
 
-export type SettingsStore = Readonly<SettingsState & SettingsActions>;
+export type SettingsStore = SettingsState & SettingsActions;
 
 export type SettingsActionType =
   | 'UPDATE_PREFERENCES'
