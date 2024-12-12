@@ -10,7 +10,7 @@ export const generateAIResponse = async (
     switch (provider) {
       case "gemini":
         return await generateGeminiResponse(prompt);
-      case "openai":
+      case "chatgpt":
         const { data: openaiResponse, error: openaiError } = await supabase.functions.invoke("generate-with-openai", {
           body: { prompt }
         });

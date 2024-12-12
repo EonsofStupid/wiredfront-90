@@ -22,7 +22,7 @@ export const processTask = async (task: Task) => {
         task_id: task.id,
         type: task.type,
         prompt: task.prompt,
-        provider: task.provider === 'openai' ? 'chatgpt' : task.provider, // Map openai to chatgpt for DB compatibility
+        provider: task.provider,
         status: 'completed',
         result: response,
         user_id: (await supabase.auth.getUser()).data.user?.id
