@@ -14,6 +14,7 @@ interface AISettingsData {
   max_tokens: number;
   temperature: number;
   is_active: boolean;
+  user_id: string;
 }
 
 export function AISettings() {
@@ -24,34 +25,46 @@ export function AISettings() {
     model_name: '',
     max_tokens: 1000,
     temperature: 0.7,
-    is_active: true
+    is_active: true,
+    user_id: '' // Will be set when component mounts
   });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadSettings();
-  }, []);
+    const initializeSettings = async () => {
+      try {
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('No user found');
 
-  const loadSettings = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('ai_settings')
-        .select('*')
-        .single();
+        // Update settings with user_id
+        setSettings(prev => ({ ...prev, user_id: user.id }));
 
-      if (error) throw error;
-      if (data) setSettings(data);
-    } catch (error) {
-      console.error('Error loading settings:', error);
-      toast({
-        title: "Error loading settings",
-        description: "Failed to load AI settings",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        // Load existing settings
+        const { data, error } = await supabase
+          .from('ai_settings')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "no rows returned" error
+        if (data) {
+          setSettings(data);
+        }
+      } catch (error) {
+        console.error('Error initializing settings:', error);
+        toast({
+          title: "Error loading settings",
+          description: "Failed to load AI settings",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeSettings();
+  }, [toast]);
 
   const saveSettings = async () => {
     try {
@@ -74,6 +87,10 @@ export function AISettings() {
       });
     }
   };
+
+  if (isLoading) {
+    return <div>Loading settings...</div>;
+  }
 
   return (
     <div className="space-y-6">
