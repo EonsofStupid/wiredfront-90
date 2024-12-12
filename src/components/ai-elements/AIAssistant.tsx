@@ -1,0 +1,114 @@
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Bot, Loader, X, Maximize2, Minimize2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { processWithHuggingFace } from "@/utils/ai/aiIntegrations";
+import { useToast } from "@/components/ui/use-toast";
+
+export const AIAssistant = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [input, setInput] = useState("");
+  const [response, setResponse] = useState("");
+  const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+
+    setIsProcessing(true);
+    try {
+      const result = await processWithHuggingFace(input);
+      setResponse(JSON.stringify(result.result, null, 2));
+      toast({
+        title: "AI Processing Complete",
+        description: "Response generated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Processing Error",
+        description: "Failed to process your request",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 20 }}
+        className={`fixed bottom-4 right-4 z-50 ${
+          isMinimized ? "w-auto" : "w-96"
+        }`}
+      >
+        <div className="glass-card neon-border overflow-hidden">
+          <div className="flex items-center justify-between p-4 bg-dark-lighter/50">
+            <div className="flex items-center gap-2">
+              <Bot className="text-neon-blue w-5 h-5" />
+              <span className="text-sm font-medium">AI Assistant</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setIsMinimized(!isMinimized)}
+              >
+                {isMinimized ? (
+                  <Maximize2 className="h-4 w-4" />
+                ) : (
+                  <Minimize2 className="h-4 w-4" />
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setIsOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {!isMinimized && (
+            <div className="p-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <textarea
+                  className="w-full h-24 p-2 rounded-md bg-dark-lighter/30 border border-white/10 text-sm"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Ask me anything..."
+                />
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? (
+                    <Loader className="w-4 h-4 animate-spin mr-2" />
+                  ) : (
+                    "Process"
+                  )}
+                </Button>
+              </form>
+
+              {response && (
+                <div className="mt-4 p-2 rounded-md bg-dark-lighter/30 border border-white/10">
+                  <pre className="text-xs overflow-auto max-h-40">
+                    {response}
+                  </pre>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};

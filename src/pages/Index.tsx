@@ -18,6 +18,7 @@ import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/h
 import { NeuralParticles } from "@/components/ai-elements/NeuralParticles";
 import { ProcessingRings } from "@/components/ai-elements/ProcessingRings";
 import { DataStream } from "@/components/ai-elements/DataStream";
+import { AIAssistant } from "@/components/ai-elements/AIAssistant";
 
 const Index = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -34,6 +35,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen grid-bg">
+      <AIAssistant />
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden px-4">
         <NeuralParticles />
