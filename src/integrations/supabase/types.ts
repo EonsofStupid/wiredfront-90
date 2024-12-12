@@ -105,6 +105,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_visual_preferences: {
+        Row: {
+          created_at: string | null
+          id: string
+          prefer_high_performance: boolean | null
+          reduced_motion: boolean | null
+          theme_preference: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          prefer_high_performance?: boolean | null
+          reduced_motion?: boolean | null
+          theme_preference?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          prefer_high_performance?: boolean | null
+          reduced_motion?: boolean | null
+          theme_preference?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
