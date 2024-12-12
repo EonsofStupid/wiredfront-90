@@ -10,6 +10,7 @@ export const selectors: StoreSelectors = {
   selectMetrics: (state) => Object.values(useDataStore.getState().metrics),
   selectDashboardLayout: (state) => useSettingsStore.getState().dashboardLayout,
   selectNotificationSettings: (state) => useSettingsStore.getState().notifications,
+  selectCacheSettings: (state) => useSettingsStore.getState().cache,
 };
 
 // Custom hooks for accessing store data
@@ -18,3 +19,4 @@ export const useUser = () => useAuthStore((state) => state.user);
 export const useMetrics = () => useDataStore((state) => Object.values(state.metrics));
 export const useDashboardLayout = () => useSettingsStore((state) => state.dashboardLayout);
 export const useNotificationSettings = () => useSettingsStore((state) => state.notifications);
+export const useCacheSettings = () => useSettingsStore((state) => state.cache);

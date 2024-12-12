@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { devtools } from 'zustand/middleware';
-import type { SettingsStore, SettingsAction } from '@/types/store/settings';
+import type { SettingsStore, SettingsAction, CacheSettings } from '@/types/store/settings';
 import type { DevToolsConfig } from '@/types/store/middleware';
 
 const persistConfig = {
@@ -27,12 +27,25 @@ const persistConfig = {
     preferences: state.preferences,
     dashboardLayout: state.dashboardLayout,
     notifications: state.notifications,
+    cache: state.cache,
   }),
 };
 
 const devtoolsConfig: DevToolsConfig = {
   name: 'Settings Store',
   enabled: process.env.NODE_ENV === 'development',
+};
+
+const defaultCacheSettings: CacheSettings = {
+  enabled: false,
+  ttl: 3600,
+  maxSize: 100,
+  redis: {
+    host: 'localhost',
+    port: 6379,
+    tls: false,
+    database: 0,
+  },
 };
 
 export const useSettingsStore = create<SettingsStore>()(
@@ -54,6 +67,7 @@ export const useSettingsStore = create<SettingsStore>()(
           frequency: 'daily',
           types: ['alerts', 'updates'],
         },
+        cache: defaultCacheSettings,
         updatePreferences: (updates) => 
           set(
             (state) => ({
@@ -75,6 +89,14 @@ export const useSettingsStore = create<SettingsStore>()(
             }),
             false,
             { type: 'UPDATE_NOTIFICATIONS', payload: settings }
+          ),
+        updateCacheSettings: (settings) =>
+          set(
+            (state) => ({
+              cache: { ...state.cache, ...settings },
+            }),
+            false,
+            { type: 'UPDATE_CACHE_SETTINGS', payload: settings }
           ),
       }),
       persistConfig
