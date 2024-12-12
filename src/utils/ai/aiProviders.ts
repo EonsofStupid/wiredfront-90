@@ -41,7 +41,8 @@ export const generateAIResponse = async (
         if (cohereError) throw cohereError;
         return cohereResponse.text;
       default:
-        throw new Error("Provider not supported");
+        const _exhaustiveCheck: never = provider;
+        throw new Error(`Unsupported provider: ${provider}`);
     }
   } catch (error) {
     console.error("Error generating AI response:", error);
