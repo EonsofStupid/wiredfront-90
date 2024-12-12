@@ -50,7 +50,7 @@ export const AIProviderSelector = ({ provider, onProviderChange }: AIProviderSel
       <h3 className="text-lg font-semibold mb-4">AI Providers</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {Object.entries(AI_PROVIDERS).map(([id, config]) => {
-          const Icon = config.icon;
+          const IconComponent = config.icon;
           return (
             <div 
               key={id}
@@ -59,7 +59,7 @@ export const AIProviderSelector = ({ provider, onProviderChange }: AIProviderSel
               }`}
             >
               <div className="flex items-center gap-3">
-                <Icon className="w-5 h-5 text-neon-blue" />
+                <IconComponent className="w-5 h-5 text-neon-blue" />
                 <div>
                   <h4 className="font-medium">{config.name}</h4>
                   <p className="text-sm text-gray-400">{config.description}</p>

@@ -1,3 +1,5 @@
+import { LucideIcon } from "lucide-react";
+
 export type AIMode = "chat" | "code" | "file";
 export type AIProvider = "gemini" | "openai" | "anthropic" | "huggingface" | "mistral" | "cohere";
 
@@ -8,7 +10,7 @@ export interface AIProviderConfig {
   isEnabled: boolean;
   apiKeyRequired: boolean;
   models: string[];
-  icon: string;
+  icon: LucideIcon;
 }
 
 export interface AIResponse {
