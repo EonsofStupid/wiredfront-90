@@ -9,7 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      ai_settings: {
+        Row: {
+          api_key: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean
+          max_tokens: number | null
+          model_name: string | null
+          provider: Database["public"]["Enums"]["ai_provider"]
+          temperature: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          api_key?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_tokens?: number | null
+          model_name?: string | null
+          provider?: Database["public"]["Enums"]["ai_provider"]
+          temperature?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          api_key?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_tokens?: number | null
+          model_name?: string | null
+          provider?: Database["public"]["Enums"]["ai_provider"]
+          temperature?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +56,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      ai_provider:
+        | "chatgpt"
+        | "gemini"
+        | "huggingface"
+        | "anthropic"
+        | "mistral"
+        | "cohere"
     }
     CompositeTypes: {
       [_ in never]: never

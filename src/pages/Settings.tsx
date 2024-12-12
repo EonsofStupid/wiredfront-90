@@ -4,6 +4,7 @@ import { Settings as SettingsIcon, Bell, Eye, Globe } from "lucide-react";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { AccessibilitySettings } from "@/components/settings/AccessibilitySettings";
+import { AISettings } from "@/components/settings/AISettings";
 
 export default function Settings() {
   return (
@@ -13,8 +14,12 @@ export default function Settings() {
         <h1 className="text-3xl font-bold">Settings</h1>
       </div>
 
-      <Tabs defaultValue="general" className="space-y-4">
+      <Tabs defaultValue="ai" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="ai">
+            <Globe className="h-4 w-4 mr-2" />
+            AI Settings
+          </TabsTrigger>
           <TabsTrigger value="general">
             <Globe className="h-4 w-4 mr-2" />
             General
@@ -30,6 +35,9 @@ export default function Settings() {
         </TabsList>
 
         <Card className="p-6">
+          <TabsContent value="ai">
+            <AISettings />
+          </TabsContent>
           <TabsContent value="general">
             <GeneralSettings />
           </TabsContent>
