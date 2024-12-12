@@ -1,100 +1,56 @@
 @layer components {
-  /* Interactive Elements with Performance Optimizations */
-  .interactive-element {
-    @apply relative transition-all duration-300;
-    will-change: transform, opacity;
-  }
-
-  .interactive-element::before {
-    @apply content-[''] absolute inset-0 opacity-0 transition-opacity duration-300 rounded-xl;
-    background: linear-gradient(45deg, theme('colors.neon.pink'), theme('colors.neon.blue'));
-    z-index: -1;
-    will-change: opacity;
-  }
-
-  .interactive-element:hover::before {
-    @apply opacity-20;
-  }
-
-  /* Optimized Glow Effects */
-  .glow-effect {
-    @apply relative;
-    will-change: filter;
-  }
-
-  .glow-effect::after {
-    @apply content-[''] absolute inset-0 opacity-0 transition-opacity duration-300;
-    box-shadow: 0 0 15px theme('colors.neon.pink'),
-                0 0 25px theme('colors.neon.blue');
-    z-index: -1;
-  }
-
-  .glow-effect:hover::after {
-    @apply opacity-100;
-  }
-
-  /* Glass Card with Performance Optimizations */
-  .glass-card-enhanced {
-    @apply relative bg-dark-lighter/30 backdrop-blur-md border border-white/10 rounded-xl;
-    will-change: transform, opacity;
-  }
-
-  .glass-card-enhanced::before {
-    @apply content-[''] absolute inset-0 rounded-xl opacity-30;
+  .cyber-orb {
+    @apply relative rounded-full overflow-hidden backdrop-blur-lg;
     background: linear-gradient(
       45deg,
       theme('colors.neon.blue'),
-      theme('colors.neon.pink'),
-      theme('colors.neon.violet')
+      theme('colors.neon.pink')
     );
-    mask: linear-gradient(#fff 0 0) content-box,
-          linear-gradient(#fff 0 0);
-    mask-composite: exclude;
-    -webkit-mask-composite: xor;
-    padding: 1px;
-    z-index: -1;
   }
 
-  /* Gradient Text with Performance Optimization */
-  .gradient-text-enhanced {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-neon-blue via-neon-pink to-neon-violet;
-    will-change: background-position;
-    animation: gradient-shift 8s linear infinite;
+  .cyber-orb::before {
+    @apply content-[''] absolute inset-0 rounded-full;
+    background: linear-gradient(
+      45deg,
+      theme('colors.neon.pink'),
+      theme('colors.neon.blue')
+    );
+    animation: orbit 8s linear infinite;
   }
 
-  @keyframes gradient-shift {
-    0%, 100% {
-      background-position: 0% 50%;
+  @keyframes orbit {
+    0% {
+      transform: rotate(0deg) scale(1);
+      opacity: 0.5;
     }
     50% {
-      background-position: 100% 50%;
+      transform: rotate(180deg) scale(1.2);
+      opacity: 0.8;
+    }
+    100% {
+      transform: rotate(360deg) scale(1);
+      opacity: 0.5;
     }
   }
 
-  /* Performance Fallbacks */
-  @media (prefers-reduced-motion: reduce) {
-    .interactive-element,
-    .glow-effect,
-    .glass-card-enhanced,
-    .gradient-text-enhanced {
-      @apply transition-none;
-      animation: none !important;
-    }
+  .neural-particle {
+    @apply absolute rounded-full;
+    background: radial-gradient(
+      circle,
+      theme('colors.neon.blue'),
+      transparent
+    );
+    animation: float 4s ease-in-out infinite;
   }
 
-  /* Low-end Device Fallbacks */
-  .low-performance {
-    .glass-card-enhanced {
-      @apply bg-dark-lighter/50 backdrop-blur-none;
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0) scale(1);
+      opacity: 0.5;
     }
-
-    .glow-effect::after {
-      content: none;
-    }
-
-    .gradient-text-enhanced {
-      animation: none;
-      @apply text-neon-pink;
+    50% {
+      transform: translateY(-20px) scale(1.2);
+      opacity: 0.8;
     }
   }
 }
