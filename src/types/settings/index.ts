@@ -3,23 +3,10 @@ export type ThemeMode = 'light' | 'dark' | 'system';
 export interface UserPreferences {
   theme: ThemeMode;
   language: string;
-  notifications: NotificationPreferences;
-  accessibility: AccessibilitySettings;
-}
-
-export interface NotificationPreferences {
-  email: boolean;
-  push: boolean;
-  desktop: boolean;
-  frequency: 'immediate' | 'daily' | 'weekly';
-  types: Array<'system' | 'updates' | 'security'>;
-}
-
-export interface AccessibilitySettings {
-  fontSize: 'small' | 'medium' | 'large';
-  contrast: 'normal' | 'high';
-  reducedMotion: boolean;
-  soundEffects: boolean;
+  defaultView: string;
+  refreshInterval: number;
+  notifications: boolean;
+  timezone: string;
 }
 
 export interface SettingsContextValue {

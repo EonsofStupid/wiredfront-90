@@ -15,19 +15,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     updateStore({
       theme: 'system',
       language: 'en',
-      notifications: {
-        email: true,
-        push: true,
-        desktop: true,
-        frequency: 'immediate',
-        types: ['system', 'security'],
-      },
-      accessibility: {
-        fontSize: 'medium',
-        contrast: 'normal',
-        reducedMotion: false,
-        soundEffects: true,
-      },
+      defaultView: 'dashboard',
+      refreshInterval: 30000,
+      notifications: true,
+      timezone: 'UTC'
     });
   }, [updateStore]);
 
