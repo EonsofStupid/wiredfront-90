@@ -50,11 +50,17 @@ export type Database = {
       }
       ai_tasks: {
         Row: {
+          completed_at: string | null
           created_at: string | null
+          error_message: string | null
           id: string
+          metadata: Json | null
+          priority: number | null
           prompt: string
           provider: Database["public"]["Enums"]["ai_provider"]
           result: string | null
+          retry_count: number | null
+          scheduled_for: string | null
           status: string
           task_id: string
           type: Database["public"]["Enums"]["task_type"]
@@ -62,11 +68,17 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          completed_at?: string | null
           created_at?: string | null
+          error_message?: string | null
           id?: string
+          metadata?: Json | null
+          priority?: number | null
           prompt: string
           provider: Database["public"]["Enums"]["ai_provider"]
           result?: string | null
+          retry_count?: number | null
+          scheduled_for?: string | null
           status: string
           task_id: string
           type: Database["public"]["Enums"]["task_type"]
@@ -74,11 +86,17 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          completed_at?: string | null
           created_at?: string | null
+          error_message?: string | null
           id?: string
+          metadata?: Json | null
+          priority?: number | null
           prompt?: string
           provider?: Database["public"]["Enums"]["ai_provider"]
           result?: string | null
+          retry_count?: number | null
+          scheduled_for?: string | null
           status?: string
           task_id?: string
           type?: Database["public"]["Enums"]["task_type"]
