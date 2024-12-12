@@ -3,9 +3,11 @@ import { useEffect, useState } from "react";
 import { ChevronDown, Activity, Code, Database, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
   const [scrolled, setScrolled] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,7 +21,7 @@ const Index = () => {
   return (
     <div className="min-h-screen grid-bg">
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative h-screen flex items-center justify-center overflow-hidden px-4">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute inset-0 bg-gradient-to-b from-dark via-dark/50 to-dark" />
         </div>
@@ -28,19 +30,22 @@ const Index = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="text-center z-10 px-4"
+          className="text-center z-10"
         >
-          <div className="neon-border p-8 glass-card mb-8">
-            <h1 className="text-6xl md:text-8xl font-bold gradient-text mb-6">
+          <div className="neon-border p-4 md:p-8 glass-card mb-8">
+            <h1 className={`${isMobile ? 'text-4xl' : 'text-6xl md:text-8xl'} font-bold gradient-text mb-6`}>
               wiredFRONT
             </h1>
-            <p className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto">
+            <p className="text-lg md:text-2xl text-gray-300 max-w-2xl mx-auto">
               The future of interface design, today.
             </p>
           </div>
 
           <Link to="/dashboard">
-            <Button className="neon-glow bg-dark-lighter hover:bg-dark-lighter/80 text-neon-blue border border-neon-blue/50 text-lg px-8 py-6">
+            <Button 
+              className="neon-glow bg-dark-lighter hover:bg-dark-lighter/80 text-neon-blue border border-neon-blue/50 
+                       text-base md:text-lg px-6 md:px-8 py-4 md:py-6 w-full md:w-auto"
+            >
               Launch Dashboard
             </Button>
           </Link>
@@ -50,7 +55,7 @@ const Index = () => {
           {[...Array(5)].map((_, i) => (
             <motion.div
               key={i}
-              className="absolute glass-card neon-glow w-32 h-32"
+              className="absolute glass-card neon-glow w-16 md:w-32 h-16 md:h-32"
               animate={{
                 x: [0, 30, 0],
                 y: [0, 50, 0],
@@ -76,23 +81,27 @@ const Index = () => {
           transition={{ duration: 2, repeat: Infinity }}
           className="absolute bottom-10 left-1/2 transform -translate-x-1/2"
         >
-          <ChevronDown className="w-8 h-8 text-neon-blue animate-pulse" />
+          <ChevronDown className="w-6 md:w-8 h-6 md:h-8 text-neon-blue animate-pulse" />
         </motion.div>
       </section>
 
-      <section className="container mx-auto px-4 py-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <section className="container mx-auto px-4 py-12 md:py-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
           {features.map((feature, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="glass-card p-6 hover:scale-105 transition-transform duration-300"
+              className="glass-card p-4 md:p-6 hover:scale-105 transition-transform duration-300"
             >
-              <div className="text-neon-blue mb-4">{<feature.icon className="w-8 h-8" />}</div>
-              <h3 className="text-xl font-semibold mb-2 gradient-text">{feature.title}</h3>
-              <p className="text-gray-400">{feature.description}</p>
+              <div className="text-neon-blue mb-4">
+                {<feature.icon className="w-6 md:w-8 h-6 md:h-8" />}
+              </div>
+              <h3 className="text-lg md:text-xl font-semibold mb-2 gradient-text">
+                {feature.title}
+              </h3>
+              <p className="text-sm md:text-base text-gray-400">{feature.description}</p>
             </motion.div>
           ))}
         </div>

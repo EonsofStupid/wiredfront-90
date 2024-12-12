@@ -14,7 +14,7 @@ const defaultPreferences: UserPreferences = {
 };
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
-  const { preferences, updatePreferences: updateStore } = useSettingsStore();
+  const { preferences: storePreferences, updatePreferences: updateStore } = useSettingsStore();
 
   const updatePreferences = useCallback((updates: Partial<UserPreferences>) => {
     updateStore(updates);
@@ -24,10 +24,19 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     updateStore(defaultPreferences);
   }, [updateStore]);
 
+  const preferences: UserPreferences = {
+    theme: storePreferences?.theme ?? defaultPreferences.theme,
+    language: storePreferences?.language ?? defaultPreferences.language,
+    defaultView: storePreferences?.defaultView ?? defaultPreferences.defaultView,
+    refreshInterval: storePreferences?.refreshInterval ?? defaultPreferences.refreshInterval,
+    notifications: storePreferences?.notifications ?? defaultPreferences.notifications,
+    timezone: storePreferences?.timezone ?? defaultPreferences.timezone,
+  };
+
   return (
     <SettingsContext.Provider
       value={{
-        preferences: defaultPreferences,
+        preferences,
         updatePreferences,
         resetPreferences,
       }}
