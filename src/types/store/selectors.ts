@@ -1,16 +1,31 @@
-import type { StoreSelector } from './index';
-import type { User, NotificationSettings } from './common';
-import type { DashboardMetric, DashboardLayout } from '../dashboard';
-import type { CacheSettings } from './settings';
+import type { UIStore } from './ui';
+import type { AuthStore } from './auth';
+import type { DataStore } from './data';
+import type { SettingsStore } from './settings';
+import { useUIStore } from '@/stores/ui';
+import { useAuthStore } from '@/stores/auth';
+import { useDataStore } from '@/stores/data';
+import { useSettingsStore } from '@/stores/settings';
+
+export type StoreSelector<T> = (state: any) => T;
 
 export interface StoreSelectors {
-  selectTheme: StoreSelector<'light' | 'dark'>;
-  selectUser: StoreSelector<User | null>;
-  selectMetrics: StoreSelector<DashboardMetric[]>;
-  selectDashboardLayout: StoreSelector<DashboardLayout>;
-  selectNotificationSettings: StoreSelector<NotificationSettings>;
-  selectCacheSettings: StoreSelector<CacheSettings>;
+  selectTheme: StoreSelector<UIStore['theme']>;
+  selectUser: StoreSelector<AuthStore['user']>;
+  selectMetrics: StoreSelector<DataStore['metrics']>;
+  selectDashboardLayout: StoreSelector<SettingsStore['dashboardLayout']>;
+  selectNotificationSettings: StoreSelector<SettingsStore['notifications']>;
+  selectCacheSettings: StoreSelector<SettingsStore['cache']>;
 }
+
+export const selectors: StoreSelectors = {
+  selectTheme: () => useUIStore.getState().theme,
+  selectUser: () => useAuthStore.getState().user,
+  selectMetrics: () => Object.values(useDataStore.getState().metrics),
+  selectDashboardLayout: () => useSettingsStore.getState().dashboardLayout,
+  selectNotificationSettings: () => useSettingsStore.getState().notifications,
+  selectCacheSettings: () => useSettingsStore.getState().cache,
+};
 
 // Custom hooks for accessing store data
 export const useTheme = () => useUIStore((state) => state.theme);
@@ -19,12 +34,3 @@ export const useMetrics = () => useDataStore((state) => Object.values(state.metr
 export const useDashboardLayout = () => useSettingsStore((state) => state.dashboardLayout);
 export const useNotificationSettings = () => useSettingsStore((state) => state.notifications);
 export const useCacheSettings = () => useSettingsStore((state) => state.cache);
-
-export const selectors: StoreSelectors = {
-  selectTheme: (state) => useUIStore.getState().theme,
-  selectUser: (state) => useAuthStore.getState().user,
-  selectMetrics: (state) => Object.values(useDataStore.getState().metrics),
-  selectDashboardLayout: (state) => useSettingsStore.getState().dashboardLayout,
-  selectNotificationSettings: (state) => useSettingsStore.getState().notifications,
-  selectCacheSettings: (state) => useSettingsStore.getState().cache,
-};
