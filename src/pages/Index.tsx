@@ -15,6 +15,9 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
+import { NeuralParticles } from "@/components/ai-elements/NeuralParticles";
+import { ProcessingRings } from "@/components/ai-elements/ProcessingRings";
+import { DataStream } from "@/components/ai-elements/DataStream";
 
 const Index = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -33,6 +36,10 @@ const Index = () => {
     <div className="min-h-screen grid-bg">
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden px-4">
+        <NeuralParticles />
+        <ProcessingRings />
+        <DataStream />
+        
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute inset-0 bg-gradient-to-b from-dark via-dark/50 to-dark" />
         </div>
