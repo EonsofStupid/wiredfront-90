@@ -12,7 +12,7 @@ export type StoreSelector<T> = (state: any) => T;
 export interface StoreSelectors {
   selectTheme: StoreSelector<UIStore['theme']>;
   selectUser: StoreSelector<AuthStore['user']>;
-  selectMetrics: StoreSelector<DataStore['metrics']>;
+  selectMetrics: StoreSelector<Record<string, DataStore['metrics']>>;
   selectDashboardLayout: StoreSelector<SettingsStore['dashboardLayout']>;
   selectNotificationSettings: StoreSelector<SettingsStore['notifications']>;
   selectCacheSettings: StoreSelector<SettingsStore['cache']>;
@@ -21,7 +21,7 @@ export interface StoreSelectors {
 export const selectors: StoreSelectors = {
   selectTheme: () => useUIStore.getState().theme,
   selectUser: () => useAuthStore.getState().user,
-  selectMetrics: () => Object.values(useDataStore.getState().metrics),
+  selectMetrics: () => useDataStore.getState().metrics,
   selectDashboardLayout: () => useSettingsStore.getState().dashboardLayout,
   selectNotificationSettings: () => useSettingsStore.getState().notifications,
   selectCacheSettings: () => useSettingsStore.getState().cache,
@@ -30,7 +30,7 @@ export const selectors: StoreSelectors = {
 // Custom hooks for accessing store data
 export const useTheme = () => useUIStore((state) => state.theme);
 export const useUser = () => useAuthStore((state) => state.user);
-export const useMetrics = () => useDataStore((state) => Object.values(state.metrics));
+export const useMetrics = () => useDataStore((state) => state.metrics);
 export const useDashboardLayout = () => useSettingsStore((state) => state.dashboardLayout);
 export const useNotificationSettings = () => useSettingsStore((state) => state.notifications);
 export const useCacheSettings = () => useSettingsStore((state) => state.cache);
