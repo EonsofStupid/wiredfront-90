@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { motion } from "framer-motion";
 
 interface AISwirlProps {
-  onClick: () => void;
+  onExpand: () => void;
 }
 
-export const AISwirl = ({ onClick }: AISwirlProps) => {
+export const AISwirl = ({ onExpand }: AISwirlProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -16,42 +17,68 @@ export const AISwirl = ({ onClick }: AISwirlProps) => {
 
     // Initialize Three.js scene
     sceneRef.current = new THREE.Scene();
-    cameraRef.current = new THREE.PerspectiveCamera(
-      75,
-      1,
-      0.1,
-      1000
-    );
-    rendererRef.current = new THREE.WebGLRenderer({ alpha: true });
-    rendererRef.current.setSize(50, 50);
+    cameraRef.current = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    rendererRef.current = new THREE.WebGLRenderer({ 
+      alpha: true,
+      antialias: true 
+    });
+    
+    rendererRef.current.setSize(80, 80);
     containerRef.current.appendChild(rendererRef.current.domElement);
 
-    // Create swirl geometry
-    const curve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-2, 0, 0),
-      new THREE.Vector3(0, 2, 0),
-      new THREE.Vector3(2, 0, 0),
-      new THREE.Vector3(0, -2, 0),
-      new THREE.Vector3(-2, 0, 0),
-    ]);
+    // Create enhanced swirl geometry
+    const points = [];
+    for (let i = 0; i <= 100; i++) {
+      const angle = (i / 100) * Math.PI * 4;
+      const radius = 2 + Math.sin(angle * 2) * 0.5;
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      const z = (i / 100) * 4 - 2;
+      points.push(new THREE.Vector3(x, y, z));
+    }
 
-    const points = curve.getPoints(50);
-    const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    const material = new THREE.LineBasicMaterial({
-      color: 0xff00ff,
-      transparent: true,
-      opacity: 0.8,
+    const curve = new THREE.CatmullRomCurve3(points);
+    const geometry = new THREE.TubeGeometry(curve, 100, 0.1, 8, false);
+    
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        time: { value: 0 },
+        color1: { value: new THREE.Color("#00FFFF") },
+        color2: { value: new THREE.Color("#FF007F") }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float time;
+        uniform vec3 color1;
+        uniform vec3 color2;
+        varying vec2 vUv;
+        
+        void main() {
+          vec3 color = mix(color1, color2, sin(vUv.x * 10.0 + time) * 0.5 + 0.5);
+          gl_FragColor = vec4(color, 0.8);
+        }
+      `,
+      transparent: true
     });
 
-    const swirl = new THREE.Line(geometry, material);
+    const swirl = new THREE.Mesh(geometry, material);
     sceneRef.current.add(swirl);
 
     cameraRef.current.position.z = 5;
 
     // Animation loop
+    let time = 0;
     const animate = () => {
       requestAnimationFrame(animate);
       if (sceneRef.current && cameraRef.current && rendererRef.current) {
+        time += 0.01;
+        material.uniforms.time.value = time;
         swirl.rotation.z += 0.01;
         rendererRef.current.render(sceneRef.current, cameraRef.current);
       }
@@ -67,11 +94,13 @@ export const AISwirl = ({ onClick }: AISwirlProps) => {
   }, []);
 
   return (
-    <div
+    <motion.div
       ref={containerRef}
-      onClick={onClick}
-      className="cursor-pointer hover:scale-110 transition-transform"
-      style={{ width: 50, height: 50 }}
+      onClick={onExpand}
+      className="fixed bottom-4 right-4 cursor-pointer"
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.95 }}
+      style={{ width: 80, height: 80 }}
     />
   );
 };
