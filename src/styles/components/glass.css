@@ -1,8 +1,7 @@
 @layer components {
   .glass-card {
-    @apply bg-dark-lighter/30 backdrop-blur-md border border-white/10 rounded-xl shadow-xl;
-    position: relative;
-    overflow: hidden;
+    @apply relative bg-dark-lighter/30 backdrop-blur-md border border-white/10 rounded-xl shadow-xl overflow-hidden;
+    transform-style: preserve-3d;
   }
   
   .glass-card::before {
@@ -17,48 +16,38 @@
     );
     opacity: 0.1;
     pointer-events: none;
+    mix-blend-mode: overlay;
   }
   
-  .neon-glow {
-    @apply relative;
+  .glass-card-enhanced {
+    @apply glass-card;
+    transform-style: preserve-3d;
+    transition: all 0.3s ease-in-out;
   }
   
-  .neon-glow::after {
-    @apply content-[''] absolute inset-0 rounded-xl;
-    box-shadow: 0 0 20px theme('colors.neon.blue'), 
-                0 0 40px theme('colors.neon.pink');
-    opacity: 0.5;
-    z-index: -1;
+  .glass-card-enhanced:hover {
+    transform: translateY(-5px);
+    box-shadow: 
+      0 0 20px theme('colors.neon.blue/20'),
+      0 0 40px theme('colors.neon.pink/20');
   }
-
-  .neon-border {
-    @apply relative rounded-xl overflow-hidden;
-  }
-
-  .neon-border::before {
+  
+  .glass-card-enhanced::after {
     content: '';
     position: absolute;
-    inset: -2px;
-    background: linear-gradient(45deg, 
-      theme('colors.neon.blue'), 
-      theme('colors.neon.pink'), 
-      theme('colors.neon.violet'),
-      theme('colors.neon.teal')
+    inset: 0;
+    background: linear-gradient(
+      45deg,
+      theme('colors.neon.blue/10'),
+      transparent 40%,
+      transparent 60%,
+      theme('colors.neon.pink/10')
     );
-    animation: rotate 4s linear infinite;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
   }
-
-  .neon-border::after {
-    content: '';
-    position: absolute;
-    inset: 2px;
-    background: theme('colors.dark.DEFAULT');
-    border-radius: inherit;
-    z-index: 0;
-  }
-
-  .neon-border > * {
-    position: relative;
-    z-index: 1;
+  
+  .glass-card-enhanced:hover::after {
+    opacity: 1;
   }
 }
