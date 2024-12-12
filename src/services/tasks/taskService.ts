@@ -2,6 +2,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from "uuid";
 import type { Task, TaskConfig } from "@/types/tasks/core";
 import type { TaskStatusUpdate } from "@/types/tasks/status";
+import type { Database } from "@/integrations/supabase/types";
+
+type TaskInsert = Database["public"]["Tables"]["ai_tasks"]["Insert"];
 
 const mapToSnakeCase = (data: Record<string, any>): Record<string, any> => {
   const snakeCase: Record<string, any> = {};
@@ -22,17 +25,17 @@ const mapToCamelCase = (data: Record<string, any>): Record<string, any> => {
 };
 
 export const createTask = async (config: TaskConfig): Promise<Task> => {
-  const taskData = mapToSnakeCase({
-    taskId: uuidv4(),
+  const taskData: TaskInsert = {
+    task_id: uuidv4(),
     type: config.type,
     prompt: config.prompt,
     provider: config.provider,
     status: 'pending',
     priority: config.priority || 5,
-    scheduledFor: config.scheduledFor?.toISOString(),
+    scheduled_for: config.scheduledFor?.toISOString(),
     metadata: config.metadata || {},
-    retryCount: 0,
-  });
+    retry_count: 0,
+  };
 
   const { data, error } = await supabase
     .from('ai_tasks')
@@ -66,13 +69,13 @@ export const updateTaskStatus = async (
   taskId: string,
   update: TaskStatusUpdate
 ): Promise<Task> => {
-  const updateData = mapToSnakeCase({
+  const updateData = {
     status: update.status,
     result: update.result,
-    errorMessage: update.errorMessage,
-    completedAt: update.completedAt?.toISOString(),
-    updatedAt: new Date().toISOString(),
-  });
+    error_message: update.errorMessage,
+    completed_at: update.completedAt?.toISOString(),
+    updated_at: new Date().toISOString(),
+  };
 
   const { data, error } = await supabase
     .from('ai_tasks')
