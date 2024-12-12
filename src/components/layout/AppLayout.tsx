@@ -10,9 +10,9 @@ interface AppLayoutProps {
 
 export const AppLayout = ({ children }: AppLayoutProps) => {
   return (
-    <div className="h-screen flex flex-col">
+    <div className="app-layout">
       <TopBar />
-      <div className="flex-1 flex">
+      <div className="app-content">
         <FileBar position="left" />
         <ResizablePanelGroup direction="horizontal" className="flex-1">
           <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
@@ -20,9 +20,9 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
           </ResizablePanel>
           <ResizableHandle />
           <ResizablePanel defaultSize={80}>
-            <div className="h-full overflow-auto">
+            <main className="h-full overflow-auto">
               {children}
-            </div>
+            </main>
           </ResizablePanel>
         </ResizablePanelGroup>
         <FileBar position="right" />
