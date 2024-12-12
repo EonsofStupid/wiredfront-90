@@ -38,7 +38,7 @@ export function AISettings() {
 
         if (error && error.code !== 'PGRST116') throw error;
         if (data) {
-          setSettings(data);
+          setSettings(data as AISettingsData);
         }
       } catch (error) {
         console.error('Error initializing settings:', error);
@@ -109,7 +109,7 @@ export function AISettings() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="gemini">Google Gemini</SelectItem>
-                  <SelectItem value="openai">OpenAI</SelectItem>
+                  <SelectItem value="chatgpt">OpenAI</SelectItem>
                   <SelectItem value="anthropic">Anthropic</SelectItem>
                   <SelectItem value="mistral">Mistral</SelectItem>
                 </SelectContent>
@@ -143,13 +143,13 @@ export function AISettings() {
               <Label>Chat Provider</Label>
               <Select
                 value={settings.provider}
-                onValueChange={(value) => setSettings({ ...settings, provider: value })}
+                onValueChange={handleProviderChange}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select provider" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="openai">OpenAI GPT-4</SelectItem>
+                  <SelectItem value="chatgpt">OpenAI GPT-4</SelectItem>
                   <SelectItem value="anthropic">Anthropic Claude</SelectItem>
                   <SelectItem value="gemini">Google Gemini</SelectItem>
                 </SelectContent>
@@ -159,7 +159,7 @@ export function AISettings() {
             <div className="grid gap-2">
               <Label>Temperature ({settings.temperature})</Label>
               <Slider
-                value={[settings.temperature]}
+                value={[settings.temperature || 0.7]}
                 min={0}
                 max={1}
                 step={0.1}
@@ -186,13 +186,13 @@ export function AISettings() {
               <Label>Image Generation Provider</Label>
               <Select
                 value={settings.provider}
-                onValueChange={(value) => setSettings({ ...settings, provider: value })}
+                onValueChange={handleProviderChange}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select provider" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="openai">DALL-E 3</SelectItem>
+                  <SelectItem value="chatgpt">DALL-E 3</SelectItem>
                   <SelectItem value="gemini">Gemini Vision</SelectItem>
                 </SelectContent>
               </Select>
