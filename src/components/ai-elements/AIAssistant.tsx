@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, Loader, X, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { processWithHuggingFace } from "@/utils/ai/aiIntegrations";
 import { useToast } from "@/components/ui/use-toast";
+import { generateGeminiResponse, initializeGemini } from "@/utils/ai/geminiIntegrations";
 
 export const AIAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,19 +13,32 @@ export const AIAssistant = () => {
   const [response, setResponse] = useState("");
   const { toast } = useToast();
 
+  useEffect(() => {
+    initializeGemini().then((success) => {
+      if (!success) {
+        toast({
+          title: "AI Initialization Error",
+          description: "Failed to initialize Gemini AI",
+          variant: "destructive",
+        });
+      }
+    });
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
 
     setIsProcessing(true);
     try {
-      const result = await processWithHuggingFace(input);
-      setResponse(JSON.stringify(result.result, null, 2));
+      const result = await generateGeminiResponse(input);
+      setResponse(result);
       toast({
-        title: "AI Processing Complete",
+        title: "AI Response Generated",
         description: "Response generated successfully",
       });
     } catch (error) {
+      console.error('Error generating response:', error);
       toast({
         title: "Processing Error",
         description: "Failed to process your request",
@@ -50,7 +63,7 @@ export const AIAssistant = () => {
           <div className="flex items-center justify-between p-4 bg-dark-lighter/50">
             <div className="flex items-center gap-2">
               <Bot className="text-neon-blue w-5 h-5" />
-              <span className="text-sm font-medium">AI Assistant</span>
+              <span className="text-sm font-medium">Gemini AI Assistant</span>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -93,14 +106,14 @@ export const AIAssistant = () => {
                   {isProcessing ? (
                     <Loader className="w-4 h-4 animate-spin mr-2" />
                   ) : (
-                    "Process"
+                    "Ask Gemini"
                   )}
                 </Button>
               </form>
 
               {response && (
                 <div className="mt-4 p-2 rounded-md bg-dark-lighter/30 border border-white/10">
-                  <pre className="text-xs overflow-auto max-h-40">
+                  <pre className="text-xs overflow-auto max-h-40 whitespace-pre-wrap">
                     {response}
                   </pre>
                 </div>
