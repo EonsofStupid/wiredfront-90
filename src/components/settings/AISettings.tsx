@@ -8,27 +8,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-
-interface AISettingsData {
-  provider: string;
-  api_key: string;
-  model_name: string;
-  max_tokens: number;
-  temperature: number;
-  is_active: boolean;
-  user_id: string;
-}
+import type { AISettingsData, AIProvider } from "@/types/settings/ai";
 
 export function AISettings() {
   const { toast } = useToast();
   const [settings, setSettings] = useState<AISettingsData>({
-    provider: 'gemini',
-    api_key: '',
-    model_name: '',
+    provider: "gemini",
+    api_key: "",
+    model_name: "",
     max_tokens: 1000,
     temperature: 0.7,
     is_active: true,
-    user_id: ''
+    user_id: ""
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -90,6 +81,10 @@ export function AISettings() {
     return <div>Loading settings...</div>;
   }
 
+  const handleProviderChange = (value: AIProvider) => {
+    setSettings(prev => ({ ...prev, provider: value }));
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-semibold mb-4">AI Provider Settings</h2>
@@ -107,7 +102,7 @@ export function AISettings() {
               <Label>Provider</Label>
               <Select
                 value={settings.provider}
-                onValueChange={(value) => setSettings({ ...settings, provider: value })}
+                onValueChange={handleProviderChange}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select provider" />
@@ -125,7 +120,7 @@ export function AISettings() {
               <Label>API Key</Label>
               <Input
                 type="password"
-                value={settings.api_key}
+                value={settings.api_key || ""}
                 onChange={(e) => setSettings({ ...settings, api_key: e.target.value })}
               />
             </div>
@@ -133,7 +128,7 @@ export function AISettings() {
             <div className="grid gap-2">
               <Label>Model</Label>
               <Input
-                value={settings.model_name}
+                value={settings.model_name || ""}
                 onChange={(e) => setSettings({ ...settings, model_name: e.target.value })}
               />
             </div>
