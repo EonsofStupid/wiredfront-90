@@ -3,9 +3,11 @@ import { useToast } from "@/components/ui/use-toast";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
 
 interface AISettingsData {
   provider: string;
@@ -26,28 +28,24 @@ export function AISettings() {
     max_tokens: 1000,
     temperature: 0.7,
     is_active: true,
-    user_id: '' // Will be set when component mounts
+    user_id: ''
   });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const initializeSettings = async () => {
       try {
-        // Get current user
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('No user found');
-
-        // Update settings with user_id
         setSettings(prev => ({ ...prev, user_id: user.id }));
-
-        // Load existing settings
+        
         const { data, error } = await supabase
           .from('ai_settings')
           .select('*')
           .eq('user_id', user.id)
           .single();
 
-        if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "no rows returned" error
+        if (error && error.code !== 'PGRST116') throw error;
         if (data) {
           setSettings(data);
         }
@@ -96,70 +94,133 @@ export function AISettings() {
     <div className="space-y-6">
       <h2 className="text-lg font-semibold mb-4">AI Provider Settings</h2>
       
-      <div className="space-y-4">
-        <div className="grid gap-2">
-          <Label htmlFor="provider">AI Provider</Label>
-          <Select
-            value={settings.provider}
-            onValueChange={(value) => setSettings({ ...settings, provider: value })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select provider" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="gemini">Google Gemini</SelectItem>
-              <SelectItem value="chatgpt">ChatGPT</SelectItem>
-              <SelectItem value="huggingface">Hugging Face</SelectItem>
-              <SelectItem value="anthropic">Anthropic</SelectItem>
-              <SelectItem value="mistral">Mistral</SelectItem>
-              <SelectItem value="cohere">Cohere</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <Tabs defaultValue="text" className="w-full">
+        <TabsList>
+          <TabsTrigger value="text">Text Generation</TabsTrigger>
+          <TabsTrigger value="chat">Chat Models</TabsTrigger>
+          <TabsTrigger value="image">Image Generation</TabsTrigger>
+        </TabsList>
 
-        <div className="grid gap-2">
-          <Label htmlFor="api_key">API Key</Label>
-          <Input
-            id="api_key"
-            type="password"
-            value={settings.api_key || ''}
-            onChange={(e) => setSettings({ ...settings, api_key: e.target.value })}
-          />
-        </div>
+        <TabsContent value="text">
+          <Card className="p-4 space-y-4">
+            <div className="grid gap-2">
+              <Label>Provider</Label>
+              <Select
+                value={settings.provider}
+                onValueChange={(value) => setSettings({ ...settings, provider: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="gemini">Google Gemini</SelectItem>
+                  <SelectItem value="openai">OpenAI</SelectItem>
+                  <SelectItem value="anthropic">Anthropic</SelectItem>
+                  <SelectItem value="mistral">Mistral</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className="grid gap-2">
-          <Label htmlFor="model_name">Model Name</Label>
-          <Input
-            id="model_name"
-            value={settings.model_name || ''}
-            onChange={(e) => setSettings({ ...settings, model_name: e.target.value })}
-          />
-        </div>
+            <div className="grid gap-2">
+              <Label>API Key</Label>
+              <Input
+                type="password"
+                value={settings.api_key}
+                onChange={(e) => setSettings({ ...settings, api_key: e.target.value })}
+              />
+            </div>
 
-        <div className="grid gap-2">
-          <Label>Temperature ({settings.temperature})</Label>
-          <Slider
-            value={[settings.temperature]}
-            min={0}
-            max={1}
-            step={0.1}
-            onValueChange={([value]) => setSettings({ ...settings, temperature: value })}
-          />
-        </div>
+            <div className="grid gap-2">
+              <Label>Model</Label>
+              <Input
+                value={settings.model_name}
+                onChange={(e) => setSettings({ ...settings, model_name: e.target.value })}
+              />
+            </div>
 
-        <div className="grid gap-2">
-          <Label>Max Tokens</Label>
-          <Input
-            type="number"
-            value={settings.max_tokens}
-            onChange={(e) => setSettings({ ...settings, max_tokens: parseInt(e.target.value) })}
-          />
-        </div>
+            <Button onClick={saveSettings}>Save Text Generation Settings</Button>
+          </Card>
+        </TabsContent>
 
-        <Button onClick={saveSettings} className="w-full">
-          Save Settings
-        </Button>
-      </div>
+        <TabsContent value="chat">
+          <Card className="p-4 space-y-4">
+            <div className="grid gap-2">
+              <Label>Chat Provider</Label>
+              <Select
+                value={settings.provider}
+                onValueChange={(value) => setSettings({ ...settings, provider: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="openai">OpenAI GPT-4</SelectItem>
+                  <SelectItem value="anthropic">Anthropic Claude</SelectItem>
+                  <SelectItem value="gemini">Google Gemini</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Temperature ({settings.temperature})</Label>
+              <Slider
+                value={[settings.temperature]}
+                min={0}
+                max={1}
+                step={0.1}
+                onValueChange={([value]) => setSettings({ ...settings, temperature: value })}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Max Tokens</Label>
+              <Input
+                type="number"
+                value={settings.max_tokens}
+                onChange={(e) => setSettings({ ...settings, max_tokens: parseInt(e.target.value) })}
+              />
+            </div>
+
+            <Button onClick={saveSettings}>Save Chat Settings</Button>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="image">
+          <Card className="p-4 space-y-4">
+            <div className="grid gap-2">
+              <Label>Image Generation Provider</Label>
+              <Select
+                value={settings.provider}
+                onValueChange={(value) => setSettings({ ...settings, provider: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="openai">DALL-E 3</SelectItem>
+                  <SelectItem value="gemini">Gemini Vision</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Image Size</Label>
+              <Select defaultValue="1024x1024">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select size" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="256x256">256x256</SelectItem>
+                  <SelectItem value="512x512">512x512</SelectItem>
+                  <SelectItem value="1024x1024">1024x1024</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button onClick={saveSettings}>Save Image Generation Settings</Button>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

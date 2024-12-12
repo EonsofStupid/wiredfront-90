@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
 import { SettingsProvider } from "@/contexts/SettingsContext";
+import { AppLayout } from "@/components/layout/AppLayout";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
@@ -24,11 +25,13 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/settings" element={<Settings />} />
-            </Routes>
+            <AppLayout>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/settings" element={<Settings />} />
+              </Routes>
+            </AppLayout>
           </BrowserRouter>
         </TooltipProvider>
       </SettingsProvider>
