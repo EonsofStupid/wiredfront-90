@@ -5,15 +5,7 @@ import type { TaskStatusUpdate } from "@/types/tasks/status";
 import type { Database } from "@/integrations/supabase/types";
 
 type TaskInsert = Database["public"]["Tables"]["ai_tasks"]["Insert"];
-
-const mapToSnakeCase = (data: Record<string, any>): Record<string, any> => {
-  const snakeCase: Record<string, any> = {};
-  Object.entries(data).forEach(([key, value]) => {
-    const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-    snakeCase[snakeKey] = value;
-  });
-  return snakeCase;
-};
+type Json = Database["public"]["Tables"]["ai_tasks"]["Insert"]["metadata"];
 
 const mapToCamelCase = (data: Record<string, any>): Record<string, any> => {
   const camelCase: Record<string, any> = {};
@@ -33,7 +25,7 @@ export const createTask = async (config: TaskConfig): Promise<Task> => {
     status: 'pending',
     priority: config.priority || 5,
     scheduled_for: config.scheduledFor?.toISOString(),
-    metadata: config.metadata || {},
+    metadata: config.metadata as Json || {},
     retry_count: 0,
   };
 
