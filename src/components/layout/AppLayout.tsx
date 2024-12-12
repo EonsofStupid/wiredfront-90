@@ -2,6 +2,7 @@ import { Sidebar } from "@/components/ui/sidebar";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { FileBar } from "@/components/layout/FileBar";
 import { StatusBar } from "@/components/layout/StatusBar";
+import { TopBar } from "@/components/layout/TopBar";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -10,7 +11,7 @@ interface AppLayoutProps {
 export const AppLayout = ({ children }: AppLayoutProps) => {
   return (
     <div className="h-screen flex flex-col">
-      <FileBar position="top" />
+      <TopBar />
       <div className="flex-1 flex">
         <FileBar position="left" />
         <ResizablePanelGroup direction="horizontal" className="flex-1">
