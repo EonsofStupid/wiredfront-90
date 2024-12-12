@@ -42,7 +42,7 @@ const defaultCacheSettings: CacheSettings = {
   },
 };
 
-// Initialize store with default values
+// Initialize store with default values and proper typing
 const initialState = {
   preferences: {
     defaultView: 'dashboard',
@@ -56,8 +56,8 @@ const initialState = {
   notifications: {
     email: true,
     push: true,
-    frequency: 'daily',
-    types: ['alerts', 'updates'],
+    frequency: 'daily' as const, // Explicitly type as literal
+    types: ['alerts', 'updates'] as const,
   },
   cache: defaultCacheSettings,
 };
