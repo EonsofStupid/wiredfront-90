@@ -1,11 +1,11 @@
 /* Base */
 .ai-assistant {
-  @apply fixed z-50 transition-all duration-300;
+  @apply relative transition-all duration-300;
 }
 
 /* Block */
 .ai-assistant__container {
-  @apply glass-card neon-border overflow-hidden;
+  @apply glass-card neon-border overflow-hidden rounded-lg;
 }
 
 .ai-assistant__handle {
@@ -13,7 +13,7 @@
 }
 
 .ai-assistant__content {
-  @apply p-4 space-y-4;
+  @apply p-4 space-y-4 h-[calc(100%-3rem)] overflow-y-auto;
 }
 
 /* Elements */
@@ -35,7 +35,7 @@
 
 /* Modifiers */
 .ai-assistant--minimized {
-  @apply w-auto;
+  @apply h-auto;
 }
 
 .ai-assistant--dragging {

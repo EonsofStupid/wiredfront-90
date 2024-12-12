@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,32 +18,13 @@ export const AIAssistant = () => {
   const [response, setResponse] = useState("");
   const [mode, setMode] = useState<AIMode>("chat");
   const [provider, setProvider] = useState<AIProvider>("gemini");
-  const [isDragging, setIsDragging] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
   const constraintsRef = useRef(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const loadUserSettings = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: settings } = await supabase
-            .from('ai_settings')
-            .select('*')
-            .eq('user_id', user.id)
-            .single();
-          
-          if (settings) {
-            setProvider(settings.provider as AIProvider);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading user settings:', error);
-      }
-    };
-
-    loadUserSettings();
-  }, []);
+  const handleDragEnd = (_e: any, info: any) => {
+    setPosition({ x: position.x + info.offset.x, y: position.y + info.offset.y });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,30 +51,29 @@ export const AIAssistant = () => {
   };
 
   return (
-    <motion.div ref={constraintsRef} className="fixed inset-0 pointer-events-none overflow-hidden">
+    <div ref={constraintsRef} className="fixed inset-0 pointer-events-none">
       <AnimatePresence>
         <motion.div
           drag
-          dragConstraints={constraintsRef}
-          dragElastic={0.1}
           dragMomentum={false}
-          onDragStart={() => setIsDragging(true)}
-          onDragEnd={() => setIsDragging(false)}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          className={`ai-assistant pointer-events-auto ${isMinimized ? 'ai-assistant--minimized' : ''} ${
-            isDragging ? 'ai-assistant--dragging' : ''
-          }`}
-          style={{
-            position: 'fixed',
-            bottom: '2rem',
-            right: '2rem',
-            width: isMinimized ? 'auto' : '24rem',
+          dragConstraints={{
+            top: 0,
+            left: 0,
+            right: window.innerWidth - 400, // Adjust based on assistant width
+            bottom: window.innerHeight - 600, // Adjust based on assistant height
           }}
+          dragElastic={0}
+          onDragEnd={handleDragEnd}
+          animate={{
+            x: position.x,
+            y: position.y,
+          }}
+          className={`fixed bottom-8 right-8 w-96 pointer-events-auto z-50
+            ${isMinimized ? 'h-auto' : 'h-[600px]'}`}
         >
-          <div className="ai-assistant__container">
-            <div className="ai-assistant__handle" />
+          <div className="ai-assistant glass-card neon-border w-full h-full overflow-hidden rounded-lg shadow-xl">
+            <div className="cursor-move bg-dark-lighter/30 hover:bg-dark-lighter/50 h-6" />
+            
             <AIHeader
               isMinimized={isMinimized}
               onMinimize={() => setIsMinimized(!isMinimized)}
@@ -101,11 +81,11 @@ export const AIAssistant = () => {
             />
 
             {!isMinimized && (
-              <div className="ai-assistant__content">
-                <AIModeSelector mode={mode} onModeChange={(value) => setMode(value)} />
+              <div className="p-4 space-y-4 h-[calc(100%-3rem)] overflow-y-auto">
+                <AIModeSelector mode={mode} onModeChange={setMode} />
                 <AIProviderSelector
                   provider={provider}
-                  onProviderChange={(value) => setProvider(value)}
+                  onProviderChange={setProvider}
                 />
                 <AIInputForm
                   input={input}
@@ -120,6 +100,6 @@ export const AIAssistant = () => {
           </div>
         </motion.div>
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 };
