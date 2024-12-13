@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { AISwirl } from "./AISwirl";
+import { CyberNebula } from "./CyberNebula";
 import { AITaskPanel } from "./AITaskPanel";
 import { AIPersonalityConfig } from "./AIPersonalityConfig";
 import { AIPermissions } from "./AIPermissions";
@@ -13,7 +13,7 @@ export const AIInterface = () => {
   return (
     <div className="fixed inset-0 pointer-events-none">
       {!isExpanded ? (
-        <AISwirl onExpand={() => setIsExpanded(true)} />
+        <CyberNebula onExpand={() => setIsExpanded(true)} />
       ) : (
         <motion.div
           initial={{ opacity: 0 }}
