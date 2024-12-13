@@ -1,0 +1,72 @@
+@layer components {
+  /* Base Glass Effect */
+  .glass-effect {
+    @apply relative bg-dark-lighter/30 backdrop-blur-md border border-white/10 rounded-xl shadow-xl overflow-hidden;
+    transform-style: preserve-3d;
+  }
+  
+  /* Standard Glass Card */
+  .glass-card {
+    @apply glass-effect;
+  }
+  
+  /* Enhanced Glass Card with Hover Effects */
+  .glass-card-enhanced {
+    @apply glass-effect transition-all duration-300;
+  }
+  
+  .glass-card-enhanced:hover {
+    @apply transform -translate-y-1;
+    box-shadow: 
+      0 0 20px theme('colors.neon.blue/20'),
+      0 0 40px theme('colors.neon.pink/20');
+  }
+
+  /* Neon Border Variant */
+  .glass-card-neon {
+    @apply glass-effect;
+    box-shadow: 
+      0 0 10px theme('colors.neon.blue/30'),
+      inset 0 0 10px theme('colors.neon.blue/20');
+  }
+
+  /* Interactive Glass Card */
+  .glass-card-interactive {
+    @apply glass-effect cursor-pointer transition-all duration-300;
+  }
+  
+  .glass-card-interactive:hover {
+    @apply bg-dark-lighter/40 border-white/20;
+    transform: translateY(-2px) scale(1.01);
+  }
+
+  /* Gradient Overlay Effect */
+  .glass-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom right,
+      theme('colors.neon.blue/5'),
+      transparent,
+      theme('colors.neon.pink/5')
+    );
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+
+  /* Dark Glass Variant */
+  .glass-card-dark {
+    @apply glass-effect bg-dark-lighter/50;
+  }
+
+  /* Light Glass Variant */
+  .glass-card-light {
+    @apply glass-effect bg-white/10;
+  }
+
+  /* Minimal Glass Effect */
+  .glass-minimal {
+    @apply backdrop-blur-sm bg-dark-lighter/20 border border-white/5 rounded-lg;
+  }
+}

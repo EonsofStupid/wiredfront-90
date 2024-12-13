@@ -1,0 +1,32 @@
+@layer components {
+  .app-layout {
+    @apply min-h-screen flex flex-col;
+  }
+
+  .app-content {
+    @apply flex-1 flex overflow-hidden relative;
+  }
+
+  .top-bar {
+    @apply sticky top-0 z-50 w-full;
+  }
+
+  .status-bar {
+    @apply sticky bottom-0 z-50 w-full;
+  }
+
+  .sidebar {
+    @apply h-full overflow-y-auto;
+  }
+
+  .main-content {
+    @apply flex-1 overflow-y-auto;
+  }
+
+  .grid-bg {
+    background-size: 50px 50px;
+    background-image: 
+      linear-gradient(to right, theme('colors.neon.blue/0.1') 1px, transparent 1px),
+      linear-gradient(to bottom, theme('colors.neon.pink/0.1') 1px, transparent 1px);
+  }
+}

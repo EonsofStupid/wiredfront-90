@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Critical Base Styles */
+@import './base/reset.css';
+@import './components/layout.css';
+@import './components/glass.css';
+@import './components/text.css';
+@import './components/ai-elements.css';
+@import './animations/effects.css';
+
+/* Z-index Strategy */
+:root {
+  --z-background: -1;
+  --z-base: 0;
+  --z-floating: 10;
+  --z-overlay: 20;
+  --z-modal: 30;
+  --z-tooltip: 40;
+}
+
+/* Global Styles */
+.app-container {
+  @apply relative min-h-screen overflow-hidden;
+  background: theme('colors.dark.DEFAULT');
+}
+
+/* Layering Classes */
+.layer-background {
+  @apply fixed inset-0;
+  z-index: var(--z-background);
+}
+
+.layer-base {
+  @apply relative;
+  z-index: var(--z-base);
+}
+
+.layer-floating {
+  @apply fixed pointer-events-none;
+  z-index: var(--z-floating);
+}
+
+.layer-overlay {
+  @apply fixed pointer-events-none;
+  z-index: var(--z-overlay);
+}
+
+/* Performance Optimizations */
+.gpu-accelerated {
+  @apply transform-gpu;
+  will-change: transform, opacity;
+}
+
+.optimize-animation {
+  @apply transition-transform transition-opacity;
+  backface-visibility: hidden;
+}
+
+/* Enhanced Glass Effects */
+.glass-effect {
+  @apply backdrop-blur-lg bg-dark-lighter/30 border border-white/10;
+  transform-style: preserve-3d;
+}
+
+.glass-effect-hover {
+  @apply transition-all duration-300;
+}
+
+.glass-effect-hover:hover {
+  @apply backdrop-blur-xl bg-dark-lighter/40 border-white/20;
+  transform: translateY(-2px);
+}
