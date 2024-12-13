@@ -1,36 +1,49 @@
 @layer components {
-  .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-neon-blue via-neon-pink to-neon-violet animate-gradient-x;
+  @keyframes rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
-  .neon-border {
-    @apply relative rounded-xl overflow-hidden;
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
   }
 
-  .neon-border::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    background: linear-gradient(45deg, 
-      theme('colors.neon.blue'), 
-      theme('colors.neon.pink'), 
-      theme('colors.neon.violet'),
-      theme('colors.neon.teal')
-    );
-    animation: rotate 4s linear infinite;
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
   }
 
-  .neon-border::after {
-    content: '';
-    position: absolute;
-    inset: 2px;
-    background: theme('colors.dark.DEFAULT');
-    border-radius: inherit;
-    z-index: 0;
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite;
   }
 
-  .neon-border > * {
-    position: relative;
-    z-index: 1;
+  @keyframes glow {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-200 hover:scale-105;
+  }
+
+  .hover-glow {
+    @apply transition-all duration-200;
+  }
+
+  .hover-glow:hover {
+    filter: drop-shadow(0 0 10px theme('colors.neon.blue'))
+           drop-shadow(0 0 20px theme('colors.neon.pink'));
   }
 }

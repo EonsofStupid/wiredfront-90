@@ -30,4 +30,35 @@
     opacity: 0.5;
     z-index: -1;
   }
+
+  .neon-border {
+    @apply relative rounded-xl overflow-hidden;
+  }
+
+  .neon-border::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(45deg, 
+      theme('colors.neon.blue'), 
+      theme('colors.neon.pink'), 
+      theme('colors.neon.violet'),
+      theme('colors.neon.teal')
+    );
+    animation: rotate 4s linear infinite;
+  }
+
+  .neon-border::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: theme('colors.dark.DEFAULT');
+    border-radius: inherit;
+    z-index: 0;
+  }
+
+  .neon-border > * {
+    position: relative;
+    z-index: 1;
+  }
 }

@@ -42,7 +42,7 @@ export const AICore = () => {
               top: position.y - 25,
             }}
           >
-            <AISwirl onClick={handleSwirlClick} />
+            <AISwirl onExpand={handleSwirlClick} />
           </motion.div>
         )}
 

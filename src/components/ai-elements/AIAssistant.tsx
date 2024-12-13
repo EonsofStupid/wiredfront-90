@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +18,8 @@ export const AIAssistant = () => {
   const [response, setResponse] = useState("");
   const [mode, setMode] = useState<AIMode>("chat");
   const [provider, setProvider] = useState<AIProvider>("gemini");
+  const [isDragging, setIsDragging] = useState(false);
+  const constraintsRef = useRef(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -68,41 +70,56 @@ export const AIAssistant = () => {
   };
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 20 }}
-        className={`fixed bottom-4 right-4 z-50 ${
-          isMinimized ? "w-auto" : "w-96"
-        }`}
-      >
-        <div className="glass-card neon-border overflow-hidden">
-          <AIHeader
-            isMinimized={isMinimized}
-            onMinimize={() => setIsMinimized(!isMinimized)}
-            onClose={() => setIsOpen(false)}
-          />
+    <motion.div ref={constraintsRef} className="fixed inset-0 pointer-events-none overflow-hidden">
+      <AnimatePresence>
+        <motion.div
+          drag
+          dragConstraints={constraintsRef}
+          dragElastic={0.1}
+          dragMomentum={false}
+          onDragStart={() => setIsDragging(true)}
+          onDragEnd={() => setIsDragging(false)}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          className={`ai-assistant pointer-events-auto ${isMinimized ? 'ai-assistant--minimized' : ''} ${
+            isDragging ? 'ai-assistant--dragging' : ''
+          }`}
+          style={{
+            position: 'fixed',
+            bottom: '2rem',
+            right: '2rem',
+            width: isMinimized ? 'auto' : '24rem',
+          }}
+        >
+          <div className="ai-assistant__container">
+            <div className="ai-assistant__handle" />
+            <AIHeader
+              isMinimized={isMinimized}
+              onMinimize={() => setIsMinimized(!isMinimized)}
+              onClose={() => setIsOpen(false)}
+            />
 
-          {!isMinimized && (
-            <div className="p-4">
-              <AIModeSelector mode={mode} onModeChange={(value) => setMode(value)} />
-              <AIProviderSelector
-                provider={provider}
-                onProviderChange={(value) => setProvider(value)}
-              />
-              <AIInputForm
-                input={input}
-                mode={mode}
-                isProcessing={isProcessing}
-                onInputChange={setInput}
-                onSubmit={handleSubmit}
-              />
-              <AIResponse response={response} />
-            </div>
-          )}
-        </div>
-      </motion.div>
-    </AnimatePresence>
+            {!isMinimized && (
+              <div className="ai-assistant__content">
+                <AIModeSelector mode={mode} onModeChange={(value) => setMode(value)} />
+                <AIProviderSelector
+                  provider={provider}
+                  onProviderChange={(value) => setProvider(value)}
+                />
+                <AIInputForm
+                  input={input}
+                  mode={mode}
+                  isProcessing={isProcessing}
+                  onInputChange={setInput}
+                  onSubmit={handleSubmit}
+                />
+                <AIResponse response={response} />
+              </div>
+            )}
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    </motion.div>
   );
 };

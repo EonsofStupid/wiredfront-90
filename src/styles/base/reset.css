@@ -27,9 +27,10 @@
   }
   
   body {
-    @apply bg-dark text-foreground antialiased;
-    background: radial-gradient(circle at top right, theme('colors.neon.blue'), transparent 50%),
-                radial-gradient(circle at bottom left, theme('colors.neon.pink'), transparent 50%),
-                theme('colors.dark.DEFAULT');
+    @apply bg-dark text-foreground antialiased min-h-screen;
+  }
+
+  #root {
+    @apply min-h-screen flex flex-col;
   }
 }
