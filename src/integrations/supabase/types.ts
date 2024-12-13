@@ -48,93 +48,6 @@ export type Database = {
         }
         Relationships: []
       }
-      ai_tasks: {
-        Row: {
-          completed_at: string | null
-          created_at: string | null
-          error_message: string | null
-          id: string
-          metadata: Json | null
-          priority: number | null
-          prompt: string
-          provider: Database["public"]["Enums"]["ai_provider"]
-          result: string | null
-          retry_count: number | null
-          scheduled_for: string | null
-          status: string
-          task_id: string
-          type: Database["public"]["Enums"]["task_type"]
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          completed_at?: string | null
-          created_at?: string | null
-          error_message?: string | null
-          id?: string
-          metadata?: Json | null
-          priority?: number | null
-          prompt: string
-          provider: Database["public"]["Enums"]["ai_provider"]
-          result?: string | null
-          retry_count?: number | null
-          scheduled_for?: string | null
-          status: string
-          task_id: string
-          type: Database["public"]["Enums"]["task_type"]
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          completed_at?: string | null
-          created_at?: string | null
-          error_message?: string | null
-          id?: string
-          metadata?: Json | null
-          priority?: number | null
-          prompt?: string
-          provider?: Database["public"]["Enums"]["ai_provider"]
-          result?: string | null
-          retry_count?: number | null
-          scheduled_for?: string | null
-          status?: string
-          task_id?: string
-          type?: Database["public"]["Enums"]["task_type"]
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      user_visual_preferences: {
-        Row: {
-          created_at: string | null
-          id: string
-          prefer_high_performance: boolean | null
-          reduced_motion: boolean | null
-          theme_preference: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          prefer_high_performance?: boolean | null
-          reduced_motion?: boolean | null
-          theme_preference?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          prefer_high_performance?: boolean | null
-          reduced_motion?: boolean | null
-          theme_preference?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
@@ -150,7 +63,6 @@ export type Database = {
         | "anthropic"
         | "mistral"
         | "cohere"
-      task_type: "code" | "analysis" | "automation" | "data"
     }
     CompositeTypes: {
       [_ in never]: never

@@ -1,4 +1,5 @@
 import { Bot, Code, FileText, Loader } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { AIMode } from "@/types/ai";
 
 interface AIInputFormProps {
@@ -32,7 +33,7 @@ export const AIInputForm = ({
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <textarea
-        className="ai-assistant__textarea"
+        className="w-full h-24 p-2 rounded-md bg-dark-lighter/30 border border-white/10 text-sm"
         value={input}
         onChange={(e) => onInputChange(e.target.value)}
         placeholder={
@@ -43,13 +44,9 @@ export const AIInputForm = ({
             : "Describe what you want to do with your files..."
         }
       />
-      <button 
-        type="submit" 
-        className="ai-assistant__button"
-        disabled={isProcessing}
-      >
+      <Button type="submit" className="w-full" disabled={isProcessing}>
         {isProcessing ? (
-          <Loader className="w-4 h-4 animate-spin mr-2 inline" />
+          <Loader className="w-4 h-4 animate-spin mr-2" />
         ) : (
           <>
             {getModeIcon(mode)}
@@ -62,7 +59,7 @@ export const AIInputForm = ({
             </span>
           </>
         )}
-      </button>
+      </Button>
     </form>
   );
 };

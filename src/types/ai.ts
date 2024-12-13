@@ -1,7 +1,7 @@
 import { LucideIcon } from "lucide-react";
 
 export type AIMode = "chat" | "code" | "file";
-export type AIProvider = "gemini" | "chatgpt" | "anthropic" | "huggingface" | "mistral" | "cohere";
+export type AIProvider = "gemini" | "openai" | "anthropic" | "huggingface" | "mistral" | "cohere";
 
 export interface AIProviderConfig {
   id: string;
