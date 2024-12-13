@@ -6,16 +6,16 @@ export const NeuralParticles = () => {
 
   useEffect(() => {
     const generateParticles = () => {
-      const newParticles = Array.from({ length: 15 }, () => ({
+      const newParticles = Array.from({ length: 20 }, () => ({
         x: Math.random() * 100,
         y: Math.random() * 100,
-        size: Math.random() * 3 + 1,
+        size: Math.random() * 4 + 2,
       }));
       setParticles(newParticles);
     };
 
     generateParticles();
-    const interval = setInterval(generateParticles, 2000);
+    const interval = setInterval(generateParticles, 3000);
     return () => clearInterval(interval);
   }, []);
 
@@ -33,13 +33,11 @@ export const NeuralParticles = () => {
           }}
           initial={{ opacity: 0, scale: 0 }}
           animate={{
-            opacity: [0, 0.8, 0],
-            scale: [0, 1.5, 0],
-            x: [0, Math.random() * 20 - 10],
-            y: [0, Math.random() * 20 - 10],
+            opacity: [0, 0.5, 0],
+            scale: [0, 1, 0],
           }}
           transition={{
-            duration: 2,
+            duration: 3,
             ease: "easeInOut",
             repeat: Infinity,
             repeatType: "loop",

@@ -11,8 +11,8 @@ export const AI_PROVIDERS: Record<string, AIProviderConfig> = {
     models: ["gemini-pro", "gemini-pro-vision"],
     icon: Bot
   },
-  chatgpt: {
-    id: "chatgpt",
+  openai: {
+    id: "openai",
     name: "OpenAI GPT-4",
     description: "Advanced language model for natural conversations and complex tasks",
     isEnabled: false,

@@ -10,7 +10,7 @@ export const generateAIResponse = async (
     switch (provider) {
       case "gemini":
         return await generateGeminiResponse(prompt);
-      case "chatgpt":
+      case "openai":
         const { data: openaiResponse, error: openaiError } = await supabase.functions.invoke("generate-with-openai", {
           body: { prompt }
         });
@@ -41,8 +41,7 @@ export const generateAIResponse = async (
         if (cohereError) throw cohereError;
         return cohereResponse.text;
       default:
-        const _exhaustiveCheck: never = provider;
-        throw new Error(`Unsupported provider: ${provider}`);
+        throw new Error("Provider not supported");
     }
   } catch (error) {
     console.error("Error generating AI response:", error);

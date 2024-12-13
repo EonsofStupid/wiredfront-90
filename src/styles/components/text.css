@@ -1,0 +1,34 @@
+@layer components {
+  /* Global text highlight effect */
+  h1, h2, h3, h4, h5, h6, p, a, span, button {
+    transition: color 1.5s ease;
+    background-clip: text;
+    position: relative;
+    cursor: default;
+  }
+
+  h1:hover, h2:hover, h3:hover, h4:hover, h5:hover, h6:hover, 
+  p:hover, a:hover, span:hover, button:hover {
+    color: transparent;
+  }
+
+  h1::after, h2::after, h3::after, h4::after, h5::after, h6::after,
+  p::after, a::after, span::after, button::after {
+    content: attr(data-text);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 100%;
+    color: theme('colors.neon.pink');
+    overflow: hidden;
+    transition: width 1.5s ease;
+    white-space: nowrap;
+  }
+
+  h1:hover::after, h2:hover::after, h3:hover::after, h4:hover::after, 
+  h5:hover::after, h6:hover::after, p:hover::after, a:hover::after, 
+  span:hover::after, button:hover::after {
+    width: 100%;
+  }
+}

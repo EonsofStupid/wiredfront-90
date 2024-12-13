@@ -1,0 +1,36 @@
+@layer components {
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-neon-blue via-neon-pink to-neon-violet animate-gradient-x;
+  }
+
+  .neon-border {
+    @apply relative rounded-xl overflow-hidden;
+  }
+
+  .neon-border::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(45deg, 
+      theme('colors.neon.blue'), 
+      theme('colors.neon.pink'), 
+      theme('colors.neon.violet'),
+      theme('colors.neon.teal')
+    );
+    animation: rotate 4s linear infinite;
+  }
+
+  .neon-border::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: theme('colors.dark.DEFAULT');
+    border-radius: inherit;
+    z-index: 0;
+  }
+
+  .neon-border > * {
+    position: relative;
+    z-index: 1;
+  }
+}
