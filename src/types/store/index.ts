@@ -1,5 +1,6 @@
-export * from './common/types';
-export * from '../store/core/types';
+// Re-export core types with namespacing to avoid conflicts
+export * as CoreTypes from '../store/core/types';
+export * as CommonTypes from './common/types';
 export * from './auth';
 export * from './data';
 export * from './settings';
