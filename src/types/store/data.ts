@@ -1,7 +1,7 @@
-import type { BaseAction } from './common';
-import type { AsyncState } from './state';
-import type { DashboardMetric } from '../dashboard/metrics';
-import type { AnalyticsData } from '../dashboard/analytics';
+import type { BaseAction } from './common/types';
+import type { AsyncState } from './core/types';
+import type { DashboardMetric } from '@/types/dashboard/metrics';
+import type { AnalyticsData } from '@/types/dashboard/analytics';
 
 export interface DataState extends AsyncState {
   readonly metrics: Readonly<Record<string, DashboardMetric>>;

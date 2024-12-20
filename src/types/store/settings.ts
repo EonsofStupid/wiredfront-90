@@ -1,21 +1,19 @@
-import type { BaseAction } from './common';
-import type { NotificationSettings, UserPreferences } from './common';
-import type { DashboardLayout } from '../dashboard/common';
+import type { BaseAction } from './common/types';
+import type { NotificationSettings, UserPreferences } from './common/types';
+import type { DashboardLayout } from '@/types/dashboard/common';
 
 export interface RedisConfig {
   host: string;
   port: number;
-  password?: string;
-  tls?: boolean;
-  database?: number;
-  prefix?: string;
+  tls: boolean;
+  database: number;
 }
 
 export interface CacheSettings {
   enabled: boolean;
   ttl: number;
   maxSize: number;
-  redis?: RedisConfig;
+  redis: RedisConfig;
 }
 
 export interface SettingsState {

@@ -1,4 +1,4 @@
-import type { ActionType, BaseAction } from './common';
+import type { BaseAction } from './common/types';
 
 export interface UIState {
   readonly theme: 'light' | 'dark';

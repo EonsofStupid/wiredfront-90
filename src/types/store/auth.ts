@@ -1,5 +1,5 @@
-import type { ActionType, BaseAction, User, LoginCredentials } from './common';
-import type { AsyncState } from './state';
+import type { User, LoginCredentials, BaseAction } from './common/types';
+import type { AsyncState } from './core/types';
 
 export interface AuthState extends AsyncState {
   readonly user: User | null;

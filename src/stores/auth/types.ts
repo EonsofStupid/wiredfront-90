@@ -1,5 +1,5 @@
-import type { AsyncState } from '../core/types';
-import type { User } from '@/types/store/common';
+import type { User } from '@/types/store/common/types';
+import type { AsyncState } from '@/types/store/core/types';
 
 export interface AuthState extends AsyncState {
   user: User | null;
