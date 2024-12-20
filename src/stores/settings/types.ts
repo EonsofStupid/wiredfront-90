@@ -1,8 +1,16 @@
 import type { UserPreferences, NotificationSettings } from '@/types/store/common';
 import type { DashboardLayout } from '@/types/dashboard/common';
-import type { CacheSettings } from '@/types/store/cache';
+import type { CacheConfig, RedisConfig } from '../core/types';
+
+export interface CacheSettings {
+  enabled: boolean;
+  ttl: number;
+  maxSize: number;
+  redis?: RedisConfig;
+}
 
 export interface SettingsState {
+  version: string;
   preferences: UserPreferences;
   dashboardLayout: DashboardLayout;
   notifications: NotificationSettings;

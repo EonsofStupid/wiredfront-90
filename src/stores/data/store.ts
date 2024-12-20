@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { DataState, DataStore } from './types';
 
 const initialState: DataState = {
+  version: '1.0.0',
   metrics: {},
   analytics: null,
   lastFetch: null,

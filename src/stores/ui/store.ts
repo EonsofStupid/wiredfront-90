@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { UIState, UIStore } from './types';
 
 const initialState: UIState = {
+  version: '1.0.0',
   theme: 'light',
   sidebarOpen: false,
   activePanel: null,

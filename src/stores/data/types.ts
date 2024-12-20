@@ -1,4 +1,4 @@
-import type { AsyncState } from '@/types/store/state';
+import type { AsyncState } from '../core/types';
 import type { DashboardMetric } from '@/types/dashboard/metrics';
 import type { AnalyticsData } from '@/types/dashboard/analytics';
 

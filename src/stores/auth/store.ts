@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { AuthState, AuthStore } from './types';
 
 const initialState: AuthState = {
+  version: '1.0.0',
   user: null,
   isAuthenticated: false,
   token: null,

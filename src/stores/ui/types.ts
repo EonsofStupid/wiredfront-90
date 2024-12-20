@@ -1,4 +1,5 @@
 export interface UIState {
+  version: string;
   theme: 'light' | 'dark';
   sidebarOpen: boolean;
   activePanel: string | null;
