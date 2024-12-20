@@ -35,6 +35,11 @@ export interface ValidationError {
   message: string;
 }
 
+export interface DevToolsConfig {
+  name?: string;
+  enabled?: boolean;
+}
+
 export type ActionType = string;
 
 export interface Action<T extends ActionType = ActionType, P = unknown> {

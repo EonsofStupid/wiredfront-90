@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { devtools } from 'zustand/middleware';
 import type { SettingsStore } from './types';
-import type { CoreTypes } from '@/types/store';
+import type { DevToolsConfig } from '../core/types';
 
 const persistConfig = {
   name: 'settings-storage',
@@ -31,7 +31,7 @@ const persistConfig = {
   }),
 };
 
-const devtoolsConfig: CoreTypes.DevToolsConfig = {
+const devtoolsConfig: DevToolsConfig = {
   name: 'Settings Store',
   enabled: process.env.NODE_ENV === 'development',
 };

@@ -1,5 +1,4 @@
 import type { DashboardLayout } from '@/types/dashboard/common';
-import type { CoreTypes } from '@/types/store';
 
 export interface RedisConfig {
   host: string;
