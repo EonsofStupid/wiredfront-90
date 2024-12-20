@@ -62,6 +62,7 @@ export const useSettingsStore = create<SettingsStore>()(
           largeText: false,
           username: '',
           language: 'en',
+          showVersion: true,  // Added default value
         },
         dashboardLayout: {
           panels: [],
