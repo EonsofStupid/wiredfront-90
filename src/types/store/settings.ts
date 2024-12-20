@@ -1,6 +1,5 @@
-import type { BaseAction } from './common/types';
-import type { NotificationSettings, UserPreferences } from './common/types';
 import type { DashboardLayout } from '@/types/dashboard/common';
+import type { BaseAction } from './common/types';
 
 export interface RedisConfig {
   host: string;
@@ -26,7 +25,7 @@ export interface UserPreferences {
   largeText: boolean;
   username: string;
   language: string;
-  showVersion: boolean;  // Added this property
+  showVersion: boolean;
 }
 
 export interface NotificationSettings {
@@ -52,3 +51,15 @@ export interface SettingsActions {
 }
 
 export type SettingsStore = SettingsState & SettingsActions;
+
+export type SettingsActionType =
+  | 'UPDATE_PREFERENCES'
+  | 'SAVE_LAYOUT'
+  | 'UPDATE_NOTIFICATIONS'
+  | 'UPDATE_CACHE_SETTINGS';
+
+export type SettingsAction = 
+  | BaseAction<'UPDATE_PREFERENCES', Partial<UserPreferences>>
+  | BaseAction<'SAVE_LAYOUT', DashboardLayout>
+  | BaseAction<'UPDATE_NOTIFICATIONS', Partial<NotificationSettings>>
+  | BaseAction<'UPDATE_CACHE_SETTINGS', Partial<CacheSettings>>;

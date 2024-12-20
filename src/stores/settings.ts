@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { devtools } from 'zustand/middleware';
-import type { SettingsStore, SettingsAction, CacheSettings } from '@/types/store/settings';
+import type { SettingsStore, SettingsState, CacheSettings } from '@/types/store/settings';
 import type { DevToolsConfig } from '@/types/store/middleware';
 
 const persistConfig = {
@@ -62,7 +62,7 @@ export const useSettingsStore = create<SettingsStore>()(
           largeText: false,
           username: '',
           language: 'en',
-          showVersion: true,  // Added default value
+          showVersion: true,
         },
         dashboardLayout: {
           panels: [],
