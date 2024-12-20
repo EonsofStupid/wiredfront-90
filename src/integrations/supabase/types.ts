@@ -9,7 +9,114 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string
+          preferences: Json | null
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          preferences?: Json | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          preferences?: Json | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      settings: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_public: boolean | null
+          key: string
+          type: Database["public"]["Enums"]["setting_type"]
+          updated_at: string | null
+          value: Json
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          key: string
+          type: Database["public"]["Enums"]["setting_type"]
+          updated_at?: string | null
+          value: Json
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          key?: string
+          type?: Database["public"]["Enums"]["setting_type"]
+          updated_at?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          setting_id: string | null
+          updated_at: string | null
+          user_id: string | null
+          value: Json
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          setting_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          value: Json
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          setting_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_settings_setting_id_fkey"
+            columns: ["setting_id"]
+            isOneToOne: false
+            referencedRelation: "settings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +125,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      setting_type: "string" | "number" | "boolean" | "json" | "array"
     }
     CompositeTypes: {
       [_ in never]: never
