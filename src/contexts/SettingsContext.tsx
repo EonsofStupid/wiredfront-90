@@ -14,9 +14,7 @@ const defaultPreferences: UserPreferences = {
 };
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
-  // Move store access inside the component
-  const storePreferences = useSettingsStore((state) => state.preferences);
-  const updateStore = useSettingsStore((state) => state.updatePreferences);
+  const { preferences: storePreferences, updatePreferences: updateStore } = useSettingsStore();
 
   const updatePreferences = useCallback((updates: Partial<UserPreferences>) => {
     updateStore(updates);
@@ -29,16 +27,16 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const preferences = {
     ...defaultPreferences,
     ...storePreferences,
-  };
-
-  const value = {
-    preferences,
-    updatePreferences,
-    resetPreferences,
-  };
+  } as UserPreferences;
 
   return (
-    <SettingsContext.Provider value={value}>
+    <SettingsContext.Provider
+      value={{
+        preferences,
+        updatePreferences,
+        resetPreferences,
+      }}
+    >
       {children}
     </SettingsContext.Provider>
   );
