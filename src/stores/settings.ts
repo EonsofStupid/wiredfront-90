@@ -57,6 +57,11 @@ export const useSettingsStore = create<SettingsStore>()(
           refreshInterval: 30000,
           notifications: true,
           timezone: 'UTC',
+          highContrast: false,
+          reduceMotion: false,
+          largeText: false,
+          username: '',
+          language: 'en',
         },
         dashboardLayout: {
           panels: [],
@@ -66,6 +71,7 @@ export const useSettingsStore = create<SettingsStore>()(
           push: true,
           frequency: 'daily',
           types: ['alerts', 'updates'],
+          marketing: false,
         },
         cache: defaultCacheSettings,
         updatePreferences: (updates) => 
