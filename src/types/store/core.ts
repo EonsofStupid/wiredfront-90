@@ -1,10 +1,12 @@
-// Core type definitions for store management
+import type { StateCreator } from 'zustand';
+
+// Basic type definitions
 export type Status = 'idle' | 'loading' | 'error' | 'success';
 
 export interface AsyncState {
   status: Status;
   error: string | null;
-  timestamp: number | null;
+  lastUpdated: number | null;
 }
 
 export interface BaseState {
@@ -12,60 +14,42 @@ export interface BaseState {
   initialized: boolean;
 }
 
-// Redis configuration types
-export interface RedisConfig {
-  host: string;
-  port: number;
-  password?: string;
-  tls?: boolean;
-  database?: number;
-  prefix?: string;
+// Store middleware types
+export type StoreMiddleware<T> = StateCreator<T>;
+
+// Store action types
+export type ActionType = string;
+
+export interface Action<T extends ActionType = ActionType, P = unknown> {
+  type: T;
+  payload?: P;
 }
 
-export interface CacheConfig extends RedisConfig {
-  ttl: number;
-  maxSize: number;
-  invalidationStrategy: 'lru' | 'fifo' | 'custom';
-}
+// Store selector types
+export type Selector<T, R> = (state: T) => R;
 
-// Store configuration types
-export interface StoreConfig {
-  persist?: boolean;
-  storage?: 'local' | 'session' | 'redis';
-  encryption?: boolean;
-  version?: string;
-}
+// Utility type for creating store slices
+export type StateSlice<T extends object, K extends keyof T = keyof T> = Pick<T, K>;
 
-// Validation types
-export interface ValidationResult {
-  valid: boolean;
-  errors: ValidationError[];
-}
-
-export interface ValidationError {
-  field: string;
-  message: string;
-  code: string;
-}
-
-// Type guards
-export const isAsyncState = (state: unknown): state is AsyncState => {
+// Type guard utilities
+export const isAsyncState = (value: unknown): value is AsyncState => {
   return (
-    typeof state === 'object' &&
-    state !== null &&
-    'status' in state &&
-    'error' in state &&
-    'timestamp' in state
+    typeof value === 'object' &&
+    value !== null &&
+    'status' in value &&
+    'error' in value &&
+    'lastUpdated' in value
   );
 };
 
-export const isRedisConfig = (config: unknown): config is RedisConfig => {
+export const isAction = <T extends ActionType>(
+  value: unknown,
+  type: T
+): value is Action<T> => {
   return (
-    typeof config === 'object' &&
-    config !== null &&
-    'host' in config &&
-    'port' in config &&
-    typeof (config as RedisConfig).host === 'string' &&
-    typeof (config as RedisConfig).port === 'number'
+    typeof value === 'object' &&
+    value !== null &&
+    'type' in value &&
+    value.type === type
   );
 };
