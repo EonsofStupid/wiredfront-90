@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { devtools } from 'zustand/middleware';
-import type { SettingsStore, SettingsAction, CacheSettings } from '@/types/store/settings';
+import type { SettingsStore, CacheSettings } from '@/types/store/settings';
 import type { DevToolsConfig } from '@/types/store/middleware';
 
 const persistConfig = {
@@ -23,12 +23,6 @@ const persistConfig = {
       localStorage.removeItem(name);
     },
   },
-  partialize: (state: SettingsStore) => ({
-    preferences: state.preferences,
-    dashboardLayout: state.dashboardLayout,
-    notifications: state.notifications,
-    cache: state.cache,
-  }),
 };
 
 const devtoolsConfig: DevToolsConfig = {
@@ -48,26 +42,31 @@ const defaultCacheSettings: CacheSettings = {
   },
 };
 
+// Initialize store with default values and proper typing
+const initialState = {
+  preferences: {
+    defaultView: 'dashboard',
+    refreshInterval: 30000,
+    notifications: true,
+    timezone: 'UTC',
+  },
+  dashboardLayout: {
+    panels: [],
+  },
+  notifications: {
+    email: true,
+    push: true,
+    frequency: 'daily' as const, // Explicitly type as literal
+    types: ['alerts', 'updates'] as const,
+  },
+  cache: defaultCacheSettings,
+};
+
 export const useSettingsStore = create<SettingsStore>()(
   devtools(
     persist(
       (set) => ({
-        preferences: {
-          defaultView: 'dashboard',
-          refreshInterval: 30000,
-          notifications: true,
-          timezone: 'UTC',
-        },
-        dashboardLayout: {
-          panels: [],
-        },
-        notifications: {
-          email: true,
-          push: true,
-          frequency: 'daily',
-          types: ['alerts', 'updates'],
-        },
-        cache: defaultCacheSettings,
+        ...initialState,
         updatePreferences: (updates) => 
           set(
             (state) => ({

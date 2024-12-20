@@ -1,0 +1,56 @@
+@layer components {
+  .cyber-orb {
+    @apply relative rounded-full overflow-hidden backdrop-blur-lg;
+    background: linear-gradient(
+      45deg,
+      theme('colors.neon.blue'),
+      theme('colors.neon.pink')
+    );
+  }
+
+  .cyber-orb::before {
+    @apply content-[''] absolute inset-0 rounded-full;
+    background: linear-gradient(
+      45deg,
+      theme('colors.neon.pink'),
+      theme('colors.neon.blue')
+    );
+    animation: orbit 8s linear infinite;
+  }
+
+  @keyframes orbit {
+    0% {
+      transform: rotate(0deg) scale(1);
+      opacity: 0.5;
+    }
+    50% {
+      transform: rotate(180deg) scale(1.2);
+      opacity: 0.8;
+    }
+    100% {
+      transform: rotate(360deg) scale(1);
+      opacity: 0.5;
+    }
+  }
+
+  .neural-particle {
+    @apply absolute rounded-full;
+    background: radial-gradient(
+      circle,
+      theme('colors.neon.blue'),
+      transparent
+    );
+    animation: float 4s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0) scale(1);
+      opacity: 0.5;
+    }
+    50% {
+      transform: translateY(-20px) scale(1.2);
+      opacity: 0.8;
+    }
+  }
+}
