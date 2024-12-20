@@ -1,7 +1,7 @@
-import type { BaseState } from './core/types';
+import type { AsyncState } from './core/types';
 import type { RedisConfig } from './settings/types';
 
-export interface CacheState extends BaseState {
+export interface CacheState extends AsyncState {
   config: {
     ttl: number;
     maxSize: number;
