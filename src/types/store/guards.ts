@@ -1,5 +1,4 @@
-import type { ActionType, BaseAction, User, NotificationSettings } from './common';
-import type { AsyncState } from './state';
+import type { ActionType, BaseAction, User, NotificationSettings } from './common/types';
 import type { UIState } from './ui';
 import type { AuthState } from './auth';
 import type { DataState } from './data';

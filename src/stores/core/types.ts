@@ -41,3 +41,8 @@ export interface Action<T extends ActionType = ActionType, P = unknown> {
   type: T;
   payload?: P;
 }
+
+export interface DevToolsConfig {
+  name?: string;
+  enabled?: boolean;
+}
