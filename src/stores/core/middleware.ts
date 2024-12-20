@@ -1,4 +1,5 @@
 import type { StateCreator, StoreMutatorIdentifier } from 'zustand';
+import type { DevToolsConfig } from './types';
 
 export interface PersistOptions<T> {
   name: string;
