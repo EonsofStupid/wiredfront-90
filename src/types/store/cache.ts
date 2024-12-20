@@ -1,26 +1,21 @@
-import type { BaseAction } from './common';
-import type { CacheConfig } from './core';
+import type { BaseState } from './core/types';
+import type { RedisConfig } from './settings/types';
 
-export interface CacheState {
-  readonly config: Readonly<CacheConfig>;
-  readonly size: number;
-  readonly lastCleared: number | null;
+export interface CacheState extends BaseState {
+  config: {
+    ttl: number;
+    maxSize: number;
+    enabled: boolean;
+    redis?: RedisConfig;
+  };
+  size: number;
+  lastCleared: number | null;
 }
 
 export interface CacheActions {
-  readonly updateConfig: (config: Partial<CacheConfig>) => void;
-  readonly clearCache: () => void;
-  readonly invalidateKey: (key: string) => void;
+  updateConfig: (config: Partial<CacheState['config']>) => void;
+  clearCache: () => void;
+  invalidateKey: (key: string) => void;
 }
 
-export type CacheStore = Readonly<CacheState & CacheActions>;
-
-export type CacheActionType =
-  | 'UPDATE_CONFIG'
-  | 'CLEAR_CACHE'
-  | 'INVALIDATE_KEY';
-
-export type CacheAction =
-  | BaseAction<'UPDATE_CONFIG', Partial<CacheConfig>>
-  | BaseAction<'CLEAR_CACHE'>
-  | BaseAction<'INVALIDATE_KEY', string>;
+export type CacheStore = CacheState & CacheActions;

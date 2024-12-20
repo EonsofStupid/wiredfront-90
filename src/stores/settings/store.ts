@@ -2,7 +2,11 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { devtools } from 'zustand/middleware';
 import type { SettingsStore } from './types';
-import type { DevToolsConfig } from '../core/middleware';
+
+interface DevToolsConfig {
+  name?: string;
+  enabled?: boolean;
+}
 
 const persistConfig = {
   name: 'settings-storage',
@@ -23,6 +27,12 @@ const persistConfig = {
       localStorage.removeItem(name);
     },
   },
+  partialize: (state: SettingsStore) => ({
+    preferences: state.preferences,
+    dashboardLayout: state.dashboardLayout,
+    notifications: state.notifications,
+    cache: state.cache,
+  }),
 };
 
 const devtoolsConfig: DevToolsConfig = {
@@ -30,11 +40,22 @@ const devtoolsConfig: DevToolsConfig = {
   enabled: process.env.NODE_ENV === 'development',
 };
 
+const defaultCacheSettings = {
+  enabled: false,
+  ttl: 3600,
+  maxSize: 100,
+  redis: {
+    host: 'localhost',
+    port: 6379,
+    tls: false,
+    database: 0,
+  },
+};
+
 export const useSettingsStore = create<SettingsStore>()(
   devtools(
     persist(
       (set) => ({
-        version: '1.0.0',
         preferences: {
           defaultView: 'dashboard',
           refreshInterval: 30000,
@@ -56,36 +77,36 @@ export const useSettingsStore = create<SettingsStore>()(
           types: ['alerts', 'updates'],
           marketing: false,
         },
-        cache: {
-          enabled: false,
-          ttl: 3600,
-          maxSize: 100,
-          redis: {
-            host: 'localhost',
-            port: 6379,
-            tls: false,
-            database: 0,
-          },
-        },
+        cache: defaultCacheSettings,
         updatePreferences: (updates) => 
           set(
             (state) => ({
               preferences: { ...state.preferences, ...updates },
-            })
+            }),
+            false,
+            { type: 'UPDATE_PREFERENCES', payload: updates }
           ),
         saveDashboardLayout: (layout) => 
-          set({ dashboardLayout: layout }),
+          set(
+            { dashboardLayout: layout },
+            false,
+            { type: 'SAVE_LAYOUT', payload: layout }
+          ),
         updateNotifications: (settings) => 
           set(
             (state) => ({
               notifications: { ...state.notifications, ...settings },
-            })
+            }),
+            false,
+            { type: 'UPDATE_NOTIFICATIONS', payload: settings }
           ),
         updateCacheSettings: (settings) =>
           set(
             (state) => ({
               cache: { ...state.cache, ...settings },
-            })
+            }),
+            false,
+            { type: 'UPDATE_CACHE_SETTINGS', payload: settings }
           ),
       }),
       persistConfig

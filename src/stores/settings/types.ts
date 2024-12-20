@@ -1,16 +1,40 @@
-import type { UserPreferences, NotificationSettings } from '@/types/store/common';
 import type { DashboardLayout } from '@/types/dashboard/common';
-import type { CacheConfig, RedisConfig } from '../core/types';
+
+export interface RedisConfig {
+  host: string;
+  port: number;
+  tls: boolean;
+  database: number;
+}
 
 export interface CacheSettings {
   enabled: boolean;
   ttl: number;
   maxSize: number;
-  redis?: RedisConfig;
+  redis: RedisConfig;
+}
+
+export interface UserPreferences {
+  defaultView: string;
+  refreshInterval: number;
+  notifications: boolean;
+  timezone: string;
+  highContrast: boolean;
+  reduceMotion: boolean;
+  largeText: boolean;
+  username: string;
+  language: string;
+}
+
+export interface NotificationSettings {
+  email: boolean;
+  push: boolean;
+  frequency: 'daily' | 'weekly' | 'realtime';
+  types: string[];
+  marketing: boolean;
 }
 
 export interface SettingsState {
-  version: string;
   preferences: UserPreferences;
   dashboardLayout: DashboardLayout;
   notifications: NotificationSettings;

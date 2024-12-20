@@ -1,16 +1,16 @@
 import type { StateCreator, StoreMutatorIdentifier } from 'zustand';
 
+export interface DevToolsConfig {
+  name?: string;
+  enabled?: boolean;
+}
+
 export interface PersistOptions<T> {
   name: string;
   storage?: Storage;
   partialize?: (state: T) => Partial<T>;
   version?: number;
   migrate?: (persistedState: any, version: number) => T | Promise<T>;
-}
-
-export interface DevToolsOptions {
-  name?: string;
-  enabled?: boolean;
 }
 
 export type MiddlewareCreator = <
@@ -23,5 +23,5 @@ export type MiddlewareCreator = <
 
 export interface StoreMiddlewareConfig<T> {
   persist?: PersistOptions<T>;
-  devtools?: DevToolsOptions;
+  devtools?: DevToolsConfig;
 }
