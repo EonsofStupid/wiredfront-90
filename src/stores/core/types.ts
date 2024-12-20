@@ -18,6 +18,13 @@ export interface CacheConfig {
   enabled: boolean;
 }
 
+export interface RedisConfig {
+  host: string;
+  port: number;
+  tls: boolean;
+  database: number;
+}
+
 export interface ValidationResult {
   valid: boolean;
   errors: ValidationError[];
@@ -26,13 +33,6 @@ export interface ValidationResult {
 export interface ValidationError {
   field: string;
   message: string;
-}
-
-export interface RedisConfig {
-  host: string;
-  port: number;
-  tls: boolean;
-  database: number;
 }
 
 export type ActionType = string;
