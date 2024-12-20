@@ -1,10 +1,5 @@
 import type { StateCreator, StoreMutatorIdentifier } from 'zustand';
 
-export interface DevToolsConfig {
-  name?: string;
-  enabled?: boolean;
-}
-
 export interface PersistOptions<T> {
   name: string;
   storage?: Storage;
