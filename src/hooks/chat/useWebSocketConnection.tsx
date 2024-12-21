@@ -1,136 +1,105 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ConnectionState } from '@/types/websocket';
-import { MAX_RETRIES } from './constants/websocket';
-import { calculateRetryDelay, handleConnectionError, handleMaxRetriesExceeded } from './utils/websocket';
-import { useWebSocketLifecycle } from './websocket/useWebSocketLifecycle';
-import { useWebSocketMetrics } from './websocket/useWebSocketMetrics';
-import { WebSocketConfig } from './websocket/types';
-import { toast } from 'sonner';
+import { ConnectionManager } from '@/services/chat/ConnectionManager';
+import { messageQueue } from '@/services/chat/MessageQueueService';
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const useWebSocketConnection = (
   sessionId: string,
   isMinimized: boolean,
   onMessage: (message: any) => void
 ) => {
+  const [connectionManager, setConnectionManager] = useState<ConnectionManager | null>(null);
   const [connectionState, setConnectionState] = useState<ConnectionState>('initial');
-  const { metrics, updateMetrics, incrementMessageCount } = useWebSocketMetrics();
-  const [errorLog, setErrorLog] = useState<Array<{ timestamp: Date; error: Error }>>([]);
-
-  const config: WebSocketConfig = {
-    url: `https://ewjisqyvspdvhyppkhnm.supabase.co/functions/v1/realtime-chat`,
-    sessionId,
-    isMinimized,
-    onMessage
-  };
-
-  const {
-    wsRef,
-    heartbeatIntervalRef,
-    messageQueueRef,
-    setupWebSocketHandlers
-  } = useWebSocketLifecycle(config.url, setConnectionState, updateMetrics);
-
-  const logError = useCallback((error: Error) => {
-    setErrorLog(prev => {
-      const newLog = [...prev, { timestamp: new Date(), error }];
-      // Keep last 100 errors
-      if (newLog.length > 100) newLog.shift();
-      return newLog;
-    });
-    console.error('WebSocket error:', error);
-  }, []);
-
-  const handleError = useCallback((error: Error) => {
-    logError(error);
-    updateMetrics({ lastError: error });
-
-    if (metrics.reconnectAttempts < MAX_RETRIES) {
-      setConnectionState('reconnecting');
-      const delay = calculateRetryDelay(metrics.reconnectAttempts);
-      
-      setTimeout(() => {
-        updateMetrics({ reconnectAttempts: metrics.reconnectAttempts + 1 });
-        initWebSocket();
-      }, delay);
-      
-      handleConnectionError(error);
-    } else {
-      setConnectionState('error');
-      handleMaxRetriesExceeded();
-    }
-  }, [metrics.reconnectAttempts, updateMetrics, logError]);
-
-  const initWebSocket = useCallback(() => {
-    try {
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.close();
-      }
-
-      setConnectionState('connecting');
-      console.log('Connecting to WebSocket:', config.url);
-      
-      const ws = new WebSocket(config.url);
-      wsRef.current = setupWebSocketHandlers(ws, onMessage);
-
-      ws.onerror = (error) => {
-        logError(error instanceof Error ? error : new Error('WebSocket connection error'));
-        handleError(new Error('WebSocket connection error'));
-      };
-
-      ws.onclose = () => {
-        console.log('WebSocket closed');
-        setConnectionState('disconnected');
-        clearInterval(heartbeatIntervalRef.current);
-        
-        if (metrics.reconnectAttempts < MAX_RETRIES) {
-          handleError(new Error('Connection closed'));
-        }
-      };
-
-    } catch (error) {
-      logError(error instanceof Error ? error : new Error('Failed to connect'));
-      handleError(error instanceof Error ? error : new Error('Failed to connect'));
-    }
-  }, [config.url, handleError, metrics.reconnectAttempts, setupWebSocketHandlers, onMessage, logError]);
-
-  const reconnect = useCallback(() => {
-    updateMetrics({
-      reconnectAttempts: 0,
-      lastError: null
-    });
-    initWebSocket();
-  }, [initWebSocket, updateMetrics]);
-
-  const sendMessage = useCallback((message: any) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(message));
-      incrementMessageCount('sent');
-    } else {
-      messageQueueRef.current.add(message);
-      toast.info('Message queued - waiting for connection');
-    }
-  }, [incrementMessageCount]);
+  const [metrics, setMetrics] = useState(connectionManager?.getMetrics());
 
   useEffect(() => {
     if (!isMinimized) {
-      initWebSocket();
+      const initConnection = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          toast.error('Authentication required');
+          return;
+        }
+
+        const wsUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/realtime-chat?jwt=${session.access_token}`;
+        const manager = new ConnectionManager(wsUrl);
+        
+        manager.onStateChange = (state) => {
+          setConnectionState(state);
+          if (state === 'connected') {
+            processPendingMessages();
+          }
+        };
+
+        manager.onMessage = onMessage;
+        setConnectionManager(manager);
+        manager.connect();
+      };
+
+      initConnection();
     }
 
     return () => {
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.close();
-      }
-      clearInterval(heartbeatIntervalRef.current);
+      connectionManager?.destroy();
     };
-  }, [initWebSocket, isMinimized]);
+  }, [isMinimized, sessionId]);
+
+  const processPendingMessages = useCallback(async () => {
+    if (connectionState !== 'connected') return;
+
+    const pending = await messageQueue.getPendingMessages();
+    for (const item of pending) {
+      try {
+        if (connectionManager?.send(item.message)) {
+          await messageQueue.updateStatus(item.id, 'delivered');
+        }
+      } catch (error) {
+        console.error('Failed to process pending message:', error);
+        await messageQueue.updateStatus(item.id, 'failed');
+      }
+    }
+  }, [connectionState, connectionManager]);
+
+  const sendMessage = useCallback(async (message: any) => {
+    if (connectionState !== 'connected') {
+      const queuedMessage = await messageQueue.enqueue(message);
+      toast.info('Message queued - waiting for connection');
+      return queuedMessage.id;
+    }
+
+    try {
+      if (connectionManager?.send(message)) {
+        return null; // No queue ID needed for direct sends
+      } else {
+        const queuedMessage = await messageQueue.enqueue(message);
+        toast.info('Message queued - connection unavailable');
+        return queuedMessage.id;
+      }
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      toast.error('Failed to send message');
+      throw error;
+    }
+  }, [connectionState, connectionManager]);
+
+  // Update metrics periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (connectionManager) {
+        setMetrics(connectionManager.getMetrics());
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [connectionManager]);
 
   return {
-    ws: wsRef.current,
     connectionState,
     metrics,
-    reconnect,
     sendMessage,
     isConnected: connectionState === 'connected',
-    errorLog
+    reconnect: () => connectionManager?.reconnect()
   };
 };
