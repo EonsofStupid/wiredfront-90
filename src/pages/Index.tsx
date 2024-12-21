@@ -1,29 +1,13 @@
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
-import { ChevronDown, Activity, Code, Database, Settings } from "lucide-react";
+import { Activity, Code, Database, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const Index = () => {
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
-    <div className="min-h-screen grid-bg">
+    <div className="min-h-full grid-bg">
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-b from-dark via-dark/50 to-dark" />
-        </div>
-
+      <section className="relative flex items-center justify-center py-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -69,15 +53,6 @@ const Index = () => {
             />
           ))}
         </div>
-
-        {/* Scroll Indicator */}
-        <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="absolute bottom-10 left-1/2 transform -translate-x-1/2"
-        >
-          <ChevronDown className="w-8 h-8 text-neon-blue animate-pulse" />
-        </motion.div>
       </section>
 
       <section className="container mx-auto px-4 py-20">
@@ -90,8 +65,12 @@ const Index = () => {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className="glass-card p-6 hover:scale-105 transition-transform duration-300"
             >
-              <div className="text-neon-blue mb-4">{<feature.icon className="w-8 h-8" />}</div>
-              <h3 className="text-xl font-semibold mb-2 gradient-text">{feature.title}</h3>
+              <div className="text-neon-blue mb-4">
+                {<feature.icon className="w-8 h-8" />}
+              </div>
+              <h3 className="text-xl font-semibold mb-2 gradient-text">
+                {feature.title}
+              </h3>
               <p className="text-gray-400">{feature.description}</p>
             </motion.div>
           ))}
