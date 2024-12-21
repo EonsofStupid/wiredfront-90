@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { SignalHigh, CloudOff } from 'lucide-react';
 
@@ -34,7 +34,7 @@ export const useWebSocketConnection = (
         setIsConnected(true);
         setRetryCount(0);
         toast.success('Connected to chat service', {
-          icon: SignalHigh
+          icon: () => <SignalHigh className="h-5 w-5" />
         });
       };
 
@@ -53,7 +53,7 @@ export const useWebSocketConnection = (
         setIsConnected(false);
         toast.error('Chat connection error', {
           description: 'Please try again later',
-          icon: CloudOff
+          icon: () => <CloudOff className="h-5 w-5" />
         });
       };
 
