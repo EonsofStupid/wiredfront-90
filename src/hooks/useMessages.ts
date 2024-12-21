@@ -129,17 +129,18 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
       return;
     }
 
+    const now = new Date().toISOString();
     const optimisticMessage: Message = {
       id: crypto.randomUUID(),
       content,
       user_id: user.id,
       chat_session_id: sessionId,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      created_at: now,
+      updated_at: now,
       type: 'text',
       metadata: {},
       is_minimized: false,
-      last_accessed: new Date().toISOString(),
+      last_accessed: now,
       position: { x: null, y: null },
       window_state: { width: 350, height: 500 }
     };
