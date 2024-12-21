@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -6,10 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { AIServicesSettings } from "./api/AIServicesSettings";
 import { CloudStorageSettings } from "./api/CloudStorageSettings";
 import { DevelopmentSettings } from "./api/DevelopmentSettings";
+import { useNavigate } from "react-router-dom";
 
 export function APISettings() {
   const [isSaving, setIsSaving] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // AI Services
   const [openaiKey, setOpenaiKey] = useState("");
@@ -28,12 +31,76 @@ export function APISettings() {
   const [githubToken, setGithubToken] = useState("");
   const [dockerToken, setDockerToken] = useState("");
 
+  useEffect(() => {
+    // Check authentication status
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to manage API settings.",
+          variant: "destructive"
+        });
+        navigate("/login");
+        return;
+      }
+      setUser(session.user);
+
+      // Load existing settings
+      if (session.user) {
+        try {
+          const { data: settings, error } = await supabase
+            .from('user_settings')
+            .select('setting_id, value')
+            .eq('user_id', session.user.id);
+
+          if (error) throw error;
+
+          if (settings) {
+            settings.forEach(setting => {
+              const value = setting.value.key;
+              switch (setting.setting_id) {
+                case 'openai-api-key': setOpenaiKey(value); break;
+                case 'huggingface-api-key': setHuggingfaceKey(value); break;
+                case 'gemini-api-key': setGeminiKey(value); break;
+                case 'alexa-api-key': setAlexaKey(value); break;
+                case 'cortana-api-key': setCortanaKey(value); break;
+                case 'google-drive-api-key': setGoogleDriveKey(value); break;
+                case 'dropbox-api-key': setDropboxKey(value); break;
+                case 'aws-access-key': setAwsAccessKey(value); break;
+                case 'aws-secret-key': setAwsSecretKey(value); break;
+                case 'github-token': setGithubToken(value); break;
+                case 'docker-token': setDockerToken(value); break;
+              }
+            });
+          }
+        } catch (error) {
+          console.error('Error loading settings:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load API settings.",
+            variant: "destructive"
+          });
+        }
+      }
+    };
+
+    checkAuth();
+  }, [navigate, toast]);
+
   const handleSave = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to save API settings.",
+        variant: "destructive"
+      });
+      navigate("/login");
+      return;
+    }
+
     setIsSaving(true);
     try {
-      const userId = (await supabase.auth.getUser()).data.user?.id;
-      if (!userId) throw new Error('User not authenticated');
-
       const apiKeys = {
         'openai-api-key': openaiKey,
         'huggingface-api-key': huggingfaceKey,
@@ -53,7 +120,7 @@ export function APISettings() {
           const { error } = await supabase
             .from('user_settings')
             .upsert({
-              user_id: userId,
+              user_id: user.id,
               setting_id: key,
               value: { key: value }
             });
@@ -77,6 +144,10 @@ export function APISettings() {
       setIsSaving(false);
     }
   };
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="space-y-6">
