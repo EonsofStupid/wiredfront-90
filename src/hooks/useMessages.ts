@@ -9,7 +9,14 @@ const MESSAGES_PER_PAGE = 50;
 
 export const useMessages = (sessionId: string, isMinimized: boolean) => {
   const { realtimeMessages, addMessage, addOptimisticMessage } = useMessageManagement(sessionId);
-  const { ws, isConnected, sendMessage, connectionState, metrics, reconnect } = useWebSocketConnection(sessionId, isMinimized, addMessage);
+  const { 
+    ws, 
+    isConnected, 
+    sendMessage, 
+    connectionState, 
+    metrics, 
+    reconnect 
+  } = useWebSocketConnection(sessionId, isMinimized, addMessage);
 
   const {
     data,
