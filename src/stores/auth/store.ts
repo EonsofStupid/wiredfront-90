@@ -22,7 +22,7 @@ export const useAuthStore = create<AuthStore>()(
         user, 
         isAuthenticated: !!user,
         status: 'success',
-        lastUpdated: new Date().toISOString()
+        lastUpdated: Date.now()
       }),
       setLoading: (loading) => set({ loading }),
       login: async (credentials) => {
@@ -36,13 +36,13 @@ export const useAuthStore = create<AuthStore>()(
             token: data.session?.access_token || null,
             status: 'success',
             error: null,
-            lastUpdated: new Date().toISOString()
+            lastUpdated: Date.now()
           });
         } catch (error) {
           set({ 
             status: 'error', 
             error: (error as Error).message,
-            lastUpdated: new Date().toISOString()
+            lastUpdated: Date.now()
           });
           throw error;
         }
@@ -56,7 +56,7 @@ export const useAuthStore = create<AuthStore>()(
         if (session) {
           set({ 
             token: session.access_token,
-            lastUpdated: new Date().toISOString()
+            lastUpdated: Date.now()
           });
         }
       },
