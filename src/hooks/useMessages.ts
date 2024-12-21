@@ -13,7 +13,6 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
   const [realtimeMessages, setRealtimeMessages] = useState<Message[]>([]);
   const [ws, setWs] = useState<WebSocket | null>(null);
 
-  // Fetch paginated messages
   const {
     data,
     fetchNextPage,
@@ -119,7 +118,7 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     ...(data?.pages.flatMap(page => page) || [])
   ];
 
-  // Send message through WebSocket
+  // Update the optimistic message creation
   const addOptimisticMessage = async (content: string) => {
     if (!ws || ws.readyState !== WebSocket.OPEN) {
       toast.error('Chat service not connected');
@@ -132,20 +131,24 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
       return;
     }
 
-    const optimisticMessage = {
+    const optimisticMessage: Message = {
       id: crypto.randomUUID(),
       content,
       user_id: user.id,
       chat_session_id: sessionId,
       created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       type: 'text',
       metadata: {},
-    } as Message;
+      is_minimized: false,
+      last_accessed: new Date().toISOString(),
+      position: { x: null, y: null },
+      window_state: { width: 350, height: 500 }
+    };
 
     setRealtimeMessages(prev => [optimisticMessage, ...prev]);
     
     try {
-      // Send message through WebSocket
       ws.send(JSON.stringify({
         type: 'conversation.item.create',
         item: {
@@ -160,7 +163,6 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
         }
       }));
 
-      // Also save to database
       const { error } = await supabase
         .from('messages')
         .insert({
