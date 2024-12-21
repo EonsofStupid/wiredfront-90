@@ -15,7 +15,8 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     metrics, 
     sendMessage, 
     isConnected, 
-    reconnect 
+    reconnect,
+    ws 
   } = useWebSocketConnection(sessionId, isMinimized, addMessage);
 
   const {
@@ -90,6 +91,7 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     connectionState,
     metrics,
     isConnected,
-    reconnect
+    reconnect,
+    ws
   };
 };
