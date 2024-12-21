@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useWebSocketConnection } from './chat/useWebSocketConnection';
 import { useMessageManagement } from './chat/useMessageManagement';
+import { messageCache } from '@/services/chat/MessageCacheService';
 import type { Message } from '@/types/chat';
 
 const MESSAGES_PER_PAGE = 50;
@@ -10,11 +11,10 @@ const MESSAGES_PER_PAGE = 50;
 export const useMessages = (sessionId: string, isMinimized: boolean) => {
   const { realtimeMessages, addMessage, addOptimisticMessage } = useMessageManagement(sessionId);
   const { 
-    ws, 
-    isConnected, 
-    sendMessage, 
     connectionState, 
     metrics, 
+    sendMessage, 
+    isConnected, 
     reconnect 
   } = useWebSocketConnection(sessionId, isMinimized, addMessage);
 
@@ -28,20 +28,37 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
   } = useInfiniteQuery({
     queryKey: ['messages', sessionId],
     queryFn: async ({ pageParam = 0 }) => {
-      const start = Number(pageParam) * MESSAGES_PER_PAGE;
-      
-      const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('chat_session_id', sessionId)
-        .order('created_at', { ascending: false })
-        .range(start, start + MESSAGES_PER_PAGE - 1);
+      try {
+        // First, try to get cached messages
+        if (pageParam === 0) {
+          const cachedMessages = await messageCache.getCachedMessages(sessionId);
+          if (cachedMessages) {
+            return cachedMessages;
+          }
+        }
 
-      if (error) {
+        // If no cache or not first page, fetch from API
+        const start = Number(pageParam) * MESSAGES_PER_PAGE;
+        const { data, error } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('chat_session_id', sessionId)
+          .order('created_at', { ascending: false })
+          .range(start, start + MESSAGES_PER_PAGE - 1);
+
+        if (error) throw error;
+
+        // Cache first page of messages
+        if (pageParam === 0) {
+          await messageCache.cacheMessages(sessionId, data as Message[]);
+        }
+
+        return data as Message[];
+      } catch (error) {
+        console.error('Error fetching messages:', error);
         toast.error('Failed to fetch messages');
         throw error;
       }
-      return data as Message[];
     },
     getNextPageParam: (lastPage: Message[] | undefined, allPages: Message[][]) => {
       if (!lastPage) return undefined;
@@ -70,10 +87,9 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
       }
       await addOptimisticMessage(content, sendMessage);
     },
-    ws,
-    isConnected,
     connectionState,
     metrics,
+    isConnected,
     reconnect
   };
 };
