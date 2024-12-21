@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ConnectionState } from '@/types/websocket';
+import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
 import { ConnectionManager } from '@/services/chat/ConnectionManager';
 import { messageQueue } from '@/services/chat/MessageQueueService';
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const useWebSocketConnection = (
@@ -12,47 +11,46 @@ export const useWebSocketConnection = (
 ) => {
   const [connectionManager, setConnectionManager] = useState<ConnectionManager | null>(null);
   const [connectionState, setConnectionState] = useState<ConnectionState>('initial');
-  const [metrics, setMetrics] = useState(connectionManager?.getMetrics());
+  const [metrics, setMetrics] = useState<ConnectionMetrics>({
+    lastConnected: null,
+    reconnectAttempts: 0,
+    lastError: null,
+    messagesSent: 0,
+    messagesReceived: 0,
+    lastHeartbeat: null,
+    latency: 0,
+    uptime: 0,
+  });
 
   useEffect(() => {
     if (!isMinimized) {
-      const initConnection = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          toast.error('Authentication required');
-          return;
+      const wsUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/realtime-chat`;
+      const manager = new ConnectionManager(wsUrl);
+      
+      manager.onStateChange = (state) => {
+        setConnectionState(state);
+        if (state === 'connected') {
+          processPendingMessages();
         }
-
-        const wsUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/realtime-chat?jwt=${session.access_token}`;
-        const manager = new ConnectionManager(wsUrl);
-        
-        manager.onStateChange = (state) => {
-          setConnectionState(state);
-          if (state === 'connected') {
-            processPendingMessages();
-          }
-        };
-
-        manager.onMessage = onMessage;
-        setConnectionManager(manager);
-        manager.connect();
       };
 
-      initConnection();
-    }
+      manager.onMessage = onMessage;
+      setConnectionManager(manager);
+      manager.connect();
 
-    return () => {
-      connectionManager?.destroy();
-    };
-  }, [isMinimized, sessionId]);
+      return () => {
+        manager.destroy();
+      };
+    }
+  }, [isMinimized, sessionId, onMessage]);
 
   const processPendingMessages = useCallback(async () => {
-    if (connectionState !== 'connected') return;
+    if (connectionState !== 'connected' || !connectionManager) return;
 
     const pending = await messageQueue.getPendingMessages();
     for (const item of pending) {
       try {
-        if (connectionManager?.send(item.message)) {
+        if (connectionManager.send(item.message)) {
           await messageQueue.updateStatus(item.id, 'delivered');
         }
       } catch (error) {
@@ -63,14 +61,14 @@ export const useWebSocketConnection = (
   }, [connectionState, connectionManager]);
 
   const sendMessage = useCallback(async (message: any) => {
-    if (connectionState !== 'connected') {
+    if (connectionState !== 'connected' || !connectionManager) {
       const queuedMessage = await messageQueue.enqueue(message);
       toast.info('Message queued - waiting for connection');
       return queuedMessage.id;
     }
 
     try {
-      if (connectionManager?.send(message)) {
+      if (connectionManager.send(message)) {
         return null; // No queue ID needed for direct sends
       } else {
         const queuedMessage = await messageQueue.enqueue(message);
@@ -96,6 +94,7 @@ export const useWebSocketConnection = (
   }, [connectionManager]);
 
   return {
+    ws: connectionManager?.getWebSocket() || null,
     connectionState,
     metrics,
     sendMessage,

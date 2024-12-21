@@ -149,6 +149,10 @@ export class ConnectionManager {
     return { ...this.metrics };
   }
 
+  public getWebSocket(): WebSocket | null {
+    return this.ws;
+  }
+
   public onStateChange?: (state: ConnectionState) => void;
   public onMessage?: (message: any) => void;
 
