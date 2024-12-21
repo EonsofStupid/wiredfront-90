@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { MobileLayout } from "./components/layout/MobileLayout";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -11,6 +11,7 @@ import Settings from "./pages/Settings";
 import { supabase } from "@/integrations/supabase/client";
 import Login from "./pages/Login";
 import { DraggableChat } from "@/components/chat/DraggableChat";
+import { useAuthStore } from "@/stores/auth";
 
 // Move QueryClient instance outside component
 const queryClient = new QueryClient({
@@ -24,9 +25,7 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [isChatVisible, setIsChatVisible] = useState(true);
+  const { user, setUser, setLoading, loading } = useAuthStore();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -41,7 +40,7 @@ const App = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [setUser, setLoading]);
 
   if (loading) {
     return null;
@@ -72,7 +71,7 @@ const App = () => {
               <Route path="/profile" element={<div>Profile Page</div>} />
               <Route path="/login" element={<Login />} />
             </Routes>
-            {isChatVisible && <DraggableChat />}
+            <DraggableChat />
           </MobileLayout>
         </BrowserRouter>
       </TooltipProvider>
