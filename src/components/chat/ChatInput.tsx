@@ -89,29 +89,18 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 border-t border-white/10">
-      <div className="flex items-center gap-2">
-        <div className="flex-1">
-          <Textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onPaste={handlePaste}
-            placeholder="Type your message or paste an image..."
-            className="min-h-[88px] max-h-[200px] resize-none bg-dark-lighter/50 border-white/10 focus:border-white/20 placeholder:text-white/50 text-white"
-            disabled={isLoading}
-          />
-          {attachments.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-2">
-              {attachments.map((file, index) => (
-                <div key={index} className="text-sm text-white/70">
-                  {file.name}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        <div className="flex flex-col gap-2">
+    <form onSubmit={handleSubmit} className="p-4">
+      <div className="relative">
+        <Textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
+          placeholder="Type your message or paste an image..."
+          className="min-h-[88px] max-h-[200px] resize-none pr-24"
+          disabled={isLoading}
+        />
+        <div className="absolute bottom-3 right-3 flex gap-2">
           <input
             type="file"
             id="file-upload"
@@ -124,19 +113,29 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
             type="button"
             variant="outline"
             size="icon"
-            className="h-10 w-10 border-white/10 bg-dark-lighter/50 hover:bg-dark-lighter/70"
+            className="h-8 w-8"
             onClick={() => document.getElementById('file-upload')?.click()}
           >
-            <Paperclip className="h-5 w-5 text-white/70" />
+            <Paperclip className="h-4 w-4" />
           </Button>
           <Button 
             type="submit" 
+            size="icon"
             disabled={isLoading || (!message.trim() && attachments.length === 0)}
-            className="h-10 w-20 bg-dark-lighter/50 hover:bg-dark-lighter/70 text-white/90"
+            className="h-8 w-8"
           >
-            <Send className="h-5 w-5" />
+            <Send className="h-4 w-4" />
           </Button>
         </div>
+        {attachments.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {attachments.map((file, index) => (
+              <div key={index} className="text-sm">
+                {file.name}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </form>
   );
