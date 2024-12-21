@@ -2,27 +2,24 @@ import { toast } from 'sonner';
 import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
 import { WEBSOCKET_URL, RECONNECT_INTERVALS, MAX_RECONNECT_ATTEMPTS, HEARTBEAT_INTERVAL } from '@/constants/websocket';
 import { supabase } from "@/integrations/supabase/client";
+import { WebSocketMessageHandler } from './WebSocketMessageHandler';
+import { HeartbeatManager } from './HeartbeatManager';
+import { MetricsTracker } from './MetricsTracker';
 
 export class ConnectionManager {
   private ws: WebSocket | null = null;
+  private messageHandler: WebSocketMessageHandler;
+  private heartbeatManager: HeartbeatManager;
+  private metricsTracker: MetricsTracker;
   private reconnectAttempts = 0;
   private reconnectTimeout: NodeJS.Timeout | null = null;
-  private heartbeatInterval: NodeJS.Timeout | null = null;
-  private metrics: ConnectionMetrics = {
-    lastConnected: null,
-    reconnectAttempts: 0,
-    lastError: null,
-    messagesSent: 0,
-    messagesReceived: 0,
-    lastHeartbeat: null,
-    latency: 0,
-    uptime: 0,
-  };
-  private connectionState: ConnectionState = 'initial';
   private projectId: string;
   
   constructor(projectId: string) {
     this.projectId = projectId;
+    this.messageHandler = new WebSocketMessageHandler();
+    this.heartbeatManager = new HeartbeatManager();
+    this.metricsTracker = new MetricsTracker();
     this.setupHeartbeat();
   }
 
@@ -30,7 +27,6 @@ export class ConnectionManager {
   public onMessage: ((data: any) => void) | null = null;
 
   private updateState(newState: ConnectionState) {
-    this.connectionState = newState;
     if (this.onStateChange) {
       this.onStateChange(newState);
     }
@@ -52,18 +48,9 @@ export class ConnectionManager {
   }
 
   private setupHeartbeat() {
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval);
-    }
-
-    this.heartbeatInterval = setInterval(() => {
-      if (this.ws?.readyState === WebSocket.OPEN) {
-        const startTime = Date.now();
-        this.ws.send(JSON.stringify({ type: 'ping' }));
-        this.metrics.lastHeartbeat = new Date();
-        this.metrics.latency = Date.now() - startTime;
-      }
-    }, HEARTBEAT_INTERVAL);
+    this.heartbeatManager.setup(this.ws, () => {
+      this.metricsTracker.updateLastHeartbeat();
+    });
   }
 
   public async connect() {
@@ -75,7 +62,7 @@ export class ConnectionManager {
     try {
       this.updateState('connecting');
       
-      // Get the current session
+      // Get the current session and access token
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         throw new Error('No active session');
@@ -88,45 +75,28 @@ export class ConnectionManager {
       
       this.ws.onopen = () => {
         console.log('WebSocket connected successfully');
-        this.metrics.lastConnected = new Date();
+        this.metricsTracker.setLastConnected();
         this.reconnectAttempts = 0;
         this.updateState('connected');
         this.setupHeartbeat();
       };
 
       this.ws.onmessage = (event) => {
-        this.metrics.messagesReceived++;
+        this.metricsTracker.incrementMessagesReceived();
         if (this.onMessage) {
-          try {
-            const data = JSON.parse(event.data);
-            if (data.type === 'pong') {
-              this.metrics.latency = Date.now() - this.metrics.lastHeartbeat!.getTime();
-              return;
-            }
-            this.onMessage(data);
-          } catch (error) {
-            console.error('Failed to parse WebSocket message:', error);
-          }
+          this.messageHandler.handleMessage(event.data, this.onMessage);
         }
       };
 
       this.ws.onerror = (event) => {
         console.error('WebSocket error:', event);
-        const error = new Error('WebSocket connection error');
-        this.metrics.lastError = error;
-        
-        if (this.connectionState === 'connected') {
-          this.updateState('error');
-        }
-        
+        this.metricsTracker.setLastError(new Error('WebSocket connection error'));
+        this.updateState('error');
         this.attemptReconnect();
       };
 
       this.ws.onclose = (event) => {
-        if (this.connectionState !== 'disconnected') {
-          this.updateState('disconnected');
-        }
-
+        this.updateState('disconnected');
         if (event.code !== 1000) {
           this.attemptReconnect();
         }
@@ -139,10 +109,8 @@ export class ConnectionManager {
   }
 
   private handleError(error: Error) {
-    this.metrics.lastError = error;
-    if (this.connectionState === 'connected') {
-      this.updateState('error');
-    }
+    this.metricsTracker.setLastError(error);
+    this.updateState('error');
     this.attemptReconnect();
   }
 
@@ -160,7 +128,7 @@ export class ConnectionManager {
 
     const delay = RECONNECT_INTERVALS[this.reconnectAttempts] || RECONNECT_INTERVALS[RECONNECT_INTERVALS.length - 1];
     this.reconnectAttempts++;
-    this.metrics.reconnectAttempts = this.reconnectAttempts;
+    this.metricsTracker.setReconnectAttempts(this.reconnectAttempts);
     
     this.updateState('reconnecting');
     console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts})`);
@@ -174,7 +142,7 @@ export class ConnectionManager {
     if (this.ws?.readyState === WebSocket.OPEN) {
       try {
         this.ws.send(JSON.stringify(data));
-        this.metrics.messagesSent++;
+        this.metricsTracker.incrementMessagesSent();
         return true;
       } catch (error) {
         console.error('Failed to send message:', error);
@@ -190,10 +158,7 @@ export class ConnectionManager {
   }
 
   public getMetrics(): ConnectionMetrics {
-    if (this.metrics.lastConnected) {
-      this.metrics.uptime = Date.now() - this.metrics.lastConnected.getTime();
-    }
-    return { ...this.metrics };
+    return this.metricsTracker.getMetrics();
   }
 
   public reconnect() {
@@ -207,9 +172,7 @@ export class ConnectionManager {
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
     }
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval);
-    }
+    this.heartbeatManager.destroy();
     if (this.ws) {
       this.ws.close();
       this.ws = null;
