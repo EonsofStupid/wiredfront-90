@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor, DragStartEvent } from '@dnd-kit/core';
 import { restrictToWindowEdges } from '@dnd-kit/modifiers';
 import { useMessageSubscription } from '@/hooks/useMessageSubscription';
@@ -24,8 +24,17 @@ export const DraggableChat = () => {
   const [isTacked, setIsTacked] = useState(true);
   const { toast } = useToast();
 
-  // Use a fixed session ID for now - in a real app, this would be dynamic
-  const sessionId = 'default-session';
+  // Generate a stable session ID using localStorage
+  const [sessionId, setSessionId] = useState<string>(() => {
+    const stored = localStorage.getItem('chat_session_id');
+    if (stored) return stored;
+    
+    // Generate a new UUID using crypto API
+    const newId = crypto.randomUUID();
+    localStorage.setItem('chat_session_id', newId);
+    return newId;
+  });
+
   const { messages, isLoading, error } = useMessageSubscription({
     sessionId,
     isMinimized,
