@@ -12,6 +12,16 @@ interface SettingValue {
   key: string;
 }
 
+// Type guard to check if a value is a SettingValue
+function isSettingValue(value: unknown): value is SettingValue {
+  return (
+    typeof value === 'object' && 
+    value !== null && 
+    'key' in value && 
+    typeof (value as SettingValue).key === 'string'
+  );
+}
+
 export function APISettings() {
   const [isSaving, setIsSaving] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -62,22 +72,20 @@ export function APISettings() {
 
           if (settings) {
             settings.forEach(setting => {
-              // Safely type cast the value to our SettingValue interface
-              const value = setting.value as SettingValue;
-              if (!value || typeof value.key !== 'string') return;
+              if (!isSettingValue(setting.value)) return;
               
               switch (setting.setting_id) {
-                case 'openai-api-key': setOpenaiKey(value.key); break;
-                case 'huggingface-api-key': setHuggingfaceKey(value.key); break;
-                case 'gemini-api-key': setGeminiKey(value.key); break;
-                case 'alexa-api-key': setAlexaKey(value.key); break;
-                case 'cortana-api-key': setCortanaKey(value.key); break;
-                case 'google-drive-api-key': setGoogleDriveKey(value.key); break;
-                case 'dropbox-api-key': setDropboxKey(value.key); break;
-                case 'aws-access-key': setAwsAccessKey(value.key); break;
-                case 'aws-secret-key': setAwsSecretKey(value.key); break;
-                case 'github-token': setGithubToken(value.key); break;
-                case 'docker-token': setDockerToken(value.key); break;
+                case 'openai-api-key': setOpenaiKey(setting.value.key); break;
+                case 'huggingface-api-key': setHuggingfaceKey(setting.value.key); break;
+                case 'gemini-api-key': setGeminiKey(setting.value.key); break;
+                case 'alexa-api-key': setAlexaKey(setting.value.key); break;
+                case 'cortana-api-key': setCortanaKey(setting.value.key); break;
+                case 'google-drive-api-key': setGoogleDriveKey(setting.value.key); break;
+                case 'dropbox-api-key': setDropboxKey(setting.value.key); break;
+                case 'aws-access-key': setAwsAccessKey(setting.value.key); break;
+                case 'aws-secret-key': setAwsSecretKey(setting.value.key); break;
+                case 'github-token': setGithubToken(setting.value.key); break;
+                case 'docker-token': setDockerToken(setting.value.key); break;
               }
             });
           }
@@ -219,4 +227,4 @@ export function APISettings() {
       </Button>
     </div>
   );
-}
+};
