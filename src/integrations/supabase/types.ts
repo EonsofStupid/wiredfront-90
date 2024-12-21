@@ -16,6 +16,7 @@ export type Database = {
           created_at: string | null
           id: string
           is_minimized: boolean | null
+          last_accessed: string | null
           metadata: Json | null
           position: Json | null
           type: Database["public"]["Enums"]["message_type"]
@@ -29,6 +30,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_minimized?: boolean | null
+          last_accessed?: string | null
           metadata?: Json | null
           position?: Json | null
           type?: Database["public"]["Enums"]["message_type"]
@@ -42,6 +44,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_minimized?: boolean | null
+          last_accessed?: string | null
           metadata?: Json | null
           position?: Json | null
           type?: Database["public"]["Enums"]["message_type"]
