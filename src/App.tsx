@@ -16,13 +16,11 @@ const App = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -33,7 +31,7 @@ const App = () => {
   }, []);
 
   if (loading) {
-    return null; // Or a loading spinner
+    return null;
   }
 
   return (
@@ -47,13 +45,11 @@ const App = () => {
               <Route path="/" element={<Index />} />
               <Route 
                 path="/dashboard" 
-                element={
-                  user ? <Dashboard /> : <Navigate to="/login" replace />
-                } 
+                element={user ? <Dashboard /> : <Navigate to="/login" replace />} 
               />
               <Route path="/editor" element={<div>Editor Page</div>} />
               <Route path="/documents" element={<div>Documents Page</div>} />
-              <Route path="/team" element={<div>Team Page</div>} />
+              <Route path="/ai" element={<div>AI Assistant Page</div>} />
               <Route path="/analytics" element={<div>Analytics Page</div>} />
               <Route path="/reports" element={<div>Reports Page</div>} />
               <Route path="/data" element={<div>Data Page</div>} />
