@@ -11,6 +11,7 @@ const MESSAGES_PER_PAGE = 50;
 export const useMessages = (sessionId: string, isMinimized: boolean) => {
   const queryClient = useQueryClient();
   const [realtimeMessages, setRealtimeMessages] = useState<Message[]>([]);
+  const [ws, setWs] = useState<WebSocket | null>(null);
 
   // Fetch paginated messages
   const {
@@ -46,67 +47,71 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     enabled: !isMinimized && !!sessionId,
   });
 
-  // Subscribe to real-time updates
+  // Initialize WebSocket connection
   useEffect(() => {
     if (!sessionId || isMinimized) return;
 
-    console.log('Subscribing to messages channel for session:', sessionId);
+    const initWebSocket = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          toast.error('Authentication required');
+          return;
+        }
 
-    const channel = supabase
-      .channel(`messages:${sessionId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'messages',
-          filter: `chat_session_id=eq.${sessionId}`,
-        },
-        (payload) => {
-          console.log('Real-time message update:', payload);
-          
-          if (payload.eventType === 'INSERT') {
-            setRealtimeMessages((prev) => [payload.new as Message, ...prev]);
-            // Update cache
-            queryClient.setQueryData(['messages', sessionId], (oldData: any) => {
-              if (!oldData?.pages) return oldData;
-              const newPages = [...oldData.pages];
-              newPages[0] = [payload.new as Message, ...newPages[0]];
-              return { ...oldData, pages: newPages };
-            });
-          } else if (payload.eventType === 'UPDATE') {
-            queryClient.setQueryData(['messages', sessionId], (oldData: any) => {
-              if (!oldData?.pages) return oldData;
-              const newPages = oldData.pages.map((page: Message[]) =>
-                page.map((msg) =>
-                  msg.id === payload.new.id ? payload.new as Message : msg
-                )
-              );
-              return { ...oldData, pages: newPages };
-            });
-          } else if (payload.eventType === 'DELETE') {
-            queryClient.setQueryData(['messages', sessionId], (oldData: any) => {
-              if (!oldData?.pages) return oldData;
-              const newPages = oldData.pages.map((page: Message[]) =>
-                page.filter((msg) => msg.id !== payload.old.id)
-              );
-              return { ...oldData, pages: newPages };
-            });
+        const wsUrl = `wss://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.functions.supabase.co/realtime-chat?jwt=${session.access_token}`;
+        const newWs = new WebSocket(wsUrl);
+
+        newWs.onopen = () => {
+          console.log('WebSocket connected');
+          toast.success('Connected to chat service');
+        };
+
+        newWs.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          console.log('Received message:', data);
+
+          if (data.type === 'response.message') {
+            // Handle AI response
+            const newMessage: Message = {
+              id: crypto.randomUUID(),
+              content: data.message,
+              chat_session_id: sessionId,
+              created_at: new Date().toISOString(),
+              type: 'text',
+              user_id: 'ai', // You might want to create a specific AI user ID
+              metadata: {},
+            };
+            setRealtimeMessages(prev => [newMessage, ...prev]);
           }
-        }
-      )
-      .subscribe((status) => {
-        console.log(`Subscription status for session ${sessionId}:`, status);
-        if (status === 'SUBSCRIBED') {
-          console.log('Successfully subscribed to message updates');
-        }
-      });
+        };
+
+        newWs.onerror = (error) => {
+          console.error('WebSocket error:', error);
+          toast.error('Chat connection error');
+        };
+
+        newWs.onclose = () => {
+          console.log('WebSocket closed');
+          toast.error('Chat connection closed');
+        };
+
+        setWs(newWs);
+      } catch (error) {
+        console.error('Failed to initialize WebSocket:', error);
+        toast.error('Failed to connect to chat service');
+      }
+    };
+
+    initWebSocket();
 
     return () => {
-      console.log(`Unsubscribing from session ${sessionId}`);
-      supabase.removeChannel(channel);
+      if (ws) {
+        ws.close();
+        setWs(null);
+      }
     };
-  }, [sessionId, isMinimized, queryClient]);
+  }, [sessionId, isMinimized]);
 
   // Combine paginated and real-time messages
   const allMessages = [
@@ -114,8 +119,13 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     ...(data?.pages.flatMap(page => page) || [])
   ];
 
-  // Optimistic update helper
+  // Send message through WebSocket
   const addOptimisticMessage = async (content: string) => {
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      toast.error('Chat service not connected');
+      return;
+    }
+
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (!user || userError) {
       toast.error('You must be logged in to send messages');
@@ -123,24 +133,41 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     }
 
     const optimisticMessage = {
-      id: `temp-${Date.now()}`,
+      id: crypto.randomUUID(),
       content,
       user_id: user.id,
       chat_session_id: sessionId,
       created_at: new Date().toISOString(),
       type: 'text',
+      metadata: {},
     } as Message;
 
     setRealtimeMessages(prev => [optimisticMessage, ...prev]);
     
     try {
+      // Send message through WebSocket
+      ws.send(JSON.stringify({
+        type: 'conversation.item.create',
+        item: {
+          type: 'message',
+          role: 'user',
+          content: [
+            {
+              type: 'input_text',
+              text: content
+            }
+          ]
+        }
+      }));
+
+      // Also save to database
       const { error } = await supabase
         .from('messages')
         .insert({
           content,
           chat_session_id: sessionId,
           type: 'text',
-          user_id: user.id, // Add the required user_id field
+          user_id: user.id,
         });
 
       if (error) throw error;
