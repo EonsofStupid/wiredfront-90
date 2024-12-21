@@ -1,6 +1,19 @@
 import { cn } from "@/lib/utils";
-import { Bell, Search, User, PanelLeftClose, PanelLeft } from "lucide-react";
+import { Bell, Search, ChevronDown, PanelLeftClose, PanelLeft } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 interface TopBarProps {
   className?: string;
@@ -9,6 +22,35 @@ interface TopBarProps {
 }
 
 export const TopBar = ({ className, isCompact, onToggleCompact }: TopBarProps) => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/login');
+      toast.success('Logged out successfully');
+    } catch (error) {
+      toast.error('Error logging out');
+    }
+  };
+
   return (
     <header className={cn("h-16 border-b border-neon-blue/20 glass-card px-6", className)}>
       <div className="h-full flex items-center justify-between">
@@ -27,30 +69,67 @@ export const TopBar = ({ className, isCompact, onToggleCompact }: TopBarProps) =
           <div className="flex items-center gap-4">
             <Tooltip>
               <TooltipTrigger asChild>
-                <button className="animate-hover-button p-2 rounded-lg text-neon-pink hover:text-neon-blue transition-colors" aria-label="Search">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => navigate('/search')}
+                  className="animate-hover-button text-neon-pink hover:text-neon-blue"
+                >
                   <Search className="w-5 h-5" />
-                </button>
+                </Button>
               </TooltipTrigger>
               <TooltipContent>Search</TooltipContent>
             </Tooltip>
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <button className="animate-hover-button p-2 rounded-lg text-neon-pink hover:text-neon-blue transition-colors" aria-label="Notifications">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => navigate('/notifications')} 
+                  className="animate-hover-button text-neon-pink hover:text-neon-blue"
+                >
                   <Bell className="w-5 h-5" />
-                </button>
+                </Button>
               </TooltipTrigger>
               <TooltipContent>Notifications</TooltipContent>
             </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button className="animate-hover-button p-2 rounded-lg text-neon-pink hover:text-neon-blue transition-colors" aria-label="Profile">
-                  <User className="w-5 h-5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>Profile</TooltipContent>
-            </Tooltip>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="animate-hover-button text-neon-pink hover:text-neon-blue flex items-center gap-2"
+                  >
+                    {user.email}
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="glass-card">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/settings')}>
+                    Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button 
+                variant="ghost"
+                onClick={() => navigate('/login')}
+                className="animate-hover-button text-neon-pink hover:text-neon-blue"
+              >
+                Login
+              </Button>
+            )}
           </div>
         </TooltipProvider>
       </div>
