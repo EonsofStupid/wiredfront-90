@@ -14,6 +14,9 @@ export function APISettings() {
   // AI Services
   const [openaiKey, setOpenaiKey] = useState("");
   const [huggingfaceKey, setHuggingfaceKey] = useState("");
+  const [geminiKey, setGeminiKey] = useState("");
+  const [alexaKey, setAlexaKey] = useState("");
+  const [cortanaKey, setCortanaKey] = useState("");
 
   // Cloud Storage
   const [googleDriveKey, setGoogleDriveKey] = useState("");
@@ -34,6 +37,9 @@ export function APISettings() {
       const apiKeys = {
         'openai-api-key': openaiKey,
         'huggingface-api-key': huggingfaceKey,
+        'gemini-api-key': geminiKey,
+        'alexa-api-key': alexaKey,
+        'cortana-api-key': cortanaKey,
         'google-drive-api-key': googleDriveKey,
         'dropbox-api-key': dropboxKey,
         'aws-access-key': awsAccessKey,
@@ -92,8 +98,14 @@ export function APISettings() {
           <AIServicesSettings
             openaiKey={openaiKey}
             huggingfaceKey={huggingfaceKey}
+            geminiKey={geminiKey}
+            alexaKey={alexaKey}
+            cortanaKey={cortanaKey}
             onOpenAIKeyChange={setOpenaiKey}
             onHuggingfaceKeyChange={setHuggingfaceKey}
+            onGeminiKeyChange={setGeminiKey}
+            onAlexaKeyChange={setAlexaKey}
+            onCortanaKeyChange={setCortanaKey}
           />
         </TabsContent>
 
