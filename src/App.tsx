@@ -12,7 +12,16 @@ import { supabase } from "@/integrations/supabase/client";
 import Login from "./pages/Login";
 import { DraggableChat } from "@/components/chat/DraggableChat";
 
-const queryClient = new QueryClient();
+// Move QueryClient instance outside component
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => {
   const [user, setUser] = useState<any>(null);
