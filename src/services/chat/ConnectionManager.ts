@@ -1,11 +1,10 @@
 import { toast } from 'sonner';
 import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
+import { WEBSOCKET_URL, RECONNECT_INTERVALS, MAX_RECONNECT_ATTEMPTS, HEARTBEAT_INTERVAL } from '@/constants/websocket';
 
 export class ConnectionManager {
   private ws: WebSocket | null = null;
-  private url: string;
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
   private reconnectTimeout: NodeJS.Timeout | null = null;
   private heartbeatInterval: NodeJS.Timeout | null = null;
   private metrics: ConnectionMetrics = {
@@ -21,11 +20,8 @@ export class ConnectionManager {
 
   private connectionState: ConnectionState = 'initial';
   
-  constructor(projectId: string) {
-    if (!projectId) {
-      throw new Error('Project ID is required');
-    }
-    this.url = `wss://${projectId}.functions.supabase.co/functions/v1/realtime-chat`;
+  constructor() {
+    this.setupHeartbeat();
   }
 
   public onStateChange: ((state: ConnectionState) => void) | null = null;
@@ -37,7 +33,6 @@ export class ConnectionManager {
       this.onStateChange(newState);
     }
 
-    // Show connection state notifications
     switch (newState) {
       case 'connected':
         toast.success('Connected to chat service');
@@ -54,7 +49,7 @@ export class ConnectionManager {
     }
   }
 
-  private startHeartbeat() {
+  private setupHeartbeat() {
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);
     }
@@ -66,7 +61,7 @@ export class ConnectionManager {
         this.metrics.lastHeartbeat = new Date();
         this.metrics.latency = Date.now() - startTime;
       }
-    }, 30000);
+    }, HEARTBEAT_INTERVAL);
   }
 
   public connect() {
@@ -77,16 +72,16 @@ export class ConnectionManager {
 
     try {
       this.updateState('connecting');
-      console.log('Connecting to WebSocket:', this.url);
+      console.log('Connecting to WebSocket:', WEBSOCKET_URL);
       
-      this.ws = new WebSocket(this.url);
+      this.ws = new WebSocket(WEBSOCKET_URL);
       
       this.ws.onopen = () => {
         console.log('WebSocket connected successfully');
         this.metrics.lastConnected = new Date();
         this.reconnectAttempts = 0;
         this.updateState('connected');
-        this.startHeartbeat();
+        this.setupHeartbeat();
       };
 
       this.ws.onmessage = (event) => {
@@ -135,16 +130,14 @@ export class ConnectionManager {
 
   private handleError(error: Error) {
     this.metrics.lastError = error;
-    
     if (this.connectionState === 'connected') {
       this.updateState('error');
     }
-    
     this.attemptReconnect();
   }
 
   private attemptReconnect() {
-    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+    if (this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
       console.error('Max reconnection attempts reached');
       toast.error('Unable to establish connection. Please try again later.');
       this.updateState('error');
@@ -155,10 +148,9 @@ export class ConnectionManager {
       clearTimeout(this.reconnectTimeout);
     }
 
+    const delay = RECONNECT_INTERVALS[this.reconnectAttempts] || RECONNECT_INTERVALS[RECONNECT_INTERVALS.length - 1];
     this.reconnectAttempts++;
     this.metrics.reconnectAttempts = this.reconnectAttempts;
-    
-    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 10000);
     
     this.updateState('reconnecting');
     console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts})`);

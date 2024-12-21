@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { X, Minus, Pin, PinOff, SignalHigh, CloudOff, Loader2 } from "lucide-react";
+import { X, Minus, Pin, PinOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConnectionState } from "@/types/websocket";
+import { ConnectionStatus } from "./ConnectionStatus";
 
 interface ChatHeaderProps {
   onMinimize: () => void;
@@ -24,38 +25,6 @@ export const ChatHeader = ({
   currentAPI,
   connectionState
 }: ChatHeaderProps) => {
-  const getConnectionIcon = () => {
-    switch (connectionState) {
-      case 'connected':
-        return <SignalHigh className="w-4 h-4 text-green-500" />;
-      case 'connecting':
-      case 'reconnecting':
-        return <Loader2 className="w-4 h-4 text-yellow-500 animate-spin" />;
-      case 'disconnected':
-      case 'error':
-        return <CloudOff className="w-4 h-4 text-red-500" />;
-      default:
-        return null;
-    }
-  };
-
-  const getConnectionTitle = () => {
-    switch (connectionState) {
-      case 'connected':
-        return 'Connected';
-      case 'connecting':
-        return 'Connecting...';
-      case 'reconnecting':
-        return 'Reconnecting...';
-      case 'disconnected':
-        return 'Disconnected';
-      case 'error':
-        return 'Connection Error';
-      default:
-        return '';
-    }
-  };
-
   return (
     <div
       className={cn(
@@ -67,9 +36,7 @@ export const ChatHeader = ({
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium">AI Chat</span>
         {connectionState && (
-          <span className="text-xs text-muted-foreground flex items-center gap-1" title={getConnectionTitle()}>
-            {getConnectionIcon()}
-          </span>
+          <ConnectionStatus state={connectionState} />
         )}
         {currentAPI && (
           <span className="text-xs text-muted-foreground">
