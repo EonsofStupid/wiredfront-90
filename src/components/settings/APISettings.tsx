@@ -6,13 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { AIServicesSettings } from "./api/AIServicesSettings";
 import { CloudStorageSettings } from "./api/CloudStorageSettings";
 import { DevelopmentSettings } from "./api/DevelopmentSettings";
+import { VoiceSettings } from "./api/VoiceSettings";
 import { useNavigate } from "react-router-dom";
 
 interface SettingValue {
   key: string;
 }
 
-// Type guard to check if a value is a SettingValue
 function isSettingValue(value: unknown): value is SettingValue {
   return (
     typeof value === 'object' && 
@@ -32,8 +32,12 @@ export function APISettings() {
   const [openaiKey, setOpenaiKey] = useState("");
   const [huggingfaceKey, setHuggingfaceKey] = useState("");
   const [geminiKey, setGeminiKey] = useState("");
-  const [alexaKey, setAlexaKey] = useState("");
-  const [cortanaKey, setCortanaKey] = useState("");
+  const [anthropicKey, setAnthropicKey] = useState("");
+  const [perplexityKey, setPerplexityKey] = useState("");
+
+  // Voice Services
+  const [elevenLabsKey, setElevenLabsKey] = useState("");
+  const [selectedVoice, setSelectedVoice] = useState("");
 
   // Cloud Storage
   const [googleDriveKey, setGoogleDriveKey] = useState("");
@@ -46,7 +50,6 @@ export function APISettings() {
   const [dockerToken, setDockerToken] = useState("");
 
   useEffect(() => {
-    // Check authentication status
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -60,7 +63,6 @@ export function APISettings() {
       }
       setUser(session.user);
 
-      // Load existing settings
       if (session.user) {
         try {
           const { data: settings, error } = await supabase
@@ -78,8 +80,10 @@ export function APISettings() {
                 case 'openai-api-key': setOpenaiKey(setting.value.key); break;
                 case 'huggingface-api-key': setHuggingfaceKey(setting.value.key); break;
                 case 'gemini-api-key': setGeminiKey(setting.value.key); break;
-                case 'alexa-api-key': setAlexaKey(setting.value.key); break;
-                case 'cortana-api-key': setCortanaKey(setting.value.key); break;
+                case 'anthropic-api-key': setAnthropicKey(setting.value.key); break;
+                case 'perplexity-api-key': setPerplexityKey(setting.value.key); break;
+                case 'elevenlabs-api-key': setElevenLabsKey(setting.value.key); break;
+                case 'elevenlabs-voice': setSelectedVoice(setting.value.key); break;
                 case 'google-drive-api-key': setGoogleDriveKey(setting.value.key); break;
                 case 'dropbox-api-key': setDropboxKey(setting.value.key); break;
                 case 'aws-access-key': setAwsAccessKey(setting.value.key); break;
@@ -120,8 +124,10 @@ export function APISettings() {
         'openai-api-key': openaiKey,
         'huggingface-api-key': huggingfaceKey,
         'gemini-api-key': geminiKey,
-        'alexa-api-key': alexaKey,
-        'cortana-api-key': cortanaKey,
+        'anthropic-api-key': anthropicKey,
+        'perplexity-api-key': perplexityKey,
+        'elevenlabs-api-key': elevenLabsKey,
+        'elevenlabs-voice': selectedVoice,
         'google-drive-api-key': googleDriveKey,
         'dropbox-api-key': dropboxKey,
         'aws-access-key': awsAccessKey,
@@ -176,6 +182,7 @@ export function APISettings() {
       <Tabs defaultValue="ai-services" className="space-y-4">
         <TabsList>
           <TabsTrigger value="ai-services">AI Services</TabsTrigger>
+          <TabsTrigger value="voice">Voice</TabsTrigger>
           <TabsTrigger value="cloud-storage">Cloud Storage</TabsTrigger>
           <TabsTrigger value="development">Development</TabsTrigger>
         </TabsList>
@@ -185,13 +192,22 @@ export function APISettings() {
             openaiKey={openaiKey}
             huggingfaceKey={huggingfaceKey}
             geminiKey={geminiKey}
-            alexaKey={alexaKey}
-            cortanaKey={cortanaKey}
+            anthropicKey={anthropicKey}
+            perplexityKey={perplexityKey}
             onOpenAIKeyChange={setOpenaiKey}
             onHuggingfaceKeyChange={setHuggingfaceKey}
             onGeminiKeyChange={setGeminiKey}
-            onAlexaKeyChange={setAlexaKey}
-            onCortanaKeyChange={setCortanaKey}
+            onAnthropicKeyChange={setAnthropicKey}
+            onPerplexityKeyChange={setPerplexityKey}
+          />
+        </TabsContent>
+
+        <TabsContent value="voice">
+          <VoiceSettings
+            elevenLabsKey={elevenLabsKey}
+            onElevenLabsKeyChange={setElevenLabsKey}
+            selectedVoice={selectedVoice}
+            onVoiceChange={setSelectedVoice}
           />
         </TabsContent>
 
@@ -227,4 +243,4 @@ export function APISettings() {
       </Button>
     </div>
   );
-};
+}

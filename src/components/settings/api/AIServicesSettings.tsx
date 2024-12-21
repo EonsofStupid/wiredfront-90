@@ -7,26 +7,26 @@ interface AIServicesSettingsProps {
   openaiKey: string;
   huggingfaceKey: string;
   geminiKey: string;
-  alexaKey: string;
-  cortanaKey: string;
+  anthropicKey: string;
+  perplexityKey: string;
   onOpenAIKeyChange: (value: string) => void;
   onHuggingfaceKeyChange: (value: string) => void;
   onGeminiKeyChange: (value: string) => void;
-  onAlexaKeyChange: (value: string) => void;
-  onCortanaKeyChange: (value: string) => void;
+  onAnthropicKeyChange: (value: string) => void;
+  onPerplexityKeyChange: (value: string) => void;
 }
 
 export function AIServicesSettings({
   openaiKey,
   huggingfaceKey,
   geminiKey,
-  alexaKey,
-  cortanaKey,
+  anthropicKey,
+  perplexityKey,
   onOpenAIKeyChange,
   onHuggingfaceKeyChange,
   onGeminiKeyChange,
-  onAlexaKeyChange,
-  onCortanaKeyChange,
+  onAnthropicKeyChange,
+  onPerplexityKeyChange,
 }: AIServicesSettingsProps) {
   return (
     <div className="space-y-6">
@@ -38,7 +38,7 @@ export function AIServicesSettings({
               <CardHeader>
                 <CardTitle>OpenAI API</CardTitle>
                 <CardDescription>
-                  Configure OpenAI API for code generation, document processing, and AI assistants.
+                  Configure OpenAI API for GPT models and DALL-E image generation.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -61,6 +61,80 @@ export function AIServicesSettings({
                     className="text-primary hover:underline"
                   >
                     OpenAI dashboard
+                  </a>
+                </p>
+              </CardContent>
+            </Card>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="anthropic">
+          <AccordionTrigger>Anthropic API</AccordionTrigger>
+          <AccordionContent>
+            <Card>
+              <CardHeader>
+                <CardTitle>Anthropic API</CardTitle>
+                <CardDescription>
+                  Configure Anthropic API for Claude models.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="anthropic-key">API Key</Label>
+                  <Input
+                    id="anthropic-key"
+                    type="password"
+                    value={anthropicKey}
+                    onChange={(e) => onAnthropicKeyChange(e.target.value)}
+                    placeholder="sk-ant-..."
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Get your API key from the{" "}
+                  <a
+                    href="https://console.anthropic.com/account/keys"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Anthropic Console
+                  </a>
+                </p>
+              </CardContent>
+            </Card>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="perplexity">
+          <AccordionTrigger>Perplexity API</AccordionTrigger>
+          <AccordionContent>
+            <Card>
+              <CardHeader>
+                <CardTitle>Perplexity API</CardTitle>
+                <CardDescription>
+                  Configure Perplexity API for advanced language models.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="perplexity-key">API Key</Label>
+                  <Input
+                    id="perplexity-key"
+                    type="password"
+                    value={perplexityKey}
+                    onChange={(e) => onPerplexityKeyChange(e.target.value)}
+                    placeholder="pplx-..."
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Get your API key from the{" "}
+                  <a
+                    href="https://www.perplexity.ai/settings"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Perplexity Settings
                   </a>
                 </p>
               </CardContent>
@@ -135,80 +209,6 @@ export function AIServicesSettings({
                     className="text-primary hover:underline"
                   >
                     Google AI Studio
-                  </a>
-                </p>
-              </CardContent>
-            </Card>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="alexa">
-          <AccordionTrigger>Amazon Alexa API</AccordionTrigger>
-          <AccordionContent>
-            <Card>
-              <CardHeader>
-                <CardTitle>Amazon Alexa API</CardTitle>
-                <CardDescription>
-                  Integrate voice commands and Alexa skills into your application.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="alexa-key">API Key</Label>
-                  <Input
-                    id="alexa-key"
-                    type="password"
-                    value={alexaKey}
-                    onChange={(e) => onAlexaKeyChange(e.target.value)}
-                    placeholder="Enter Alexa API key"
-                  />
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Get your API key from the{" "}
-                  <a
-                    href="https://developer.amazon.com/alexa/console/ask"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    Alexa Developer Console
-                  </a>
-                </p>
-              </CardContent>
-            </Card>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="cortana">
-          <AccordionTrigger>Microsoft Cortana API</AccordionTrigger>
-          <AccordionContent>
-            <Card>
-              <CardHeader>
-                <CardTitle>Microsoft Cortana API</CardTitle>
-                <CardDescription>
-                  Integrate Microsoft's AI assistant capabilities.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="cortana-key">API Key</Label>
-                  <Input
-                    id="cortana-key"
-                    type="password"
-                    value={cortanaKey}
-                    onChange={(e) => onCortanaKeyChange(e.target.value)}
-                    placeholder="Enter Cortana API key"
-                  />
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Get your API key from the{" "}
-                  <a
-                    href="https://www.microsoft.com/en-us/cortana"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    Microsoft Developer Portal
                   </a>
                 </p>
               </CardContent>
