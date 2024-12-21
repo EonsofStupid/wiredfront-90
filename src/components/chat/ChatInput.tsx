@@ -28,22 +28,21 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="p-4 border-t">
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2">
         <Textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Type your message..."
-          className="min-h-[44px] max-h-[200px]"
+          className="min-h-[88px] max-h-[200px] resize-none"
           disabled={isLoading}
         />
         <Button 
           type="submit" 
-          size="icon"
           disabled={isLoading || !message.trim()}
-          className="shrink-0"
+          className="h-[88px] px-6 self-stretch flex items-center justify-center"
         >
-          <Send className="h-4 w-4" />
+          <Send className="h-5 w-5" />
         </Button>
       </div>
     </form>
