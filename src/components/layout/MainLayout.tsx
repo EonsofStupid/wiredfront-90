@@ -17,7 +17,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   }, [updatePreferences]);
 
   return (
-    <div className="layout-grid min-h-screen bg-background w-full">
+    <div className="layout-grid">
       <TopBar />
       <SideBar />
       <ContentArea>{children}</ContentArea>

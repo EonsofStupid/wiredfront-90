@@ -7,13 +7,19 @@
     "bottom-bar bottom-bar";
   grid-template-columns: auto 1fr;
   grid-template-rows: auto 1fr auto;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden; /* Prevent body scrolling */
+  position: fixed; /* Fix the entire layout */
+  top: 0;
+  left: 0;
 }
 
 /* Fixed Position Elements */
 .top-bar {
   grid-area: top-bar;
-  position: sticky;
-  top: 0;
+  height: 4rem; /* 64px - matches h-16 */
+  position: relative;
   z-index: 40;
   background-color: rgba(26, 26, 26, 0.8);
   backdrop-filter: blur(12px);
@@ -21,17 +27,27 @@
 
 .bottom-bar {
   grid-area: bottom-bar;
-  position: sticky;
-  bottom: 0;
+  height: 3rem; /* 48px - matches h-12 */
+  position: relative;
   z-index: 30;
   background-color: rgba(26, 26, 26, 0.8);
   backdrop-filter: blur(12px);
 }
 
+.sidebar {
+  grid-area: sidebar;
+  height: calc(100vh - 7rem); /* Subtract top-bar and bottom-bar heights */
+  position: relative;
+  z-index: 20;
+  overflow-y: auto;
+}
+
 .content-area {
   grid-area: content;
-  min-height: calc(100vh - theme('spacing.16') - theme('spacing.12'));
-  padding-bottom: theme('spacing.12');
+  height: calc(100vh - 7rem); /* Subtract top-bar and bottom-bar heights */
+  overflow-y: auto;
+  position: relative;
+  z-index: 10;
 }
 
 /* Responsive Adjustments */
@@ -42,5 +58,13 @@
       "content"
       "bottom-bar";
     grid-template-columns: 1fr;
+  }
+  
+  .sidebar {
+    display: none; /* Hide sidebar on mobile */
+  }
+  
+  .content-area {
+    width: 100%;
   }
 }
