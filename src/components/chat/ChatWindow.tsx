@@ -19,6 +19,8 @@ interface ChatWindowProps {
   isLoadingMore: boolean;
   onLoadMore: () => void;
   onSendMessage: (content: string) => void;
+  onSwitchAPI?: (provider: string) => void;
+  currentAPI?: string;
 }
 
 export const ChatWindow = ({ 
@@ -35,7 +37,9 @@ export const ChatWindow = ({
   hasMoreMessages,
   isLoadingMore,
   onLoadMore,
-  onSendMessage
+  onSendMessage,
+  onSwitchAPI,
+  currentAPI
 }: ChatWindowProps) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: 'chat-window',
@@ -75,6 +79,7 @@ export const ChatWindow = ({
         isTacked={isTacked}
         isDragging={isDragging}
         dragHandleProps={{ ...attributes, ...listeners }}
+        currentAPI={currentAPI}
       />
 
       {!isMinimized && (
@@ -89,6 +94,7 @@ export const ChatWindow = ({
           />
           <ChatInput 
             onSendMessage={onSendMessage}
+            onSwitchAPI={onSwitchAPI}
             isLoading={isLoading}
           />
         </>

@@ -4,19 +4,56 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { parseCommand, getCommandHelp } from "@/utils/chat/commandParser";
 
 interface ChatInputProps {
   onSendMessage: (content: string) => void;
+  onSwitchAPI?: (provider: string) => void;
   isLoading?: boolean;
 }
 
-export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
+export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputProps) => {
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
+
+  const handleCommand = (command: string) => {
+    const parsed = parseCommand(command);
+    if (!parsed) return false;
+
+    switch (parsed.type) {
+      case 'switch-api':
+        if (parsed.args.length > 0 && onSwitchAPI) {
+          onSwitchAPI(parsed.args[0]);
+          toast.success(`Switched to ${parsed.args[0]} API`);
+        } else {
+          toast.error("Please specify an API provider");
+        }
+        return true;
+      case 'help':
+        toast.info(getCommandHelp());
+        return true;
+      case 'clear':
+        setMessage("");
+        setAttachments([]);
+        toast.success("Chat input cleared");
+        return true;
+      case 'unknown':
+        toast.error("Unknown command. Type /help for available commands");
+        return true;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() && attachments.length === 0) return;
+    
+    // Handle commands
+    if (message.startsWith('/')) {
+      if (handleCommand(message)) {
+        setMessage("");
+        return;
+      }
+    }
     
     try {
       // Handle file uploads first
@@ -96,7 +133,7 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          placeholder="Type your message or paste an image..."
+          placeholder="Type a message or command (type /help for commands)..."
           className="min-h-[88px] max-h-[200px] resize-none pr-24"
           disabled={isLoading}
         />

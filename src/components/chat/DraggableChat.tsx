@@ -7,6 +7,7 @@ import { ChatWindow } from './ChatWindow';
 import { ChatDragContext } from './ChatDragContext';
 import { useToast } from "@/components/ui/use-toast";
 import { ChatSessionControls } from './ChatSessionControls';
+import { supabase } from "@/integrations/supabase/client";
 
 export const DraggableChat = () => {
   const CHAT_WIDTH = 414;
@@ -31,6 +32,10 @@ export const DraggableChat = () => {
     return stored ? JSON.parse(stored) : true;
   });
 
+  const [currentAPI, setCurrentAPI] = useState<string>(() => {
+    return localStorage.getItem('current-api') || 'openai';
+  });
+
   const { toast } = useToast();
 
   const {
@@ -50,6 +55,10 @@ export const DraggableChat = () => {
   useEffect(() => {
     localStorage.setItem('chat-tacked', JSON.stringify(isTacked));
   }, [isTacked]);
+
+  useEffect(() => {
+    localStorage.setItem('current-api', currentAPI);
+  }, [currentAPI]);
 
   useEffect(() => {
     const storedPosition = localStorage.getItem('chat-position');
@@ -115,6 +124,12 @@ export const DraggableChat = () => {
     });
   };
 
+  const handleSwitchAPI = async (provider: string) => {
+    setCurrentAPI(provider);
+    // You might want to add additional logic here to handle the API switch
+    // such as updating configurations or reinitializing connections
+  };
+
   const handleSendMessage = async (content: string) => {
     try {
       await addOptimisticMessage(content);
@@ -156,6 +171,8 @@ export const DraggableChat = () => {
           isLoadingMore={isFetchingNextPage}
           onLoadMore={handleLoadMore}
           onSendMessage={handleSendMessage}
+          onSwitchAPI={handleSwitchAPI}
+          currentAPI={currentAPI}
         />
       </div>
     </ChatDragContext>
