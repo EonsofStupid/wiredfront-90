@@ -4,6 +4,8 @@ import { ConnectionManager } from '@/services/chat/ConnectionManager';
 import { messageQueue } from '@/services/chat/MessageQueueService';
 import { toast } from "sonner";
 
+const SUPABASE_PROJECT_ID = 'ewjisqyvspdvhyppkhnm'; // Your Supabase project ID
+
 export const useWebSocketConnection = (
   sessionId: string,
   isMinimized: boolean,
@@ -24,8 +26,7 @@ export const useWebSocketConnection = (
 
   useEffect(() => {
     if (!isMinimized) {
-      const wsUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/realtime-chat`;
-      const manager = new ConnectionManager(wsUrl);
+      const manager = new ConnectionManager(SUPABASE_PROJECT_ID);
       
       manager.onStateChange = (state) => {
         setConnectionState(state);

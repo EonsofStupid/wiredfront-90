@@ -1,5 +1,5 @@
-import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
 import { toast } from 'sonner';
+import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
 
 export class ConnectionManager {
   private ws: WebSocket | null = null;
@@ -20,8 +20,9 @@ export class ConnectionManager {
 
   private connectionState: ConnectionState = 'initial';
   
-  constructor(url: string) {
-    this.url = url;
+  constructor(projectId: string) {
+    // Construct proper WebSocket URL using the project ID
+    this.url = `wss://${projectId}.functions.supabase.co/functions/v1/realtime-chat`;
   }
 
   public onStateChange: ((state: ConnectionState) => void) | null = null;
@@ -52,6 +53,7 @@ export class ConnectionManager {
         this.reconnectAttempts = 0;
         this.updateState('connected');
         this.startHeartbeat();
+        toast.success('Connected to chat service');
       };
 
       this.ws.onmessage = (event) => {
@@ -68,7 +70,6 @@ export class ConnectionManager {
 
       this.ws.onerror = (event: Event) => {
         console.error('WebSocket error:', event);
-        // Create a proper Error object from the event
         const error = new Error('WebSocket connection error');
         this.metrics.lastError = error;
         
@@ -85,7 +86,6 @@ export class ConnectionManager {
           this.updateState('disconnected');
         }
 
-        // Don't attempt to reconnect if the closure was clean
         if (event.code !== 1000) {
           this.attemptReconnect();
         }
