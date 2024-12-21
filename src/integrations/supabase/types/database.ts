@@ -1,3 +1,6 @@
+import type { Tables } from './tables';
+import type { Enums } from './enums';
+
 export type Json =
   | string
   | number

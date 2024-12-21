@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Database } from '@/integrations/supabase/types';
 
 interface SessionState {
   id: string;
@@ -19,7 +20,7 @@ export const useSessionManager = () => {
     try {
       const { data, error } = await supabase
         .from('messages')
-        .select('chat_session_id, last_accessed')
+        .select<'*', Database['public']['Tables']['messages']['Row']>('*')
         .order('last_accessed', { ascending: false })
         .limit(10);
 
@@ -30,8 +31,8 @@ export const useSessionManager = () => {
           data.map(item => [
             item.chat_session_id,
             {
-              id: item.chat_session_id,
-              lastAccessed: new Date(item.last_accessed),
+              id: item.chat_session_id!,
+              lastAccessed: new Date(item.last_accessed!),
               isActive: item.chat_session_id === currentSessionId
             }
           ])
