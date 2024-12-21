@@ -77,9 +77,14 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
               content: data.message,
               chat_session_id: sessionId,
               created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
               type: 'text',
-              user_id: 'ai', // You might want to create a specific AI user ID
+              user_id: 'ai',
               metadata: {},
+              is_minimized: false,
+              last_accessed: new Date().toISOString(),
+              position: { x: null, y: null },
+              window_state: { width: 350, height: 500 }
             };
             setRealtimeMessages(prev => [newMessage, ...prev]);
           }
