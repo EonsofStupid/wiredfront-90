@@ -1,12 +1,15 @@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useSettingsStore } from "@/stores/settings";
+import { useCallback } from "react";
 
 export function AccessibilitySettings() {
-  const { preferences, updatePreferences } = useSettingsStore((state) => ({
-    preferences: state.preferences,
-    updatePreferences: state.updatePreferences,
-  }));
+  const preferences = useSettingsStore(state => state.preferences);
+  const updatePreferences = useSettingsStore(state => state.updatePreferences);
+
+  const handlePreferenceChange = useCallback((key: keyof typeof preferences, value: boolean) => {
+    updatePreferences({ [key]: value });
+  }, [updatePreferences]);
 
   return (
     <div className="space-y-6">
@@ -28,9 +31,7 @@ export function AccessibilitySettings() {
           <Switch
             id="high-contrast"
             checked={preferences.highContrast}
-            onCheckedChange={(checked) =>
-              updatePreferences({ highContrast: checked })
-            }
+            onCheckedChange={(checked) => handlePreferenceChange('highContrast', checked)}
           />
         </div>
 
@@ -44,9 +45,7 @@ export function AccessibilitySettings() {
           <Switch
             id="reduce-motion"
             checked={preferences.reduceMotion}
-            onCheckedChange={(checked) =>
-              updatePreferences({ reduceMotion: checked })
-            }
+            onCheckedChange={(checked) => handlePreferenceChange('reduceMotion', checked)}
           />
         </div>
 
@@ -60,9 +59,7 @@ export function AccessibilitySettings() {
           <Switch
             id="large-text"
             checked={preferences.largeText}
-            onCheckedChange={(checked) =>
-              updatePreferences({ largeText: checked })
-            }
+            onCheckedChange={(checked) => handlePreferenceChange('largeText', checked)}
           />
         </div>
       </div>
