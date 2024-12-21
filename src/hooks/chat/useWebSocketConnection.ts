@@ -9,6 +9,9 @@ export const useWebSocketConnection = (
   onMessage: (message: Message) => void
 ) => {
   const [ws, setWs] = useState<WebSocket | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY = 2000;
 
   useEffect(() => {
     if (!sessionId || isMinimized) return;
@@ -17,15 +20,19 @@ export const useWebSocketConnection = (
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-          toast.error('Authentication required');
+          console.log('No auth session found');
           return;
         }
 
-        const wsUrl = `wss://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.functions.supabase.co/realtime-chat?jwt=${session.access_token}`;
+        // Use the correct project ID for the WebSocket URL
+        const wsUrl = `wss://ewjisqyvspdvhyppkhnm.functions.supabase.co/realtime-chat?jwt=${session.access_token}`;
+        console.log('Connecting to WebSocket:', wsUrl);
+
         const newWs = new WebSocket(wsUrl);
 
         newWs.onopen = () => {
           console.log('WebSocket connected');
+          setRetryCount(0); // Reset retry count on successful connection
           toast.success('Connected to chat service');
         };
 
@@ -55,12 +62,19 @@ export const useWebSocketConnection = (
 
         newWs.onerror = (error) => {
           console.error('WebSocket error:', error);
-          toast.error('Chat connection error');
+          if (retryCount < MAX_RETRIES) {
+            setTimeout(() => {
+              setRetryCount(prev => prev + 1);
+              initWebSocket();
+            }, RETRY_DELAY);
+          } else {
+            toast.error('Chat connection error. Please try again later.');
+          }
         };
 
         newWs.onclose = () => {
           console.log('WebSocket closed');
-          toast.error('Chat connection closed');
+          setWs(null);
         };
 
         setWs(newWs);
@@ -74,11 +88,12 @@ export const useWebSocketConnection = (
 
     return () => {
       if (ws) {
+        console.log('Cleaning up WebSocket connection');
         ws.close();
         setWs(null);
       }
     };
-  }, [sessionId, isMinimized, onMessage]);
+  }, [sessionId, isMinimized, retryCount, onMessage]);
 
   return ws;
 };

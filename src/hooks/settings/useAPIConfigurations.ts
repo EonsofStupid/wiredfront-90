@@ -1,124 +1,89 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import type { APIConfiguration, APIType } from '@/types/store/settings/api-config';
 
-export function useAPIConfigurations() {
-  const [configurations, setConfigurations] = useState<APIConfiguration[]>([]);
-  const [loading, setLoading] = useState(true);
+export const useAPIConfigurations = () => {
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    fetchConfigurations();
-    
-    const channel = supabase
-      .channel('api-config-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'api_configurations' },
-        (payload) => {
-          console.log('API configuration changed:', payload);
-          fetchConfigurations();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  const fetchConfigurations = async () => {
+  const createConfiguration = async (apiType: string) => {
     try {
+      setIsLoading(true);
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        throw new Error('User not authenticated');
+        toast.error('You must be logged in to create API configurations');
+        return;
       }
 
       const { data, error } = await supabase
         .from('api_configurations')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('priority', { ascending: false });
+        .insert([
+          {
+            user_id: user.id,
+            api_type: apiType,
+            is_enabled: true,
+            is_default: false,
+            priority: 0
+          }
+        ])
+        .select()
+        .single();
 
-      if (error) throw error;
-
-      setConfigurations(data.map(config => ({
-        id: config.id,
-        apiType: config.api_type,
-        isEnabled: config.is_enabled,
-        isDefault: config.is_default,
-        priority: config.priority
-      })));
-    } catch (error) {
-      console.error('Error fetching API configurations:', error);
-      toast.error('Failed to load API configurations');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateConfiguration = async (id: string, updates: Partial<APIConfiguration>) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
+      if (error) {
+        console.error('Error creating API configuration:', error);
+        toast.error(error.message);
+        return null;
       }
 
-      // If setting as default, first remove default from other configurations
-      if (updates.isDefault) {
-        await supabase
-          .from('api_configurations')
-          .update({ is_default: false })
-          .eq('user_id', user.id);
-      }
-
-      const { error } = await supabase
-        .from('api_configurations')
-        .update({
-          is_enabled: updates.isEnabled,
-          is_default: updates.isDefault,
-          priority: updates.priority
-        })
-        .eq('id', id)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-      toast.success('API configuration updated');
-    } catch (error) {
-      console.error('Error updating API configuration:', error);
-      toast.error('Failed to update API configuration');
-    }
-  };
-
-  const createConfiguration = async (apiType: APIType) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
-      const { error } = await supabase
-        .from('api_configurations')
-        .insert({
-          api_type: apiType,
-          is_enabled: true,
-          is_default: false,
-          priority: 0,
-          user_id: user.id // Add the user_id here
-        });
-
-      if (error) throw error;
-      toast.success('API configuration created');
+      toast.success('API configuration created successfully');
+      return data;
     } catch (error) {
       console.error('Error creating API configuration:', error);
       toast.error('Failed to create API configuration');
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateConfiguration = async (id: string, updates: any) => {
+    try {
+      setIsLoading(true);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('You must be logged in to update API configurations');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('api_configurations')
+        .update(updates)
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating API configuration:', error);
+        toast.error(error.message);
+        return null;
+      }
+
+      toast.success('API configuration updated successfully');
+      return data;
+    } catch (error) {
+      console.error('Error updating API configuration:', error);
+      toast.error('Failed to update API configuration');
+      return null;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return {
-    configurations,
-    loading,
+    createConfiguration,
     updateConfiguration,
-    createConfiguration
+    isLoading
   };
-}
+};
