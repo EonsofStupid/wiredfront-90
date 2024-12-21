@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 export const useSessionId = () => {
   const [sessionId] = useState<string>(() => {
     const stored = localStorage.getItem('chat_session_id');
