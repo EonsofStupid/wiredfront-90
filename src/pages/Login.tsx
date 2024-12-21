@@ -46,10 +46,13 @@ const Login = () => {
               input: 'w-full bg-dark-lighter/30 border border-white/10 rounded-md p-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-neon-blue focus:border-transparent',
               label: 'text-white/80',
               message: 'text-neon-pink',
+              divider: 'text-white/50',
+              anchor: 'text-neon-blue hover:text-neon-pink transition-colors duration-300',
             }
           }}
           theme="dark"
-          providers={[]}
+          providers={["github", "google"]}
+          redirectTo={window.location.origin}
         />
       </div>
     </div>
