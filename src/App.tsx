@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { MobileLayout } from "./components/layout/MobileLayout";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -11,12 +11,12 @@ import Settings from "./pages/Settings";
 import { supabase } from "@/integrations/supabase/client";
 import Login from "./pages/Login";
 import { DraggableChat } from "@/components/chat/DraggableChat";
+import { useAuthStore } from "@/stores/auth/store";
 
-// Move QueryClient instance outside component
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,
       retry: 1,
       refetchOnWindowFocus: false,
     },
@@ -24,28 +24,27 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { updateSession, user, refreshToken } = useAuthStore();
   const [isChatVisible, setIsChatVisible] = useState(true);
 
   useEffect(() => {
+    // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
+      updateSession(session);
     });
 
+    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      updateSession(session);
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    // Initial token refresh
+    refreshToken();
 
-  if (loading) {
-    return null;
-  }
+    return () => subscription.unsubscribe();
+  }, [updateSession, refreshToken]);
 
   return (
     <QueryClientProvider client={queryClient}>
