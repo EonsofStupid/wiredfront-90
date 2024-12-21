@@ -8,6 +8,7 @@ import { useChatSettings } from "@/hooks/settings/useChatSettings";
 import { Button } from "@/components/ui/button";
 import { MessageSquare } from "lucide-react";
 import { toast } from "sonner";
+import { MessageBehavior } from "@/hooks/settings/types";
 
 export function ChatSettings() {
   const {
@@ -72,7 +73,7 @@ export function ChatSettings() {
             <Label>Send Message On</Label>
             <Select
               value={settings.message_behavior}
-              onValueChange={(value) => updateSettings({ message_behavior: value })}
+              onValueChange={(value: MessageBehavior) => updateSettings({ message_behavior: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select behavior" />

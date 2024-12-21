@@ -1,23 +1,11 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-interface UICustomizations {
-  chatbot_name: string;
-  avatar_url: string | null;
-  placeholder_text: string;
-  theme: string;
-}
-
-interface ChatSettings {
-  enabled: boolean;
-  message_behavior: 'enter_send' | 'enter_newline';
-  ui_customizations: UICustomizations;
-}
+import { ChatSettings, UICustomizations, MessageBehavior } from "./types";
 
 const defaultSettings: ChatSettings = {
   enabled: true,
-  message_behavior: 'enter_send',
+  message_behavior: "enter_send",
   ui_customizations: {
     chatbot_name: 'AI Assistant',
     avatar_url: null,
@@ -53,10 +41,16 @@ export function useChatSettings() {
       }
 
       if (data) {
+        const uiCustomizations = data.ui_customizations as UICustomizations;
         setSettings({
-          enabled: data.enabled,
-          message_behavior: data.message_behavior,
-          ui_customizations: data.ui_customizations
+          enabled: data.enabled ?? defaultSettings.enabled,
+          message_behavior: data.message_behavior ?? defaultSettings.message_behavior,
+          ui_customizations: {
+            chatbot_name: uiCustomizations?.chatbot_name ?? defaultSettings.ui_customizations.chatbot_name,
+            avatar_url: uiCustomizations?.avatar_url ?? defaultSettings.ui_customizations.avatar_url,
+            placeholder_text: uiCustomizations?.placeholder_text ?? defaultSettings.ui_customizations.placeholder_text,
+            theme: uiCustomizations?.theme ?? defaultSettings.ui_customizations.theme
+          }
         });
       }
     } catch (error) {
@@ -87,7 +81,7 @@ export function useChatSettings() {
         user_id: user.id,
         enabled: settings.enabled,
         message_behavior: settings.message_behavior,
-        ui_customizations: settings.ui_customizations
+        ui_customizations: settings.ui_customizations as any // Type assertion needed due to Supabase JSONB limitations
       });
 
     if (error) {
