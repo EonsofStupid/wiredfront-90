@@ -66,16 +66,29 @@ export class ConnectionManager {
         }
       };
 
-      this.ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        this.metrics.lastError = error as Error;
-        this.handleError(error);
+      this.ws.onerror = (event: Event) => {
+        console.error('WebSocket error:', event);
+        // Create a proper Error object from the event
+        const error = new Error('WebSocket connection error');
+        this.metrics.lastError = error;
+        
+        if (this.connectionState === 'connected') {
+          this.updateState('error');
+          toast.error('Connection error occurred. Attempting to reconnect...');
+        }
+        
+        this.attemptReconnect();
       };
 
       this.ws.onclose = (event) => {
-        console.log('WebSocket closed:', event.code, event.reason);
-        this.updateState('disconnected');
-        this.handleClose(event);
+        if (this.connectionState !== 'disconnected') {
+          this.updateState('disconnected');
+        }
+
+        // Don't attempt to reconnect if the closure was clean
+        if (event.code !== 1000) {
+          this.attemptReconnect();
+        }
       };
 
     } catch (error) {
@@ -84,8 +97,8 @@ export class ConnectionManager {
     }
   }
 
-  private handleError(error: Error | Event) {
-    this.metrics.lastError = error as Error;
+  private handleError(error: Error) {
+    this.metrics.lastError = error;
     
     if (this.connectionState === 'connected') {
       this.updateState('error');
@@ -93,17 +106,6 @@ export class ConnectionManager {
     }
     
     this.attemptReconnect();
-  }
-
-  private handleClose(event: CloseEvent) {
-    if (this.connectionState !== 'disconnected') {
-      this.updateState('disconnected');
-    }
-
-    // Don't attempt to reconnect if the closure was clean
-    if (event.code !== 1000) {
-      this.attemptReconnect();
-    }
   }
 
   private attemptReconnect() {
