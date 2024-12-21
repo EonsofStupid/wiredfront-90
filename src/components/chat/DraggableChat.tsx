@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
-import { useMessageSubscription } from '@/hooks/useMessageSubscription';
 import { useSessionId } from '@/hooks/useSessionId';
 import { useWindowPosition } from '@/hooks/useWindowPosition';
+import { useMessages } from '@/hooks/useMessages';
 import { ChatWindow } from './ChatWindow';
 import { ChatDragContext } from './ChatDragContext';
 import { useToast } from "@/components/ui/use-toast";
@@ -24,11 +24,15 @@ export const DraggableChat = () => {
   const [isTacked, setIsTacked] = useState(true);
   const { toast } = useToast();
 
-  const { messages, isLoading, error } = useMessageSubscription({
-    sessionId,
-    isMinimized,
-    limit: 50,
-  });
+  const {
+    messages,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    addOptimisticMessage
+  } = useMessages(sessionId, isMinimized);
 
   const handleDragStart = (event: DragStartEvent) => {
     setIsDragging(true);
@@ -66,6 +70,12 @@ export const DraggableChat = () => {
     }
   };
 
+  const handleLoadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
   if (error) {
     console.error('Chat error:', error);
   }
@@ -83,6 +93,9 @@ export const DraggableChat = () => {
         isTacked={isTacked}
         onTackToggle={handleTackToggle}
         dimensions={{ width: CHAT_WIDTH, height: CHAT_HEIGHT }}
+        hasMoreMessages={hasNextPage}
+        isLoadingMore={isFetchingNextPage}
+        onLoadMore={handleLoadMore}
       />
     </ChatDragContext>
   );
