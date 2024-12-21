@@ -11,12 +11,12 @@ import Settings from "./pages/Settings";
 import { supabase } from "@/integrations/supabase/client";
 import Login from "./pages/Login";
 import { DraggableChat } from "@/components/chat/DraggableChat";
-import { useAuthStore } from "@/stores/auth/store";
 
+// Move QueryClient instance outside component
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,
+      staleTime: 5 * 60 * 1000, // 5 minutes
       retry: 1,
       refetchOnWindowFocus: false,
     },
@@ -24,27 +24,28 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  const { updateSession, user, refreshToken } = useAuthStore();
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [isChatVisible, setIsChatVisible] = useState(true);
 
   useEffect(() => {
-    // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
-      updateSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
     });
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      updateSession(session);
+      setUser(session?.user ?? null);
     });
 
-    // Initial token refresh
-    refreshToken();
-
     return () => subscription.unsubscribe();
-  }, [updateSession, refreshToken]);
+  }, []);
+
+  if (loading) {
+    return null;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>

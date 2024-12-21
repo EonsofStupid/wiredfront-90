@@ -1,20 +1,16 @@
-import type { User } from '@supabase/supabase-js';
+import type { User } from '@/types/store/common/types';
+import type { AsyncState } from '@/types/store/core/types';
 
-export interface AuthState {
-  version: string;
+export interface AuthState extends AsyncState {
   user: User | null;
   isAuthenticated: boolean;
   token: string | null;
-  status: 'idle' | 'loading' | 'success' | 'error';
-  error: string | null;
-  lastUpdated: string | null;
 }
 
 export interface AuthActions {
   login: (credentials: { email: string; password: string }) => Promise<void>;
-  logout: () => Promise<void>;
+  logout: () => void;
   refreshToken: () => Promise<void>;
-  updateSession: (session: any) => void;
 }
 
 export type AuthStore = AuthState & AuthActions;
