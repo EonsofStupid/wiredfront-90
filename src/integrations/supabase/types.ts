@@ -11,31 +11,43 @@ export type Database = {
     Tables: {
       messages: {
         Row: {
+          chat_session_id: string | null
           content: string
           created_at: string | null
           id: string
+          is_minimized: boolean | null
           metadata: Json | null
+          position: Json | null
           type: Database["public"]["Enums"]["message_type"]
           updated_at: string | null
           user_id: string
+          window_state: Json | null
         }
         Insert: {
+          chat_session_id?: string | null
           content: string
           created_at?: string | null
           id?: string
+          is_minimized?: boolean | null
           metadata?: Json | null
+          position?: Json | null
           type?: Database["public"]["Enums"]["message_type"]
           updated_at?: string | null
           user_id: string
+          window_state?: Json | null
         }
         Update: {
+          chat_session_id?: string | null
           content?: string
           created_at?: string | null
           id?: string
+          is_minimized?: boolean | null
           metadata?: Json | null
+          position?: Json | null
           type?: Database["public"]["Enums"]["message_type"]
           updated_at?: string | null
           user_id?: string
+          window_state?: Json | null
         }
         Relationships: [
           {

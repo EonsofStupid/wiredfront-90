@@ -2,8 +2,32 @@ import { motion } from "framer-motion";
 import { Activity, Code, Database, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { DraggableChat } from "@/components/chat/DraggableChat";
 
 const Index = () => {
+const features = [
+  {
+    icon: Code,
+    title: "Advanced Editor",
+    description: "Next-gen code editing with real-time collaboration.",
+  },
+  {
+    icon: Activity,
+    title: "Live Analytics",
+    description: "Real-time performance monitoring and insights.",
+  },
+  {
+    icon: Database,
+    title: "Smart Storage",
+    description: "Intelligent data management and version control.",
+  },
+  {
+    icon: Settings,
+    title: "Full Control",
+    description: "Customizable workspace and powerful integrations.",
+  },
+];
+
   return (
     <div className="min-h-full grid-bg">
       {/* Hero Section */}
@@ -55,6 +79,7 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Features Section */}
       <section className="container mx-auto px-4 py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => (
@@ -76,31 +101,11 @@ const Index = () => {
           ))}
         </div>
       </section>
+
+      {/* Add DraggableChat */}
+      <DraggableChat />
     </div>
   );
 };
-
-const features = [
-  {
-    icon: Code,
-    title: "Advanced Editor",
-    description: "Next-gen code editing with real-time collaboration.",
-  },
-  {
-    icon: Activity,
-    title: "Live Analytics",
-    description: "Real-time performance monitoring and insights.",
-  },
-  {
-    icon: Database,
-    title: "Smart Storage",
-    description: "Intelligent data management and version control.",
-  },
-  {
-    icon: Settings,
-    title: "Full Control",
-    description: "Customizable workspace and powerful integrations.",
-  },
-];
 
 export default Index;
