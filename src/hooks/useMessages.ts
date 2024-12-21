@@ -116,8 +116,8 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
 
   // Optimistic update helper
   const addOptimisticMessage = async (content: string) => {
-    const user = await supabase.auth.getUser();
-    if (!user.data.user) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (!user || userError) {
       toast.error('You must be logged in to send messages');
       return;
     }
@@ -125,7 +125,7 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     const optimisticMessage = {
       id: `temp-${Date.now()}`,
       content,
-      user_id: user.data.user.id,
+      user_id: user.id,
       chat_session_id: sessionId,
       created_at: new Date().toISOString(),
       type: 'text',
@@ -136,11 +136,12 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     try {
       const { error } = await supabase
         .from('messages')
-        .insert([{
+        .insert({
           content,
           chat_session_id: sessionId,
           type: 'text',
-        }]);
+          user_id: user.id, // Add the required user_id field
+        });
 
       if (error) throw error;
     } catch (error) {
