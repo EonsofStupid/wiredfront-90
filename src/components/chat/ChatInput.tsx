@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface ChatInputProps {
-  onSendMessage: (content: string, type?: string, metadata?: any) => void;
+  onSendMessage: (content: string) => void;
   isLoading?: boolean;
 }
 
@@ -43,13 +43,16 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
         })
       );
 
-      // Send message with attachments if any
+      // Create the message content with attachments if any
+      let finalContent = message;
       if (uploadedFiles.length > 0) {
-        onSendMessage(message || '', 'attachment', { files: uploadedFiles });
-      } else {
-        onSendMessage(message, 'text');
+        finalContent = JSON.stringify({
+          text: message,
+          attachments: uploadedFiles
+        });
       }
 
+      onSendMessage(finalContent);
       setMessage("");
       setAttachments([]);
     } catch (error) {

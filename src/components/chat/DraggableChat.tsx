@@ -85,9 +85,9 @@ export const DraggableChat = () => {
     });
   };
 
-  const handleSendMessage = async (content: string, type = 'text', metadata = {}) => {
+  const handleSendMessage = async (content: string) => {
     try {
-      await addOptimisticMessage(content, type, metadata);
+      await addOptimisticMessage(content);
     } catch (error) {
       console.error('Failed to send message:', error);
       toast({
