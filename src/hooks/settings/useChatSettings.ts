@@ -41,10 +41,10 @@ export function useChatSettings() {
       }
 
       if (data) {
-        const uiCustomizations = data.ui_customizations as UICustomizations;
+        const uiCustomizations = data.ui_customizations as unknown as UICustomizations;
         setSettings({
           enabled: data.enabled ?? defaultSettings.enabled,
-          message_behavior: data.message_behavior ?? defaultSettings.message_behavior,
+          message_behavior: (data.message_behavior as MessageBehavior) ?? defaultSettings.message_behavior,
           ui_customizations: {
             chatbot_name: uiCustomizations?.chatbot_name ?? defaultSettings.ui_customizations.chatbot_name,
             avatar_url: uiCustomizations?.avatar_url ?? defaultSettings.ui_customizations.avatar_url,
@@ -81,7 +81,7 @@ export function useChatSettings() {
         user_id: user.id,
         enabled: settings.enabled,
         message_behavior: settings.message_behavior,
-        ui_customizations: settings.ui_customizations as any // Type assertion needed due to Supabase JSONB limitations
+        ui_customizations: settings.ui_customizations
       });
 
     if (error) {

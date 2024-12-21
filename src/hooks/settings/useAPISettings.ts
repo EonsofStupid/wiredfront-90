@@ -28,7 +28,7 @@ export function useAPISettings(): UseAPISettingsReturn {
   const [isSaving, setIsSaving] = useState(false);
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
-  const { getCachedValue, setCachedValue, invalidateCache } = useSettingsCache();
+  const { getCachedValue, setCachedValue } = useSettingsCache();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -47,7 +47,8 @@ export function useAPISettings(): UseAPISettingsReturn {
           if (userSettings) {
             const newSettings = { ...settings };
             userSettings.forEach(setting => {
-              if (!isSettingValue(setting.value)) return;
+              const value = setting.value;
+              if (!isSettingValue(value)) return;
               
               const settingKey = Object.entries(settingKeyToId).find(
                 ([_, id]) => id === setting.setting_id
@@ -65,8 +66,8 @@ export function useAPISettings(): UseAPISettingsReturn {
               if (cachedValue) {
                 (newSettings as any)[key] = cachedValue;
               } else {
-                (newSettings as any)[key] = setting.value.key;
-                setCachedValue(setting.setting_id, setting.value.key);
+                (newSettings as any)[key] = value.key;
+                setCachedValue(setting.setting_id, value.key);
               }
             });
             setSettings(newSettings);
