@@ -130,24 +130,33 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          cache_ttl: unknown | null
           created_at: string | null
+          encrypted_value: string | null
           id: string
+          last_used_at: string | null
           setting_id: string | null
           updated_at: string | null
           user_id: string | null
           value: Json
         }
         Insert: {
+          cache_ttl?: unknown | null
           created_at?: string | null
+          encrypted_value?: string | null
           id?: string
+          last_used_at?: string | null
           setting_id?: string | null
           updated_at?: string | null
           user_id?: string | null
           value: Json
         }
         Update: {
+          cache_ttl?: unknown | null
           created_at?: string | null
+          encrypted_value?: string | null
           id?: string
+          last_used_at?: string | null
           setting_id?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -175,7 +184,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      decrypt_setting_value: {
+        Args: {
+          encrypted_value: string
+        }
+        Returns: Json
+      }
+      encrypt_setting_value: {
+        Args: {
+          value: Json
+        }
+        Returns: string
+      }
     }
     Enums: {
       message_type: "text" | "command" | "system"
