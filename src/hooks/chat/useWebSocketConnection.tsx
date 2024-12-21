@@ -8,6 +8,7 @@ import {
   calculateUptime 
 } from './utils/websocket';
 import { useWebSocketLifecycle } from './useWebSocketLifecycle';
+import { supabase } from "@/integrations/supabase/client";
 
 export const useWebSocketConnection = (
   sessionId: string,
@@ -20,7 +21,8 @@ export const useWebSocketConnection = (
   const uptimeIntervalRef = useRef<ReturnType<typeof setInterval>>();
 
   const config = {
-    url: `wss://ewjisqyvspdvhyppkhnm.functions.supabase.co/realtime-chat`,
+    // Use the Supabase project URL for WebSocket connection
+    url: `${supabase.supabaseUrl}/functions/v1/realtime-chat`,
     sessionId,
     isMinimized,
     onMessage

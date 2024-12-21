@@ -3,6 +3,7 @@ import { ConnectionState, ConnectionMetrics, WebSocketConfig } from '@/types/web
 import { HEARTBEAT_INTERVAL } from './constants/websocket';
 import { calculateLatency } from './utils/websocket';
 import { MessageQueueManager } from './utils/messageQueue';
+import { supabase } from "@/integrations/supabase/client";
 
 export const useWebSocketLifecycle = (
   config: WebSocketConfig,
@@ -17,7 +18,12 @@ export const useWebSocketLifecycle = (
   const sendHeartbeat = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       pingTimeRef.current = Date.now();
-      wsRef.current.send(JSON.stringify({ type: 'ping' }));
+      wsRef.current.send(JSON.stringify({ 
+        type: 'ping',
+        auth: {
+          access_token: supabase.auth.session()?.access_token
+        }
+      }));
     }
   }, []);
 
@@ -46,7 +52,7 @@ export const useWebSocketLifecycle = (
         }
       });
 
-      // Start heartbeat
+      // Start heartbeat with authentication
       heartbeatIntervalRef.current = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
     };
 
