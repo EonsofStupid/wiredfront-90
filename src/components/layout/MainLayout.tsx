@@ -9,11 +9,12 @@ interface MainLayoutProps {
 
 export const MainLayout = ({ children }: MainLayoutProps) => {
   return (
-    <div className="h-screen w-full grid grid-cols-[auto_1fr] grid-rows-[auto_1fr_auto]">
-      <TopBar className="col-span-2" />
-      <Sidebar />
+    <div className="h-screen w-full grid grid-cols-[16rem_1fr_16rem] grid-rows-[auto_1fr_auto]">
+      <TopBar className="col-span-3" />
+      <Sidebar side="left" />
       <main className="overflow-auto p-6 bg-dark">{children}</main>
-      <BottomBar className="col-span-2" />
+      <Sidebar side="right" />
+      <BottomBar className="col-span-3" />
     </div>
   );
 };
