@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor, DragStartEvent } from '@dnd-kit/core';
 import { restrictToWindowEdges } from '@dnd-kit/modifiers';
 import { supabase } from "@/integrations/supabase/client";
 import { ChatWindow } from './ChatWindow';
@@ -14,6 +14,9 @@ export const DraggableChat = () => {
   const [position, setPosition] = useState<Position>({ x: window.innerWidth - 400, y: window.innerHeight - 600 });
   const [messages, setMessages] = useState<any[]>([]);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isTacked, setIsTacked] = useState(false);
+  const [windowState, setWindowState] = useState({ width: 350, height: 500 });
   const { toast } = useToast();
 
   const sensors = useSensors(
@@ -46,12 +49,22 @@ export const DraggableChat = () => {
     };
   }, []);
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setIsDragging(true);
+    if (isTacked) {
+      setIsTacked(false);
+    }
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
-    const { delta } = event;
-    setPosition((prev) => ({
-      x: prev.x + delta.x,
-      y: prev.y + delta.y,
-    }));
+    setIsDragging(false);
+    if (!isTacked) {
+      const { delta } = event;
+      setPosition((prev) => ({
+        x: prev.x + delta.x,
+        y: prev.y + delta.y,
+      }));
+    }
   };
 
   const handleMinimize = () => {
@@ -59,17 +72,32 @@ export const DraggableChat = () => {
   };
 
   const handleClose = () => {
-    // Implement close functionality
     toast({
       title: "Chat closed",
       description: "You can reopen the chat from the menu",
     });
   };
 
+  const handleTackToggle = () => {
+    setIsTacked(!isTacked);
+    if (!isTacked) {
+      // When tacking, move to bottom right
+      setPosition({ 
+        x: window.innerWidth - windowState.width - 32, 
+        y: window.innerHeight - windowState.height - 48 
+      });
+    }
+  };
+
+  const handleResize = (width: number, height: number) => {
+    setWindowState({ width, height });
+  };
+
   return (
     <DndContext
       sensors={sensors}
       modifiers={[restrictToWindowEdges]}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
       <ChatWindow
@@ -78,6 +106,11 @@ export const DraggableChat = () => {
         messages={messages}
         onMinimize={handleMinimize}
         onClose={handleClose}
+        isDragging={isDragging}
+        isTacked={isTacked}
+        onTackToggle={handleTackToggle}
+        windowState={windowState}
+        onResize={handleResize}
       />
     </DndContext>
   );

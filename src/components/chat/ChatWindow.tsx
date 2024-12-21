@@ -1,7 +1,8 @@
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { X, Minus, GripVertical } from 'lucide-react';
+import { X, Minus, GripVertical, Pin } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
 interface ChatWindowProps {
   position: { x: number; y: number };
@@ -9,9 +10,25 @@ interface ChatWindowProps {
   messages: any[];
   onMinimize: () => void;
   onClose: () => void;
+  isDragging: boolean;
+  isTacked: boolean;
+  onTackToggle: () => void;
+  windowState: { width: number; height: number };
+  onResize: (width: number, height: number) => void;
 }
 
-export const ChatWindow = ({ position, isMinimized, messages, onMinimize, onClose }: ChatWindowProps) => {
+export const ChatWindow = ({ 
+  position, 
+  isMinimized, 
+  messages, 
+  onMinimize, 
+  onClose,
+  isDragging,
+  isTacked,
+  onTackToggle,
+  windowState,
+  onResize
+}: ChatWindowProps) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: 'chat-window',
   });
@@ -19,11 +36,15 @@ export const ChatWindow = ({ position, isMinimized, messages, onMinimize, onClos
   const style = {
     transform: CSS.Transform.toString(transform),
     position: 'fixed',
-    left: position.x,
-    top: position.y,
-    width: '350px',
-    height: isMinimized ? '50px' : '500px',
+    left: isTacked ? 'auto' : position.x,
+    right: isTacked ? '32px' : 'auto',
+    bottom: isTacked ? '48px' : 'auto',
+    top: isTacked ? 'auto' : position.y,
+    width: windowState.width,
+    height: isMinimized ? '50px' : windowState.height,
     transition: 'height 0.3s ease',
+    zIndex: isDragging ? 9999 : 1000,
+    border: isDragging ? `2px solid #baff0a` : undefined,
   } as const;
 
   return (
@@ -33,12 +54,19 @@ export const ChatWindow = ({ position, isMinimized, messages, onMinimize, onClos
       className="glass-card flex flex-col"
     >
       <div
-        className="flex items-center justify-between p-2 border-b border-border cursor-move"
-        {...attributes}
-        {...listeners}
+        className={`flex items-center justify-between p-2 border-b border-border ${!isTacked ? 'cursor-move' : ''}`}
+        {...(!isTacked ? { ...attributes, ...listeners } : {})}
       >
-        <GripVertical className="h-4 w-4 text-foreground/60" />
+        <GripVertical className={`h-4 w-4 text-foreground/60 ${isDragging ? 'text-[#baff0a]' : ''}`} />
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={onTackToggle}
+          >
+            <Pin className={`h-4 w-4 ${isTacked ? 'text-neon-blue' : ''}`} />
+          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -59,13 +87,21 @@ export const ChatWindow = ({ position, isMinimized, messages, onMinimize, onClos
       </div>
 
       {!isMinimized && (
-        <div className="flex-1 overflow-auto p-4">
-          {messages.map((message, index) => (
-            <div key={index} className="mb-2">
-              {message.content}
-            </div>
-          ))}
-        </div>
+        <ResizablePanelGroup direction="vertical" className="flex-1">
+          <ResizablePanel 
+            defaultSize={100}
+            onResize={(size) => {
+              onResize(windowState.width, size);
+            }}
+            className="overflow-auto p-4"
+          >
+            {messages.map((message, index) => (
+              <div key={index} className="mb-2">
+                {message.content}
+              </div>
+            ))}
+          </ResizablePanel>
+        </ResizablePanelGroup>
       )}
     </div>
   );
