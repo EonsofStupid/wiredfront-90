@@ -34,7 +34,7 @@ export const useWebSocketConnection = (
         setIsConnected(true);
         setRetryCount(0);
         toast.success('Connected to chat service', {
-          icon: SignalHigh as unknown as ReactNode
+          icon: SignalHigh
         });
       };
 
@@ -53,7 +53,7 @@ export const useWebSocketConnection = (
         setIsConnected(false);
         toast.error('Chat connection error', {
           description: 'Please try again later',
-          icon: CloudOff as unknown as ReactNode
+          icon: CloudOff
         });
       };
 
