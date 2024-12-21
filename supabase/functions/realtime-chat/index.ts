@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,6 +10,40 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 )
+
+async function getUserAPIKey(userId: string, keyType: string): Promise<string | null> {
+  console.log(`Fetching ${keyType} for user ${userId}`);
+  
+  try {
+    const { data: settings } = await supabase
+      .from('settings')
+      .select('id')
+      .eq('key', keyType)
+      .single();
+
+    if (!settings?.id) {
+      console.error(`Setting not found for key: ${keyType}`);
+      return null;
+    }
+
+    const { data: userSetting } = await supabase
+      .from('user_settings')
+      .select('value')
+      .eq('user_id', userId)
+      .eq('setting_id', settings.id)
+      .single();
+
+    if (!userSetting?.value?.key) {
+      console.error(`User setting not found for ${keyType}`);
+      return null;
+    }
+
+    return userSetting.value.key;
+  } catch (error) {
+    console.error(`Error fetching ${keyType}:`, error);
+    return null;
+  }
+}
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
@@ -36,15 +71,16 @@ Deno.serve(async (req) => {
       return new Response('Unauthorized', { status: 401 })
     }
 
+    // Get the user's OpenAI API key from their settings
+    const openaiApiKey = await getUserAPIKey(user.id, 'openai-api-key')
+    if (!openaiApiKey) {
+      return new Response('OpenAI API key not configured', { status: 400 })
+    }
+
     // Upgrade the connection to WebSocket
     const { socket, response } = Deno.upgradeWebSocket(req)
 
     // Connect to OpenAI's Realtime API
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
-    if (!openaiApiKey) {
-      return new Response('OpenAI API key not configured', { status: 500 })
-    }
-
     const openaiWs = new WebSocket(
       'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01',
       [
