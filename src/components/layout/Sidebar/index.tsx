@@ -24,9 +24,9 @@ export const Sidebar = ({ className, side, isCompact }: SidebarProps) => {
   return (
     <aside 
       className={cn(
-        "glass-card border-neon-blue/20 transition-all duration-300",
+        "glass-card border-neon-blue/20 transition-all duration-300 ease-in-out",
         side === "left" ? "border-r" : "border-l",
-        isCompact ? "w-20" : "w-64",
+        isCompact ? "w-20" : "w-32", // 8rem (32) default, 5rem (20) when compact
         className
       )}
     >
@@ -48,7 +48,7 @@ export const Sidebar = ({ className, side, isCompact }: SidebarProps) => {
                   >
                     <item.icon className="w-6 h-6 shrink-0" />
                     {!isCompact && (
-                      <span className="truncate">{item.label}</span>
+                      <span className="truncate text-sm">{item.label}</span>
                     )}
                     <div className="absolute inset-0 pointer-events-none">
                       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-neon-blue/10 to-neon-pink/10" />
