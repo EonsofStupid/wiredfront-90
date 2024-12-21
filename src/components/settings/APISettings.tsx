@@ -1,47 +1,70 @@
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { AIServicesSettings } from "./api/AIServicesSettings";
+import { CloudStorageSettings } from "./api/CloudStorageSettings";
+import { DevelopmentSettings } from "./api/DevelopmentSettings";
 
 export function APISettings() {
-  const [openaiKey, setOpenaiKey] = useState("");
-  const [anthropicKey, setAnthropicKey] = useState("");
-  const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+
+  // AI Services
+  const [openaiKey, setOpenaiKey] = useState("");
+  const [huggingfaceKey, setHuggingfaceKey] = useState("");
+
+  // Cloud Storage
+  const [googleDriveKey, setGoogleDriveKey] = useState("");
+  const [dropboxKey, setDropboxKey] = useState("");
+  const [awsAccessKey, setAwsAccessKey] = useState("");
+  const [awsSecretKey, setAwsSecretKey] = useState("");
+
+  // Development
+  const [githubToken, setGithubToken] = useState("");
+  const [dockerToken, setDockerToken] = useState("");
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const { error: openaiError } = await supabase
-        .from('user_settings')
-        .upsert({
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-          setting_id: 'openai-api-key',
-          value: { key: openaiKey }
-        });
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) throw new Error('User not authenticated');
 
-      const { error: anthropicError } = await supabase
-        .from('user_settings')
-        .upsert({
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-          setting_id: 'anthropic-api-key',
-          value: { key: anthropicKey }
-        });
+      const apiKeys = {
+        'openai-api-key': openaiKey,
+        'huggingface-api-key': huggingfaceKey,
+        'google-drive-api-key': googleDriveKey,
+        'dropbox-api-key': dropboxKey,
+        'aws-access-key': awsAccessKey,
+        'aws-secret-key': awsSecretKey,
+        'github-token': githubToken,
+        'docker-token': dockerToken,
+      };
 
-      if (openaiError || anthropicError) throw new Error('Failed to save API keys');
+      for (const [key, value] of Object.entries(apiKeys)) {
+        if (value) {
+          const { error } = await supabase
+            .from('user_settings')
+            .upsert({
+              user_id: userId,
+              setting_id: key,
+              value: { key: value }
+            });
+
+          if (error) throw error;
+        }
+      }
 
       toast({
         title: "Success",
-        description: "API keys have been saved successfully.",
+        description: "API settings have been saved successfully.",
       });
     } catch (error) {
-      console.error('Error saving API keys:', error);
+      console.error('Error saving API settings:', error);
       toast({
         title: "Error",
-        description: "Failed to save API keys. Please try again.",
+        description: "Failed to save API settings. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -54,83 +77,56 @@ export function APISettings() {
       <div>
         <h3 className="text-lg font-medium">API Settings</h3>
         <p className="text-sm text-muted-foreground">
-          Configure your API keys for various services.
+          Configure your API keys and tokens for various services.
         </p>
       </div>
 
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>OpenAI API</CardTitle>
-            <CardDescription>
-              Configure your OpenAI API key for AI chat functionality.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="openai-key">API Key</Label>
-              <Input
-                id="openai-key"
-                type="password"
-                value={openaiKey}
-                onChange={(e) => setOpenaiKey(e.target.value)}
-                placeholder="sk-..."
-              />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Get your API key from the{" "}
-              <a
-                href="https://platform.openai.com/api-keys"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                OpenAI dashboard
-              </a>
-            </p>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="ai-services" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="ai-services">AI Services</TabsTrigger>
+          <TabsTrigger value="cloud-storage">Cloud Storage</TabsTrigger>
+          <TabsTrigger value="development">Development</TabsTrigger>
+        </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Anthropic API</CardTitle>
-            <CardDescription>
-              Configure your Anthropic API key for Claude integration.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="anthropic-key">API Key</Label>
-              <Input
-                id="anthropic-key"
-                type="password"
-                value={anthropicKey}
-                onChange={(e) => setAnthropicKey(e.target.value)}
-                placeholder="sk-ant-..."
-              />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Get your API key from the{" "}
-              <a
-                href="https://console.anthropic.com/account/keys"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                Anthropic console
-              </a>
-            </p>
-          </CardContent>
-        </Card>
+        <TabsContent value="ai-services">
+          <AIServicesSettings
+            openaiKey={openaiKey}
+            huggingfaceKey={huggingfaceKey}
+            onOpenAIKeyChange={setOpenaiKey}
+            onHuggingfaceKeyChange={setHuggingfaceKey}
+          />
+        </TabsContent>
 
-        <Button 
-          onClick={handleSave}
-          disabled={isSaving}
-          className="w-full md:w-auto"
-        >
-          {isSaving ? "Saving..." : "Save API Keys"}
-        </Button>
-      </div>
+        <TabsContent value="cloud-storage">
+          <CloudStorageSettings
+            googleDriveKey={googleDriveKey}
+            dropboxKey={dropboxKey}
+            awsAccessKey={awsAccessKey}
+            awsSecretKey={awsSecretKey}
+            onGoogleDriveKeyChange={setGoogleDriveKey}
+            onDropboxKeyChange={setDropboxKey}
+            onAwsAccessKeyChange={setAwsAccessKey}
+            onAwsSecretKeyChange={setAwsSecretKey}
+          />
+        </TabsContent>
+
+        <TabsContent value="development">
+          <DevelopmentSettings
+            githubToken={githubToken}
+            dockerToken={dockerToken}
+            onGithubTokenChange={setGithubToken}
+            onDockerTokenChange={setDockerToken}
+          />
+        </TabsContent>
+      </Tabs>
+
+      <Button 
+        onClick={handleSave}
+        disabled={isSaving}
+        className="w-full md:w-auto"
+      >
+        {isSaving ? "Saving..." : "Save API Settings"}
+      </Button>
     </div>
   );
 }
