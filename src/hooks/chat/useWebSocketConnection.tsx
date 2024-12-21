@@ -33,8 +33,8 @@ export const useWebSocketConnection = (
   });
 
   const wsRef = useRef<WebSocket | null>(null);
-  const retryTimeoutRef = useRef<number>();
-  const heartbeatIntervalRef = useRef<number>();
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval>>();
 
   const calculateRetryDelay = useCallback(() => {
     const backoff = Math.min(
@@ -181,5 +181,6 @@ export const useWebSocketConnection = (
     connectionState,
     metrics,
     reconnect,
+    isConnected: connectionState === 'connected'
   };
 };
