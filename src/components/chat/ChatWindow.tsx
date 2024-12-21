@@ -3,6 +3,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { ChatHeader } from './ChatHeader';
 import { ChatMessageList } from './ChatMessageList';
 import { ChatInput } from './ChatInput';
+import { ConnectionState } from '@/types/websocket';
 
 interface ChatWindowProps {
   position: { x: number; y: number };
@@ -21,7 +22,7 @@ interface ChatWindowProps {
   onSendMessage: (content: string) => void;
   onSwitchAPI?: (provider: string) => void;
   currentAPI?: string;
-  isConnected?: boolean;
+  connectionState?: ConnectionState;
 }
 
 export const ChatWindow = ({ 
@@ -41,7 +42,7 @@ export const ChatWindow = ({
   onSendMessage,
   onSwitchAPI,
   currentAPI,
-  isConnected
+  connectionState
 }: ChatWindowProps) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: 'chat-window',
@@ -82,7 +83,7 @@ export const ChatWindow = ({
         isDragging={isDragging}
         dragHandleProps={{ ...attributes, ...listeners }}
         currentAPI={currentAPI}
-        isConnected={isConnected}
+        connectionState={connectionState}
       />
 
       {!isMinimized && (

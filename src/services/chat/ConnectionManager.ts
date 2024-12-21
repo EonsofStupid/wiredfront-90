@@ -7,6 +7,7 @@ export class ConnectionManager {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectTimeout: NodeJS.Timeout | null = null;
+  private heartbeatInterval: NodeJS.Timeout | null = null;
   private metrics: ConnectionMetrics = {
     lastConnected: null,
     reconnectAttempts: 0,
@@ -21,7 +22,9 @@ export class ConnectionManager {
   private connectionState: ConnectionState = 'initial';
   
   constructor(projectId: string) {
-    // Construct proper WebSocket URL using the project ID
+    if (!projectId) {
+      throw new Error('Project ID is required');
+    }
     this.url = `wss://${projectId}.functions.supabase.co/functions/v1/realtime-chat`;
   }
 
@@ -33,6 +36,37 @@ export class ConnectionManager {
     if (this.onStateChange) {
       this.onStateChange(newState);
     }
+
+    // Show connection state notifications
+    switch (newState) {
+      case 'connected':
+        toast.success('Connected to chat service');
+        break;
+      case 'disconnected':
+        toast.error('Disconnected from chat service');
+        break;
+      case 'reconnecting':
+        toast.info('Attempting to reconnect...');
+        break;
+      case 'error':
+        toast.error('Connection error occurred');
+        break;
+    }
+  }
+
+  private startHeartbeat() {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+    }
+
+    this.heartbeatInterval = setInterval(() => {
+      if (this.ws?.readyState === WebSocket.OPEN) {
+        const startTime = Date.now();
+        this.ws.send(JSON.stringify({ type: 'ping' }));
+        this.metrics.lastHeartbeat = new Date();
+        this.metrics.latency = Date.now() - startTime;
+      }
+    }, 30000);
   }
 
   public connect() {
@@ -53,7 +87,6 @@ export class ConnectionManager {
         this.reconnectAttempts = 0;
         this.updateState('connected');
         this.startHeartbeat();
-        toast.success('Connected to chat service');
       };
 
       this.ws.onmessage = (event) => {
@@ -61,6 +94,10 @@ export class ConnectionManager {
         if (this.onMessage) {
           try {
             const data = JSON.parse(event.data);
+            if (data.type === 'pong') {
+              this.metrics.latency = Date.now() - this.metrics.lastHeartbeat!.getTime();
+              return;
+            }
             this.onMessage(data);
           } catch (error) {
             console.error('Failed to parse WebSocket message:', error);
@@ -68,14 +105,13 @@ export class ConnectionManager {
         }
       };
 
-      this.ws.onerror = (event: Event) => {
+      this.ws.onerror = (event) => {
         console.error('WebSocket error:', event);
         const error = new Error('WebSocket connection error');
         this.metrics.lastError = error;
         
         if (this.connectionState === 'connected') {
           this.updateState('error');
-          toast.error('Connection error occurred. Attempting to reconnect...');
         }
         
         this.attemptReconnect();
@@ -102,7 +138,6 @@ export class ConnectionManager {
     
     if (this.connectionState === 'connected') {
       this.updateState('error');
-      toast.error('Connection error occurred. Attempting to reconnect...');
     }
     
     this.attemptReconnect();
@@ -133,17 +168,6 @@ export class ConnectionManager {
     }, delay);
   }
 
-  private startHeartbeat() {
-    setInterval(() => {
-      if (this.ws?.readyState === WebSocket.OPEN) {
-        const startTime = Date.now();
-        this.ws.send(JSON.stringify({ type: 'ping' }));
-        this.metrics.lastHeartbeat = new Date();
-        this.metrics.latency = Date.now() - startTime;
-      }
-    }, 30000); // Send heartbeat every 30 seconds
-  }
-
   public send(data: any): boolean {
     if (this.ws?.readyState === WebSocket.OPEN) {
       try {
@@ -152,6 +176,7 @@ export class ConnectionManager {
         return true;
       } catch (error) {
         console.error('Failed to send message:', error);
+        toast.error('Failed to send message');
         return false;
       }
     }
@@ -179,6 +204,9 @@ export class ConnectionManager {
   public destroy() {
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
+    }
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
     }
     if (this.ws) {
       this.ws.close();
