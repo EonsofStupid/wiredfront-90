@@ -1,34 +1,9 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { Settings2, Key } from "lucide-react";
+import { Settings2 } from "lucide-react";
 import { useAPIConfigurations } from "@/hooks/settings/useAPIConfigurations";
 import { APIType } from "@/types/store/settings/api-config";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCallback } from "react";
-
-const API_TYPES: { type: APIType; label: string; description: string }[] = [
-  {
-    type: 'openai',
-    label: 'OpenAI',
-    description: 'GPT models for advanced language tasks'
-  },
-  {
-    type: 'gemini',
-    label: 'Google Gemini',
-    description: 'Google\'s latest AI model'
-  },
-  {
-    type: 'anthropic',
-    label: 'Anthropic Claude',
-    description: 'Advanced reasoning and analysis'
-  },
-  {
-    type: 'huggingface',
-    label: 'Hugging Face',
-    description: 'Open-source AI models'
-  }
-];
+import { APIConfigurationList } from "./api/APIConfigurationList";
 
 export function APIConfigurationPanel() {
   const { configurations, loading, updateConfiguration, createConfiguration } = useAPIConfigurations();
@@ -61,46 +36,11 @@ export function APIConfigurationPanel() {
         <h2 className="text-lg font-medium">API Configuration</h2>
       </div>
 
-      <div className="grid gap-4">
-        {API_TYPES.map((api) => {
-          const config = configurations.find(c => c.api_type === api.type);
-          
-          return (
-            <Card key={api.type}>
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">{api.label}</CardTitle>
-                  <Switch
-                    checked={config?.is_enabled ?? false}
-                    onCheckedChange={(checked) => {
-                      handleConfigurationChange(checked, config, api.type);
-                    }}
-                  />
-                </div>
-                <CardDescription>{api.description}</CardDescription>
-              </CardHeader>
-              {config?.is_enabled && (
-                <CardContent>
-                  <div className="flex items-center gap-2">
-                    <Key className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">API Key configured</span>
-                  </div>
-                  <div className="mt-4 flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleSetDefault(config.id)}
-                      disabled={config.is_default}
-                    >
-                      {config.is_default ? 'Default API' : 'Set as Default'}
-                    </Button>
-                  </div>
-                </CardContent>
-              )}
-            </Card>
-          );
-        })}
-      </div>
+      <APIConfigurationList
+        configurations={configurations}
+        onConfigurationChange={handleConfigurationChange}
+        onSetDefault={handleSetDefault}
+      />
     </div>
   );
 }
