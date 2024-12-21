@@ -65,18 +65,39 @@ export function APISettings() {
 
       if (session.user) {
         try {
-          const { data: settings, error } = await supabase
+          // First, get all settings to get their UUIDs
+          const { data: allSettings, error: settingsError } = await supabase
+            .from('settings')
+            .select('id, key');
+          
+          if (settingsError) throw settingsError;
+
+          // Create a map of setting keys to their UUIDs
+          const settingKeyToId = allSettings?.reduce((acc: Record<string, string>, setting) => {
+            acc[setting.key] = setting.id;
+            return acc;
+          }, {}) || {};
+
+          // Then get user settings
+          const { data: userSettings, error: userSettingsError } = await supabase
             .from('user_settings')
             .select('setting_id, value')
             .eq('user_id', session.user.id);
 
-          if (error) throw error;
+          if (userSettingsError) throw userSettingsError;
 
-          if (settings) {
-            settings.forEach(setting => {
+          if (userSettings) {
+            userSettings.forEach(setting => {
               if (!isSettingValue(setting.value)) return;
               
-              switch (setting.setting_id) {
+              // Find the setting key by UUID
+              const settingKey = Object.entries(settingKeyToId).find(
+                ([_, id]) => id === setting.setting_id
+              )?.[0];
+
+              if (!settingKey) return;
+
+              switch (settingKey) {
                 case 'openai-api-key': setOpenaiKey(setting.value.key); break;
                 case 'huggingface-api-key': setHuggingfaceKey(setting.value.key); break;
                 case 'gemini-api-key': setGeminiKey(setting.value.key); break;
@@ -120,6 +141,19 @@ export function APISettings() {
 
     setIsSaving(true);
     try {
+      // First, get all settings to get their UUIDs
+      const { data: allSettings, error: settingsError } = await supabase
+        .from('settings')
+        .select('id, key');
+      
+      if (settingsError) throw settingsError;
+
+      // Create a map of setting keys to their UUIDs
+      const settingKeyToId = allSettings?.reduce((acc: Record<string, string>, setting) => {
+        acc[setting.key] = setting.id;
+        return acc;
+      }, {}) || {};
+
       const apiKeys = {
         'openai-api-key': openaiKey,
         'huggingface-api-key': huggingfaceKey,
@@ -137,12 +171,12 @@ export function APISettings() {
       };
 
       for (const [key, value] of Object.entries(apiKeys)) {
-        if (value) {
+        if (value && settingKeyToId[key]) {
           const { error } = await supabase
             .from('user_settings')
             .upsert({
               user_id: user.id,
-              setting_id: key,
+              setting_id: settingKeyToId[key],
               value: { key: value }
             });
 
