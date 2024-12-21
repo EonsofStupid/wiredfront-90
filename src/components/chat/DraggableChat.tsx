@@ -6,7 +6,7 @@ import { useMessages } from '@/hooks/useMessages';
 import { ChatWindow } from './ChatWindow';
 import { ChatDragContext } from './ChatDragContext';
 import { useToast } from "@/components/ui/use-toast";
-import { Button } from "@/components/ui/button";
+import { ChatSessionControls } from './ChatSessionControls';
 
 export const DraggableChat = () => {
   const CHAT_WIDTH = 350;
@@ -84,10 +84,6 @@ export const DraggableChat = () => {
     });
   };
 
-  const handleSwitchSession = (sessionId: string) => {
-    switchSession(sessionId);
-  };
-
   if (error) {
     console.error('Chat error:', error);
   }
@@ -95,25 +91,12 @@ export const DraggableChat = () => {
   return (
     <ChatDragContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex flex-col gap-2">
-        <div className="flex gap-2 justify-end px-4">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={handleNewSession}
-          >
-            New Session
-          </Button>
-          {sessions.map((session) => (
-            <Button
-              key={session.id}
-              variant={session.id === currentSessionId ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleSwitchSession(session.id)}
-            >
-              {session.id.slice(0, 4)}
-            </Button>
-          ))}
-        </div>
+        <ChatSessionControls
+          sessions={sessions}
+          currentSessionId={currentSessionId}
+          onNewSession={handleNewSession}
+          onSwitchSession={switchSession}
+        />
         <ChatWindow
           position={position}
           isMinimized={isMinimized}
