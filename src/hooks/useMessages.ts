@@ -22,7 +22,7 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
   } = useInfiniteQuery({
     queryKey: ['messages', sessionId],
     queryFn: async ({ pageParam = 0 }) => {
-      const start = pageParam * MESSAGES_PER_PAGE;
+      const start = Number(pageParam) * MESSAGES_PER_PAGE;
       
       const { data, error } = await supabase
         .from('messages')
@@ -32,12 +32,12 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
         .range(start, start + MESSAGES_PER_PAGE - 1);
 
       if (error) throw error;
-      return data;
+      return data as Message[];
     },
     getNextPageParam: (lastPage, allPages) => {
-      return lastPage?.length === MESSAGES_PER_PAGE ? allPages.length : undefined;
+      if (!lastPage) return undefined;
+      return lastPage.length === MESSAGES_PER_PAGE ? allPages.length : undefined;
     },
-    initialPageSize: MESSAGES_PER_PAGE,
     enabled: !isMinimized,
   });
 
@@ -101,7 +101,7 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isLoading: status === 'pending',
+    isLoading: status === 'loading',
     error,
     addOptimisticMessage,
   };
