@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { CloudOff, SignalHigh } from 'lucide-react';
+import { SignalHigh, CloudOff } from 'lucide-react';
 
 export const useWebSocketConnection = (
   sessionId: string,
@@ -16,14 +15,9 @@ export const useWebSocketConnection = (
 
   const initWebSocket = useCallback(async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.log('No auth session found');
-        return;
-      }
-
       const projectId = 'ewjisqyvspdvhyppkhnm';
-      const wsUrl = `wss://${projectId}.functions.supabase.co/realtime-chat?jwt=${session.access_token}`;
+      const wsUrl = `wss://${projectId}.functions.supabase.co/realtime-chat`;
+
       console.log('Connecting to WebSocket:', wsUrl);
 
       const ws = new WebSocket(wsUrl);
@@ -34,7 +28,7 @@ export const useWebSocketConnection = (
         setIsConnected(true);
         setRetryCount(0);
         toast.success('Connected to chat service', {
-          icon: <SignalHigh className="w-4 h-4" />,
+          icon: () => <SignalHigh className="w-4 h-4" />
         });
       };
 
@@ -51,23 +45,23 @@ export const useWebSocketConnection = (
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
         setIsConnected(false);
-        if (retryCount < MAX_RETRIES) {
-          setTimeout(() => {
-            setRetryCount(prev => prev + 1);
-            initWebSocket();
-          }, RETRY_DELAY);
-        } else {
-          toast.error('Chat connection error', {
-            description: 'Please try again later',
-            icon: <CloudOff className="w-4 h-4" />,
-          });
-        }
+        toast.error('Chat connection error', {
+          description: 'Please try again later',
+          icon: () => <CloudOff className="w-4 h-4" />
+        });
       };
 
       ws.onclose = () => {
         console.log('WebSocket closed');
         setIsConnected(false);
         setWsRef(null);
+
+        if (retryCount < MAX_RETRIES) {
+          setTimeout(() => {
+            setRetryCount(prev => prev + 1);
+            initWebSocket();
+          }, RETRY_DELAY);
+        }
       };
 
       return () => {
