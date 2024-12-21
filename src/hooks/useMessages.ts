@@ -16,7 +16,7 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     sendMessage, 
     isConnected, 
     reconnect,
-    ws 
+    ws
   } = useWebSocketConnection(sessionId, isMinimized, addMessage);
 
   const {
@@ -30,17 +30,18 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     queryKey: ['messages', sessionId],
     queryFn: async ({ pageParam = 0 }) => {
       try {
-        // First, try to get cached messages
+        // First page: try cache first
         if (pageParam === 0) {
           const cachedMessages = await messageCache.getCachedMessages(sessionId);
           if (cachedMessages) {
+            console.log('Using cached messages');
             return cachedMessages;
           }
         }
 
-        // If no cache or not first page, fetch from API
+        // Cache miss or subsequent pages: fetch from API
         const start = Number(pageParam) * MESSAGES_PER_PAGE;
-        const { data, error } = await supabase
+        const { data: fetchedMessages, error } = await supabase
           .from('messages')
           .select('*')
           .eq('chat_session_id', sessionId)
@@ -51,24 +52,27 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
 
         // Cache first page of messages
         if (pageParam === 0) {
-          await messageCache.cacheMessages(sessionId, data as Message[]);
+          await messageCache.cacheMessages(sessionId, fetchedMessages as Message[]);
         }
 
-        return data as Message[];
+        return fetchedMessages as Message[];
       } catch (error) {
         console.error('Error fetching messages:', error);
         toast.error('Failed to fetch messages');
         throw error;
       }
     },
-    getNextPageParam: (lastPage: Message[] | undefined, allPages: Message[][]) => {
+    getNextPageParam: (lastPage, allPages) => {
       if (!lastPage) return undefined;
       return lastPage.length === MESSAGES_PER_PAGE ? allPages.length : undefined;
     },
     initialPageParam: 0,
     enabled: !isMinimized && !!sessionId,
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+    cacheTime: 1000 * 60 * 30, // Keep unused data in memory for 30 minutes
   });
 
+  // Combine realtime and cached messages
   const allMessages = [
     ...realtimeMessages,
     ...(data?.pages.flatMap(page => page) || [])
