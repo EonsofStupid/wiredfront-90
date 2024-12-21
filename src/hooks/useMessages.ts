@@ -83,7 +83,7 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isLoading: status === 'loading', // Updated from 'pending' to 'loading'
+    isLoading: status === 'pending',
     error,
     addOptimisticMessage: async (content: string) => {
       if (!isConnected) {
