@@ -1,27 +1,20 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { ConnectionState, ConnectionMetrics, WebSocketHookReturn } from '@/types/websocket';
-import { INITIAL_METRICS, MAX_RETRIES } from './constants/websocket';
-import { 
-  calculateRetryDelay, 
-  handleConnectionError, 
-  handleMaxRetriesExceeded, 
-  calculateUptime 
-} from './utils/websocket';
-import { useWebSocketLifecycle } from './useWebSocketLifecycle';
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useCallback, useEffect } from 'react';
+import { ConnectionState } from '@/types/websocket';
+import { MAX_RETRIES } from './constants/websocket';
+import { calculateRetryDelay, handleConnectionError, handleMaxRetriesExceeded } from './utils/websocket';
+import { useWebSocketLifecycle } from './websocket/useWebSocketLifecycle';
+import { useWebSocketMetrics } from './websocket/useWebSocketMetrics';
+import { WebSocketConfig } from './websocket/types';
 
 export const useWebSocketConnection = (
   sessionId: string,
   isMinimized: boolean,
   onMessage: (message: any) => void
-): WebSocketHookReturn => {
+) => {
   const [connectionState, setConnectionState] = useState<ConnectionState>('initial');
-  const [metrics, setMetrics] = useState<ConnectionMetrics>(INITIAL_METRICS);
-  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
-  const uptimeIntervalRef = useRef<ReturnType<typeof setInterval>>();
+  const { metrics, updateMetrics, incrementMessageCount } = useWebSocketMetrics();
 
-  const config = {
-    // Use the Supabase project URL directly since we know it
+  const config: WebSocketConfig = {
     url: `https://ewjisqyvspdvhyppkhnm.supabase.co/functions/v1/realtime-chat`,
     sessionId,
     isMinimized,
@@ -33,24 +26,18 @@ export const useWebSocketConnection = (
     heartbeatIntervalRef,
     messageQueueRef,
     setupWebSocketHandlers
-  } = useWebSocketLifecycle(config, setConnectionState, setMetrics);
+  } = useWebSocketLifecycle(config.url, setConnectionState, updateMetrics);
 
   const handleError = useCallback((error: Error) => {
     console.error('WebSocket error:', error);
-    setMetrics(prev => ({
-      ...prev,
-      lastError: error
-    }));
+    updateMetrics({ lastError: error });
 
     if (metrics.reconnectAttempts < MAX_RETRIES) {
       setConnectionState('reconnecting');
       const delay = calculateRetryDelay(metrics.reconnectAttempts);
       
-      retryTimeoutRef.current = setTimeout(() => {
-        setMetrics(prev => ({
-          ...prev,
-          reconnectAttempts: prev.reconnectAttempts + 1
-        }));
+      setTimeout(() => {
+        updateMetrics({ reconnectAttempts: metrics.reconnectAttempts + 1 });
         initWebSocket();
       }, delay);
       
@@ -59,7 +46,7 @@ export const useWebSocketConnection = (
       setConnectionState('error');
       handleMaxRetriesExceeded();
     }
-  }, [metrics.reconnectAttempts]);
+  }, [metrics.reconnectAttempts, updateMetrics]);
 
   const initWebSocket = useCallback(() => {
     try {
@@ -71,7 +58,7 @@ export const useWebSocketConnection = (
       console.log('Connecting to WebSocket:', config.url);
       
       const ws = new WebSocket(config.url);
-      wsRef.current = setupWebSocketHandlers(ws);
+      wsRef.current = setupWebSocketHandlers(ws, onMessage);
 
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
@@ -82,49 +69,34 @@ export const useWebSocketConnection = (
         console.log('WebSocket closed');
         setConnectionState('disconnected');
         clearInterval(heartbeatIntervalRef.current);
-        clearInterval(uptimeIntervalRef.current);
         
         if (metrics.reconnectAttempts < MAX_RETRIES) {
           handleError(new Error('Connection closed'));
         }
       };
 
-      // Start tracking uptime
-      uptimeIntervalRef.current = setInterval(() => {
-        if (metrics.lastConnected) {
-          setMetrics(prev => ({
-            ...prev,
-            uptime: calculateUptime(prev.lastConnected)
-          }));
-        }
-      }, 1000);
-
     } catch (error) {
       console.error('Failed to initialize WebSocket:', error);
       handleError(error instanceof Error ? error : new Error('Failed to connect'));
     }
-  }, [config.url, handleError, metrics.reconnectAttempts, setupWebSocketHandlers]);
+  }, [config.url, handleError, metrics.reconnectAttempts, setupWebSocketHandlers, onMessage]);
 
   const reconnect = useCallback(() => {
-    setMetrics(prev => ({
-      ...prev,
+    updateMetrics({
       reconnectAttempts: 0,
       lastError: null
-    }));
+    });
     initWebSocket();
-  }, [initWebSocket]);
+  }, [initWebSocket, updateMetrics]);
 
   const sendMessage = useCallback((message: any) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(message));
-      setMetrics(prev => ({
-        ...prev,
-        messagesSent: prev.messagesSent + 1
-      }));
+      incrementMessageCount('sent');
     } else {
       messageQueueRef.current.add(message);
     }
-  }, []);
+  }, [incrementMessageCount]);
 
   useEffect(() => {
     if (!isMinimized) {
@@ -135,9 +107,7 @@ export const useWebSocketConnection = (
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.close();
       }
-      clearTimeout(retryTimeoutRef.current);
       clearInterval(heartbeatIntervalRef.current);
-      clearInterval(uptimeIntervalRef.current);
     };
   }, [initWebSocket, isMinimized]);
 
