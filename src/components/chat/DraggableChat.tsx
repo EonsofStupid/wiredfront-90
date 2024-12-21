@@ -8,6 +8,7 @@ import { ChatDragContext } from './ChatDragContext';
 import { useToast } from "@/components/ui/use-toast";
 import { ChatSessionControls } from './ChatSessionControls';
 import { supabase } from "@/integrations/supabase/client";
+import { useWebSocketConnection } from '@/hooks/chat/useWebSocketConnection';
 
 export const DraggableChat = () => {
   const CHAT_WIDTH = 414;
@@ -45,14 +46,11 @@ export const DraggableChat = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    addOptimisticMessage
-  } = useMessages(currentSessionId, isMinimized);
-
-  const {
+    addOptimisticMessage,
     ws,
     isConnected,
     reconnect
-  } = useWebSocketConnection(currentSessionId, isMinimized, addOptimisticMessage);
+  } = useMessages(currentSessionId, isMinimized);
 
   useEffect(() => {
     localStorage.setItem('chat-minimized', JSON.stringify(isMinimized));
