@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { useSessionManager } from '@/hooks/useSessionManager';
 import { useWindowPosition } from '@/hooks/useWindowPosition';
@@ -9,7 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { ChatSessionControls } from './ChatSessionControls';
 
 export const DraggableChat = () => {
-  const CHAT_WIDTH = 414; // Increased by 4rem (64px)
+  const CHAT_WIDTH = 414;
   const CHAT_HEIGHT = 500;
   const MARGIN = 32;
 
@@ -20,9 +20,17 @@ export const DraggableChat = () => {
     margin: MARGIN,
   });
 
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(() => {
+    const stored = localStorage.getItem('chat-minimized');
+    return stored ? JSON.parse(stored) : false;
+  });
+  
   const [isDragging, setIsDragging] = useState(false);
-  const [isTacked, setIsTacked] = useState(true);
+  const [isTacked, setIsTacked] = useState(() => {
+    const stored = localStorage.getItem('chat-tacked');
+    return stored ? JSON.parse(stored) : true;
+  });
+
   const { toast } = useToast();
 
   const {
@@ -34,6 +42,27 @@ export const DraggableChat = () => {
     isFetchingNextPage,
     addOptimisticMessage
   } = useMessages(currentSessionId, isMinimized);
+
+  useEffect(() => {
+    localStorage.setItem('chat-minimized', JSON.stringify(isMinimized));
+  }, [isMinimized]);
+
+  useEffect(() => {
+    localStorage.setItem('chat-tacked', JSON.stringify(isTacked));
+  }, [isTacked]);
+
+  useEffect(() => {
+    const storedPosition = localStorage.getItem('chat-position');
+    if (storedPosition) {
+      setPosition(JSON.parse(storedPosition));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isDragging) {
+      localStorage.setItem('chat-position', JSON.stringify(position));
+    }
+  }, [position, isDragging]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setIsDragging(true);
@@ -59,9 +88,10 @@ export const DraggableChat = () => {
 
   const handleClose = () => {
     toast({
-      title: "Chat closed",
-      description: "You can reopen the chat from the menu",
+      title: "Chat minimized",
+      description: "You can restore the chat from the AI button",
     });
+    setIsMinimized(true);
   };
 
   const handleTackToggle = () => {

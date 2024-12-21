@@ -10,12 +10,14 @@ import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import { supabase } from "@/integrations/supabase/client";
 import Login from "./pages/Login";
+import { DraggableChat } from "@/components/chat/DraggableChat";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isChatVisible, setIsChatVisible] = useState(true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -61,6 +63,7 @@ const App = () => {
               <Route path="/profile" element={<div>Profile Page</div>} />
               <Route path="/login" element={<Login />} />
             </Routes>
+            {isChatVisible && <DraggableChat />}
           </MobileLayout>
         </BrowserRouter>
       </TooltipProvider>
