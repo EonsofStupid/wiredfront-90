@@ -102,7 +102,7 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isLoading: status === 'loading',
+    isLoading: status === 'pending',
     error,
     addOptimisticMessage,
   };
