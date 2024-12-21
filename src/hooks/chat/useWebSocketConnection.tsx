@@ -5,6 +5,7 @@ import { calculateRetryDelay, handleConnectionError, handleMaxRetriesExceeded } 
 import { useWebSocketLifecycle } from './websocket/useWebSocketLifecycle';
 import { useWebSocketMetrics } from './websocket/useWebSocketMetrics';
 import { WebSocketConfig } from './websocket/types';
+import { toast } from 'sonner';
 
 export const useWebSocketConnection = (
   sessionId: string,
@@ -13,6 +14,7 @@ export const useWebSocketConnection = (
 ) => {
   const [connectionState, setConnectionState] = useState<ConnectionState>('initial');
   const { metrics, updateMetrics, incrementMessageCount } = useWebSocketMetrics();
+  const [errorLog, setErrorLog] = useState<Array<{ timestamp: Date; error: Error }>>([]);
 
   const config: WebSocketConfig = {
     url: `https://ewjisqyvspdvhyppkhnm.supabase.co/functions/v1/realtime-chat`,
@@ -28,8 +30,18 @@ export const useWebSocketConnection = (
     setupWebSocketHandlers
   } = useWebSocketLifecycle(config.url, setConnectionState, updateMetrics);
 
-  const handleError = useCallback((error: Error) => {
+  const logError = useCallback((error: Error) => {
+    setErrorLog(prev => {
+      const newLog = [...prev, { timestamp: new Date(), error }];
+      // Keep last 100 errors
+      if (newLog.length > 100) newLog.shift();
+      return newLog;
+    });
     console.error('WebSocket error:', error);
+  }, []);
+
+  const handleError = useCallback((error: Error) => {
+    logError(error);
     updateMetrics({ lastError: error });
 
     if (metrics.reconnectAttempts < MAX_RETRIES) {
@@ -46,7 +58,7 @@ export const useWebSocketConnection = (
       setConnectionState('error');
       handleMaxRetriesExceeded();
     }
-  }, [metrics.reconnectAttempts, updateMetrics]);
+  }, [metrics.reconnectAttempts, updateMetrics, logError]);
 
   const initWebSocket = useCallback(() => {
     try {
@@ -61,7 +73,7 @@ export const useWebSocketConnection = (
       wsRef.current = setupWebSocketHandlers(ws, onMessage);
 
       ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        logError(error instanceof Error ? error : new Error('WebSocket connection error'));
         handleError(new Error('WebSocket connection error'));
       };
 
@@ -76,10 +88,10 @@ export const useWebSocketConnection = (
       };
 
     } catch (error) {
-      console.error('Failed to initialize WebSocket:', error);
+      logError(error instanceof Error ? error : new Error('Failed to connect'));
       handleError(error instanceof Error ? error : new Error('Failed to connect'));
     }
-  }, [config.url, handleError, metrics.reconnectAttempts, setupWebSocketHandlers, onMessage]);
+  }, [config.url, handleError, metrics.reconnectAttempts, setupWebSocketHandlers, onMessage, logError]);
 
   const reconnect = useCallback(() => {
     updateMetrics({
@@ -95,6 +107,7 @@ export const useWebSocketConnection = (
       incrementMessageCount('sent');
     } else {
       messageQueueRef.current.add(message);
+      toast.info('Message queued - waiting for connection');
     }
   }, [incrementMessageCount]);
 
@@ -117,6 +130,7 @@ export const useWebSocketConnection = (
     metrics,
     reconnect,
     sendMessage,
-    isConnected: connectionState === 'connected'
+    isConnected: connectionState === 'connected',
+    errorLog
   };
 };
