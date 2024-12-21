@@ -112,13 +112,11 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     };
   }, [sessionId, isMinimized]);
 
-  // Combine paginated and real-time messages
   const allMessages = [
     ...realtimeMessages,
     ...(data?.pages.flatMap(page => page) || [])
   ];
 
-  // Update the optimistic message creation
   const addOptimisticMessage = async (content: string) => {
     if (!ws || ws.readyState !== WebSocket.OPEN) {
       toast.error('Chat service not connected');

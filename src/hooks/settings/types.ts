@@ -1,4 +1,4 @@
-import { APISettingsState } from "@/types/store/settings";
+import { APISettingsState } from "@/types/store/settings/api";
 
 export interface UseAPISettingsReturn {
   settings: APISettingsState;

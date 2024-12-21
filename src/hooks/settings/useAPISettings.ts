@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from 'sonner';
-import { APISettingsState } from "@/types/store/settings";
+import { APISettingsState } from "@/types/store/settings/api";
 import { useSettingsCache } from "./useSettingsCache";
 import { fetchUserSettings, saveUserSetting } from "./useSettingsQueries";
 import { isSettingValue, UseAPISettingsReturn } from "./types";
