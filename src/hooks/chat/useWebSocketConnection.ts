@@ -1,115 +1,101 @@
-import { useState, useEffect, useRef } from 'react';
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Message } from '@/types/chat';
+import { CloudOff, SignalHigh } from 'lucide-react';
 
 export const useWebSocketConnection = (
-  sessionId: string, 
+  sessionId: string,
   isMinimized: boolean,
-  onMessage: (message: Message) => void
+  onMessage: (message: any) => void
 ) => {
-  const wsRef = useRef<WebSocket | null>(null);
+  const [wsRef, setWsRef] = useState<WebSocket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const MAX_RETRIES = 3;
   const RETRY_DELAY = 2000;
 
-  useEffect(() => {
-    let mounted = true;
+  const initWebSocket = useCallback(async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.log('No auth session found');
+        return;
+      }
 
-    const initWebSocket = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session || !mounted) {
-          console.log('No auth session found or component unmounted');
-          return;
-        }
+      const projectId = 'ewjisqyvspdvhyppkhnm';
+      const wsUrl = `wss://${projectId}.functions.supabase.co/realtime-chat?jwt=${session.access_token}`;
+      console.log('Connecting to WebSocket:', wsUrl);
 
-        const wsUrl = `wss://ewjisqyvspdvhyppkhnm.functions.supabase.co/realtime-chat?jwt=${session.access_token}`;
-        console.log('Connecting to WebSocket:', wsUrl);
+      const ws = new WebSocket(wsUrl);
+      setWsRef(ws);
 
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
-          console.log('WebSocket already connected');
-          return;
-        }
+      ws.onopen = () => {
+        console.log('WebSocket connected');
+        setIsConnected(true);
+        setRetryCount(0);
+        toast.success('Connected to chat service', {
+          icon: <SignalHigh className="w-4 h-4" />,
+        });
+      };
 
-        const newWs = new WebSocket(wsUrl);
-        wsRef.current = newWs;
-
-        newWs.onopen = () => {
-          if (mounted) {
-            console.log('WebSocket connected');
-            setRetryCount(0);
-            toast.success('Connected to chat service');
-          }
-        };
-
-        newWs.onmessage = (event) => {
-          if (!mounted) return;
-          
+      ws.onmessage = (event) => {
+        try {
           const data = JSON.parse(event.data);
           console.log('Received message:', data);
-
-          if (data.type === 'response.message') {
-            const now = new Date().toISOString();
-            const newMessage: Message = {
-              id: crypto.randomUUID(),
-              content: data.message,
-              chat_session_id: sessionId,
-              created_at: now,
-              updated_at: now,
-              type: 'text',
-              user_id: 'ai',
-              metadata: {},
-              is_minimized: false,
-              last_accessed: now,
-              position: { x: null, y: null },
-              window_state: { width: 350, height: 500 }
-            };
-            onMessage(newMessage);
-          }
-        };
-
-        newWs.onerror = (error) => {
-          console.error('WebSocket error:', error);
-          if (mounted && retryCount < MAX_RETRIES) {
-            setTimeout(() => {
-              if (mounted) {
-                setRetryCount(prev => prev + 1);
-                initWebSocket();
-              }
-            }, RETRY_DELAY);
-          } else if (mounted) {
-            toast.error('Chat connection error. Please try again later.');
-          }
-        };
-
-        newWs.onclose = () => {
-          console.log('WebSocket closed');
-          if (mounted) {
-            wsRef.current = null;
-          }
-        };
-
-      } catch (error) {
-        console.error('Failed to initialize WebSocket:', error);
-        if (mounted) {
-          toast.error('Failed to connect to chat service');
+          onMessage(data);
+        } catch (error) {
+          console.error('Error parsing message:', error);
         }
-      }
-    };
+      };
 
-    if (sessionId && !isMinimized) {
-      initWebSocket();
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setIsConnected(false);
+        if (retryCount < MAX_RETRIES) {
+          setTimeout(() => {
+            setRetryCount(prev => prev + 1);
+            initWebSocket();
+          }, RETRY_DELAY);
+        } else {
+          toast.error('Chat connection error', {
+            description: 'Please try again later',
+            icon: <CloudOff className="w-4 h-4" />,
+          });
+        }
+      };
+
+      ws.onclose = () => {
+        console.log('WebSocket closed');
+        setIsConnected(false);
+        setWsRef(null);
+      };
+
+      return () => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        }
+      };
+    } catch (error) {
+      console.error('Failed to initialize WebSocket:', error);
+      toast.error('Failed to connect to chat service');
     }
+  }, [onMessage, retryCount]);
 
-    return () => {
-      mounted = false;
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
-      }
-    };
-  }, [sessionId, isMinimized, retryCount, onMessage]);
+  useEffect(() => {
+    if (!isMinimized) {
+      const cleanup = initWebSocket();
+      return () => {
+        cleanup?.();
+        if (wsRef?.readyState === WebSocket.OPEN) {
+          wsRef.close();
+        }
+      };
+    }
+  }, [initWebSocket, isMinimized]);
 
-  return wsRef.current;
+  return {
+    ws: wsRef,
+    isConnected,
+    reconnect: initWebSocket
+  };
 };

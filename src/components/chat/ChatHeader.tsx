@@ -1,5 +1,6 @@
-import { GripVertical, Pin, Minus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { X, Minus, Pin, PinOff, SignalHigh, CloudOff } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ChatHeaderProps {
   onMinimize: () => void;
@@ -7,7 +8,9 @@ interface ChatHeaderProps {
   onTackToggle: () => void;
   isTacked: boolean;
   isDragging: boolean;
-  dragHandleProps?: any;
+  dragHandleProps: any;
+  currentAPI?: string;
+  isConnected?: boolean;
 }
 
 export const ChatHeader = ({
@@ -16,38 +19,63 @@ export const ChatHeader = ({
   onTackToggle,
   isTacked,
   isDragging,
-  dragHandleProps
+  dragHandleProps,
+  currentAPI,
+  isConnected
 }: ChatHeaderProps) => {
   return (
     <div
-      className={`flex items-center justify-between p-2 border-b border-border ${!isTacked ? 'cursor-move' : ''}`}
-      {...(!isTacked ? dragHandleProps : {})}
+      className={cn(
+        "flex items-center justify-between p-2 border-b border-border",
+        isDragging && "cursor-grabbing"
+      )}
+      {...dragHandleProps}
     >
-      <GripVertical className={`h-4 w-4 text-foreground/60 ${isDragging ? 'text-[#baff0a]' : ''}`} />
       <div className="flex items-center gap-2">
+        <span className="text-sm font-medium">AI Chat</span>
+        {isConnected !== undefined && (
+          <span className="text-xs text-muted-foreground">
+            {isConnected ? (
+              <SignalHigh className="w-4 h-4 text-green-500" />
+            ) : (
+              <CloudOff className="w-4 h-4 text-red-500" />
+            )}
+          </span>
+        )}
+        {currentAPI && (
+          <span className="text-xs text-muted-foreground">
+            ({currentAPI})
+          </span>
+        )}
+      </div>
+      <div className="flex items-center gap-1">
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6"
+          className="w-6 h-6"
           onClick={onTackToggle}
         >
-          <Pin className={`h-4 w-4 ${isTacked ? 'text-neon-blue' : ''}`} />
+          {isTacked ? (
+            <PinOff className="w-4 h-4" />
+          ) : (
+            <Pin className="w-4 h-4" />
+          )}
         </Button>
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6"
+          className="w-6 h-6"
           onClick={onMinimize}
         >
-          <Minus className="h-4 w-4" />
+          <Minus className="w-4 h-4" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6"
+          className="w-6 h-6"
           onClick={onClose}
         >
-          <X className="h-4 w-4" />
+          <X className="w-4 h-4" />
         </Button>
       </div>
     </div>

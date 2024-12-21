@@ -21,6 +21,7 @@ interface ChatWindowProps {
   onSendMessage: (content: string) => void;
   onSwitchAPI?: (provider: string) => void;
   currentAPI?: string;
+  isConnected?: boolean;
 }
 
 export const ChatWindow = ({ 
@@ -39,7 +40,8 @@ export const ChatWindow = ({
   onLoadMore,
   onSendMessage,
   onSwitchAPI,
-  currentAPI
+  currentAPI,
+  isConnected
 }: ChatWindowProps) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: 'chat-window',
@@ -54,7 +56,7 @@ export const ChatWindow = ({
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    position: 'fixed',
+    position: 'fixed' as const,
     left: isTacked ? 'auto' : position.x,
     right: isTacked ? '32px' : 'auto',
     bottom: isTacked ? '48px' : 'auto',
@@ -64,7 +66,7 @@ export const ChatWindow = ({
     transition: 'height 0.3s ease',
     zIndex: isDragging ? 9999 : 1000,
     border: isDragging ? `2px solid #baff0a` : undefined,
-  } as const;
+  };
 
   return (
     <div
@@ -80,6 +82,7 @@ export const ChatWindow = ({
         isDragging={isDragging}
         dragHandleProps={{ ...attributes, ...listeners }}
         currentAPI={currentAPI}
+        isConnected={isConnected}
       />
 
       {!isMinimized && (

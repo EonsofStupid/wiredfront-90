@@ -48,6 +48,12 @@ export const DraggableChat = () => {
     addOptimisticMessage
   } = useMessages(currentSessionId, isMinimized);
 
+  const {
+    ws,
+    isConnected,
+    reconnect
+  } = useWebSocketConnection(currentSessionId, isMinimized, addOptimisticMessage);
+
   useEffect(() => {
     localStorage.setItem('chat-minimized', JSON.stringify(isMinimized));
   }, [isMinimized]);
@@ -143,10 +149,6 @@ export const DraggableChat = () => {
     }
   };
 
-  if (error) {
-    console.error('Chat error:', error);
-  }
-
   return (
     <ChatDragContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex flex-col gap-2">
@@ -173,6 +175,7 @@ export const DraggableChat = () => {
           onSendMessage={handleSendMessage}
           onSwitchAPI={handleSwitchAPI}
           currentAPI={currentAPI}
+          isConnected={isConnected}
         />
       </div>
     </ChatDragContext>
