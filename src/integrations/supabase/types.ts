@@ -91,6 +91,68 @@ export type Database = {
           },
         ]
       }
+      chat_settings: {
+        Row: {
+          api_key: string | null
+          api_provider: Database["public"]["Enums"]["chat_api_provider"] | null
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          max_tokens: number | null
+          message_behavior:
+            | Database["public"]["Enums"]["message_behavior_type"]
+            | null
+          model: string | null
+          system_prompt: string | null
+          temperature: number | null
+          ui_customizations: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          api_key?: string | null
+          api_provider?: Database["public"]["Enums"]["chat_api_provider"] | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          max_tokens?: number | null
+          message_behavior?:
+            | Database["public"]["Enums"]["message_behavior_type"]
+            | null
+          model?: string | null
+          system_prompt?: string | null
+          temperature?: number | null
+          ui_customizations?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          api_key?: string | null
+          api_provider?: Database["public"]["Enums"]["chat_api_provider"] | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          max_tokens?: number | null
+          message_behavior?:
+            | Database["public"]["Enums"]["message_behavior_type"]
+            | null
+          model?: string | null
+          system_prompt?: string | null
+          temperature?: number | null
+          ui_customizations?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           chat_session_id: string | null
@@ -281,6 +343,8 @@ export type Database = {
     }
     Enums: {
       api_type: "openai" | "gemini" | "anthropic" | "huggingface"
+      chat_api_provider: "openai" | "anthropic" | "gemini" | "huggingface"
+      message_behavior_type: "enter_send" | "enter_newline"
       message_type: "text" | "command" | "system"
       setting_type: "string" | "number" | "boolean" | "json" | "array"
     }

@@ -4,6 +4,7 @@ import { AccessibilitySettings } from "@/components/settings/AccessibilitySettin
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { APISettings } from "@/components/settings/APISettings";
 import { APIConfigurationPanel } from "@/components/settings/APIConfigurationPanel";
+import { ChatSettings } from "@/components/settings/ChatSettings";
 import { Settings as SettingsIcon } from "lucide-react";
 
 const Settings = () => {
@@ -19,6 +20,7 @@ const Settings = () => {
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="accessibility">Accessibility</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="chat">Chat</TabsTrigger>
           <TabsTrigger value="api">API Keys</TabsTrigger>
           <TabsTrigger value="api-config">API Config</TabsTrigger>
         </TabsList>
@@ -38,6 +40,12 @@ const Settings = () => {
         <TabsContent value="notifications" className="space-y-4">
           <div className="glass-card p-6">
             <NotificationSettings />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="chat" className="space-y-4">
+          <div className="glass-card p-6">
+            <ChatSettings />
           </div>
         </TabsContent>
 
