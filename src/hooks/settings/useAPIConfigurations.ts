@@ -29,9 +29,15 @@ export function useAPIConfigurations() {
 
   const fetchConfigurations = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       const { data, error } = await supabase
         .from('api_configurations')
         .select('*')
+        .eq('user_id', user.id)
         .order('priority', { ascending: false });
 
       if (error) throw error;
@@ -53,6 +59,19 @@ export function useAPIConfigurations() {
 
   const updateConfiguration = async (id: string, updates: Partial<APIConfiguration>) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // If setting as default, first remove default from other configurations
+      if (updates.isDefault) {
+        await supabase
+          .from('api_configurations')
+          .update({ is_default: false })
+          .eq('user_id', user.id);
+      }
+
       const { error } = await supabase
         .from('api_configurations')
         .update({
@@ -60,7 +79,8 @@ export function useAPIConfigurations() {
           is_default: updates.isDefault,
           priority: updates.priority
         })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id);
 
       if (error) throw error;
       toast.success('API configuration updated');
@@ -72,13 +92,19 @@ export function useAPIConfigurations() {
 
   const createConfiguration = async (apiType: APIType) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       const { error } = await supabase
         .from('api_configurations')
         .insert({
           api_type: apiType,
-          is_enabled: false,
+          is_enabled: true,
           is_default: false,
-          priority: 0
+          priority: 0,
+          user_id: user.id // Add the user_id here
         });
 
       if (error) throw error;
