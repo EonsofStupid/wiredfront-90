@@ -34,10 +34,11 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
       if (error) throw error;
       return data as Message[];
     },
-    getNextPageParam: (lastPage, allPages) => {
+    getNextPageParam: (lastPage: Message[] | undefined, allPages: Message[][]) => {
       if (!lastPage) return undefined;
       return lastPage.length === MESSAGES_PER_PAGE ? allPages.length : undefined;
     },
+    initialPageParam: 0,
     enabled: !isMinimized,
   });
 
