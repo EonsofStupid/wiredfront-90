@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useChatSettings } from "@/hooks/settings/useChatSettings";
 import { toast } from "sonner";
-import { ChatSettingsForm } from "./chat/ChatSettingsForm";
+import { Button } from "@/components/ui/button";
+import { ChatSettingsSection } from "./chat/ChatSettingsSection";
 
 export function ChatSettings() {
   const {
@@ -31,11 +32,15 @@ export function ChatSettings() {
   }
 
   return (
-    <ChatSettingsForm
-      settings={settings}
-      updateSettings={updateSettings}
-      onSave={handleSave}
-      isSaving={isSaving}
-    />
+    <div className="space-y-6">
+      <ChatSettingsSection settings={settings} updateSettings={updateSettings} />
+      <Button
+        onClick={handleSave}
+        disabled={isSaving}
+        className="w-full md:w-auto"
+      >
+        {isSaving ? "Saving..." : "Save Changes"}
+      </Button>
+    </div>
   );
 }

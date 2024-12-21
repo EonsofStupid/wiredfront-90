@@ -1,6 +1,6 @@
 import { useSettingsStore } from "@/stores/settings";
 import { useCallback } from "react";
-import { GeneralSettingsForm } from "./general/GeneralSettingsForm";
+import { GeneralSettingsSection } from "./general/GeneralSettingsSection";
 
 export function GeneralSettings() {
   const preferences = useSettingsStore(state => state.preferences);
@@ -12,14 +12,7 @@ export function GeneralSettings() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium">General Settings</h3>
-        <p className="text-sm text-muted-foreground">
-          Configure your general application preferences.
-        </p>
-      </div>
-
-      <GeneralSettingsForm
+      <GeneralSettingsSection
         preferences={preferences}
         onPreferenceChange={handleChange}
       />
