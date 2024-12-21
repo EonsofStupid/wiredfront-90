@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { MainLayout } from "./components/layout/MainLayout";
+import { MobileLayout } from "./components/layout/MobileLayout";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
@@ -42,7 +42,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <MainLayout>
+          <MobileLayout>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route 
@@ -61,7 +61,7 @@ const App = () => {
               <Route path="/profile" element={<div>Profile Page</div>} />
               <Route path="/login" element={<Login />} />
             </Routes>
-          </MainLayout>
+          </MobileLayout>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
