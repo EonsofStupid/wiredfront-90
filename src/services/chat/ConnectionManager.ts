@@ -17,10 +17,11 @@ export class ConnectionManager {
     latency: 0,
     uptime: 0,
   };
-
   private connectionState: ConnectionState = 'initial';
+  private projectId: string;
   
-  constructor() {
+  constructor(projectId: string) {
+    this.projectId = projectId;
     this.setupHeartbeat();
   }
 
@@ -72,9 +73,10 @@ export class ConnectionManager {
 
     try {
       this.updateState('connecting');
-      console.log('Connecting to WebSocket:', WEBSOCKET_URL);
+      const wsUrl = `${WEBSOCKET_URL}?project_id=${this.projectId}`;
+      console.log('Connecting to WebSocket:', wsUrl);
       
-      this.ws = new WebSocket(WEBSOCKET_URL);
+      this.ws = new WebSocket(wsUrl);
       
       this.ws.onopen = () => {
         console.log('WebSocket connected successfully');
