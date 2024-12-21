@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor, DragStartEvent } from '@dnd-kit/core';
 import { restrictToWindowEdges } from '@dnd-kit/modifiers';
-import { supabase } from "@/integrations/supabase/client";
+import { useMessageSubscription } from '@/hooks/useMessageSubscription';
 import { ChatWindow } from './ChatWindow';
 import { useToast } from "@/components/ui/use-toast";
 
@@ -11,20 +11,26 @@ interface Position {
 }
 
 export const DraggableChat = () => {
-  // Fixed dimensions for the chat window
   const CHAT_WIDTH = 350;
   const CHAT_HEIGHT = 500;
-  const MARGIN = 32; // Distance from edges when tacked
+  const MARGIN = 32;
 
   const [position, setPosition] = useState<Position>(() => ({
     x: window.innerWidth - CHAT_WIDTH - MARGIN,
-    y: window.innerHeight - CHAT_HEIGHT - 48 // 48px accounts for the bottom bar
+    y: window.innerHeight - CHAT_HEIGHT - 48
   }));
-  const [messages, setMessages] = useState<any[]>([]);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [isTacked, setIsTacked] = useState(true); // Start tacked by default
+  const [isTacked, setIsTacked] = useState(true);
   const { toast } = useToast();
+
+  // Use a fixed session ID for now - in a real app, this would be dynamic
+  const sessionId = 'default-session';
+  const { messages, isLoading, error } = useMessageSubscription({
+    sessionId,
+    isMinimized,
+    limit: 50,
+  });
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -33,28 +39,6 @@ export const DraggableChat = () => {
       },
     })
   );
-
-  useEffect(() => {
-    // Subscribe to real-time messages
-    const channel = supabase
-      .channel('chat-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-        },
-        (payload) => {
-          setMessages((current) => [...current, payload.new]);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
 
   const handleDragStart = (event: DragStartEvent) => {
     setIsDragging(true);
@@ -88,13 +72,16 @@ export const DraggableChat = () => {
   const handleTackToggle = () => {
     setIsTacked(!isTacked);
     if (!isTacked) {
-      // When tacking, move to bottom right
       setPosition({
         x: window.innerWidth - CHAT_WIDTH - MARGIN,
         y: window.innerHeight - CHAT_HEIGHT - 48
       });
     }
   };
+
+  if (error) {
+    console.error('Chat error:', error);
+  }
 
   return (
     <DndContext
@@ -107,6 +94,7 @@ export const DraggableChat = () => {
         position={position}
         isMinimized={isMinimized}
         messages={messages}
+        isLoading={isLoading}
         onMinimize={handleMinimize}
         onClose={handleClose}
         isDragging={isDragging}

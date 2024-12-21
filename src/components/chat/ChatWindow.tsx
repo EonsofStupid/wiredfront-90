@@ -1,12 +1,14 @@
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { X, Minus, GripVertical, Pin } from 'lucide-react';
+import { X, Minus, GripVertical, Pin, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ChatWindowProps {
   position: { x: number; y: number };
   isMinimized: boolean;
   messages: any[];
+  isLoading: boolean;
   onMinimize: () => void;
   onClose: () => void;
   isDragging: boolean;
@@ -19,6 +21,7 @@ export const ChatWindow = ({
   position, 
   isMinimized, 
   messages, 
+  isLoading,
   onMinimize, 
   onClose,
   isDragging,
@@ -84,13 +87,24 @@ export const ChatWindow = ({
       </div>
 
       {!isMinimized && (
-        <div className="flex-1 overflow-auto p-4">
-          {messages.map((message, index) => (
-            <div key={index} className="mb-2">
-              {message.content}
+        <ScrollArea className="flex-1 p-4">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          ))}
-        </div>
+          ) : (
+            <div className="space-y-4">
+              {messages.map((message) => (
+                <div key={message.id} className="bg-muted/50 rounded-lg p-3">
+                  <p className="text-sm">{message.content}</p>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(message.created_at).toLocaleTimeString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </ScrollArea>
       )}
     </div>
   );
