@@ -7,8 +7,8 @@ import { useEffect, useState } from "react";
 import { MainLayout } from "./components/layout/MainLayout";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import Settings from "./pages/Settings";
 import { supabase } from "@/integrations/supabase/client";
-import { APISettings } from "@/components/settings/APISettings";
 
 const queryClient = new QueryClient();
 
@@ -54,8 +54,7 @@ const App = () => {
               <Route path="/analytics" element={<div>Analytics Page</div>} />
               <Route path="/reports" element={<div>Reports Page</div>} />
               <Route path="/data" element={<div>Data Page</div>} />
-              <Route path="/settings" element={<div>Settings Page</div>} />
-              <Route path="/settings/api" element={<APISettings />} />
+              <Route path="/settings/*" element={<Settings />} />
               <Route path="/search" element={<div>Search Page</div>} />
               <Route path="/notifications" element={<div>Notifications Page</div>} />
               <Route path="/profile" element={<div>Profile Page</div>} />
