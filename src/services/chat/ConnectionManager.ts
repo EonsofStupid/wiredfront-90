@@ -1,16 +1,12 @@
-import { toast } from "sonner";
-import { ConnectionState, ConnectionMetrics } from "@/types/websocket";
-import { calculateRetryDelay } from "@/hooks/chat/utils/websocket";
+import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
+import { toast } from 'sonner';
 
 export class ConnectionManager {
   private ws: WebSocket | null = null;
-  private heartbeatInterval: number | null = null;
-  private reconnectTimeout: number | null = null;
-  private retryAttempts = 0;
-  private readonly maxRetries = 5;
-  private readonly heartbeatIntervalMs = 60000;
-  private readonly url: string;
-  private connectionState: ConnectionState = 'initial';
+  private url: string;
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectTimeout: NodeJS.Timeout | null = null;
   private metrics: ConnectionMetrics = {
     lastConnected: null,
     reconnectAttempts: 0,
@@ -22,142 +18,169 @@ export class ConnectionManager {
     uptime: 0,
   };
 
+  private connectionState: ConnectionState = 'initial';
+  
   constructor(url: string) {
     this.url = url;
-    this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
-    document.addEventListener('visibilitychange', this.handleVisibilityChange);
   }
 
-  private handleVisibilityChange() {
-    if (document.visibilityState === 'visible') {
-      if (this.connectionState === 'disconnected') {
-        this.reconnect();
-      }
+  public onStateChange: ((state: ConnectionState) => void) | null = null;
+  public onMessage: ((data: any) => void) | null = null;
+
+  private updateState(newState: ConnectionState) {
+    this.connectionState = newState;
+    if (this.onStateChange) {
+      this.onStateChange(newState);
     }
-  }
-
-  private startHeartbeat() {
-    this.stopHeartbeat();
-    this.heartbeatInterval = window.setInterval(() => {
-      if (this.ws?.readyState === WebSocket.OPEN) {
-        const pingTime = Date.now();
-        this.ws.send(JSON.stringify({ type: 'ping', timestamp: pingTime }));
-      }
-    }, this.heartbeatIntervalMs);
-  }
-
-  private stopHeartbeat() {
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval);
-      this.heartbeatInterval = null;
-    }
-  }
-
-  private updateState(state: ConnectionState) {
-    this.connectionState = state;
-    this.onStateChange?.(state);
-  }
-
-  private handleOpen() {
-    this.updateState('connected');
-    this.retryAttempts = 0;
-    this.metrics.lastConnected = new Date();
-    this.startHeartbeat();
-    toast.success('Connected to chat service');
-  }
-
-  private handleClose() {
-    this.updateState('disconnected');
-    this.stopHeartbeat();
-    
-    if (this.retryAttempts < this.maxRetries) {
-      const delay = calculateRetryDelay(this.retryAttempts);
-      this.reconnectTimeout = window.setTimeout(() => {
-        this.reconnect();
-      }, delay);
-    } else {
-      toast.error('Connection lost. Max retries exceeded.');
-    }
-  }
-
-  private handleError(error: Event) {
-    console.error('WebSocket error:', error);
-    this.metrics.lastError = error instanceof Error ? error : new Error('WebSocket error');
-    this.metrics.reconnectAttempts = this.retryAttempts;
-    toast.error('Connection error occurred');
   }
 
   public connect() {
     if (this.ws?.readyState === WebSocket.OPEN) {
+      console.log('WebSocket already connected');
       return;
     }
 
-    this.updateState('connecting');
-    this.ws = new WebSocket(this.url);
+    try {
+      this.updateState('connecting');
+      console.log('Connecting to WebSocket:', this.url);
+      
+      this.ws = new WebSocket(this.url);
+      
+      this.ws.onopen = () => {
+        console.log('WebSocket connected successfully');
+        this.metrics.lastConnected = new Date();
+        this.reconnectAttempts = 0;
+        this.updateState('connected');
+        this.startHeartbeat();
+      };
 
-    this.ws.onopen = this.handleOpen.bind(this);
-    this.ws.onclose = this.handleClose.bind(this);
-    this.ws.onerror = this.handleError.bind(this);
-    this.ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'pong') {
-          this.metrics.lastHeartbeat = new Date();
-          this.metrics.latency = Date.now() - data.timestamp;
-        }
+      this.ws.onmessage = (event) => {
         this.metrics.messagesReceived++;
-        this.onMessage?.(data);
-      } catch (error) {
-        console.error('Error parsing message:', error);
-      }
-    };
+        if (this.onMessage) {
+          try {
+            const data = JSON.parse(event.data);
+            this.onMessage(data);
+          } catch (error) {
+            console.error('Failed to parse WebSocket message:', error);
+          }
+        }
+      };
+
+      this.ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        this.metrics.lastError = error as Error;
+        this.handleError(error);
+      };
+
+      this.ws.onclose = (event) => {
+        console.log('WebSocket closed:', event.code, event.reason);
+        this.updateState('disconnected');
+        this.handleClose(event);
+      };
+
+    } catch (error) {
+      console.error('Failed to create WebSocket connection:', error);
+      this.handleError(error as Error);
+    }
   }
 
-  public disconnect() {
-    this.stopHeartbeat();
+  private handleError(error: Error | Event) {
+    this.metrics.lastError = error as Error;
+    
+    if (this.connectionState === 'connected') {
+      this.updateState('error');
+      toast.error('Connection error occurred. Attempting to reconnect...');
+    }
+    
+    this.attemptReconnect();
+  }
+
+  private handleClose(event: CloseEvent) {
+    if (this.connectionState !== 'disconnected') {
+      this.updateState('disconnected');
+    }
+
+    // Don't attempt to reconnect if the closure was clean
+    if (event.code !== 1000) {
+      this.attemptReconnect();
+    }
+  }
+
+  private attemptReconnect() {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.error('Max reconnection attempts reached');
+      toast.error('Unable to establish connection. Please try again later.');
+      this.updateState('error');
+      return;
+    }
+
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
-      this.reconnectTimeout = null;
+    }
+
+    this.reconnectAttempts++;
+    this.metrics.reconnectAttempts = this.reconnectAttempts;
+    
+    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 10000);
+    
+    this.updateState('reconnecting');
+    console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts})`);
+    
+    this.reconnectTimeout = setTimeout(() => {
+      this.connect();
+    }, delay);
+  }
+
+  private startHeartbeat() {
+    setInterval(() => {
+      if (this.ws?.readyState === WebSocket.OPEN) {
+        const startTime = Date.now();
+        this.ws.send(JSON.stringify({ type: 'ping' }));
+        this.metrics.lastHeartbeat = new Date();
+        this.metrics.latency = Date.now() - startTime;
+      }
+    }, 30000); // Send heartbeat every 30 seconds
+  }
+
+  public send(data: any): boolean {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      try {
+        this.ws.send(JSON.stringify(data));
+        this.metrics.messagesSent++;
+        return true;
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        return false;
+      }
+    }
+    return false;
+  }
+
+  public getWebSocket() {
+    return this.ws;
+  }
+
+  public getMetrics(): ConnectionMetrics {
+    if (this.metrics.lastConnected) {
+      this.metrics.uptime = Date.now() - this.metrics.lastConnected.getTime();
+    }
+    return { ...this.metrics };
+  }
+
+  public reconnect() {
+    if (this.ws) {
+      this.ws.close();
+    }
+    this.connect();
+  }
+
+  public destroy() {
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
     }
     if (this.ws) {
       this.ws.close();
       this.ws = null;
     }
-    this.updateState('disconnected');
-  }
-
-  public reconnect() {
-    this.disconnect();
-    this.retryAttempts++;
-    this.connect();
-  }
-
-  public send(message: any) {
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(message));
-      this.metrics.messagesSent++;
-      return true;
-    }
-    return false;
-  }
-
-  public getState() {
-    return this.connectionState;
-  }
-
-  public getMetrics() {
-    return { ...this.metrics };
-  }
-
-  public getWebSocket(): WebSocket | null {
-    return this.ws;
-  }
-
-  public onStateChange?: (state: ConnectionState) => void;
-  public onMessage?: (message: any) => void;
-
-  public destroy() {
-    this.disconnect();
-    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
   }
 }
