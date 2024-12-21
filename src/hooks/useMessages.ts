@@ -69,7 +69,7 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     initialPageParam: 0,
     enabled: !isMinimized && !!sessionId,
     staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
-    cacheTime: 1000 * 60 * 30, // Keep unused data in memory for 30 minutes
+    gcTime: 1000 * 60 * 30, // Keep unused data in memory for 30 minutes (replaced cacheTime)
   });
 
   // Combine realtime and cached messages
@@ -83,7 +83,7 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isLoading: status === 'pending',
+    isLoading: status === 'loading', // Updated from 'pending' to 'loading'
     error,
     addOptimisticMessage: async (content: string) => {
       if (!isConnected) {
