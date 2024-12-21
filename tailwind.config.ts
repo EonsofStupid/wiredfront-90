@@ -20,12 +20,16 @@ export default {
     },
     extend: {
       colors,
+      scale: {
+        '115': '1.15',
+      },
       animation: {
         "gradient-x": "gradient-x 15s ease infinite",
         "gradient-y": "gradient-y 15s ease infinite",
         "gradient-xy": "gradient-xy 15s ease infinite",
         float: "float 6s ease-in-out infinite",
         glow: "glow 2s ease-in-out infinite",
+        "button-float": "button-float 2s ease-in-out infinite",
       },
       keyframes: {
         "gradient-y": {
@@ -66,11 +70,10 @@ export default {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.6" },
         },
-      },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        "button-float": {
+          "0%, 100%": { transform: "translateY(-8px) scale(1.15)" },
+          "50%": { transform: "translateY(-12px) scale(1.15)" },
+        },
       },
     },
   },
