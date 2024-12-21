@@ -5,6 +5,7 @@ import { Settings2, Key } from "lucide-react";
 import { useAPIConfigurations } from "@/hooks/settings/useAPIConfigurations";
 import { APIType } from "@/types/store/settings/api-config";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCallback } from "react";
 
 const API_TYPES: { type: APIType; label: string; description: string }[] = [
   {
@@ -31,6 +32,18 @@ const API_TYPES: { type: APIType; label: string; description: string }[] = [
 
 export function APIConfigurationPanel() {
   const { configurations, loading, updateConfiguration, createConfiguration } = useAPIConfigurations();
+
+  const handleConfigurationChange = useCallback(async (checked: boolean, config: typeof configurations[0] | undefined, apiType: APIType) => {
+    if (config) {
+      await updateConfiguration(config.id, { isEnabled: checked });
+    } else {
+      await createConfiguration(apiType);
+    }
+  }, [updateConfiguration, createConfiguration]);
+
+  const handleSetDefault = useCallback(async (configId: string) => {
+    await updateConfiguration(configId, { isDefault: true });
+  }, [updateConfiguration]);
 
   if (loading) {
     return (
@@ -60,11 +73,7 @@ export function APIConfigurationPanel() {
                   <Switch
                     checked={config?.isEnabled ?? false}
                     onCheckedChange={(checked) => {
-                      if (config) {
-                        updateConfiguration(config.id, { isEnabled: checked });
-                      } else {
-                        createConfiguration(api.type);
-                      }
+                      handleConfigurationChange(checked, config, api.type);
                     }}
                   />
                 </div>
@@ -80,7 +89,7 @@ export function APIConfigurationPanel() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => updateConfiguration(config.id, { isDefault: true })}
+                      onClick={() => handleSetDefault(config.id)}
                       disabled={config.isDefault}
                     >
                       {config.isDefault ? 'Default API' : 'Set as Default'}
