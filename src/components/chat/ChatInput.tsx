@@ -40,7 +40,7 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
         <Button 
           type="submit" 
           disabled={isLoading || !message.trim()}
-          className="h-[88px] px-6 self-stretch flex items-center justify-center"
+          className="h-12 w-24 self-center flex items-center justify-center"
         >
           <Send className="h-5 w-5" />
         </Button>
