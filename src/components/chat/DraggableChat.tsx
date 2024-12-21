@@ -1,53 +1,34 @@
-import { useState, useEffect } from 'react';
-import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor, DragStartEvent } from '@dnd-kit/core';
-import { restrictToWindowEdges } from '@dnd-kit/modifiers';
+import { useState } from 'react';
+import { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { useMessageSubscription } from '@/hooks/useMessageSubscription';
+import { useSessionId } from '@/hooks/useSessionId';
+import { useWindowPosition } from '@/hooks/useWindowPosition';
 import { ChatWindow } from './ChatWindow';
+import { ChatDragContext } from './ChatDragContext';
 import { useToast } from "@/components/ui/use-toast";
-
-interface Position {
-  x: number;
-  y: number;
-}
 
 export const DraggableChat = () => {
   const CHAT_WIDTH = 350;
   const CHAT_HEIGHT = 500;
   const MARGIN = 32;
 
-  const [position, setPosition] = useState<Position>(() => ({
-    x: window.innerWidth - CHAT_WIDTH - MARGIN,
-    y: window.innerHeight - CHAT_HEIGHT - 48
-  }));
+  const sessionId = useSessionId();
+  const { position, setPosition, resetPosition } = useWindowPosition({
+    width: CHAT_WIDTH,
+    height: CHAT_HEIGHT,
+    margin: MARGIN,
+  });
+
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isTacked, setIsTacked] = useState(true);
   const { toast } = useToast();
-
-  // Generate a stable session ID using localStorage
-  const [sessionId, setSessionId] = useState<string>(() => {
-    const stored = localStorage.getItem('chat_session_id');
-    if (stored) return stored;
-    
-    // Generate a new UUID using crypto API
-    const newId = crypto.randomUUID();
-    localStorage.setItem('chat_session_id', newId);
-    return newId;
-  });
 
   const { messages, isLoading, error } = useMessageSubscription({
     sessionId,
     isMinimized,
     limit: 50,
   });
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
-  );
 
   const handleDragStart = (event: DragStartEvent) => {
     setIsDragging(true);
@@ -81,10 +62,7 @@ export const DraggableChat = () => {
   const handleTackToggle = () => {
     setIsTacked(!isTacked);
     if (!isTacked) {
-      setPosition({
-        x: window.innerWidth - CHAT_WIDTH - MARGIN,
-        y: window.innerHeight - CHAT_HEIGHT - 48
-      });
+      resetPosition();
     }
   };
 
@@ -93,12 +71,7 @@ export const DraggableChat = () => {
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      modifiers={[restrictToWindowEdges]}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
+    <ChatDragContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <ChatWindow
         position={position}
         isMinimized={isMinimized}
@@ -111,6 +84,6 @@ export const DraggableChat = () => {
         onTackToggle={handleTackToggle}
         dimensions={{ width: CHAT_WIDTH, height: CHAT_HEIGHT }}
       />
-    </DndContext>
+    </ChatDragContext>
   );
 };
