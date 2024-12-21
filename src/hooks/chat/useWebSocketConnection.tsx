@@ -34,7 +34,7 @@ export const useWebSocketConnection = (
         setIsConnected(true);
         setRetryCount(0);
         toast.success('Connected to chat service', {
-          icon: () => <SignalHigh className="h-5 w-5" />
+          icon: <SignalHigh className="h-5 w-5" />
         });
       };
 
@@ -53,7 +53,7 @@ export const useWebSocketConnection = (
         setIsConnected(false);
         toast.error('Chat connection error', {
           description: 'Please try again later',
-          icon: () => <CloudOff className="h-5 w-5" />
+          icon: <CloudOff className="h-5 w-5" />
         });
       };
 
