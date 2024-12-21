@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Home, Settings, Activity, Code, Database, FileText, Robot, BarChart } from "lucide-react";
+import { Home, Settings, Activity, Code, Database, FileText, Bot, BarChart } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Link, useLocation } from "react-router-dom";
 
@@ -17,7 +17,7 @@ export const Sidebar = ({ className, side, isCompact }: SidebarProps) => {
         { icon: Home, label: "Home", path: "/" },
         { icon: Code, label: "Editor", path: "/editor" },
         { icon: FileText, label: "Documents", path: "/documents" },
-        { icon: Robot, label: "AI Assistant", path: "/ai" },
+        { icon: Bot, label: "AI Assistant", path: "/ai" },
       ]
     : [
         { icon: Activity, label: "Analytics", path: "/analytics" },
