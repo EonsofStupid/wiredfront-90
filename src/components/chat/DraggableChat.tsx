@@ -32,6 +32,7 @@ export const DraggableChat = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    addOptimisticMessage
   } = useMessages(currentSessionId, isMinimized);
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -84,6 +85,19 @@ export const DraggableChat = () => {
     });
   };
 
+  const handleSendMessage = async (content: string) => {
+    try {
+      await addOptimisticMessage(content);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (error) {
     console.error('Chat error:', error);
   }
@@ -111,6 +125,7 @@ export const DraggableChat = () => {
           hasMoreMessages={hasNextPage}
           isLoadingMore={isFetchingNextPage}
           onLoadMore={handleLoadMore}
+          onSendMessage={handleSendMessage}
         />
       </div>
     </ChatDragContext>

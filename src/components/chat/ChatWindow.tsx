@@ -2,6 +2,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { ChatHeader } from './ChatHeader';
 import { ChatMessageList } from './ChatMessageList';
+import { ChatInput } from './ChatInput';
 
 interface ChatWindowProps {
   position: { x: number; y: number };
@@ -17,6 +18,7 @@ interface ChatWindowProps {
   hasMoreMessages: boolean;
   isLoadingMore: boolean;
   onLoadMore: () => void;
+  onSendMessage: (content: string) => void;
 }
 
 export const ChatWindow = ({ 
@@ -32,7 +34,8 @@ export const ChatWindow = ({
   dimensions,
   hasMoreMessages,
   isLoadingMore,
-  onLoadMore
+  onLoadMore,
+  onSendMessage
 }: ChatWindowProps) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: 'chat-window',
@@ -75,14 +78,20 @@ export const ChatWindow = ({
       />
 
       {!isMinimized && (
-        <ChatMessageList
-          messages={messages}
-          isLoading={isLoading}
-          isLoadingMore={isLoadingMore}
-          hasMoreMessages={hasMoreMessages}
-          onLoadMore={onLoadMore}
-          onScroll={handleScroll}
-        />
+        <>
+          <ChatMessageList
+            messages={messages}
+            isLoading={isLoading}
+            isLoadingMore={isLoadingMore}
+            hasMoreMessages={hasMoreMessages}
+            onLoadMore={onLoadMore}
+            onScroll={handleScroll}
+          />
+          <ChatInput 
+            onSendMessage={onSendMessage}
+            isLoading={isLoading}
+          />
+        </>
       )}
     </div>
   );
