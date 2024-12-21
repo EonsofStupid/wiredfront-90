@@ -1,6 +1,7 @@
 import { toast } from 'sonner';
 import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
 import { WEBSOCKET_URL, RECONNECT_INTERVALS, MAX_RECONNECT_ATTEMPTS, HEARTBEAT_INTERVAL } from '@/constants/websocket';
+import { supabase } from "@/integrations/supabase/client";
 
 export class ConnectionManager {
   private ws: WebSocket | null = null;
@@ -65,7 +66,7 @@ export class ConnectionManager {
     }, HEARTBEAT_INTERVAL);
   }
 
-  public connect() {
+  public async connect() {
     if (this.ws?.readyState === WebSocket.OPEN) {
       console.log('WebSocket already connected');
       return;
@@ -73,7 +74,14 @@ export class ConnectionManager {
 
     try {
       this.updateState('connecting');
-      const wsUrl = `${WEBSOCKET_URL}?project_id=${this.projectId}`;
+      
+      // Get the current session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const wsUrl = `${WEBSOCKET_URL}?project_id=${this.projectId}&access_token=${session.access_token}`;
       console.log('Connecting to WebSocket:', wsUrl);
       
       this.ws = new WebSocket(wsUrl);
