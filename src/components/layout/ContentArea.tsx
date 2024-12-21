@@ -6,9 +6,9 @@ export function ContentArea({ children }: { children: React.ReactNode }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
-      className="content-area"
+      className="content-area p-6"
     >
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto">
         {children}
       </div>
     </motion.main>
