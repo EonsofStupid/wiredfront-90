@@ -48,7 +48,7 @@ export const DraggableChat = () => {
     isFetchingNextPage,
     addOptimisticMessage,
     ws,
-    isConnected,
+    connectionState,
     reconnect
   } = useMessages(currentSessionId, isMinimized);
 
@@ -130,8 +130,6 @@ export const DraggableChat = () => {
 
   const handleSwitchAPI = async (provider: string) => {
     setCurrentAPI(provider);
-    // You might want to add additional logic here to handle the API switch
-    // such as updating configurations or reinitializing connections
   };
 
   const handleSendMessage = async (content: string) => {
@@ -173,7 +171,7 @@ export const DraggableChat = () => {
           onSendMessage={handleSendMessage}
           onSwitchAPI={handleSwitchAPI}
           currentAPI={currentAPI}
-          isConnected={isConnected}
+          connectionState={connectionState}
         />
       </div>
     </ChatDragContext>
