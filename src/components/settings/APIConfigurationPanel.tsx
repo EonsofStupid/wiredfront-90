@@ -35,14 +35,14 @@ export function APIConfigurationPanel() {
 
   const handleConfigurationChange = useCallback(async (checked: boolean, config: typeof configurations[0] | undefined, apiType: APIType) => {
     if (config) {
-      await updateConfiguration(config.id, { isEnabled: checked });
+      await updateConfiguration(config.id, { is_enabled: checked });
     } else {
       await createConfiguration(apiType);
     }
   }, [updateConfiguration, createConfiguration]);
 
   const handleSetDefault = useCallback(async (configId: string) => {
-    await updateConfiguration(configId, { isDefault: true });
+    await updateConfiguration(configId, { is_default: true });
   }, [updateConfiguration]);
 
   if (loading) {
@@ -63,7 +63,7 @@ export function APIConfigurationPanel() {
 
       <div className="grid gap-4">
         {API_TYPES.map((api) => {
-          const config = configurations.find(c => c.apiType === api.type);
+          const config = configurations.find(c => c.api_type === api.type);
           
           return (
             <Card key={api.type}>
@@ -71,7 +71,7 @@ export function APIConfigurationPanel() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">{api.label}</CardTitle>
                   <Switch
-                    checked={config?.isEnabled ?? false}
+                    checked={config?.is_enabled ?? false}
                     onCheckedChange={(checked) => {
                       handleConfigurationChange(checked, config, api.type);
                     }}
@@ -79,7 +79,7 @@ export function APIConfigurationPanel() {
                 </div>
                 <CardDescription>{api.description}</CardDescription>
               </CardHeader>
-              {config?.isEnabled && (
+              {config?.is_enabled && (
                 <CardContent>
                   <div className="flex items-center gap-2">
                     <Key className="h-4 w-4 text-muted-foreground" />
@@ -90,9 +90,9 @@ export function APIConfigurationPanel() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleSetDefault(config.id)}
-                      disabled={config.isDefault}
+                      disabled={config.is_default}
                     >
-                      {config.isDefault ? 'Default API' : 'Set as Default'}
+                      {config.is_default ? 'Default API' : 'Set as Default'}
                     </Button>
                   </div>
                 </CardContent>

@@ -2,10 +2,13 @@ export type APIType = 'openai' | 'gemini' | 'anthropic' | 'huggingface';
 
 export interface APIConfiguration {
   id: string;
-  apiType: APIType;
-  isEnabled: boolean;
-  isDefault: boolean;
+  user_id: string;
+  api_type: APIType;
+  is_enabled: boolean;
+  is_default: boolean;
   priority: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface APIProfile {
@@ -13,5 +16,5 @@ export interface APIProfile {
   name: string;
   description?: string;
   configuration: Record<string, any>;
-  isActive: boolean;
+  is_active: boolean;
 }
