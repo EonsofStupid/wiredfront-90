@@ -1,5 +1,6 @@
-import type { DashboardLayout } from '@/types/dashboard/common';
 import type { BaseAction } from './common/types';
+import type { NotificationSettings, UserPreferences } from './common/types';
+import type { DashboardLayout } from '@/types/dashboard/common';
 
 export interface RedisConfig {
   host: string;
@@ -15,42 +16,21 @@ export interface CacheSettings {
   redis: RedisConfig;
 }
 
-export interface UserPreferences {
-  defaultView: string;
-  refreshInterval: number;
-  notifications: boolean;
-  timezone: string;
-  highContrast: boolean;
-  reduceMotion: boolean;
-  largeText: boolean;
-  username: string;
-  language: string;
-  showVersion: boolean;
-}
-
-export interface NotificationSettings {
-  email: boolean;
-  push: boolean;
-  frequency: 'daily' | 'weekly' | 'realtime';
-  types: string[];
-  marketing: boolean;
-}
-
 export interface SettingsState {
-  preferences: UserPreferences;
-  dashboardLayout: DashboardLayout;
-  notifications: NotificationSettings;
-  cache: CacheSettings;
+  readonly preferences: Readonly<UserPreferences>;
+  readonly dashboardLayout: Readonly<DashboardLayout>;
+  readonly notifications: Readonly<NotificationSettings>;
+  readonly cache: Readonly<CacheSettings>;
 }
 
 export interface SettingsActions {
-  updatePreferences: (updates: Partial<UserPreferences>) => void;
-  saveDashboardLayout: (layout: DashboardLayout) => void;
-  updateNotifications: (settings: Partial<NotificationSettings>) => void;
-  updateCacheSettings: (settings: Partial<CacheSettings>) => void;
+  readonly updatePreferences: (updates: Partial<UserPreferences>) => void;
+  readonly saveDashboardLayout: (layout: DashboardLayout) => void;
+  readonly updateNotifications: (settings: Partial<NotificationSettings>) => void;
+  readonly updateCacheSettings: (settings: Partial<CacheSettings>) => void;
 }
 
-export type SettingsStore = SettingsState & SettingsActions;
+export type SettingsStore = Readonly<SettingsState & SettingsActions>;
 
 export type SettingsActionType =
   | 'UPDATE_PREFERENCES'
