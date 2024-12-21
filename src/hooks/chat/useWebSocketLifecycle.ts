@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import { ConnectionState, ConnectionMetrics, WebSocketConfig } from './types/websocket';
+import { ConnectionState, ConnectionMetrics, WebSocketConfig } from '../types/websocket';
 import { HEARTBEAT_INTERVAL } from './constants/websocket';
 import { calculateLatency } from './utils/websocket';
 import { MessageQueueManager } from './utils/messageQueue';
