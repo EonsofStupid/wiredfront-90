@@ -13,11 +13,10 @@ import Login from "./pages/Login";
 import { DraggableChat } from "@/components/chat/DraggableChat";
 import { useAuthStore } from "@/stores/auth";
 
-// Move QueryClient instance outside component
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,
       retry: 1,
       refetchOnWindowFocus: false,
     },
