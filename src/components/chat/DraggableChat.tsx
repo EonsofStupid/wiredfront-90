@@ -11,12 +11,19 @@ interface Position {
 }
 
 export const DraggableChat = () => {
-  const [position, setPosition] = useState<Position>({ x: window.innerWidth - 400, y: window.innerHeight - 600 });
+  // Fixed dimensions for the chat window
+  const CHAT_WIDTH = 350;
+  const CHAT_HEIGHT = 500;
+  const MARGIN = 32; // Distance from edges when tacked
+
+  const [position, setPosition] = useState<Position>(() => ({
+    x: window.innerWidth - CHAT_WIDTH - MARGIN,
+    y: window.innerHeight - CHAT_HEIGHT - 48 // 48px accounts for the bottom bar
+  }));
   const [messages, setMessages] = useState<any[]>([]);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [isTacked, setIsTacked] = useState(false);
-  const [windowState, setWindowState] = useState({ width: 350, height: 500 });
+  const [isTacked, setIsTacked] = useState(true); // Start tacked by default
   const { toast } = useToast();
 
   const sensors = useSensors(
@@ -82,15 +89,11 @@ export const DraggableChat = () => {
     setIsTacked(!isTacked);
     if (!isTacked) {
       // When tacking, move to bottom right
-      setPosition({ 
-        x: window.innerWidth - windowState.width - 32, 
-        y: window.innerHeight - windowState.height - 48 
+      setPosition({
+        x: window.innerWidth - CHAT_WIDTH - MARGIN,
+        y: window.innerHeight - CHAT_HEIGHT - 48
       });
     }
-  };
-
-  const handleResize = (width: number, height: number) => {
-    setWindowState({ width, height });
   };
 
   return (
@@ -109,8 +112,7 @@ export const DraggableChat = () => {
         isDragging={isDragging}
         isTacked={isTacked}
         onTackToggle={handleTackToggle}
-        windowState={windowState}
-        onResize={handleResize}
+        dimensions={{ width: CHAT_WIDTH, height: CHAT_HEIGHT }}
       />
     </DndContext>
   );

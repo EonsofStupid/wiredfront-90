@@ -2,7 +2,6 @@ import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { X, Minus, GripVertical, Pin } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
 interface ChatWindowProps {
   position: { x: number; y: number };
@@ -13,8 +12,7 @@ interface ChatWindowProps {
   isDragging: boolean;
   isTacked: boolean;
   onTackToggle: () => void;
-  windowState: { width: number; height: number };
-  onResize: (width: number, height: number) => void;
+  dimensions: { width: number; height: number };
 }
 
 export const ChatWindow = ({ 
@@ -26,8 +24,7 @@ export const ChatWindow = ({
   isDragging,
   isTacked,
   onTackToggle,
-  windowState,
-  onResize
+  dimensions
 }: ChatWindowProps) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: 'chat-window',
@@ -40,8 +37,8 @@ export const ChatWindow = ({
     right: isTacked ? '32px' : 'auto',
     bottom: isTacked ? '48px' : 'auto',
     top: isTacked ? 'auto' : position.y,
-    width: windowState.width,
-    height: isMinimized ? '50px' : windowState.height,
+    width: dimensions.width,
+    height: isMinimized ? '50px' : dimensions.height,
     transition: 'height 0.3s ease',
     zIndex: isDragging ? 9999 : 1000,
     border: isDragging ? `2px solid #baff0a` : undefined,
@@ -87,21 +84,13 @@ export const ChatWindow = ({
       </div>
 
       {!isMinimized && (
-        <ResizablePanelGroup direction="vertical" className="flex-1">
-          <ResizablePanel 
-            defaultSize={100}
-            onResize={(size) => {
-              onResize(windowState.width, size);
-            }}
-            className="overflow-auto p-4"
-          >
-            {messages.map((message, index) => (
-              <div key={index} className="mb-2">
-                {message.content}
-              </div>
-            ))}
-          </ResizablePanel>
-        </ResizablePanelGroup>
+        <div className="flex-1 overflow-auto p-4">
+          {messages.map((message, index) => (
+            <div key={index} className="mb-2">
+              {message.content}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
