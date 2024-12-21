@@ -1,19 +1,9 @@
 import { cn } from "@/lib/utils";
-import { Bell, Search, ChevronDown, PanelLeftClose, PanelLeft, User } from "lucide-react";
+import { Bell, Search, PanelLeftClose, PanelLeft } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { UserMenu } from "@/components/user/UserMenu";
 
 interface TopBarProps {
   className?: string;
@@ -23,31 +13,6 @@ interface TopBarProps {
 
 export const TopBar = ({ className, isCompact, onToggleCompact }: TopBarProps) => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      navigate('/login');
-      toast.success('Logged out successfully');
-    } catch (error) {
-      toast.error('Error logging out');
-    }
-  };
 
   return (
     <header className={cn("h-16 border-b border-neon-blue/20 glass-card px-6", className)}>
@@ -93,39 +58,7 @@ export const TopBar = ({ className, isCompact, onToggleCompact }: TopBarProps) =
               <TooltipContent>Notifications</TooltipContent>
             </Tooltip>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="animate-hover-button text-neon-pink hover:text-neon-blue"
-                >
-                  <User className="w-5 h-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="glass-card">
-                {user ? (
-                  <>
-                    <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => navigate('/profile')}>
-                      Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/settings')}>
-                      Settings
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
-                      Logout
-                    </DropdownMenuItem>
-                  </>
-                ) : (
-                  <DropdownMenuItem onClick={() => navigate('/login')}>
-                    Login
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <UserMenu />
           </div>
         </TooltipProvider>
       </div>
