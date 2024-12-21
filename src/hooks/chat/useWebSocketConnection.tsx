@@ -1,7 +1,12 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ConnectionState, ConnectionMetrics, WebSocketHookReturn } from './types/websocket';
+import { ConnectionState, ConnectionMetrics, WebSocketHookReturn } from '@/types/websocket';
 import { INITIAL_METRICS, MAX_RETRIES } from './constants/websocket';
-import { calculateRetryDelay, handleConnectionError, handleMaxRetriesExceeded, handleConnectionSuccess, calculateUptime } from './utils/websocket';
+import { 
+  calculateRetryDelay, 
+  handleConnectionError, 
+  handleMaxRetriesExceeded, 
+  calculateUptime 
+} from './utils/websocket';
 import { useWebSocketLifecycle } from './useWebSocketLifecycle';
 
 export const useWebSocketConnection = (

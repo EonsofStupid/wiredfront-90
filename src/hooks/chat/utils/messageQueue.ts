@@ -30,4 +30,8 @@ export class MessageQueueManager {
   size(): number {
     return this.queue.length;
   }
+
+  isEmpty(): boolean {
+    return this.queue.length === 0;
+  }
 }
