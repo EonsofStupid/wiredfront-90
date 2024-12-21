@@ -10,12 +10,7 @@ export const useMessageManagement = (sessionId: string) => {
     setRealtimeMessages(prev => [message, ...prev]);
   };
 
-  const addOptimisticMessage = async (content: string, ws: WebSocket | null) => {
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
-      toast.error('Chat service not connected');
-      return;
-    }
-
+  const addOptimisticMessage = async (content: string, sendMessage: (message: any) => void) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (!user || userError) {
       toast.error('You must be logged in to send messages');
@@ -41,7 +36,7 @@ export const useMessageManagement = (sessionId: string) => {
     setRealtimeMessages(prev => [optimisticMessage, ...prev]);
     
     try {
-      ws.send(JSON.stringify({
+      sendMessage({
         type: 'conversation.item.create',
         item: {
           type: 'message',
@@ -53,7 +48,7 @@ export const useMessageManagement = (sessionId: string) => {
             }
           ]
         }
-      }));
+      });
 
       const { error } = await supabase
         .from('messages')

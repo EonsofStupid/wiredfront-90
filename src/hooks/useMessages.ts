@@ -9,7 +9,7 @@ const MESSAGES_PER_PAGE = 50;
 
 export const useMessages = (sessionId: string, isMinimized: boolean) => {
   const { realtimeMessages, addMessage, addOptimisticMessage } = useMessageManagement(sessionId);
-  const { ws, isConnected, reconnect } = useWebSocketConnection(sessionId, isMinimized, addMessage);
+  const { ws, isConnected, sendMessage, connectionState, metrics, reconnect } = useWebSocketConnection(sessionId, isMinimized, addMessage);
 
   const {
     data,
@@ -56,9 +56,17 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     isFetchingNextPage,
     isLoading: status === 'pending',
     error,
-    addOptimisticMessage: (content: string) => addOptimisticMessage(content, ws),
+    addOptimisticMessage: async (content: string) => {
+      if (!isConnected) {
+        toast.error('Not connected to chat service');
+        return;
+      }
+      await addOptimisticMessage(content, sendMessage);
+    },
     ws,
     isConnected,
+    connectionState,
+    metrics,
     reconnect
   };
 };
