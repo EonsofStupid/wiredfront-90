@@ -75,13 +75,21 @@ export function useChatSettings() {
       return;
     }
 
+    // Convert UICustomizations to a plain object for JSONB compatibility
+    const uiCustomizationsJson = {
+      chatbot_name: settings.ui_customizations.chatbot_name,
+      avatar_url: settings.ui_customizations.avatar_url,
+      placeholder_text: settings.ui_customizations.placeholder_text,
+      theme: settings.ui_customizations.theme
+    };
+
     const { error } = await supabase
       .from('chat_settings')
       .upsert({
         user_id: user.id,
         enabled: settings.enabled,
         message_behavior: settings.message_behavior,
-        ui_customizations: settings.ui_customizations
+        ui_customizations: uiCustomizationsJson
       });
 
     if (error) {
