@@ -21,8 +21,8 @@ export const useWebSocketConnection = (
   const uptimeIntervalRef = useRef<ReturnType<typeof setInterval>>();
 
   const config = {
-    // Use the Supabase project URL for WebSocket connection
-    url: `${supabase.supabaseUrl}/functions/v1/realtime-chat`,
+    // Get the base URL from the environment or construct it from the project ID
+    url: `${process.env.SUPABASE_URL || 'https://ewjisqyvspdvhyppkhnm.supabase.co'}/functions/v1/realtime-chat`,
     sessionId,
     isMinimized,
     onMessage

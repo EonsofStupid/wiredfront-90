@@ -15,13 +15,14 @@ export const useWebSocketLifecycle = (
   const messageQueueRef = useRef<MessageQueueManager>(new MessageQueueManager());
   const pingTimeRef = useRef<number>(0);
 
-  const sendHeartbeat = useCallback(() => {
+  const sendHeartbeat = useCallback(async () => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
+      const { data: { session } } = await supabase.auth.getSession();
       pingTimeRef.current = Date.now();
       wsRef.current.send(JSON.stringify({ 
         type: 'ping',
         auth: {
-          access_token: supabase.auth.session()?.access_token
+          access_token: session?.access_token
         }
       }));
     }
