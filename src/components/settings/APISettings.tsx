@@ -8,6 +8,10 @@ import { CloudStorageSettings } from "./api/CloudStorageSettings";
 import { DevelopmentSettings } from "./api/DevelopmentSettings";
 import { useNavigate } from "react-router-dom";
 
+interface SettingValue {
+  key: string;
+}
+
 export function APISettings() {
   const [isSaving, setIsSaving] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -58,19 +62,22 @@ export function APISettings() {
 
           if (settings) {
             settings.forEach(setting => {
-              const value = setting.value.key;
+              // Safely type cast the value to our SettingValue interface
+              const value = setting.value as SettingValue;
+              if (!value || typeof value.key !== 'string') return;
+              
               switch (setting.setting_id) {
-                case 'openai-api-key': setOpenaiKey(value); break;
-                case 'huggingface-api-key': setHuggingfaceKey(value); break;
-                case 'gemini-api-key': setGeminiKey(value); break;
-                case 'alexa-api-key': setAlexaKey(value); break;
-                case 'cortana-api-key': setCortanaKey(value); break;
-                case 'google-drive-api-key': setGoogleDriveKey(value); break;
-                case 'dropbox-api-key': setDropboxKey(value); break;
-                case 'aws-access-key': setAwsAccessKey(value); break;
-                case 'aws-secret-key': setAwsSecretKey(value); break;
-                case 'github-token': setGithubToken(value); break;
-                case 'docker-token': setDockerToken(value); break;
+                case 'openai-api-key': setOpenaiKey(value.key); break;
+                case 'huggingface-api-key': setHuggingfaceKey(value.key); break;
+                case 'gemini-api-key': setGeminiKey(value.key); break;
+                case 'alexa-api-key': setAlexaKey(value.key); break;
+                case 'cortana-api-key': setCortanaKey(value.key); break;
+                case 'google-drive-api-key': setGoogleDriveKey(value.key); break;
+                case 'dropbox-api-key': setDropboxKey(value.key); break;
+                case 'aws-access-key': setAwsAccessKey(value.key); break;
+                case 'aws-secret-key': setAwsSecretKey(value.key); break;
+                case 'github-token': setGithubToken(value.key); break;
+                case 'docker-token': setDockerToken(value.key); break;
               }
             });
           }
