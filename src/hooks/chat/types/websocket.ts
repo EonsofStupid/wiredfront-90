@@ -1,3 +1,5 @@
+import { Message } from '@/types/chat';
+
 export type ConnectionState = 
   | 'initial'
   | 'connecting'
@@ -13,6 +15,8 @@ export interface ConnectionMetrics {
   messagesSent: number;
   messagesReceived: number;
   lastHeartbeat: Date | null;
+  latency: number;
+  uptime: number;
 }
 
 export interface WebSocketConfig {
@@ -29,4 +33,11 @@ export interface WebSocketHookReturn {
   reconnect: () => void;
   sendMessage: (message: any) => void;
   isConnected: boolean;
+}
+
+export interface MessageQueue {
+  messages: Message[];
+  add: (message: Message) => void;
+  remove: (messageId: string) => void;
+  clear: () => void;
 }

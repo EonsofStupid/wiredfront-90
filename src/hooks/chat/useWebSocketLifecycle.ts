@@ -1,7 +1,8 @@
 import { useCallback, useRef } from 'react';
 import { ConnectionState, ConnectionMetrics, WebSocketConfig } from './types/websocket';
 import { HEARTBEAT_INTERVAL } from './constants/websocket';
-import { handleConnectionSuccess } from './utils/websocket';
+import { calculateLatency } from './utils/websocket';
+import { MessageQueueManager } from './utils/messageQueue';
 
 export const useWebSocketLifecycle = (
   config: WebSocketConfig,
@@ -10,44 +11,43 @@ export const useWebSocketLifecycle = (
 ) => {
   const wsRef = useRef<WebSocket | null>(null);
   const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval>>();
-  const messageQueueRef = useRef<any[]>([]);
+  const messageQueueRef = useRef<MessageQueueManager>(new MessageQueueManager());
+  const pingTimeRef = useRef<number>(0);
 
   const sendHeartbeat = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
+      pingTimeRef.current = Date.now();
       wsRef.current.send(JSON.stringify({ type: 'ping' }));
-      setMetrics(prev => ({
-        ...prev,
-        lastHeartbeat: new Date()
-      }));
     }
-  }, [setMetrics]);
+  }, []);
 
   const setupWebSocketHandlers = useCallback((ws: WebSocket) => {
     ws.onopen = () => {
       console.log('WebSocket connected');
+      const connectedAt = new Date();
       setConnectionState('connected');
       setMetrics(prev => ({
         ...prev,
-        lastConnected: new Date(),
+        lastConnected: connectedAt,
         reconnectAttempts: 0,
         lastError: null
       }));
 
       // Process queued messages
-      while (messageQueueRef.current.length > 0) {
-        const message = messageQueueRef.current.shift();
+      const queuedMessages = messageQueueRef.current.getAll();
+      queuedMessages.forEach(message => {
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify(message));
+          messageQueueRef.current.remove(message.id);
           setMetrics(prev => ({
             ...prev,
             messagesSent: prev.messagesSent + 1
           }));
         }
-      }
+      });
 
       // Start heartbeat
       heartbeatIntervalRef.current = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
-      handleConnectionSuccess();
     };
 
     ws.onmessage = (event) => {
@@ -55,17 +55,15 @@ export const useWebSocketLifecycle = (
         const data = JSON.parse(event.data);
         
         if (data.type === 'pong') {
+          const latency = calculateLatency(pingTimeRef.current);
           setMetrics(prev => ({
             ...prev,
-            lastHeartbeat: new Date()
+            lastHeartbeat: new Date(),
+            latency
           }));
           return;
         }
         
-        if (data.type === 'status' && data.status === 'disconnected') {
-          throw new Error(data.reason || 'Connection closed');
-        }
-
         setMetrics(prev => ({
           ...prev,
           messagesReceived: prev.messagesReceived + 1
