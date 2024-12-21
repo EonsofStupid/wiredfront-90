@@ -50,7 +50,7 @@ export const UserMenu = () => {
             <Button 
               variant="ghost" 
               size="icon"
-              className="animate-hover-button text-neon-pink hover:text-neon-blue"
+              className="animate-hover-button text-neon-pink hover:text-neon-blue relative z-50"
             >
               <User className="w-5 h-5" />
             </Button>
@@ -58,7 +58,7 @@ export const UserMenu = () => {
           <TooltipContent>Account</TooltipContent>
         </Tooltip>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="glass-card">
+      <DropdownMenuContent align="end" className="glass-card z-[100]">
         {user ? (
           <>
             <DropdownMenuLabel>{user.email}</DropdownMenuLabel>

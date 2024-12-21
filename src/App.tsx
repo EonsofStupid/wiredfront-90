@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import { supabase } from "@/integrations/supabase/client";
+import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
 
@@ -58,7 +59,7 @@ const App = () => {
               <Route path="/search" element={<div>Search Page</div>} />
               <Route path="/notifications" element={<div>Notifications Page</div>} />
               <Route path="/profile" element={<div>Profile Page</div>} />
-              <Route path="/login" element={<div>Login Page</div>} />
+              <Route path="/login" element={<Login />} />
             </Routes>
           </MainLayout>
         </BrowserRouter>
