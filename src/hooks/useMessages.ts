@@ -9,7 +9,7 @@ const MESSAGES_PER_PAGE = 50;
 
 export const useMessages = (sessionId: string, isMinimized: boolean) => {
   const { realtimeMessages, addMessage, addOptimisticMessage } = useMessageManagement(sessionId);
-  const ws = useWebSocketConnection(sessionId, isMinimized, addMessage);
+  const { ws, isConnected, reconnect } = useWebSocketConnection(sessionId, isMinimized, addMessage);
 
   const {
     data,
@@ -57,5 +57,8 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     isLoading: status === 'pending',
     error,
     addOptimisticMessage: (content: string) => addOptimisticMessage(content, ws),
+    ws,
+    isConnected,
+    reconnect
   };
 };

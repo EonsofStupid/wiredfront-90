@@ -33,9 +33,9 @@ export const useMessageManagement = (sessionId: string) => {
       type: 'text',
       metadata: {},
       is_minimized: false,
-      last_accessed: now,
       position: { x: null, y: null },
-      window_state: { width: 350, height: 500 }
+      window_state: { width: 350, height: 500 },
+      last_accessed: now
     };
 
     setRealtimeMessages(prev => [optimisticMessage, ...prev]);

@@ -1,12 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import { SignalHigh, CloudOff } from 'lucide-react';
+
+interface WebSocketConnection {
+  ws: WebSocket | null;
+  isConnected: boolean;
+  reconnect: () => Promise<void>;
+}
 
 export const useWebSocketConnection = (
   sessionId: string,
   isMinimized: boolean,
   onMessage: (message: any) => void
-) => {
+): WebSocketConnection => {
   const [wsRef, setWsRef] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
@@ -28,7 +34,7 @@ export const useWebSocketConnection = (
         setIsConnected(true);
         setRetryCount(0);
         toast.success('Connected to chat service', {
-          icon: () => <SignalHigh className="w-4 h-4" />
+          icon: SignalHigh as unknown as ReactNode
         });
       };
 
@@ -47,7 +53,7 @@ export const useWebSocketConnection = (
         setIsConnected(false);
         toast.error('Chat connection error', {
           description: 'Please try again later',
-          icon: () => <CloudOff className="w-4 h-4" />
+          icon: CloudOff as unknown as ReactNode
         });
       };
 
@@ -63,12 +69,6 @@ export const useWebSocketConnection = (
           }, RETRY_DELAY);
         }
       };
-
-      return () => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.close();
-        }
-      };
     } catch (error) {
       console.error('Failed to initialize WebSocket:', error);
       toast.error('Failed to connect to chat service');
@@ -77,15 +77,14 @@ export const useWebSocketConnection = (
 
   useEffect(() => {
     if (!isMinimized) {
-      const cleanup = initWebSocket();
+      initWebSocket();
       return () => {
-        cleanup?.();
         if (wsRef?.readyState === WebSocket.OPEN) {
           wsRef.close();
         }
       };
     }
-  }, [initWebSocket, isMinimized]);
+  }, [initWebSocket, isMinimized, wsRef]);
 
   return {
     ws: wsRef,
