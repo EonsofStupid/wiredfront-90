@@ -8,6 +8,7 @@ import { MainLayout } from "./components/layout/MainLayout";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import { initializeTextEffect } from "./utils/textEffect";
+import { SidebarProvider } from "./components/ui/sidebar";
 
 const queryClient = new QueryClient();
 
@@ -19,16 +20,20 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <MainLayout>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-            </Routes>
-          </MainLayout>
-        </BrowserRouter>
+        <SidebarProvider>
+          <div className="min-h-screen flex w-full">
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <MainLayout>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                </Routes>
+              </MainLayout>
+            </BrowserRouter>
+          </div>
+        </SidebarProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
