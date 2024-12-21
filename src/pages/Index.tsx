@@ -1,15 +1,11 @@
-import { HeroSection } from "@/components/home/HeroSection";
-import { FeaturesSection } from "@/components/home/FeaturesSection";
 import { DraggableChat } from "@/components/chat/DraggableChat";
+import { CacheMetricsPanel } from "@/components/debug/CacheMetricsPanel";
 
-const Index = () => {
+export default function Index() {
   return (
-    <div className="min-h-full grid-bg">
-      <HeroSection />
-      <FeaturesSection />
+    <div className="relative min-h-screen">
       <DraggableChat />
+      {process.env.NODE_ENV === 'development' && <CacheMetricsPanel />}
     </div>
   );
-};
-
-export default Index;
+}
