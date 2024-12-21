@@ -9,7 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { ChatSessionControls } from './ChatSessionControls';
 
 export const DraggableChat = () => {
-  const CHAT_WIDTH = 350;
+  const CHAT_WIDTH = 414; // Increased by 4rem (64px)
   const CHAT_HEIGHT = 500;
   const MARGIN = 32;
 
