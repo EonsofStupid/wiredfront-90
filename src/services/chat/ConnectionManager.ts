@@ -1,11 +1,11 @@
 import { logger } from './LoggingService';
 import { WebSocketMessageHandler } from './WebSocketMessageHandler';
 import { WEBSOCKET_URL } from '@/constants/websocket';
-import { supabase } from "@/integrations/supabase/client";
 
 export class ConnectionManager {
   private ws: WebSocket | null = null;
   private sessionId: string;
+  private authToken: string | null = null;
   private messageHandler: WebSocketMessageHandler;
   private onMessageCallback: ((message: any) => void) | null = null;
   private onStateChangeCallback: ((state: string) => void) | null = null;
@@ -14,6 +14,14 @@ export class ConnectionManager {
     this.sessionId = sessionId;
     this.messageHandler = new WebSocketMessageHandler(sessionId);
     logger.info('Connection manager initialized', { sessionId }, this.sessionId);
+  }
+
+  setAuthToken(token: string) {
+    this.authToken = token;
+  }
+
+  getSessionId() {
+    return this.sessionId;
   }
 
   setCallbacks(callbacks: {
@@ -27,15 +35,14 @@ export class ConnectionManager {
 
   async connect() {
     try {
-      logger.info('Initiating WebSocket connection', undefined, this.sessionId);
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No active session');
+      if (!this.authToken) {
+        throw new Error('Authentication token not set');
       }
 
-      const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${session.access_token}`;
-      logger.debug('Connecting to WebSocket', { url: wsUrl.replace(session.access_token, '[REDACTED]') }, this.sessionId);
+      logger.info('Initiating WebSocket connection', undefined, this.sessionId);
+      
+      const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${this.authToken}`;
+      logger.debug('Connecting to WebSocket', { url: wsUrl.replace(this.authToken, '[REDACTED]') }, this.sessionId);
       
       this.ws = new WebSocket(wsUrl);
       
@@ -64,6 +71,7 @@ export class ConnectionManager {
   }
 
   private handleError(event: Event) {
+    logger.error('WebSocket connection error', { event }, this.sessionId);
     this.messageHandler.handleError(new Error('WebSocket connection error'));
     if (this.onStateChangeCallback) {
       this.onStateChangeCallback('error');
@@ -71,6 +79,12 @@ export class ConnectionManager {
   }
 
   private handleClose(event: CloseEvent) {
+    logger.info('WebSocket connection closed', {
+      code: event.code,
+      reason: event.reason,
+      wasClean: event.wasClean
+    }, this.sessionId);
+    
     this.messageHandler.handleClose(event);
     if (this.onStateChangeCallback) {
       this.onStateChangeCallback('disconnected');

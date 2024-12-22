@@ -1,6 +1,12 @@
 import { corsHeaders } from './utils/cors.ts';
 import { WebSocketHandler } from './utils/websocket.ts';
 import { logger } from './utils/logger.ts';
+import { createClient } from 'jsr:@supabase/supabase-js@2';
+
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+);
 
 Deno.serve(async (req) => {
   const requestId = crypto.randomUUID();
@@ -32,9 +38,12 @@ Deno.serve(async (req) => {
     // Get access token from URL params
     const url = new URL(req.url);
     const accessToken = url.searchParams.get('access_token');
+    const sessionId = url.searchParams.get('session_id');
+
     logger.debug('Validating access token', { 
       requestId,
-      hasToken: !!accessToken 
+      hasToken: !!accessToken,
+      sessionId 
     });
     
     if (!accessToken) {
@@ -45,11 +54,35 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Initialize WebSocket handler
-    logger.info('Initializing WebSocket connection', { requestId });
-    const handler = new WebSocketHandler(req);
+    // Validate token and get user
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
     
-    logger.info('WebSocket connection established successfully', { requestId });
+    if (authError || !user) {
+      logger.error('Invalid access token', { requestId, error: authError });
+      return new Response('Invalid access token', { 
+        status: 401,
+        headers: corsHeaders
+      });
+    }
+
+    logger.info('User authenticated successfully', {
+      requestId,
+      userId: user.id,
+      sessionId
+    });
+
+    // Initialize WebSocket handler
+    const handler = new WebSocketHandler(req, {
+      userId: user.id,
+      sessionId: sessionId || requestId
+    });
+    
+    logger.info('WebSocket connection established successfully', {
+      requestId,
+      userId: user.id,
+      sessionId: handler.getSessionId()
+    });
+
     return handler.response;
 
   } catch (error) {

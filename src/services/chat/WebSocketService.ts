@@ -1,6 +1,7 @@
 import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
 import { ConnectionManager } from './ConnectionManager';
 import { logger } from './LoggingService';
+import { supabase } from "@/integrations/supabase/client";
 
 export class WebSocketService {
   private connectionManager: ConnectionManager;
@@ -20,11 +21,18 @@ export class WebSocketService {
     logger.info('WebSocket service initialized', { sessionId }, sessionId);
   }
 
-  public setCallbacks(callbacks: {
+  public async setCallbacks(callbacks: {
     onMessage: (message: any) => void;
     onStateChange: (state: ConnectionState) => void;
     onMetricsUpdate: (metrics: Partial<ConnectionMetrics>) => void;
   }) {
+    // Get current session token
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      logger.error('No active session found', {}, this.connectionManager.getSessionId());
+      throw new Error('Authentication required');
+    }
+
     this.connectionManager.setCallbacks({
       onMessage: (message) => {
         this.updateMetrics({ messagesReceived: this.metrics.messagesReceived + 1 });
@@ -41,11 +49,14 @@ export class WebSocketService {
         callbacks.onStateChange(state as ConnectionState);
       }
     });
+
+    // Pass authentication token to connection manager
+    this.connectionManager.setAuthToken(session.access_token);
   }
 
   private updateMetrics(updates: Partial<ConnectionMetrics>) {
     this.metrics = { ...this.metrics, ...updates };
-    logger.debug('Metrics updated', this.metrics);
+    logger.debug('Metrics updated', this.metrics, this.connectionManager.getSessionId());
   }
 
   public async connect() {
