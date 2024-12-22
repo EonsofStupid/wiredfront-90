@@ -75,9 +75,9 @@ export const DraggableChat = () => {
   };
 
   const handleMinimize = () => {
-    if (currentSessionId && currentSession) {
+    if (currentSessionId) {
       updateSession(currentSessionId, { 
-        isMinimized: !currentSession.isMinimized 
+        isMinimized: !currentSession?.isMinimized 
       });
     }
   };
@@ -93,8 +93,8 @@ export const DraggableChat = () => {
   };
 
   const handleTackToggle = () => {
-    if (currentSessionId && currentSession) {
-      const newIsTacked = !currentSession.isTacked;
+    if (currentSessionId) {
+      const newIsTacked = !currentSession?.isTacked;
       updateSession(currentSessionId, { isTacked: newIsTacked });
       if (newIsTacked) {
         resetPosition();
@@ -109,7 +109,7 @@ export const DraggableChat = () => {
   };
 
   const handleNewSession = () => {
-    createSession();
+    const newSessionId = createSession();
     toast({
       title: "New chat session created",
       description: "You can switch between sessions using the menu",
