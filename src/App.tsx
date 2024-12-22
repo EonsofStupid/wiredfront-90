@@ -48,21 +48,27 @@ const App = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      // Only redirect on initial load if we have a session
+      if (session?.user) {
+        const redirectPath = getRedirectPath(session.user);
+        navigate(redirectPath, { replace: true });
+      }
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      if (session?.user) {
-        // Use navigate instead of window.location to prevent reload
+      // Don't redirect on every auth state change, only when logging in
+      if (session?.user && location.pathname === '/login') {
         const redirectPath = getRedirectPath(session.user);
         navigate(redirectPath, { replace: true });
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [setUser, setLoading, navigate]);
+  }, [setUser, setLoading, navigate, location.pathname]);
 
   // Store last visited path
   useEffect(() => {
