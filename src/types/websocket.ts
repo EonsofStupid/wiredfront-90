@@ -4,7 +4,8 @@ export type ConnectionState =
   | 'connected'
   | 'disconnected'
   | 'reconnecting'
-  | 'error';
+  | 'error'
+  | 'failed';
 
 export interface ConnectionMetrics {
   lastConnected: Date | null;
