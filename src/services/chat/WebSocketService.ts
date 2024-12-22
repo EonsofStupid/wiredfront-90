@@ -1,112 +1,68 @@
 import { ConnectionState, ConnectionMetrics, WebSocketCallbacks } from './types/websocket';
-import { WebSocketMetricsService } from './services/WebSocketMetricsService';
-import { WebSocketConnectionService } from './services/WebSocketConnectionService';
-import { logger } from './LoggingService';
+import { WebSocketLogger } from './services/websocket/WebSocketLogger';
+import { WebSocketStateManager } from './services/websocket/WebSocketStateManager';
+import { WebSocketConnection } from './services/websocket/WebSocketConnection';
+import { WebSocketMessageHandler } from './services/websocket/WebSocketMessageHandler';
 
 export class WebSocketService {
-  private connectionService: WebSocketConnectionService;
-  private metricsService: WebSocketMetricsService;
-  private sessionId: string;
+  private connection: WebSocketConnection;
+  private logger: WebSocketLogger;
+  private stateManager: WebSocketStateManager;
+  private messageHandler: WebSocketMessageHandler;
 
-  constructor(sessionId: string) {
-    this.sessionId = sessionId;
-    
-    logger.info('Initializing WebSocket service', 
-      { sessionId }, 
-      sessionId,
-      { component: 'WebSocketService', action: 'initialize' }
+  constructor(private sessionId: string) {
+    this.logger = new WebSocketLogger(sessionId);
+    this.stateManager = new WebSocketStateManager(this.logger);
+    this.messageHandler = new WebSocketMessageHandler(
+      this.logger,
+      this.handleMessage.bind(this),
+      this.handleMetricsUpdate.bind(this)
     );
-
-    this.metricsService = new WebSocketMetricsService(sessionId);
-    this.connectionService = new WebSocketConnectionService(
+    this.connection = new WebSocketConnection(
       sessionId,
-      this.metricsService,
-      this.handleStateChange.bind(this)
+      this.logger,
+      this.stateManager,
+      this.messageHandler
     );
   }
 
-  private handleStateChange(state: ConnectionState) {
-    logger.info(`WebSocket state changed to ${state}`,
-      { 
-        previousState: this.connectionService.getState(),
-        newState: state,
-        timestamp: new Date().toISOString()
-      },
-      this.sessionId,
-      { component: 'WebSocketService', action: 'handleStateChange' }
-    );
+  private handleMessage(data: any) {
+    console.log('WebSocket message received:', data);
+  }
+
+  private handleMetricsUpdate(metrics: Partial<ConnectionMetrics>) {
+    console.log('WebSocket metrics updated:', metrics);
   }
 
   public async setCallbacks(callbacks: WebSocketCallbacks) {
-    logger.debug('Setting WebSocket callbacks',
-      { 
-        hasMessageCallback: !!callbacks.onMessage,
-        hasStateCallback: !!callbacks.onStateChange,
-        hasMetricsCallback: !!callbacks.onMetricsUpdate,
-        timestamp: new Date().toISOString()
-      },
-      this.sessionId,
-      { component: 'WebSocketService', action: 'setCallbacks' }
+    this.messageHandler = new WebSocketMessageHandler(
+      this.logger,
+      callbacks.onMessage,
+      callbacks.onMetricsUpdate
     );
   }
 
   public async connect(accessToken: string) {
-    logger.info('Initiating WebSocket connection',
-      { 
-        sessionId: this.sessionId,
-        hasToken: !!accessToken,
-        timestamp: new Date().toISOString()
-      },
-      this.sessionId,
-      { component: 'WebSocketService', action: 'connect' }
-    );
-
     try {
-      this.connectionService.setAuthToken(accessToken);
-      await this.connectionService.connect();
+      this.connection.setAuthToken(accessToken);
+      await this.connection.connect();
     } catch (error) {
-      logger.error('Connection failed',
-        { 
-          error,
-          timestamp: new Date().toISOString()
-        },
-        this.sessionId,
-        { component: 'WebSocketService', action: 'connect' }
-      );
+      console.error('Failed to connect:', error);
       throw error;
     }
   }
 
   public send(message: any): boolean {
-    logger.debug('Attempting to send message',
-      { 
-        messageType: message?.type,
-        timestamp: new Date().toISOString()
-      },
-      this.sessionId,
-      { component: 'WebSocketService', action: 'send' }
-    );
-    return this.connectionService.send(message);
+    return this.connection.send(message);
   }
 
   public disconnect() {
-    logger.info('Disconnecting WebSocket service',
-      {
-        timestamp: new Date().toISOString()
-      },
-      this.sessionId,
-      { component: 'WebSocketService', action: 'disconnect' }
-    );
-    this.connectionService.disconnect();
+    this.connection.disconnect();
   }
 
   public getState(): ConnectionState {
-    const wsState = this.connectionService.getState();
-    return this.mapWebSocketState(wsState);
-  }
-
-  private mapWebSocketState(state: number): ConnectionState {
-    switch (state) {
+    const wsState = this.connection.getState();
+    switch (wsState) {
       case WebSocket.CONNECTING:
         return 'connecting';
       case WebSocket.OPEN:
@@ -118,9 +74,5 @@ export class WebSocketService {
       default:
         return 'initial';
     }
-  }
-
-  public getMetrics(): ConnectionMetrics {
-    return this.metricsService.getMetrics();
   }
 }
