@@ -84,7 +84,6 @@ export const useWebSocketLifecycle = ({
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
         isConnectingRef.current = false;
-        updateConnectionState('error');
       };
     } catch (error) {
       console.error('Failed to create WebSocket:', error);
