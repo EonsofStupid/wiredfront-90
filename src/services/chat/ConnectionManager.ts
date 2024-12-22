@@ -2,6 +2,7 @@ import { logger } from './LoggingService';
 import { WebSocketMessageHandler } from './WebSocketMessageHandler';
 import { WEBSOCKET_URL } from '@/constants/websocket';
 import { ConnectionMetrics } from '@/types/websocket';
+import { supabase } from "@/integrations/supabase/client";
 
 export interface ConnectionCallbacks {
   onMessage: (message: any) => void;
@@ -17,6 +18,8 @@ export class ConnectionManager {
   private onMessageCallback: ((message: any) => void) | null = null;
   private onStateChangeCallback: ((state: string) => void) | null = null;
   private onMetricsUpdateCallback: ((metrics: Partial<ConnectionMetrics>) => void) | null = null;
+  private reconnectAttempts: number = 0;
+  private maxReconnectAttempts: number = 5;
 
   constructor(sessionId: string) {
     this.sessionId = sessionId;
@@ -51,8 +54,14 @@ export class ConnectionManager {
         this.ws = null;
       }
 
-      const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${this.authToken}`;
-      logger.debug('Connecting to WebSocket', { url: wsUrl.replace(this.authToken, '[REDACTED]') }, this.sessionId);
+      // Get a fresh session token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No valid session found');
+      }
+
+      const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${session.access_token}`;
+      logger.debug('Connecting to WebSocket', { url: wsUrl.replace(session.access_token, '[REDACTED]') }, this.sessionId);
       
       this.ws = new WebSocket(wsUrl);
       
@@ -63,17 +72,22 @@ export class ConnectionManager {
       
     } catch (error) {
       logger.error('Failed to establish WebSocket connection', { error }, this.sessionId);
+      this.handleReconnect();
       throw error;
     }
   }
 
   private handleOpen() {
+    this.reconnectAttempts = 0;
     logger.info('WebSocket connection established', undefined, this.sessionId);
     if (this.onStateChangeCallback) {
       this.onStateChangeCallback('connected');
     }
     if (this.onMetricsUpdateCallback) {
-      this.onMetricsUpdateCallback({ lastConnected: new Date() });
+      this.onMetricsUpdateCallback({ 
+        lastConnected: new Date(),
+        reconnectAttempts: this.reconnectAttempts
+      });
     }
   }
 
@@ -93,8 +107,12 @@ export class ConnectionManager {
       this.onStateChangeCallback('error');
     }
     if (this.onMetricsUpdateCallback) {
-      this.onMetricsUpdateCallback({ lastError: new Error('WebSocket connection error') });
+      this.onMetricsUpdateCallback({ 
+        lastError: new Error('WebSocket connection error'),
+        reconnectAttempts: this.reconnectAttempts
+      });
     }
+    this.handleReconnect();
   }
 
   private handleClose(event: CloseEvent) {
@@ -107,6 +125,39 @@ export class ConnectionManager {
     this.messageHandler.handleClose(event);
     if (this.onStateChangeCallback) {
       this.onStateChangeCallback('disconnected');
+    }
+    this.handleReconnect();
+  }
+
+  private async handleReconnect() {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      logger.error('Max reconnection attempts reached', {
+        attempts: this.reconnectAttempts
+      }, this.sessionId);
+      if (this.onStateChangeCallback) {
+        this.onStateChangeCallback('failed');
+      }
+      return;
+    }
+
+    this.reconnectAttempts++;
+    logger.info('Attempting to reconnect', {
+      attempt: this.reconnectAttempts,
+      maxAttempts: this.maxReconnectAttempts
+    }, this.sessionId);
+
+    if (this.onStateChangeCallback) {
+      this.onStateChangeCallback('reconnecting');
+    }
+
+    // Exponential backoff
+    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+    await new Promise(resolve => setTimeout(resolve, delay));
+
+    try {
+      await this.connect();
+    } catch (error) {
+      logger.error('Reconnection attempt failed', { error }, this.sessionId);
     }
   }
 
