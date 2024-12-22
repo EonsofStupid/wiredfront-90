@@ -3,6 +3,7 @@ import { useWebSocketLifecycle } from './useWebSocketLifecycle';
 import { useWebSocketMetrics } from './websocket/useWebSocketMetrics';
 import { WEBSOCKET_URL } from '@/constants/websocket';
 import { WebSocketConfig } from '@/types/websocket';
+import { toast } from 'sonner';
 
 export const useWebSocketConnection = (
   sessionId: string,
@@ -14,39 +15,59 @@ export const useWebSocketConnection = (
   const handleMessage = useCallback((event: MessageEvent) => {
     try {
       const data = JSON.parse(event.data);
+      console.log('Received WebSocket message:', data);
       onMessage(data);
     } catch (error) {
       console.error('Failed to parse WebSocket message:', error);
+      toast.error('Failed to process message');
     }
   }, [onMessage]);
 
-  const { connectionState, connect, disconnect, ws } = useWebSocketLifecycle(wsUrl);
-  const metrics = useWebSocketMetrics(connectionState);
+  const { connectionState, metrics, updateMetrics, setConnectionState } = useWebSocketMetrics();
+  
+  const { wsRef, connect, cleanup, messageQueueRef } = useWebSocketLifecycle(
+    wsUrl,
+    setConnectionState,
+    updateMetrics
+  );
 
   useEffect(() => {
     if (!isMinimized) {
       connect();
     } else {
-      disconnect();
+      cleanup();
     }
     
     return () => {
-      disconnect();
+      cleanup();
     };
-  }, [wsUrl, isMinimized, connect, disconnect]);
+  }, [wsUrl, isMinimized, connect, cleanup]);
+
+  const sendMessage = useCallback((message: any): boolean => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      try {
+        wsRef.current.send(JSON.stringify(message));
+        updateMetrics({ messagesSent: prev => (prev || 0) + 1 });
+        return true;
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        toast.error('Failed to send message');
+        return false;
+      }
+    }
+
+    // Queue message if socket isn't open
+    messageQueueRef.current.add(message);
+    toast.info('Message queued for sending');
+    return false;
+  }, [wsRef, updateMetrics, messageQueueRef]);
 
   return {
     connectionState,
     metrics,
-    sendMessage: useCallback((message: any) => {
-      if (ws?.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify(message));
-        return true;
-      }
-      return false;
-    }, [ws]),
+    sendMessage,
     isConnected: connectionState === 'connected',
     reconnect: connect,
-    ws
+    ws: wsRef.current
   };
 };
