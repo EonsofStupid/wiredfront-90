@@ -28,10 +28,13 @@ export class WebSocketService {
   }) {
     // Get current session token
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    if (!session?.access_token) {
       logger.error('No active session found', {}, this.connectionManager.getSessionId());
       throw new Error('Authentication required');
     }
+
+    // Set auth token in connection manager
+    this.connectionManager.setAuthToken(session.access_token);
 
     this.connectionManager.setCallbacks({
       onMessage: (message) => {
@@ -49,9 +52,6 @@ export class WebSocketService {
         callbacks.onStateChange(state as ConnectionState);
       }
     });
-
-    // Pass authentication token to connection manager
-    this.connectionManager.setAuthToken(session.access_token);
   }
 
   private updateMetrics(updates: Partial<ConnectionMetrics>) {
@@ -61,6 +61,14 @@ export class WebSocketService {
 
   public async connect() {
     try {
+      // Verify we have a current session before connecting
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No active session');
+      }
+      
+      // Update token in case it changed
+      this.connectionManager.setAuthToken(session.access_token);
       await this.connectionManager.connect();
     } catch (error) {
       this.updateMetrics({ 

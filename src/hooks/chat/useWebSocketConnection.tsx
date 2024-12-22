@@ -3,6 +3,7 @@ import { WebSocketService } from '@/services/chat/WebSocketService';
 import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
 import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useWebSocketConnection = (
   sessionId: string,
@@ -39,18 +40,43 @@ export const useWebSocketConnection = (
   }, []);
 
   useEffect(() => {
-    if (!isMinimized && !wsServiceRef.current) {
-      logger.info('Initializing WebSocket service', { sessionId });
-      wsServiceRef.current = new WebSocketService(sessionId);
-      
-      wsServiceRef.current.setCallbacks({
-        onMessage,
-        onStateChange: updateState,
-        onMetricsUpdate: updateMetrics
-      });
+    const initializeWebSocket = async () => {
+      if (isMinimized) return;
 
-      wsServiceRef.current.connect();
-    }
+      try {
+        // Get current session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          throw sessionError;
+        }
+
+        if (!session) {
+          logger.warn('No active session found');
+          updateState('error');
+          return;
+        }
+
+        // Initialize WebSocket service with session token
+        if (!wsServiceRef.current) {
+          logger.info('Initializing WebSocket service', { sessionId });
+          wsServiceRef.current = new WebSocketService(sessionId);
+          
+          await wsServiceRef.current.setCallbacks({
+            onMessage,
+            onStateChange: updateState,
+            onMetricsUpdate: updateMetrics
+          });
+
+          await wsServiceRef.current.connect();
+        }
+      } catch (error) {
+        logger.error('Failed to initialize WebSocket', { error });
+        updateState('error');
+      }
+    };
+
+    initializeWebSocket();
 
     return () => {
       if (wsServiceRef.current) {
@@ -77,7 +103,9 @@ export const useWebSocketConnection = (
     isConnected: stateRef.current === 'connected',
     reconnect: async () => {
       logger.info('Manual reconnection requested');
-      wsServiceRef.current?.connect();
+      if (wsServiceRef.current) {
+        await wsServiceRef.current.connect();
+      }
     },
   };
 };
