@@ -14,9 +14,11 @@ export class WebSocketAuthenticator {
       if (error) throw error;
       
       const isValid = !!session?.access_token;
-      this.logger.logTokenValidation(isValid, {
+      this.logger.info('Token validation', {
+        isValid,
         sessionId: this.sessionId,
-        userId: session?.user?.id
+        userId: session?.user?.id,
+        timestamp: new Date().toISOString()
       });
       
       if (!isValid) {
@@ -25,9 +27,10 @@ export class WebSocketAuthenticator {
       
       return session.access_token;
     } catch (error) {
-      this.logger.logConnectionError(error as Error, {
+      this.logger.error('Authentication error', {
         sessionId: this.sessionId,
-        error: error as Error
+        error: error as Error,
+        timestamp: new Date().toISOString()
       });
       throw error;
     }

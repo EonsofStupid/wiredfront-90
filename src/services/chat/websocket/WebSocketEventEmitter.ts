@@ -3,6 +3,8 @@ import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
 import { toast } from 'sonner';
 
 export class WebSocketEventEmitter {
+  private state: ConnectionState = 'initial';
+
   constructor(
     private logger: WebSocketLogger,
     private onStateChange: (state: ConnectionState) => void,
@@ -10,10 +12,11 @@ export class WebSocketEventEmitter {
   ) {}
 
   emitStateChange(state: ConnectionState, metadata: Record<string, any> = {}) {
+    this.state = state;
     this.onStateChange(state);
     this.logger.logStateChange(state, {
       ...metadata,
-      previousState: this.currentState,
+      previousState: this.state,
       timestamp: new Date().toISOString()
     });
     
@@ -42,24 +45,17 @@ export class WebSocketEventEmitter {
 
   emitMetricsUpdate(metrics: Partial<ConnectionMetrics>) {
     this.onMetricsUpdate(metrics);
-    this.logger.logMetricsUpdate({
-      lastConnected: metrics.lastConnected || null,
-      reconnectAttempts: metrics.reconnectAttempts || 0,
-      lastError: metrics.lastError || null,
-      messagesSent: metrics.messagesSent || 0,
-      messagesReceived: metrics.messagesReceived || 0,
-      lastHeartbeat: metrics.lastHeartbeat || null,
-      latency: metrics.latency || 0,
-      uptime: metrics.uptime || 0
+    this.logger.debug('WebSocket metrics updated', {
+      metrics,
+      timestamp: new Date().toISOString()
     });
   }
 
   emitError(error: Error, context: Record<string, any> = {}) {
-    this.logger.logConnectionError(error, {
+    this.logger.error('WebSocket error', {
       ...context,
-      timestamp: new Date().toISOString(),
-      errorType: error.name,
-      errorStack: error.stack
+      error,
+      timestamp: new Date().toISOString()
     });
     
     let errorMessage = 'Connection error occurred';
@@ -73,29 +69,5 @@ export class WebSocketEventEmitter {
     }
     
     toast.error(errorMessage);
-  }
-
-  emitMessageFailure(messageId: string, error: Error, retryAttempt: number) {
-    this.logger.logMessageError(error, messageId, {
-      retryAttempt,
-      timestamp: new Date().toISOString(),
-      errorType: error.name,
-      errorStack: error.stack
-    });
-    
-    if (retryAttempt < 3) {
-      toast.error(`Message send failed. Retry attempt ${retryAttempt + 1}/3`);
-    } else {
-      toast.error('Message send failed after multiple attempts');
-    }
-  }
-
-  emitAuthFailure(error: Error) {
-    this.logger.logAuthError(error, {
-      timestamp: new Date().toISOString(),
-      errorType: error.name,
-      errorStack: error.stack
-    });
-    toast.error('Authentication failed. Please log in again.');
   }
 }

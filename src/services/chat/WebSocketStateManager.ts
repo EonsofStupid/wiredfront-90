@@ -11,7 +11,10 @@ export class WebSocketStateManager {
   setState(newState: ConnectionState) {
     const previousState = this.state;
     this.state = newState;
-    this.logger.logStateChange(previousState, newState);
+    this.logger.logStateChange(newState, {
+      previousState,
+      timestamp: new Date().toISOString()
+    });
   }
 
   getState(): ConnectionState {
@@ -20,7 +23,11 @@ export class WebSocketStateManager {
 
   incrementReconnectAttempts(): boolean {
     this.reconnectAttempts++;
-    this.logger.logReconnectAttempt(this.reconnectAttempts, this.maxReconnectAttempts);
+    this.logger.info('Reconnection attempt', {
+      attempt: this.reconnectAttempts,
+      maxAttempts: this.maxReconnectAttempts,
+      timestamp: new Date().toISOString()
+    });
     return this.reconnectAttempts < this.maxReconnectAttempts;
   }
 
