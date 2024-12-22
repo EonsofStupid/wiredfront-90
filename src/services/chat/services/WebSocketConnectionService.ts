@@ -1,189 +1,67 @@
-import { ConnectionState } from '../types/websocket';
-import { logger } from '../LoggingService';
-import { WebSocketMetricsService } from './WebSocketMetricsService';
+import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
+import { WebSocketLogger } from './websocket/WebSocketLogger';
+import { WebSocketStateManager } from './websocket/WebSocketStateManager';
+import { WebSocketEventHandler } from './websocket/WebSocketEventHandler';
 import { WEBSOCKET_URL } from '@/constants/websocket';
 
 export class WebSocketConnectionService {
   private ws: WebSocket | null = null;
-  private sessionId: string;
-  private metricsService: WebSocketMetricsService;
   private authToken: string | null = null;
-  private onStateChange: (state: ConnectionState) => void;
-  private connectionAttempts: number = 0;
+  private logger: WebSocketLogger;
+  private stateManager: WebSocketStateManager;
+  private eventHandler: WebSocketEventHandler;
 
   constructor(
-    sessionId: string, 
-    metricsService: WebSocketMetricsService,
+    private sessionId: string,
+    private metricsService: any,
     onStateChange: (state: ConnectionState) => void
   ) {
-    this.sessionId = sessionId;
-    this.metricsService = metricsService;
-    this.onStateChange = onStateChange;
-
-    logger.info('WebSocket connection service initialized',
-      { 
-        sessionId,
-        timestamp: new Date().toISOString(),
-        connectionAttempts: this.connectionAttempts
-      },
-      sessionId,
-      { component: 'WebSocketConnectionService', action: 'initialize' }
+    this.logger = new WebSocketLogger(sessionId);
+    this.stateManager = new WebSocketStateManager(this.logger, onStateChange);
+    this.eventHandler = new WebSocketEventHandler(
+      this.logger,
+      this.stateManager,
+      this.handleMessage.bind(this),
+      this.handleMetricsUpdate.bind(this)
     );
   }
 
   setAuthToken(token: string) {
-    logger.debug('Setting auth token',
-      { 
-        hasToken: !!token,
-        tokenLength: token.length,
-        timestamp: new Date().toISOString(),
-        sessionId: this.sessionId
-      },
-      this.sessionId,
-      { component: 'WebSocketConnectionService', action: 'setAuthToken' }
-    );
     this.authToken = token;
   }
 
   async connect() {
     if (!this.authToken) {
       const error = new Error('No auth token provided');
-      logger.error('Connection failed - missing auth token',
-        { 
-          error,
-          timestamp: new Date().toISOString(),
-          sessionId: this.sessionId,
-          connectionAttempts: this.connectionAttempts
-        },
-        this.sessionId,
-        { component: 'WebSocketConnectionService', action: 'connect' }
-      );
+      this.logger.logConnectionError(error, 0);
       throw error;
     }
 
     const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${this.authToken}`;
-    
-    logger.info('Initiating WebSocket connection',
-      { 
-        url: WEBSOCKET_URL,
-        sessionId: this.sessionId,
-        timestamp: new Date().toISOString(),
-        connectionAttempts: this.connectionAttempts,
-        wsState: this.ws?.readyState
-      },
-      this.sessionId,
-      { component: 'WebSocketConnectionService', action: 'connect' }
-    );
+    this.logger.logConnectionAttempt(WEBSOCKET_URL, !!this.authToken);
 
     try {
       if (this.ws) {
-        logger.info('Closing existing connection before reconnect',
-          {
-            previousState: this.ws.readyState,
-            sessionId: this.sessionId,
-            timestamp: new Date().toISOString()
-          },
-          this.sessionId,
-          { component: 'WebSocketConnectionService', action: 'connect' }
-        );
         this.ws.close();
         this.ws = null;
       }
 
-      this.connectionAttempts++;
       this.ws = new WebSocket(wsUrl);
-      this.setupEventHandlers();
+      this.eventHandler.setupEventHandlers(this.ws);
       
-      logger.info('WebSocket connection attempt completed',
-        { 
-          timestamp: new Date().toISOString(),
-          sessionId: this.sessionId,
-          attempt: this.connectionAttempts,
-          wsState: this.ws.readyState
-        },
-        this.sessionId,
-        { component: 'WebSocketConnectionService', action: 'connect' }
-      );
     } catch (error) {
-      logger.error('Failed to establish WebSocket connection',
-        { 
-          error,
-          timestamp: new Date().toISOString(),
-          sessionId: this.sessionId,
-          connectionAttempts: this.connectionAttempts,
-          wsUrl: wsUrl.replace(this.authToken, '[REDACTED]')
-        },
-        this.sessionId,
-        { component: 'WebSocketConnectionService', action: 'connect' }
-      );
+      this.logger.logConnectionError(error as Error, this.stateManager.getReconnectAttempts());
       throw error;
     }
   }
 
-  private setupEventHandlers() {
-    if (!this.ws) return;
+  private handleMessage(data: any) {
+    // Handle incoming messages
+    this.metricsService.incrementMessagesReceived();
+  }
 
-    this.ws.onopen = () => {
-      logger.info('WebSocket connection opened',
-        { 
-          timestamp: new Date().toISOString(),
-          sessionId: this.sessionId,
-          connectionAttempts: this.connectionAttempts,
-          wsState: this.ws?.readyState
-        },
-        this.sessionId,
-        { component: 'WebSocketConnectionService', action: 'onOpen' }
-      );
-      this.onStateChange('connected');
-      this.metricsService.updateMetrics({ 
-        lastConnected: new Date(),
-        reconnectAttempts: this.connectionAttempts
-      });
-    };
-
-    this.ws.onclose = (event) => {
-      logger.info('WebSocket connection closed',
-        { 
-          code: event.code,
-          reason: event.reason,
-          wasClean: event.wasClean,
-          timestamp: new Date().toISOString(),
-          sessionId: this.sessionId,
-          connectionAttempts: this.connectionAttempts
-        },
-        this.sessionId,
-        { component: 'WebSocketConnectionService', action: 'onClose' }
-      );
-      this.onStateChange('disconnected');
-    };
-
-    this.ws.onerror = (error) => {
-      logger.error('WebSocket connection error',
-        { 
-          error,
-          timestamp: new Date().toISOString(),
-          sessionId: this.sessionId,
-          connectionAttempts: this.connectionAttempts,
-          wsState: this.ws?.readyState
-        },
-        this.sessionId,
-        { component: 'WebSocketConnectionService', action: 'onError' }
-      );
-      this.onStateChange('error');
-      this.metricsService.recordError(error instanceof Error ? error : new Error('WebSocket error'));
-    };
-
-    this.ws.onmessage = (event) => {
-      logger.debug('WebSocket message received',
-        {
-          data: event.data,
-          timestamp: new Date().toISOString(),
-          sessionId: this.sessionId
-        },
-        this.sessionId,
-        { component: 'WebSocketConnectionService', action: 'onMessage' }
-      );
-    };
+  private handleMetricsUpdate(metrics: Partial<ConnectionMetrics>) {
+    this.metricsService.updateMetrics(metrics);
   }
 
   send(message: any): boolean {
@@ -191,56 +69,20 @@ export class WebSocketConnectionService {
       try {
         this.ws.send(JSON.stringify(message));
         this.metricsService.incrementMessagesSent();
-        logger.debug('Message sent successfully',
-          { 
-            messageType: message?.type,
-            timestamp: new Date().toISOString(),
-            sessionId: this.sessionId,
-            wsState: this.ws.readyState
-          },
-          this.sessionId,
-          { component: 'WebSocketConnectionService', action: 'send' }
-        );
+        this.logger.logMessageSent(message?.type, true);
         return true;
       } catch (error) {
-        logger.error('Failed to send message',
-          { 
-            error,
-            message,
-            timestamp: new Date().toISOString(),
-            sessionId: this.sessionId,
-            wsState: this.ws.readyState
-          },
-          this.sessionId,
-          { component: 'WebSocketConnectionService', action: 'send' }
-        );
+        this.logger.logConnectionError(error as Error, this.stateManager.getReconnectAttempts());
         return false;
       }
     }
-    logger.warn('Cannot send message - connection not open',
-      { 
-        readyState: this.ws?.readyState,
-        timestamp: new Date().toISOString(),
-        sessionId: this.sessionId
-      },
-      this.sessionId,
-      { component: 'WebSocketConnectionService', action: 'send' }
-    );
+    this.logger.logMessageSent(message?.type, false);
     return false;
   }
 
   disconnect() {
-    logger.info('Disconnecting WebSocket',
-      { 
-        timestamp: new Date().toISOString(),
-        sessionId: this.sessionId,
-        wsState: this.ws?.readyState,
-        connectionAttempts: this.connectionAttempts
-      },
-      this.sessionId,
-      { component: 'WebSocketConnectionService', action: 'disconnect' }
-    );
     if (this.ws) {
+      this.logger.logDisconnect();
       this.ws.close();
       this.ws = null;
     }
