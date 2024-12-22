@@ -6,35 +6,43 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
 
-// Initialize logger
+// Initialize structured logger
 const logger = {
-  info: (msg: string, data?: any) => {
+  log: (level: string, message: string, data?: Record<string, unknown>) => {
     console.log(JSON.stringify({
-      level: 'INFO',
       timestamp: new Date().toISOString(),
-      message: msg,
-      data
+      level,
+      message,
+      ...data
     }));
   },
-  error: (msg: string, error?: any) => {
-    console.error(JSON.stringify({
-      level: 'ERROR',
-      timestamp: new Date().toISOString(),
-      message: msg,
+  info: (message: string, data?: Record<string, unknown>) => {
+    logger.log('INFO', message, data);
+  },
+  error: (message: string, error?: unknown, data?: Record<string, unknown>) => {
+    logger.log('ERROR', message, {
       error: error instanceof Error ? {
+        name: error.name,
         message: error.message,
         stack: error.stack,
-        name: error.name
-      } : error
-    }));
+      } : error,
+      ...data,
+    });
+  },
+  debug: (message: string, data?: Record<string, unknown>) => {
+    logger.log('DEBUG', message, data);
+  },
+  warn: (message: string, data?: Record<string, unknown>) => {
+    logger.log('WARN', message, data);
   }
 };
 
-logger.info('[STARTUP] Initializing realtime-chat function');
+logger.info('Initializing realtime-chat function');
 
 Deno.serve(async (req) => {
   const requestId = crypto.randomUUID();
-  logger.info(`[${requestId}] New request received`, {
+  logger.info('New request received', {
+    requestId,
     method: req.method,
     url: req.url,
     headers: Object.fromEntries(req.headers.entries())
@@ -43,16 +51,16 @@ Deno.serve(async (req) => {
   try {
     // Handle CORS
     if (req.method === 'OPTIONS') {
-      logger.info(`[${requestId}] Handling CORS preflight request`);
+      logger.debug('Handling CORS preflight request', { requestId });
       return new Response(null, { headers: corsHeaders });
     }
 
     // Verify WebSocket upgrade
     const upgrade = req.headers.get('upgrade') || '';
-    logger.info(`[${requestId}] Upgrade header`, { upgrade });
+    logger.debug('Processing upgrade header', { requestId, upgrade });
     
     if (upgrade.toLowerCase() !== 'websocket') {
-      logger.error(`[${requestId}] Not a WebSocket upgrade request`);
+      logger.error('Not a WebSocket upgrade request', { requestId });
       return new Response("Request isn't trying to upgrade to websocket.", { 
         status: 400,
         headers: corsHeaders
@@ -62,10 +70,13 @@ Deno.serve(async (req) => {
     // Get access token from URL params
     const url = new URL(req.url);
     const accessToken = url.searchParams.get('access_token');
-    logger.info(`[${requestId}] Access token present`, { hasToken: !!accessToken });
+    logger.debug('Validating access token', { 
+      requestId,
+      hasToken: !!accessToken 
+    });
     
     if (!accessToken) {
-      logger.error(`[${requestId}] No access token provided`);
+      logger.error('No access token provided', { requestId });
       return new Response('Access token not provided', { 
         status: 401,
         headers: corsHeaders
@@ -73,11 +84,14 @@ Deno.serve(async (req) => {
     }
 
     // Verify the access token
-    logger.info(`[${requestId}] Verifying access token...`);
+    logger.debug('Verifying access token', { requestId });
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
     
     if (authError) {
-      logger.error(`[${requestId}] Auth error`, authError);
+      logger.error('Authentication error', { 
+        requestId,
+        error: authError
+      });
       return new Response('Invalid access token', { 
         status: 401,
         headers: corsHeaders
@@ -85,80 +99,102 @@ Deno.serve(async (req) => {
     }
 
     if (!user) {
-      logger.error(`[${requestId}] No user found for token`);
+      logger.error('No user found for token', { requestId });
       return new Response('User not found', { 
         status: 401,
         headers: corsHeaders
       });
     }
 
-    logger.info(`[${requestId}] User authenticated successfully`, { userId: user.id });
+    logger.info('User authenticated successfully', { 
+      requestId,
+      userId: user.id 
+    });
 
     // Upgrade the connection to WebSocket
-    logger.info(`[${requestId}] Attempting WebSocket upgrade`);
+    logger.debug('Attempting WebSocket upgrade', { requestId });
     const { socket, response } = Deno.upgradeWebSocket(req);
-    logger.info(`[${requestId}] WebSocket upgrade successful`);
+    logger.info('WebSocket upgrade successful', { requestId });
 
     // Set up heartbeat interval
     const heartbeatInterval = setInterval(() => {
       if (socket.readyState === WebSocket.OPEN) {
-        logger.info(`[${requestId}] Sending heartbeat ping`);
+        logger.debug('Sending heartbeat ping', { requestId });
         socket.send(JSON.stringify({ type: 'ping' }));
       } else {
-        logger.warn(`[${requestId}] Socket not open during heartbeat`, { 
+        logger.warn('Socket not open during heartbeat', { 
+          requestId,
           state: socket.readyState 
         });
       }
     }, 30000);
 
     socket.onopen = () => {
-      logger.info(`[${requestId}] WebSocket opened`, { userId: user.id });
+      logger.info('WebSocket opened', { 
+        requestId,
+        userId: user.id 
+      });
       try {
         socket.send(JSON.stringify({ 
           type: 'connected',
           userId: user.id
         }));
-        logger.info(`[${requestId}] Sent connection confirmation to client`);
+        logger.debug('Sent connection confirmation', { requestId });
       } catch (error) {
-        logger.error(`[${requestId}] Error sending connection confirmation`, error);
+        logger.error('Error sending connection confirmation', { 
+          requestId,
+          error 
+        });
       }
     };
 
     socket.onmessage = async (event) => {
       try {
-        logger.info(`[${requestId}] Received message from client`, { data: event.data });
+        logger.debug('Received message', { 
+          requestId,
+          data: event.data 
+        });
         const data = JSON.parse(event.data);
 
         if (data.type === 'pong') {
-          logger.info(`[${requestId}] Received pong response`);
+          logger.debug('Received pong response', { requestId });
           return;
         }
 
-        // Echo back for now
-        logger.info(`[${requestId}] Processing message`, { type: data.type });
+        logger.debug('Processing message', { 
+          requestId,
+          type: data.type 
+        });
         socket.send(JSON.stringify({
           type: 'echo',
           data: event.data,
           timestamp: new Date().toISOString()
         }));
-        logger.info(`[${requestId}] Echo response sent`);
+        logger.debug('Echo response sent', { requestId });
 
       } catch (error) {
-        logger.error(`[${requestId}] Error processing message`, error);
+        logger.error('Error processing message', { 
+          requestId,
+          error 
+        });
         try {
           socket.send(JSON.stringify({
             type: 'error',
             error: 'Failed to process message',
-            details: error.message
+            details: error instanceof Error ? error.message : 'Unknown error'
           }));
         } catch (sendError) {
-          logger.error(`[${requestId}] Failed to send error message to client`, sendError);
+          logger.error('Failed to send error message to client', { 
+            requestId,
+            error: sendError 
+          });
         }
       }
     };
 
     socket.onerror = (error) => {
-      logger.error(`[${requestId}] WebSocket error`, {
+      logger.error('WebSocket error occurred', {
+        requestId,
         error,
         readyState: socket.readyState,
         timestamp: new Date().toISOString()
@@ -166,7 +202,8 @@ Deno.serve(async (req) => {
     };
 
     socket.onclose = (event) => {
-      logger.info(`[${requestId}] WebSocket closed`, {
+      logger.info('WebSocket closed', {
+        requestId,
         userId: user.id,
         code: event.code,
         reason: event.reason,
@@ -176,13 +213,14 @@ Deno.serve(async (req) => {
       clearInterval(heartbeatInterval);
     };
 
-    logger.info(`[${requestId}] Returning WebSocket upgrade response`);
+    logger.debug('Returning WebSocket upgrade response', { requestId });
     return response;
 
   } catch (error) {
-    logger.error(`[${requestId}] Server error`, {
+    logger.error('Server error', {
+      requestId,
       error,
-      stack: error.stack,
+      stack: error instanceof Error ? error.stack : undefined,
       timestamp: new Date().toISOString()
     });
     return new Response('Internal Server Error', { 
