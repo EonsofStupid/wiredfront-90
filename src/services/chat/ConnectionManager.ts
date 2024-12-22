@@ -45,7 +45,7 @@ export class ConnectionManager {
     return this.sessionId;
   }
 
-  setCallbacks(callbacks: ConnectionCallbacks) {
+  setCallbacks(callbacks: WebSocketCallbacks) {
     this.onMessageCallback = callbacks.onMessage;
     this.onStateChangeCallback = callbacks.onStateChange;
     this.onMetricsUpdateCallback = callbacks.onMetricsUpdate;
