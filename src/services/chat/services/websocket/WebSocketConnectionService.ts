@@ -4,6 +4,7 @@ import { WebSocketStateManager } from './WebSocketStateManager';
 import { WebSocketEventHandler } from './WebSocketEventHandler';
 import { WEBSOCKET_URL } from '@/constants/websocket';
 import { toast } from 'sonner';
+import { supabase } from "@/integrations/supabase/client";
 
 export class WebSocketConnectionService {
   private ws: WebSocket | null = null;
@@ -11,6 +12,8 @@ export class WebSocketConnectionService {
   private logger: WebSocketLogger;
   private stateManager: WebSocketStateManager;
   private eventHandler: WebSocketEventHandler;
+  private reconnectTimeout: NodeJS.Timeout | null = null;
+  private readonly MAX_BACKOFF = 30000; // 30 seconds
 
   constructor(
     private sessionId: string,
@@ -25,20 +28,94 @@ export class WebSocketConnectionService {
       this.handleMessage.bind(this),
       this.handleMetricsUpdate.bind(this)
     );
-
-    this.logger.info('WebSocket service initialized', {
-      sessionId,
-      timestamp: new Date().toISOString()
-    });
-    toast.info('Chat service initialized');
   }
 
-  setAuthToken(token: string) {
-    this.authToken = token;
-    this.logger.info('Auth token updated', {
+  private async refreshSession(): Promise<string | null> {
+    this.logger.info('Attempting to refresh session', {
       sessionId: this.sessionId,
-      hasToken: !!token
+      timestamp: new Date().toISOString()
     });
+    toast.loading('Refreshing session...');
+
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error || !session) {
+        this.logger.error('Session refresh failed', {
+          error,
+          sessionId: this.sessionId
+        });
+        toast.error('Session refresh failed. Please log in again.');
+        return null;
+      }
+
+      this.logger.info('Session refreshed successfully', {
+        sessionId: this.sessionId,
+        userId: session.user.id
+      });
+      toast.success('Session refreshed');
+      return session.access_token;
+    } catch (error) {
+      this.logger.error('Session refresh error', {
+        error,
+        sessionId: this.sessionId
+      });
+      toast.error('Failed to refresh session');
+      return null;
+    }
+  }
+
+  private calculateBackoff(attempt: number): number {
+    const backoff = Math.min(1000 * Math.pow(2, attempt), this.MAX_BACKOFF);
+    const jitter = Math.random() * 0.2 * backoff; // 20% jitter
+    return backoff + jitter;
+  }
+
+  private async handleReconnection() {
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+    }
+
+    const attempt = this.stateManager.getReconnectAttempts();
+    const backoff = this.calculateBackoff(attempt);
+
+    this.logger.info('Planning reconnection attempt', {
+      attempt,
+      backoff,
+      sessionId: this.sessionId
+    });
+    toast.loading(`Reconnecting in ${Math.round(backoff/1000)}s (Attempt ${attempt + 1})`);
+
+    this.reconnectTimeout = setTimeout(async () => {
+      if (!this.authToken) {
+        this.logger.info('Attempting to refresh auth token before reconnect', {
+          sessionId: this.sessionId
+        });
+        this.authToken = await this.refreshSession();
+        
+        if (!this.authToken) {
+          this.stateManager.setState('error');
+          return;
+        }
+      }
+
+      try {
+        await this.connect();
+      } catch (error) {
+        this.logger.error('Reconnection attempt failed', {
+          error,
+          attempt,
+          sessionId: this.sessionId
+        });
+        
+        if (this.stateManager.incrementReconnectAttempts()) {
+          this.handleReconnection();
+        } else {
+          this.stateManager.setState('error');
+          toast.error('Maximum reconnection attempts reached');
+        }
+      }
+    }, backoff);
   }
 
   async connect() {
@@ -52,11 +129,7 @@ export class WebSocketConnectionService {
     }
 
     const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${this.authToken}`;
-    this.logger.info('Attempting connection', {
-      sessionId: this.sessionId,
-      url: WEBSOCKET_URL
-    });
-    toast.loading('Connecting to chat service...');
+    this.stateManager.setState('connecting');
 
     try {
       if (this.ws) {
@@ -67,19 +140,31 @@ export class WebSocketConnectionService {
       this.ws = new WebSocket(wsUrl);
       this.eventHandler.setupEventHandlers(this.ws);
       
-      this.logger.info('WebSocket connection established', {
-        sessionId: this.sessionId,
-        timestamp: new Date().toISOString()
-      });
-      toast.success('Connected to chat service');
+      this.ws.onerror = async (error) => {
+        this.logger.error('WebSocket error occurred', {
+          error,
+          sessionId: this.sessionId
+        });
+        this.stateManager.setState('reconnecting');
+        this.handleReconnection();
+      };
+
+      this.ws.onclose = () => {
+        this.logger.info('WebSocket connection closed', {
+          sessionId: this.sessionId
+        });
+        if (this.stateManager.getState() !== 'error') {
+          this.stateManager.setState('reconnecting');
+          this.handleReconnection();
+        }
+      };
       
     } catch (error) {
       this.logger.error('Connection failed', {
-        sessionId: this.sessionId,
         error,
+        sessionId: this.sessionId,
         attempt: this.stateManager.getReconnectAttempts()
       });
-      toast.error('Failed to connect to chat service');
       throw error;
     }
   }

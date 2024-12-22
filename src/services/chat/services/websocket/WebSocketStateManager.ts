@@ -21,30 +21,31 @@ export class WebSocketStateManager {
     const previousState = this.state;
     this.state = newState;
     
-    this.logger.info('State changed', {
+    this.logger.info('State transition', {
       previousState,
       newState,
+      reconnectAttempts: this.reconnectAttempts,
       timestamp: new Date().toISOString()
     });
     
     this.onStateChange?.(newState);
 
-    // User-friendly state notifications
     switch (newState) {
       case 'connecting':
-        toast.loading('Connecting to chat service...');
+        toast.loading('Establishing connection...');
         break;
       case 'connected':
         toast.success('Connected to chat service');
+        this.reconnectAttempts = 0;
         break;
       case 'disconnected':
-        toast.info('Disconnected from chat service');
+        toast.error('Connection lost');
         break;
       case 'reconnecting':
-        toast.loading(`Reconnecting to chat service (Attempt ${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
+        toast.loading(`Reconnecting (Attempt ${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
         break;
       case 'error':
-        toast.error('Chat service error occurred');
+        toast.error('Connection error - please refresh the page');
         break;
     }
   }
@@ -56,20 +57,13 @@ export class WebSocketStateManager {
   incrementReconnectAttempts(): boolean {
     this.reconnectAttempts++;
     
-    this.logger.info('Reconnection attempt', {
+    this.logger.info('Reconnection attempt incremented', {
       attempt: this.reconnectAttempts,
       maxAttempts: this.maxReconnectAttempts,
       timestamp: new Date().toISOString()
     });
 
     return this.reconnectAttempts < this.maxReconnectAttempts;
-  }
-
-  resetReconnectAttempts() {
-    this.reconnectAttempts = 0;
-    this.logger.info('Reconnection attempts reset', {
-      timestamp: new Date().toISOString()
-    });
   }
 
   getReconnectAttempts(): number {
