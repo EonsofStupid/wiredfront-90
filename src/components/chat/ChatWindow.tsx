@@ -1,9 +1,10 @@
-import { useDraggable } from '@dnd-kit/core';
-import { CSS } from '@dnd-kit/utilities';
-import { ChatHeader } from './ChatHeader';
-import { ChatMessageList } from './ChatMessageList';
-import { ChatInput } from './ChatInput';
-import { ConnectionState } from '@/types/websocket';
+import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Minimize2, X, Tack, TackOff } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { MessageList } from "./MessageList";
+import { MessageInput } from "./MessageInput";
+import { ConnectionStatus } from "./ConnectionStatus";
 
 interface ChatWindowProps {
   position: { x: number; y: number };
@@ -19,18 +20,16 @@ interface ChatWindowProps {
   hasMoreMessages: boolean;
   isLoadingMore: boolean;
   onLoadMore: () => void;
-  onSendMessage: (content: string) => void;
-  onSwitchAPI?: (provider: string) => void;
-  currentAPI?: string;
-  connectionState?: ConnectionState;
+  onSendMessage: (content: string) => Promise<void>;
+  connectionState: string;
 }
 
 export const ChatWindow = ({ 
-  position, 
-  isMinimized, 
-  messages, 
+  position,
+  isMinimized,
+  messages,
   isLoading,
-  onMinimize, 
+  onMinimize,
   onClose,
   isDragging,
   isTacked,
@@ -40,69 +39,78 @@ export const ChatWindow = ({
   isLoadingMore,
   onLoadMore,
   onSendMessage,
-  onSwitchAPI,
-  currentAPI,
   connectionState
 }: ChatWindowProps) => {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: 'chat-window',
-  });
-
-  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop } = event.currentTarget;
-    if (scrollTop === 0 && hasMoreMessages && !isLoadingMore) {
-      onLoadMore();
-    }
-  };
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    position: 'fixed' as const,
-    left: isTacked ? 'auto' : position.x,
-    right: isTacked ? '32px' : 'auto',
-    bottom: isTacked ? '48px' : 'auto',
-    top: isTacked ? 'auto' : position.y,
-    width: dimensions.width,
-    height: isMinimized ? '50px' : dimensions.height,
-    transition: 'height 0.3s ease',
-    zIndex: isDragging ? 9999 : 1000,
-    border: isDragging ? `2px solid #baff0a` : undefined,
-  };
-
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="glass-card flex flex-col"
+    <DialogContent 
+      className={cn(
+        "glass-card fixed p-0 border-none shadow-2xl transition-transform duration-200",
+        isDragging && "opacity-50",
+        isMinimized && "scale-0"
+      )}
+      style={{
+        width: dimensions.width,
+        height: dimensions.height,
+        transform: `translate(${position.x}px, ${position.y}px)`,
+        transition: isDragging ? 'none' : undefined
+      }}
     >
-      <ChatHeader
-        onMinimize={onMinimize}
-        onClose={onClose}
-        onTackToggle={onTackToggle}
-        isTacked={isTacked}
-        isDragging={isDragging}
-        dragHandleProps={{ ...attributes, ...listeners }}
-        currentAPI={currentAPI}
-        connectionState={connectionState}
-      />
+      <DialogHeader>
+        <DialogTitle className="sr-only">Chat Window</DialogTitle>
+        <DialogDescription className="sr-only">
+          Chat interface for communicating with the AI assistant
+        </DialogDescription>
+      </DialogHeader>
 
-      {!isMinimized && (
-        <>
-          <ChatMessageList
+      <div className="flex flex-col h-full">
+        <div className="flex items-center justify-between p-4 border-b border-border/50">
+          <ConnectionStatus state={connectionState} />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={onTackToggle}
+            >
+              {isTacked ? (
+                <TackOff className="h-4 w-4" />
+              ) : (
+                <Tack className="h-4 w-4" />
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={onMinimize}
+            >
+              <Minimize2 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={onClose}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-hidden">
+          <MessageList
             messages={messages}
             isLoading={isLoading}
+            hasMore={hasMoreMessages}
             isLoadingMore={isLoadingMore}
-            hasMoreMessages={hasMoreMessages}
             onLoadMore={onLoadMore}
-            onScroll={handleScroll}
           />
-          <ChatInput 
-            onSendMessage={onSendMessage}
-            onSwitchAPI={onSwitchAPI}
-            isLoading={isLoading}
-          />
-        </>
-      )}
-    </div>
+        </div>
+
+        <div className="p-4 border-t border-border/50">
+          <MessageInput onSend={onSendMessage} />
+        </div>
+      </div>
+    </DialogContent>
   );
 };

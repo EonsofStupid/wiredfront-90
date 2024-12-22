@@ -28,7 +28,7 @@ export const UserMenu = () => {
     <div className="relative" style={{ zIndex: 'var(--z-dropdown)' }}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <UserMenuTrigger />
+          <UserMenuTrigger aria-label="User menu" />
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end" 
