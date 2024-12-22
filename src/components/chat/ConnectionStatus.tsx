@@ -5,10 +5,10 @@ import { useWebSocketStore } from '@/stores/websocket/store';
 
 interface ConnectionStatusProps {
   className?: string;
+  state: ConnectionState;
 }
 
-export const ConnectionStatus = ({ className }: ConnectionStatusProps) => {
-  const state = useWebSocketStore((state) => state.connectionState);
+export const ConnectionStatus = ({ className, state }: ConnectionStatusProps) => {
   const errorCount = useWebSocketStore((state) => state.errors.errorCount);
 
   const getIcon = () => {
