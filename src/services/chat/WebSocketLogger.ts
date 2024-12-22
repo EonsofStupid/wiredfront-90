@@ -36,55 +36,65 @@ export class WebSocketLogger {
     });
   }
 
-  logConnectionAttempt(url: string, hasAuthToken: boolean) {
+  logConnectionAttempt(url: string, metadata: Record<string, any> = {}) {
     this.info('Attempting WebSocket connection', {
+      ...metadata,
       url,
-      hasAuthToken,
       timestamp: new Date().toISOString()
     });
   }
 
-  logTokenValidation(isValid: boolean, metadata: Record<string, any> = {}) {
-    this.info('Token validation result', {
+  logStateChange(state: ConnectionState, metadata: Record<string, any> = {}) {
+    this.info('WebSocket state changed', {
       ...metadata,
-      isValid,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  logSessionValidation(isValid: boolean, metadata: Record<string, any> = {}) {
-    this.info('Session validation result', {
-      ...metadata,
-      isValid,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  logConnectionSuccess(metadata: Record<string, any> = {}) {
-    this.info('WebSocket connection established', {
-      ...metadata,
+      newState: state,
       timestamp: new Date().toISOString()
     });
   }
 
   logConnectionError(error: Error, metadata: Record<string, any> = {}) {
-    this.error('WebSocket connection failed', {
+    this.error('WebSocket connection error', {
       ...metadata,
-      error,
-      timestamp: new Date().toISOString()
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      }
     });
   }
 
-  logMessageAttempt(messageId: string, metadata: Record<string, any> = {}) {
-    this.info('Attempting to send message', {
+  logAuthError(error: Error, metadata: Record<string, any> = {}) {
+    this.error('WebSocket authentication error', {
+      ...metadata,
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      }
+    });
+  }
+
+  logMessageError(error: Error, messageId: string, metadata: Record<string, any> = {}) {
+    this.error('Message handling failed', {
       ...metadata,
       messageId,
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      }
+    });
+  }
+
+  logMetricsUpdate(metrics: ConnectionMetrics) {
+    this.debug('WebSocket metrics updated', {
+      metrics,
       timestamp: new Date().toISOString()
     });
   }
 
   logMessageSent(messageId: string, metadata: Record<string, any> = {}) {
-    this.info('Message sent successfully', {
+    this.debug('Message sent', {
       ...metadata,
       messageId,
       timestamp: new Date().toISOString()
@@ -92,33 +102,9 @@ export class WebSocketLogger {
   }
 
   logMessageReceived(messageId: string, metadata: Record<string, any> = {}) {
-    this.info('Message received', {
+    this.debug('Message received', {
       ...metadata,
       messageId,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  logMessageError(error: Error, messageId: string, metadata: Record<string, any> = {}) {
-    this.error('Message handling failed', {
-      ...metadata,
-      error,
-      messageId,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  logStateChange(previousState: ConnectionState, newState: ConnectionState) {
-    this.info('WebSocket state changed', {
-      previousState,
-      newState,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  logMetricsUpdate(metrics: ConnectionMetrics) {
-    this.debug('WebSocket metrics updated', {
-      metrics,
       timestamp: new Date().toISOString()
     });
   }

@@ -9,9 +9,11 @@ export class WebSocketEventEmitter {
     private onMetricsUpdate: (metrics: Partial<ConnectionMetrics>) => void
   ) {}
 
-  emitStateChange(state: ConnectionState) {
+  emitStateChange(state: ConnectionState, metadata: Record<string, any> = {}) {
     this.onStateChange(state);
     this.logger.logStateChange(state, {
+      ...metadata,
+      previousState: this.currentState,
       timestamp: new Date().toISOString()
     });
     
@@ -32,6 +34,9 @@ export class WebSocketEventEmitter {
       case 'reconnecting':
         toast.loading('Attempting to reconnect...');
         break;
+      case 'failed':
+        toast.error('Connection failed after multiple attempts');
+        break;
     }
   }
 
@@ -49,10 +54,48 @@ export class WebSocketEventEmitter {
     });
   }
 
-  emitError(error: Error) {
+  emitError(error: Error, context: Record<string, any> = {}) {
     this.logger.logConnectionError(error, {
-      timestamp: new Date().toISOString()
+      ...context,
+      timestamp: new Date().toISOString(),
+      errorType: error.name,
+      errorStack: error.stack
     });
-    toast.error(`Connection error: ${error.message}`);
+    
+    let errorMessage = 'Connection error occurred';
+    
+    if (error.name === 'TokenExpiredError') {
+      errorMessage = 'Authentication token expired. Please log in again.';
+    } else if (error.name === 'MessageSendError') {
+      errorMessage = 'Failed to send message. Retrying...';
+    } else if (error.name === 'OpenAIError') {
+      errorMessage = 'AI service error. Please try again later.';
+    }
+    
+    toast.error(errorMessage);
+  }
+
+  emitMessageFailure(messageId: string, error: Error, retryAttempt: number) {
+    this.logger.logMessageError(error, messageId, {
+      retryAttempt,
+      timestamp: new Date().toISOString(),
+      errorType: error.name,
+      errorStack: error.stack
+    });
+    
+    if (retryAttempt < 3) {
+      toast.error(`Message send failed. Retry attempt ${retryAttempt + 1}/3`);
+    } else {
+      toast.error('Message send failed after multiple attempts');
+    }
+  }
+
+  emitAuthFailure(error: Error) {
+    this.logger.logAuthError(error, {
+      timestamp: new Date().toISOString(),
+      errorType: error.name,
+      errorStack: error.stack
+    });
+    toast.error('Authentication failed. Please log in again.');
   }
 }
