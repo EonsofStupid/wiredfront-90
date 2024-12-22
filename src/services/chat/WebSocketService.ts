@@ -1,12 +1,7 @@
-import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
+import { ConnectionState, ConnectionMetrics, WebSocketCallbacks } from './types/websocket';
 import { ConnectionManager } from './ConnectionManager';
+import { mapWebSocketState } from './utils/stateMapping';
 import { logger } from './LoggingService';
-
-interface WebSocketCallbacks {
-  onMessage: (message: any) => void;
-  onStateChange: (state: ConnectionState) => void;
-  onMetricsUpdate: (metrics: Partial<ConnectionMetrics>) => void;
-}
 
 export class WebSocketService {
   private connectionManager: ConnectionManager;
@@ -210,19 +205,10 @@ export class WebSocketService {
   }
 
   public getState(): ConnectionState {
-    const wsState = this.connectionManager.getState();
-    switch (wsState) {
-      case 0:
-        return 'connecting';
-      case 1:
-        return 'connected';
-      case 2:
-        return 'disconnected';
-      case 3:
-        return 'disconnected';
-      default:
-        return 'error';
-    }
+    if (!this.connectionManager) return 'initial';
+    
+    const wsState = this.connectionManager.getState() as number;
+    return mapWebSocketState(wsState as 0 | 1 | 2 | 3);
   }
 
   public getMetrics(): ConnectionMetrics {

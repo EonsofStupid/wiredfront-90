@@ -1,14 +1,8 @@
 import { logger } from './LoggingService';
 import { WebSocketMessageHandler } from './WebSocketMessageHandler';
 import { WEBSOCKET_URL } from '@/constants/websocket';
-import { ConnectionMetrics } from '@/types/websocket';
+import { ConnectionState, WebSocketCallbacks } from './types/websocket';
 import { supabase } from "@/integrations/supabase/client";
-
-export interface ConnectionCallbacks {
-  onMessage: (message: any) => void;
-  onStateChange: (state: string) => void;
-  onMetricsUpdate: (metrics: Partial<ConnectionMetrics>) => void;
-}
 
 export class ConnectionManager {
   private ws: WebSocket | null = null;
@@ -16,8 +10,8 @@ export class ConnectionManager {
   private authToken: string | null = null;
   private messageHandler: WebSocketMessageHandler;
   private onMessageCallback: ((message: any) => void) | null = null;
-  private onStateChangeCallback: ((state: string) => void) | null = null;
-  private onMetricsUpdateCallback: ((metrics: Partial<ConnectionMetrics>) => void) | null = null;
+  private onStateChangeCallback: ((state: ConnectionState) => void) | null = null;
+  private onMetricsUpdateCallback: WebSocketCallbacks['onMetricsUpdate'] | null = null;
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
 
@@ -317,6 +311,10 @@ export class ConnectionManager {
     return false;
   }
 
+  public getState(): number {
+    return this.ws?.readyState ?? -1;
+  }
+
   disconnect() {
     logger.info('Disconnecting WebSocket',
       {
@@ -332,18 +330,4 @@ export class ConnectionManager {
     }
   }
 
-  getState(): string {
-    if (!this.ws) return 'initial';
-    switch (this.ws.readyState) {
-      case WebSocket.CONNECTING:
-        return 'connecting';
-      case WebSocket.OPEN:
-        return 'connected';
-      case WebSocket.CLOSING:
-      case WebSocket.CLOSED:
-        return 'disconnected';
-      default:
-        return 'error';
-    }
-  }
 }
