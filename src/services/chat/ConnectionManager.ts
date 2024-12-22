@@ -1,181 +1,117 @@
-import { toast } from 'sonner';
-import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
-import { WEBSOCKET_URL, RECONNECT_INTERVALS, MAX_RECONNECT_ATTEMPTS, HEARTBEAT_INTERVAL } from '@/constants/websocket';
-import { supabase } from "@/integrations/supabase/client";
+import { logger } from './LoggingService';
 import { WebSocketMessageHandler } from './WebSocketMessageHandler';
-import { HeartbeatManager } from './HeartbeatManager';
-import { MetricsTracker } from './MetricsTracker';
+import { WEBSOCKET_URL } from '@/constants/websocket';
+import { supabase } from "@/integrations/supabase/client";
 
 export class ConnectionManager {
   private ws: WebSocket | null = null;
+  private sessionId: string;
   private messageHandler: WebSocketMessageHandler;
-  private heartbeatManager: HeartbeatManager;
-  private metricsTracker: MetricsTracker;
-  private reconnectAttempts = 0;
-  private reconnectTimeout: NodeJS.Timeout | null = null;
-  private projectId: string;
-  
-  constructor(projectId: string) {
-    this.projectId = projectId;
-    this.messageHandler = new WebSocketMessageHandler();
-    this.heartbeatManager = new HeartbeatManager();
-    this.metricsTracker = new MetricsTracker();
-    this.setupHeartbeat();
+  private onMessageCallback: ((message: any) => void) | null = null;
+  private onStateChangeCallback: ((state: string) => void) | null = null;
+
+  constructor(sessionId: string) {
+    this.sessionId = sessionId;
+    this.messageHandler = new WebSocketMessageHandler(sessionId);
+    logger.info('Connection manager initialized', { sessionId }, this.sessionId);
   }
 
-  public onStateChange: ((state: ConnectionState) => void) | null = null;
-  public onMessage: ((data: any) => void) | null = null;
-
-  private updateState(newState: ConnectionState) {
-    if (this.onStateChange) {
-      this.onStateChange(newState);
-    }
-
-    switch (newState) {
-      case 'connected':
-        toast.success('Connected to chat service');
-        break;
-      case 'disconnected':
-        toast.error('Disconnected from chat service');
-        break;
-      case 'reconnecting':
-        toast.info('Attempting to reconnect...');
-        break;
-      case 'error':
-        toast.error('Connection error occurred');
-        break;
-    }
+  setCallbacks(callbacks: {
+    onMessage: (message: any) => void;
+    onStateChange: (state: string) => void;
+  }) {
+    this.onMessageCallback = callbacks.onMessage;
+    this.onStateChangeCallback = callbacks.onStateChange;
+    logger.debug('Callbacks set for connection manager', undefined, this.sessionId);
   }
 
-  private setupHeartbeat() {
-    this.heartbeatManager.setup(this.ws, () => {
-      this.metricsTracker.updateLastHeartbeat();
-    });
-  }
-
-  public async connect() {
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      console.log('WebSocket already connected');
-      return;
-    }
-
+  async connect() {
     try {
-      this.updateState('connecting');
+      logger.info('Initiating WebSocket connection', undefined, this.sessionId);
       
-      // Get the current session and access token
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         throw new Error('No active session');
       }
 
-      const wsUrl = `${WEBSOCKET_URL}?project_id=${this.projectId}&access_token=${session.access_token}`;
-      console.log('Connecting to WebSocket:', wsUrl);
+      const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${session.access_token}`;
+      logger.debug('Connecting to WebSocket', { url: wsUrl.replace(session.access_token, '[REDACTED]') }, this.sessionId);
       
       this.ws = new WebSocket(wsUrl);
       
-      this.ws.onopen = () => {
-        console.log('WebSocket connected successfully');
-        this.metricsTracker.setLastConnected();
-        this.reconnectAttempts = 0;
-        this.updateState('connected');
-        this.setupHeartbeat();
-      };
-
-      this.ws.onmessage = (event) => {
-        this.metricsTracker.incrementMessagesReceived();
-        if (this.onMessage) {
-          this.messageHandler.handleMessage(event.data, this.onMessage);
-        }
-      };
-
-      this.ws.onerror = (event) => {
-        console.error('WebSocket error:', event);
-        this.metricsTracker.setLastError(new Error('WebSocket connection error'));
-        this.updateState('error');
-        this.attemptReconnect();
-      };
-
-      this.ws.onclose = (event) => {
-        this.updateState('disconnected');
-        if (event.code !== 1000) {
-          this.attemptReconnect();
-        }
-      };
-
+      this.ws.onopen = this.handleOpen.bind(this);
+      this.ws.onmessage = this.handleMessage.bind(this);
+      this.ws.onerror = this.handleError.bind(this);
+      this.ws.onclose = this.handleClose.bind(this);
+      
     } catch (error) {
-      console.error('Failed to create WebSocket connection:', error);
-      this.handleError(error as Error);
+      logger.error('Failed to establish WebSocket connection', { error }, this.sessionId);
+      throw error;
     }
   }
 
-  private handleError(error: Error) {
-    this.metricsTracker.setLastError(error);
-    this.updateState('error');
-    this.attemptReconnect();
+  private handleOpen() {
+    logger.info('WebSocket connection established', undefined, this.sessionId);
+    if (this.onStateChangeCallback) {
+      this.onStateChangeCallback('connected');
+    }
   }
 
-  private attemptReconnect() {
-    if (this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-      console.error('Max reconnection attempts reached');
-      toast.error('Unable to establish connection. Please try again later.');
-      this.updateState('error');
-      return;
+  private handleMessage(event: MessageEvent) {
+    if (this.onMessageCallback) {
+      this.messageHandler.handleMessage(event.data, this.onMessageCallback);
     }
-
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-    }
-
-    const delay = RECONNECT_INTERVALS[this.reconnectAttempts] || RECONNECT_INTERVALS[RECONNECT_INTERVALS.length - 1];
-    this.reconnectAttempts++;
-    this.metricsTracker.setReconnectAttempts(this.reconnectAttempts);
-    
-    this.updateState('reconnecting');
-    console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts})`);
-    
-    this.reconnectTimeout = setTimeout(() => {
-      this.connect();
-    }, delay);
   }
 
-  public send(data: any): boolean {
+  private handleError(event: Event) {
+    this.messageHandler.handleError(new Error('WebSocket connection error'));
+    if (this.onStateChangeCallback) {
+      this.onStateChangeCallback('error');
+    }
+  }
+
+  private handleClose(event: CloseEvent) {
+    this.messageHandler.handleClose(event);
+    if (this.onStateChangeCallback) {
+      this.onStateChangeCallback('disconnected');
+    }
+  }
+
+  send(message: any): boolean {
     if (this.ws?.readyState === WebSocket.OPEN) {
       try {
-        this.ws.send(JSON.stringify(data));
-        this.metricsTracker.incrementMessagesSent();
+        logger.debug('Sending WebSocket message', { message }, this.sessionId);
+        this.ws.send(JSON.stringify(message));
         return true;
       } catch (error) {
-        console.error('Failed to send message:', error);
-        toast.error('Failed to send message');
+        logger.error('Failed to send WebSocket message', { error, message }, this.sessionId);
         return false;
       }
     }
+    logger.warn('Cannot send message - WebSocket not connected', { readyState: this.ws?.readyState }, this.sessionId);
     return false;
   }
 
-  public getWebSocket() {
-    return this.ws;
-  }
-
-  public getMetrics(): ConnectionMetrics {
-    return this.metricsTracker.getMetrics();
-  }
-
-  public reconnect() {
-    if (this.ws) {
-      this.ws.close();
-    }
-    this.connect();
-  }
-
-  public destroy() {
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-    }
-    this.heartbeatManager.destroy();
+  disconnect() {
+    logger.info('Disconnecting WebSocket', undefined, this.sessionId);
     if (this.ws) {
       this.ws.close();
       this.ws = null;
+    }
+  }
+
+  getState(): string {
+    if (!this.ws) return 'initial';
+    switch (this.ws.readyState) {
+      case WebSocket.CONNECTING:
+        return 'connecting';
+      case WebSocket.OPEN:
+        return 'connected';
+      case WebSocket.CLOSING:
+      case WebSocket.CLOSED:
+        return 'disconnected';
+      default:
+        return 'error';
     }
   }
 }

@@ -5,12 +5,15 @@ interface LogEntry {
   timestamp: string;
   message: string;
   data?: any;
+  sessionId?: string;
+  userId?: string;
 }
 
 export class LoggingService {
   private static instance: LoggingService;
   private logs: LogEntry[] = [];
   private readonly MAX_LOGS = 1000;
+  private logToConsole = true;
 
   private constructor() {}
 
@@ -21,13 +24,36 @@ export class LoggingService {
     return LoggingService.instance;
   }
 
-  private formatLogEntry(level: LogLevel, message: string, data?: any): LogEntry {
-    return {
+  private formatLogEntry(level: LogLevel, message: string, data?: any, sessionId?: string): LogEntry {
+    const entry: LogEntry = {
       level,
       timestamp: new Date().toISOString(),
       message,
+      sessionId,
       data: data ? this.sanitizeData(data) : undefined
     };
+
+    if (this.logToConsole) {
+      const logPrefix = `[${entry.level.toUpperCase()}]${sessionId ? ` [Session: ${sessionId}]` : ''}`;
+      const logMessage = `${logPrefix} ${entry.message}`;
+      
+      switch (level) {
+        case 'debug':
+          console.debug(logMessage, entry.data || '');
+          break;
+        case 'info':
+          console.info(logMessage, entry.data || '');
+          break;
+        case 'warn':
+          console.warn(logMessage, entry.data || '');
+          break;
+        case 'error':
+          console.error(logMessage, entry.data || '');
+          break;
+      }
+    }
+
+    return entry;
   }
 
   private sanitizeData(data: any): any {
@@ -36,6 +62,8 @@ export class LoggingService {
       // Remove sensitive data
       delete sanitized.accessToken;
       delete sanitized.apiKey;
+      delete sanitized.password;
+      delete sanitized.secret;
       return sanitized;
     }
     return data;
@@ -46,31 +74,48 @@ export class LoggingService {
     if (this.logs.length > this.MAX_LOGS) {
       this.logs.pop();
     }
-    console.log(`[${entry.level.toUpperCase()}] ${entry.message}`, entry.data || '');
   }
 
-  debug(message: string, data?: any) {
-    this.addLog(this.formatLogEntry('debug', message, data));
+  debug(message: string, data?: any, sessionId?: string) {
+    const entry = this.formatLogEntry('debug', message, data, sessionId);
+    this.addLog(entry);
   }
 
-  info(message: string, data?: any) {
-    this.addLog(this.formatLogEntry('info', message, data));
+  info(message: string, data?: any, sessionId?: string) {
+    const entry = this.formatLogEntry('info', message, data, sessionId);
+    this.addLog(entry);
   }
 
-  warn(message: string, data?: any) {
-    this.addLog(this.formatLogEntry('warn', message, data));
+  warn(message: string, data?: any, sessionId?: string) {
+    const entry = this.formatLogEntry('warn', message, data, sessionId);
+    this.addLog(entry);
   }
 
-  error(message: string, data?: any) {
-    this.addLog(this.formatLogEntry('error', message, data));
+  error(message: string, data?: any, sessionId?: string) {
+    const entry = this.formatLogEntry('error', message, data, sessionId);
+    this.addLog(entry);
   }
 
-  getLogs(): LogEntry[] {
-    return [...this.logs];
+  getLogs(filter?: { level?: LogLevel; sessionId?: string }): LogEntry[] {
+    let filtered = [...this.logs];
+    
+    if (filter?.level) {
+      filtered = filtered.filter(log => log.level === filter.level);
+    }
+    
+    if (filter?.sessionId) {
+      filtered = filtered.filter(log => log.sessionId === filter.sessionId);
+    }
+    
+    return filtered;
   }
 
   clearLogs() {
     this.logs = [];
+  }
+
+  setLogToConsole(enabled: boolean) {
+    this.logToConsole = enabled;
   }
 }
 
