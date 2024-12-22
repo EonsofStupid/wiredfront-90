@@ -38,6 +38,10 @@ export class ConnectionManager {
     );
   }
 
+  setAuthToken(token: string) {
+    this.connectionHandler.setAuthToken(token);
+  }
+
   getSessionId() {
     return this.sessionId;
   }

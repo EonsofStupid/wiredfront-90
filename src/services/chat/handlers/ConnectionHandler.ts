@@ -9,6 +9,7 @@ export class ConnectionHandler {
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number;
   private callbacks: WebSocketCallbacks;
+  private authToken: string | null = null;
 
   constructor(sessionId: string, callbacks: WebSocketCallbacks, maxReconnectAttempts: number = 5) {
     this.sessionId = sessionId;
@@ -16,14 +17,21 @@ export class ConnectionHandler {
     this.maxReconnectAttempts = maxReconnectAttempts;
   }
 
+  setAuthToken(token: string) {
+    this.authToken = token;
+  }
+
   async connect() {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error('No valid session found');
+      if (!this.authToken) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          throw new Error('No valid session found');
+        }
+        this.authToken = session.access_token;
       }
 
-      const wsUrl = `wss://${process.env.VITE_SUPABASE_PROJECT_ID}.functions.supabase.co/realtime-chat?session_id=${this.sessionId}&access_token=${session.access_token}`;
+      const wsUrl = `wss://${process.env.VITE_SUPABASE_PROJECT_ID}.functions.supabase.co/realtime-chat?session_id=${this.sessionId}&access_token=${this.authToken}`;
       
       if (this.ws) {
         this.ws.close();
