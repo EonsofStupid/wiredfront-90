@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -9,28 +8,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { UserMenuItems } from "./UserMenuItems";
 import { UserMenuTrigger } from "./UserMenuTrigger";
+import { useAuthStore } from "@/stores/auth";
 
 export const UserMenu = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const { user, logout } = useAuthStore();
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      await logout();
       navigate('/login');
       toast.success('Logged out successfully');
     } catch (error) {
@@ -39,15 +25,15 @@ export const UserMenu = () => {
   };
 
   return (
-    <div className="relative z-[100]">
+    <div className="relative" style={{ zIndex: 'var(--z-dropdown)' }}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <UserMenuTrigger />
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end" 
-          className="glass-card z-[100]"
-          style={{ position: 'relative', zIndex: 100 }}
+          className="glass-card"
+          style={{ position: 'relative', zIndex: 'var(--z-dropdown)' }}
         >
           <UserMenuItems user={user} onLogout={handleLogout} />
         </DropdownMenuContent>

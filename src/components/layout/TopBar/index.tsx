@@ -4,6 +4,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { UserMenu } from "@/components/user/UserMenu";
+import { DebugMenuIcon } from "@/components/debug/DebugMenuIcon";
 
 interface TopBarProps {
   className?: string;
@@ -59,6 +60,7 @@ export const TopBar = ({ className, isCompact, onToggleCompact }: TopBarProps) =
             </Tooltip>
 
             <UserMenu />
+            {process.env.NODE_ENV === 'development' && <DebugMenuIcon />}
           </div>
         </TooltipProvider>
       </div>
