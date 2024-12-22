@@ -1,68 +1,54 @@
-import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
+import { ConnectionState } from '@/types/websocket';
 import { WebSocketLogger } from './WebSocketLogger';
-import { WebSocketStateManager } from './WebSocketStateManager';
-import { WebSocketMetricsService } from './WebSocketMetricsService';
-import { supabase } from "@/integrations/supabase/client";
+import { WebSocketAuthenticator } from './websocket/WebSocketAuthenticator';
+import { WebSocketEventEmitter } from './websocket/WebSocketEventEmitter';
+import { WebSocketMessageHandler } from './websocket/WebSocketMessageHandler';
+import { WebSocketReconnectionManager } from './websocket/WebSocketReconnectionManager';
 import { WEBSOCKET_URL } from '@/constants/websocket';
+import { toast } from 'sonner';
 
 export class WebSocketConnectionService {
   private ws: WebSocket | null = null;
   private logger: WebSocketLogger;
-  private stateManager: WebSocketStateManager;
-  private metricsService: WebSocketMetricsService;
-  private sessionId: string;
-  private authToken: string | null = null;
+  private authenticator: WebSocketAuthenticator;
+  private eventEmitter: WebSocketEventEmitter;
+  private messageHandler: WebSocketMessageHandler | null = null;
+  private reconnectionManager: WebSocketReconnectionManager;
 
   constructor(
-    sessionId: string,
-    private onMessage?: (data: any) => void,
-    private onStateChange?: (state: ConnectionState) => void,
-    private onMetricsUpdate?: (metrics: Partial<ConnectionMetrics>) => void
+    private sessionId: string,
+    private metricsService: any,
+    onStateChange: (state: ConnectionState) => void
   ) {
-    this.sessionId = sessionId;
     this.logger = new WebSocketLogger(sessionId);
-    this.stateManager = new WebSocketStateManager(sessionId);
-    this.metricsService = new WebSocketMetricsService(sessionId);
-  }
+    this.authenticator = new WebSocketAuthenticator(this.logger, sessionId);
+    this.eventEmitter = new WebSocketEventEmitter(
+      this.logger,
+      onStateChange,
+      this.handleMetricsUpdate.bind(this)
+    );
+    this.reconnectionManager = new WebSocketReconnectionManager(
+      this.logger,
+      this.eventEmitter
+    );
 
-  async validateSession(): Promise<boolean> {
-    try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) throw error;
-      
-      const isValid = !!session?.access_token;
-      this.logger.logSessionValidation(isValid, {
-        sessionId: this.sessionId,
-        userId: session?.user?.id
-      });
-      
-      if (isValid) {
-        this.authToken = session.access_token;
-      }
-      
-      return isValid;
-    } catch (error) {
-      this.logger.logConnectionError(error as Error, {
-        sessionId: this.sessionId,
-        error: error as Error
-      });
-      return false;
-    }
+    this.logger.info('WebSocket service initialized', {
+      sessionId,
+      timestamp: new Date().toISOString()
+    });
+    toast.info('Chat service initialized');
   }
 
   async connect() {
     try {
-      const isSessionValid = await this.validateSession();
-      if (!isSessionValid) {
-        throw new Error('Invalid session');
-      }
-
-      const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${this.authToken}`;
+      const token = await this.authenticator.validateSession();
+      const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${token}`;
       
-      this.logger.logConnectionAttempt({
-        sessionId: this.sessionId
+      this.logger.info('Attempting connection', {
+        sessionId: this.sessionId,
+        url: WEBSOCKET_URL
       });
+      toast.loading('Connecting to chat service...');
 
       if (this.ws) {
         this.ws.close();
@@ -70,14 +56,16 @@ export class WebSocketConnectionService {
       }
 
       this.ws = new WebSocket(wsUrl);
+      this.messageHandler = new WebSocketMessageHandler(this.logger, this.ws, this.sessionId);
       this.setupEventHandlers();
       
     } catch (error) {
-      this.logger.logConnectionError(error as Error, {
+      this.logger.error('Connection failed', {
         sessionId: this.sessionId,
-        retryAttempt: this.stateManager.getReconnectAttempts()
+        error,
+        attempt: this.reconnectionManager.getAttempts()
       });
-      await this.handleReconnect();
+      toast.error('Failed to connect to chat service');
       throw error;
     }
   }
@@ -92,119 +80,56 @@ export class WebSocketConnectionService {
   }
 
   private handleOpen() {
-    const connectedAt = new Date();
-    this.stateManager.setState('connected');
-    this.stateManager.resetReconnectAttempts();
-    
-    this.metricsService.updateMetrics({
-      lastConnected: connectedAt,
+    this.eventEmitter.emitStateChange('connected');
+    this.reconnectionManager.resetAttempts();
+    this.eventEmitter.emitMetricsUpdate({
+      lastConnected: new Date(),
       reconnectAttempts: 0,
       lastError: null
     });
-
-    this.logger.logConnectionSuccess({
-      sessionId: this.sessionId,
-      connectionState: 'connected'
-    });
+    toast.success('Connected to chat service');
   }
 
   private handleMessage(event: MessageEvent) {
     try {
-      const startTime = Date.now();
       const data = JSON.parse(event.data);
-      
-      this.logger.logMessageReceived({
-        sessionId: this.sessionId,
-        messageId: crypto.randomUUID()
-      });
-      
-      this.metricsService.incrementMessagesReceived();
-      this.metricsService.recordLatency(startTime);
-      
-      this.onMessage?.(data);
+      this.messageHandler?.handleMessage(data);
     } catch (error) {
-      this.logger.logConnectionError(error as Error, {
-        sessionId: this.sessionId,
-        error: error as Error
-      });
+      this.eventEmitter.emitError(error as Error);
+      toast.error('Failed to process message');
     }
   }
 
-  private handleError(event: Event) {
-    const error = new Error('WebSocket error occurred');
-    this.stateManager.setState('error');
-    this.metricsService.recordError(error);
-    
-    this.logger.logConnectionError(error, {
-      sessionId: this.sessionId,
-      connectionState: 'error'
-    });
+  private handleError() {
+    this.eventEmitter.emitStateChange('error');
+    toast.error('Chat connection error occurred');
   }
 
-  private handleClose(event: CloseEvent) {
-    this.stateManager.setState('disconnected');
-    
-    this.logger.logDisconnect(event.code, event.reason);
-    
-    this.handleReconnect();
+  private handleClose() {
+    this.eventEmitter.emitStateChange('disconnected');
+    this.reconnectionManager.handleReconnect(this.connect.bind(this));
+    toast.info('Chat connection closed');
   }
 
-  private async handleReconnect() {
-    if (!this.stateManager.incrementReconnectAttempts()) {
-      this.stateManager.setState('failed');
-      return;
-    }
-
-    this.stateManager.setState('reconnecting');
-    
-    const delay = Math.min(1000 * Math.pow(2, this.stateManager.getReconnectAttempts()), 30000);
-    await new Promise(resolve => setTimeout(resolve, delay));
-
-    try {
-      await this.connect();
-    } catch (error) {
-      this.logger.logConnectionError(error as Error, {
-        sessionId: this.sessionId,
-        retryAttempt: this.stateManager.getReconnectAttempts()
-      });
-    }
+  private handleMetricsUpdate(metrics: any) {
+    this.metricsService.updateMetrics(metrics);
   }
 
   send(message: any): boolean {
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      try {
-        const messageId = crypto.randomUUID();
-        this.ws.send(JSON.stringify(message));
-        
-        this.metricsService.incrementMessagesSent();
-        this.logger.logMessageSent({
-          sessionId: this.sessionId,
-          messageId
-        });
-        
-        return true;
-      } catch (error) {
-        this.logger.logConnectionError(error as Error, {
-          sessionId: this.sessionId,
-          error: error as Error
-        });
-        return false;
-      }
-    }
-    return false;
+    return this.messageHandler?.send(message) ?? false;
   }
 
-  getState(): ConnectionState {
-    return this.stateManager.getState();
-  }
-
-  getMetrics(): ConnectionMetrics {
-    return this.metricsService.getMetrics();
+  getState(): number {
+    return this.ws?.readyState ?? -1;
   }
 
   disconnect() {
     if (this.ws) {
-      this.logger.logDisconnect();
+      this.logger.info('Disconnecting', {
+        sessionId: this.sessionId,
+        timestamp: new Date().toISOString()
+      });
+      toast.info('Disconnecting from chat service');
       this.ws.close();
       this.ws = null;
     }
