@@ -1,17 +1,16 @@
 import { ConnectionState, ConnectionMetrics } from '../types/websocket';
-import { WebSocketLogger } from '../WebSocketLogger';
+import { WebSocketLogger } from './WebSocketLogger';
 import { WebSocketStateManager } from './WebSocketStateManager';
 import { WebSocketEventHandler } from './WebSocketEventHandler';
-import { WebSocketAuthenticator } from './WebSocketAuthenticator';
 import { WEBSOCKET_URL } from '@/constants/websocket';
 import { toast } from 'sonner';
 
 export class WebSocketConnectionService {
   private ws: WebSocket | null = null;
+  private authToken: string | null = null;
   private logger: WebSocketLogger;
   private stateManager: WebSocketStateManager;
   private eventHandler: WebSocketEventHandler;
-  private authenticator: WebSocketAuthenticator;
 
   constructor(
     private sessionId: string,
@@ -26,14 +25,26 @@ export class WebSocketConnectionService {
       this.handleMessage.bind(this),
       this.handleMetricsUpdate.bind(this)
     );
-    this.authenticator = new WebSocketAuthenticator(this.logger, sessionId);
+  }
+
+  setAuthToken(token: string) {
+    this.authToken = token;
   }
 
   async connect() {
+    if (!this.authToken) {
+      const error = new Error('No auth token provided');
+      this.logger.error('Connection failed - no auth token', {
+        sessionId: this.sessionId
+      });
+      toast.error('Connection failed - authentication required');
+      throw error;
+    }
+
+    const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${this.authToken}`;
+    this.stateManager.setState('connecting');
+
     try {
-      const accessToken = await this.authenticator.validateSession();
-      const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${accessToken}`;
-      
       if (this.ws) {
         this.ws.close();
         this.ws = null;

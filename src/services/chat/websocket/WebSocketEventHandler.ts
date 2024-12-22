@@ -1,4 +1,4 @@
-import { WebSocketLogger } from '../WebSocketLogger';
+import { WebSocketLogger } from './WebSocketLogger';
 import { ConnectionState, ConnectionMetrics } from '../types/websocket';
 import { WebSocketStateManager } from './WebSocketStateManager';
 import { toast } from 'sonner';
