@@ -10,14 +10,7 @@ interface WebSocketConfig {
   onStateChange?: (state: ConnectionState) => void;
 }
 
-export const useWebSocketLifecycle = ({
-  url,
-  maxRetries = 5,
-  initialRetryDelay = 1000,
-  maxRetryDelay = 30000,
-  onMessage,
-  onStateChange
-}: WebSocketConfig) => {
+export const useWebSocketLifecycle = () => {
   const [connectionState, setConnectionState] = useState<ConnectionState>('initial');
   const wsRef = useRef<WebSocket | null>(null);
   const retryCountRef = useRef(0);
@@ -26,7 +19,6 @@ export const useWebSocketLifecycle = ({
 
   const updateConnectionState = (newState: ConnectionState) => {
     setConnectionState(newState);
-    onStateChange?.(newState);
   };
 
   const clearRetryTimeout = () => {
@@ -36,16 +28,20 @@ export const useWebSocketLifecycle = ({
     }
   };
 
-  const connect = () => {
+  const connect = (config: WebSocketConfig) => {
     if (isConnectingRef.current || wsRef.current?.readyState === WebSocket.OPEN) {
       return;
     }
+
+    const maxRetries = config.maxRetries ?? 5;
+    const initialRetryDelay = config.initialRetryDelay ?? 1000;
+    const maxRetryDelay = config.maxRetryDelay ?? 30000;
 
     isConnectingRef.current = true;
     updateConnectionState('connecting');
 
     try {
-      const ws = new WebSocket(url);
+      const ws = new WebSocket(config.url);
       wsRef.current = ws;
 
       ws.onopen = () => {
@@ -56,7 +52,7 @@ export const useWebSocketLifecycle = ({
       };
 
       ws.onmessage = (event) => {
-        onMessage?.(event);
+        config.onMessage?.(event);
       };
 
       ws.onclose = () => {
@@ -74,7 +70,7 @@ export const useWebSocketLifecycle = ({
           clearRetryTimeout();
           retryTimeoutRef.current = setTimeout(() => {
             retryCountRef.current++;
-            connect();
+            connect(config);
           }, delay);
         } else {
           updateConnectionState('error');
@@ -102,20 +98,10 @@ export const useWebSocketLifecycle = ({
     updateConnectionState('disconnected');
   };
 
-  useEffect(() => {
-    connect();
-    return () => {
-      disconnect();
-    };
-  }, [url]);
-
   return {
     connectionState,
     disconnect,
-    reconnect: () => {
-      retryCountRef.current = 0;
-      connect();
-    },
+    connect,
     ws: wsRef.current
   };
 };
