@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { ConnectionState, WebSocketConfig } from '@/types/websocket';
+import { ConnectionState } from '@/types/websocket';
 
 export const useWebSocketLifecycle = () => {
   const [connectionState, setConnectionState] = useState<ConnectionState>('initial');
@@ -19,20 +19,16 @@ export const useWebSocketLifecycle = () => {
     }
   };
 
-  const connect = useCallback((config: WebSocketConfig) => {
+  const connect = useCallback(() => {
     if (isConnectingRef.current || wsRef.current?.readyState === WebSocket.OPEN) {
       return;
     }
-
-    const maxRetries = config.maxRetries ?? 5;
-    const initialRetryDelay = config.initialRetryDelay ?? 1000;
-    const maxRetryDelay = config.maxRetryDelay ?? 30000;
 
     isConnectingRef.current = true;
     updateConnectionState('connecting');
 
     try {
-      const ws = new WebSocket(config.url);
+      const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {
@@ -42,28 +38,11 @@ export const useWebSocketLifecycle = () => {
         updateConnectionState('connected');
       };
 
-      ws.onmessage = config.onMessage;
-
       ws.onclose = () => {
         console.log('WebSocket closed');
         isConnectingRef.current = false;
         wsRef.current = null;
         updateConnectionState('disconnected');
-
-        if (retryCountRef.current < maxRetries) {
-          const delay = Math.min(
-            initialRetryDelay * Math.pow(2, retryCountRef.current),
-            maxRetryDelay
-          );
-          console.log(`Attempting to reconnect in ${delay}ms (attempt ${retryCountRef.current + 1})`);
-          clearRetryTimeout();
-          retryTimeoutRef.current = setTimeout(() => {
-            retryCountRef.current++;
-            connect(config);
-          }, delay);
-        } else {
-          updateConnectionState('error');
-        }
       };
 
       ws.onerror = (error) => {

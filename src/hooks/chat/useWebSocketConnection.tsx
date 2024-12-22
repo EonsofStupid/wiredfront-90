@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useWebSocketLifecycle } from './useWebSocketLifecycle';
 import { useWebSocketMetrics } from './websocket/useWebSocketMetrics';
 import { WEBSOCKET_URL } from '@/constants/websocket';
@@ -25,14 +25,7 @@ export const useWebSocketConnection = (
 
   useEffect(() => {
     if (!isMinimized) {
-      const config: WebSocketConfig = {
-        url: wsUrl,
-        onMessage: handleMessage,
-        maxRetries: 5,
-        initialRetryDelay: 1000,
-        maxRetryDelay: 30000
-      };
-      connect(config);
+      connect();
     } else {
       disconnect();
     }
@@ -54,15 +47,8 @@ export const useWebSocketConnection = (
     }, [ws]),
     isConnected: connectionState === 'connected',
     reconnect: useCallback(() => {
-      const config: WebSocketConfig = {
-        url: wsUrl,
-        onMessage: handleMessage,
-        maxRetries: 5,
-        initialRetryDelay: 1000,
-        maxRetryDelay: 30000
-      };
-      connect(config);
-    }, [connect, wsUrl, handleMessage]),
+      connect();
+    }, [connect]),
     ws
   };
 };
