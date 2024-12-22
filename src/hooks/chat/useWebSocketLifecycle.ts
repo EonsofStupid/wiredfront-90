@@ -1,13 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { ConnectionState } from '@/types/websocket';
-
-interface WebSocketConfig {
-  url: string;
-  onMessage?: (event: MessageEvent) => void;
-  maxRetries?: number;
-  initialRetryDelay?: number;
-  maxRetryDelay?: number;
-}
+import { ConnectionState, WebSocketConfig } from '@/types/websocket';
 
 export const useWebSocketLifecycle = () => {
   const [connectionState, setConnectionState] = useState<ConnectionState>('initial');
@@ -50,9 +42,7 @@ export const useWebSocketLifecycle = () => {
         updateConnectionState('connected');
       };
 
-      ws.onmessage = (event) => {
-        config.onMessage?.(event);
-      };
+      ws.onmessage = config.onMessage;
 
       ws.onclose = () => {
         console.log('WebSocket closed');

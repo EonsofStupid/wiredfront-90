@@ -20,9 +20,10 @@ export interface ConnectionMetrics {
 
 export interface WebSocketConfig {
   url: string;
-  sessionId: string;
-  isMinimized: boolean;
-  onMessage: (message: any) => void;
+  onMessage: (event: MessageEvent) => void;
+  maxRetries?: number;
+  initialRetryDelay?: number;
+  maxRetryDelay?: number;
 }
 
 export interface WebSocketHookReturn {

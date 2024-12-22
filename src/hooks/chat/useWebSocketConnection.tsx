@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { useWebSocketLifecycle } from './useWebSocketLifecycle';
 import { useWebSocketMetrics } from './websocket/useWebSocketMetrics';
 import { WEBSOCKET_URL } from '@/constants/websocket';
+import { WebSocketConfig } from '@/types/websocket';
 
 export const useWebSocketConnection = (
   sessionId: string,
@@ -24,13 +25,14 @@ export const useWebSocketConnection = (
 
   useEffect(() => {
     if (!isMinimized) {
-      connect({
+      const config: WebSocketConfig = {
         url: wsUrl,
         onMessage: handleMessage,
         maxRetries: 5,
         initialRetryDelay: 1000,
         maxRetryDelay: 30000
-      });
+      };
+      connect(config);
     } else {
       disconnect();
     }
@@ -52,13 +54,14 @@ export const useWebSocketConnection = (
     }, [ws]),
     isConnected: connectionState === 'connected',
     reconnect: useCallback(() => {
-      connect({
+      const config: WebSocketConfig = {
         url: wsUrl,
         onMessage: handleMessage,
         maxRetries: 5,
         initialRetryDelay: 1000,
         maxRetryDelay: 30000
-      });
+      };
+      connect(config);
     }, [connect, wsUrl, handleMessage]),
     ws
   };
