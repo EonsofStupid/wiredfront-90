@@ -2,6 +2,12 @@ import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
 import { ConnectionManager } from './ConnectionManager';
 import { logger } from './LoggingService';
 
+interface WebSocketCallbacks {
+  onMessage: (message: any) => void;
+  onStateChange: (state: ConnectionState) => void;
+  onMetricsUpdate: (metrics: Partial<ConnectionMetrics>) => void;
+}
+
 export class WebSocketService {
   private connectionManager: ConnectionManager;
   private metrics: ConnectionMetrics = {
@@ -17,14 +23,10 @@ export class WebSocketService {
 
   constructor(sessionId: string) {
     this.connectionManager = new ConnectionManager(sessionId);
-    logger.info('WebSocket service initialized', { sessionId }, sessionId);
+    logger.info('WebSocket service initialized', { sessionId });
   }
 
-  public async setCallbacks(callbacks: {
-    onMessage: (message: any) => void;
-    onStateChange: (state: ConnectionState) => void;
-    onMetricsUpdate: (metrics: Partial<ConnectionMetrics>) => void;
-  }) {
+  public async setCallbacks(callbacks: WebSocketCallbacks) {
     this.connectionManager.setCallbacks({
       onMessage: (message) => {
         this.updateMetrics({ messagesReceived: this.metrics.messagesReceived + 1 });
@@ -39,13 +41,14 @@ export class WebSocketService {
           });
         }
         callbacks.onStateChange(state as ConnectionState);
-      }
+      },
+      onMetricsUpdate: callbacks.onMetricsUpdate
     });
   }
 
   private updateMetrics(updates: Partial<ConnectionMetrics>) {
     this.metrics = { ...this.metrics, ...updates };
-    logger.debug('Metrics updated', this.metrics, this.connectionManager.getSessionId());
+    logger.debug('Metrics updated', this.metrics);
   }
 
   public async connect(accessToken: string) {

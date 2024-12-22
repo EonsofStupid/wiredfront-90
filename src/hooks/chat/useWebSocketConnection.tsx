@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from '@/stores/auth/store';
+import { WebSocketService } from '@/services/chat/WebSocketService';
 
 export const useWebSocketConnection = (
   sessionId: string,
@@ -73,7 +74,6 @@ export const useWebSocketConnection = (
 
     initializeWebSocket();
 
-    // Cleanup function
     return () => {
       if (wsServiceRef.current) {
         logger.info('Cleaning up WebSocket service');
