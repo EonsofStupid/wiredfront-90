@@ -1,5 +1,5 @@
-import { WebSocketLogger } from './WebSocketLogger';
-import { ConnectionState, ConnectionMetrics } from '../types/websocket';
+import { WebSocketLogger } from './monitoring/WebSocketLogger';
+import { ConnectionState, ConnectionMetrics } from './types/connection';
 import { WebSocketStateManager } from './WebSocketStateManager';
 import { toast } from 'sonner';
 

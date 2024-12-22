@@ -1,5 +1,5 @@
-import { ConnectionState } from '../types/websocket';
-import { WebSocketLogger } from './WebSocketLogger';
+import { ConnectionState } from './types/connection';
+import { WebSocketLogger } from './monitoring/WebSocketLogger';
 import { toast } from 'sonner';
 
 export class WebSocketStateManager {
