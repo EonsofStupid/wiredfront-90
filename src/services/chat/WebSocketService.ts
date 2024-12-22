@@ -2,6 +2,7 @@ import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
 import { toast } from 'sonner';
 import { WEBSOCKET_URL, HEARTBEAT_INTERVAL, MAX_RECONNECT_ATTEMPTS, RECONNECT_INTERVALS } from '@/constants/websocket';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from './LoggingService';
 
 export class WebSocketService {
   private ws: WebSocket | null = null;
@@ -26,11 +27,7 @@ export class WebSocketService {
 
   constructor(sessionId: string) {
     this.sessionId = sessionId;
-    this.setupHeartbeat = this.setupHeartbeat.bind(this);
-    this.handleMessage = this.handleMessage.bind(this);
-    this.handleError = this.handleError.bind(this);
-    this.handleClose = this.handleClose.bind(this);
-    this.connect = this.connect.bind(this);
+    logger.info('WebSocket service initialized', { sessionId });
   }
 
   public setCallbacks(callbacks: {
@@ -41,10 +38,11 @@ export class WebSocketService {
     this.onMessageCallback = callbacks.onMessage;
     this.onStateChangeCallback = callbacks.onStateChange;
     this.onMetricsUpdateCallback = callbacks.onMetricsUpdate;
+    logger.debug('WebSocket callbacks set');
   }
 
   private updateState(state: ConnectionState) {
-    console.log(`[WebSocket] State changed to: ${state}`);
+    logger.info(`WebSocket state changed to: ${state}`);
     if (this.onStateChangeCallback) {
       this.onStateChangeCallback(state);
     }
@@ -52,6 +50,7 @@ export class WebSocketService {
 
   private updateMetrics(updates: Partial<ConnectionMetrics>) {
     this.metrics = { ...this.metrics, ...updates };
+    logger.debug('Metrics updated', this.metrics);
     if (this.onMetricsUpdateCallback) {
       this.onMetricsUpdateCallback(this.metrics);
     }
@@ -66,7 +65,7 @@ export class WebSocketService {
       if (this.ws?.readyState === WebSocket.OPEN) {
         this.lastPingTime = Date.now();
         this.ws.send(JSON.stringify({ type: 'ping' }));
-        console.log('[WebSocket] Heartbeat sent');
+        logger.debug('Heartbeat sent');
       }
     }, HEARTBEAT_INTERVAL);
   }
@@ -74,7 +73,7 @@ export class WebSocketService {
   private async handleMessage(event: MessageEvent) {
     try {
       const data = JSON.parse(event.data);
-      console.log('[WebSocket] Received message:', data);
+      logger.debug('Received message', data);
 
       if (data.type === 'pong') {
         const latency = Date.now() - this.lastPingTime;
@@ -88,13 +87,13 @@ export class WebSocketService {
 
       this.updateMetrics({ messagesReceived: this.metrics.messagesReceived + 1 });
     } catch (error) {
-      console.error('[WebSocket] Error processing message:', error);
+      logger.error('Error processing message', error);
       this.handleError(new Error('Failed to process message'));
     }
   }
 
   private handleError(error: Error) {
-    console.error('[WebSocket] Connection error:', error);
+    logger.error('WebSocket error:', error);
     this.updateMetrics({ 
       lastError: error,
       reconnectAttempts: this.reconnectAttempts 
@@ -104,7 +103,11 @@ export class WebSocketService {
   }
 
   private handleClose(event: CloseEvent) {
-    console.log('[WebSocket] Connection closed:', event);
+    logger.info('WebSocket connection closed', { 
+      code: event.code,
+      reason: event.reason,
+      wasClean: event.wasClean 
+    });
     this.updateState('disconnected');
     if (event.code !== 1000) {
       this.attemptReconnect();
@@ -113,7 +116,7 @@ export class WebSocketService {
 
   private attemptReconnect() {
     if (this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-      console.error('[WebSocket] Max reconnection attempts reached');
+      logger.error('Max reconnection attempts reached');
       toast.error('Unable to establish connection. Please try again later.');
       this.updateState('failed');
       return;
@@ -126,7 +129,10 @@ export class WebSocketService {
     const delay = RECONNECT_INTERVALS[this.reconnectAttempts] || RECONNECT_INTERVALS[RECONNECT_INTERVALS.length - 1];
     this.reconnectAttempts++;
     
-    console.log(`[WebSocket] Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts})`);
+    logger.info(`Attempting to reconnect`, { 
+      attempt: this.reconnectAttempts,
+      delay 
+    });
     this.updateState('reconnecting');
     
     this.reconnectTimeout = setTimeout(() => {
@@ -136,7 +142,7 @@ export class WebSocketService {
 
   public async connect() {
     if (this.ws?.readyState === WebSocket.OPEN) {
-      console.log('[WebSocket] Already connected');
+      logger.info('WebSocket already connected');
       return;
     }
 
@@ -149,12 +155,12 @@ export class WebSocketService {
       }
 
       const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${session.access_token}`;
-      console.log('[WebSocket] Connecting to:', wsUrl);
+      logger.info('Connecting to WebSocket', { url: wsUrl.replace(session.access_token, '[REDACTED]') });
       
       this.ws = new WebSocket(wsUrl);
       
       this.ws.onopen = () => {
-        console.log('[WebSocket] Connected successfully');
+        logger.info('WebSocket connected successfully');
         this.updateState('connected');
         this.updateMetrics({ 
           lastConnected: new Date(),
@@ -165,12 +171,12 @@ export class WebSocketService {
         this.setupHeartbeat();
       };
 
-      this.ws.onmessage = this.handleMessage;
+      this.ws.onmessage = this.handleMessage.bind(this);
       this.ws.onerror = () => this.handleError(new Error('WebSocket connection error'));
-      this.ws.onclose = this.handleClose;
+      this.ws.onclose = this.handleClose.bind(this);
 
     } catch (error) {
-      console.error('[WebSocket] Connection setup failed:', error);
+      logger.error('Connection setup failed', error);
       this.handleError(error instanceof Error ? error : new Error('Failed to setup connection'));
     }
   }
@@ -179,11 +185,11 @@ export class WebSocketService {
     if (this.ws?.readyState === WebSocket.OPEN) {
       try {
         this.ws.send(JSON.stringify(message));
-        console.log('[WebSocket] Message sent:', message);
+        logger.debug('Message sent', message);
         this.updateMetrics({ messagesSent: this.metrics.messagesSent + 1 });
         return true;
       } catch (error) {
-        console.error('[WebSocket] Failed to send message:', error);
+        logger.error('Failed to send message', error);
         toast.error('Failed to send message');
         return false;
       }
@@ -211,7 +217,7 @@ export class WebSocketService {
   }
 
   public disconnect() {
-    console.log('[WebSocket] Disconnecting...');
+    logger.info('Disconnecting WebSocket');
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
     }
