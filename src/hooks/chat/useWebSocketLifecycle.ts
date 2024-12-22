@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { ConnectionState } from '@/types/websocket';
 
-export const useWebSocketLifecycle = () => {
+export const useWebSocketLifecycle = (wsUrl: string) => {
   const [connectionState, setConnectionState] = useState<ConnectionState>('initial');
   const wsRef = useRef<WebSocket | null>(null);
   const retryCountRef = useRef(0);
@@ -48,13 +48,14 @@ export const useWebSocketLifecycle = () => {
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
         isConnectingRef.current = false;
+        updateConnectionState('error');
       };
     } catch (error) {
       console.error('Failed to create WebSocket:', error);
       isConnectingRef.current = false;
       updateConnectionState('error');
     }
-  }, []);
+  }, [wsUrl]);
 
   const disconnect = useCallback(() => {
     clearRetryTimeout();

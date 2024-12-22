@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useWebSocketLifecycle } from './useWebSocketLifecycle';
 import { useWebSocketMetrics } from './websocket/useWebSocketMetrics';
 import { WEBSOCKET_URL } from '@/constants/websocket';
@@ -20,7 +20,7 @@ export const useWebSocketConnection = (
     }
   }, [onMessage]);
 
-  const { connectionState, connect, disconnect, ws } = useWebSocketLifecycle();
+  const { connectionState, connect, disconnect, ws } = useWebSocketLifecycle(wsUrl);
   const metrics = useWebSocketMetrics(connectionState);
 
   useEffect(() => {
