@@ -1,104 +1,79 @@
-import { logger } from '@/services/chat/LoggingService';
-import { ConnectionState, ConnectionMetrics } from '../types/connection';
+import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
 
-interface LogMetadata {
-  sessionId: string;
-  messageType?: string;
-  error?: Error;
-  retryAttempt?: number;
-  url?: string;
+interface LogEntry {
+  timestamp: number;
+  message: string;
+  level: 'info' | 'warn' | 'error';
+  metadata?: any;
 }
 
 export class WebSocketLogger {
-  constructor(private sessionId: string) {}
+  private static instance: WebSocketLogger;
+  private logs: LogEntry[] = [];
+  private metrics: ConnectionMetrics = {
+    lastConnected: null,
+    reconnectAttempts: 0,
+    lastError: null,
+    messagesSent: 0,
+    messagesReceived: 0,
+    lastHeartbeat: null,
+    latency: 0,
+    uptime: 0
+  };
+  private connectionState: ConnectionState = 'initial';
 
-  logConnectionAttempt(metadata: LogMetadata) {
-    logger.info('Attempting WebSocket connection',
-      {
-        ...metadata,
-        timestamp: new Date().toISOString()
-      },
-      this.sessionId,
-      { component: 'WebSocketConnection', action: 'connect_attempt' }
-    );
+  private constructor() {}
+
+  static getInstance(): WebSocketLogger {
+    if (!WebSocketLogger.instance) {
+      WebSocketLogger.instance = new WebSocketLogger();
+    }
+    return WebSocketLogger.instance;
   }
 
-  logConnectionSuccess(metrics: Partial<ConnectionMetrics>) {
-    logger.info('WebSocket connection established',
-      {
-        metrics,
-        timestamp: new Date().toISOString()
-      },
-      this.sessionId,
-      { component: 'WebSocketConnection', action: 'connect_success' }
-    );
+  log(level: 'info' | 'warn' | 'error', message: string, metadata?: any) {
+    const entry: LogEntry = {
+      timestamp: Date.now(),
+      message,
+      level,
+      metadata
+    };
+    this.logs.unshift(entry);
+    
+    // Keep only last 1000 logs
+    if (this.logs.length > 1000) {
+      this.logs.pop();
+    }
+
+    // Also log to console for debugging
+    console[level](message, metadata);
   }
 
-  logConnectionError(error: Error, metadata: LogMetadata) {
-    logger.error('WebSocket connection failed',
-      {
-        ...metadata,
-        error,
-        timestamp: new Date().toISOString()
-      },
-      this.sessionId,
-      { component: 'WebSocketConnection', action: 'connect_error', error }
-    );
+  updateMetrics(updates: Partial<ConnectionMetrics>) {
+    this.metrics = { ...this.metrics, ...updates };
+    if (this.metrics.lastConnected) {
+      this.metrics.uptime = Date.now() - this.metrics.lastConnected.getTime();
+    }
   }
 
-  logMessageSent(metadata: LogMetadata) {
-    logger.debug('WebSocket message sent',
-      {
-        ...metadata,
-        timestamp: new Date().toISOString()
-      },
-      this.sessionId,
-      { component: 'WebSocketConnection', action: 'message_sent' }
-    );
+  updateConnectionState(state: ConnectionState) {
+    this.connectionState = state;
+    this.log('info', `Connection state changed to ${state}`);
   }
 
-  logMessageReceived(metadata: LogMetadata) {
-    logger.debug('WebSocket message received',
-      {
-        ...metadata,
-        timestamp: new Date().toISOString()
-      },
-      this.sessionId,
-      { component: 'WebSocketConnection', action: 'message_received' }
-    );
+  getMetrics(): ConnectionMetrics {
+    return { ...this.metrics };
   }
 
-  logStateChange(previousState: ConnectionState, newState: ConnectionState) {
-    logger.info('WebSocket state changed',
-      {
-        previousState,
-        newState,
-        timestamp: new Date().toISOString()
-      },
-      this.sessionId,
-      { component: 'WebSocketConnection', action: 'state_change' }
-    );
+  getConnectionState(): ConnectionState {
+    return this.connectionState;
   }
 
-  logReconnectAttempt(attempt: number, maxAttempts: number) {
-    logger.info('Attempting WebSocket reconnection',
-      {
-        attempt,
-        maxAttempts,
-        timestamp: new Date().toISOString()
-      },
-      this.sessionId,
-      { component: 'WebSocketConnection', action: 'reconnect' }
-    );
+  getLogs(): LogEntry[] {
+    return [...this.logs];
   }
 
-  logDisconnect() {
-    logger.info('WebSocket disconnecting',
-      {
-        timestamp: new Date().toISOString()
-      },
-      this.sessionId,
-      { component: 'WebSocketConnection', action: 'disconnect' }
-    );
+  clearLogs() {
+    this.logs = [];
   }
 }
