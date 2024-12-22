@@ -1,9 +1,10 @@
 import { WebSocketLogger } from '../WebSocketLogger';
 import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
 import { toast } from 'sonner';
+import { WebSocketError, TokenExpiredError, OpenAIError } from '../types/errors';
 
 export class WebSocketEventEmitter {
-  private state: ConnectionState = 'initial';
+  private currentState: ConnectionState = 'initial';
 
   constructor(
     private logger: WebSocketLogger,
@@ -12,13 +13,15 @@ export class WebSocketEventEmitter {
   ) {}
 
   emitStateChange(state: ConnectionState, metadata: Record<string, any> = {}) {
-    this.state = state;
-    this.onStateChange(state);
+    const previousState = this.currentState;
+    this.currentState = state;
+    
     this.logger.logStateChange(state, {
-      ...metadata,
-      previousState: this.state,
-      timestamp: new Date().toISOString()
+      previousState,
+      ...metadata
     });
+    
+    this.onStateChange(state);
     
     // User feedback
     switch (state) {
@@ -41,33 +44,27 @@ export class WebSocketEventEmitter {
         toast.error('Connection failed after multiple attempts');
         break;
     }
+
+    this.logger.logUIUpdate('ConnectionStatus', `State changed to ${state}`);
+  }
+
+  emitError(error: Error, context: Record<string, any> = {}) {
+    if (error instanceof TokenExpiredError) {
+      this.logger.logAuthError(error);
+      toast.error('Authentication expired. Please log in again.');
+    } else if (error instanceof OpenAIError) {
+      this.logger.logOpenAIError(error, context);
+      toast.error('AI service error. Please try again later.');
+    } else {
+      this.logger.logConnectionError(error, context.attempt || 0);
+      toast.error('Connection error occurred');
+    }
+
+    this.emitStateChange('error', { error, ...context });
   }
 
   emitMetricsUpdate(metrics: Partial<ConnectionMetrics>) {
     this.onMetricsUpdate(metrics);
-    this.logger.debug('WebSocket metrics updated', {
-      metrics,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  emitError(error: Error, context: Record<string, any> = {}) {
-    this.logger.error('WebSocket error', {
-      ...context,
-      error,
-      timestamp: new Date().toISOString()
-    });
-    
-    let errorMessage = 'Connection error occurred';
-    
-    if (error.name === 'TokenExpiredError') {
-      errorMessage = 'Authentication token expired. Please log in again.';
-    } else if (error.name === 'MessageSendError') {
-      errorMessage = 'Failed to send message. Retrying...';
-    } else if (error.name === 'OpenAIError') {
-      errorMessage = 'AI service error. Please try again later.';
-    }
-    
-    toast.error(errorMessage);
+    this.logger.logMetrics(metrics as ConnectionMetrics);
   }
 }
