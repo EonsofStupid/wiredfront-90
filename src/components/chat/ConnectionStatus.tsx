@@ -1,13 +1,16 @@
 import { SignalHigh, CloudOff, Loader2, AlertTriangle } from 'lucide-react';
 import { ConnectionState } from '@/types/websocket';
 import { cn } from '@/lib/utils';
+import { useWebSocketStore } from '@/stores/websocket/store';
 
 interface ConnectionStatusProps {
-  state: ConnectionState;
   className?: string;
 }
 
-export const ConnectionStatus = ({ state, className }: ConnectionStatusProps) => {
+export const ConnectionStatus = ({ className }: ConnectionStatusProps) => {
+  const state = useWebSocketStore((state) => state.connectionState);
+  const errorCount = useWebSocketStore((state) => state.errors.errorCount);
+
   const getIcon = () => {
     switch (state) {
       case 'connected':
@@ -32,7 +35,7 @@ export const ConnectionStatus = ({ state, className }: ConnectionStatusProps) =>
       case 'connecting':
         return 'Connecting...';
       case 'reconnecting':
-        return 'Reconnecting...';
+        return `Reconnecting... (Attempt ${errorCount})`;
       case 'disconnected':
         return 'Disconnected';
       case 'error':

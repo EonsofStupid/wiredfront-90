@@ -2,6 +2,7 @@ import { ConnectionState, ConnectionMetrics, WebSocketCallbacks } from './types/
 import { WebSocketMetricsService } from './services/WebSocketMetricsService';
 import { WebSocketConnectionService } from './services/WebSocketConnectionService';
 import { logger } from './LoggingService';
+import { useWebSocketStore } from '@/stores/websocket/store';
 
 export class WebSocketService {
   private connectionService: WebSocketConnectionService;
@@ -26,6 +27,7 @@ export class WebSocketService {
   }
 
   private handleStateChange(state: ConnectionState) {
+    useWebSocketStore.getState().setConnectionState(state);
     logger.info(`WebSocket state changed to ${state}`,
       { 
         previousState: this.connectionService.getState(),
@@ -35,6 +37,10 @@ export class WebSocketService {
       this.sessionId,
       { component: 'WebSocketService', action: 'handleStateChange' }
     );
+  }
+
+  private handleMetricsUpdate(metrics: Partial<ConnectionMetrics>) {
+    useWebSocketStore.getState().updateMetrics(metrics);
   }
 
   public async setCallbacks(callbacks: WebSocketCallbacks) {
@@ -73,6 +79,7 @@ export class WebSocketService {
         this.sessionId,
         { component: 'WebSocketService', action: 'connect' }
       );
+      useWebSocketStore.getState().setError(error as Error);
       throw error;
     }
   }
@@ -86,7 +93,18 @@ export class WebSocketService {
       this.sessionId,
       { component: 'WebSocketService', action: 'send' }
     );
-    return this.connectionService.send(message);
+
+    const success = this.connectionService.send(message);
+    
+    if (success) {
+      useWebSocketStore.getState().updateMetrics({
+        messagesSent: (useWebSocketStore.getState().metrics.messagesSent || 0) + 1
+      });
+    } else {
+      useWebSocketStore.getState().setError(new Error('Failed to send message'));
+    }
+
+    return success;
   }
 
   public disconnect() {
@@ -98,29 +116,14 @@ export class WebSocketService {
       { component: 'WebSocketService', action: 'disconnect' }
     );
     this.connectionService.disconnect();
+    useWebSocketStore.getState().setConnectionState('disconnected');
   }
 
   public getState(): ConnectionState {
-    const wsState = this.connectionService.getState();
-    return this.mapWebSocketState(wsState);
-  }
-
-  private mapWebSocketState(state: number): ConnectionState {
-    switch (state) {
-      case WebSocket.CONNECTING:
-        return 'connecting';
-      case WebSocket.OPEN:
-        return 'connected';
-      case WebSocket.CLOSING:
-        return 'disconnected';
-      case WebSocket.CLOSED:
-        return 'disconnected';
-      default:
-        return 'initial';
-    }
+    return useWebSocketStore.getState().connectionState;
   }
 
   public getMetrics(): ConnectionMetrics {
-    return this.metricsService.getMetrics();
+    return useWebSocketStore.getState().metrics;
   }
 }
