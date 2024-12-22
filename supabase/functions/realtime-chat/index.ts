@@ -13,7 +13,8 @@ Deno.serve(async (req) => {
   logger.info('New request received', {
     requestId,
     method: req.method,
-    url: req.url
+    url: req.url,
+    headers: Object.fromEntries(req.headers.entries())
   });
 
   try {
@@ -43,7 +44,8 @@ Deno.serve(async (req) => {
     logger.debug('Validating access token', { 
       requestId,
       hasToken: !!accessToken,
-      sessionId 
+      sessionId,
+      searchParams: Object.fromEntries(url.searchParams.entries())
     });
     
     if (!accessToken) {
@@ -58,7 +60,12 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
     
     if (authError || !user) {
-      logger.error('Invalid access token', { requestId, error: authError });
+      logger.error('Invalid access token', { 
+        requestId, 
+        error: authError,
+        tokenLength: accessToken.length,
+        tokenPrefix: accessToken.substring(0, 10) + '...'
+      });
       return new Response('Invalid access token', { 
         status: 401,
         headers: corsHeaders
@@ -68,7 +75,9 @@ Deno.serve(async (req) => {
     logger.info('User authenticated successfully', {
       requestId,
       userId: user.id,
-      sessionId
+      sessionId,
+      email: user.email,
+      lastSignIn: user.last_sign_in_at
     });
 
     // Initialize WebSocket handler
@@ -79,7 +88,8 @@ Deno.serve(async (req) => {
       logger.info('WebSocket connection opened', {
         requestId,
         userId: user.id,
-        sessionId
+        sessionId,
+        timestamp: new Date().toISOString()
       });
       
       // Send initial connection success message
@@ -98,15 +108,31 @@ Deno.serve(async (req) => {
           requestId,
           userId: user.id,
           sessionId,
-          messageType: data.type
+          messageType: data.type,
+          timestamp: new Date().toISOString(),
+          messageSize: event.data.length
         });
 
         // Handle different message types
         switch (data.type) {
           case 'ping':
-            socket.send(JSON.stringify({ type: 'pong', timestamp: new Date().toISOString() }));
+            logger.debug('Received ping, sending pong', {
+              requestId,
+              userId: user.id,
+              sessionId
+            });
+            socket.send(JSON.stringify({ 
+              type: 'pong', 
+              timestamp: new Date().toISOString() 
+            }));
             break;
           case 'chat_message':
+            logger.info('Processing chat message', {
+              requestId,
+              userId: user.id,
+              sessionId,
+              messageLength: data.content?.length || 0
+            });
             // Store message in database
             const { error: dbError } = await supabase
               .from('messages')
@@ -122,13 +148,23 @@ Deno.serve(async (req) => {
                 requestId,
                 error: dbError,
                 userId: user.id,
-                sessionId
+                sessionId,
+                errorCode: dbError.code,
+                errorMessage: dbError.message,
+                details: dbError.details
               });
               socket.send(JSON.stringify({
                 type: 'error',
                 message: 'Failed to store message',
                 timestamp: new Date().toISOString()
               }));
+            } else {
+              logger.info('Message stored successfully', {
+                requestId,
+                userId: user.id,
+                sessionId,
+                timestamp: new Date().toISOString()
+              });
             }
             break;
           default:
@@ -136,7 +172,8 @@ Deno.serve(async (req) => {
               requestId,
               type: data.type,
               userId: user.id,
-              sessionId
+              sessionId,
+              rawMessage: event.data
             });
         }
       } catch (error) {
@@ -144,7 +181,11 @@ Deno.serve(async (req) => {
           requestId,
           error,
           userId: user.id,
-          sessionId
+          sessionId,
+          rawMessage: event.data,
+          errorName: error.name,
+          errorMessage: error.message,
+          stack: error.stack
         });
       }
     };
@@ -154,15 +195,22 @@ Deno.serve(async (req) => {
         requestId,
         error,
         userId: user.id,
-        sessionId
+        sessionId,
+        errorType: error.type,
+        errorMessage: error.message,
+        timestamp: new Date().toISOString()
       });
     };
 
-    socket.onclose = () => {
+    socket.onclose = (event) => {
       logger.info('WebSocket connection closed', {
         requestId,
         userId: user.id,
-        sessionId
+        sessionId,
+        code: event.code,
+        reason: event.reason,
+        wasClean: event.wasClean,
+        timestamp: new Date().toISOString()
       });
     };
 
@@ -172,7 +220,10 @@ Deno.serve(async (req) => {
     logger.error('Server error', {
       requestId,
       error,
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error.stack,
+      timestamp: new Date().toISOString(),
+      errorName: error.name,
+      errorMessage: error.message
     });
     return new Response('Internal Server Error', { 
       status: 500,
