@@ -1,6 +1,6 @@
 import { Message } from '@/types/chat';
 
-export class MessageQueueManager {
+export class MessageQueue {
   private queue: Message[] = [];
   private maxSize: number;
 
@@ -10,7 +10,7 @@ export class MessageQueueManager {
 
   add(message: Message): void {
     if (this.queue.length >= this.maxSize) {
-      this.queue.shift(); // Remove oldest message if queue is full
+      this.queue.shift();
     }
     this.queue.push(message);
   }

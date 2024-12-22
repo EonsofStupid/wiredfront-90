@@ -1,10 +1,11 @@
 import { useState, useCallback } from 'react';
-import { ConnectionMetrics } from '@/types/websocket';
+import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
 import { INITIAL_METRICS } from '../constants/websocket';
 import { calculateUptime } from '../utils/websocket';
 
 export const useWebSocketMetrics = () => {
   const [metrics, setMetrics] = useState<ConnectionMetrics>(INITIAL_METRICS);
+  const [connectionState, setConnectionState] = useState<ConnectionState>('initial');
 
   const updateMetrics = useCallback((updates: Partial<ConnectionMetrics>) => {
     setMetrics(prev => ({ ...prev, ...updates }));
@@ -14,7 +15,7 @@ export const useWebSocketMetrics = () => {
     setMetrics(prev => ({
       ...prev,
       [type === 'sent' ? 'messagesSent' : 'messagesReceived']: 
-        prev[type === 'sent' ? 'messagesSent' : 'messagesReceived'] + 1
+        (prev[type === 'sent' ? 'messagesSent' : 'messagesReceived'] || 0) + 1
     }));
   }, []);
 
@@ -29,6 +30,8 @@ export const useWebSocketMetrics = () => {
 
   return {
     metrics,
+    connectionState,
+    setConnectionState,
     updateMetrics,
     incrementMessageCount,
     updateUptime

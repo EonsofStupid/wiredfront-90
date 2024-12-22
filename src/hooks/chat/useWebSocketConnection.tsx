@@ -12,42 +12,50 @@ export const useWebSocketConnection = (
 ) => {
   const wsUrl = `${WEBSOCKET_URL}?project_id=${sessionId}`;
   
-  const handleMessage = useCallback((event: MessageEvent) => {
-    try {
-      const data = JSON.parse(event.data);
-      console.log('Received WebSocket message:', data);
-      onMessage(data);
-    } catch (error) {
-      console.error('Failed to parse WebSocket message:', error);
-      toast.error('Failed to process message');
-    }
-  }, [onMessage]);
-
-  const { connectionState, metrics, updateMetrics, setConnectionState } = useWebSocketMetrics();
+  const { 
+    metrics, 
+    connectionState, 
+    setConnectionState, 
+    updateMetrics 
+  } = useWebSocketMetrics();
   
-  const { wsRef, connect, cleanup, messageQueueRef } = useWebSocketLifecycle(
+  const { wsRef, setupWebSocketHandlers } = useWebSocketLifecycle(
     wsUrl,
     setConnectionState,
     updateMetrics
   );
 
+  const handleMessage = useCallback((event: MessageEvent) => {
+    try {
+      const data = JSON.parse(event.data);
+      console.log('Received WebSocket message:', data);
+      onMessage(data);
+      updateMetrics({ messagesReceived: (prev) => prev + 1 });
+    } catch (error) {
+      console.error('Failed to parse WebSocket message:', error);
+      toast.error('Failed to process message');
+    }
+  }, [onMessage, updateMetrics]);
+
   useEffect(() => {
     if (!isMinimized) {
-      connect();
-    } else {
-      cleanup();
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = setupWebSocketHandlers(ws, handleMessage);
     }
     
     return () => {
-      cleanup();
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
     };
-  }, [wsUrl, isMinimized, connect, cleanup]);
+  }, [wsUrl, isMinimized, setupWebSocketHandlers, handleMessage]);
 
   const sendMessage = useCallback((message: any): boolean => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       try {
         wsRef.current.send(JSON.stringify(message));
-        updateMetrics({ messagesSent: prev => (prev || 0) + 1 });
+        updateMetrics({ messagesSent: (prev) => prev + 1 });
         return true;
       } catch (error) {
         console.error('Failed to send message:', error);
@@ -55,19 +63,21 @@ export const useWebSocketConnection = (
         return false;
       }
     }
-
-    // Queue message if socket isn't open
-    messageQueueRef.current.add(message);
-    toast.info('Message queued for sending');
     return false;
-  }, [wsRef, updateMetrics, messageQueueRef]);
+  }, [updateMetrics]);
 
   return {
     connectionState,
     metrics,
     sendMessage,
     isConnected: connectionState === 'connected',
-    reconnect: connect,
+    reconnect: () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+        const ws = new WebSocket(wsUrl);
+        wsRef.current = setupWebSocketHandlers(ws, handleMessage);
+      }
+    },
     ws: wsRef.current
   };
 };
