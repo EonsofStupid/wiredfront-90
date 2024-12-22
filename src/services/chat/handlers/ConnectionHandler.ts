@@ -2,6 +2,7 @@ import { logger } from '../LoggingService';
 import { supabase } from "@/integrations/supabase/client";
 import { WebSocketCallbacks } from '../types/websocket';
 import { ConnectionState } from '@/types/websocket';
+import { WEBSOCKET_URL } from '@/constants/websocket';
 
 export class ConnectionHandler {
   private ws: WebSocket | null = null;
@@ -31,7 +32,7 @@ export class ConnectionHandler {
         this.authToken = session.access_token;
       }
 
-      const wsUrl = `wss://${process.env.VITE_SUPABASE_PROJECT_ID}.functions.supabase.co/realtime-chat?session_id=${this.sessionId}&access_token=${this.authToken}`;
+      const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${this.authToken}`;
       
       if (this.ws) {
         this.ws.close();
