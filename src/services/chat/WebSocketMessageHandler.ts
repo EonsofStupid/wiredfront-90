@@ -15,7 +15,10 @@ export class WebSocketMessageHandler {
   handleMessage(data: string, callback: (data: any) => void) {
     try {
       logger.debug('Processing WebSocket message',
-        { data },
+        { 
+          rawData: data,
+          timestamp: new Date().toISOString()
+        },
         this.sessionId,
         { component: 'WebSocketMessageHandler', action: 'handleMessage' }
       );
@@ -23,7 +26,9 @@ export class WebSocketMessageHandler {
       
       if (parsedData.type === 'pong') {
         logger.debug('Received pong message',
-          undefined,
+          {
+            timestamp: new Date().toISOString()
+          },
           this.sessionId,
           { component: 'WebSocketMessageHandler', action: 'handleMessage' }
         );
@@ -31,14 +36,22 @@ export class WebSocketMessageHandler {
       }
 
       logger.info('Handling WebSocket message',
-        { type: parsedData.type },
+        { 
+          type: parsedData.type,
+          messageId: parsedData.id,
+          timestamp: new Date().toISOString()
+        },
         this.sessionId,
         { component: 'WebSocketMessageHandler', action: 'handleMessage' }
       );
       callback(parsedData);
     } catch (error) {
       logger.error('Failed to parse WebSocket message',
-        { error, data },
+        { 
+          error,
+          rawData: data,
+          timestamp: new Date().toISOString()
+        },
         this.sessionId,
         { component: 'WebSocketMessageHandler', action: 'handleMessage', error: error as Error }
       );
@@ -47,7 +60,10 @@ export class WebSocketMessageHandler {
 
   handleError(error: Error) {
     logger.error('WebSocket error occurred',
-      { error },
+      { 
+        error,
+        timestamp: new Date().toISOString()
+      },
       this.sessionId,
       { component: 'WebSocketMessageHandler', action: 'handleError', error }
     );
@@ -58,7 +74,8 @@ export class WebSocketMessageHandler {
       {
         code: event.code,
         reason: event.reason,
-        wasClean: event.wasClean
+        wasClean: event.wasClean,
+        timestamp: new Date().toISOString()
       },
       this.sessionId,
       { component: 'WebSocketMessageHandler', action: 'handleClose' }
