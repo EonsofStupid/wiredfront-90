@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { WebSocketService } from '@/services/chat/WebSocketService';
 import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
 import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
+import { useAuthStore } from '@/stores/auth/store';
 
 export const useWebSocketConnection = (
   sessionId: string,
@@ -13,6 +13,7 @@ export const useWebSocketConnection = (
   const wsServiceRef = useRef<WebSocketService | null>(null);
   const metricsRef = useRef<ConnectionMetrics | null>(null);
   const stateRef = useRef<ConnectionState>('initial');
+  const { isAuthenticated } = useAuthStore();
 
   const updateMetrics = useCallback((metrics: Partial<ConnectionMetrics>) => {
     metricsRef.current = { ...metricsRef.current, ...metrics } as ConnectionMetrics;
@@ -41,23 +42,17 @@ export const useWebSocketConnection = (
 
   useEffect(() => {
     const initializeWebSocket = async () => {
-      if (isMinimized) return;
+      if (isMinimized || !isAuthenticated) return;
 
       try {
-        // Get current session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (sessionError) {
-          throw sessionError;
-        }
-
-        if (!session) {
+        if (!session?.access_token) {
           logger.warn('No active session found');
           updateState('error');
           return;
         }
 
-        // Initialize WebSocket service with session token
         if (!wsServiceRef.current) {
           logger.info('Initializing WebSocket service', { sessionId });
           wsServiceRef.current = new WebSocketService(sessionId);
@@ -68,7 +63,7 @@ export const useWebSocketConnection = (
             onMetricsUpdate: updateMetrics
           });
 
-          await wsServiceRef.current.connect();
+          await wsServiceRef.current.connect(session.access_token);
         }
       } catch (error) {
         logger.error('Failed to initialize WebSocket', { error });
@@ -78,6 +73,7 @@ export const useWebSocketConnection = (
 
     initializeWebSocket();
 
+    // Cleanup function
     return () => {
       if (wsServiceRef.current) {
         logger.info('Cleaning up WebSocket service');
@@ -85,26 +81,30 @@ export const useWebSocketConnection = (
         wsServiceRef.current = null;
       }
     };
-  }, [sessionId, isMinimized, onMessage, updateState, updateMetrics]);
-
-  const sendMessage = useCallback((message: any): boolean => {
-    if (!wsServiceRef.current) {
-      logger.error('WebSocket connection not initialized');
-      toast.error('WebSocket connection not initialized');
-      return false;
-    }
-    return wsServiceRef.current.send(message);
-  }, []);
+  }, [sessionId, isMinimized, onMessage, updateState, updateMetrics, isAuthenticated]);
 
   return {
     connectionState: stateRef.current,
     metrics: metricsRef.current,
-    sendMessage,
+    sendMessage: useCallback((message: any): boolean => {
+      if (!wsServiceRef.current) {
+        logger.error('WebSocket connection not initialized');
+        toast.error('WebSocket connection not initialized');
+        return false;
+      }
+      return wsServiceRef.current.send(message);
+    }, []),
     isConnected: stateRef.current === 'connected',
     reconnect: async () => {
       logger.info('Manual reconnection requested');
-      if (wsServiceRef.current) {
-        await wsServiceRef.current.connect();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token && wsServiceRef.current) {
+          await wsServiceRef.current.connect(session.access_token);
+        }
+      } catch (error) {
+        logger.error('Failed to reconnect', { error });
+        updateState('error');
       }
     },
   };

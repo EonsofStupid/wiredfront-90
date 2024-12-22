@@ -34,13 +34,17 @@ export class ConnectionManager {
   }
 
   async connect() {
+    if (!this.authToken) {
+      logger.error('Authentication token not set', {}, this.sessionId);
+      throw new Error('Authentication token not set');
+    }
+
     try {
-      if (!this.authToken) {
-        throw new Error('Authentication token not set');
+      if (this.ws) {
+        this.ws.close();
+        this.ws = null;
       }
 
-      logger.info('Initiating WebSocket connection', undefined, this.sessionId);
-      
       const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${this.authToken}`;
       logger.debug('Connecting to WebSocket', { url: wsUrl.replace(this.authToken, '[REDACTED]') }, this.sessionId);
       
