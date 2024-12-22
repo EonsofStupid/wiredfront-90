@@ -3,10 +3,10 @@ import { ConnectionState } from '@/types/websocket';
 
 interface WebSocketConfig {
   url: string;
+  onMessage?: (event: MessageEvent) => void;
   maxRetries?: number;
   initialRetryDelay?: number;
   maxRetryDelay?: number;
-  onMessage?: (event: MessageEvent) => void;
   onStateChange?: (state: ConnectionState) => void;
 }
 
@@ -77,7 +77,7 @@ export const useWebSocketLifecycle = ({
             connect();
           }, delay);
         } else {
-          updateConnectionState('failed');
+          updateConnectionState('error');
         }
       };
 
@@ -88,7 +88,7 @@ export const useWebSocketLifecycle = ({
     } catch (error) {
       console.error('Failed to create WebSocket:', error);
       isConnectingRef.current = false;
-      updateConnectionState('failed');
+      updateConnectionState('error');
     }
   };
 
