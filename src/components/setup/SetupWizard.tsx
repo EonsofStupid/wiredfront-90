@@ -5,8 +5,13 @@ import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { WelcomeStep } from "./steps/WelcomeStep";
 import { APIConfigStep } from "./steps/APIConfigStep";
 import { PreferencesStep } from "./steps/PreferencesStep";
+import { toast } from "sonner";
 
-export function SetupWizard() {
+interface SetupWizardProps {
+  onComplete: () => void;
+}
+
+export function SetupWizard({ onComplete }: SetupWizardProps) {
   const [isOpen, setIsOpen] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -22,7 +27,10 @@ export function SetupWizard() {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
+      localStorage.setItem('setupComplete', 'true');
       setIsOpen(false);
+      onComplete();
+      toast.success("Setup completed successfully!");
     }
   };
 

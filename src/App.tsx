@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Login from "./pages/Login";
 import { DraggableChat } from "@/components/chat/DraggableChat";
 import { useAuthStore } from "@/stores/auth";
-import { storeLastVisitedPath, getRedirectPath } from "@/utils/auth";
+import { storeLastVisitedPath } from "@/utils/auth";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,8 +26,8 @@ const queryClient = new QueryClient({
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuthStore();
-  const location = useLocation();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -40,36 +40,39 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = () => {
-  const { user, setUser, setLoading, loading } = useAuthStore();
+  const { user, setUser, setLoading } = useAuthStore();
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
+        setLoading(false);
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        setLoading(false);
+      }
+    };
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    initAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
-      if (session?.user) {
-        const redirectPath = getRedirectPath(session.user);
-        window.location.href = redirectPath;
+      if (session?.user && location.pathname === '/login') {
+        const returnTo = new URLSearchParams(location.search).get('returnTo');
+        navigate(returnTo || '/dashboard', { replace: true });
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [setUser, setLoading]);
+  }, [setUser, setLoading, location, navigate]);
 
   // Store last visited path
   useEffect(() => {
     storeLastVisitedPath(location.pathname);
   }, [location]);
-
-  if (loading) {
-    return null;
-  }
 
   return (
     <QueryClientProvider client={queryClient}>
