@@ -1,4 +1,5 @@
 import { logger } from '../../LoggingService';
+import { ConnectionState } from '../types/connection';
 
 export class WebSocketLogger {
   constructor(private sessionId: string) {}
@@ -36,6 +37,27 @@ export class WebSocketLogger {
       sessionId: this.sessionId,
       timestamp: new Date().toISOString(),
       component: 'WebSocketService'
+    });
+  }
+
+  logConnectionState(state: ConnectionState, metadata: Record<string, any> = {}) {
+    this.info(`WebSocket state changed to ${state}`, {
+      state,
+      ...metadata
+    });
+  }
+
+  logMessageSent(messageId: string, metadata: Record<string, any> = {}) {
+    this.debug('Message sent', {
+      messageId,
+      ...metadata
+    });
+  }
+
+  logMessageReceived(messageId: string, metadata: Record<string, any> = {}) {
+    this.debug('Message received', {
+      messageId,
+      ...metadata
     });
   }
 }
