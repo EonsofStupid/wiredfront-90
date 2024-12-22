@@ -2,7 +2,6 @@ import { useCallback, useEffect } from 'react';
 import { useWebSocketLifecycle } from './useWebSocketLifecycle';
 import { useWebSocketMetrics } from './websocket/useWebSocketMetrics';
 import { WEBSOCKET_URL } from '@/constants/websocket';
-import { WebSocketConfig } from '@/types/websocket';
 import { toast } from 'sonner';
 
 export const useWebSocketConnection = (
@@ -30,12 +29,12 @@ export const useWebSocketConnection = (
       const data = JSON.parse(event.data);
       console.log('Received WebSocket message:', data);
       onMessage(data);
-      updateMetrics({ messagesReceived: (prev) => prev + 1 });
+      updateMetrics({ messagesReceived: metrics.messagesReceived + 1 });
     } catch (error) {
       console.error('Failed to parse WebSocket message:', error);
       toast.error('Failed to process message');
     }
-  }, [onMessage, updateMetrics]);
+  }, [onMessage, updateMetrics, metrics.messagesReceived]);
 
   useEffect(() => {
     if (!isMinimized) {
@@ -55,7 +54,7 @@ export const useWebSocketConnection = (
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       try {
         wsRef.current.send(JSON.stringify(message));
-        updateMetrics({ messagesSent: (prev) => prev + 1 });
+        updateMetrics({ messagesSent: metrics.messagesSent + 1 });
         return true;
       } catch (error) {
         console.error('Failed to send message:', error);
@@ -64,7 +63,7 @@ export const useWebSocketConnection = (
       }
     }
     return false;
-  }, [updateMetrics]);
+  }, [updateMetrics, metrics.messagesSent]);
 
   return {
     connectionState,

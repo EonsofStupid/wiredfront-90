@@ -1,8 +1,8 @@
 import { useRef, useCallback } from 'react';
 import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
 import { supabase } from "@/integrations/supabase/client";
-import { MessageQueue } from './utils/messageQueue';
-import { HEARTBEAT_INTERVAL } from './constants/websocket';
+import { MessageQueueManager } from './utils/messageQueue';
+import { HEARTBEAT_INTERVAL } from '@/constants/websocket';
 
 export const useWebSocketLifecycle = (
   url: string,
@@ -11,7 +11,7 @@ export const useWebSocketLifecycle = (
 ) => {
   const wsRef = useRef<WebSocket | null>(null);
   const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval>>();
-  const messageQueueRef = useRef<MessageQueue>(new MessageQueue());
+  const messageQueueRef = useRef<MessageQueueManager>(new MessageQueueManager());
   const pingTimeRef = useRef<number>(0);
 
   const sendHeartbeat = useCallback(async () => {
@@ -34,7 +34,9 @@ export const useWebSocketLifecycle = (
       updateMetrics({
         lastConnected: connectedAt,
         reconnectAttempts: 0,
-        lastError: null
+        lastError: null,
+        messagesReceived: 0,
+        messagesSent: 0
       });
 
       const queuedMessages = messageQueueRef.current.getAll();
@@ -51,29 +53,9 @@ export const useWebSocketLifecycle = (
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.type === 'pong') {
-          const latency = Date.now() - pingTimeRef.current;
-          updateMetrics({ latency });
-          return;
-        }
         onMessage(data);
-        updateMetrics({ messagesReceived: prev => (prev || 0) + 1 });
       } catch (error) {
         console.error('Error parsing message:', error);
-        updateMetrics({ lastError: new Error('Failed to parse message') });
-      }
-    };
-
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      updateMetrics({ lastError: new Error('WebSocket connection error') });
-      setConnectionState('error');
-    };
-
-    ws.onclose = () => {
-      setConnectionState('disconnected');
-      if (heartbeatIntervalRef.current) {
-        clearInterval(heartbeatIntervalRef.current);
       }
     };
 

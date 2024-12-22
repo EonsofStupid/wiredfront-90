@@ -1,6 +1,6 @@
 import { Message } from '@/types/chat';
 
-export class MessageQueue {
+export class MessageQueueManager {
   private queue: Message[] = [];
   private maxSize: number;
 
