@@ -8,12 +8,15 @@ import { useToast } from "@/components/ui/use-toast";
 import { ChatSessionControls } from './ChatSessionControls';
 import { useChatStore } from '@/stores/chat/store';
 import { useUIStore } from '@/stores/ui/store';
+import { useAuthStore } from '@/stores/auth';
 
 export const DraggableChat = () => {
   const CHAT_WIDTH = 414;
   const CHAT_HEIGHT = 500;
   const MARGIN = 32;
 
+  const { user, loading: authLoading } = useAuthStore();
+  
   const { 
     sessions,
     currentSessionId,
@@ -48,11 +51,12 @@ export const DraggableChat = () => {
     reconnect
   } = useMessages(currentSessionId, currentSession?.isMinimized ?? false);
 
+  // Only create session if user is authenticated
   useEffect(() => {
-    if (!currentSessionId) {
+    if (!authLoading && user && !currentSessionId) {
       createSession();
     }
-  }, [currentSessionId, createSession]);
+  }, [authLoading, user, currentSessionId, createSession]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setIsDragging(true);
@@ -117,6 +121,15 @@ export const DraggableChat = () => {
   };
 
   const handleSendMessage = async (content: string) => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to send messages",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       await addOptimisticMessage(content);
     } catch (error) {
@@ -128,6 +141,12 @@ export const DraggableChat = () => {
       });
     }
   };
+
+  // Don't render anything while authentication is loading
+  if (authLoading) return null;
+
+  // Don't render chat for unauthenticated users
+  if (!user) return null;
 
   if (!currentSession) return null;
 
