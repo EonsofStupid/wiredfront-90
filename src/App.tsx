@@ -8,10 +8,9 @@ import { MobileLayout } from "./components/layout/MobileLayout";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
-import { supabase } from "@/integrations/supabase/client";
 import Login from "./pages/Login";
 import { DraggableChat } from "@/components/chat/DraggableChat";
-import { useAuthStore } from "@/stores/auth";
+import { useSession } from "@/hooks/useSession";
 import { storeLastVisitedPath } from "@/utils/auth";
 
 const queryClient = new QueryClient({
@@ -25,7 +24,7 @@ const queryClient = new QueryClient({
 });
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuthStore();
+  const { user, loading } = useSession();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -40,39 +39,15 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = () => {
-  const { user, setUser, setLoading } = useAuthStore();
   const location = useLocation();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setUser(session?.user ?? null);
-        setLoading(false);
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        setLoading(false);
-      }
-    };
-
-    initAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user && location.pathname === '/login') {
-        const returnTo = new URLSearchParams(location.search).get('returnTo');
-        navigate(returnTo || '/dashboard', { replace: true });
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [setUser, setLoading, location, navigate]);
+  const { user, loading } = useSession();
 
   // Store last visited path
   useEffect(() => {
     storeLastVisitedPath(location.pathname);
   }, [location]);
+
+  if (loading) return null;
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -116,7 +91,7 @@ const App = () => {
             />
             <Route path="/login" element={<Login />} />
           </Routes>
-          <DraggableChat />
+          {user && <DraggableChat />}
         </MobileLayout>
       </TooltipProvider>
     </QueryClientProvider>
