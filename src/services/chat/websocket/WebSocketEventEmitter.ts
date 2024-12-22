@@ -16,14 +16,14 @@ export class WebSocketEventEmitter {
     const previousState = this.currentState;
     this.currentState = state;
     
-    this.logger.logStateChange(state, {
+    this.logger.info('WebSocket state changed', {
       previousState,
+      newState: state,
       ...metadata
     });
     
     this.onStateChange(state);
     
-    // User feedback
     switch (state) {
       case 'connecting':
         toast.loading('Connecting to chat service...');
@@ -44,19 +44,21 @@ export class WebSocketEventEmitter {
         toast.error('Connection failed after multiple attempts');
         break;
     }
-
-    this.logger.logUIUpdate('ConnectionStatus', `State changed to ${state}`);
   }
 
   emitError(error: Error, context: Record<string, any> = {}) {
     if (error instanceof TokenExpiredError) {
-      this.logger.logAuthError(error);
+      this.logger.error('Authentication error', { error, ...context });
       toast.error('Authentication expired. Please log in again.');
     } else if (error instanceof OpenAIError) {
-      this.logger.logOpenAIError(error, context);
+      this.logger.error('OpenAI API error', { error, ...context });
       toast.error('AI service error. Please try again later.');
     } else {
-      this.logger.logConnectionError(error, context.attempt || 0);
+      this.logger.error('Connection error', { 
+        error, 
+        attempt: context.attempt || 0,
+        ...context 
+      });
       toast.error('Connection error occurred');
     }
 
@@ -65,6 +67,6 @@ export class WebSocketEventEmitter {
 
   emitMetricsUpdate(metrics: Partial<ConnectionMetrics>) {
     this.onMetricsUpdate(metrics);
-    this.logger.logMetrics(metrics as ConnectionMetrics);
+    this.logger.debug('Metrics updated', { metrics });
   }
 }

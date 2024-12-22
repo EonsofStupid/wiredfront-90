@@ -1,5 +1,6 @@
 import { WebSocketLogger } from '../WebSocketLogger';
 import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
+import { WebSocketEventEmitter } from './WebSocketEventEmitter';
 import { toast } from 'sonner';
 
 export class WebSocketStateManager {
@@ -38,21 +39,14 @@ export class WebSocketStateManager {
     }
   }
 
-  resetAttempts() {
-    this.reconnectAttempts = 0;
-    this.logger.info('Reconnection attempts reset', {
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  getAttempts(): number {
-    return this.reconnectAttempts;
-  }
-
   resetReconnectAttempts(): void {
     this.reconnectAttempts = 0;
     this.logger.info('Reconnection attempts reset', {
       timestamp: new Date().toISOString()
     });
+  }
+
+  getReconnectAttempts(): number {
+    return this.reconnectAttempts;
   }
 }
