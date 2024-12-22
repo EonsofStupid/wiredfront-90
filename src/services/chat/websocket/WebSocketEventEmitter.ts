@@ -11,7 +11,7 @@ export class WebSocketEventEmitter {
 
   emitStateChange(state: ConnectionState) {
     this.onStateChange(state);
-    this.logger.logStateChange(state, state, {
+    this.logger.logStateChange(state, {
       sessionId: crypto.randomUUID()
     });
     
