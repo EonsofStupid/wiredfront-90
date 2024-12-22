@@ -51,7 +51,7 @@ export const useWebSocketConnection = (
       return false;
     }, [ws]),
     isConnected: connectionState === 'connected',
-    reconnect: () => {
+    reconnect: useCallback(() => {
       connect({
         url: wsUrl,
         onMessage: handleMessage,
@@ -59,7 +59,7 @@ export const useWebSocketConnection = (
         initialRetryDelay: 1000,
         maxRetryDelay: 30000
       });
-    },
+    }, [connect, wsUrl, handleMessage]),
     ws
   };
 };

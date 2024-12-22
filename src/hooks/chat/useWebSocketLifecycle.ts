@@ -7,7 +7,6 @@ interface WebSocketConfig {
   maxRetries?: number;
   initialRetryDelay?: number;
   maxRetryDelay?: number;
-  onStateChange?: (state: ConnectionState) => void;
 }
 
 export const useWebSocketLifecycle = () => {
