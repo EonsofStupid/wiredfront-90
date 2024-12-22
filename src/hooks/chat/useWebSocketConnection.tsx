@@ -1,7 +1,6 @@
-import { useCallback, useEffect } from 'react';
-import { useWebSocketLifecycle } from './useWebSocketLifecycle';
+import { useCallback, useEffect, useRef } from 'react';
+import { WebSocketService } from '@/services/chat/WebSocketService';
 import { useWebSocketMetrics } from './websocket/useWebSocketMetrics';
-import { WEBSOCKET_URL } from '@/constants/websocket';
 import { toast } from 'sonner';
 
 export const useWebSocketConnection = (
@@ -9,8 +8,6 @@ export const useWebSocketConnection = (
   isMinimized: boolean,
   onMessage: (message: any) => void
 ) => {
-  const wsUrl = `${WEBSOCKET_URL}?project_id=${sessionId}`;
-  
   const { 
     metrics, 
     connectionState, 
@@ -18,65 +15,45 @@ export const useWebSocketConnection = (
     updateMetrics 
   } = useWebSocketMetrics();
   
-  const { wsRef, setupWebSocketHandlers } = useWebSocketLifecycle(
-    wsUrl,
-    setConnectionState,
-    updateMetrics
-  );
-
-  const handleMessage = useCallback((event: MessageEvent) => {
-    try {
-      const data = JSON.parse(event.data);
-      console.log('Received WebSocket message:', data);
-      onMessage(data);
-      updateMetrics({ messagesReceived: metrics.messagesReceived + 1 });
-    } catch (error) {
-      console.error('Failed to parse WebSocket message:', error);
-      toast.error('Failed to process message');
-    }
-  }, [onMessage, updateMetrics, metrics.messagesReceived]);
+  const wsServiceRef = useRef<WebSocketService | null>(null);
 
   useEffect(() => {
-    if (!isMinimized) {
-      const ws = new WebSocket(wsUrl);
-      wsRef.current = setupWebSocketHandlers(ws, handleMessage);
+    if (!isMinimized && !wsServiceRef.current) {
+      console.log('[useWebSocketConnection] Initializing WebSocket service');
+      wsServiceRef.current = new WebSocketService(sessionId);
+      
+      wsServiceRef.current.setCallbacks({
+        onMessage,
+        onStateChange: setConnectionState,
+        onMetricsUpdate: updateMetrics
+      });
+
+      wsServiceRef.current.connect();
     }
-    
+
     return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
+      if (wsServiceRef.current) {
+        console.log('[useWebSocketConnection] Cleaning up WebSocket service');
+        wsServiceRef.current.disconnect();
+        wsServiceRef.current = null;
       }
     };
-  }, [wsUrl, isMinimized, setupWebSocketHandlers, handleMessage]);
+  }, [sessionId, isMinimized, onMessage, setConnectionState, updateMetrics]);
 
   const sendMessage = useCallback((message: any): boolean => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      try {
-        wsRef.current.send(JSON.stringify(message));
-        updateMetrics({ messagesSent: metrics.messagesSent + 1 });
-        return true;
-      } catch (error) {
-        console.error('Failed to send message:', error);
-        toast.error('Failed to send message');
-        return false;
-      }
+    if (!wsServiceRef.current) {
+      toast.error('WebSocket connection not initialized');
+      return false;
     }
-    return false;
-  }, [updateMetrics, metrics.messagesSent]);
+    return wsServiceRef.current.send(message);
+  }, []);
 
   return {
     connectionState,
     metrics,
     sendMessage,
     isConnected: connectionState === 'connected',
-    reconnect: () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-        const ws = new WebSocket(wsUrl);
-        wsRef.current = setupWebSocketHandlers(ws, handleMessage);
-      }
-    },
-    ws: wsRef.current
+    reconnect: () => wsServiceRef.current?.connect(),
+    ws: wsServiceRef.current?.ws
   };
 };
