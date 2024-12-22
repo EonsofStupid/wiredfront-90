@@ -7,6 +7,12 @@ interface LogEntry {
   data?: any;
   sessionId?: string;
   userId?: string;
+  context?: {
+    component?: string;
+    action?: string;
+    state?: string;
+    error?: Error;
+  };
 }
 
 export class LoggingService {
@@ -24,18 +30,26 @@ export class LoggingService {
     return LoggingService.instance;
   }
 
-  private formatLogEntry(level: LogLevel, message: string, data?: any, sessionId?: string): LogEntry {
+  private formatLogEntry(
+    level: LogLevel, 
+    message: string, 
+    data?: any, 
+    sessionId?: string,
+    context?: LogEntry['context']
+  ): LogEntry {
     const entry: LogEntry = {
       level,
       timestamp: new Date().toISOString(),
       message,
       sessionId,
-      data: data ? this.sanitizeData(data) : undefined
+      data: data ? this.sanitizeData(data) : undefined,
+      context
     };
 
     if (this.logToConsole) {
       const logPrefix = `[${entry.level.toUpperCase()}]${sessionId ? ` [Session: ${sessionId}]` : ''}`;
-      const logMessage = `${logPrefix} ${entry.message}`;
+      const contextStr = context ? ` [${Object.entries(context).map(([k,v]) => `${k}:${v}`).join(', ')}]` : '';
+      const logMessage = `${logPrefix}${contextStr} ${entry.message}`;
       
       switch (level) {
         case 'debug':
@@ -49,6 +63,9 @@ export class LoggingService {
           break;
         case 'error':
           console.error(logMessage, entry.data || '');
+          if (context?.error?.stack) {
+            console.error(context.error.stack);
+          }
           break;
       }
     }
@@ -76,27 +93,32 @@ export class LoggingService {
     }
   }
 
-  debug(message: string, data?: any, sessionId?: string) {
-    const entry = this.formatLogEntry('debug', message, data, sessionId);
+  debug(message: string, data?: any, sessionId?: string, context?: LogEntry['context']) {
+    const entry = this.formatLogEntry('debug', message, data, sessionId, context);
     this.addLog(entry);
   }
 
-  info(message: string, data?: any, sessionId?: string) {
-    const entry = this.formatLogEntry('info', message, data, sessionId);
+  info(message: string, data?: any, sessionId?: string, context?: LogEntry['context']) {
+    const entry = this.formatLogEntry('info', message, data, sessionId, context);
     this.addLog(entry);
   }
 
-  warn(message: string, data?: any, sessionId?: string) {
-    const entry = this.formatLogEntry('warn', message, data, sessionId);
+  warn(message: string, data?: any, sessionId?: string, context?: LogEntry['context']) {
+    const entry = this.formatLogEntry('warn', message, data, sessionId, context);
     this.addLog(entry);
   }
 
-  error(message: string, data?: any, sessionId?: string) {
-    const entry = this.formatLogEntry('error', message, data, sessionId);
+  error(message: string, data?: any, sessionId?: string, context?: LogEntry['context']) {
+    const entry = this.formatLogEntry('error', message, data, sessionId, context);
     this.addLog(entry);
   }
 
-  getLogs(filter?: { level?: LogLevel; sessionId?: string }): LogEntry[] {
+  getLogs(filter?: { 
+    level?: LogLevel; 
+    sessionId?: string;
+    component?: string;
+    timeRange?: { start: Date; end: Date };
+  }): LogEntry[] {
     let filtered = [...this.logs];
     
     if (filter?.level) {
@@ -105,6 +127,17 @@ export class LoggingService {
     
     if (filter?.sessionId) {
       filtered = filtered.filter(log => log.sessionId === filter.sessionId);
+    }
+
+    if (filter?.component) {
+      filtered = filtered.filter(log => log.context?.component === filter.component);
+    }
+
+    if (filter?.timeRange) {
+      filtered = filtered.filter(log => {
+        const logTime = new Date(log.timestamp);
+        return logTime >= filter.timeRange!.start && logTime <= filter.timeRange!.end;
+      });
     }
     
     return filtered;
