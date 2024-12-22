@@ -42,6 +42,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const App = () => {
   const { user, setUser, setLoading, loading } = useAuthStore();
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -54,13 +55,14 @@ const App = () => {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
+        // Use navigate instead of window.location to prevent reload
         const redirectPath = getRedirectPath(session.user);
-        window.location.href = redirectPath;
+        navigate(redirectPath, { replace: true });
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [setUser, setLoading]);
+  }, [setUser, setLoading, navigate]);
 
   // Store last visited path
   useEffect(() => {
