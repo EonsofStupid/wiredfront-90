@@ -1,43 +1,43 @@
 import { useState, useEffect } from 'react';
 import { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
+import { useSessionManager } from '@/hooks/useSessionManager';
 import { useWindowPosition } from '@/hooks/useWindowPosition';
 import { useMessages } from '@/hooks/useMessages';
 import { ChatWindow } from './ChatWindow';
 import { ChatDragContext } from './ChatDragContext';
 import { useToast } from "@/components/ui/use-toast";
 import { ChatSessionControls } from './ChatSessionControls';
-import { useChatStore } from '@/stores/chat/store';
-import { useUIStore } from '@/stores/ui/store';
-import { useAuthStore } from '@/stores/auth';
+import { supabase } from "@/integrations/supabase/client";
+import { useWebSocketConnection } from '@/hooks/chat/useWebSocketConnection';
 
 export const DraggableChat = () => {
   const CHAT_WIDTH = 414;
   const CHAT_HEIGHT = 500;
   const MARGIN = 32;
 
-  const { user, loading: authLoading } = useAuthStore();
-  
-  const { 
-    sessions,
-    currentSessionId,
-    createSession,
-    switchSession,
-    updateSession,
-    connectionState
-  } = useChatStore();
-
-  const zIndex = useUIStore((state) => state.zIndex);
-
+  const { currentSessionId, sessions, switchSession, createSession } = useSessionManager();
   const { position, setPosition, resetPosition } = useWindowPosition({
     width: CHAT_WIDTH,
     height: CHAT_HEIGHT,
     margin: MARGIN,
   });
 
+  const [isMinimized, setIsMinimized] = useState(() => {
+    const stored = localStorage.getItem('chat-minimized');
+    return stored ? JSON.parse(stored) : false;
+  });
+  
   const [isDragging, setIsDragging] = useState(false);
-  const { toast } = useToast();
+  const [isTacked, setIsTacked] = useState(() => {
+    const stored = localStorage.getItem('chat-tacked');
+    return stored ? JSON.parse(stored) : true;
+  });
 
-  const currentSession = currentSessionId ? sessions[currentSessionId] : null;
+  const [currentAPI, setCurrentAPI] = useState<string>(() => {
+    return localStorage.getItem('current-api') || 'openai';
+  });
+
+  const { toast } = useToast();
 
   const {
     messages,
@@ -48,42 +48,55 @@ export const DraggableChat = () => {
     isFetchingNextPage,
     addOptimisticMessage,
     ws,
+    connectionState,
     reconnect
-  } = useMessages(currentSessionId, currentSession?.isMinimized ?? false);
+  } = useMessages(currentSessionId, isMinimized);
 
-  // Only create session if user is authenticated
   useEffect(() => {
-    if (!authLoading && user && !currentSessionId) {
-      createSession();
+    localStorage.setItem('chat-minimized', JSON.stringify(isMinimized));
+  }, [isMinimized]);
+
+  useEffect(() => {
+    localStorage.setItem('chat-tacked', JSON.stringify(isTacked));
+  }, [isTacked]);
+
+  useEffect(() => {
+    localStorage.setItem('current-api', currentAPI);
+  }, [currentAPI]);
+
+  useEffect(() => {
+    const storedPosition = localStorage.getItem('chat-position');
+    if (storedPosition) {
+      setPosition(JSON.parse(storedPosition));
     }
-  }, [authLoading, user, currentSessionId, createSession]);
+  }, []);
+
+  useEffect(() => {
+    if (!isDragging) {
+      localStorage.setItem('chat-position', JSON.stringify(position));
+    }
+  }, [position, isDragging]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setIsDragging(true);
-    if (currentSession?.isTacked) {
-      updateSession(currentSessionId!, { isTacked: false });
+    if (isTacked) {
+      setIsTacked(false);
     }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     setIsDragging(false);
-    if (currentSessionId && !currentSession?.isTacked) {
+    if (!isTacked) {
       const { delta } = event;
-      const newPosition = {
-        x: position.x + delta.x,
-        y: position.y + delta.y,
-      };
-      setPosition(newPosition);
-      updateSession(currentSessionId, { position: newPosition });
+      setPosition((prev) => ({
+        x: prev.x + delta.x,
+        y: prev.y + delta.y,
+      }));
     }
   };
 
   const handleMinimize = () => {
-    if (currentSessionId && currentSession) {
-      updateSession(currentSessionId, { 
-        isMinimized: !currentSession.isMinimized 
-      });
-    }
+    setIsMinimized(!isMinimized);
   };
 
   const handleClose = () => {
@@ -91,18 +104,13 @@ export const DraggableChat = () => {
       title: "Chat minimized",
       description: "You can restore the chat from the AI button",
     });
-    if (currentSessionId) {
-      updateSession(currentSessionId, { isMinimized: true });
-    }
+    setIsMinimized(true);
   };
 
   const handleTackToggle = () => {
-    if (currentSessionId && currentSession) {
-      const newIsTacked = !currentSession.isTacked;
-      updateSession(currentSessionId, { isTacked: newIsTacked });
-      if (newIsTacked) {
-        resetPosition();
-      }
+    setIsTacked(!isTacked);
+    if (!isTacked) {
+      resetPosition();
     }
   };
 
@@ -112,24 +120,19 @@ export const DraggableChat = () => {
     }
   };
 
-  const handleNewSession = () => {
-    createSession();
+  const handleNewSession = async () => {
+    const newSessionId = await createSession();
     toast({
       title: "New chat session created",
       description: "You can switch between sessions using the menu",
     });
   };
 
-  const handleSendMessage = async (content: string) => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please log in to send messages",
-        variant: "destructive"
-      });
-      return;
-    }
+  const handleSwitchAPI = async (provider: string) => {
+    setCurrentAPI(provider);
+  };
 
+  const handleSendMessage = async (content: string) => {
     try {
       await addOptimisticMessage(content);
     } catch (error) {
@@ -142,38 +145,33 @@ export const DraggableChat = () => {
     }
   };
 
-  if (authLoading || !user || !currentSession) return null;
-
   return (
     <ChatDragContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex flex-col gap-2" style={{ zIndex: zIndex.floating }}>
+      <div className="flex flex-col gap-2">
         <ChatSessionControls
-          sessions={Object.values(sessions)}
-          currentSessionId={currentSessionId!}
+          sessions={sessions}
+          currentSessionId={currentSessionId}
           onNewSession={handleNewSession}
           onSwitchSession={switchSession}
         />
         <ChatWindow
-          position={currentSession.position}
-          isMinimized={currentSession.isMinimized}
+          position={position}
+          isMinimized={isMinimized}
           messages={messages}
           isLoading={isLoading}
           onMinimize={handleMinimize}
           onClose={handleClose}
           isDragging={isDragging}
-          isTacked={currentSession.isTacked}
+          isTacked={isTacked}
           onTackToggle={handleTackToggle}
           dimensions={{ width: CHAT_WIDTH, height: CHAT_HEIGHT }}
           hasMoreMessages={hasNextPage}
           isLoadingMore={isFetchingNextPage}
           onLoadMore={handleLoadMore}
           onSendMessage={handleSendMessage}
+          onSwitchAPI={handleSwitchAPI}
+          currentAPI={currentAPI}
           connectionState={connectionState}
-          currentAPI="OpenAI"
-          dragHandleProps={{
-            'data-drag-handle': true,
-            style: { cursor: isDragging ? 'grabbing' : 'grab' }
-          }}
         />
       </div>
     </ChatDragContext>

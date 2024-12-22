@@ -1,9 +1,9 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
-import { ChatMessageList } from "./ChatMessageList";
-import { ChatInput } from "./ChatInput";
-import { ChatHeader } from "./ChatHeader";
-import { ConnectionState } from "@/types/websocket";
+import { useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
+import { ChatHeader } from './ChatHeader';
+import { ChatMessageList } from './ChatMessageList';
+import { ChatInput } from './ChatInput';
+import { ConnectionState } from '@/types/websocket';
 
 interface ChatWindowProps {
   position: { x: number; y: number };
@@ -19,18 +19,18 @@ interface ChatWindowProps {
   hasMoreMessages: boolean;
   isLoadingMore: boolean;
   onLoadMore: () => void;
-  onSendMessage: (content: string) => Promise<void>;
-  connectionState: ConnectionState;
+  onSendMessage: (content: string) => void;
+  onSwitchAPI?: (provider: string) => void;
   currentAPI?: string;
-  dragHandleProps?: any;
+  connectionState?: ConnectionState;
 }
 
 export const ChatWindow = ({ 
-  position,
-  isMinimized,
-  messages,
+  position, 
+  isMinimized, 
+  messages, 
   isLoading,
-  onMinimize,
+  onMinimize, 
   onClose,
   isDragging,
   isTacked,
@@ -40,55 +40,69 @@ export const ChatWindow = ({
   isLoadingMore,
   onLoadMore,
   onSendMessage,
-  connectionState,
+  onSwitchAPI,
   currentAPI,
-  dragHandleProps
+  connectionState
 }: ChatWindowProps) => {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: 'chat-window',
+  });
+
+  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop } = event.currentTarget;
+    if (scrollTop === 0 && hasMoreMessages && !isLoadingMore) {
+      onLoadMore();
+    }
+  };
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    position: 'fixed' as const,
+    left: isTacked ? 'auto' : position.x,
+    right: isTacked ? '32px' : 'auto',
+    bottom: isTacked ? '48px' : 'auto',
+    top: isTacked ? 'auto' : position.y,
+    width: dimensions.width,
+    height: isMinimized ? '50px' : dimensions.height,
+    transition: 'height 0.3s ease',
+    zIndex: isDragging ? 9999 : 1000,
+    border: isDragging ? `2px solid #baff0a` : undefined,
+  };
+
   return (
-    <Dialog open={!isMinimized} modal={false}>
-      <DialogContent 
-        className={cn(
-          "glass-card fixed p-0 border-none shadow-2xl transition-transform duration-200",
-          isDragging && "opacity-50",
-          isMinimized && "scale-0"
-        )}
-        style={{
-          width: dimensions.width,
-          height: dimensions.height,
-          transform: `translate(${position.x}px, ${position.y}px)`,
-          transition: isDragging ? 'none' : undefined
-        }}
-        data-chat-window="true"
-        data-minimized={isMinimized}
-      >
-        <div className="flex flex-col h-full">
-          <ChatHeader
-            onMinimize={onMinimize}
-            onClose={onClose}
-            isTacked={isTacked}
-            onTackToggle={onTackToggle}
-            isDragging={isDragging}
-            dragHandleProps={dragHandleProps}
-            currentAPI={currentAPI}
-            connectionState={connectionState}
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="glass-card flex flex-col"
+    >
+      <ChatHeader
+        onMinimize={onMinimize}
+        onClose={onClose}
+        onTackToggle={onTackToggle}
+        isTacked={isTacked}
+        isDragging={isDragging}
+        dragHandleProps={{ ...attributes, ...listeners }}
+        currentAPI={currentAPI}
+        connectionState={connectionState}
+      />
+
+      {!isMinimized && (
+        <>
+          <ChatMessageList
+            messages={messages}
+            isLoading={isLoading}
+            isLoadingMore={isLoadingMore}
+            hasMoreMessages={hasMoreMessages}
+            onLoadMore={onLoadMore}
+            onScroll={handleScroll}
           />
-
-          <div className="flex-1 overflow-hidden">
-            <ChatMessageList
-              messages={messages}
-              isLoading={isLoading}
-              hasMoreMessages={hasMoreMessages}
-              isLoadingMore={isLoadingMore}
-              onLoadMore={onLoadMore}
-              onScroll={() => {}}
-            />
-          </div>
-
-          <div className="p-4 border-t border-border/50">
-            <ChatInput onSendMessage={onSendMessage} />
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+          <ChatInput 
+            onSendMessage={onSendMessage}
+            onSwitchAPI={onSwitchAPI}
+            isLoading={isLoading}
+          />
+        </>
+      )}
+    </div>
   );
 };

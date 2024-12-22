@@ -64,7 +64,7 @@ export const CacheMetricsPanel = () => {
     : '0';
 
   return (
-    <Card className="fixed top-16 right-4 w-80 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg border-muted" style={{ zIndex: 'var(--z-dropdown)' }}>
+    <Card className="fixed bottom-4 right-4 w-80 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg border-muted">
       <div className="p-4">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold">Cache Metrics Debug Panel</h3>

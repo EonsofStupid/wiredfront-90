@@ -3,7 +3,6 @@ import { X, Minus, Pin, PinOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConnectionState } from "@/types/websocket";
 import { ConnectionStatus } from "./ConnectionStatus";
-import { DebugMenuIcon } from "../debug/DebugMenuIcon";
 
 interface ChatHeaderProps {
   onMinimize: () => void;
@@ -29,7 +28,7 @@ export const ChatHeader = ({
   return (
     <div
       className={cn(
-        "flex items-center justify-between p-2 border-b border-border select-none",
+        "flex items-center justify-between p-2 border-b border-border",
         isDragging && "cursor-grabbing"
       )}
       {...dragHandleProps}
@@ -46,7 +45,6 @@ export const ChatHeader = ({
         )}
       </div>
       <div className="flex items-center gap-1">
-        {process.env.NODE_ENV === 'development' && <DebugMenuIcon />}
         <Button
           variant="ghost"
           size="icon"
