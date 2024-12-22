@@ -1,10 +1,12 @@
 import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Minimize2, X, Tack, TackOff } from "lucide-react";
+import { Minimize2, X, Pin, PinOff } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { MessageList } from "./MessageList";
-import { MessageInput } from "./MessageInput";
+import { ChatMessageList } from "./ChatMessageList";
+import { ChatInput } from "./ChatInput";
 import { ConnectionStatus } from "./ConnectionStatus";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { ConnectionState } from "@/types/websocket";
 
 interface ChatWindowProps {
   position: { x: number; y: number };
@@ -21,7 +23,7 @@ interface ChatWindowProps {
   isLoadingMore: boolean;
   onLoadMore: () => void;
   onSendMessage: (content: string) => Promise<void>;
-  connectionState: string;
+  connectionState: ConnectionState;
 }
 
 export const ChatWindow = ({ 
@@ -55,9 +57,9 @@ export const ChatWindow = ({
         transition: isDragging ? 'none' : undefined
       }}
     >
-      <DialogHeader>
-        <DialogTitle className="sr-only">Chat Window</DialogTitle>
-        <DialogDescription className="sr-only">
+      <DialogHeader className="sr-only">
+        <DialogTitle>Chat Window</DialogTitle>
+        <DialogDescription>
           Chat interface for communicating with the AI assistant
         </DialogDescription>
       </DialogHeader>
@@ -73,9 +75,9 @@ export const ChatWindow = ({
               onClick={onTackToggle}
             >
               {isTacked ? (
-                <TackOff className="h-4 w-4" />
+                <PinOff className="h-4 w-4" />
               ) : (
-                <Tack className="h-4 w-4" />
+                <Pin className="h-4 w-4" />
               )}
             </Button>
             <Button
@@ -98,17 +100,18 @@ export const ChatWindow = ({
         </div>
 
         <div className="flex-1 overflow-hidden">
-          <MessageList
+          <ChatMessageList
             messages={messages}
             isLoading={isLoading}
-            hasMore={hasMoreMessages}
+            hasMoreMessages={hasMoreMessages}
             isLoadingMore={isLoadingMore}
             onLoadMore={onLoadMore}
+            onScroll={() => {}}
           />
         </div>
 
         <div className="p-4 border-t border-border/50">
-          <MessageInput onSend={onSendMessage} />
+          <ChatInput onSendMessage={onSendMessage} />
         </div>
       </div>
     </DialogContent>
