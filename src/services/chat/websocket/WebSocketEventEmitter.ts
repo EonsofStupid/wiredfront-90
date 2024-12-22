@@ -1,5 +1,6 @@
 import { WebSocketLogger } from '../WebSocketLogger';
 import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
+import { toast } from 'sonner';
 
 export class WebSocketEventEmitter {
   constructor(
@@ -10,24 +11,49 @@ export class WebSocketEventEmitter {
 
   emitStateChange(state: ConnectionState) {
     this.onStateChange(state);
-    this.logger.logStateChange('previous', state, {
-      sessionId: crypto.randomUUID(),
-      connectionState: state
+    this.logger.logStateChange(state, state, {
+      sessionId: crypto.randomUUID()
     });
+    
+    // User feedback
+    switch (state) {
+      case 'connecting':
+        toast.loading('Connecting to chat service...');
+        break;
+      case 'connected':
+        toast.success('Connected to chat service');
+        break;
+      case 'disconnected':
+        toast.error('Disconnected from chat service');
+        break;
+      case 'error':
+        toast.error('Chat connection error occurred');
+        break;
+      case 'reconnecting':
+        toast.loading('Attempting to reconnect...');
+        break;
+    }
   }
 
   emitMetricsUpdate(metrics: Partial<ConnectionMetrics>) {
     this.onMetricsUpdate(metrics);
-    this.logger.logMetricsUpdate(metrics, {
-      sessionId: crypto.randomUUID(),
-      metrics
+    this.logger.logMetricsUpdate({
+      lastConnected: metrics.lastConnected || null,
+      reconnectAttempts: metrics.reconnectAttempts || 0,
+      lastError: metrics.lastError || null,
+      messagesSent: metrics.messagesSent || 0,
+      messagesReceived: metrics.messagesReceived || 0,
+      lastHeartbeat: metrics.lastHeartbeat || null,
+      latency: metrics.latency || 0,
+      uptime: metrics.uptime || 0
     });
   }
 
   emitError(error: Error) {
     this.logger.logConnectionError(error, {
       sessionId: crypto.randomUUID(),
-      error
+      timestamp: new Date().toISOString()
     });
+    toast.error(`Connection error: ${error.message}`);
   }
 }

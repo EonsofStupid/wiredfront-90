@@ -56,9 +56,11 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    handleFileUpload(files);
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      handleFileUpload(files);
+    }
   };
 
   return (
@@ -74,7 +76,13 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
           disabled={isLoading}
         />
         <ChatInputActions
-          onAttachmentClick={handleFileSelect}
+          onAttachmentClick={() => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.multiple = true;
+            input.onchange = (e) => handleFileSelect(e as React.ChangeEvent<HTMLInputElement>);
+            input.click();
+          }}
           isLoading={isLoading}
           hasContent={!!message.trim() || attachments.length > 0}
         />
