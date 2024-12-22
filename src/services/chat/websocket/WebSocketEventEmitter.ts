@@ -11,7 +11,9 @@ export class WebSocketEventEmitter {
 
   emitStateChange(state: ConnectionState) {
     this.onStateChange(state);
-    this.logger.logStateChange(state);
+    this.logger.logStateChange(state, {
+      timestamp: new Date().toISOString()
+    });
     
     // User feedback
     switch (state) {
@@ -49,7 +51,6 @@ export class WebSocketEventEmitter {
 
   emitError(error: Error) {
     this.logger.logConnectionError(error, {
-      sessionId: crypto.randomUUID(),
       timestamp: new Date().toISOString()
     });
     toast.error(`Connection error: ${error.message}`);
