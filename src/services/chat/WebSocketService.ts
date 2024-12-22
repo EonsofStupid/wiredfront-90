@@ -1,5 +1,5 @@
 import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
-import { ConnectionManager } from './ConnectionManager';
+import { ConnectionManager, ConnectionCallbacks } from './ConnectionManager';
 import { logger } from './LoggingService';
 
 interface WebSocketCallbacks {
@@ -27,7 +27,7 @@ export class WebSocketService {
   }
 
   public async setCallbacks(callbacks: WebSocketCallbacks) {
-    this.connectionManager.setCallbacks({
+    const connectionCallbacks: ConnectionCallbacks = {
       onMessage: (message) => {
         this.updateMetrics({ messagesReceived: this.metrics.messagesReceived + 1 });
         callbacks.onMessage(message);
@@ -43,7 +43,9 @@ export class WebSocketService {
         callbacks.onStateChange(state as ConnectionState);
       },
       onMetricsUpdate: callbacks.onMetricsUpdate
-    });
+    };
+
+    this.connectionManager.setCallbacks(connectionCallbacks);
   }
 
   private updateMetrics(updates: Partial<ConnectionMetrics>) {

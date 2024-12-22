@@ -3,7 +3,7 @@ import { WebSocketMessageHandler } from './WebSocketMessageHandler';
 import { WEBSOCKET_URL } from '@/constants/websocket';
 import { ConnectionMetrics } from '@/types/websocket';
 
-interface ConnectionCallbacks {
+export interface ConnectionCallbacks {
   onMessage: (message: any) => void;
   onStateChange: (state: string) => void;
   onMetricsUpdate: (metrics: Partial<ConnectionMetrics>) => void;
