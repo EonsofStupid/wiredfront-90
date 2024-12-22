@@ -1,10 +1,13 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Send, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { parseCommand, getCommandHelp } from "@/utils/chat/commandParser";
+import { MessageProcessor } from '@/services/chat/services/messaging/MessageProcessor';
+import { MessageQueue } from '@/services/chat/services/messaging/MessageQueue';
+import { MessageLogger } from '@/services/chat/services/messaging/MessageLogger';
 
 interface ChatInputProps {
   onSendMessage: (content: string) => void;
@@ -15,6 +18,9 @@ interface ChatInputProps {
 export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputProps) => {
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
+  const messageLogger = useRef(new MessageLogger(crypto.randomUUID()));
+  const messageProcessor = useRef(new MessageProcessor(crypto.randomUUID()));
+  const messageQueue = useRef(new MessageQueue(crypto.randomUUID()));
 
   const handleCommand = (command: string) => {
     const parsed = parseCommand(command);
@@ -56,9 +62,21 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
     }
     
     try {
+      messageLogger.current.logMessageAttempt({ 
+        id: crypto.randomUUID(),
+        content: message,
+        type: 'text'
+      });
+
       // Handle file uploads first
       const uploadedFiles = await Promise.all(
         attachments.map(async (file) => {
+          messageLogger.current.logAttachmentUpload({
+            name: file.name,
+            type: file.type,
+            size: file.size
+          });
+
           const fileExt = file.name.split('.').pop();
           const filePath = `${crypto.randomUUID()}.${fileExt}`;
           
@@ -66,12 +84,20 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
             .from('chat-attachments')
             .upload(filePath, file);
             
-          if (error) throw error;
+          if (error) {
+            messageLogger.current.logAttachmentError(error, { name: file.name });
+            throw error;
+          }
           
           const { data: { publicUrl } } = supabase.storage
             .from('chat-attachments')
             .getPublicUrl(filePath);
             
+          messageLogger.current.logAttachmentSuccess({
+            name: file.name,
+            url: publicUrl
+          });
+
           return {
             url: publicUrl,
             type: file.type,
@@ -89,11 +115,27 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
         });
       }
 
+      await messageQueue.current.enqueue({
+        id: crypto.randomUUID(),
+        content: finalContent,
+        type: 'text',
+        user_id: '', // Will be set by backend
+        chat_session_id: '',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        is_minimized: false,
+        metadata: {},
+        position: { x: null, y: null },
+        window_state: { width: 350, height: 500 },
+        last_accessed: new Date().toISOString()
+      });
+
       onSendMessage(finalContent);
       setMessage("");
       setAttachments([]);
     } catch (error) {
       console.error('Upload error:', error);
+      messageLogger.current.logMessageError(error as Error);
       toast.error("Failed to upload file(s)");
     }
   };
