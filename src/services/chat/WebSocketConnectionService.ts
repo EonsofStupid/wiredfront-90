@@ -1,10 +1,9 @@
-import { ConnectionState } from '@/types/websocket';
+import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
 import { WebSocketLogger } from './WebSocketLogger';
 import { WebSocketStateManager } from './WebSocketStateManager';
 import { WebSocketEventHandler } from './websocket/WebSocketEventHandler';
 import { WEBSOCKET_URL } from '@/constants/websocket';
 import { toast } from 'sonner';
-import { WebSocketError } from './types/errors';
 
 export class WebSocketConnectionService {
   private ws: WebSocket | null = null;
@@ -22,8 +21,7 @@ export class WebSocketConnectionService {
     this.stateManager = new WebSocketStateManager(this.logger, onStateChange);
     this.eventHandler = new WebSocketEventHandler(
       this.logger,
-      this.stateManager,
-      this.handleMessage.bind(this),
+      onStateChange,
       this.handleMetricsUpdate.bind(this)
     );
 
@@ -36,11 +34,15 @@ export class WebSocketConnectionService {
 
   setAuthToken(token: string) {
     this.authToken = token;
+    this.logger.info('Auth token updated', {
+      sessionId: this.sessionId,
+      hasToken: !!token
+    });
   }
 
-  async connect(): Promise<void> {
+  async connect() {
     if (!this.authToken) {
-      const error = new WebSocketError('No auth token provided');
+      const error = new Error('No auth token provided');
       this.logger.error('Connection failed - no auth token', {
         sessionId: this.sessionId
       });
@@ -64,6 +66,12 @@ export class WebSocketConnectionService {
       this.ws = new WebSocket(wsUrl);
       this.eventHandler.setupEventHandlers(this.ws);
       
+      this.logger.info('WebSocket connection established', {
+        sessionId: this.sessionId,
+        timestamp: new Date().toISOString()
+      });
+      toast.success('Connected to chat service');
+      
     } catch (error) {
       this.logger.error('Connection failed', {
         sessionId: this.sessionId,
@@ -76,11 +84,21 @@ export class WebSocketConnectionService {
   }
 
   private handleMessage(data: any) {
+    this.logger.debug('Message received', {
+      sessionId: this.sessionId,
+      messageType: data?.type,
+      timestamp: new Date().toISOString()
+    });
     this.metricsService.incrementMessagesReceived();
   }
 
-  private handleMetricsUpdate(metrics: any) {
+  private handleMetricsUpdate(metrics: Partial<ConnectionMetrics>) {
     this.metricsService.updateMetrics(metrics);
+    this.logger.debug('Metrics updated', {
+      sessionId: this.sessionId,
+      metrics,
+      timestamp: new Date().toISOString()
+    });
   }
 
   send(message: any): boolean {
@@ -90,7 +108,8 @@ export class WebSocketConnectionService {
         this.metricsService.incrementMessagesSent();
         this.logger.info('Message sent', {
           sessionId: this.sessionId,
-          messageType: message?.type
+          messageType: message?.type,
+          timestamp: new Date().toISOString()
         });
         return true;
       } catch (error) {
@@ -114,7 +133,8 @@ export class WebSocketConnectionService {
   disconnect() {
     if (this.ws) {
       this.logger.info('Disconnecting', {
-        sessionId: this.sessionId
+        sessionId: this.sessionId,
+        timestamp: new Date().toISOString()
       });
       toast.info('Disconnecting from chat service');
       this.ws.close();
