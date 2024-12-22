@@ -1,6 +1,13 @@
 import { logger } from './LoggingService';
 import { WebSocketMessageHandler } from './WebSocketMessageHandler';
 import { WEBSOCKET_URL } from '@/constants/websocket';
+import { ConnectionMetrics } from '@/types/websocket';
+
+interface ConnectionCallbacks {
+  onMessage: (message: any) => void;
+  onStateChange: (state: string) => void;
+  onMetricsUpdate: (metrics: Partial<ConnectionMetrics>) => void;
+}
 
 export class ConnectionManager {
   private ws: WebSocket | null = null;
@@ -9,6 +16,7 @@ export class ConnectionManager {
   private messageHandler: WebSocketMessageHandler;
   private onMessageCallback: ((message: any) => void) | null = null;
   private onStateChangeCallback: ((state: string) => void) | null = null;
+  private onMetricsUpdateCallback: ((metrics: Partial<ConnectionMetrics>) => void) | null = null;
 
   constructor(sessionId: string) {
     this.sessionId = sessionId;
@@ -24,12 +32,10 @@ export class ConnectionManager {
     return this.sessionId;
   }
 
-  setCallbacks(callbacks: {
-    onMessage: (message: any) => void;
-    onStateChange: (state: string) => void;
-  }) {
+  setCallbacks(callbacks: ConnectionCallbacks) {
     this.onMessageCallback = callbacks.onMessage;
     this.onStateChangeCallback = callbacks.onStateChange;
+    this.onMetricsUpdateCallback = callbacks.onMetricsUpdate;
     logger.debug('Callbacks set for connection manager', undefined, this.sessionId);
   }
 
@@ -66,11 +72,17 @@ export class ConnectionManager {
     if (this.onStateChangeCallback) {
       this.onStateChangeCallback('connected');
     }
+    if (this.onMetricsUpdateCallback) {
+      this.onMetricsUpdateCallback({ lastConnected: new Date() });
+    }
   }
 
   private handleMessage(event: MessageEvent) {
     if (this.onMessageCallback) {
       this.messageHandler.handleMessage(event.data, this.onMessageCallback);
+    }
+    if (this.onMetricsUpdateCallback) {
+      this.onMetricsUpdateCallback({ messagesReceived: 1 });
     }
   }
 
@@ -79,6 +91,9 @@ export class ConnectionManager {
     this.messageHandler.handleError(new Error('WebSocket connection error'));
     if (this.onStateChangeCallback) {
       this.onStateChangeCallback('error');
+    }
+    if (this.onMetricsUpdateCallback) {
+      this.onMetricsUpdateCallback({ lastError: new Error('WebSocket connection error') });
     }
   }
 
@@ -100,6 +115,9 @@ export class ConnectionManager {
       try {
         logger.debug('Sending WebSocket message', { message }, this.sessionId);
         this.ws.send(JSON.stringify(message));
+        if (this.onMetricsUpdateCallback) {
+          this.onMetricsUpdateCallback({ messagesSent: 1 });
+        }
         return true;
       } catch (error) {
         logger.error('Failed to send WebSocket message', { error, message }, this.sessionId);
