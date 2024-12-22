@@ -2,153 +2,132 @@ import { logger } from './LoggingService';
 import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
 
 export class WebSocketLogger {
-  private sessionId: string;
+  constructor(private sessionId: string) {}
 
-  constructor(sessionId: string) {
-    this.sessionId = sessionId;
-  }
-
-  logConnectionAttempt(metadata: Record<string, any> = {}) {
-    logger.info('Attempting WebSocket connection', {
+  info(message: string, metadata: Record<string, any> = {}) {
+    logger.info(message, {
       ...metadata,
       sessionId: this.sessionId,
-      timestamp: new Date().toISOString(),
-      component: 'WebSocketService',
-      action: 'connect_attempt'
+      component: 'WebSocketService'
+    });
+  }
+
+  error(message: string, metadata: Record<string, any> = {}) {
+    logger.error(message, {
+      ...metadata,
+      sessionId: this.sessionId,
+      component: 'WebSocketService'
+    });
+  }
+
+  warn(message: string, metadata: Record<string, any> = {}) {
+    logger.warn(message, {
+      ...metadata,
+      sessionId: this.sessionId,
+      component: 'WebSocketService'
+    });
+  }
+
+  debug(message: string, metadata: Record<string, any> = {}) {
+    logger.debug(message, {
+      ...metadata,
+      sessionId: this.sessionId,
+      component: 'WebSocketService'
+    });
+  }
+
+  logConnectionAttempt(url: string, hasAuthToken: boolean) {
+    this.info('Attempting WebSocket connection', {
+      url,
+      hasAuthToken,
+      timestamp: new Date().toISOString()
     });
   }
 
   logTokenValidation(isValid: boolean, metadata: Record<string, any> = {}) {
-    logger.info('Token validation result', {
+    this.info('Token validation result', {
       ...metadata,
       isValid,
-      sessionId: this.sessionId,
-      timestamp: new Date().toISOString(),
-      component: 'WebSocketService',
-      action: 'token_validation'
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  logSessionValidation(isValid: boolean, metadata: Record<string, any> = {}) {
+    this.info('Session validation result', {
+      ...metadata,
+      isValid,
+      timestamp: new Date().toISOString()
     });
   }
 
   logConnectionSuccess(metadata: Record<string, any> = {}) {
-    logger.info('WebSocket connection established', {
+    this.info('WebSocket connection established', {
       ...metadata,
-      sessionId: this.sessionId,
-      timestamp: new Date().toISOString(),
-      component: 'WebSocketService',
-      action: 'connect_success'
+      timestamp: new Date().toISOString()
     });
   }
 
   logConnectionError(error: Error, metadata: Record<string, any> = {}) {
-    logger.error('WebSocket connection failed', {
+    this.error('WebSocket connection failed', {
       ...metadata,
       error,
-      sessionId: this.sessionId,
-      timestamp: new Date().toISOString(),
-      component: 'WebSocketService',
-      action: 'connect_error'
+      timestamp: new Date().toISOString()
     });
   }
 
   logMessageAttempt(messageId: string, metadata: Record<string, any> = {}) {
-    logger.info('Attempting to send message', {
+    this.info('Attempting to send message', {
       ...metadata,
       messageId,
-      sessionId: this.sessionId,
-      timestamp: new Date().toISOString(),
-      component: 'WebSocketService',
-      action: 'message_attempt'
+      timestamp: new Date().toISOString()
     });
   }
 
   logMessageSent(messageId: string, metadata: Record<string, any> = {}) {
-    logger.info('Message sent successfully', {
+    this.info('Message sent successfully', {
       ...metadata,
       messageId,
-      sessionId: this.sessionId,
-      timestamp: new Date().toISOString(),
-      component: 'WebSocketService',
-      action: 'message_sent'
+      timestamp: new Date().toISOString()
     });
   }
 
   logMessageReceived(messageId: string, metadata: Record<string, any> = {}) {
-    logger.info('Message received', {
+    this.info('Message received', {
       ...metadata,
       messageId,
-      sessionId: this.sessionId,
-      timestamp: new Date().toISOString(),
-      component: 'WebSocketService',
-      action: 'message_received'
+      timestamp: new Date().toISOString()
     });
   }
 
   logMessageError(error: Error, messageId: string, metadata: Record<string, any> = {}) {
-    logger.error('Message handling failed', {
+    this.error('Message handling failed', {
       ...metadata,
       error,
       messageId,
-      sessionId: this.sessionId,
-      timestamp: new Date().toISOString(),
-      component: 'WebSocketService',
-      action: 'message_error'
+      timestamp: new Date().toISOString()
     });
   }
 
-  logStateChange(previousState: ConnectionState, newState: ConnectionState, metadata: Record<string, any> = {}) {
-    logger.info('WebSocket state changed', {
-      ...metadata,
+  logStateChange(previousState: ConnectionState, newState: ConnectionState) {
+    this.info('WebSocket state changed', {
       previousState,
       newState,
-      sessionId: this.sessionId,
-      timestamp: new Date().toISOString(),
-      component: 'WebSocketService',
-      action: 'state_change'
+      timestamp: new Date().toISOString()
     });
   }
 
-  logMetricsUpdate(metrics: ConnectionMetrics, metadata: Record<string, any> = {}) {
-    logger.debug('WebSocket metrics updated', {
-      ...metadata,
+  logMetricsUpdate(metrics: ConnectionMetrics) {
+    this.debug('WebSocket metrics updated', {
       metrics,
-      sessionId: this.sessionId,
-      timestamp: new Date().toISOString(),
-      component: 'WebSocketService',
-      action: 'metrics_update'
+      timestamp: new Date().toISOString()
     });
   }
 
-  logAuthCheck(userId: string, isValid: boolean, metadata: Record<string, any> = {}) {
-    logger.info('Authentication check result', {
-      ...metadata,
-      userId,
-      isValid,
-      sessionId: this.sessionId,
-      timestamp: new Date().toISOString(),
-      component: 'WebSocketService',
-      action: 'auth_check'
-    });
-  }
-
-  logOpenAIRequest(requestId: string, metadata: Record<string, any> = {}) {
-    logger.info('OpenAI request sent', {
-      ...metadata,
-      requestId,
-      sessionId: this.sessionId,
-      timestamp: new Date().toISOString(),
-      component: 'WebSocketService',
-      action: 'openai_request'
-    });
-  }
-
-  logOpenAIResponse(requestId: string, metadata: Record<string, any> = {}) {
-    logger.info('OpenAI response received', {
-      ...metadata,
-      requestId,
-      sessionId: this.sessionId,
-      timestamp: new Date().toISOString(),
-      component: 'WebSocketService',
-      action: 'openai_response'
+  logReconnectAttempt(attempt: number, maxAttempts: number) {
+    this.info('Attempting WebSocket reconnection', {
+      attempt,
+      maxAttempts,
+      timestamp: new Date().toISOString()
     });
   }
 }

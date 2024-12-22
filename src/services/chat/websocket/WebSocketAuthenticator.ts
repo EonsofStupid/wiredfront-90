@@ -14,7 +14,7 @@ export class WebSocketAuthenticator {
       if (error) throw error;
       
       const isValid = !!session?.access_token;
-      this.logger.logSessionValidation(isValid, {
+      this.logger.logTokenValidation(isValid, {
         sessionId: this.sessionId,
         userId: session?.user?.id
       });

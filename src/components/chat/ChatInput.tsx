@@ -80,7 +80,10 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
             const input = document.createElement('input');
             input.type = 'file';
             input.multiple = true;
-            input.onchange = (e) => handleFileSelect(e as React.ChangeEvent<HTMLInputElement>);
+            input.onchange = (e) => {
+              const event = e as React.ChangeEvent<HTMLInputElement>;
+              handleFileSelect(event);
+            };
             input.click();
           }}
           isLoading={isLoading}
