@@ -1,5 +1,5 @@
 import { ConnectionMetrics } from '@/types/websocket';
-import { logger } from '../LoggingService';
+import { logger } from '@/services/chat/LoggingService';
 
 export class WebSocketMetricsService {
   private metrics: ConnectionMetrics;
