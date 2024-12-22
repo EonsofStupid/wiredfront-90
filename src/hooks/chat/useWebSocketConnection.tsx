@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { WebSocketService } from '@/services/chat/WebSocketService';
-import { useWebSocketMetrics } from './websocket/useWebSocketMetrics';
+import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
 import { toast } from 'sonner';
 
 export const useWebSocketConnection = (
@@ -8,14 +8,31 @@ export const useWebSocketConnection = (
   isMinimized: boolean,
   onMessage: (message: any) => void
 ) => {
-  const { 
-    metrics, 
-    connectionState, 
-    setConnectionState, 
-    updateMetrics 
-  } = useWebSocketMetrics();
-  
   const wsServiceRef = useRef<WebSocketService | null>(null);
+  const metricsRef = useRef<ConnectionMetrics | null>(null);
+  const stateRef = useRef<ConnectionState>('initial');
+
+  const updateMetrics = useCallback((metrics: Partial<ConnectionMetrics>) => {
+    metricsRef.current = { ...metricsRef.current, ...metrics } as ConnectionMetrics;
+  }, []);
+
+  const updateState = useCallback((state: ConnectionState) => {
+    stateRef.current = state;
+    switch (state) {
+      case 'connected':
+        toast.success('Connected to chat service');
+        break;
+      case 'disconnected':
+        toast.error('Disconnected from chat service');
+        break;
+      case 'reconnecting':
+        toast.info('Attempting to reconnect...');
+        break;
+      case 'error':
+        toast.error('Connection error occurred');
+        break;
+    }
+  }, []);
 
   useEffect(() => {
     if (!isMinimized && !wsServiceRef.current) {
@@ -24,7 +41,7 @@ export const useWebSocketConnection = (
       
       wsServiceRef.current.setCallbacks({
         onMessage,
-        onStateChange: setConnectionState,
+        onStateChange: updateState,
         onMetricsUpdate: updateMetrics
       });
 
@@ -38,7 +55,7 @@ export const useWebSocketConnection = (
         wsServiceRef.current = null;
       }
     };
-  }, [sessionId, isMinimized, onMessage, setConnectionState, updateMetrics]);
+  }, [sessionId, isMinimized, onMessage, updateState, updateMetrics]);
 
   const sendMessage = useCallback((message: any): boolean => {
     if (!wsServiceRef.current) {
@@ -49,11 +66,10 @@ export const useWebSocketConnection = (
   }, []);
 
   return {
-    connectionState,
-    metrics,
+    connectionState: stateRef.current,
+    metrics: metricsRef.current,
     sendMessage,
-    isConnected: connectionState === 'connected',
+    isConnected: stateRef.current === 'connected',
     reconnect: () => wsServiceRef.current?.connect(),
-    ws: wsServiceRef.current?.ws
   };
 };

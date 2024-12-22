@@ -13,6 +13,16 @@ export class WebSocketService {
   private onMessageCallback: ((message: any) => void) | null = null;
   private onStateChangeCallback: ((state: ConnectionState) => void) | null = null;
   private onMetricsUpdateCallback: ((metrics: Partial<ConnectionMetrics>) => void) | null = null;
+  private metrics: ConnectionMetrics = {
+    lastConnected: null,
+    reconnectAttempts: 0,
+    lastError: null,
+    messagesSent: 0,
+    messagesReceived: 0,
+    lastHeartbeat: null,
+    latency: 0,
+    uptime: 0,
+  };
 
   constructor(sessionId: string) {
     this.sessionId = sessionId;
@@ -40,9 +50,10 @@ export class WebSocketService {
     }
   }
 
-  private updateMetrics(metrics: Partial<ConnectionMetrics>) {
+  private updateMetrics(updates: Partial<ConnectionMetrics>) {
+    this.metrics = { ...this.metrics, ...updates };
     if (this.onMetricsUpdateCallback) {
-      this.onMetricsUpdateCallback(metrics);
+      this.onMetricsUpdateCallback(this.metrics);
     }
   }
 
@@ -75,7 +86,7 @@ export class WebSocketService {
         this.onMessageCallback(data);
       }
 
-      this.updateMetrics({ messagesReceived: 1 });
+      this.updateMetrics({ messagesReceived: this.metrics.messagesReceived + 1 });
     } catch (error) {
       console.error('[WebSocket] Error processing message:', error);
       this.handleError(new Error('Failed to process message'));
@@ -155,7 +166,7 @@ export class WebSocketService {
       };
 
       this.ws.onmessage = this.handleMessage;
-      this.ws.onerror = (event) => this.handleError(new Error('WebSocket connection error'));
+      this.ws.onerror = () => this.handleError(new Error('WebSocket connection error'));
       this.ws.onclose = this.handleClose;
 
     } catch (error) {
@@ -169,7 +180,7 @@ export class WebSocketService {
       try {
         this.ws.send(JSON.stringify(message));
         console.log('[WebSocket] Message sent:', message);
-        this.updateMetrics({ messagesSent: 1 });
+        this.updateMetrics({ messagesSent: this.metrics.messagesSent + 1 });
         return true;
       } catch (error) {
         console.error('[WebSocket] Failed to send message:', error);
@@ -178,6 +189,25 @@ export class WebSocketService {
       }
     }
     return false;
+  }
+
+  public getState(): ConnectionState {
+    if (!this.ws) return 'initial';
+    switch (this.ws.readyState) {
+      case WebSocket.CONNECTING:
+        return 'connecting';
+      case WebSocket.OPEN:
+        return 'connected';
+      case WebSocket.CLOSING:
+      case WebSocket.CLOSED:
+        return 'disconnected';
+      default:
+        return 'error';
+    }
+  }
+
+  public getMetrics(): ConnectionMetrics {
+    return { ...this.metrics };
   }
 
   public disconnect() {
