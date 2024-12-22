@@ -1,6 +1,7 @@
 import { WebSocketLogger } from './WebSocketLogger';
 import { WebSocketStateManager } from './WebSocketStateManager';
 import { ConnectionMetrics } from '@/types/websocket';
+import { toast } from 'sonner';
 
 export class WebSocketEventHandler {
   constructor(
@@ -8,13 +9,21 @@ export class WebSocketEventHandler {
     private stateManager: WebSocketStateManager,
     private onMessage?: (data: any) => void,
     private onMetricsUpdate?: (metrics: Partial<ConnectionMetrics>) => void
-  ) {}
+  ) {
+    this.logger.info('Event handler initialized', {
+      timestamp: new Date().toISOString()
+    });
+  }
 
   setupEventHandlers(ws: WebSocket) {
     ws.onopen = this.handleOpen.bind(this);
     ws.onmessage = this.handleMessage.bind(this);
     ws.onerror = this.handleError.bind(this);
     ws.onclose = this.handleClose.bind(this);
+    
+    this.logger.info('Event handlers setup complete', {
+      timestamp: new Date().toISOString()
+    });
   }
 
   private handleOpen() {
@@ -27,30 +36,55 @@ export class WebSocketEventHandler {
       lastError: null
     };
     
-    this.logger.logConnectionSuccess(metrics);
+    this.logger.info('Connection opened', {
+      metrics,
+      timestamp: new Date().toISOString()
+    });
+    
     this.onMetricsUpdate?.(metrics);
+    toast.success('Chat connection established');
   }
 
   private handleMessage(event: MessageEvent) {
     try {
       const data = JSON.parse(event.data);
-      this.logger.logMessageReceived(data);
+      this.logger.debug('Message received', {
+        messageType: data?.type,
+        timestamp: new Date().toISOString()
+      });
       this.onMessage?.(data);
     } catch (error) {
-      this.logger.logConnectionError(error as Error, this.stateManager.getReconnectAttempts());
+      this.logger.error('Message processing failed', {
+        error,
+        rawData: event.data,
+        timestamp: new Date().toISOString()
+      });
+      toast.error('Failed to process message');
     }
   }
 
   private handleError(event: Event) {
+    const error = new Error('WebSocket error occurred');
     this.stateManager.setState('error');
-    this.logger.logConnectionError(
-      new Error('WebSocket error occurred'),
-      this.stateManager.getReconnectAttempts()
-    );
+    
+    this.logger.error('Connection error', {
+      error,
+      timestamp: new Date().toISOString()
+    });
+    
+    toast.error('Chat connection error occurred');
   }
 
   private handleClose(event: CloseEvent) {
     this.stateManager.setState('disconnected');
-    this.logger.logDisconnect(event.code, event.reason);
+    
+    this.logger.info('Connection closed', {
+      code: event.code,
+      reason: event.reason,
+      wasClean: event.wasClean,
+      timestamp: new Date().toISOString()
+    });
+    
+    toast.info('Chat connection closed');
   }
 }
