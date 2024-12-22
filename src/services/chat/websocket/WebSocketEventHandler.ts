@@ -1,107 +1,82 @@
 import { WebSocketLogger } from '../WebSocketLogger';
-import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
+import { ConnectionState, ConnectionMetrics } from '../types/websocket';
+import { WebSocketStateManager } from './WebSocketStateManager';
 import { toast } from 'sonner';
-import { WebSocketError, TokenExpiredError, OpenAIError } from '../types/errors';
 
 export class WebSocketEventHandler {
-  private currentState: ConnectionState = 'initial';
-
   constructor(
     private logger: WebSocketLogger,
-    private onStateChange: (state: ConnectionState) => void,
-    private onMetricsUpdate: (metrics: Partial<ConnectionMetrics>) => void
-  ) {}
-
-  emitStateChange(state: ConnectionState, metadata: Record<string, any> = {}) {
-    const previousState = this.currentState;
-    this.currentState = state;
-    
-    this.logger.info('WebSocket state changed', {
-      previousState,
-      newState: state,
-      ...metadata
+    private stateManager: WebSocketStateManager,
+    private onMessage?: (data: any) => void,
+    private onMetricsUpdate?: (metrics: Partial<ConnectionMetrics>) => void
+  ) {
+    this.logger.info('Event handler initialized', {
+      timestamp: new Date().toISOString()
     });
-    
-    this.onStateChange(state);
-    
-    // User feedback
-    switch (state) {
-      case 'connecting':
-        toast.loading('Connecting to chat service...');
-        break;
-      case 'connected':
-        toast.success('Connected to chat service');
-        break;
-      case 'disconnected':
-        toast.error('Disconnected from chat service');
-        break;
-      case 'error':
-        toast.error('Chat connection error occurred');
-        break;
-      case 'reconnecting':
-        toast.loading('Attempting to reconnect...');
-        break;
-      case 'failed':
-        toast.error('Connection failed after multiple attempts');
-        break;
-    }
-
-    this.logger.debug('UI updated after state change', {
-      component: 'ConnectionStatus',
-      action: `State changed to ${state}`
-    });
-  }
-
-  emitError(error: Error, context: Record<string, any> = {}) {
-    if (error instanceof TokenExpiredError) {
-      this.logger.error('Authentication error', { error, ...context });
-      toast.error('Authentication expired. Please log in again.');
-    } else if (error instanceof OpenAIError) {
-      this.logger.error('OpenAI API error', { error, ...context });
-      toast.error('AI service error. Please try again later.');
-    } else {
-      this.logger.error('Connection error', { 
-        error, 
-        attempt: context.attempt || 0,
-        ...context 
-      });
-      toast.error('Connection error occurred');
-    }
-
-    this.emitStateChange('error', { error, ...context });
-  }
-
-  emitMetricsUpdate(metrics: Partial<ConnectionMetrics>) {
-    this.onMetricsUpdate(metrics);
-    this.logger.debug('Metrics updated', { metrics });
   }
 
   setupEventHandlers(ws: WebSocket) {
-    ws.onopen = () => {
-      this.emitStateChange('connected');
-      this.emitMetricsUpdate({
-        lastConnected: new Date(),
-        reconnectAttempts: 0,
-        lastError: null
-      });
-    };
+    ws.onopen = this.handleOpen.bind(this);
+    ws.onmessage = this.handleMessage.bind(this);
+    ws.onerror = this.handleError.bind(this);
+    ws.onclose = this.handleClose.bind(this);
+    
+    this.logger.info('Event handlers setup complete', {
+      timestamp: new Date().toISOString()
+    });
+  }
 
-    ws.onclose = (event) => {
-      this.logger.info('Connection closed', {
-        code: event.code,
-        reason: event.reason,
-        wasClean: event.wasClean
-      });
-      this.emitStateChange('disconnected', { 
-        code: event.code,
-        reason: event.reason,
-        wasClean: event.wasClean
-      });
+  private handleOpen() {
+    this.stateManager.setState('connected');
+    this.stateManager.resetReconnectAttempts();
+    
+    const metrics = {
+      lastConnected: new Date(),
+      reconnectAttempts: 0,
+      lastError: null
     };
+    
+    this.logger.info('Connection opened', {
+      metrics,
+      timestamp: new Date().toISOString()
+    });
+    
+    this.onMetricsUpdate?.(metrics);
+  }
 
-    ws.onerror = (event) => {
-      this.logger.error('WebSocket error', { event });
-      this.emitError(new WebSocketError('WebSocket connection error'));
-    };
+  private handleMessage(event: MessageEvent) {
+    try {
+      const data = JSON.parse(event.data);
+      this.logger.debug('Message received', {
+        messageType: data?.type,
+        timestamp: new Date().toISOString()
+      });
+      this.onMessage?.(data);
+    } catch (error) {
+      this.logger.error('Message processing failed', {
+        error,
+        rawData: event.data,
+        timestamp: new Date().toISOString()
+      });
+      toast.error('Failed to process message');
+    }
+  }
+
+  private handleError(event: Event) {
+    this.stateManager.setState('error');
+    this.logger.error('Connection error', {
+      error: event,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  private handleClose(event: CloseEvent) {
+    this.stateManager.setState('disconnected');
+    this.logger.info('Connection closed', {
+      code: event.code,
+      reason: event.reason,
+      wasClean: event.wasClean,
+      timestamp: new Date().toISOString()
+    });
   }
 }

@@ -1,6 +1,5 @@
+import { ConnectionState } from '../types/websocket';
 import { WebSocketLogger } from '../WebSocketLogger';
-import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
-import { WebSocketEventEmitter } from './WebSocketEventEmitter';
 import { toast } from 'sonner';
 
 export class WebSocketStateManager {
@@ -10,33 +9,61 @@ export class WebSocketStateManager {
 
   constructor(
     private logger: WebSocketLogger,
-    private eventEmitter: WebSocketEventEmitter
-  ) {}
+    private onStateChange?: (state: ConnectionState) => void
+  ) {
+    this.logger.info('State manager initialized', {
+      initialState: this.state,
+      timestamp: new Date().toISOString()
+    });
+  }
 
-  async handleReconnect(connect: () => Promise<void>) {
-    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      this.eventEmitter.emitStateChange('failed');
-      toast.error('Max reconnection attempts reached');
-      return;
+  setState(newState: ConnectionState) {
+    const previousState = this.state;
+    this.state = newState;
+    
+    this.logger.info('State transition', {
+      previousState,
+      newState,
+      reconnectAttempts: this.reconnectAttempts,
+      timestamp: new Date().toISOString()
+    });
+    
+    this.onStateChange?.(newState);
+
+    switch (newState) {
+      case 'connecting':
+        toast.loading('Establishing connection...');
+        break;
+      case 'connected':
+        toast.success('Connected to chat service');
+        this.reconnectAttempts = 0;
+        break;
+      case 'disconnected':
+        toast.error('Connection lost');
+        break;
+      case 'reconnecting':
+        toast.loading(`Reconnecting (Attempt ${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
+        break;
+      case 'error':
+        toast.error('Connection error - please refresh the page');
+        break;
     }
+  }
 
+  getState(): ConnectionState {
+    return this.state;
+  }
+
+  incrementReconnectAttempts(): boolean {
     this.reconnectAttempts++;
-    this.eventEmitter.emitStateChange('reconnecting');
-    toast.loading(`Reconnecting (Attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+    
+    this.logger.info('Reconnection attempt incremented', {
+      attempt: this.reconnectAttempts,
+      maxAttempts: this.maxReconnectAttempts,
+      timestamp: new Date().toISOString()
+    });
 
-    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
-    await new Promise(resolve => setTimeout(resolve, delay));
-
-    try {
-      await connect();
-    } catch (error) {
-      this.logger.error('Reconnection attempt failed', {
-        error,
-        attempt: this.reconnectAttempts,
-        timestamp: new Date().toISOString()
-      });
-      toast.error('Reconnection attempt failed');
-    }
+    return this.reconnectAttempts < this.maxReconnectAttempts;
   }
 
   resetReconnectAttempts(): void {
