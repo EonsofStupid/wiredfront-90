@@ -1,10 +1,10 @@
-import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
-import { WebSocketConnection } from './websocket/core/WebSocketConnection';
-import { useWebSocketStore } from '@/stores/websocket/store';
+import { ConnectionState, ConnectionMetrics, WebSocketCallbacks } from './websocket/types/connection';
+import { WebSocketConnection } from './websocket/connection/WebSocketConnection';
 import { logger } from './LoggingService';
 
 export class WebSocketService {
   private connection: WebSocketConnection;
+  private callbacks: WebSocketCallbacks;
 
   constructor(sessionId: string) {
     logger.info('Initializing WebSocket service', 
@@ -13,29 +13,32 @@ export class WebSocketService {
       { component: 'WebSocketService', action: 'initialize' }
     );
 
+    this.callbacks = {
+      onMessage: this.handleMessage.bind(this),
+      onStateChange: this.handleStateChange.bind(this),
+      onMetricsUpdate: this.handleMetricsUpdate.bind(this)
+    };
+
     this.connection = new WebSocketConnection(
       sessionId,
-      this.handleMetricsUpdate.bind(this),
-      this.handleStateChange.bind(this),
-      this.handleMessage.bind(this),
-      this.handleMetricsUpdate.bind(this)
+      this.callbacks
     );
   }
 
   private handleStateChange(state: ConnectionState) {
-    useWebSocketStore.getState().setConnectionState(state);
+    logger.info('WebSocket state changed', { state });
   }
 
   private handleMessage(data: any) {
-    useWebSocketStore.getState().addMessage(data);
+    logger.debug('Message received', { data });
   }
 
   private handleMetricsUpdate(metrics: Partial<ConnectionMetrics>) {
-    useWebSocketStore.getState().updateMetrics(metrics);
+    logger.debug('Metrics updated', { metrics });
   }
 
   public async connect(accessToken: string): Promise<void> {
-    await this.connection.connect();
+    await this.connection.connect(accessToken);
   }
 
   public send(message: any): boolean {
@@ -46,7 +49,7 @@ export class WebSocketService {
     this.connection.disconnect();
   }
 
-  public getState(): ConnectionState {
-    return useWebSocketStore.getState().connectionState;
+  public getState(): number {
+    return this.connection.getState();
   }
 }

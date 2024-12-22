@@ -20,15 +20,15 @@ export interface ConnectionMetrics {
   uptime: number;
 }
 
-export interface WebSocketConfig {
-  url: string;
-  sessionId: string;
+export interface WebSocketCallbacks {
   onMessage: (message: any) => void;
   onStateChange: (state: ConnectionState) => void;
   onMetricsUpdate: (metrics: Partial<ConnectionMetrics>) => void;
 }
 
-export interface WebSocketCallbacks {
+export interface WebSocketConfig {
+  url: string;
+  sessionId: string;
   onMessage: (message: any) => void;
   onStateChange: (state: ConnectionState) => void;
   onMetricsUpdate: (metrics: Partial<ConnectionMetrics>) => void;

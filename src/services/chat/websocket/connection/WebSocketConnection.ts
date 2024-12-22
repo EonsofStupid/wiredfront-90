@@ -4,7 +4,6 @@ import { WebSocketAuthenticator } from './WebSocketAuthenticator';
 import { WebSocketReconnection } from './WebSocketReconnection';
 import { WebSocketMetrics } from '../monitoring/WebSocketMetrics';
 import { WEBSOCKET_URL } from '@/constants/websocket';
-import { ConnectionError } from '../types/errors';
 
 export class WebSocketConnection {
   private ws: WebSocket | null = null;
@@ -27,10 +26,9 @@ export class WebSocketConnection {
     );
   }
 
-  async connect(): Promise<void> {
+  async connect(accessToken: string): Promise<void> {
     try {
-      const token = await this.authenticator.validateSession();
-      const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${token}`;
+      const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${accessToken}`;
       
       if (this.ws) {
         this.ws.close();
@@ -47,9 +45,7 @@ export class WebSocketConnection {
         sessionId: this.sessionId,
         attempt: this.reconnection.getAttempts()
       });
-      throw new ConnectionError('Failed to establish connection', {
-        originalError: error
-      });
+      throw error;
     }
   }
 
@@ -85,12 +81,13 @@ export class WebSocketConnection {
       this.reconnection.handleReconnection();
     };
 
-    this.ws.onerror = (error) => {
+    this.ws.onerror = (event) => {
+      const error = new Error('WebSocket error occurred');
       this.logger.error('WebSocket error', {
         error,
         sessionId: this.sessionId
       });
-      this.metrics.recordError(error as Error);
+      this.metrics.recordError(error);
       this.callbacks.onStateChange('error');
     };
   }
