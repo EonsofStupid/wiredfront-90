@@ -1,23 +1,14 @@
-import { useEffect, useState } from 'react';
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { SignalHigh, CloudOff, Loader2, AlertTriangle } from 'lucide-react';
 import { ConnectionState } from '@/types/websocket';
-import { WebSocketLogger } from '@/services/chat/websocket/monitoring/WebSocketLogger';
-import { SignalHigh, CloudOff, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
-export const ConnectionStatus = () => {
-  const [state, setState] = useState<ConnectionState>('initial');
+interface ConnectionStatusProps {
+  state: ConnectionState;
+  className?: string;
+}
 
-  useEffect(() => {
-    const updateState = () => {
-      setState(WebSocketLogger.getInstance().getConnectionState());
-    };
-
-    updateState();
-    const interval = setInterval(updateState, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
+export const ConnectionStatus = ({ state, className }: ConnectionStatusProps) => {
   const getIcon = () => {
     switch (state) {
       case 'connected':
@@ -25,17 +16,56 @@ export const ConnectionStatus = () => {
       case 'connecting':
       case 'reconnecting':
         return <Loader2 className="w-4 h-4 text-yellow-500 animate-spin" />;
-      default:
+      case 'disconnected':
+      case 'error':
         return <CloudOff className="w-4 h-4 text-red-500" />;
+      case 'failed':
+        return <AlertTriangle className="w-4 h-4 text-red-500" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTitle = () => {
+    switch (state) {
+      case 'connected':
+        return 'Connected';
+      case 'connecting':
+        return 'Connecting...';
+      case 'reconnecting':
+        return 'Reconnecting...';
+      case 'disconnected':
+        return 'Disconnected';
+      case 'error':
+        return 'Connection Error';
+      case 'failed':
+        return 'Connection Failed';
+      default:
+        return '';
+    }
+  };
+
+  const getBadgeVariant = () => {
+    switch (state) {
+      case 'connected':
+        return 'default';
+      case 'connecting':
+      case 'reconnecting':
+        return 'secondary';
+      default:
+        return 'destructive';
     }
   };
 
   return (
-    <Card className="fixed bottom-4 right-4 p-2 flex items-center gap-2">
+    <div 
+      className={cn("flex items-center gap-1", className)} 
+      title={getTitle()}
+    >
       {getIcon()}
-      <Badge variant={state === 'connected' ? 'success' : 'destructive'}>
-        {state}
+      <Badge variant={getBadgeVariant()}>
+        {getTitle()}
       </Badge>
-    </Card>
+    </div>
   );
 };

@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ConnectionState } from '@/types/websocket';
 import { WebSocketLogger } from '@/services/chat/websocket/monitoring/WebSocketLogger';
 
-interface DebugMetrics {
+interface MetricsData {
   connectionState: ConnectionState;
   messagesSent: number;
   messagesReceived: number;
@@ -17,14 +17,30 @@ interface DebugMetrics {
 }
 
 export const DebugMetrics = () => {
-  const [metrics, setMetrics] = useState<DebugMetrics | null>(null);
+  const [metrics, setMetrics] = useState<MetricsData | null>(null);
   const [activeTab, setActiveTab] = useState('metrics');
+  const [hasNewInfo, setHasNewInfo] = useState(false);
 
   useEffect(() => {
     const updateMetrics = () => {
-      // Get metrics from WebSocketLogger
-      const currentMetrics = WebSocketLogger.getInstance().getMetrics();
-      setMetrics(currentMetrics as DebugMetrics);
+      const logger = WebSocketLogger.getInstance();
+      const currentMetrics = logger.getMetrics();
+      const newMetrics: MetricsData = {
+        connectionState: logger.getConnectionState(),
+        messagesSent: currentMetrics.messagesSent,
+        messagesReceived: currentMetrics.messagesReceived,
+        errors: logger.getLogs()
+          .filter(log => log.level === 'error')
+          .map(log => ({
+            timestamp: log.timestamp,
+            error: log.message
+          })),
+        latency: currentMetrics.latency,
+        uptime: currentMetrics.uptime,
+        reconnectAttempts: currentMetrics.reconnectAttempts
+      };
+      setMetrics(newMetrics);
+      setHasNewInfo(true);
     };
 
     updateMetrics();
@@ -32,14 +48,23 @@ export const DebugMetrics = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value === 'metrics' || value === 'audit') {
+      setHasNewInfo(false);
+    }
+  };
+
   if (!metrics) return null;
 
   return (
-    <Card className="fixed top-16 right-4 w-96 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+    <Card className="fixed bottom-20 right-4 w-96 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="w-full">
-          <TabsTrigger value="metrics">Metrics</TabsTrigger>
-          <TabsTrigger value="errors">Errors</TabsTrigger>
+          <TabsTrigger value="metrics" className={hasNewInfo ? 'text-neon-blue animate-pulse' : ''}>
+            Metrics
+          </TabsTrigger>
+          <TabsTrigger value="audit">Audit</TabsTrigger>
           <TabsTrigger value="logs">Logs</TabsTrigger>
         </TabsList>
 
@@ -47,7 +72,7 @@ export const DebugMetrics = () => {
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-sm">Connection State</span>
-              <Badge variant={metrics.connectionState === 'connected' ? 'success' : 'destructive'}>
+              <Badge variant={metrics.connectionState === 'connected' ? 'default' : 'destructive'}>
                 {metrics.connectionState}
               </Badge>
             </div>
@@ -79,7 +104,7 @@ export const DebugMetrics = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="errors" className="p-4">
+        <TabsContent value="audit" className="p-4">
           <ScrollArea className="h-[300px]">
             {metrics.errors.map((error, index) => (
               <div key={index} className="mb-2 p-2 rounded bg-destructive/10 text-destructive">
