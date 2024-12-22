@@ -7,17 +7,29 @@ export class WebSocketHandler {
   private heartbeatInterval?: number;
   private requestId: string;
   private supabase: ReturnType<typeof createClient>;
+  private sessionId: string;
+  private userId: string;
 
   constructor(req: Request) {
     this.requestId = crypto.randomUUID();
+    this.sessionId = crypto.randomUUID();
+    this.userId = 'anonymous';
+    
     this.supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    logger.info('Initializing WebSocket handler', {
-      requestId: this.requestId,
-      url: req.url
+    logger.info('Initializing WebSocket handler', this.sessionId, this.userId, {
+      chat_context: {
+        conversation_id: this.requestId,
+        active_personality: 'default',
+        prompt_type: 'system'
+      },
+      input: {
+        raw_text: 'WebSocket initialization',
+        processed_text: 'System initializing WebSocket connection'
+      }
     });
 
     const { socket, response } = Deno.upgradeWebSocket(req);
@@ -30,25 +42,33 @@ export class WebSocketHandler {
   }
 
   private setupEventHandlers() {
+    const startTime = performance.now();
+
     this.clientSocket.onopen = () => {
-      logger.info('WebSocket connection opened', {
-        requestId: this.requestId
+      logger.info('WebSocket connection opened', this.sessionId, this.userId, {
+        system_info: {
+          execution_time_ms: Math.round(performance.now() - startTime),
+          status_code: 200,
+          server_location: 'edge-function',
+          function_name: 'realtime-chat'
+        }
       });
     };
 
     this.clientSocket.onmessage = async (event) => {
+      const messageStartTime = performance.now();
       try {
-        logger.debug('Received WebSocket message', {
-          requestId: this.requestId,
-          data: event.data
+        logger.debug('Received WebSocket message', this.sessionId, this.userId, {
+          input: {
+            raw_text: event.data,
+            processed_text: 'Processing incoming WebSocket message'
+          }
         });
 
         const data = JSON.parse(event.data);
         
         if (data.type === 'pong') {
-          logger.debug('Received pong message', {
-            requestId: this.requestId
-          });
+          logger.debug('Received pong message', this.sessionId, this.userId);
           return;
         }
 
@@ -56,8 +76,13 @@ export class WebSocketHandler {
         await this.handleMessage(data);
 
       } catch (error) {
-        logger.error('Error processing message', error, {
-          requestId: this.requestId
+        logger.error('Error processing message', this.sessionId, this.userId, error, {
+          system_info: {
+            execution_time_ms: Math.round(performance.now() - messageStartTime),
+            status_code: 500,
+            server_location: 'edge-function',
+            function_name: 'realtime-chat'
+          }
         });
 
         this.sendError('Failed to process message');
@@ -65,24 +90,37 @@ export class WebSocketHandler {
     };
 
     this.clientSocket.onerror = (error) => {
-      logger.error('WebSocket error occurred', error, {
-        requestId: this.requestId
+      logger.error('WebSocket error occurred', this.sessionId, this.userId, error, {
+        system_info: {
+          execution_time_ms: Math.round(performance.now() - startTime),
+          status_code: 500,
+          server_location: 'edge-function',
+          function_name: 'realtime-chat'
+        }
       });
       this.cleanup();
     };
 
     this.clientSocket.onclose = () => {
-      logger.info('WebSocket connection closed', {
-        requestId: this.requestId
+      logger.info('WebSocket connection closed', this.sessionId, this.userId, {
+        system_info: {
+          execution_time_ms: Math.round(performance.now() - startTime),
+          status_code: 200,
+          server_location: 'edge-function',
+          function_name: 'realtime-chat'
+        }
       });
       this.cleanup();
     };
   }
 
   private async handleMessage(data: any) {
-    logger.debug('Processing message', {
-      requestId: this.requestId,
-      messageType: data.type
+    const messageStartTime = performance.now();
+    logger.debug('Processing message', this.sessionId, this.userId, {
+      input: {
+        raw_text: JSON.stringify(data),
+        processed_text: `Processing message of type: ${data.type}`
+      }
     });
 
     try {
@@ -93,13 +131,16 @@ export class WebSocketHandler {
         timestamp: new Date().toISOString()
       }));
 
-      logger.debug('Message processed successfully', {
-        requestId: this.requestId
+      logger.debug('Message processed successfully', this.sessionId, this.userId, {
+        response: {
+          generated_text: 'Message echoed back to client',
+          metadata: {
+            generation_time_ms: Math.round(performance.now() - messageStartTime)
+          }
+        }
       });
     } catch (error) {
-      logger.error('Failed to process message', error, {
-        requestId: this.requestId
-      });
+      logger.error('Failed to process message', this.sessionId, this.userId, error);
       this.sendError('Internal processing error');
     }
   }
@@ -112,9 +153,10 @@ export class WebSocketHandler {
         timestamp: new Date().toISOString()
       }));
     } catch (error) {
-      logger.error('Failed to send error message', error, {
-        requestId: this.requestId,
-        errorMessage: message
+      logger.error('Failed to send error message', this.sessionId, this.userId, error, {
+        input: {
+          raw_text: message
+        }
       });
     }
   }
@@ -122,9 +164,7 @@ export class WebSocketHandler {
   private startHeartbeat() {
     this.heartbeatInterval = setInterval(() => {
       if (this.clientSocket.readyState === WebSocket.OPEN) {
-        logger.debug('Sending heartbeat ping', {
-          requestId: this.requestId
-        });
+        logger.debug('Sending heartbeat ping', this.sessionId, this.userId);
         this.clientSocket.send(JSON.stringify({ type: 'ping' }));
       }
     }, 30000);
@@ -132,8 +172,6 @@ export class WebSocketHandler {
 
   private cleanup() {
     clearInterval(this.heartbeatInterval);
-    logger.info('WebSocket resources cleaned up', {
-      requestId: this.requestId
-    });
+    logger.info('WebSocket resources cleaned up', this.sessionId, this.userId);
   }
 }
