@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { ConnectionState } from '@/types/websocket';
 
 interface WebSocketConfig {
@@ -27,7 +27,7 @@ export const useWebSocketLifecycle = () => {
     }
   };
 
-  const connect = (config: WebSocketConfig) => {
+  const connect = useCallback((config: WebSocketConfig) => {
     if (isConnectingRef.current || wsRef.current?.readyState === WebSocket.OPEN) {
       return;
     }
@@ -85,9 +85,9 @@ export const useWebSocketLifecycle = () => {
       isConnectingRef.current = false;
       updateConnectionState('error');
     }
-  };
+  }, []);
 
-  const disconnect = () => {
+  const disconnect = useCallback(() => {
     clearRetryTimeout();
     if (wsRef.current) {
       wsRef.current.close();
@@ -95,7 +95,13 @@ export const useWebSocketLifecycle = () => {
     }
     isConnectingRef.current = false;
     updateConnectionState('disconnected');
-  };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      disconnect();
+    };
+  }, [disconnect]);
 
   return {
     connectionState,
