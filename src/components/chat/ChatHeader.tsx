@@ -29,7 +29,7 @@ export const ChatHeader = ({
   return (
     <div
       className={cn(
-        "flex items-center justify-between p-2 border-b border-border",
+        "flex items-center justify-between p-2 border-b border-border select-none",
         isDragging && "cursor-grabbing"
       )}
       {...dragHandleProps}

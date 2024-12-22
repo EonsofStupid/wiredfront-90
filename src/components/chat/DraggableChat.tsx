@@ -142,13 +142,7 @@ export const DraggableChat = () => {
     }
   };
 
-  // Don't render anything while authentication is loading
-  if (authLoading) return null;
-
-  // Don't render chat for unauthenticated users
-  if (!user) return null;
-
-  if (!currentSession) return null;
+  if (authLoading || !user || !currentSession) return null;
 
   return (
     <ChatDragContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -175,6 +169,11 @@ export const DraggableChat = () => {
           onLoadMore={handleLoadMore}
           onSendMessage={handleSendMessage}
           connectionState={connectionState}
+          currentAPI="OpenAI"
+          dragHandleProps={{
+            'data-drag-handle': true,
+            style: { cursor: isDragging ? 'grabbing' : 'grab' }
+          }}
         />
       </div>
     </ChatDragContext>
