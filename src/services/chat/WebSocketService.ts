@@ -210,7 +210,19 @@ export class WebSocketService {
   }
 
   public getState(): ConnectionState {
-    return this.connectionManager.getState();
+    const wsState = this.connectionManager.getState();
+    switch (wsState) {
+      case 0:
+        return 'connecting';
+      case 1:
+        return 'connected';
+      case 2:
+        return 'disconnected';
+      case 3:
+        return 'disconnected';
+      default:
+        return 'error';
+    }
   }
 
   public getMetrics(): ConnectionMetrics {
