@@ -1,12 +1,12 @@
 import { ConnectionMetrics } from '@/types/websocket';
-import { logger } from '@/services/chat/LoggingService';
+import { WebSocketLogger } from './WebSocketLogger';
 
 export class WebSocketMetricsService {
   private metrics: ConnectionMetrics;
-  private sessionId: string;
+  private logger: WebSocketLogger;
 
   constructor(sessionId: string) {
-    this.sessionId = sessionId;
+    this.logger = new WebSocketLogger(sessionId);
     this.metrics = {
       lastConnected: null,
       reconnectAttempts: 0,
@@ -17,18 +17,13 @@ export class WebSocketMetricsService {
       latency: 0,
       uptime: 0
     };
-
-    logger.info('WebSocket metrics service initialized', { 
-      sessionId,
-      component: 'WebSocketMetricsService'
-    });
   }
 
   updateMetrics(updates: Partial<ConnectionMetrics>) {
     this.metrics = { ...this.metrics, ...updates };
-    logger.debug('WebSocket metrics updated', {
-      metrics: this.metrics,
-      component: 'WebSocketMetricsService'
+    this.logger.logMetricsUpdate(this.metrics, {
+      sessionId: crypto.randomUUID(),
+      metrics: updates
     });
   }
 
@@ -41,33 +36,41 @@ export class WebSocketMetricsService {
 
   incrementMessagesSent() {
     this.metrics.messagesSent++;
-    logger.debug('Messages sent counter incremented', {
-      total: this.metrics.messagesSent,
-      component: 'WebSocketMetricsService'
+    this.logger.logMetricsUpdate(this.metrics, {
+      sessionId: crypto.randomUUID(),
+      metrics: { messagesSent: this.metrics.messagesSent }
     });
   }
 
   incrementMessagesReceived() {
     this.metrics.messagesReceived++;
-    logger.debug('Messages received counter incremented', {
-      total: this.metrics.messagesReceived,
-      component: 'WebSocketMetricsService'
+    this.logger.logMetricsUpdate(this.metrics, {
+      sessionId: crypto.randomUUID(),
+      metrics: { messagesReceived: this.metrics.messagesReceived }
     });
   }
 
   recordHeartbeat() {
     this.metrics.lastHeartbeat = new Date();
-    logger.debug('Heartbeat recorded', {
-      timestamp: this.metrics.lastHeartbeat.toISOString(),
-      component: 'WebSocketMetricsService'
+    this.logger.logMetricsUpdate(this.metrics, {
+      sessionId: crypto.randomUUID(),
+      metrics: { lastHeartbeat: this.metrics.lastHeartbeat }
     });
   }
 
   recordError(error: Error) {
     this.metrics.lastError = error;
-    logger.error('WebSocket error recorded', {
-      error,
-      component: 'WebSocketMetricsService'
+    this.logger.logMetricsUpdate(this.metrics, {
+      sessionId: crypto.randomUUID(),
+      metrics: { lastError: this.metrics.lastError }
+    });
+  }
+
+  recordLatency(startTime: number) {
+    this.metrics.latency = Date.now() - startTime;
+    this.logger.logMetricsUpdate(this.metrics, {
+      sessionId: crypto.randomUUID(),
+      metrics: { latency: this.metrics.latency }
     });
   }
 }

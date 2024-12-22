@@ -1,124 +1,169 @@
 import { logger } from './LoggingService';
-import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
-import { WebSocketError, TokenExpiredError, MessageSendError, OpenAIError } from './types/errors';
+import type { ConnectionState, ConnectionMetrics } from '@/types/websocket';
+
+interface WebSocketLogMetadata {
+  sessionId: string;
+  userId?: string;
+  messageId?: string;
+  connectionState?: ConnectionState;
+  metrics?: Partial<ConnectionMetrics>;
+  retryAttempt?: number;
+  latency?: number;
+  error?: Error;
+}
 
 export class WebSocketLogger {
   constructor(private sessionId: string) {}
 
-  info(message: string, metadata: Record<string, any> = {}) {
-    logger.info(message, {
-      ...metadata,
-      sessionId: this.sessionId,
-      timestamp: new Date().toISOString(),
-      component: 'WebSocketService'
-    });
-  }
-
-  error(message: string, metadata: Record<string, any> = {}) {
-    logger.error(message, {
-      ...metadata,
-      sessionId: this.sessionId,
-      timestamp: new Date().toISOString(),
-      component: 'WebSocketService'
-    });
-  }
-
-  debug(message: string, metadata: Record<string, any> = {}) {
-    logger.debug(message, {
-      ...metadata,
-      sessionId: this.sessionId,
-      timestamp: new Date().toISOString(),
-      component: 'WebSocketService'
-    });
-  }
-
-  warn(message: string, metadata: Record<string, any> = {}) {
-    logger.warn(message, {
-      ...metadata,
-      sessionId: this.sessionId,
-      timestamp: new Date().toISOString(),
-      component: 'WebSocketService'
-    });
-  }
-
-  logConnectionError(error: Error, attempt: number) {
-    this.error('WebSocket connection failed', {
-      error,
-      attempt,
-      context: {
-        type: 'connection',
-        action: 'connect',
-        error: error instanceof WebSocketError ? error.code : 'UNKNOWN'
-      }
-    });
-  }
-
-  logAuthError(error: Error) {
-    this.error('Authentication failed', {
-      error,
-      context: {
-        type: 'auth',
-        action: 'validate',
-        error: error instanceof TokenExpiredError ? error.code : 'AUTH_FAILED'
-      }
-    });
-  }
-
-  logMessageError(error: Error, messageId: string, attempt: number) {
-    this.error('Message send failed', {
-      error,
-      messageId,
-      attempt,
-      context: {
-        type: 'message',
-        action: 'send',
-        error: error instanceof MessageSendError ? error.code : 'MESSAGE_FAILED'
-      }
-    });
-  }
-
-  logOpenAIError(error: Error, metadata?: Record<string, any>) {
-    this.error('OpenAI API error', {
-      error,
-      metadata,
-      context: {
-        type: 'openai',
-        action: 'api_call',
-        error: error instanceof OpenAIError ? (error as OpenAIError).code : 'API_ERROR'
-      }
-    });
-  }
-
-  logStateChange(newState: ConnectionState, metadata: Record<string, any> = {}) {
-    this.info('WebSocket state changed', {
-      previousState: metadata.previousState,
-      newState,
-      context: {
-        type: 'state',
-        action: 'transition'
+  logConnectionAttempt(metadata: WebSocketLogMetadata) {
+    logger.info('Attempting WebSocket connection',
+      {
+        ...metadata,
+        timestamp: new Date().toISOString()
       },
-      ...metadata
-    });
+      this.sessionId,
+      { 
+        component: 'WebSocketService',
+        action: 'connect_attempt'
+      }
+    );
   }
 
-  logUIUpdate(component: string, action: string) {
-    this.debug('UI updated', {
-      component,
-      action,
-      context: {
-        type: 'ui',
-        action: 'update'
+  logConnectionSuccess(metadata: WebSocketLogMetadata) {
+    logger.info('WebSocket connection established',
+      {
+        ...metadata,
+        timestamp: new Date().toISOString()
+      },
+      this.sessionId,
+      {
+        component: 'WebSocketService',
+        action: 'connect_success'
       }
-    });
+    );
   }
 
-  logMetrics(metrics: ConnectionMetrics) {
-    this.info('Connection metrics updated', {
-      metrics,
-      context: {
-        type: 'metrics',
-        action: 'update'
+  logConnectionError(error: Error, metadata: WebSocketLogMetadata) {
+    logger.error('WebSocket connection failed',
+      {
+        ...metadata,
+        error,
+        timestamp: new Date().toISOString()
+      },
+      this.sessionId,
+      {
+        component: 'WebSocketService',
+        action: 'connect_error',
+        error
       }
-    });
+    );
+  }
+
+  logMessageSent(metadata: WebSocketLogMetadata) {
+    logger.debug('WebSocket message sent',
+      {
+        ...metadata,
+        timestamp: new Date().toISOString()
+      },
+      this.sessionId,
+      {
+        component: 'WebSocketService',
+        action: 'message_sent'
+      }
+    );
+  }
+
+  logMessageReceived(metadata: WebSocketLogMetadata) {
+    logger.debug('WebSocket message received',
+      {
+        ...metadata,
+        timestamp: new Date().toISOString()
+      },
+      this.sessionId,
+      {
+        component: 'WebSocketService',
+        action: 'message_received'
+      }
+    );
+  }
+
+  logStateChange(
+    previousState: ConnectionState,
+    newState: ConnectionState,
+    metadata: WebSocketLogMetadata
+  ) {
+    logger.info('WebSocket state changed',
+      {
+        ...metadata,
+        previousState,
+        newState,
+        timestamp: new Date().toISOString()
+      },
+      this.sessionId,
+      {
+        component: 'WebSocketService',
+        action: 'state_change'
+      }
+    );
+  }
+
+  logMetricsUpdate(metrics: ConnectionMetrics, metadata: WebSocketLogMetadata) {
+    logger.debug('WebSocket metrics updated',
+      {
+        ...metadata,
+        metrics,
+        timestamp: new Date().toISOString()
+      },
+      this.sessionId,
+      {
+        component: 'WebSocketService',
+        action: 'metrics_update'
+      }
+    );
+  }
+
+  logReconnectAttempt(attempt: number, metadata: WebSocketLogMetadata) {
+    logger.info('Attempting WebSocket reconnection',
+      {
+        ...metadata,
+        attempt,
+        timestamp: new Date().toISOString()
+      },
+      this.sessionId,
+      {
+        component: 'WebSocketService',
+        action: 'reconnect_attempt'
+      }
+    );
+  }
+
+  logSessionValidation(isValid: boolean, metadata: WebSocketLogMetadata) {
+    logger.info('Session validation result',
+      {
+        ...metadata,
+        isValid,
+        timestamp: new Date().toISOString()
+      },
+      this.sessionId,
+      {
+        component: 'WebSocketService',
+        action: 'session_validation'
+      }
+    );
+  }
+
+  logDisconnect(code?: number, reason?: string) {
+    logger.info('WebSocket disconnecting',
+      {
+        code,
+        reason,
+        timestamp: new Date().toISOString()
+      },
+      this.sessionId,
+      {
+        component: 'WebSocketService',
+        action: 'disconnect'
+      }
+    );
   }
 }

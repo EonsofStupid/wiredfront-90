@@ -1,7 +1,6 @@
-import { WebSocketLogger } from '../monitoring/WebSocketLogger';
-import { ConnectionState, ConnectionMetrics } from '../types/connection';
+import { WebSocketLogger } from './WebSocketLogger';
 import { WebSocketStateManager } from './WebSocketStateManager';
-import { toast } from 'sonner';
+import { ConnectionMetrics } from '@/types/websocket';
 
 export class WebSocketEventHandler {
   constructor(
@@ -9,21 +8,13 @@ export class WebSocketEventHandler {
     private stateManager: WebSocketStateManager,
     private onMessage?: (data: any) => void,
     private onMetricsUpdate?: (metrics: Partial<ConnectionMetrics>) => void
-  ) {
-    this.logger.info('Event handler initialized', {
-      timestamp: new Date().toISOString()
-    });
-  }
+  ) {}
 
   setupEventHandlers(ws: WebSocket) {
     ws.onopen = this.handleOpen.bind(this);
     ws.onmessage = this.handleMessage.bind(this);
     ws.onerror = this.handleError.bind(this);
     ws.onclose = this.handleClose.bind(this);
-    
-    this.logger.info('Event handlers setup complete', {
-      timestamp: new Date().toISOString()
-    });
   }
 
   private handleOpen() {
@@ -36,47 +27,30 @@ export class WebSocketEventHandler {
       lastError: null
     };
     
-    this.logger.info('Connection opened', {
-      metrics,
-      timestamp: new Date().toISOString()
-    });
-    
+    this.logger.logConnectionSuccess(metrics);
     this.onMetricsUpdate?.(metrics);
   }
 
   private handleMessage(event: MessageEvent) {
     try {
       const data = JSON.parse(event.data);
-      this.logger.debug('Message received', {
-        messageType: data?.type,
-        timestamp: new Date().toISOString()
-      });
+      this.logger.logMessageReceived(data);
       this.onMessage?.(data);
     } catch (error) {
-      this.logger.error('Message processing failed', {
-        error,
-        rawData: event.data,
-        timestamp: new Date().toISOString()
-      });
-      toast.error('Failed to process message');
+      this.logger.logConnectionError(error as Error, this.stateManager.getReconnectAttempts());
     }
   }
 
   private handleError(event: Event) {
     this.stateManager.setState('error');
-    this.logger.error('Connection error', {
-      error: event,
-      timestamp: new Date().toISOString()
-    });
+    this.logger.logConnectionError(
+      new Error('WebSocket error occurred'),
+      this.stateManager.getReconnectAttempts()
+    );
   }
 
   private handleClose(event: CloseEvent) {
     this.stateManager.setState('disconnected');
-    this.logger.info('Connection closed', {
-      code: event.code,
-      reason: event.reason,
-      wasClean: event.wasClean,
-      timestamp: new Date().toISOString()
-    });
+    this.logger.logDisconnect(event.code, event.reason);
   }
 }

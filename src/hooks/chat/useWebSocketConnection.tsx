@@ -94,6 +94,13 @@ export const useWebSocketConnection = (
 
         if (!wsServiceRef.current) {
           wsServiceRef.current = new WebSocketService(sessionId);
+          
+          await wsServiceRef.current.setCallbacks({
+            onMessage,
+            onStateChange: updateState,
+            onMetricsUpdate: updateMetrics
+          });
+
           await wsServiceRef.current.connect(session.access_token);
           
           logger.info('WebSocket service initialized and connected',
