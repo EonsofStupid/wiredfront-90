@@ -33,7 +33,7 @@ export const useWebSocketConnection = (
     return () => {
       disconnect();
     };
-  }, [wsUrl, handleMessage, isMinimized, connect, disconnect]);
+  }, [wsUrl, isMinimized, connect, disconnect]);
 
   return {
     connectionState,
@@ -46,9 +46,7 @@ export const useWebSocketConnection = (
       return false;
     }, [ws]),
     isConnected: connectionState === 'connected',
-    reconnect: useCallback(() => {
-      connect();
-    }, [connect]),
+    reconnect: connect,
     ws
   };
 };

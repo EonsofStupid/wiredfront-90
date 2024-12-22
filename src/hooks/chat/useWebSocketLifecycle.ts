@@ -67,12 +67,6 @@ export const useWebSocketLifecycle = (wsUrl: string) => {
     updateConnectionState('disconnected');
   }, []);
 
-  useEffect(() => {
-    return () => {
-      disconnect();
-    };
-  }, [disconnect]);
-
   return {
     connectionState,
     disconnect,
