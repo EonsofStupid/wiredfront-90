@@ -1,6 +1,6 @@
 import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
 import { WebSocketLogger } from './WebSocketLogger';
-import { WebSocketStateManager } from './WebSocketStateManager';
+import { WebSocketStateManager } from './websocket/WebSocketStateManager';
 import { WebSocketEventHandler } from './websocket/WebSocketEventHandler';
 import { WEBSOCKET_URL } from '@/constants/websocket';
 import { toast } from 'sonner';
@@ -21,15 +21,10 @@ export class WebSocketConnectionService {
     this.stateManager = new WebSocketStateManager(this.logger, onStateChange);
     this.eventHandler = new WebSocketEventHandler(
       this.logger,
-      onStateChange,
+      this.stateManager,
+      this.handleMessage.bind(this),
       this.handleMetricsUpdate.bind(this)
     );
-
-    this.logger.info('WebSocket service initialized', {
-      sessionId,
-      timestamp: new Date().toISOString()
-    });
-    toast.info('Chat service initialized');
   }
 
   setAuthToken(token: string) {

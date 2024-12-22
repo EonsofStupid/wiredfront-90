@@ -9,7 +9,7 @@ export class WebSocketStateManager {
 
   constructor(
     private logger: WebSocketLogger,
-    private onStateChange?: (state: ConnectionState) => void
+    private onStateChange: (state: ConnectionState) => void
   ) {
     this.logger.info('State manager initialized', {
       initialState: this.state,
@@ -28,7 +28,7 @@ export class WebSocketStateManager {
       timestamp: new Date().toISOString()
     });
     
-    this.onStateChange?.(newState);
+    this.onStateChange(newState);
 
     switch (newState) {
       case 'connecting':

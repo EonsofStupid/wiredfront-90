@@ -1,6 +1,6 @@
-import { WebSocketLogger } from './WebSocketLogger';
-import { WebSocketStateManager } from './WebSocketStateManager';
-import { ConnectionMetrics } from '@/types/websocket';
+import { WebSocketLogger } from '../WebSocketLogger';
+import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
+import { WebSocketStateManager } from '../../websocket/WebSocketStateManager';
 import { toast } from 'sonner';
 
 export class WebSocketEventHandler {
@@ -42,7 +42,6 @@ export class WebSocketEventHandler {
     });
     
     this.onMetricsUpdate?.(metrics);
-    toast.success('Chat connection established');
   }
 
   private handleMessage(event: MessageEvent) {
@@ -64,27 +63,20 @@ export class WebSocketEventHandler {
   }
 
   private handleError(event: Event) {
-    const error = new Error('WebSocket error occurred');
     this.stateManager.setState('error');
-    
     this.logger.error('Connection error', {
-      error,
+      error: event,
       timestamp: new Date().toISOString()
     });
-    
-    toast.error('Chat connection error occurred');
   }
 
   private handleClose(event: CloseEvent) {
     this.stateManager.setState('disconnected');
-    
     this.logger.info('Connection closed', {
       code: event.code,
       reason: event.reason,
       wasClean: event.wasClean,
       timestamp: new Date().toISOString()
     });
-    
-    toast.info('Chat connection closed');
   }
 }
