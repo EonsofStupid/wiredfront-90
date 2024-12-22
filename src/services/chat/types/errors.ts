@@ -28,8 +28,8 @@ export class MessageSendError extends WebSocketError {
 }
 
 export class OpenAIError extends WebSocketError {
-  constructor(message: string, public readonly openAIErrorCode: string) {
-    super(message, 'OPENAI_ERROR', { openAIErrorCode });
+  constructor(message: string, public readonly code: string) {
+    super(message, 'OPENAI_ERROR', { code });
     this.name = 'OpenAIError';
   }
 }

@@ -6,15 +6,21 @@ export class WebSocketStateManager {
   private reconnectAttempts = 0;
   private readonly maxReconnectAttempts = 5;
 
-  constructor(private logger: WebSocketLogger) {}
+  constructor(
+    private logger: WebSocketLogger,
+    private onStateChange?: (state: ConnectionState) => void
+  ) {}
 
-  setState(newState: ConnectionState) {
+  setState(newState: ConnectionState, metadata: Record<string, any> = {}) {
     const previousState = this.state;
     this.state = newState;
+    
     this.logger.logStateChange(newState, {
       previousState,
-      timestamp: new Date().toISOString()
+      ...metadata
     });
+    
+    this.onStateChange?.(newState);
   }
 
   getState(): ConnectionState {
@@ -23,11 +29,12 @@ export class WebSocketStateManager {
 
   incrementReconnectAttempts(): boolean {
     this.reconnectAttempts++;
+    
     this.logger.info('Reconnection attempt', {
       attempt: this.reconnectAttempts,
-      maxAttempts: this.maxReconnectAttempts,
-      timestamp: new Date().toISOString()
+      maxAttempts: this.maxReconnectAttempts
     });
+
     return this.reconnectAttempts < this.maxReconnectAttempts;
   }
 
