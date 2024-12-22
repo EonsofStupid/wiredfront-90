@@ -1,94 +1,121 @@
-import { useCallback, useRef } from 'react';
-import { ConnectionState, ConnectionMetrics, WebSocketConfig } from '@/types/websocket';
-import { HEARTBEAT_INTERVAL } from './constants/websocket';
-import { calculateLatency } from './utils/websocket';
-import { MessageQueueManager } from './utils/messageQueue';
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useRef, useState } from 'react';
+import { ConnectionState } from '@/types/websocket';
 
-export const useWebSocketLifecycle = (
-  config: WebSocketConfig,
-  setConnectionState: (state: ConnectionState) => void,
-  setMetrics: (metrics: ConnectionMetrics | ((prev: ConnectionMetrics) => ConnectionMetrics)) => void
-) => {
+interface WebSocketConfig {
+  url: string;
+  maxRetries?: number;
+  initialRetryDelay?: number;
+  maxRetryDelay?: number;
+  onMessage?: (event: MessageEvent) => void;
+  onStateChange?: (state: ConnectionState) => void;
+}
+
+export const useWebSocketLifecycle = ({
+  url,
+  maxRetries = 5,
+  initialRetryDelay = 1000,
+  maxRetryDelay = 30000,
+  onMessage,
+  onStateChange
+}: WebSocketConfig) => {
+  const [connectionState, setConnectionState] = useState<ConnectionState>('initial');
   const wsRef = useRef<WebSocket | null>(null);
-  const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval>>();
-  const messageQueueRef = useRef<MessageQueueManager>(new MessageQueueManager());
-  const pingTimeRef = useRef<number>(0);
+  const retryCountRef = useRef(0);
+  const retryTimeoutRef = useRef<NodeJS.Timeout>();
+  const isConnectingRef = useRef(false);
 
-  const sendHeartbeat = useCallback(async () => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      const { data: { session } } = await supabase.auth.getSession();
-      pingTimeRef.current = Date.now();
-      wsRef.current.send(JSON.stringify({ 
-        type: 'ping',
-        auth: {
-          access_token: session?.access_token
-        }
-      }));
+  const updateConnectionState = (newState: ConnectionState) => {
+    setConnectionState(newState);
+    onStateChange?.(newState);
+  };
+
+  const clearRetryTimeout = () => {
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = undefined;
     }
-  }, []);
+  };
 
-  const setupWebSocketHandlers = useCallback((ws: WebSocket) => {
-    ws.onopen = () => {
-      console.log('WebSocket connected');
-      const connectedAt = new Date();
-      setConnectionState('connected');
-      setMetrics(prev => ({
-        ...prev,
-        lastConnected: connectedAt,
-        reconnectAttempts: 0,
-        lastError: null
-      }));
+  const connect = () => {
+    if (isConnectingRef.current || wsRef.current?.readyState === WebSocket.OPEN) {
+      return;
+    }
 
-      // Process queued messages
-      const queuedMessages = messageQueueRef.current.getAll();
-      queuedMessages.forEach(message => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify(message));
-          messageQueueRef.current.remove(message.id);
-          setMetrics(prev => ({
-            ...prev,
-            messagesSent: prev.messagesSent + 1
-          }));
+    isConnectingRef.current = true;
+    updateConnectionState('connecting');
+
+    try {
+      const ws = new WebSocket(url);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        console.log('WebSocket connected');
+        isConnectingRef.current = false;
+        retryCountRef.current = 0;
+        updateConnectionState('connected');
+      };
+
+      ws.onmessage = (event) => {
+        onMessage?.(event);
+      };
+
+      ws.onclose = () => {
+        console.log('WebSocket closed');
+        isConnectingRef.current = false;
+        wsRef.current = null;
+        updateConnectionState('disconnected');
+
+        if (retryCountRef.current < maxRetries) {
+          const delay = Math.min(
+            initialRetryDelay * Math.pow(2, retryCountRef.current),
+            maxRetryDelay
+          );
+          console.log(`Attempting to reconnect in ${delay}ms (attempt ${retryCountRef.current + 1})`);
+          clearRetryTimeout();
+          retryTimeoutRef.current = setTimeout(() => {
+            retryCountRef.current++;
+            connect();
+          }, delay);
+        } else {
+          updateConnectionState('failed');
         }
-      });
+      };
 
-      // Start heartbeat with authentication
-      heartbeatIntervalRef.current = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        isConnectingRef.current = false;
+      };
+    } catch (error) {
+      console.error('Failed to create WebSocket:', error);
+      isConnectingRef.current = false;
+      updateConnectionState('failed');
+    }
+  };
+
+  const disconnect = () => {
+    clearRetryTimeout();
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+    isConnectingRef.current = false;
+    updateConnectionState('disconnected');
+  };
+
+  useEffect(() => {
+    connect();
+    return () => {
+      disconnect();
     };
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        
-        if (data.type === 'pong') {
-          const latency = calculateLatency(pingTimeRef.current);
-          setMetrics(prev => ({
-            ...prev,
-            lastHeartbeat: new Date(),
-            latency
-          }));
-          return;
-        }
-        
-        setMetrics(prev => ({
-          ...prev,
-          messagesReceived: prev.messagesReceived + 1
-        }));
-
-        config.onMessage(data);
-      } catch (error) {
-        console.error('Error parsing message:', error);
-      }
-    };
-
-    return ws;
-  }, [config.onMessage, sendHeartbeat, setConnectionState, setMetrics]);
+  }, [url]);
 
   return {
-    wsRef,
-    heartbeatIntervalRef,
-    messageQueueRef,
-    setupWebSocketHandlers
+    connectionState,
+    disconnect,
+    reconnect: () => {
+      retryCountRef.current = 0;
+      connect();
+    },
+    ws: wsRef.current
   };
 };
