@@ -44,8 +44,7 @@ export const DraggableChat = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    addOptimisticMessage,
-    reconnect
+    addOptimisticMessage
   } = useMessages(currentSessionId, currentSession?.isMinimized ?? false);
 
   useEffect(() => {
