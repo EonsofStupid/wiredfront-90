@@ -1,6 +1,6 @@
-import { ConnectionState, ConnectionMetrics, WebSocketCallbacks } from '@/types/websocket';
 import { WebSocketLogger } from './websocket/monitoring/WebSocketLogger';
-import { WEBSOCKET_URL } from '@/constants/websocket';
+import { ConnectionState, ConnectionMetrics, WebSocketCallbacks } from '@/types/websocket';
+import { HEARTBEAT_INTERVAL } from '@/constants/websocket';
 import { toast } from 'sonner';
 
 /**
@@ -9,6 +9,7 @@ import { toast } from 'sonner';
  * - Message handling
  * - State management
  * - Reconnection logic
+ * - Heartbeat management
  */
 export class WebSocketService {
   private ws: WebSocket | null = null;
@@ -39,6 +40,45 @@ export class WebSocketService {
     });
   }
 
+  /**
+   * Starts the heartbeat mechanism
+   * @private
+   */
+  private startHeartbeat(): void {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+    }
+
+    this.heartbeatInterval = setInterval(() => {
+      if (this.ws?.readyState === WebSocket.OPEN) {
+        this.ws.send(JSON.stringify({ type: 'ping' }));
+        this.logger.log('info', 'Heartbeat ping sent', {
+          sessionId: this.sessionId,
+          timestamp: new Date().toISOString()
+        });
+      }
+    }, HEARTBEAT_INTERVAL);
+
+    this.logger.log('info', 'Heartbeat mechanism started', {
+      sessionId: this.sessionId,
+      interval: HEARTBEAT_INTERVAL
+    });
+  }
+
+  /**
+   * Stops the heartbeat mechanism
+   * @private
+   */
+  private stopHeartbeat(): void {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+      this.logger.log('info', 'Heartbeat mechanism stopped', {
+        sessionId: this.sessionId
+      });
+    }
+  }
+
   private handleMessage(data: any) {
     this.logger.log('info', 'Message received', {
       type: data?.type,
@@ -60,6 +100,7 @@ export class WebSocketService {
         lastError: null
       });
       this.callbacks?.onStateChange('connected');
+      this.startHeartbeat(); // Start heartbeat when connection opens
       toast.success('Connected to chat service');
     };
 
@@ -97,15 +138,17 @@ export class WebSocketService {
         error
       });
       this.callbacks?.onStateChange('error');
+      this.stopHeartbeat(); // Stop heartbeat on error
       toast.error('Connection error occurred');
     };
 
-    this.ws.onclose = (event) => {
+    this.ws.onclose = () => {
       this.logger.updateConnectionState('disconnected');
       this.logger.log('info', 'WebSocket disconnected', {
         sessionId: this.sessionId
       });
       this.callbacks?.onStateChange('disconnected');
+      this.stopHeartbeat(); // Stop heartbeat on close
       toast.error('Disconnected from chat service');
       this.handleReconnect();
     };
