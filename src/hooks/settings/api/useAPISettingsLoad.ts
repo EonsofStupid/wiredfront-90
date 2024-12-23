@@ -50,11 +50,17 @@ export function useAPISettingsLoad(
 
           if (userSettings) {
             const newSettings = {} as APISettingsState;
-            userSettings.forEach(setting => {
-              // Prefer encrypted value if available
-              const value = setting.encrypted_value ? 
-                await decryptValue(setting.encrypted_value) :
-                (isSettingValue(setting.value) ? setting.value.key : null);
+            
+            // Use Promise.all to handle async operations in parallel
+            await Promise.all(userSettings.map(async (setting) => {
+              let value: string | null = null;
+              
+              if (setting.encrypted_value) {
+                const decrypted = await decryptValue(setting.encrypted_value);
+                value = decrypted;
+              } else {
+                value = isSettingValue(setting.value) ? setting.value.key : null;
+              }
               
               if (!value) return;
               
@@ -71,7 +77,7 @@ export function useAPISettingsLoad(
                 .replace(/^elevenlabs-voice/, "selectedVoice");
 
               (newSettings as any)[key] = value;
-            });
+            }));
             
             // Cache settings for offline use
             localStorage.setItem('api_settings', JSON.stringify(newSettings));
@@ -89,7 +95,10 @@ export function useAPISettingsLoad(
           toast.error(`Failed to load API settings. Retrying... (${retryCount}/${RETRY_ATTEMPTS})`);
         } else {
           toast.error("Failed to load API settings. Loading from offline cache...");
-          loadOfflineSettings();
+          const offlineSettings = loadOfflineSettings();
+          if (offlineSettings) {
+            setSettings(offlineSettings);
+          }
         }
       }
     };
@@ -102,20 +111,20 @@ export function useAPISettingsLoad(
   }, [navigate, setSettings, setUser]);
 }
 
-const decryptValue = async (encryptedValue: any) => {
+const decryptValue = async (encryptedValue: any): Promise<string | null> => {
   try {
     const { data, error } = await supabase.rpc('decrypt_setting_value', {
       encrypted_value: encryptedValue
     });
     if (error) throw error;
-    return data?.key;
+    return typeof data === 'object' && data !== null ? data.key : null;
   } catch (error) {
     logger.error('Error decrypting value:', error);
     return null;
   }
 };
 
-const loadOfflineSettings = () => {
+const loadOfflineSettings = (): APISettingsState | null => {
   try {
     const cached = localStorage.getItem('api_settings');
     if (cached) {
