@@ -11,12 +11,14 @@ export const useAPISwitch = () => {
     if (!currentAPI && apiSettings) {
       const defaultProvider = getDefaultProvider();
       if (defaultProvider) {
+        console.log('Setting default API provider:', defaultProvider);
         setCurrentAPI(defaultProvider);
-        // Only show the toast once when first setting up
         if (!hasShownToast) {
+          toast.success(`Using ${defaultProvider.toUpperCase()} as the default provider`);
           setHasShownToast(true);
         }
       } else if (!hasShownToast) {
+        console.warn('No API provider configured');
         toast.error("Please configure an API provider in settings");
         setHasShownToast(true);
       }
@@ -27,13 +29,18 @@ export const useAPISwitch = () => {
     initializeAPI();
   }, [initializeAPI]);
 
-  const handleSwitchAPI = (provider: string) => {
-    setCurrentAPI(provider);
-    toast.success(`Now using ${provider.toUpperCase()} as the provider`);
-  };
+  const handleSwitchAPI = useCallback((provider: string) => {
+    if (apiSettings?.[provider.toLowerCase()]) {
+      setCurrentAPI(provider);
+      toast.success(`Now using ${provider.toUpperCase()} as the provider`);
+    } else {
+      toast.error(`${provider.toUpperCase()} API is not configured`);
+    }
+  }, [apiSettings]);
 
   return {
     currentAPI,
-    handleSwitchAPI
+    handleSwitchAPI,
+    availableAPIs: apiSettings ? Object.keys(apiSettings) : []
   };
 };
