@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { useWindowPosition } from '@/hooks/useWindowPosition';
 import { useMessages } from '@/hooks/useMessages';
@@ -8,8 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { ChatSessionControls } from './ChatSessionControls';
 import { useChatStore } from '@/stores/chat/store';
 import { useUIStore } from '@/stores/ui/store';
-import { supabase } from "@/integrations/supabase/client";
-import { logger } from '@/services/chat/LoggingService';
+import { ChatContainer } from './ChatContainer';
 
 export const DraggableChat = () => {
   const CHAT_WIDTH = 414;
@@ -23,8 +22,7 @@ export const DraggableChat = () => {
     switchSession,
     updateSession,
     removeSession,
-    connectionState,
-    setConnectionState
+    connectionState
   } = useChatStore();
 
   const zIndex = useUIStore((state) => state.zIndex);
@@ -56,41 +54,6 @@ export const DraggableChat = () => {
       createSession();
     }
   }, [currentSessionId, createSession]);
-
-  // Set up real-time subscription
-  useEffect(() => {
-    if (!currentSessionId) return;
-
-    setConnectionState('connecting');
-
-    const channel = supabase
-      .channel(`messages:${currentSessionId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'messages',
-          filter: `chat_session_id=eq.${currentSessionId}`,
-        },
-        (payload) => {
-          logger.debug('Real-time message update:', { payload, sessionId: currentSessionId });
-        }
-      )
-      .subscribe((status) => {
-        logger.info(`Subscription status for session ${currentSessionId}:`, { status });
-        if (status === 'SUBSCRIBED') {
-          setConnectionState('connected');
-          logger.info('Successfully subscribed to message updates');
-        }
-      });
-
-    return () => {
-      logger.info(`Unsubscribing from session ${currentSessionId}`);
-      setConnectionState('disconnected');
-      supabase.removeChannel(channel);
-    };
-  }, [currentSessionId, setConnectionState]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setIsDragging(true);
@@ -212,6 +175,7 @@ export const DraggableChat = () => {
           onSendMessage={handleSendMessage}
           connectionState={connectionState}
         />
+        {currentSessionId && <ChatContainer sessionId={currentSessionId} />}
       </div>
     </ChatDragContext>
   );
