@@ -62,6 +62,7 @@ export class WebSocketService {
       this.ws = new WebSocket(wsUrl);
       this.setupEventHandlers();
       
+      this.callbacks?.onStateChange?.('connecting');
       toast.info('Connecting to chat service...');
       
     } catch (error) {
@@ -97,7 +98,7 @@ export class WebSocketService {
     this.ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        this.logger.log('debug', 'Message received', {
+        this.logger.log('info', 'Message received', {
           sessionId: this.sessionId,
           messageType: data?.type,
           timestamp: new Date().toISOString()
@@ -178,7 +179,7 @@ export class WebSocketService {
     if (this.ws?.readyState === WebSocket.OPEN) {
       try {
         this.ws.send(JSON.stringify(message));
-        this.logger.log('debug', 'Message sent', {
+        this.logger.log('info', 'Message sent', {
           sessionId: this.sessionId,
           messageType: message?.type,
           timestamp: new Date().toISOString()

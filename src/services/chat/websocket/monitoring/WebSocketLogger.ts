@@ -1,26 +1,7 @@
-import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
-
-interface LogEntry {
-  timestamp: number;
-  message: string;
-  level: 'debug' | 'info' | 'warn' | 'error';
-  metadata?: any;
-}
+type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
 export class WebSocketLogger {
   private static instance: WebSocketLogger;
-  private logs: LogEntry[] = [];
-  private metrics: ConnectionMetrics = {
-    lastConnected: null,
-    reconnectAttempts: 0,
-    lastError: null,
-    messagesSent: 0,
-    messagesReceived: 0,
-    lastHeartbeat: null,
-    latency: 0,
-    uptime: 0
-  };
-  private connectionState: ConnectionState = 'initial';
 
   private constructor() {}
 
@@ -31,48 +12,30 @@ export class WebSocketLogger {
     return WebSocketLogger.instance;
   }
 
-  log(level: 'debug' | 'info' | 'warn' | 'error', message: string, metadata?: any) {
-    const entry: LogEntry = {
-      timestamp: Date.now(),
-      message,
+  log(level: LogLevel, message: string, metadata?: Record<string, any>) {
+    const timestamp = new Date().toISOString();
+    const logData = {
+      timestamp,
       level,
-      metadata
+      message,
+      ...metadata
     };
-    
-    this.logs.unshift(entry);
-    if (this.logs.length > 1000) {
-      this.logs.pop();
+
+    switch (level) {
+      case 'debug':
+        console.debug(`[${timestamp}] ${message}`, metadata);
+        break;
+      case 'info':
+        console.info(`[${timestamp}] ${message}`, metadata);
+        break;
+      case 'warn':
+        console.warn(`[${timestamp}] ${message}`, metadata);
+        break;
+      case 'error':
+        console.error(`[${timestamp}] ${message}`, metadata);
+        break;
     }
 
-    console[level](message, metadata);
-  }
-
-  updateMetrics(updates: Partial<ConnectionMetrics>) {
-    this.metrics = { ...this.metrics, ...updates };
-    if (this.metrics.lastConnected) {
-      this.metrics.uptime = Date.now() - this.metrics.lastConnected.getTime();
-    }
-    this.log('info', 'Metrics updated', { updates });
-  }
-
-  updateConnectionState(state: ConnectionState) {
-    this.connectionState = state;
-    this.log('info', `Connection state changed to ${state}`);
-  }
-
-  getMetrics(): ConnectionMetrics {
-    return { ...this.metrics };
-  }
-
-  getConnectionState(): ConnectionState {
-    return this.connectionState;
-  }
-
-  getLogs(): LogEntry[] {
-    return [...this.logs];
-  }
-
-  clearLogs() {
-    this.logs = [];
+    return logData;
   }
 }

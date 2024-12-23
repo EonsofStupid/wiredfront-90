@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { DraggableChat } from "@/components/chat/DraggableChat";
 import { SetupWizard } from "@/components/setup/SetupWizard";
 import { useAuthStore } from "@/stores/auth";
+import { toast } from "sonner";
 
 export default function Index() {
   const { user, loading } = useAuthStore();
@@ -12,12 +13,17 @@ export default function Index() {
   useEffect(() => {
     // If user is authenticated and setup is needed, show setup
     // Otherwise, if user is authenticated, redirect to dashboard
-    if (!loading && user) {
-      const hasCompletedSetup = localStorage.getItem('setupComplete');
-      if (!hasCompletedSetup) {
-        setShowSetup(true);
+    if (!loading) {
+      if (user) {
+        const hasCompletedSetup = localStorage.getItem('setupComplete');
+        if (!hasCompletedSetup) {
+          setShowSetup(true);
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
       } else {
-        navigate('/dashboard', { replace: true });
+        toast.error("Please log in to continue");
+        navigate('/login', { replace: true });
       }
     }
   }, [user, loading, navigate]);
