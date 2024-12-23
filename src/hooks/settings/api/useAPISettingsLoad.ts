@@ -10,6 +10,10 @@ import { Json } from "@/integrations/supabase/types";
 const RETRY_ATTEMPTS = 3;
 const RETRY_DELAY = 1000;
 
+interface DecryptedValue {
+  key: string;
+}
+
 export function useAPISettingsLoad(
   setUser: (user: any) => void,
   setSettings: (settings: APISettingsState) => void,
@@ -52,7 +56,6 @@ export function useAPISettingsLoad(
           if (userSettings) {
             const newSettings = {} as APISettingsState;
             
-            // Use Promise.all to handle async operations in parallel
             await Promise.all(userSettings.map(async (setting) => {
               let value: string | null = null;
               
@@ -110,10 +113,6 @@ export function useAPISettingsLoad(
       if (retryTimeout) clearTimeout(retryTimeout);
     };
   }, [navigate, setSettings, setUser]);
-}
-
-interface DecryptedValue {
-  key: string;
 }
 
 const decryptValue = async (encryptedValue: any): Promise<string | null> => {
