@@ -5,7 +5,11 @@ import { useCallback } from "react";
 import { APIConfigurationList } from "@/components/settings/api/APIConfigurationList";
 import { useAPISettings } from "@/hooks/settings/api";
 
-export function APIConfigStep() {
+interface APIConfigStepProps {
+  isFirstTimeUser?: boolean;
+}
+
+export function APIConfigStep({ isFirstTimeUser = false }: APIConfigStepProps) {
   const { configurations, loading, updateConfiguration, createConfiguration } = useAPIConfigurations();
   const { settings } = useAPISettings();
 
@@ -26,7 +30,9 @@ export function APIConfigStep() {
       <CardContent className="pt-6">
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground mb-4">
-            Configure your API keys to enable AI features. You can update these later in settings.
+            {isFirstTimeUser 
+              ? "To get started, you'll need to configure at least one AI provider. Don't worry, you can always update these later."
+              : "Configure your API keys to enable AI features. You can update these later in settings."}
           </p>
           <APIConfigurationList
             configurations={configurations}

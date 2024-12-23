@@ -2,7 +2,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
-export function PreferencesStep() {
+interface PreferencesStepProps {
+  isFirstTimeUser?: boolean;
+}
+
+export function PreferencesStep({ isFirstTimeUser = false }: PreferencesStepProps) {
   return (
     <Card>
       <CardContent className="pt-6">
