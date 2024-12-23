@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useChatAPI } from './useChatAPI';
-import { useToast } from "@/hooks/use-toast";
+import { toast } from 'sonner';
 
 export const useAPISwitch = () => {
-  const { toast } = useToast();
   const { apiSettings, getDefaultProvider } = useChatAPI();
   const [currentAPI, setCurrentAPI] = useState<string | null>(null);
 
@@ -12,26 +11,16 @@ export const useAPISwitch = () => {
       const defaultProvider = getDefaultProvider();
       if (defaultProvider) {
         setCurrentAPI(defaultProvider);
-        toast({
-          title: "API Provider Selected",
-          description: `Using ${defaultProvider.toUpperCase()} as the default provider`,
-        });
+        toast.success(`Using ${defaultProvider.toUpperCase()} as the default provider`);
       } else {
-        toast({
-          title: "No API Provider",
-          description: "Please configure an API provider in settings",
-          variant: "destructive"
-        });
+        toast.error("Please configure an API provider in settings");
       }
     }
-  }, [apiSettings, currentAPI, getDefaultProvider, toast]);
+  }, [apiSettings, currentAPI, getDefaultProvider]);
 
   const handleSwitchAPI = (provider: string) => {
     setCurrentAPI(provider);
-    toast({
-      title: "API Provider Changed",
-      description: `Now using ${provider.toUpperCase()} as the provider`,
-    });
+    toast.success(`Now using ${provider.toUpperCase()} as the provider`);
   };
 
   return {

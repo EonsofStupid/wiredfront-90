@@ -4,7 +4,7 @@ import { useWindowPosition } from '@/hooks/useWindowPosition';
 import { useMessages } from '@/hooks/useMessages';
 import { ChatWindow } from './ChatWindow';
 import { ChatDragContext } from './ChatDragContext';
-import { useToast } from "@/hooks/use-toast";
+import { toast } from 'sonner';
 import { ChatSessionControls } from './ChatSessionControls';
 import { useChatStore } from '@/stores/chat/store';
 import { useUIStore } from '@/stores/ui/store';
@@ -38,7 +38,6 @@ export const DraggableChat = () => {
   });
 
   const [isDragging, setIsDragging] = useState(false);
-  const { toast } = useToast();
 
   const currentSession = currentSessionId ? sessions[currentSessionId] : null;
   console.log('Current session:', { currentSessionId, currentSession });
@@ -95,10 +94,7 @@ export const DraggableChat = () => {
 
   const handleClose = () => {
     console.log('Close clicked');
-    toast({
-      title: "Chat minimized",
-      description: "You can restore the chat from the AI button",
-    });
+    toast.info("Chat minimized - You can restore the chat from the AI button");
     if (currentSessionId) {
       updateSession(currentSessionId, { isMinimized: true });
     }
@@ -125,26 +121,16 @@ export const DraggableChat = () => {
   const handleNewSession = () => {
     console.log('New session clicked');
     createSession();
-    toast({
-      title: "New chat session created",
-      description: "You can switch between sessions using the menu",
-    });
+    toast.success("New chat session created");
   };
 
   const handleCloseSession = (sessionId: string) => {
     console.log('Close session clicked', { sessionId });
     if (Object.keys(sessions).length > 1) {
       removeSession(sessionId);
-      toast({
-        title: "Session closed",
-        description: "Chat session has been closed",
-      });
+      toast.success("Chat session closed");
     } else {
-      toast({
-        title: "Cannot close session",
-        description: "You must have at least one active session",
-        variant: "destructive"
-      });
+      toast.error("You must have at least one active session");
     }
   };
 
@@ -154,11 +140,7 @@ export const DraggableChat = () => {
       await addOptimisticMessage(content);
     } catch (error) {
       console.error('Failed to send message:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to send message. Please try again.");
     }
   };
 
