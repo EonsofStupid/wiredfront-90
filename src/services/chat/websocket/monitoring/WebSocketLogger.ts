@@ -11,7 +11,7 @@ interface LogEntry {
 }
 
 export class WebSocketLogger {
-  private static instance: WebSocketLogger;
+  private static instance: WebSocketLogger | null = null;
   private logs: LogEntry[] = [];
   private metrics: ConnectionMetrics = {
     lastConnected: null,
@@ -24,12 +24,28 @@ export class WebSocketLogger {
     uptime: 0
   };
   private connectionState: ConnectionState = 'initial';
+  private sessionId: string = '';
 
-  constructor(private sessionId: string) {
+  private constructor() {
     this.log('debug', 'WebSocket Logger initialized', {
-      sessionId,
       timestamp: new Date().toISOString(),
       context: 'logger_init'
+    });
+  }
+
+  public static getInstance(): WebSocketLogger {
+    if (!WebSocketLogger.instance) {
+      WebSocketLogger.instance = new WebSocketLogger();
+    }
+    return WebSocketLogger.instance;
+  }
+
+  public setSessionId(sessionId: string) {
+    this.sessionId = sessionId;
+    this.log('debug', 'Session ID set', {
+      sessionId,
+      timestamp: new Date().toISOString(),
+      context: 'session_init'
     });
   }
 
@@ -50,7 +66,6 @@ export class WebSocketLogger {
       this.logs.pop();
     }
 
-    // Enhanced console logging with context
     const logPrefix = `[${new Date(entry.timestamp).toISOString()}][${level.toUpperCase()}][${entry.context}]`;
     const logMessage = `${logPrefix} ${message}`;
 
