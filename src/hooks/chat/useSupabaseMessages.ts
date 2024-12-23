@@ -59,7 +59,7 @@ export const useSupabaseMessages = (sessionId: string) => {
       .from('messages')
       .insert([{
         ...message,
-        user_id: user.id // Ensure we're using the authenticated user's ID
+        user_id: user.id
       }])
       .select()
       .single();
@@ -80,6 +80,7 @@ export const useSupabaseMessages = (sessionId: string) => {
       throw new Error('Not authenticated');
     }
 
+    const now = new Date().toISOString();
     const optimisticMessage: Message = {
       id: crypto.randomUUID(),
       content,
@@ -87,22 +88,21 @@ export const useSupabaseMessages = (sessionId: string) => {
       chat_session_id: sessionId,
       type: 'text',
       metadata: {},
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      created_at: now,
+      updated_at: now,
       is_minimized: false,
       position: { x: null, y: null },
       window_state: { width: 350, height: 500 },
-      last_accessed: new Date().toISOString()
+      last_accessed: now,
+      retry_count: 0,
+      message_status: 'pending'
     };
 
-    // Add optimistic message locally
     setMessages((prev) => [optimisticMessage, ...prev]);
 
     try {
-      // Send to server
       await addMessage(optimisticMessage);
     } catch (error) {
-      // Remove optimistic message on error
       setMessages((prev) => 
         prev.filter((msg) => msg.id !== optimisticMessage.id)
       );
