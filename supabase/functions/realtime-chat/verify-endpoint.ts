@@ -1,34 +1,40 @@
-// Verify the actual endpoint URL
-console.log('Testing Supabase Edge Function endpoints...');
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { corsHeaders } from './utils/cors.ts';
 
-const projectId = 'ewjisqyvspdvhyppkhnm';
-const possibleEndpoints = [
-  `wss://${projectId}.supabase.co/functions/v1/realtime-chat`,
-  `wss://${projectId}.functions.supabase.co/realtime-chat`,
-  `wss://${projectId}-realtime-chat.functions.supabase.co`,
-  `wss://realtime-chat.${projectId}.supabase.co`
-];
+console.log('Starting endpoint verification...');
 
-console.log('Possible endpoints to test:');
-possibleEndpoints.forEach((endpoint, index) => {
-  console.log(`${index + 1}. ${endpoint}`);
-});
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
 
-// Test each endpoint
-possibleEndpoints.forEach(async (endpoint) => {
   try {
-    const ws = new WebSocket(endpoint);
+    const projectId = 'ewjisqyvspdvhyppkhnm';
+    const baseUrl = `${req.headers.get('x-forwarded-proto')}://${req.headers.get('x-forwarded-host')}`;
     
-    ws.onopen = () => {
-      console.log(`✅ Successfully connected to: ${endpoint}`);
-      ws.close();
-    };
+    console.log('Base URL detected:', baseUrl);
+    console.log('Project ID:', projectId);
     
-    ws.onerror = (error) => {
-      console.error(`❌ Failed to connect to: ${endpoint}`);
-      console.error('Error:', error);
-    };
+    // Log headers for debugging
+    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+
+    return new Response(
+      JSON.stringify({
+        message: 'Endpoint verification active',
+        baseUrl,
+        projectId,
+        timestamp: new Date().toISOString()
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
+      }
+    );
   } catch (error) {
-    console.error(`Failed to initialize WebSocket for ${endpoint}:`, error);
+    console.error('Verification error:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500
+    });
   }
 });
