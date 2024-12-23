@@ -1,37 +1,94 @@
-import { WebSocketConnection } from './websocket/connection/WebSocketConnection';
-import { WebSocketCallbacks } from './websocket/types/websocket';
-import { logger } from './LoggingService';
+import { WebSocketLogger } from './websocket/monitoring/WebSocketLogger';
+import { WEBSOCKET_URL } from '@/constants/websocket';
+import { supabase } from "@/integrations/supabase/client";
 
 export class WebSocketService {
-  private connection: WebSocketConnection;
-  private callbacks: WebSocketCallbacks = {
-    onMessage: () => {},
-    onStateChange: () => {},
-    onMetricsUpdate: () => {}
-  };
+  private ws: WebSocket | null = null;
+  private logger: WebSocketLogger;
+  private sessionId: string;
+  private onMessage: ((data: any) => void) | null = null;
 
-  constructor(private sessionId: string) {
-    logger.info('Initializing WebSocket service', {
-      sessionId,
-      context: { component: 'WebSocketService', action: 'initialize' }
-    });
-    this.connection = new WebSocketConnection(sessionId);
+  constructor(sessionId: string) {
+    this.sessionId = sessionId;
+    this.logger = WebSocketLogger.getInstance();
+    console.log('WebSocket service initialized', { sessionId });
   }
 
-  setCallbacks(callbacks: WebSocketCallbacks) {
-    this.callbacks = callbacks;
-    this.connection.setCallbacks(callbacks);
+  setCallbacks(callbacks: { onMessage: (data: any) => void }) {
+    this.onMessage = callbacks.onMessage;
   }
 
-  async connect(token: string) {
-    await this.connection.connect(token);
+  async connect() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        throw new Error('No valid session found');
+      }
+
+      const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${session.access_token}`;
+      
+      if (this.ws) {
+        this.ws.close();
+        this.ws = null;
+      }
+
+      console.log('Connecting to WebSocket...', { sessionId: this.sessionId });
+      this.ws = new WebSocket(wsUrl);
+      this.setupEventHandlers();
+      
+    } catch (error) {
+      console.error('WebSocket connection failed:', error);
+      throw error;
+    }
+  }
+
+  private setupEventHandlers() {
+    if (!this.ws) return;
+
+    this.ws.onopen = () => {
+      console.log('WebSocket connected', { sessionId: this.sessionId });
+    };
+
+    this.ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('WebSocket message received:', data);
+        this.onMessage?.(data);
+      } catch (error) {
+        console.error('Failed to process message:', error);
+      }
+    };
+
+    this.ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    this.ws.onclose = () => {
+      console.log('WebSocket disconnected', { sessionId: this.sessionId });
+    };
   }
 
   send(message: any): boolean {
-    return this.connection.send(message);
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      try {
+        this.ws.send(JSON.stringify(message));
+        console.log('Message sent:', message);
+        return true;
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        return false;
+      }
+    }
+    console.warn('WebSocket not ready to send message');
+    return false;
   }
 
   disconnect() {
-    this.connection.disconnect();
+    if (this.ws) {
+      console.log('Disconnecting WebSocket', { sessionId: this.sessionId });
+      this.ws.close();
+      this.ws = null;
+    }
   }
 }
