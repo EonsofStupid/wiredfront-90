@@ -396,6 +396,12 @@ export type Database = {
         }
         Returns: Json
       }
+      encrypt_api_key: {
+        Args: {
+          api_key: string
+        }
+        Returns: string
+      }
       encrypt_setting_value: {
         Args: {
           value: Json
