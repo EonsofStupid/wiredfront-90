@@ -11,6 +11,8 @@ export function useAPISettings() {
     user,
     setUser,
     updateSetting,
+    offlineMode,
+    loadOfflineSettings
   } = useAPISettingsState();
 
   useAPISettingsLoad(setUser, setSettings);
@@ -21,6 +23,8 @@ export function useAPISettings() {
     updateSetting,
     isSaving,
     handleSave: () => handleSave(user, settings, setIsSaving),
-    user
+    user,
+    offlineMode,
+    loadOfflineSettings
   };
 }

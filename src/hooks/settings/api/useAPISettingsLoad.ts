@@ -6,6 +6,9 @@ import { isSettingValue } from "../types";
 import { APISettingsState } from "@/types/store/settings/api";
 import { logger } from "@/services/chat/LoggingService";
 
+const RETRY_ATTEMPTS = 3;
+const RETRY_DELAY = 1000;
+
 export function useAPISettingsLoad(
   setUser: (user: any) => void,
   setSettings: (settings: APISettingsState) => void,
@@ -13,17 +16,20 @@ export function useAPISettingsLoad(
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Please log in to manage API settings");
-        navigate("/login");
-        return;
-      }
-      setUser(session.user);
+    let retryCount = 0;
+    let retryTimeout: NodeJS.Timeout;
 
-      if (session.user) {
-        try {
+    const loadSettings = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          toast.error("Please log in to manage API settings");
+          navigate("/login");
+          return;
+        }
+        setUser(session.user);
+
+        if (session.user) {
           const { data: allSettings, error: settingsError } = await supabase
             .from('settings')
             .select('id, key');
@@ -37,7 +43,7 @@ export function useAPISettingsLoad(
 
           const { data: userSettings, error: userSettingsError } = await supabase
             .from('user_settings')
-            .select('setting_id, value')
+            .select('setting_id, value, encrypted_value')
             .eq('user_id', session.user.id);
 
           if (userSettingsError) throw userSettingsError;
@@ -45,7 +51,12 @@ export function useAPISettingsLoad(
           if (userSettings) {
             const newSettings = {} as APISettingsState;
             userSettings.forEach(setting => {
-              if (!isSettingValue(setting.value)) return;
+              // Prefer encrypted value if available
+              const value = setting.encrypted_value ? 
+                await decryptValue(setting.encrypted_value) :
+                (isSettingValue(setting.value) ? setting.value.key : null);
+              
+              if (!value) return;
               
               const settingKey = Object.entries(settingKeyToId).find(
                 ([_, id]) => id === setting.setting_id
@@ -59,17 +70,59 @@ export function useAPISettingsLoad(
                 .replace(/^google-drive/, "googleDrive")
                 .replace(/^elevenlabs-voice/, "selectedVoice");
 
-              (newSettings as any)[key] = setting.value.key;
+              (newSettings as any)[key] = value;
             });
+            
+            // Cache settings for offline use
+            localStorage.setItem('api_settings', JSON.stringify(newSettings));
+            
             setSettings(newSettings);
+            logger.info('API settings loaded successfully');
           }
-        } catch (error) {
-          logger.error('Error loading settings:', error);
-          toast.error("Failed to load API settings");
+        }
+      } catch (error) {
+        logger.error('Error loading settings:', error);
+        
+        if (retryCount < RETRY_ATTEMPTS) {
+          retryCount++;
+          retryTimeout = setTimeout(loadSettings, RETRY_DELAY * Math.pow(2, retryCount));
+          toast.error(`Failed to load API settings. Retrying... (${retryCount}/${RETRY_ATTEMPTS})`);
+        } else {
+          toast.error("Failed to load API settings. Loading from offline cache...");
+          loadOfflineSettings();
         }
       }
     };
 
-    checkAuth();
+    loadSettings();
+
+    return () => {
+      if (retryTimeout) clearTimeout(retryTimeout);
+    };
   }, [navigate, setSettings, setUser]);
 }
+
+const decryptValue = async (encryptedValue: any) => {
+  try {
+    const { data, error } = await supabase.rpc('decrypt_setting_value', {
+      encrypted_value: encryptedValue
+    });
+    if (error) throw error;
+    return data?.key;
+  } catch (error) {
+    logger.error('Error decrypting value:', error);
+    return null;
+  }
+};
+
+const loadOfflineSettings = () => {
+  try {
+    const cached = localStorage.getItem('api_settings');
+    if (cached) {
+      return JSON.parse(cached);
+    }
+  } catch (error) {
+    logger.error('Error loading offline settings:', error);
+  }
+  return null;
+};
