@@ -1,18 +1,15 @@
-import { useMessageManagement } from './chat/useMessageManagement';
-import { useWebSocketConnection } from './chat/useWebSocketConnection';
 import { useMessageQuery } from './chat/useMessageQuery';
 import { useCombinedMessages } from './chat/useCombinedMessages';
+import { useSupabaseMessages } from './chat/useSupabaseMessages';
 import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';
 
 export const useMessages = (sessionId: string, isMinimized: boolean) => {
-  const { realtimeMessages, addMessage, addOptimisticMessage } = useMessageManagement(sessionId);
-  const { 
-    connectionState, 
-    sendMessage, 
-    isConnected, 
-    reconnect
-  } = useWebSocketConnection(sessionId, isMinimized, addMessage);
+  const {
+    messages: realtimeMessages,
+    addMessage,
+    addOptimisticMessage
+  } = useSupabaseMessages(sessionId);
 
   const {
     data,
@@ -33,15 +30,12 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     isLoading: status === 'pending',
     error,
     addOptimisticMessage: async (content: string) => {
-      if (!isConnected) {
-        logger.warn('Not connected to chat service');
-        toast.error('Not connected to chat service');
-        return;
+      try {
+        await addOptimisticMessage(content);
+      } catch (error) {
+        logger.error('Failed to send message', { error, sessionId });
+        toast.error('Failed to send message');
       }
-      await addOptimisticMessage(content, sendMessage);
-    },
-    connectionState,
-    isConnected,
-    reconnect
+    }
   };
 };
