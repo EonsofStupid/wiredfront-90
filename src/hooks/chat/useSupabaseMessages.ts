@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Message } from '@/types/chat';
 import { logger } from '@/services/chat/LoggingService';
+import { toast } from 'sonner';
 
 export const useSupabaseMessages = (sessionId: string) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -46,9 +47,20 @@ export const useSupabaseMessages = (sessionId: string) => {
   }, [sessionId]);
 
   const addMessage = async (message: Message) => {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (!user) {
+      logger.error('No authenticated user found when trying to add message');
+      toast.error('You must be logged in to send messages');
+      throw new Error('Not authenticated');
+    }
+
     const { data, error } = await supabase
       .from('messages')
-      .insert([message])
+      .insert([{
+        ...message,
+        user_id: user.id // Ensure we're using the authenticated user's ID
+      }])
       .select()
       .single();
 
@@ -61,9 +73,11 @@ export const useSupabaseMessages = (sessionId: string) => {
   };
 
   const addOptimisticMessage = async (content: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
     if (!user) {
-      throw new Error('User not authenticated');
+      toast.error('You must be logged in to send messages');
+      throw new Error('Not authenticated');
     }
 
     const optimisticMessage: Message = {
