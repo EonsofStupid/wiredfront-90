@@ -12,6 +12,12 @@ let activeConnections = 0;
 
 serve(async (req) => {
   try {
+    console.log('New request received:', {
+      method: req.method,
+      url: req.url,
+      headers: Object.fromEntries(req.headers.entries())
+    });
+
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
       console.log('Handling CORS preflight request');
@@ -20,7 +26,10 @@ serve(async (req) => {
 
     const upgrade = req.headers.get('upgrade') || '';
     if (upgrade.toLowerCase() !== 'websocket') {
-      console.error('Request is not trying to upgrade to WebSocket');
+      console.error('Request is not trying to upgrade to WebSocket:', {
+        upgrade,
+        method: req.method
+      });
       return new Response("request isn't trying to upgrade to websocket.", { 
         status: 400,
         headers: corsHeaders
@@ -29,7 +38,10 @@ serve(async (req) => {
 
     // Check connection limits
     if (activeConnections >= MAX_CONNECTIONS) {
-      console.error('Maximum connections reached:', activeConnections);
+      console.error('Maximum connections reached:', {
+        current: activeConnections,
+        max: MAX_CONNECTIONS
+      });
       return new Response('Server is at capacity', { 
         status: 503,
         headers: corsHeaders
@@ -41,7 +53,10 @@ serve(async (req) => {
     const accessToken = url.searchParams.get('access_token');
     const sessionId = url.searchParams.get('session_id');
     
-    console.log('Connection attempt:', { sessionId });
+    console.log('Connection attempt:', { 
+      sessionId,
+      hasAccessToken: !!accessToken
+    });
     
     if (!accessToken) {
       console.error('Access token not provided');
@@ -60,23 +75,38 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
     
     if (authError || !user) {
-      console.error('Invalid access token:', authError);
+      console.error('Invalid access token:', {
+        error: authError,
+        userId: user?.id
+      });
       return new Response('Invalid token provided', { 
         status: 401,
         headers: corsHeaders
       });
     }
 
-    console.log('User authenticated:', { userId: user.id, sessionId });
+    console.log('User authenticated:', {
+      userId: user.id,
+      sessionId,
+      email: user.email
+    });
 
     // Upgrade to WebSocket
     const { socket, response } = Deno.upgradeWebSocket(req);
     
     activeConnections++;
-    console.log('Active connections:', activeConnections);
+    console.log('Active connections:', {
+      total: activeConnections,
+      sessionId,
+      userId: user.id
+    });
     
     socket.onopen = () => {
-      console.log('Client connected:', { userId: user.id, sessionId });
+      console.log('Client connected:', {
+        userId: user.id,
+        sessionId,
+        timestamp: new Date().toISOString()
+      });
       socket.send(JSON.stringify({
         type: 'connection_established',
         userId: user.id,
@@ -87,10 +117,20 @@ serve(async (req) => {
 
     socket.onmessage = async (event) => {
       try {
-        console.log('Received message from client:', event.data);
+        console.log('Received message from client:', {
+          data: event.data,
+          userId: user.id,
+          sessionId,
+          timestamp: new Date().toISOString()
+        });
+        
         const data = JSON.parse(event.data);
         
         if (data.type === 'ping') {
+          console.log('Received ping, sending pong:', {
+            userId: user.id,
+            sessionId
+          });
           socket.send(JSON.stringify({
             type: 'pong',
             timestamp: new Date().toISOString()
@@ -98,7 +138,7 @@ serve(async (req) => {
           return;
         }
         
-        console.log('Parsed client message:', {
+        console.log('Processing client message:', {
           type: data.type,
           sessionId,
           userId: user.id,
@@ -120,7 +160,11 @@ serve(async (req) => {
           });
 
         if (dbError) {
-          console.error('Failed to log message to database:', dbError);
+          console.error('Failed to log message to database:', {
+            error: dbError,
+            userId: user.id,
+            sessionId
+          });
         }
 
         socket.send(JSON.stringify({
@@ -130,7 +174,12 @@ serve(async (req) => {
         }));
 
       } catch (error) {
-        console.error('Error processing message:', error);
+        console.error('Error processing message:', {
+          error,
+          userId: user.id,
+          sessionId,
+          timestamp: new Date().toISOString()
+        });
         socket.send(JSON.stringify({
           type: 'error',
           error: 'Failed to process message',
@@ -144,7 +193,8 @@ serve(async (req) => {
       console.error('WebSocket error:', { 
         error,
         userId: user.id,
-        sessionId
+        sessionId,
+        timestamp: new Date().toISOString()
       });
     };
 
@@ -161,7 +211,11 @@ serve(async (req) => {
     return response;
 
   } catch (error) {
-    console.error('Server error:', error);
+    console.error('Server error:', {
+      error,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
     return new Response('Internal Server Error', { 
       status: 500,
       headers: corsHeaders
