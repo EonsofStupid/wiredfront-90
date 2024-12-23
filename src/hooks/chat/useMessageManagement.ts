@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from 'sonner';
 import { Message } from '@/types/chat';
+import { logger } from '@/services/chat/LoggingService';
 
 interface QueuedMessage {
   id: string;
@@ -23,8 +24,92 @@ export const useMessageManagement = (sessionId: string) => {
     setOfflineQueue(queue);
   };
 
-  const addMessage = (message: Message) => {
-    setRealtimeMessages(prev => [message, ...prev]);
+  const addMessage = async (message: Message) => {
+    try {
+      const { data: settings } = await supabase
+        .from('chat_settings')
+        .select('rate_limit_per_minute')
+        .single();
+
+      const rateLimit = settings?.rate_limit_per_minute || 60;
+      const now = new Date();
+      const oneMinuteAgo = new Date(now.getTime() - 60000);
+
+      const { count } = await supabase
+        .from('messages')
+        .select('id', { count: 'exact' })
+        .gte('created_at', oneMinuteAgo.toISOString())
+        .eq('user_id', message.user_id);
+
+      if (count && count >= rateLimit) {
+        toast.error(`Rate limit exceeded. Please wait before sending more messages.`);
+        return;
+      }
+
+      setRealtimeMessages(prev => [message, ...prev]);
+      
+      const { error } = await supabase
+        .from('messages')
+        .insert({
+          ...message,
+          message_status: 'sent'
+        });
+
+      if (error) throw error;
+
+    } catch (error) {
+      logger.error('Failed to add message', { error, sessionId });
+      await handleMessageError(message);
+    }
+  };
+
+  const handleMessageError = async (message: Message) => {
+    try {
+      const { data: retryConfig } = await supabase
+        .from('retry_configurations')
+        .select('*')
+        .single();
+
+      const maxRetries = retryConfig?.max_retries || 3;
+      const initialDelay = retryConfig?.initial_retry_delay || 1000;
+      const maxDelay = retryConfig?.max_retry_delay || 30000;
+      const backoffFactor = retryConfig?.backoff_factor || 2;
+
+      const currentRetries = message.retry_count || 0;
+      
+      if (currentRetries < maxRetries) {
+        const delay = Math.min(initialDelay * Math.pow(backoffFactor, currentRetries), maxDelay);
+        
+        setTimeout(async () => {
+          const { error } = await supabase
+            .from('messages')
+            .update({
+              retry_count: currentRetries + 1,
+              last_retry: new Date().toISOString(),
+              message_status: 'pending'
+            })
+            .eq('id', message.id);
+
+          if (!error) {
+            addMessage(message);
+          }
+        }, delay);
+        
+        toast.info('Message will be retried shortly...');
+      } else {
+        await supabase
+          .from('messages')
+          .update({
+            message_status: 'failed'
+          })
+          .eq('id', message.id);
+          
+        toast.error('Failed to send message after multiple attempts');
+      }
+    } catch (error) {
+      logger.error('Error handling message retry', { error, sessionId });
+      toast.error('Error handling message retry');
+    }
   };
 
   const processOfflineQueue = async () => {
@@ -47,15 +132,14 @@ export const useMessageManagement = (sessionId: string) => {
               chat_session_id: sessionId,
               type: 'text',
               user_id: user.id,
+              message_status: 'sent'
             });
 
           if (error) throw error;
           
-          // Update message status to sent
-          msg.status = 'sent';
           toast.success('Offline message sent successfully');
         } catch (error) {
-          console.error('Failed to send queued message:', error);
+          logger.error('Failed to send queued message:', error);
           msg.attempts += 1;
           msg.status = 'failed';
           failedMessages.push(msg);
@@ -65,14 +149,12 @@ export const useMessageManagement = (sessionId: string) => {
       }
     }
 
-    // Update queue with only failed messages
     saveQueue(failedMessages);
   };
 
-  const addOptimisticMessage = async (content: string, sendMessage: (message: any) => void) => {
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (!user || userError) {
-      // Queue message if offline or not authenticated
+  const addOptimisticMessage = async (content: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       const queuedMessage: QueuedMessage = {
         id: crypto.randomUUID(),
         content,
@@ -98,42 +180,20 @@ export const useMessageManagement = (sessionId: string) => {
       is_minimized: false,
       position: { x: null, y: null },
       window_state: { width: 350, height: 500 },
-      last_accessed: now
+      last_accessed: now,
+      retry_count: 0,
+      message_status: 'pending'
     };
 
     setRealtimeMessages(prev => [optimisticMessage, ...prev]);
     
     try {
-      sendMessage({
-        type: 'conversation.item.create',
-        item: {
-          type: 'message',
-          role: 'user',
-          content: [
-            {
-              type: 'input_text',
-              text: content
-            }
-          ]
-        }
-      });
-
-      const { error } = await supabase
-        .from('messages')
-        .insert({
-          content,
-          chat_session_id: sessionId,
-          type: 'text',
-          user_id: user.id,
-        });
-
-      if (error) throw error;
+      await addMessage(optimisticMessage);
     } catch (error) {
-      console.error('Failed to send message:', error);
+      logger.error('Failed to send message:', error);
       toast.error('Failed to send message');
       setRealtimeMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
       
-      // Queue failed message
       const queuedMessage: QueuedMessage = {
         id: optimisticMessage.id,
         content,
@@ -145,7 +205,6 @@ export const useMessageManagement = (sessionId: string) => {
     }
   };
 
-  // Process queue when online
   window.addEventListener('online', () => {
     if (offlineQueue.length > 0) {
       toast.info('Processing offline messages...');

@@ -1,11 +1,10 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from 'sonner';
 import { useNavigate } from "react-router-dom";
 import { isSettingValue } from "../types";
 import { APISettingsState } from "@/types/store/settings/api";
 import { logger } from "@/services/chat/LoggingService";
-import { Json } from "@/integrations/supabase/types";
 
 const RETRY_ATTEMPTS = 3;
 const RETRY_DELAY = 1000;
@@ -35,6 +34,15 @@ export function useAPISettingsLoad(
         setUser(session.user);
 
         if (session.user) {
+          // Load API configurations
+          const { data: configs, error: configError } = await supabase
+            .from('api_configurations')
+            .select('*')
+            .eq('user_id', session.user.id);
+
+          if (configError) throw configError;
+
+          // Load settings
           const { data: allSettings, error: settingsError } = await supabase
             .from('settings')
             .select('id, key');
@@ -60,8 +68,10 @@ export function useAPISettingsLoad(
               let value: string | null = null;
               
               if (setting.encrypted_value) {
-                const decrypted = await decryptValue(setting.encrypted_value);
-                value = decrypted;
+                const { data: decrypted } = await supabase.rpc('decrypt_setting_value', {
+                  encrypted_value: setting.encrypted_value
+                });
+                value = decrypted?.key || null;
               } else {
                 value = isSettingValue(setting.value) ? setting.value.key : null;
               }
@@ -84,7 +94,10 @@ export function useAPISettingsLoad(
             }));
             
             // Cache settings for offline use
-            localStorage.setItem('api_settings', JSON.stringify(newSettings));
+            localStorage.setItem('api_settings', JSON.stringify({
+              ...newSettings,
+              configs: configs || []
+            }));
             
             setSettings(newSettings);
             logger.info('API settings loaded successfully');
@@ -99,9 +112,16 @@ export function useAPISettingsLoad(
           toast.error(`Failed to load API settings. Retrying... (${retryCount}/${RETRY_ATTEMPTS})`);
         } else {
           toast.error("Failed to load API settings. Loading from offline cache...");
-          const offlineSettings = loadOfflineSettings();
-          if (offlineSettings) {
-            setSettings(offlineSettings);
+          const cached = localStorage.getItem('api_settings');
+          if (cached) {
+            try {
+              const offlineSettings = JSON.parse(cached);
+              setSettings(offlineSettings);
+              toast.info('Loaded settings from offline cache');
+            } catch (error) {
+              logger.error('Error parsing cached settings:', error);
+              toast.error('Failed to load cached settings');
+            }
           }
         }
       }
@@ -114,33 +134,3 @@ export function useAPISettingsLoad(
     };
   }, [navigate, setSettings, setUser]);
 }
-
-const decryptValue = async (encryptedValue: any): Promise<string | null> => {
-  try {
-    const { data, error } = await supabase.rpc('decrypt_setting_value', {
-      encrypted_value: encryptedValue
-    });
-    if (error) throw error;
-    
-    // Check if data is an object with a key property
-    if (data && typeof data === 'object' && 'key' in data) {
-      return (data as DecryptedValue).key;
-    }
-    return null;
-  } catch (error) {
-    logger.error('Error decrypting value:', error);
-    return null;
-  }
-};
-
-const loadOfflineSettings = (): APISettingsState | null => {
-  try {
-    const cached = localStorage.getItem('api_settings');
-    if (cached) {
-      return JSON.parse(cached);
-    }
-  } catch (error) {
-    logger.error('Error loading offline settings:', error);
-  }
-  return null;
-};

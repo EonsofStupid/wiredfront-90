@@ -98,11 +98,14 @@ export type Database = {
           created_at: string | null
           enabled: boolean | null
           id: string
+          max_offline_messages: number | null
           max_tokens: number | null
           message_behavior:
             | Database["public"]["Enums"]["message_behavior_type"]
             | null
           model: string | null
+          offline_mode_enabled: boolean | null
+          rate_limit_per_minute: number | null
           system_prompt: string | null
           temperature: number | null
           ui_customizations: Json | null
@@ -115,11 +118,14 @@ export type Database = {
           created_at?: string | null
           enabled?: boolean | null
           id?: string
+          max_offline_messages?: number | null
           max_tokens?: number | null
           message_behavior?:
             | Database["public"]["Enums"]["message_behavior_type"]
             | null
           model?: string | null
+          offline_mode_enabled?: boolean | null
+          rate_limit_per_minute?: number | null
           system_prompt?: string | null
           temperature?: number | null
           ui_customizations?: Json | null
@@ -132,11 +138,14 @@ export type Database = {
           created_at?: string | null
           enabled?: boolean | null
           id?: string
+          max_offline_messages?: number | null
           max_tokens?: number | null
           message_behavior?:
             | Database["public"]["Enums"]["message_behavior_type"]
             | null
           model?: string | null
+          offline_mode_enabled?: boolean | null
+          rate_limit_per_minute?: number | null
           system_prompt?: string | null
           temperature?: number | null
           ui_customizations?: Json | null
@@ -161,8 +170,12 @@ export type Database = {
           id: string
           is_minimized: boolean | null
           last_accessed: string | null
+          last_retry: string | null
+          message_status: string | null
           metadata: Json | null
           position: Json | null
+          rate_limit_window: string | null
+          retry_count: number | null
           type: Database["public"]["Enums"]["message_type"]
           updated_at: string | null
           user_id: string
@@ -175,8 +188,12 @@ export type Database = {
           id?: string
           is_minimized?: boolean | null
           last_accessed?: string | null
+          last_retry?: string | null
+          message_status?: string | null
           metadata?: Json | null
           position?: Json | null
+          rate_limit_window?: string | null
+          retry_count?: number | null
           type?: Database["public"]["Enums"]["message_type"]
           updated_at?: string | null
           user_id: string
@@ -189,8 +206,12 @@ export type Database = {
           id?: string
           is_minimized?: boolean | null
           last_accessed?: string | null
+          last_retry?: string | null
+          message_status?: string | null
           metadata?: Json | null
           position?: Json | null
+          rate_limit_window?: string | null
+          retry_count?: number | null
           type?: Database["public"]["Enums"]["message_type"]
           updated_at?: string | null
           user_id?: string
@@ -235,6 +256,47 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
+      }
+      retry_configurations: {
+        Row: {
+          backoff_factor: number | null
+          created_at: string | null
+          id: string
+          initial_retry_delay: number | null
+          max_retries: number | null
+          max_retry_delay: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          backoff_factor?: number | null
+          created_at?: string | null
+          id?: string
+          initial_retry_delay?: number | null
+          max_retries?: number | null
+          max_retry_delay?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          backoff_factor?: number | null
+          created_at?: string | null
+          id?: string
+          initial_retry_delay?: number | null
+          max_retries?: number | null
+          max_retry_delay?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "retry_configurations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       settings: {
         Row: {
