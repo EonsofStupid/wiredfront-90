@@ -1,4 +1,4 @@
-import { ConnectionState, ConnectionMetrics, WebSocketCallbacks } from '@/types/websocket';
+import { ConnectionState } from '@/types/websocket';
 import { WebSocketAuthenticator } from './WebSocketAuthenticator';
 import { WebSocketReconnection } from './WebSocketReconnection';
 import { WebSocketMessageHandler } from '../message/WebSocketMessageHandler';
@@ -26,12 +26,6 @@ export class WebSocketConnection {
     });
   }
 
-  setCallbacks(callbacks: WebSocketCallbacks) {
-    this.messageHandler.setCallback(callbacks.onMessage);
-    this.reconnection.setStateCallback(callbacks.onStateChange);
-    this.metricsService.setCallback(callbacks.onMetricsUpdate);
-  }
-
   async connect(token: string): Promise<void> {
     try {
       // First validate the session
@@ -39,11 +33,6 @@ export class WebSocketConnection {
       
       if (!session?.access_token) {
         throw new Error('No valid session found');
-      }
-
-      const { isValid } = await this.authenticator.validateSession(session.access_token);
-      if (!isValid) {
-        throw new Error('Invalid session');
       }
 
       const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${session.access_token}`;
