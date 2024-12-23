@@ -5,6 +5,7 @@ import { WebSocketMessageHandler } from '../message/WebSocketMessageHandler';
 import { WebSocketMetricsService } from '../monitoring/WebSocketMetricsService';
 import { logger } from '../../LoggingService';
 import { WEBSOCKET_URL } from '@/constants/websocket';
+import { supabase } from "@/integrations/supabase/client";
 
 export class WebSocketConnection {
   private ws: WebSocket | null = null;
@@ -32,9 +33,9 @@ export class WebSocketConnection {
 
   setCallbacks(callbacks: WebSocketCallbacks) {
     this.callbacks = callbacks;
-    this.reconnection = new WebSocketReconnection(sessionId, callbacks.onStateChange);
-    this.messageHandler = new WebSocketMessageHandler(sessionId, callbacks.onMessage);
-    this.metricsService = new WebSocketMetricsService(sessionId, callbacks.onMetricsUpdate);
+    this.reconnection = new WebSocketReconnection(this.sessionId, callbacks.onStateChange);
+    this.messageHandler = new WebSocketMessageHandler(this.sessionId, callbacks.onMessage);
+    this.metricsService = new WebSocketMetricsService(this.sessionId, callbacks.onMetricsUpdate);
   }
 
   async connect(token: string): Promise<void> {
