@@ -6,6 +6,7 @@ import { WebSocketMetricsService } from '../monitoring/WebSocketMetricsService';
 import { logger } from '../../LoggingService';
 import { WEBSOCKET_URL } from '@/constants/websocket';
 import { supabase } from "@/integrations/supabase/client";
+import { WebSocketCallbacks } from '../types/websocket';
 
 export class WebSocketConnection {
   private ws: WebSocket | null = null;
@@ -13,6 +14,11 @@ export class WebSocketConnection {
   private reconnection: WebSocketReconnection;
   private messageHandler: WebSocketMessageHandler;
   private metricsService: WebSocketMetricsService;
+  private callbacks: WebSocketCallbacks = {
+    onMessage: () => {},
+    onStateChange: () => {},
+    onMetricsUpdate: () => {}
+  };
 
   constructor(private sessionId: string) {
     this.authenticator = new WebSocketAuthenticator(sessionId);
@@ -24,6 +30,13 @@ export class WebSocketConnection {
       sessionId,
       context: { component: 'WebSocketConnection', action: 'initialize' }
     });
+  }
+
+  setCallbacks(callbacks: WebSocketCallbacks) {
+    this.callbacks = callbacks;
+    this.messageHandler.setCallback(callbacks.onMessage);
+    this.reconnection.setStateCallback(callbacks.onStateChange);
+    this.metricsService.setCallback(callbacks.onMetricsUpdate);
   }
 
   async connect(token: string): Promise<void> {
@@ -60,6 +73,7 @@ export class WebSocketConnection {
 
     this.ws.onopen = () => {
       this.reconnection.resetAttempts();
+      this.callbacks.onStateChange('connected');
       this.metricsService.updateMetrics({
         lastConnected: new Date(),
         reconnectAttempts: 0,
@@ -73,10 +87,12 @@ export class WebSocketConnection {
     };
 
     this.ws.onerror = () => {
+      this.callbacks.onStateChange('error');
       this.metricsService.recordError(new Error('WebSocket error occurred'));
     };
 
     this.ws.onclose = () => {
+      this.callbacks.onStateChange('disconnected');
       this.handleReconnect();
     };
   }
