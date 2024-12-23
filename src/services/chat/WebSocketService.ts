@@ -1,6 +1,5 @@
+import { WebSocketCallbacks } from '@/types/websocket';
 import { WebSocketConnection } from './websocket/connection/WebSocketConnection';
-import { WebSocketCallbacks } from './websocket/types/websocket';
-import { logger } from './LoggingService';
 
 export class WebSocketService {
   private connection: WebSocketConnection;
@@ -11,10 +10,6 @@ export class WebSocketService {
   };
 
   constructor(private sessionId: string) {
-    logger.info('Initializing WebSocket service', {
-      sessionId,
-      context: { component: 'WebSocketService', action: 'initialize' }
-    });
     this.connection = new WebSocketConnection(sessionId);
   }
 
