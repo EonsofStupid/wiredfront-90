@@ -1,24 +1,21 @@
 import { Auth } from "@supabase/auth-ui-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
-import { getLoginRedirectUrl } from "@/utils/auth";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const returnTo = searchParams.get('returnTo');
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
-        navigate(returnTo || '/dashboard', { replace: true });
+        navigate('/dashboard');
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, returnTo]);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-dark p-4">

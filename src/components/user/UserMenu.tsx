@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -25,15 +25,15 @@ export const UserMenu = () => {
   };
 
   return (
-    <div className="relative" style={{ zIndex: 'var(--z-dropdown)' }}>
+    <div className="relative z-[100]">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <UserMenuTrigger />
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end" 
-          className="glass-card"
-          style={{ position: 'relative', zIndex: 'var(--z-dropdown)' }}
+          className="glass-card z-[100]"
+          style={{ position: 'relative', zIndex: 100 }}
         >
           <UserMenuItems user={user} onLogout={handleLogout} />
         </DropdownMenuContent>

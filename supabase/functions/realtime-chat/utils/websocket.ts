@@ -1,41 +1,61 @@
-import { logger } from './logger.ts';
-import { ConnectionManager } from './connectionManager.ts';
-import { supabase } from './supabaseClient.ts';
-
-interface HandlerConfig {
-  userId: string;
-  sessionId: string;
-}
+import { OpenAIWebSocket } from './openai.ts';
 
 export class WebSocketHandler {
   private clientSocket: WebSocket;
-  private connectionManager: ConnectionManager;
+  private openaiWs: OpenAIWebSocket;
+  private heartbeatInterval?: number;
 
-  constructor(req: Request, config: HandlerConfig) {
-    logger.info('Initializing WebSocket handler', {
-      userId: config.userId,
-      sessionId: config.sessionId,
-      context: {
-        type: 'system',
-        action: 'initialization'
-      }
-    });
-
+  constructor(req: Request) {
     const { socket, response } = Deno.upgradeWebSocket(req);
     this.clientSocket = socket;
+    this.openaiWs = new OpenAIWebSocket(socket);
     
-    this.connectionManager = new ConnectionManager(
-      socket,
-      config.userId,
-      config.sessionId
-    );
-    
-    this.connectionManager.setupConnection();
+    this.setupEventHandlers();
+    this.startHeartbeat();
     
     return { response };
   }
 
-  getSessionId() {
-    return this.sessionId;
+  private setupEventHandlers() {
+    this.clientSocket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        
+        if (data.type === 'pong') {
+          return;
+        }
+
+        this.openaiWs.sendMessage(event.data);
+      } catch (error) {
+        console.error('Error processing message:', error);
+        this.clientSocket.send(JSON.stringify({
+          type: 'error',
+          error: 'Invalid message format'
+        }));
+      }
+    };
+
+    this.clientSocket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      this.cleanup();
+    };
+
+    this.clientSocket.onclose = () => {
+      console.log('Client disconnected');
+      this.cleanup();
+    };
+  }
+
+  private startHeartbeat() {
+    this.heartbeatInterval = setInterval(() => {
+      if (this.clientSocket.readyState === WebSocket.OPEN) {
+        this.clientSocket.send(JSON.stringify({ type: 'ping' }));
+      }
+    }, 30000);
+  }
+
+  private cleanup() {
+    clearInterval(this.heartbeatInterval);
+    this.openaiWs.close();
   }
 }

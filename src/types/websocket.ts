@@ -1,13 +1,10 @@
-export type WebSocketReadyState = 0 | 1 | 2 | 3;
-
 export type ConnectionState = 
   | 'initial'
   | 'connecting'
   | 'connected'
   | 'disconnected'
   | 'reconnecting'
-  | 'error'
-  | 'failed';
+  | 'error';
 
 export interface ConnectionMetrics {
   lastConnected: Date | null;
@@ -20,8 +17,18 @@ export interface ConnectionMetrics {
   uptime: number;
 }
 
-export interface WebSocketCallbacks {
+export interface WebSocketConfig {
+  url: string;
+  sessionId: string;
+  isMinimized: boolean;
   onMessage: (message: any) => void;
-  onStateChange: (state: ConnectionState) => void;
-  onMetricsUpdate: (metrics: Partial<ConnectionMetrics>) => void;
+}
+
+export interface WebSocketHookReturn {
+  ws: WebSocket | null;
+  connectionState: ConnectionState;
+  metrics: ConnectionMetrics;
+  reconnect: () => void;
+  sendMessage: (message: any) => void;
+  isConnected: boolean;
 }

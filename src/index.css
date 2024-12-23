@@ -4,7 +4,6 @@
 
 @layer base {
   :root {
-    /* Original theme variables */
     --background: 0 0% 10%;
     --foreground: 0 0% 98%;
     --card: 0 0% 15%;
@@ -21,16 +20,6 @@
     --destructive-foreground: 0 0% 98%;
     --ring: 240 4.9% 83.9%;
     --radius: 0.5rem;
-
-    /* Z-index hierarchy */
-    --z-modal: 1000;
-    --z-dropdown: 900;
-    --z-tooltip: 800;
-    --z-navbar: 700;
-    --z-floating: 600;
-    --z-content: 500;
-    --z-background: 400;
-    --z-base: 300;
   }
 
   * {

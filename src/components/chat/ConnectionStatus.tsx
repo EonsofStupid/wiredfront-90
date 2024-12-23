@@ -1,4 +1,4 @@
-import { SignalHigh, CloudOff, Loader2, AlertTriangle } from 'lucide-react';
+import { SignalHigh, CloudOff, Loader2 } from 'lucide-react';
 import { ConnectionState } from '@/types/websocket';
 import { cn } from '@/lib/utils';
 
@@ -18,8 +18,6 @@ export const ConnectionStatus = ({ state, className }: ConnectionStatusProps) =>
       case 'disconnected':
       case 'error':
         return <CloudOff className="w-4 h-4 text-red-500" />;
-      case 'failed':
-        return <AlertTriangle className="w-4 h-4 text-red-500" />;
       default:
         return null;
     }
@@ -37,8 +35,6 @@ export const ConnectionStatus = ({ state, className }: ConnectionStatusProps) =>
         return 'Disconnected';
       case 'error':
         return 'Connection Error';
-      case 'failed':
-        return 'Connection Failed';
       default:
         return '';
     }

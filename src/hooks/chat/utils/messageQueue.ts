@@ -10,7 +10,7 @@ export class MessageQueueManager {
 
   add(message: Message): void {
     if (this.queue.length >= this.maxSize) {
-      this.queue.shift();
+      this.queue.shift(); // Remove oldest message if queue is full
     }
     this.queue.push(message);
   }
