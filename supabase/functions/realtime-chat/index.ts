@@ -1,15 +1,10 @@
-import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from '@supabase/supabase-js';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-);
 
 console.log('Edge Function: realtime-chat initializing...');
 
@@ -20,19 +15,41 @@ serve(async (req) => {
   }
 
   try {
+    // Check if it's a WebSocket upgrade request
+    const upgrade = req.headers.get('upgrade') || '';
+    if (upgrade.toLowerCase() !== 'websocket') {
+      console.error('Not a WebSocket upgrade request');
+      return new Response('Expected WebSocket upgrade', { 
+        status: 400,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'text/plain'
+        }
+      });
+    }
+
     const url = new URL(req.url);
     const sessionId = url.searchParams.get('session_id');
     const accessToken = url.searchParams.get('access_token');
 
     if (!sessionId || !accessToken) {
+      console.error('Missing required parameters', { sessionId: !!sessionId, accessToken: !!accessToken });
       throw new Error('Missing session_id or access_token');
     }
 
     // Verify user authentication
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
     if (authError || !user) {
+      console.error('Authentication failed', { error: authError });
       throw new Error('Unauthorized');
     }
+
+    console.log('User authenticated successfully', { userId: user.id, sessionId });
 
     // Get user's API configurations
     const { data: apiConfigs, error: configError } = await supabase
@@ -42,14 +59,21 @@ serve(async (req) => {
       .eq('is_enabled', true);
 
     if (configError) {
+      console.error('Failed to fetch API configurations', { error: configError });
       throw new Error('Failed to fetch API configurations');
     }
 
     // Get default or first enabled API configuration
     const defaultConfig = apiConfigs?.find(config => config.is_default) || apiConfigs?.[0];
     if (!defaultConfig) {
+      console.error('No enabled API configuration found');
       throw new Error('No enabled API configuration found');
     }
+
+    console.log('API configuration found', { 
+      apiType: defaultConfig.api_type,
+      isDefault: defaultConfig.is_default 
+    });
 
     // Get the API key from user_settings
     const { data: settings, error: settingsError } = await supabase
@@ -63,43 +87,20 @@ serve(async (req) => {
         .single()).data?.id);
 
     if (settingsError || !settings?.[0]?.value?.key) {
+      console.error('Failed to fetch API key', { error: settingsError });
       throw new Error(`No API key found for ${defaultConfig.api_type}`);
     }
 
     const apiKey = settings[0].value.key;
+    console.log('API key retrieved successfully');
 
-    // Basic connection test
-    if (req.headers.get('upgrade') !== 'websocket') {
-      return new Response('Expected WebSocket upgrade', { 
-        status: 400,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'text/plain'
-        }
-      });
-    }
-
-    console.log(`Establishing WebSocket connection for ${defaultConfig.api_type}`);
+    // Upgrade to WebSocket
+    console.log('Upgrading connection to WebSocket');
     const { socket, response } = Deno.upgradeWebSocket(req);
-
-    // Initialize provider-specific WebSocket connection
-    let providerWs: WebSocket;
-    if (defaultConfig.api_type === 'openai') {
-      providerWs = new WebSocket('wss://api.openai.com/v1/chat/completions', [
-        'realtime',
-        `openai-insecure-api-key.${apiKey}`,
-        'openai-beta.realtime-v1',
-      ]);
-    } else if (defaultConfig.api_type === 'gemini') {
-      // Configure Gemini WebSocket when available
-      providerWs = new WebSocket(`wss://generativelanguage.googleapis.com/v1/chat?key=${apiKey}`);
-    } else {
-      throw new Error(`Unsupported API provider: ${defaultConfig.api_type}`);
-    }
 
     // Set up WebSocket event handlers
     socket.onopen = () => {
-      console.log('Client WebSocket opened');
+      console.log('Client WebSocket opened', { sessionId });
       socket.send(JSON.stringify({
         type: 'connected',
         provider: defaultConfig.api_type,
@@ -107,54 +108,36 @@ serve(async (req) => {
       }));
     };
 
-    providerWs.onopen = () => {
-      console.log(`${defaultConfig.api_type} WebSocket connected`);
-    };
-
-    // Relay messages between client and AI provider
     socket.onmessage = (event) => {
-      if (providerWs.readyState === WebSocket.OPEN) {
-        providerWs.send(event.data);
-      }
+      console.log('Message received from client', { 
+        sessionId,
+        messageType: typeof event.data 
+      });
     };
 
-    providerWs.onmessage = (event) => {
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.send(event.data);
-      }
-    };
-
-    // Error handling
     socket.onerror = (error) => {
-      console.error('Client WebSocket error:', error);
+      console.error('WebSocket error occurred', { 
+        sessionId,
+        error: error.toString() 
+      });
     };
 
-    providerWs.onerror = (error) => {
-      console.error(`${defaultConfig.api_type} WebSocket error:`, error);
-    };
-
-    // Cleanup
     socket.onclose = () => {
-      console.log('Client WebSocket closed');
-      providerWs.close();
-    };
-
-    providerWs.onclose = () => {
-      console.log(`${defaultConfig.api_type} WebSocket closed`);
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.close();
-      }
+      console.log('Client WebSocket closed', { sessionId });
     };
 
     return response;
 
   } catch (error) {
-    console.error('Fatal error:', error);
-    return new Response(error.message, { 
+    console.error('Fatal error in Edge Function:', error);
+    return new Response(JSON.stringify({
+      error: error.message,
+      requestId: crypto.randomUUID()
+    }), { 
       status: 500,
       headers: {
         ...corsHeaders,
-        'Content-Type': 'text/plain'
+        'Content-Type': 'application/json'
       }
     });
   }
