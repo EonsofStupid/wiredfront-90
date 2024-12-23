@@ -1,4 +1,1 @@
 project_id = "ewjisqyvspdvhyppkhnm"
-
-[global.env]
-OPENAI_API_KEY = "{{OPENAI_API_KEY}}"
