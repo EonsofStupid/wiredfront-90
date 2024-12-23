@@ -5,7 +5,6 @@ import { WebSocketMessageHandler } from '../message/WebSocketMessageHandler';
 import { WebSocketMetricsService } from '../monitoring/WebSocketMetricsService';
 import { logger } from '../../LoggingService';
 import { WEBSOCKET_URL } from '@/constants/websocket';
-import { supabase } from "@/integrations/supabase/client";
 
 export class WebSocketConnection {
   private ws: WebSocket | null = null;
@@ -13,17 +12,12 @@ export class WebSocketConnection {
   private reconnection: WebSocketReconnection;
   private messageHandler: WebSocketMessageHandler;
   private metricsService: WebSocketMetricsService;
-  private callbacks: WebSocketCallbacks = {
-    onMessage: () => {},
-    onStateChange: () => {},
-    onMetricsUpdate: () => {}
-  };
 
   constructor(private sessionId: string) {
     this.authenticator = new WebSocketAuthenticator(sessionId);
-    this.reconnection = new WebSocketReconnection(sessionId, this.callbacks.onStateChange);
-    this.messageHandler = new WebSocketMessageHandler(sessionId, this.callbacks.onMessage);
-    this.metricsService = new WebSocketMetricsService(sessionId, this.callbacks.onMetricsUpdate);
+    this.reconnection = new WebSocketReconnection(sessionId);
+    this.messageHandler = new WebSocketMessageHandler(sessionId);
+    this.metricsService = new WebSocketMetricsService(sessionId);
     
     logger.info('WebSocket connection initialized', {
       sessionId,
@@ -32,39 +26,14 @@ export class WebSocketConnection {
   }
 
   setCallbacks(callbacks: WebSocketCallbacks) {
-    this.callbacks = callbacks;
-    this.reconnection = new WebSocketReconnection(this.sessionId, callbacks.onStateChange);
-    this.messageHandler = new WebSocketMessageHandler(this.sessionId, callbacks.onMessage);
-    this.metricsService = new WebSocketMetricsService(this.sessionId, callbacks.onMetricsUpdate);
-  }
-
-  async validateSession(token: string): Promise<{ isValid: boolean }> {
-    try {
-      const { data: { user }, error } = await supabase.auth.getUser(token);
-      
-      if (error || !user) {
-        logger.error('Session validation failed', {
-          error,
-          sessionId: this.sessionId,
-          context: { component: 'WebSocketConnection', action: 'validateSession' }
-        });
-        return { isValid: false };
-      }
-      
-      return { isValid: true };
-    } catch (error) {
-      logger.error('Session validation error', {
-        error,
-        sessionId: this.sessionId,
-        context: { component: 'WebSocketConnection', action: 'validateSession' }
-      });
-      return { isValid: false };
-    }
+    this.messageHandler.setCallback(callbacks.onMessage);
+    this.reconnection.setStateCallback(callbacks.onStateChange);
+    this.metricsService.setCallback(callbacks.onMetricsUpdate);
   }
 
   async connect(token: string): Promise<void> {
     try {
-      const { isValid } = await this.validateSession(token);
+      const { isValid } = await this.authenticator.validateSession(token);
       if (!isValid) {
         throw new Error('Invalid session');
       }
@@ -92,45 +61,31 @@ export class WebSocketConnection {
   private setupEventHandlers() {
     if (!this.ws) return;
 
-    this.ws.onopen = this.handleOpen.bind(this);
-    this.ws.onmessage = this.handleMessage.bind(this);
-    this.ws.onerror = this.handleError.bind(this);
-    this.ws.onclose = this.handleClose.bind(this);
-  }
+    this.ws.onopen = () => {
+      this.reconnection.resetAttempts();
+      this.metricsService.updateMetrics({
+        lastConnected: new Date(),
+        reconnectAttempts: 0,
+        lastError: null
+      });
+    };
 
-  private handleOpen() {
-    this.reconnection.resetAttempts();
-    this.callbacks.onStateChange('connected');
-    this.metricsService.updateMetrics({
-      lastConnected: new Date(),
-      reconnectAttempts: 0,
-      lastError: null
-    });
-  }
+    this.ws.onmessage = (event) => {
+      this.messageHandler.handleMessage(event.data);
+      this.metricsService.incrementMessagesReceived();
+    };
 
-  private handleMessage(event: MessageEvent) {
-    this.messageHandler.handleMessage(event.data);
-    this.metricsService.incrementMessagesReceived();
-  }
+    this.ws.onerror = () => {
+      this.metricsService.recordError(new Error('WebSocket error occurred'));
+    };
 
-  private handleError() {
-    this.callbacks.onStateChange('error');
-    this.metricsService.recordError(new Error('WebSocket error occurred'));
-  }
-
-  private handleClose() {
-    this.callbacks.onStateChange('disconnected');
-    this.handleReconnect();
+    this.ws.onclose = () => {
+      this.handleReconnect();
+    };
   }
 
   private async handleReconnect() {
-    if (this.ws?.readyState === WebSocket.CONNECTING) return;
-    await this.reconnection.handleReconnect(async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.access_token) {
-        await this.connect(session.access_token);
-      }
-    });
+    await this.reconnection.attempt(() => this.connect(this.authenticator.getToken()));
   }
 
   send(message: any): boolean {

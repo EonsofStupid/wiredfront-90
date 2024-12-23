@@ -13,10 +13,13 @@ export class WebSocketMetricsService {
     uptime: 0
   };
 
-  constructor(
-    private sessionId: string,
-    private onMetricsUpdate?: (metrics: Partial<ConnectionMetrics>) => void
-  ) {}
+  private onMetricsUpdate?: (metrics: Partial<ConnectionMetrics>) => void;
+
+  constructor(private sessionId: string) {}
+
+  setCallback(callback: (metrics: Partial<ConnectionMetrics>) => void) {
+    this.onMetricsUpdate = callback;
+  }
 
   updateMetrics(updates: Partial<ConnectionMetrics>) {
     this.metrics = { ...this.metrics, ...updates };
@@ -49,9 +52,5 @@ export class WebSocketMetricsService {
       lastError: error,
       lastConnected: null
     });
-  }
-
-  getMetrics(): ConnectionMetrics {
-    return { ...this.metrics };
   }
 }

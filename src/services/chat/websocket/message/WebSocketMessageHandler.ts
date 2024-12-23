@@ -1,21 +1,23 @@
 import { logger } from '../../LoggingService';
 
 export class WebSocketMessageHandler {
-  constructor(
-    private sessionId: string,
-    private onMessage?: (data: any) => void
-  ) {}
+  private onMessage?: (data: any) => void;
+
+  constructor(private sessionId: string) {}
+
+  setCallback(callback: (data: any) => void) {
+    this.onMessage = callback;
+  }
 
   handleMessage(data: string) {
     try {
-      logger.debug('Processing WebSocket message', {
-        sessionId: this.sessionId,
-        context: { component: 'WebSocketMessageHandler', action: 'handleMessage' }
-      });
-
       const parsedData = JSON.parse(data);
       this.onMessage?.(parsedData);
       
+      logger.debug('Message processed', {
+        sessionId: this.sessionId,
+        context: { component: 'WebSocketMessageHandler', action: 'handleMessage' }
+      });
     } catch (error) {
       logger.error('Failed to process message', {
         error,

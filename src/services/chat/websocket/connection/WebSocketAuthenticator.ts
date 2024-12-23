@@ -2,36 +2,36 @@ import { supabase } from "@/integrations/supabase/client";
 import { logger } from '../../LoggingService';
 
 export class WebSocketAuthenticator {
+  private token: string | null = null;
+
   constructor(private sessionId: string) {}
 
-  async validateSession(): Promise<{ isValid: boolean; token: string | null }> {
+  async validateSession(token: string): Promise<{ isValid: boolean }> {
     try {
-      const { data: { session }, error } = await supabase.auth.getSession();
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      this.token = token;
       
-      if (error) {
+      if (error || !user) {
         logger.error('Session validation failed', {
           error,
           sessionId: this.sessionId,
           context: { component: 'WebSocketAuthenticator', action: 'validateSession' }
         });
-        return { isValid: false, token: null };
+        return { isValid: false };
       }
-
-      const isValid = !!session?.access_token;
-      logger.info('Session validation result', {
-        isValid,
-        sessionId: this.sessionId,
-        context: { component: 'WebSocketAuthenticator', action: 'validateSession' }
-      });
-
-      return { isValid, token: session?.access_token || null };
+      
+      return { isValid: true };
     } catch (error) {
-      logger.error('Unexpected error during session validation', {
+      logger.error('Session validation error', {
         error,
         sessionId: this.sessionId,
         context: { component: 'WebSocketAuthenticator', action: 'validateSession' }
       });
-      return { isValid: false, token: null };
+      return { isValid: false };
     }
+  }
+
+  getToken(): string {
+    return this.token || '';
   }
 }

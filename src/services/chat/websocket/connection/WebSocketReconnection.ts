@@ -1,36 +1,32 @@
 import { logger } from '../../LoggingService';
 import { ConnectionState } from '@/types/websocket';
+import { RECONNECT_INTERVALS } from '@/constants/websocket';
 
 export class WebSocketReconnection {
   private reconnectAttempts = 0;
-  private readonly maxReconnectAttempts = 5;
+  private onStateChange?: (state: ConnectionState) => void;
 
-  constructor(
-    private sessionId: string,
-    private onStateChange: (state: ConnectionState) => void
-  ) {}
+  constructor(private sessionId: string) {}
 
-  async handleReconnect(connect: () => Promise<void>): Promise<boolean> {
-    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+  setStateCallback(callback: (state: ConnectionState) => void) {
+    this.onStateChange = callback;
+  }
+
+  async attempt(connect: () => Promise<void>): Promise<boolean> {
+    if (this.reconnectAttempts >= RECONNECT_INTERVALS.length) {
       logger.error('Maximum reconnection attempts reached', {
         sessionId: this.sessionId,
         attempts: this.reconnectAttempts,
-        context: { component: 'WebSocketReconnection', action: 'handleReconnect' }
+        context: { component: 'WebSocketReconnection', action: 'attempt' }
       });
-      this.onStateChange('failed');
+      this.onStateChange?.('failed');
       return false;
     }
 
     this.reconnectAttempts++;
-    this.onStateChange('reconnecting');
+    this.onStateChange?.('reconnecting');
     
-    logger.info('Attempting reconnection', {
-      sessionId: this.sessionId,
-      attempt: this.reconnectAttempts,
-      context: { component: 'WebSocketReconnection', action: 'handleReconnect' }
-    });
-
-    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+    const delay = RECONNECT_INTERVALS[this.reconnectAttempts - 1];
     await new Promise(resolve => setTimeout(resolve, delay));
 
     try {
@@ -41,7 +37,7 @@ export class WebSocketReconnection {
         error,
         sessionId: this.sessionId,
         attempt: this.reconnectAttempts,
-        context: { component: 'WebSocketReconnection', action: 'handleReconnect' }
+        context: { component: 'WebSocketReconnection', action: 'attempt' }
       });
       return false;
     }
@@ -49,9 +45,5 @@ export class WebSocketReconnection {
 
   resetAttempts() {
     this.reconnectAttempts = 0;
-  }
-
-  getAttempts(): number {
-    return this.reconnectAttempts;
   }
 }
