@@ -12,15 +12,17 @@ export class WebSocketConnection {
   private reconnection: WebSocketReconnection;
   private messageHandler: WebSocketMessageHandler;
   private metricsService: WebSocketMetricsService;
+  private callbacks: WebSocketCallbacks = {
+    onMessage: () => {},
+    onStateChange: () => {},
+    onMetricsUpdate: () => {}
+  };
 
-  constructor(
-    private sessionId: string,
-    private callbacks: WebSocketCallbacks
-  ) {
+  constructor(private sessionId: string) {
     this.authenticator = new WebSocketAuthenticator(sessionId);
-    this.reconnection = new WebSocketReconnection(sessionId, callbacks.onStateChange);
-    this.messageHandler = new WebSocketMessageHandler(sessionId, callbacks.onMessage);
-    this.metricsService = new WebSocketMetricsService(sessionId, callbacks.onMetricsUpdate);
+    this.reconnection = new WebSocketReconnection(sessionId, this.callbacks.onStateChange);
+    this.messageHandler = new WebSocketMessageHandler(sessionId, this.callbacks.onMessage);
+    this.metricsService = new WebSocketMetricsService(sessionId, this.callbacks.onMetricsUpdate);
     
     logger.info('WebSocket connection initialized', {
       sessionId,
@@ -28,10 +30,17 @@ export class WebSocketConnection {
     });
   }
 
-  async connect(): Promise<void> {
+  setCallbacks(callbacks: WebSocketCallbacks) {
+    this.callbacks = callbacks;
+    this.reconnection = new WebSocketReconnection(sessionId, callbacks.onStateChange);
+    this.messageHandler = new WebSocketMessageHandler(sessionId, callbacks.onMessage);
+    this.metricsService = new WebSocketMetricsService(sessionId, callbacks.onMetricsUpdate);
+  }
+
+  async connect(token: string): Promise<void> {
     try {
-      const { isValid, token } = await this.authenticator.validateSession();
-      if (!isValid || !token) {
+      const { isValid } = await this.authenticator.validateSession(token);
+      if (!isValid) {
         throw new Error('Invalid session');
       }
 
@@ -90,7 +99,13 @@ export class WebSocketConnection {
   }
 
   private async handleReconnect() {
-    await this.reconnection.handleReconnect(() => this.connect());
+    if (this.ws?.readyState === WebSocket.CONNECTING) return;
+    await this.reconnection.handleReconnect(async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        await this.connect(session.access_token);
+      }
+    });
   }
 
   send(message: any): boolean {
