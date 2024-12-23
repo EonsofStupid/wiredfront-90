@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 export const useChatAPI = () => {
   const { data: apiSettings } = useQuery({
@@ -24,7 +23,6 @@ export const useChatAPI = () => {
 
       if (error) {
         console.error('Error fetching API settings:', error);
-        toast.error('Failed to load API settings');
         return null;
       }
 
@@ -40,7 +38,9 @@ export const useChatAPI = () => {
         }
         return acc;
       }, {} as Record<string, string>) || null;
-    }
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 
   return {
