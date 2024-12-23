@@ -2,6 +2,7 @@ import { WebSocketLogger } from './websocket/monitoring/WebSocketLogger';
 import { WEBSOCKET_URL } from '@/constants/websocket';
 import { supabase } from "@/integrations/supabase/client";
 import { ConnectionState } from '@/types/websocket';
+import { toast } from 'sonner';
 
 interface WebSocketCallbacks {
   onMessage: (data: any) => void;
@@ -41,12 +42,17 @@ export class WebSocketService {
         this.ws = null;
       }
 
-      console.log('Connecting to WebSocket...', { sessionId: this.sessionId });
+      console.log('Connecting to WebSocket...', { 
+        sessionId: this.sessionId,
+        url: WEBSOCKET_URL 
+      });
+      
       this.ws = new WebSocket(wsUrl);
       this.setupEventHandlers();
       
     } catch (error) {
       console.error('WebSocket connection failed:', error);
+      toast.error('Failed to connect to chat service');
       throw error;
     }
   }
@@ -57,6 +63,7 @@ export class WebSocketService {
     this.ws.onopen = () => {
       console.log('WebSocket connected', { sessionId: this.sessionId });
       this.onStateChange?.('connected');
+      toast.success('Connected to chat service');
     };
 
     this.ws.onmessage = (event) => {
@@ -66,17 +73,20 @@ export class WebSocketService {
         this.onMessage?.(data);
       } catch (error) {
         console.error('Failed to process message:', error);
+        toast.error('Failed to process message');
       }
     };
 
     this.ws.onerror = (error) => {
       console.error('WebSocket error:', error);
       this.onStateChange?.('error');
+      toast.error('Connection error occurred');
     };
 
     this.ws.onclose = () => {
       console.log('WebSocket disconnected', { sessionId: this.sessionId });
       this.onStateChange?.('disconnected');
+      toast.error('Disconnected from chat service');
     };
   }
 
@@ -88,6 +98,7 @@ export class WebSocketService {
         return true;
       } catch (error) {
         console.error('Failed to send message:', error);
+        toast.error('Failed to send message');
         return false;
       }
     }

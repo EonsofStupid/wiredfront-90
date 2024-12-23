@@ -15,6 +15,12 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Received request:', {
+      method: req.method,
+      headers: Object.fromEntries(req.headers.entries()),
+      url: req.url
+    });
+
     // Check if it's a WebSocket upgrade request
     const upgrade = req.headers.get('upgrade') || '';
     if (upgrade.toLowerCase() !== 'websocket') {
@@ -32,6 +38,8 @@ serve(async (req) => {
     const sessionId = url.searchParams.get('session_id');
     const accessToken = url.searchParams.get('access_token');
 
+    console.log('Validating request parameters:', { sessionId: !!sessionId, hasToken: !!accessToken });
+
     if (!sessionId || !accessToken) {
       console.error('Missing required parameters', { sessionId: !!sessionId, accessToken: !!accessToken });
       throw new Error('Missing session_id or access_token');
@@ -43,56 +51,15 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    console.log('Authenticating user...');
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    
     if (authError || !user) {
       console.error('Authentication failed', { error: authError });
       throw new Error('Unauthorized');
     }
 
     console.log('User authenticated successfully', { userId: user.id, sessionId });
-
-    // Get user's API configurations
-    const { data: apiConfigs, error: configError } = await supabase
-      .from('api_configurations')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('is_enabled', true);
-
-    if (configError) {
-      console.error('Failed to fetch API configurations', { error: configError });
-      throw new Error('Failed to fetch API configurations');
-    }
-
-    // Get default or first enabled API configuration
-    const defaultConfig = apiConfigs?.find(config => config.is_default) || apiConfigs?.[0];
-    if (!defaultConfig) {
-      console.error('No enabled API configuration found');
-      throw new Error('No enabled API configuration found');
-    }
-
-    console.log('API configuration found', { 
-      apiType: defaultConfig.api_type,
-      isDefault: defaultConfig.is_default 
-    });
-
-    // Get the API key from user_settings
-    const { data: settings, error: settingsError } = await supabase
-      .from('user_settings')
-      .select('value')
-      .eq('user_id', user.id)
-      .eq('setting_id', (await supabase
-        .from('settings')
-        .select('id')
-        .eq('key', `${defaultConfig.api_type}-api-key`)
-        .single()).data?.id);
-
-    if (settingsError || !settings?.[0]?.value?.key) {
-      console.error('Failed to fetch API key', { error: settingsError });
-      throw new Error(`No API key found for ${defaultConfig.api_type}`);
-    }
-
-    const apiKey = settings[0].value.key;
-    console.log('API key retrieved successfully');
 
     // Upgrade to WebSocket
     console.log('Upgrading connection to WebSocket');
@@ -103,16 +70,34 @@ serve(async (req) => {
       console.log('Client WebSocket opened', { sessionId });
       socket.send(JSON.stringify({
         type: 'connected',
-        provider: defaultConfig.api_type,
         timestamp: new Date().toISOString()
       }));
     };
 
-    socket.onmessage = (event) => {
+    socket.onmessage = async (event) => {
       console.log('Message received from client', { 
         sessionId,
         messageType: typeof event.data 
       });
+
+      try {
+        const message = JSON.parse(event.data);
+        console.log('Parsed message:', message);
+        
+        // Echo back the message for now
+        socket.send(JSON.stringify({
+          type: 'echo',
+          data: message,
+          timestamp: new Date().toISOString()
+        }));
+      } catch (error) {
+        console.error('Error processing message:', error);
+        socket.send(JSON.stringify({
+          type: 'error',
+          error: 'Failed to process message',
+          timestamp: new Date().toISOString()
+        }));
+      }
     };
 
     socket.onerror = (error) => {
