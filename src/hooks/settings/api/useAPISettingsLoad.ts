@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { isSettingValue } from "../types";
 import { APISettingsState } from "@/types/store/settings/api";
 import { logger } from "@/services/chat/LoggingService";
+import { Json } from "@/integrations/supabase/types";
 
 const RETRY_ATTEMPTS = 3;
 const RETRY_DELAY = 1000;
@@ -111,13 +112,22 @@ export function useAPISettingsLoad(
   }, [navigate, setSettings, setUser]);
 }
 
+interface DecryptedValue {
+  key: string;
+}
+
 const decryptValue = async (encryptedValue: any): Promise<string | null> => {
   try {
     const { data, error } = await supabase.rpc('decrypt_setting_value', {
       encrypted_value: encryptedValue
     });
     if (error) throw error;
-    return typeof data === 'object' && data !== null ? data.key : null;
+    
+    // Check if data is an object with a key property
+    if (data && typeof data === 'object' && 'key' in data) {
+      return (data as DecryptedValue).key;
+    }
+    return null;
   } catch (error) {
     logger.error('Error decrypting value:', error);
     return null;
