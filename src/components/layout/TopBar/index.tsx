@@ -4,7 +4,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { UserMenu } from "@/components/user/UserMenu";
-import { DebugMenuIcon } from "@/components/debug/DebugMenuIcon";
 import { Badge } from "@/components/ui/badge";
 
 interface TopBarProps {
@@ -67,7 +66,6 @@ export const TopBar = ({ className, isCompact, onToggleCompact }: TopBarProps) =
             </Tooltip>
 
             <UserMenu />
-            {isDev && <DebugMenuIcon />}
           </div>
         </TooltipProvider>
       </div>
