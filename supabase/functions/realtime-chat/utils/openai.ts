@@ -14,9 +14,8 @@ export class OpenAIWebSocket {
       throw new Error('OpenAI API key not configured');
     }
 
-    // Using the correct endpoint and protocol headers
     this.ws = new WebSocket(
-      'wss://api.openai.com/v1/audio/speech',
+      'wss://api.openai.com/v1/chat/completions',
       [
         'realtime',
         `openai-insecure-api-key.${apiKey}`,

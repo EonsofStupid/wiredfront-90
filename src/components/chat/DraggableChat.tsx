@@ -20,6 +20,7 @@ export const DraggableChat = () => {
     createSession,
     switchSession,
     updateSession,
+    removeSession,
     connectionState
   } = useChatStore();
 
@@ -115,6 +116,22 @@ export const DraggableChat = () => {
     });
   };
 
+  const handleCloseSession = (sessionId: string) => {
+    if (Object.keys(sessions).length > 1) {
+      removeSession(sessionId);
+      toast({
+        title: "Session closed",
+        description: "Chat session has been closed",
+      });
+    } else {
+      toast({
+        title: "Cannot close session",
+        description: "You must have at least one active session",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleSendMessage = async (content: string) => {
     try {
       await addOptimisticMessage(content);
@@ -138,6 +155,7 @@ export const DraggableChat = () => {
           currentSessionId={currentSessionId!}
           onNewSession={handleNewSession}
           onSwitchSession={switchSession}
+          onCloseSession={handleCloseSession}
         />
         <ChatWindow
           position={currentSession.position}

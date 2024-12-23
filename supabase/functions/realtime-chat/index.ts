@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
 
     const upgrade = req.headers.get('upgrade') || '';
     if (upgrade.toLowerCase() !== 'websocket') {
-      return new Response("Request isn't trying to upgrade to websocket.", { 
+      return new Response("request isn't trying to upgrade to websocket.", { 
         status: 400,
         headers: corsHeaders
       });
@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
     
     if (authError || !user) {
       console.error('Invalid access token:', authError);
-      return new Response('Invalid access token', { 
+      return new Response('Invalid token provided', { 
         status: 401,
         headers: corsHeaders
       });
