@@ -1,8 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'jsr:@supabase/supabase-js@2';
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { logger } from './utils/logger.ts';
-import { ConnectionManager } from './utils/connectionManager.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,86 +8,126 @@ const corsHeaders = {
 
 serve(async (req) => {
   try {
-    logger.info('New request received', {
+    logger.info('New WebSocket request received', {
       method: req.method,
       url: req.url,
       headers: Object.fromEntries(req.headers.entries())
     });
 
+    // Handle CORS preflight
     if (req.method === 'OPTIONS') {
       logger.debug('Handling CORS preflight request');
       return new Response(null, { headers: corsHeaders });
     }
 
+    // Verify WebSocket upgrade
     const upgrade = req.headers.get('upgrade') || '';
     if (upgrade.toLowerCase() !== 'websocket') {
       logger.error('Request is not trying to upgrade to WebSocket', { upgrade });
-      return new Response("Request isn't trying to upgrade to websocket.", { 
+      return new Response('Expected WebSocket upgrade', { 
         status: 400,
-        headers: corsHeaders
+        headers: corsHeaders 
       });
     }
 
-    // Extract and validate token
+    // Extract session info
     const url = new URL(req.url);
-    const accessToken = url.searchParams.get('access_token');
     const sessionId = url.searchParams.get('session_id');
-    
-    logger.info('Connection attempt', { 
+    const accessToken = url.searchParams.get('access_token');
+
+    logger.info('Connection attempt', {
       sessionId,
-      hasAccessToken: !!accessToken
+      hasAccessToken: !!accessToken,
+      timestamp: new Date().toISOString()
     });
-    
-    if (!accessToken) {
-      logger.error('Access token not provided');
-      return new Response('Access token not provided', { 
-        status: 401,
-        headers: corsHeaders
+
+    if (!sessionId || !accessToken) {
+      logger.error('Missing required parameters', {
+        hasSessionId: !!sessionId,
+        hasAccessToken: !!accessToken
+      });
+      return new Response('Missing required parameters', { 
+        status: 400,
+        headers: corsHeaders 
       });
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    // Validate user session
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-    
-    if (authError || !user) {
-      logger.error('Invalid access token', {
-        error: authError,
-        userId: user?.id
-      });
-      return new Response('Invalid token provided', { 
-        status: 401,
-        headers: corsHeaders
-      });
-    }
-
-    logger.info('User authenticated', {
-      userId: user.id,
-      sessionId,
-      email: user.email
-    });
-
-    // Upgrade to WebSocket
+    // Create WebSocket connection
     const { socket, response } = Deno.upgradeWebSocket(req);
-    
-    // Initialize connection manager
-    const connectionManager = new ConnectionManager(socket, user.id, sessionId!);
-    connectionManager.setupConnection();
+
+    // Set up WebSocket event handlers
+    socket.onopen = () => {
+      logger.info('WebSocket connection opened', {
+        sessionId,
+        timestamp: new Date().toISOString()
+      });
+
+      // Send initial connection success message
+      try {
+        socket.send(JSON.stringify({
+          type: 'connection_established',
+          sessionId,
+          timestamp: new Date().toISOString()
+        }));
+      } catch (error) {
+        logger.error('Failed to send connection message', {
+          error,
+          sessionId
+        });
+      }
+    };
+
+    socket.onmessage = async (event) => {
+      try {
+        logger.info('Message received', {
+          sessionId,
+          data: event.data,
+          timestamp: new Date().toISOString()
+        });
+
+        const data = JSON.parse(event.data);
+        
+        // Echo back the message for now
+        socket.send(JSON.stringify({
+          type: 'message_received',
+          data,
+          timestamp: new Date().toISOString()
+        }));
+      } catch (error) {
+        logger.error('Error processing message', {
+          error,
+          sessionId,
+          rawData: event.data
+        });
+      }
+    };
+
+    socket.onerror = (event) => {
+      logger.error('WebSocket error occurred', {
+        sessionId,
+        error: event,
+        timestamp: new Date().toISOString()
+      });
+    };
+
+    socket.onclose = (event) => {
+      logger.info('WebSocket connection closed', {
+        sessionId,
+        code: event.code,
+        reason: event.reason,
+        timestamp: new Date().toISOString()
+      });
+    };
 
     return response;
-
   } catch (error) {
-    logger.error('Server error', {
+    logger.error('Fatal server error', {
       error,
       stack: error.stack
     });
     return new Response('Internal Server Error', { 
       status: 500,
-      headers: corsHeaders
+      headers: corsHeaders 
     });
   }
 });

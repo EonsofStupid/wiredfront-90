@@ -1,14 +1,14 @@
-type LogLevel = 'info' | 'error' | 'debug' | 'warn';
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 interface LogEntry {
   timestamp: string;
   level: LogLevel;
   message: string;
-  metadata?: Record<string, any>;
+  data?: any;
 }
 
 export const logger = {
-  formatError(error: any) {
+  formatError(error: any): any {
     if (!error) return null;
     return {
       name: error.name,
@@ -18,31 +18,32 @@ export const logger = {
     };
   },
 
-  log(level: LogLevel, message: string, metadata: Record<string, any> = {}) {
+  log(level: LogLevel, message: string, data: any = {}) {
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),
       level,
       message,
-      metadata: metadata.error ? { ...metadata, error: this.formatError(metadata.error) } : metadata
+      data: data.error ? { ...data, error: this.formatError(data.error) } : data
     };
 
+    // Always log to console for Edge Function logging
     console.log(JSON.stringify(entry));
     return entry;
   },
 
-  info(message: string, metadata = {}) {
-    return this.log('info', message, metadata);
+  debug(message: string, data = {}) {
+    return this.log('debug', message, data);
   },
 
-  error(message: string, metadata = {}) {
-    return this.log('error', message, metadata);
+  info(message: string, data = {}) {
+    return this.log('info', message, data);
   },
 
-  debug(message: string, metadata = {}) {
-    return this.log('debug', message, metadata);
+  warn(message: string, data = {}) {
+    return this.log('warn', message, data);
   },
 
-  warn(message: string, metadata = {}) {
-    return this.log('warn', message, metadata);
+  error(message: string, data = {}) {
+    return this.log('error', message, data);
   }
 };
