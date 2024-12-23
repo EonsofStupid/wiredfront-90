@@ -14,8 +14,9 @@ export class OpenAIWebSocket {
       throw new Error('OpenAI API key not configured');
     }
 
+    // Using the correct endpoint and protocol headers
     this.ws = new WebSocket(
-      'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01',
+      'wss://api.openai.com/v1/audio/speech',
       [
         'realtime',
         `openai-insecure-api-key.${apiKey}`,
@@ -28,6 +29,7 @@ export class OpenAIWebSocket {
 
   private setupEventHandlers() {
     this.ws.onopen = () => {
+      console.log('Connected to OpenAI');
       this.clientSocket.send(JSON.stringify({ 
         type: 'status', 
         status: 'connected',
@@ -38,14 +40,16 @@ export class OpenAIWebSocket {
     this.ws.onmessage = (event) => {
       if (this.clientSocket.readyState === WebSocket.OPEN) {
         try {
+          console.log('Received message from OpenAI:', event.data);
           this.clientSocket.send(event.data);
         } catch (error) {
-          console.error(`Failed to forward OpenAI message:`, error);
+          console.error('Failed to forward OpenAI message:', error);
         }
       }
     };
 
     this.ws.onerror = (error) => {
+      console.error('OpenAI WebSocket error:', error);
       try {
         this.clientSocket.send(JSON.stringify({
           type: 'error',
@@ -53,11 +57,12 @@ export class OpenAIWebSocket {
           timestamp: new Date().toISOString()
         }));
       } catch (sendError) {
-        console.error(`Failed to send error to client:`, sendError);
+        console.error('Failed to send error to client:', sendError);
       }
     };
 
     this.ws.onclose = (event) => {
+      console.log('OpenAI connection closed:', event.code, event.reason);
       try {
         this.clientSocket.send(JSON.stringify({
           type: 'status',
@@ -66,21 +71,22 @@ export class OpenAIWebSocket {
           timestamp: new Date().toISOString()
         }));
       } catch (error) {
-        console.error(`Failed to send disconnection notice:`, error);
+        console.error('Failed to send disconnection notice:', error);
       }
-      this.clientSocket.close();
     };
   }
 
   public sendMessage(data: string) {
     if (this.ws.readyState === WebSocket.OPEN) {
       try {
+        console.log('Sending message to OpenAI:', data);
         this.ws.send(data);
       } catch (error) {
-        console.error(`Failed to send message to OpenAI:`, error);
+        console.error('Failed to send message to OpenAI:', error);
         throw error;
       }
     } else {
+      console.error('OpenAI WebSocket not ready. State:', this.ws.readyState);
       this.clientSocket.send(JSON.stringify({
         type: 'error',
         error: 'OpenAI connection not ready',
@@ -91,6 +97,7 @@ export class OpenAIWebSocket {
   }
 
   public close() {
+    console.log('Closing OpenAI WebSocket connection');
     this.ws.close();
   }
 }
