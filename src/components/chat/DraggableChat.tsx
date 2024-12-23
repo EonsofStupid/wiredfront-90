@@ -29,7 +29,7 @@ export const DraggableChat = () => {
   } = useChatStore();
 
   const { currentAPI, handleSwitchAPI } = useAPISwitch();
-  const zIndex = useUIStore((state) => state.zIndex);
+  const { floating: zIndexValue } = useUIStore((state) => state.zIndex);
 
   const { position, setPosition, resetPosition } = useWindowPosition({
     width: CHAT_WIDTH,
@@ -169,7 +169,7 @@ export const DraggableChat = () => {
 
   return (
     <ChatDragContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex flex-col gap-2" style={{ zIndex: zIndex.floating }}>
+      <div className="flex flex-col gap-2" style={{ zIndex: zIndexValue }}>
         <ChatSessionControls
           sessions={Object.values(sessions)}
           currentSessionId={currentSessionId!}
@@ -178,14 +178,14 @@ export const DraggableChat = () => {
           onCloseSession={handleCloseSession}
         />
         <ChatWindow
-          position={currentSession.position}
-          isMinimized={currentSession.isMinimized}
+          position={currentSession?.position || position}
+          isMinimized={currentSession?.isMinimized || false}
           messages={messages}
           isLoading={isLoading}
           onMinimize={handleMinimize}
           onClose={handleClose}
           isDragging={isDragging}
-          isTacked={currentSession.isTacked}
+          isTacked={currentSession?.isTacked || false}
           onTackToggle={handleTackToggle}
           dimensions={{ width: CHAT_WIDTH, height: CHAT_HEIGHT }}
           hasMoreMessages={hasNextPage}
