@@ -13,12 +13,20 @@ export class WebSocketService {
 
   constructor(private sessionId: string) {
     this.logger = WebSocketLogger.getInstance();
-    console.log('WebSocket Service initialized:', { sessionId });
+    this.logger.log('info', 'WebSocket Service initialized', {
+      sessionId,
+      timestamp: new Date().toISOString()
+    });
   }
 
   setCallbacks(callbacks: WebSocketCallbacks) {
     this.callbacks = callbacks;
-    console.log('WebSocket callbacks set');
+    this.logger.log('info', 'WebSocket callbacks configured', {
+      sessionId: this.sessionId,
+      hasMessageHandler: !!callbacks.onMessage,
+      hasStateHandler: !!callbacks.onStateChange,
+      hasMetricsHandler: !!callbacks.onMetricsUpdate
+    });
   }
 
   async connect(accessToken?: string) {
@@ -28,7 +36,10 @@ export class WebSocketService {
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error || !session?.access_token) {
-          console.error('No valid session found');
+          this.logger.log('error', 'No valid session found', {
+            error,
+            sessionId: this.sessionId
+          });
           toast.error('Authentication required');
           throw new Error('No valid session found');
         }
@@ -37,9 +48,10 @@ export class WebSocketService {
 
       const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${token}`;
       
-      console.log('Attempting WebSocket connection:', {
+      this.logger.log('info', 'Attempting WebSocket connection', {
         sessionId: this.sessionId,
-        hasToken: !!token
+        hasToken: !!token,
+        url: WEBSOCKET_URL
       });
 
       if (this.ws) {
@@ -53,7 +65,7 @@ export class WebSocketService {
       toast.info('Connecting to chat service...');
       
     } catch (error) {
-      console.error('Connection failed:', {
+      this.logger.log('error', 'Connection failed', {
         error,
         sessionId: this.sessionId,
         retryAttempt: this.reconnectAttempts
@@ -68,30 +80,59 @@ export class WebSocketService {
     if (!this.ws) return;
 
     this.ws.onopen = () => {
-      console.log('WebSocket connected');
+      this.logger.log('info', 'WebSocket connected', {
+        sessionId: this.sessionId,
+        timestamp: new Date().toISOString()
+      });
       this.reconnectAttempts = 0;
       this.callbacks?.onStateChange?.('connected');
+      this.callbacks?.onMetricsUpdate?.({
+        lastConnected: new Date(),
+        reconnectAttempts: 0,
+        lastError: null
+      });
       toast.success('Connected to chat service');
     };
 
     this.ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log('Message received:', data);
+        this.logger.log('debug', 'Message received', {
+          sessionId: this.sessionId,
+          messageType: data?.type,
+          timestamp: new Date().toISOString()
+        });
         this.callbacks?.onMessage?.(data);
       } catch (error) {
+        this.logger.log('error', 'Failed to process message', {
+          error,
+          sessionId: this.sessionId,
+          raw: event.data
+        });
         console.error('Failed to process message:', error);
       }
     };
 
     this.ws.onerror = () => {
-      console.error('WebSocket error occurred');
+      const error = new Error('WebSocket error occurred');
+      this.logger.log('error', 'WebSocket error occurred', {
+        sessionId: this.sessionId,
+        error,
+        timestamp: new Date().toISOString()
+      });
       this.callbacks?.onStateChange?.('error');
+      this.callbacks?.onMetricsUpdate?.({
+        lastError: error,
+        lastConnected: null
+      });
       toast.error('Connection error occurred');
     };
 
     this.ws.onclose = () => {
-      console.log('WebSocket disconnected');
+      this.logger.log('info', 'WebSocket disconnected', {
+        sessionId: this.sessionId,
+        timestamp: new Date().toISOString()
+      });
       this.callbacks?.onStateChange?.('disconnected');
       toast.error('Disconnected from chat service');
       this.handleReconnect();
@@ -100,13 +141,23 @@ export class WebSocketService {
 
   private async handleReconnect() {
     if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
+      this.logger.log('error', 'Maximum reconnection attempts reached', {
+        sessionId: this.sessionId,
+        attempts: this.reconnectAttempts
+      });
       this.callbacks?.onStateChange?.('failed');
       toast.error('Maximum reconnection attempts reached');
       return;
     }
 
     this.reconnectAttempts++;
+    this.logger.log('info', 'Attempting to reconnect', {
+      sessionId: this.sessionId,
+      attempt: this.reconnectAttempts,
+      timestamp: new Date().toISOString()
+    });
     this.callbacks?.onStateChange?.('reconnecting');
+    this.callbacks?.onMetricsUpdate?.({ reconnectAttempts: this.reconnectAttempts });
     toast.info('Attempting to reconnect...');
     
     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
@@ -115,9 +166,10 @@ export class WebSocketService {
     try {
       await this.connect();
     } catch (error) {
-      console.error('Reconnection attempt failed:', {
+      this.logger.log('error', 'Reconnection attempt failed', {
         error,
-        attempt: this.reconnectAttempts
+        attempt: this.reconnectAttempts,
+        sessionId: this.sessionId
       });
     }
   }
@@ -126,22 +178,36 @@ export class WebSocketService {
     if (this.ws?.readyState === WebSocket.OPEN) {
       try {
         this.ws.send(JSON.stringify(message));
-        console.log('Message sent:', message);
+        this.logger.log('debug', 'Message sent', {
+          sessionId: this.sessionId,
+          messageType: message?.type,
+          timestamp: new Date().toISOString()
+        });
         return true;
       } catch (error) {
-        console.error('Failed to send message:', error);
+        this.logger.log('error', 'Failed to send message', {
+          error,
+          sessionId: this.sessionId,
+          message
+        });
         toast.error('Failed to send message');
         return false;
       }
     }
-    console.error('Connection not ready');
+    this.logger.log('error', 'Connection not ready', {
+      sessionId: this.sessionId,
+      readyState: this.ws?.readyState
+    });
     toast.error('Connection not ready');
     return false;
   }
 
   disconnect() {
     if (this.ws) {
-      console.log('Disconnecting WebSocket');
+      this.logger.log('info', 'Disconnecting WebSocket', {
+        sessionId: this.sessionId,
+        timestamp: new Date().toISOString()
+      });
       this.ws.close();
       this.ws = null;
     }
