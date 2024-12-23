@@ -38,9 +38,8 @@ export class WebSocketLogger {
       level,
       metadata
     };
-    this.logs.unshift(entry);
     
-    // Keep only last 1000 logs
+    this.logs.unshift(entry);
     if (this.logs.length > 1000) {
       this.logs.pop();
     }

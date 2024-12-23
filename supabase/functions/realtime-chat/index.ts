@@ -1,5 +1,4 @@
 import { corsHeaders } from './utils/cors.ts';
-import { logger } from './utils/logger.ts';
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { OpenAIWebSocket } from './utils/openai.ts';
 
@@ -9,9 +8,8 @@ const supabase = createClient(
 );
 
 Deno.serve(async (req) => {
-  const requestId = crypto.randomUUID();
-
   try {
+    // Handle CORS preflight
     if (req.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders });
     }
@@ -24,32 +22,40 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Extract and validate token
     const url = new URL(req.url);
     const accessToken = url.searchParams.get('access_token');
     const sessionId = url.searchParams.get('session_id');
     
     if (!accessToken) {
+      console.error('Access token not provided');
       return new Response('Access token not provided', { 
         status: 401,
         headers: corsHeaders
       });
     }
 
+    // Validate user session
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
     
     if (authError || !user) {
+      console.error('Invalid access token:', authError);
       return new Response('Invalid access token', { 
         status: 401,
         headers: corsHeaders
       });
     }
 
+    console.log('User authenticated:', user.id);
+
+    // Upgrade to WebSocket
     const { socket, response } = Deno.upgradeWebSocket(req);
     
     // Initialize OpenAI WebSocket connection
     const openaiWS = new OpenAIWebSocket(socket);
     
     socket.onopen = () => {
+      console.log('Client connected:', user.id);
       socket.send(JSON.stringify({
         type: 'connection_established',
         userId: user.id,
@@ -60,10 +66,15 @@ Deno.serve(async (req) => {
 
     socket.onmessage = async (event) => {
       try {
-        const data = JSON.parse(event.data);
+        console.log('Received message from client:', event.data);
         openaiWS.sendMessage(event.data);
       } catch (error) {
         console.error('Error processing message:', error);
+        socket.send(JSON.stringify({
+          type: 'error',
+          error: 'Failed to process message',
+          timestamp: new Date().toISOString()
+        }));
       }
     };
 
@@ -72,12 +83,14 @@ Deno.serve(async (req) => {
     };
 
     socket.onclose = () => {
+      console.log('Client disconnected:', user.id);
       openaiWS.close();
     };
 
     return response;
 
   } catch (error) {
+    console.error('Server error:', error);
     return new Response('Internal Server Error', { 
       status: 500,
       headers: corsHeaders
