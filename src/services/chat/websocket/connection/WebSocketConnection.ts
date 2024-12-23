@@ -38,9 +38,33 @@ export class WebSocketConnection {
     this.metricsService = new WebSocketMetricsService(this.sessionId, callbacks.onMetricsUpdate);
   }
 
+  async validateSession(token: string): Promise<{ isValid: boolean }> {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      
+      if (error || !user) {
+        logger.error('Session validation failed', {
+          error,
+          sessionId: this.sessionId,
+          context: { component: 'WebSocketConnection', action: 'validateSession' }
+        });
+        return { isValid: false };
+      }
+      
+      return { isValid: true };
+    } catch (error) {
+      logger.error('Session validation error', {
+        error,
+        sessionId: this.sessionId,
+        context: { component: 'WebSocketConnection', action: 'validateSession' }
+      });
+      return { isValid: false };
+    }
+  }
+
   async connect(token: string): Promise<void> {
     try {
-      const { isValid } = await this.authenticator.validateSession(token);
+      const { isValid } = await this.validateSession(token);
       if (!isValid) {
         throw new Error('Invalid session');
       }
