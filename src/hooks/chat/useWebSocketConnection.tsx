@@ -6,10 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { WebSocketService } from '@/services/chat/WebSocketService';
 import { WEBSOCKET_URL } from '@/constants/websocket';
 
-/**
- * Hook for managing WebSocket connections in chat functionality
- * Handles connection lifecycle, authentication, and message handling
- */
 export const useWebSocketConnection = (
   sessionId: string,
   isMinimized: boolean,
@@ -88,7 +84,7 @@ export const useWebSocketConnection = (
         if (!wsServiceRef.current) {
           wsServiceRef.current = new WebSocketService(sessionId);
           
-          await wsServiceRef.current.setCallbacks({
+          wsServiceRef.current.setCallbacks({
             onMessage,
             onStateChange: updateState,
             onMetricsUpdate: updateMetrics

@@ -1,5 +1,5 @@
 import { WebSocketLogger } from './websocket/monitoring/WebSocketLogger';
-import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
+import { ConnectionState, ConnectionMetrics, WebSocketCallbacks } from '@/types/websocket';
 import { WEBSOCKET_URL } from '@/constants/websocket';
 import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
@@ -9,31 +9,37 @@ export class WebSocketService {
   private logger: WebSocketLogger;
   private reconnectAttempts = 0;
   private readonly MAX_RECONNECT_ATTEMPTS = 5;
+  private callbacks: WebSocketCallbacks | null = null;
 
-  constructor(
-    private sessionId: string,
-    private onMessage?: (data: any) => void,
-    private onStateChange?: (state: ConnectionState) => void
-  ) {
+  constructor(private sessionId: string) {
     this.logger = WebSocketLogger.getInstance();
     console.log('WebSocket Service initialized:', { sessionId });
   }
 
-  async connect() {
+  setCallbacks(callbacks: WebSocketCallbacks) {
+    this.callbacks = callbacks;
+    console.log('WebSocket callbacks set');
+  }
+
+  async connect(accessToken?: string) {
     try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error || !session?.access_token) {
-        console.error('No valid session found');
-        toast.error('Authentication required');
-        throw new Error('No valid session found');
+      let token = accessToken;
+      if (!token) {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error || !session?.access_token) {
+          console.error('No valid session found');
+          toast.error('Authentication required');
+          throw new Error('No valid session found');
+        }
+        token = session.access_token;
       }
 
-      const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${session.access_token}`;
+      const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${token}`;
       
       console.log('Attempting WebSocket connection:', {
         sessionId: this.sessionId,
-        hasToken: !!session.access_token
+        hasToken: !!token
       });
 
       if (this.ws) {
@@ -64,7 +70,7 @@ export class WebSocketService {
     this.ws.onopen = () => {
       console.log('WebSocket connected');
       this.reconnectAttempts = 0;
-      this.onStateChange?.('connected');
+      this.callbacks?.onStateChange?.('connected');
       toast.success('Connected to chat service');
     };
 
@@ -72,7 +78,7 @@ export class WebSocketService {
       try {
         const data = JSON.parse(event.data);
         console.log('Message received:', data);
-        this.onMessage?.(data);
+        this.callbacks?.onMessage?.(data);
       } catch (error) {
         console.error('Failed to process message:', error);
       }
@@ -80,13 +86,13 @@ export class WebSocketService {
 
     this.ws.onerror = () => {
       console.error('WebSocket error occurred');
-      this.onStateChange?.('error');
+      this.callbacks?.onStateChange?.('error');
       toast.error('Connection error occurred');
     };
 
     this.ws.onclose = () => {
       console.log('WebSocket disconnected');
-      this.onStateChange?.('disconnected');
+      this.callbacks?.onStateChange?.('disconnected');
       toast.error('Disconnected from chat service');
       this.handleReconnect();
     };
@@ -94,13 +100,13 @@ export class WebSocketService {
 
   private async handleReconnect() {
     if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
-      this.onStateChange?.('failed');
+      this.callbacks?.onStateChange?.('failed');
       toast.error('Maximum reconnection attempts reached');
       return;
     }
 
     this.reconnectAttempts++;
-    this.onStateChange?.('reconnecting');
+    this.callbacks?.onStateChange?.('reconnecting');
     toast.info('Attempting to reconnect...');
     
     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
