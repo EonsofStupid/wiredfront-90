@@ -12,8 +12,8 @@ export const useAPISwitch = () => {
       const defaultProvider = getDefaultProvider();
       if (defaultProvider) {
         setCurrentAPI(defaultProvider);
+        // Only show the toast once when first setting up
         if (!hasShownToast) {
-          toast.success(`Using ${defaultProvider.toUpperCase()} as the default provider`);
           setHasShownToast(true);
         }
       } else if (!hasShownToast) {

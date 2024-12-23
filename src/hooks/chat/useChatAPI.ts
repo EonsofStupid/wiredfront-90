@@ -8,7 +8,8 @@ export const useChatAPI = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
-      const { data: settings, error } = await supabase
+      // First check user_settings table for API keys
+      const { data: userSettings, error: userError } = await supabase
         .from('user_settings')
         .select(`
           value,
@@ -18,26 +19,47 @@ export const useChatAPI = () => {
         .in('settings.key', [
           'openai-api-key',
           'gemini-api-key',
-          'anthropic-api-key'
+          'anthropic-api-key',
+          'perplexity-api-key'
         ]);
 
-      if (error) {
-        console.error('Error fetching API settings:', error);
+      if (userError) {
+        console.error('Error fetching user settings:', userError);
         return null;
       }
 
-      // Transform settings into a more usable format
-      return settings?.reduce((acc, setting) => {
+      // Then check api_configurations table
+      const { data: apiConfigs, error: configError } = await supabase
+        .from('api_configurations')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_enabled', true);
+
+      if (configError) {
+        console.error('Error fetching API configurations:', configError);
+        return null;
+      }
+
+      // Combine both sources of API settings
+      const settings: Record<string, string> = {};
+      
+      // Add settings from user_settings
+      userSettings?.forEach(setting => {
         const key = setting.settings.key.replace(/-api-key$/, "");
-        // Safely access the value assuming it's a JSON object with a key field
-        const apiKey = typeof setting.value === 'object' && setting.value && 'key' in setting.value 
-          ? (setting.value as { key: string }).key 
-          : null;
-        if (apiKey) {
-          acc[key] = apiKey;
+        if (setting.value && typeof setting.value === 'object' && 'key' in setting.value) {
+          settings[key] = setting.value.key;
         }
-        return acc;
-      }, {} as Record<string, string>) || null;
+      });
+
+      // Add settings from api_configurations
+      apiConfigs?.forEach(config => {
+        const key = config.api_type.toLowerCase();
+        if (config.is_enabled) {
+          settings[key] = 'configured';
+        }
+      });
+
+      return Object.keys(settings).length > 0 ? settings : null;
     },
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
@@ -47,9 +69,11 @@ export const useChatAPI = () => {
     apiSettings,
     getDefaultProvider: () => {
       if (!apiSettings) return null;
+      // Check for configured providers in order of preference
       if (apiSettings.openai) return 'openai';
-      if (apiSettings.gemini) return 'gemini';
       if (apiSettings.anthropic) return 'anthropic';
+      if (apiSettings.gemini) return 'gemini';
+      if (apiSettings.perplexity) return 'perplexity';
       return null;
     }
   };
