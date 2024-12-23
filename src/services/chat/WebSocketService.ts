@@ -4,42 +4,27 @@ import { logger } from './LoggingService';
 
 export class WebSocketService {
   private connection: WebSocketConnection;
+  private callbacks: WebSocketCallbacks = {
+    onMessage: () => {},
+    onStateChange: () => {},
+    onMetricsUpdate: () => {}
+  };
 
-  constructor(sessionId: string) {
+  constructor(private sessionId: string) {
     logger.info('Initializing WebSocket service', {
       sessionId,
       context: { component: 'WebSocketService', action: 'initialize' }
     });
-    this.connection = new WebSocketConnection(sessionId, this.callbacks);
+    this.connection = new WebSocketConnection(sessionId);
   }
-
-  private callbacks: WebSocketCallbacks = {
-    onMessage: (message: any) => {
-      // Forward to registered callback
-      this.onMessageCallback?.(message);
-    },
-    onStateChange: (state) => {
-      // Forward to registered callback
-      this.onStateChangeCallback?.(state);
-    },
-    onMetricsUpdate: (metrics) => {
-      // Forward to registered callback
-      this.onMetricsUpdateCallback?.(metrics);
-    }
-  };
-
-  private onMessageCallback?: (message: any) => void;
-  private onStateChangeCallback?: (state: any) => void;
-  private onMetricsUpdateCallback?: (metrics: any) => void;
 
   setCallbacks(callbacks: WebSocketCallbacks) {
-    this.onMessageCallback = callbacks.onMessage;
-    this.onStateChangeCallback = callbacks.onStateChange;
-    this.onMetricsUpdateCallback = callbacks.onMetricsUpdate;
+    this.callbacks = callbacks;
+    this.connection.setCallbacks(callbacks);
   }
 
-  async connect() {
-    await this.connection.connect();
+  async connect(token: string) {
+    await this.connection.connect(token);
   }
 
   send(message: any): boolean {
