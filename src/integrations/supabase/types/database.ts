@@ -1,26 +1,7 @@
-import type { Tables } from './tables';
-import type { Enums } from './enums';
-
 export type Json =
   | string
   | number
   | boolean
   | null
-  | { [key: string]: Json | undefined }
+  | { key?: string; [key: string]: Json | undefined }
   | Json[]
-
-export interface Database {
-  public: {
-    Tables: Tables;
-    Views: {
-      [_ in never]: never
-    };
-    Functions: {
-      [_ in never]: never
-    };
-    Enums: Enums;
-    CompositeTypes: {
-      [_ in never]: never
-    };
-  }
-}

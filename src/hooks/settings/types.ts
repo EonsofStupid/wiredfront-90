@@ -1,6 +1,5 @@
 import { Database } from "@/integrations/supabase/types";
 import { APISettingsState } from "@/types/store/settings/api";
-import { Json } from "@/integrations/supabase/types";
 
 export type MessageBehavior = Database["public"]["Enums"]["message_behavior_type"];
 export type ChatAPIProvider = Database["public"]["Enums"]["chat_api_provider"];
@@ -28,7 +27,8 @@ export interface UseAPISettingsReturn {
 
 export interface SettingValue {
   key: string;
-  [key: string]: any;
+  value?: string | number | boolean | null;
+  [additionalProp: string]: any;
 }
 
 export function isSettingValue(value: unknown): value is SettingValue {

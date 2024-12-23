@@ -2,15 +2,13 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from 'sonner';
 import { useNavigate } from "react-router-dom";
-import { isSettingValue } from "../types";
+import { isSettingValue, SettingValue } from "../types";
 import { APISettingsState } from "@/types/store/settings/api";
 import { logger } from "@/services/chat/LoggingService";
 
-const RETRY_ATTEMPTS = 3;
-const RETRY_DELAY = 1000;
-
 interface DecryptedValue {
   key: string;
+  [key: string]: any;
 }
 
 export function useAPISettingsLoad(
@@ -65,18 +63,18 @@ export function useAPISettingsLoad(
             const newSettings = {} as APISettingsState;
             
             await Promise.all(userSettings.map(async (setting) => {
-              let value: string | null = null;
+              let settingValue: SettingValue | null = null;
               
               if (setting.encrypted_value) {
                 const { data: decrypted } = await supabase.rpc('decrypt_setting_value', {
                   encrypted_value: setting.encrypted_value
                 });
-                value = decrypted?.key || null;
-              } else {
-                value = isSettingValue(setting.value) ? setting.value.key : null;
+                settingValue = decrypted as SettingValue;
+              } else if (isSettingValue(setting.value)) {
+                settingValue = setting.value;
               }
               
-              if (!value) return;
+              if (!settingValue?.key) return;
               
               const settingKey = Object.entries(settingKeyToId).find(
                 ([_, id]) => id === setting.setting_id
@@ -90,7 +88,7 @@ export function useAPISettingsLoad(
                 .replace(/^google-drive/, "googleDrive")
                 .replace(/^elevenlabs-voice/, "selectedVoice");
 
-              (newSettings as any)[key] = value;
+              (newSettings as any)[key] = settingValue.key;
             }));
             
             // Cache settings for offline use
@@ -106,10 +104,10 @@ export function useAPISettingsLoad(
       } catch (error) {
         logger.error('Error loading settings:', error);
         
-        if (retryCount < RETRY_ATTEMPTS) {
+        if (retryCount < 3) {
           retryCount++;
-          retryTimeout = setTimeout(loadSettings, RETRY_DELAY * Math.pow(2, retryCount));
-          toast.error(`Failed to load API settings. Retrying... (${retryCount}/${RETRY_ATTEMPTS})`);
+          retryTimeout = setTimeout(loadSettings, 1000 * Math.pow(2, retryCount));
+          toast.error(`Failed to load API settings. Retrying... (${retryCount}/3)`);
         } else {
           toast.error("Failed to load API settings. Loading from offline cache...");
           const cached = localStorage.getItem('api_settings');
