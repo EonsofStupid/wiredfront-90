@@ -2,6 +2,7 @@ import { logger } from './logger.ts';
 
 export class HeartbeatManager {
   private heartbeatInterval?: number;
+  private readonly HEARTBEAT_INTERVAL = 30000; // 30 seconds
   
   constructor(
     private socket: WebSocket,
@@ -16,15 +17,24 @@ export class HeartbeatManager {
           userId: this.userId,
           sessionId: this.sessionId
         });
-        this.socket.send(JSON.stringify({ type: 'ping' }));
+        
+        this.socket.send(JSON.stringify({ 
+          type: 'ping',
+          timestamp: new Date().toISOString()
+        }));
       }
-    }, 30000);
+    }, this.HEARTBEAT_INTERVAL);
   }
 
   stop() {
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = undefined;
+      
+      logger.debug('Heartbeat manager stopped', {
+        userId: this.userId,
+        sessionId: this.sessionId
+      });
     }
   }
 }
