@@ -46,7 +46,10 @@ export const useChatAPI = () => {
       // Add settings from user_settings
       userSettings?.forEach(setting => {
         const key = setting.settings.key.replace(/-api-key$/, "");
-        if (setting.value && typeof setting.value === 'object' && 'key' in setting.value) {
+        if (setting.value && 
+            typeof setting.value === 'object' && 
+            'key' in setting.value && 
+            typeof setting.value.key === 'string') {
           settings[key] = setting.value.key;
         }
       });
