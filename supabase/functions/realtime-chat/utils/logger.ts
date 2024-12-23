@@ -4,61 +4,45 @@ interface LogEntry {
   timestamp: string;
   level: LogLevel;
   message: string;
-  requestId?: string;
-  userId?: string;
-  sessionId?: string;
-  error?: any;
-  context?: Record<string, any>;
+  metadata?: Record<string, any>;
 }
 
 export const logger = {
   formatError(error: any) {
     if (!error) return null;
-    
     return {
       name: error.name,
       message: error.message,
       stack: error.stack,
-      code: error.code,
-      details: error.details,
-      hint: error.hint,
       ...(error.cause && { cause: this.formatError(error.cause) })
     };
   },
 
-  createLogEntry(
-    level: LogLevel,
-    message: string,
-    context: Record<string, any> = {}
-  ): LogEntry {
+  log(level: LogLevel, message: string, metadata: Record<string, any> = {}) {
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),
       level,
       message,
-      ...context
+      metadata: metadata.error ? { ...metadata, error: this.formatError(metadata.error) } : metadata
     };
 
-    if (context.error) {
-      entry.error = this.formatError(context.error);
-    }
-
-    console.log(JSON.stringify(entry, null, 2));
+    console.log(JSON.stringify(entry));
     return entry;
   },
 
-  info(message: string, context: Record<string, any> = {}) {
-    return this.createLogEntry('info', message, context);
+  info(message: string, metadata = {}) {
+    return this.log('info', message, metadata);
   },
 
-  error(message: string, context: Record<string, any> = {}) {
-    return this.createLogEntry('error', message, context);
+  error(message: string, metadata = {}) {
+    return this.log('error', message, metadata);
   },
 
-  debug(message: string, context: Record<string, any> = {}) {
-    return this.createLogEntry('debug', message, context);
+  debug(message: string, metadata = {}) {
+    return this.log('debug', message, metadata);
   },
 
-  warn(message: string, context: Record<string, any> = {}) {
-    return this.createLogEntry('warn', message, context);
+  warn(message: string, metadata = {}) {
+    return this.log('warn', message, metadata);
   }
 };

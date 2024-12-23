@@ -1,49 +1,32 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { logger } from './utils/logger.ts';
+import { ConnectionManager } from './utils/connectionManager.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const MAX_CONNECTIONS = 100;
-let activeConnections = 0;
-
 serve(async (req) => {
   try {
-    console.log('New request received:', {
+    logger.info('New request received', {
       method: req.method,
       url: req.url,
       headers: Object.fromEntries(req.headers.entries())
     });
 
-    // Handle CORS preflight
     if (req.method === 'OPTIONS') {
-      console.log('Handling CORS preflight request');
+      logger.debug('Handling CORS preflight request');
       return new Response(null, { headers: corsHeaders });
     }
 
     const upgrade = req.headers.get('upgrade') || '';
     if (upgrade.toLowerCase() !== 'websocket') {
-      console.error('Request is not trying to upgrade to WebSocket:', {
-        upgrade,
-        method: req.method
-      });
-      return new Response("request isn't trying to upgrade to websocket.", { 
+      logger.error('Request is not trying to upgrade to WebSocket', { upgrade });
+      return new Response("Request isn't trying to upgrade to websocket.", { 
         status: 400,
-        headers: corsHeaders
-      });
-    }
-
-    // Check connection limits
-    if (activeConnections >= MAX_CONNECTIONS) {
-      console.error('Maximum connections reached:', {
-        current: activeConnections,
-        max: MAX_CONNECTIONS
-      });
-      return new Response('Server is at capacity', { 
-        status: 503,
         headers: corsHeaders
       });
     }
@@ -53,13 +36,13 @@ serve(async (req) => {
     const accessToken = url.searchParams.get('access_token');
     const sessionId = url.searchParams.get('session_id');
     
-    console.log('Connection attempt:', { 
+    logger.info('Connection attempt', { 
       sessionId,
       hasAccessToken: !!accessToken
     });
     
     if (!accessToken) {
-      console.error('Access token not provided');
+      logger.error('Access token not provided');
       return new Response('Access token not provided', { 
         status: 401,
         headers: corsHeaders
@@ -75,7 +58,7 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
     
     if (authError || !user) {
-      console.error('Invalid access token:', {
+      logger.error('Invalid access token', {
         error: authError,
         userId: user?.id
       });
@@ -85,7 +68,7 @@ serve(async (req) => {
       });
     }
 
-    console.log('User authenticated:', {
+    logger.info('User authenticated', {
       userId: user.id,
       sessionId,
       email: user.email
@@ -94,127 +77,16 @@ serve(async (req) => {
     // Upgrade to WebSocket
     const { socket, response } = Deno.upgradeWebSocket(req);
     
-    activeConnections++;
-    console.log('Active connections:', {
-      total: activeConnections,
-      sessionId,
-      userId: user.id
-    });
-    
-    socket.onopen = () => {
-      console.log('Client connected:', {
-        userId: user.id,
-        sessionId,
-        timestamp: new Date().toISOString()
-      });
-      socket.send(JSON.stringify({
-        type: 'connection_established',
-        userId: user.id,
-        sessionId,
-        timestamp: new Date().toISOString()
-      }));
-    };
-
-    socket.onmessage = async (event) => {
-      try {
-        console.log('Received message from client:', {
-          data: event.data,
-          userId: user.id,
-          sessionId,
-          timestamp: new Date().toISOString()
-        });
-        
-        const data = JSON.parse(event.data);
-        
-        if (data.type === 'ping') {
-          console.log('Received ping, sending pong:', {
-            userId: user.id,
-            sessionId
-          });
-          socket.send(JSON.stringify({
-            type: 'pong',
-            timestamp: new Date().toISOString()
-          }));
-          return;
-        }
-        
-        console.log('Processing client message:', {
-          type: data.type,
-          sessionId,
-          userId: user.id,
-          timestamp: new Date().toISOString()
-        });
-
-        // Log message to database for auditing
-        const { error: dbError } = await supabase
-          .from('messages')
-          .insert({
-            content: typeof data === 'string' ? data : JSON.stringify(data),
-            user_id: user.id,
-            chat_session_id: sessionId,
-            type: 'text',
-            metadata: {
-              messageType: data.type,
-              timestamp: new Date().toISOString()
-            }
-          });
-
-        if (dbError) {
-          console.error('Failed to log message to database:', {
-            error: dbError,
-            userId: user.id,
-            sessionId
-          });
-        }
-
-        socket.send(JSON.stringify({
-          type: 'message_received',
-          content: data,
-          timestamp: new Date().toISOString()
-        }));
-
-      } catch (error) {
-        console.error('Error processing message:', {
-          error,
-          userId: user.id,
-          sessionId,
-          timestamp: new Date().toISOString()
-        });
-        socket.send(JSON.stringify({
-          type: 'error',
-          error: 'Failed to process message',
-          details: error.message,
-          timestamp: new Date().toISOString()
-        }));
-      }
-    };
-
-    socket.onerror = (error) => {
-      console.error('WebSocket error:', { 
-        error,
-        userId: user.id,
-        sessionId,
-        timestamp: new Date().toISOString()
-      });
-    };
-
-    socket.onclose = () => {
-      activeConnections--;
-      console.log('Client disconnected:', { 
-        userId: user.id,
-        sessionId,
-        activeConnections,
-        timestamp: new Date().toISOString()
-      });
-    };
+    // Initialize connection manager
+    const connectionManager = new ConnectionManager(socket, user.id, sessionId!);
+    connectionManager.setupConnection();
 
     return response;
 
   } catch (error) {
-    console.error('Server error:', {
+    logger.error('Server error', {
       error,
-      stack: error.stack,
-      timestamp: new Date().toISOString()
+      stack: error.stack
     });
     return new Response('Internal Server Error', { 
       status: 500,
