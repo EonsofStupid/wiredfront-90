@@ -24,24 +24,21 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
       case 'switch-api':
         if (parsed.args.length > 0 && onSwitchAPI) {
           onSwitchAPI(parsed.args[0]);
-          toast.success(`Switched to ${parsed.args[0]} API`, {
-            id: 'api-switch' // Prevent duplicate toasts
-          });
+          toast.success(`Switched to ${parsed.args[0]} API`);
+        } else {
+          toast.error("Please specify an API provider");
         }
         return true;
       case 'help':
-        toast.info(getCommandHelp(), {
-          id: 'help-command' // Prevent duplicate toasts
-        });
+        toast.info(getCommandHelp());
         return true;
       case 'clear':
         setMessage("");
         setAttachments([]);
+        toast.success("Chat input cleared");
         return true;
       case 'unknown':
-        toast.error("Unknown command. Type /help for available commands", {
-          id: 'unknown-command' // Prevent duplicate toasts
-        });
+        toast.error("Unknown command. Type /help for available commands");
         return true;
     }
   };
@@ -50,6 +47,7 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
     e.preventDefault();
     if (!message.trim() && attachments.length === 0) return;
     
+    // Handle commands
     if (message.startsWith('/')) {
       if (handleCommand(message)) {
         setMessage("");
@@ -58,6 +56,7 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
     }
     
     try {
+      // Handle file uploads first
       const uploadedFiles = await Promise.all(
         attachments.map(async (file) => {
           const fileExt = file.name.split('.').pop();
@@ -81,6 +80,7 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
         })
       );
 
+      // Create the message content with attachments if any
       let finalContent = message;
       if (uploadedFiles.length > 0) {
         finalContent = JSON.stringify({
@@ -94,9 +94,7 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
       setAttachments([]);
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error("Failed to upload file(s)", {
-        id: 'upload-error' // Prevent duplicate toasts
-      });
+      toast.error("Failed to upload file(s)");
     }
   };
 
@@ -115,9 +113,7 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
         const file = item.getAsFile();
         if (file) {
           setAttachments(prev => [...prev, file]);
-          toast.success("Image added to message", {
-            id: 'image-paste' // Prevent duplicate toasts
-          });
+          toast.success("Image added to message");
         }
       }
     });
@@ -126,11 +122,7 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     setAttachments(prev => [...prev, ...files]);
-    if (files.length > 0) {
-      toast.success(`${files.length} file(s) added to message`, {
-        id: 'file-select' // Prevent duplicate toasts
-      });
-    }
+    toast.success(`${files.length} file(s) added to message`);
   };
 
   return (
