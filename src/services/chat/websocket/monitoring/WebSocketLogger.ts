@@ -1,10 +1,13 @@
 import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
 
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
 interface LogEntry {
   timestamp: number;
   message: string;
-  level: 'debug' | 'info' | 'warn' | 'error';
+  level: LogLevel;
   metadata?: any;
+  context?: string;
 }
 
 export class WebSocketLogger {
@@ -22,21 +25,24 @@ export class WebSocketLogger {
   };
   private connectionState: ConnectionState = 'initial';
 
-  private constructor() {}
-
-  static getInstance(): WebSocketLogger {
-    if (!WebSocketLogger.instance) {
-      WebSocketLogger.instance = new WebSocketLogger();
-    }
-    return WebSocketLogger.instance;
+  constructor(private sessionId: string) {
+    this.log('debug', 'WebSocket Logger initialized', {
+      sessionId,
+      timestamp: new Date().toISOString(),
+      context: 'logger_init'
+    });
   }
 
-  log(level: 'debug' | 'info' | 'warn' | 'error', message: string, metadata?: any) {
+  log(level: LogLevel, message: string, metadata?: any) {
     const entry: LogEntry = {
       timestamp: Date.now(),
       message,
       level,
-      metadata
+      metadata: {
+        ...metadata,
+        sessionId: this.sessionId
+      },
+      context: metadata?.context || 'general'
     };
     
     this.logs.unshift(entry);
@@ -44,18 +50,25 @@ export class WebSocketLogger {
       this.logs.pop();
     }
 
+    // Enhanced console logging with context
+    const logPrefix = `[${new Date(entry.timestamp).toISOString()}][${level.toUpperCase()}][${entry.context}]`;
+    const logMessage = `${logPrefix} ${message}`;
+
     switch (level) {
       case 'debug':
-        console.debug(`[${new Date(entry.timestamp).toISOString()}] ${message}`, metadata);
+        console.debug(logMessage, metadata);
         break;
       case 'info':
-        console.info(`[${new Date(entry.timestamp).toISOString()}] ${message}`, metadata);
+        console.info(logMessage, metadata);
         break;
       case 'warn':
-        console.warn(`[${new Date(entry.timestamp).toISOString()}] ${message}`, metadata);
+        console.warn(logMessage, metadata);
         break;
       case 'error':
-        console.error(`[${new Date(entry.timestamp).toISOString()}] ${message}`, metadata);
+        console.error(logMessage, metadata);
+        if (metadata?.error?.stack) {
+          console.error('Stack trace:', metadata.error.stack);
+        }
         break;
     }
 

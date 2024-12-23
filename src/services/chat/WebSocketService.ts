@@ -12,25 +12,33 @@ export class WebSocketService {
   private callbacks: WebSocketCallbacks | null = null;
 
   constructor(private sessionId: string) {
-    this.logger = WebSocketLogger.getInstance();
-    this.logger.log('info', 'WebSocket Service initialized', {
+    this.logger = new WebSocketLogger(sessionId);
+    this.logger.log('debug', 'WebSocket Service initialized', {
       sessionId,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      context: 'initialization'
     });
   }
 
   setCallbacks(callbacks: WebSocketCallbacks) {
     this.callbacks = callbacks;
-    this.logger.log('info', 'WebSocket callbacks configured', {
+    this.logger.log('debug', 'WebSocket callbacks configured', {
       sessionId: this.sessionId,
       hasMessageHandler: !!callbacks.onMessage,
       hasStateHandler: !!callbacks.onStateChange,
-      hasMetricsHandler: !!callbacks.onMetricsUpdate
+      hasMetricsHandler: !!callbacks.onMetricsUpdate,
+      context: 'configuration'
     });
   }
 
   async connect(accessToken?: string) {
     try {
+      this.logger.log('debug', 'Starting WebSocket connection process', {
+        sessionId: this.sessionId,
+        hasExistingToken: !!accessToken,
+        context: 'connection_start'
+      });
+
       let token = accessToken;
       if (!token) {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -38,7 +46,8 @@ export class WebSocketService {
         if (error || !session?.access_token) {
           this.logger.log('error', 'No valid session found', {
             error,
-            sessionId: this.sessionId
+            sessionId: this.sessionId,
+            context: 'auth_validation'
           });
           toast.error('Authentication required');
           throw new Error('No valid session found');
@@ -48,13 +57,19 @@ export class WebSocketService {
 
       const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${token}`;
       
-      this.logger.log('info', 'Attempting WebSocket connection', {
+      this.logger.log('debug', 'Attempting WebSocket connection', {
         sessionId: this.sessionId,
+        url: WEBSOCKET_URL,
         hasToken: !!token,
-        url: WEBSOCKET_URL
+        context: 'connection_attempt'
       });
 
       if (this.ws) {
+        this.logger.log('debug', 'Closing existing connection', {
+          sessionId: this.sessionId,
+          readyState: this.ws.readyState,
+          context: 'connection_cleanup'
+        });
         this.ws.close();
         this.ws = null;
       }
@@ -69,7 +84,8 @@ export class WebSocketService {
       this.logger.log('error', 'Connection failed', {
         error,
         sessionId: this.sessionId,
-        retryAttempt: this.reconnectAttempts
+        retryAttempt: this.reconnectAttempts,
+        context: 'connection_error'
       });
       toast.error('Failed to connect to chat service');
       this.handleReconnect();

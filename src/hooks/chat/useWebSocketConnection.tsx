@@ -15,61 +15,36 @@ export const useWebSocketConnection = (
   const metricsRef = useRef<ConnectionMetrics | null>(null);
   const stateRef = useRef<ConnectionState>('initial');
   
-  const updateMetrics = useCallback((metrics: Partial<ConnectionMetrics>) => {
-    metricsRef.current = { ...metricsRef.current, ...metrics } as ConnectionMetrics;
-    logger.info('WebSocket metrics updated', 
-      { 
-        metrics: metricsRef.current,
-        sessionId,
-        timestamp: new Date().toISOString()
-      }
-    );
-  }, [sessionId]);
-
-  const updateState = useCallback((state: ConnectionState) => {
-    stateRef.current = state;
-    logger.info(`WebSocket state updated: ${state}`,
-      {
-        previousState: stateRef.current,
-        newState: state,
-        sessionId,
-        timestamp: new Date().toISOString()
-      }
-    );
-    
-    switch (state) {
-      case 'connected':
-        toast.success('Connected to chat service');
-        break;
-      case 'disconnected':
-        toast.error('Disconnected from chat service');
-        break;
-      case 'reconnecting':
-        toast.info('Attempting to reconnect...');
-        break;
-      case 'error':
-        toast.error('Connection error occurred');
-        break;
-    }
-  }, [sessionId]);
-
   useEffect(() => {
     const initializeWebSocket = async () => {
       if (isMinimized) {
         logger.info('Chat is minimized, not initializing WebSocket',
-          { sessionId }
+          { 
+            sessionId,
+            context: 'initialization_skipped'
+          }
         );
         return;
       }
 
       try {
+        logger.info('Starting WebSocket initialization',
+          {
+            sessionId,
+            timestamp: new Date().toISOString(),
+            context: 'initialization_start'
+          }
+        );
+
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.access_token) {
           logger.warn('No active session found',
-            { sessionId }
+            {
+              sessionId,
+              context: 'auth_validation'
+            }
           );
-          updateState('error');
           return;
         }
 
@@ -77,7 +52,8 @@ export const useWebSocketConnection = (
           {
             sessionId,
             hasToken: !!session.access_token,
-            url: WEBSOCKET_URL
+            url: WEBSOCKET_URL,
+            context: 'connection_setup'
           }
         );
 
@@ -86,24 +62,46 @@ export const useWebSocketConnection = (
           
           wsServiceRef.current.setCallbacks({
             onMessage,
-            onStateChange: updateState,
-            onMetricsUpdate: updateMetrics
+            onStateChange: (state: ConnectionState) => {
+              logger.info(`WebSocket state updated: ${state}`,
+                {
+                  previousState: stateRef.current,
+                  newState: state,
+                  sessionId,
+                  context: 'state_change'
+                }
+              );
+              stateRef.current = state;
+            },
+            onMetricsUpdate: (metrics: Partial<ConnectionMetrics>) => {
+              logger.info('WebSocket metrics updated',
+                {
+                  metrics,
+                  sessionId,
+                  context: 'metrics_update'
+                }
+              );
+              metricsRef.current = { ...metricsRef.current, ...metrics } as ConnectionMetrics;
+            }
           });
 
           await wsServiceRef.current.connect(session.access_token);
           
           logger.info('WebSocket service initialized and connected',
-            { sessionId }
+            {
+              sessionId,
+              context: 'initialization_complete'
+            }
           );
         }
       } catch (error) {
         logger.error('Failed to initialize WebSocket',
           {
             error,
-            sessionId
+            sessionId,
+            context: 'initialization_error'
           }
         );
-        updateState('error');
       }
     };
 
@@ -112,13 +110,16 @@ export const useWebSocketConnection = (
     return () => {
       if (wsServiceRef.current) {
         logger.info('Cleaning up WebSocket service',
-          { sessionId }
+          {
+            sessionId,
+            context: 'cleanup'
+          }
         );
         wsServiceRef.current.disconnect();
         wsServiceRef.current = null;
       }
     };
-  }, [sessionId, isMinimized, onMessage, updateState, updateMetrics]);
+  }, [sessionId, isMinimized, onMessage]);
 
   return {
     connectionState: stateRef.current,
@@ -147,7 +148,6 @@ export const useWebSocketConnection = (
         logger.error('Failed to reconnect',
           { error, sessionId }
         );
-        updateState('error');
       }
     },
   };
