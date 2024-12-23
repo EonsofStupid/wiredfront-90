@@ -1,48 +1,39 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from 'sonner';
 import { Message } from '@/types/chat';
 import { logger } from '@/services/chat/LoggingService';
-
-interface QueuedMessage {
-  id: string;
-  content: string;
-  attempts: number;
-  timestamp: string;
-  status: 'pending' | 'failed' | 'sent';
-}
+import { useMessageQueue } from './message/useMessageQueue';
+import { useMessageRetry } from './message/useMessageRetry';
+import { useMessageCache } from './message/useMessageCache';
+import { useMessageRateLimit } from './message/useMessageRateLimit';
 
 export const useMessageManagement = (sessionId: string) => {
   const [realtimeMessages, setRealtimeMessages] = useState<Message[]>([]);
-  const [offlineQueue, setOfflineQueue] = useState<QueuedMessage[]>(() => {
-    const saved = localStorage.getItem(`chat_queue_${sessionId}`);
-    return saved ? JSON.parse(saved) : [];
-  });
+  const { offlineQueue, addToQueue, removeFromQueue, updateMessageStatus } = useMessageQueue(sessionId);
+  const { retryConfig, loadRetryConfig, calculateRetryDelay, shouldRetry } = useMessageRetry(sessionId);
+  const { loadCacheConfig, cacheMessages, getCachedMessages } = useMessageCache(sessionId);
+  const { loadRateLimitConfig, checkRateLimit, incrementMessageCount } = useMessageRateLimit();
 
-  const saveQueue = (queue: QueuedMessage[]) => {
-    localStorage.setItem(`chat_queue_${sessionId}`, JSON.stringify(queue));
-    setOfflineQueue(queue);
-  };
+  useEffect(() => {
+    const initializeConfigurations = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await Promise.all([
+          loadRetryConfig(user.id),
+          loadCacheConfig(user.id),
+          loadRateLimitConfig(user.id)
+        ]);
+      }
+    };
+
+    initializeConfigurations();
+  }, []);
 
   const addMessage = async (message: Message) => {
     try {
-      const { data: settings } = await supabase
-        .from('chat_settings')
-        .select('rate_limit_per_minute')
-        .single();
-
-      const rateLimit = settings?.rate_limit_per_minute || 60;
-      const now = new Date();
-      const oneMinuteAgo = new Date(now.getTime() - 60000);
-
-      const { count } = await supabase
-        .from('messages')
-        .select('id', { count: 'exact' })
-        .gte('created_at', oneMinuteAgo.toISOString())
-        .eq('user_id', message.user_id);
-
-      if (count && count >= rateLimit) {
-        toast.error(`Rate limit exceeded. Please wait before sending more messages.`);
+      if (!checkRateLimit()) {
+        toast.error('Rate limit exceeded. Please wait before sending more messages.');
         return;
       }
 
@@ -57,34 +48,25 @@ export const useMessageManagement = (sessionId: string) => {
 
       if (error) throw error;
 
+      incrementMessageCount();
+      await cacheMessages([message, ...realtimeMessages]);
+
     } catch (error) {
-      logger.error('Failed to add message', { error, sessionId });
+      logger.error('Failed to add message:', error);
       await handleMessageError(message);
     }
   };
 
   const handleMessageError = async (message: Message) => {
-    try {
-      const { data: retryConfig } = await supabase
-        .from('retry_configurations')
-        .select('*')
-        .single();
-
-      const maxRetries = retryConfig?.max_retries || 3;
-      const initialDelay = retryConfig?.initial_retry_delay || 1000;
-      const maxDelay = retryConfig?.max_retry_delay || 30000;
-      const backoffFactor = retryConfig?.backoff_factor || 2;
-
-      const currentRetries = message.retry_count || 0;
+    if (shouldRetry(message)) {
+      const delay = calculateRetryDelay(message.retry_count);
       
-      if (currentRetries < maxRetries) {
-        const delay = Math.min(initialDelay * Math.pow(backoffFactor, currentRetries), maxDelay);
-        
-        setTimeout(async () => {
+      setTimeout(async () => {
+        try {
           const { error } = await supabase
             .from('messages')
             .update({
-              retry_count: currentRetries + 1,
+              retry_count: message.retry_count + 1,
               last_retry: new Date().toISOString(),
               message_status: 'pending'
             })
@@ -93,94 +75,56 @@ export const useMessageManagement = (sessionId: string) => {
           if (!error) {
             addMessage(message);
           }
-        }, delay);
-        
-        toast.info('Message will be retried shortly...');
-      } else {
-        await supabase
-          .from('messages')
-          .update({
-            message_status: 'failed'
-          })
-          .eq('id', message.id);
-          
-        toast.error('Failed to send message after multiple attempts');
-      }
-    } catch (error) {
-      logger.error('Error handling message retry', { error, sessionId });
-      toast.error('Error handling message retry');
-    }
-  };
-
-  const processOfflineQueue = async () => {
-    const queue = [...offlineQueue];
-    const failedMessages: QueuedMessage[] = [];
-
-    for (const msg of queue) {
-      if (msg.status === 'pending' && msg.attempts < 3) {
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) {
-            failedMessages.push(msg);
-            continue;
-          }
-
-          const { error } = await supabase
-            .from('messages')
-            .insert({
-              content: msg.content,
-              chat_session_id: sessionId,
-              type: 'text',
-              user_id: user.id,
-              message_status: 'sent'
-            });
-
-          if (error) throw error;
-          
-          toast.success('Offline message sent successfully');
         } catch (error) {
-          logger.error('Failed to send queued message:', error);
-          msg.attempts += 1;
-          msg.status = 'failed';
-          failedMessages.push(msg);
+          logger.error('Retry attempt failed:', error);
+          updateMessageStatus(message.id, 'failed', message.retry_count + 1);
         }
-      } else if (msg.status === 'failed' || msg.attempts >= 3) {
-        failedMessages.push(msg);
-      }
+      }, delay);
+      
+      toast.info('Message will be retried shortly...');
+    } else {
+      updateMessageStatus(message.id, 'failed');
+      toast.error('Failed to send message after multiple attempts');
     }
-
-    saveQueue(failedMessages);
   };
 
   const addOptimisticMessage = async (content: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      const queuedMessage: QueuedMessage = {
+      const optimisticMessage: Message = {
         id: crypto.randomUUID(),
         content,
-        attempts: 0,
-        timestamp: new Date().toISOString(),
-        status: 'pending'
+        user_id: 'offline',
+        chat_session_id: sessionId,
+        type: 'text',
+        metadata: {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        is_minimized: false,
+        position: { x: null, y: null },
+        window_state: { width: 350, height: 500 },
+        last_accessed: new Date().toISOString(),
+        retry_count: 0,
+        message_status: 'pending'
       };
-      saveQueue([...offlineQueue, queuedMessage]);
-      toast.info('Message queued for sending when online');
+
+      addToQueue(optimisticMessage);
       return;
     }
 
-    const now = new Date().toISOString();
     const optimisticMessage: Message = {
       id: crypto.randomUUID(),
       content,
       user_id: user.id,
       chat_session_id: sessionId,
-      created_at: now,
-      updated_at: now,
       type: 'text',
       metadata: {},
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       is_minimized: false,
       position: { x: null, y: null },
       window_state: { width: 350, height: 500 },
-      last_accessed: now,
+      last_accessed: new Date().toISOString(),
       retry_count: 0,
       message_status: 'pending'
     };
@@ -193,30 +137,50 @@ export const useMessageManagement = (sessionId: string) => {
       logger.error('Failed to send message:', error);
       toast.error('Failed to send message');
       setRealtimeMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
-      
-      const queuedMessage: QueuedMessage = {
-        id: optimisticMessage.id,
-        content,
-        attempts: 1,
-        timestamp: now,
-        status: 'failed'
-      };
-      saveQueue([...offlineQueue, queuedMessage]);
+      addToQueue(optimisticMessage);
     }
   };
 
-  window.addEventListener('online', () => {
-    if (offlineQueue.length > 0) {
-      toast.info('Processing offline messages...');
-      processOfflineQueue();
-    }
-  });
+  useEffect(() => {
+    const channel = supabase
+      .channel(`messages:${sessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+          filter: `chat_session_id=eq.${sessionId}`,
+        },
+        (payload) => {
+          logger.debug('Real-time message update:', payload);
+          
+          if (payload.eventType === 'INSERT') {
+            setRealtimeMessages((prev) => [payload.new as Message, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            setRealtimeMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === payload.new.id ? (payload.new as Message) : msg
+              )
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setRealtimeMessages((prev) =>
+              prev.filter((msg) => msg.id !== payload.old.id)
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [sessionId]);
 
   return {
     realtimeMessages,
     addMessage,
     addOptimisticMessage,
-    offlineQueue,
-    processOfflineQueue
+    offlineQueue
   };
 };
