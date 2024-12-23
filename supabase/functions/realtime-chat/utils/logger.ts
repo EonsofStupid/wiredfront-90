@@ -26,7 +26,7 @@ export const logger = {
       data: data.error ? { ...data, error: this.formatError(data.error) } : data
     };
 
-    // Always log to console for Edge Function logging
+    // Log to edge function logs
     console.log(JSON.stringify(entry));
     return entry;
   },
