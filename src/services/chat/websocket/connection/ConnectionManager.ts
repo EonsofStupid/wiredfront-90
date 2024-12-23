@@ -15,6 +15,7 @@ export class ConnectionManager {
     private onStateChange?: (state: ConnectionState) => void
   ) {
     this.logger = WebSocketLogger.getInstance();
+    this.logger.setSessionId(sessionId);
   }
 
   async connect() {

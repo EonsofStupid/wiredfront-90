@@ -15,6 +15,7 @@ export class WebSocketConnection {
     private onMetricsUpdate?: (metrics: Partial<ConnectionMetrics>) => void
   ) {
     this.logger = WebSocketLogger.getInstance();
+    this.logger.setSessionId(sessionId);
   }
 
   async connect(accessToken: string) {

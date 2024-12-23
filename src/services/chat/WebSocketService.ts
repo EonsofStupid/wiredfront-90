@@ -12,7 +12,8 @@ export class WebSocketService {
   private callbacks: WebSocketCallbacks | null = null;
 
   constructor(private sessionId: string) {
-    this.logger = new WebSocketLogger(sessionId);
+    this.logger = WebSocketLogger.getInstance();
+    this.logger.setSessionId(sessionId);
     this.logger.log('debug', 'WebSocket Service initialized', {
       sessionId,
       timestamp: new Date().toISOString(),
