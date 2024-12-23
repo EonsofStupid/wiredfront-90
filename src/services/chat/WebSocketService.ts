@@ -1,12 +1,14 @@
 import { WebSocketLogger } from './websocket/monitoring/WebSocketLogger';
 import { WEBSOCKET_URL } from '@/constants/websocket';
 import { supabase } from "@/integrations/supabase/client";
+import { ConnectionState } from '@/types/websocket';
 
 export class WebSocketService {
   private ws: WebSocket | null = null;
   private logger: WebSocketLogger;
   private sessionId: string;
-  private onMessage: ((data: any) => void) | null = null;
+  private onMessage?: (data: any) => void;
+  private onStateChange?: (state: ConnectionState) => void;
 
   constructor(sessionId: string) {
     this.sessionId = sessionId;
@@ -14,8 +16,12 @@ export class WebSocketService {
     console.log('WebSocket service initialized', { sessionId });
   }
 
-  setCallbacks(callbacks: { onMessage: (data: any) => void }) {
+  setCallbacks(callbacks: { 
+    onMessage: (data: any) => void;
+    onStateChange?: (state: ConnectionState) => void;
+  }) {
     this.onMessage = callbacks.onMessage;
+    this.onStateChange = callbacks.onStateChange;
   }
 
   async connect() {
@@ -48,6 +54,7 @@ export class WebSocketService {
 
     this.ws.onopen = () => {
       console.log('WebSocket connected', { sessionId: this.sessionId });
+      this.onStateChange?.('connected');
     };
 
     this.ws.onmessage = (event) => {
@@ -62,10 +69,12 @@ export class WebSocketService {
 
     this.ws.onerror = (error) => {
       console.error('WebSocket error:', error);
+      this.onStateChange?.('error');
     };
 
     this.ws.onclose = () => {
       console.log('WebSocket disconnected', { sessionId: this.sessionId });
+      this.onStateChange?.('disconnected');
     };
   }
 
