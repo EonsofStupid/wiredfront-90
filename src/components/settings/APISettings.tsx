@@ -4,8 +4,7 @@ import { AIServicesSettings } from "./api/AIServicesSettings";
 import { CloudStorageSettings } from "./api/CloudStorageSettings";
 import { DevelopmentSettings } from "./api/DevelopmentSettings";
 import { VoiceSettings } from "./api/VoiceSettings";
-import { useAPISettings } from "@/hooks/useAPISettings";
-
+import { useAPISettings } from "@/hooks/settings/api";
 export function APISettings() {
   const {
     settings,

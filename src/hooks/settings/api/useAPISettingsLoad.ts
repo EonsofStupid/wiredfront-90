@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { isSettingValue } from "../types";
 import { APISettingsState } from "@/types/store/settings/api";
+import { logger } from "@/services/chat/LoggingService";
 
 export function useAPISettingsLoad(
   setUser: (user: any) => void,
@@ -63,7 +64,7 @@ export function useAPISettingsLoad(
             setSettings(newSettings);
           }
         } catch (error) {
-          console.error('Error loading settings:', error);
+          logger.error('Error loading settings:', error);
           toast.error("Failed to load API settings");
         }
       }

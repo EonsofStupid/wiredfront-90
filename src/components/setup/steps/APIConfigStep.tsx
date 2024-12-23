@@ -3,9 +3,11 @@ import { useAPIConfigurations } from "@/hooks/settings/useAPIConfigurations";
 import { APIType } from "@/types/store/settings/api-config";
 import { useCallback } from "react";
 import { APIConfigurationList } from "@/components/settings/api/APIConfigurationList";
+import { useAPISettings } from "@/hooks/settings/api";
 
 export function APIConfigStep() {
   const { configurations, loading, updateConfiguration, createConfiguration } = useAPIConfigurations();
+  const { settings } = useAPISettings();
 
   const handleConfigurationChange = useCallback(async (checked: boolean, config: typeof configurations[0] | undefined, apiType: APIType) => {
     if (config) {
