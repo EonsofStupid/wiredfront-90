@@ -31,7 +31,11 @@ export const useChatAPI = () => {
       // Transform settings into a more usable format
       return settings?.reduce((acc, setting) => {
         const key = setting.settings.key.replace(/-api-key$/, "");
-        acc[key] = setting.value.key;
+        // Safely access the value assuming it's a JSON object with an apiKey field
+        const apiKey = typeof setting.value === 'object' && setting.value ? setting.value.apiKey : null;
+        if (apiKey) {
+          acc[key] = apiKey;
+        }
         return acc;
       }, {} as Record<string, string>) || null;
     }

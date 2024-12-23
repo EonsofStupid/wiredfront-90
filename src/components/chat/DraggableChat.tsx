@@ -9,7 +9,7 @@ import { ChatSessionControls } from './ChatSessionControls';
 import { useChatStore } from '@/stores/chat/store';
 import { useUIStore } from '@/stores/ui/store';
 import { ChatContainer } from './ChatContainer';
-import { useChatAPI } from '@/hooks/chat/useChatAPI';
+import { useAPISwitch } from '@/hooks/chat/useAPISwitch';
 
 export const DraggableChat = () => {
   console.log('DraggableChat render');
@@ -28,28 +28,8 @@ export const DraggableChat = () => {
     connectionState
   } = useChatStore();
 
-  const { apiSettings, getDefaultProvider } = useChatAPI();
-  const [currentAPI, setCurrentAPI] = useState<string | null>(null);
-
-  // Initialize current API based on available settings
-  useEffect(() => {
-    if (!currentAPI && apiSettings) {
-      const defaultProvider = getDefaultProvider();
-      if (defaultProvider) {
-        setCurrentAPI(defaultProvider);
-        toast({
-          title: "API Provider Selected",
-          description: `Using ${defaultProvider.toUpperCase()} as the default provider`,
-        });
-      } else {
-        toast({
-          title: "No API Provider",
-          description: "Please configure an API provider in settings",
-          variant: "destructive"
-        });
-      }
-    }
-  }, [apiSettings, currentAPI, getDefaultProvider]);
+  const { currentAPI, handleSwitchAPI } = useAPISwitch();
+  const zIndex = useUIStore((state) => state.zIndex);
 
   const { position, setPosition, resetPosition } = useWindowPosition({
     width: CHAT_WIDTH,
