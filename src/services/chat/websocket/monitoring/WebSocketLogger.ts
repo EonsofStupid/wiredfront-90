@@ -24,6 +24,9 @@ export class WebSocketLogger {
 
   private constructor() {}
 
+  /**
+   * Gets the singleton instance of WebSocketLogger
+   */
   static getInstance(): WebSocketLogger {
     if (!WebSocketLogger.instance) {
       WebSocketLogger.instance = new WebSocketLogger();
@@ -31,6 +34,9 @@ export class WebSocketLogger {
     return WebSocketLogger.instance;
   }
 
+  /**
+   * Logs a message with the specified level and metadata
+   */
   log(level: 'info' | 'warn' | 'error', message: string, metadata?: any) {
     const entry: LogEntry = {
       timestamp: Date.now(),
@@ -48,30 +54,49 @@ export class WebSocketLogger {
     console[level](message, metadata);
   }
 
+  /**
+   * Updates WebSocket metrics
+   */
   updateMetrics(updates: Partial<ConnectionMetrics>) {
     this.metrics = { ...this.metrics, ...updates };
     if (this.metrics.lastConnected) {
       this.metrics.uptime = Date.now() - this.metrics.lastConnected.getTime();
     }
+    this.log('info', 'Metrics updated', { updates });
   }
 
+  /**
+   * Updates the WebSocket connection state
+   */
   updateConnectionState(state: ConnectionState) {
     this.connectionState = state;
     this.log('info', `Connection state changed to ${state}`);
   }
 
+  /**
+   * Gets the current WebSocket metrics
+   */
   getMetrics(): ConnectionMetrics {
     return { ...this.metrics };
   }
 
+  /**
+   * Gets the current connection state
+   */
   getConnectionState(): ConnectionState {
     return this.connectionState;
   }
 
+  /**
+   * Gets all logged entries
+   */
   getLogs(): LogEntry[] {
     return [...this.logs];
   }
 
+  /**
+   * Clears all logs
+   */
   clearLogs() {
     this.logs = [];
   }
