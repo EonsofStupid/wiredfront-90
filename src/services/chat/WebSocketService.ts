@@ -4,8 +4,15 @@ import { WebSocketStateManager } from './services/websocket/WebSocketStateManage
 import { WebSocketMessageHandler } from './websocket/message/WebSocketMessageHandler';
 import { WEBSOCKET_URL } from '@/constants/websocket';
 import { toast } from 'sonner';
+import { logger } from './LoggingService';
 
-// Split into smaller files for better maintainability
+/**
+ * WebSocketService handles the core WebSocket functionality including:
+ * - Connection management
+ * - Message handling
+ * - State management
+ * - Reconnection logic
+ */
 export class WebSocketService {
   private ws: WebSocket | null = null;
   private logger: WebSocketLogger;
@@ -13,9 +20,10 @@ export class WebSocketService {
   private messageHandler: WebSocketMessageHandler;
   private reconnectTimeout: NodeJS.Timeout | null = null;
   private heartbeatInterval: NodeJS.Timeout | null = null;
+  private callbacks: WebSocketCallbacks;
 
   constructor(private sessionId: string) {
-    this.logger = WebSocketLogger.getInstance();
+    this.logger = new WebSocketLogger(sessionId);
     this.stateManager = new WebSocketStateManager(sessionId);
     this.messageHandler = new WebSocketMessageHandler(
       sessionId,
@@ -23,40 +31,61 @@ export class WebSocketService {
       this.handleMetricsUpdate.bind(this)
     );
 
-    this.logger.log('info', 'WebSocket service initialized', {
+    logger.info('WebSocket service initialized', {
       sessionId,
       timestamp: new Date().toISOString()
     });
   }
 
-  private handleMessage(data: any) {
-    this.logger.log('debug', 'Message received', {
-      type: data.type,
+  /**
+   * Sets up callback functions for WebSocket events
+   */
+  public async setCallbacks(callbacks: WebSocketCallbacks): Promise<void> {
+    this.callbacks = callbacks;
+    logger.info('WebSocket callbacks configured', {
       sessionId: this.sessionId,
-      timestamp: new Date().toISOString()
+      hasMessageCallback: !!callbacks.onMessage,
+      hasStateCallback: !!callbacks.onStateChange,
+      hasMetricsCallback: !!callbacks.onMetricsUpdate
     });
   }
 
+  private handleMessage(data: any) {
+    logger.info('Message received', {
+      type: data?.type,
+      sessionId: this.sessionId,
+      timestamp: new Date().toISOString()
+    });
+    this.callbacks?.onMessage(data);
+  }
+
   private handleMetricsUpdate(metrics: Partial<ConnectionMetrics>) {
-    this.logger.log('debug', 'Metrics updated', {
+    logger.info('Metrics updated', {
       metrics,
       sessionId: this.sessionId,
       timestamp: new Date().toISOString()
     });
+    this.callbacks?.onMetricsUpdate(metrics);
   }
 
+  /**
+   * Establishes WebSocket connection with authentication
+   */
   public async connect(accessToken: string) {
     try {
       if (!accessToken) {
         const error = new Error('No auth token provided');
-        this.logger.log('error', 'Connection failed: No auth token', { error });
+        logger.error('Connection failed: No auth token', { 
+          error,
+          sessionId: this.sessionId 
+        });
         toast.error('Authentication failed: No token provided');
         throw error;
       }
 
       const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${accessToken}`;
       
-      this.logger.log('info', 'Attempting WebSocket connection', {
+      logger.info('Attempting WebSocket connection', {
         sessionId: this.sessionId,
         url: wsUrl
       });
@@ -72,7 +101,7 @@ export class WebSocketService {
       toast.info('Connecting to chat service...');
       
     } catch (error) {
-      this.logger.log('error', 'Connection failed', {
+      logger.error('Connection failed', {
         error,
         sessionId: this.sessionId,
         retryAttempt: this.stateManager.getReconnectAttempts()
@@ -167,6 +196,9 @@ export class WebSocketService {
     }
   }
 
+  /**
+   * Handles reconnection attempts with exponential backoff
+   */
   private async handleReconnect() {
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
@@ -174,7 +206,7 @@ export class WebSocketService {
 
     if (!this.stateManager.incrementReconnectAttempts()) {
       this.stateManager.setState('failed');
-      this.logger.log('error', 'Maximum reconnection attempts reached', {
+      logger.error('Maximum reconnection attempts reached', {
         sessionId: this.sessionId
       });
       toast.error('Maximum reconnection attempts reached');
@@ -185,7 +217,7 @@ export class WebSocketService {
     const delay = Math.min(1000 * Math.pow(2, attempt), 30000);
     
     this.stateManager.setState('reconnecting');
-    this.logger.log('info', 'Scheduling reconnection attempt', {
+    logger.info('Scheduling reconnection attempt', {
       sessionId: this.sessionId,
       attempt,
       delay
@@ -197,7 +229,7 @@ export class WebSocketService {
         const token = await this.refreshToken();
         await this.connect(token);
       } catch (error) {
-        this.logger.log('error', 'Reconnection attempt failed', {
+        logger.error('Reconnection attempt failed', {
           error,
           sessionId: this.sessionId,
           attempt
@@ -211,12 +243,15 @@ export class WebSocketService {
     return '';
   }
 
+  /**
+   * Sends a message through the WebSocket connection
+   */
   public send(message: any): boolean {
     if (this.ws?.readyState === WebSocket.OPEN) {
       try {
         this.ws.send(JSON.stringify(message));
         
-        this.logger.log('debug', 'Message sent', {
+        logger.info('Message sent', {
           sessionId: this.sessionId,
           messageType: message?.type,
           timestamp: new Date().toISOString()
@@ -224,7 +259,7 @@ export class WebSocketService {
         
         return true;
       } catch (error) {
-        this.logger.log('error', 'Failed to send message', {
+        logger.error('Failed to send message', {
           error,
           sessionId: this.sessionId
         });
@@ -233,16 +268,15 @@ export class WebSocketService {
       }
     }
     
-    this.logger.log('warn', 'Cannot send message - connection not ready', {
-      sessionId: this.sessionId,
-      readyState: this.ws?.readyState
-    });
     toast.error('Connection not ready');
     return false;
   }
 
+  /**
+   * Cleanly disconnects the WebSocket connection
+   */
   public disconnect() {
-    this.logger.log('info', 'Disconnecting WebSocket', {
+    logger.info('Disconnecting WebSocket', {
       sessionId: this.sessionId
     });
     
@@ -259,6 +293,9 @@ export class WebSocketService {
     }
   }
 
+  /**
+   * Returns the current connection state
+   */
   public getState(): ConnectionState {
     return this.stateManager.getState();
   }

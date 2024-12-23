@@ -1,3 +1,5 @@
+export type WebSocketReadyState = 0 | 1 | 2 | 3;
+
 export type ConnectionState = 
   | 'initial'
   | 'connecting'
@@ -18,19 +20,8 @@ export interface ConnectionMetrics {
   uptime: number;
 }
 
-export interface WebSocketConfig {
-  url: string;
-  onMessage: (event: MessageEvent) => void;
-  maxRetries?: number;
-  initialRetryDelay?: number;
-  maxRetryDelay?: number;
-}
-
-export interface WebSocketHookReturn {
-  ws: WebSocket | null;
-  connectionState: ConnectionState;
-  metrics: ConnectionMetrics;
-  reconnect: () => void;
-  sendMessage: (message: any) => void;
-  isConnected: boolean;
+export interface WebSocketCallbacks {
+  onMessage: (message: any) => void;
+  onStateChange: (state: ConnectionState) => void;
+  onMetricsUpdate: (metrics: Partial<ConnectionMetrics>) => void;
 }
