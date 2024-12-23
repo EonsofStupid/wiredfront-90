@@ -7,9 +7,12 @@ import type { Message } from '@/types/chat';
 const MESSAGES_PER_PAGE = 50;
 
 export const useMessageQuery = (sessionId: string, isMinimized: boolean) => {
+  console.log('useMessageQuery hook called', { sessionId, isMinimized });
+  
   return useInfiniteQuery({
     queryKey: ['messages', sessionId],
     queryFn: async ({ pageParam = 0 }) => {
+      console.log('Fetching messages page', { pageParam });
       try {
         // First page: try cache first
         if (pageParam === 0) {
@@ -30,6 +33,8 @@ export const useMessageQuery = (sessionId: string, isMinimized: boolean) => {
           .range(start, start + MESSAGES_PER_PAGE - 1);
 
         if (error) throw error;
+
+        console.log('Fetched messages:', fetchedMessages?.length);
 
         // Cache first page of messages
         if (pageParam === 0) {

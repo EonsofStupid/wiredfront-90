@@ -5,6 +5,8 @@ import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';
 
 export const useMessages = (sessionId: string, isMinimized: boolean) => {
+  console.log('useMessages hook called', { sessionId, isMinimized });
+
   const {
     messages: realtimeMessages,
     addMessage,
@@ -20,7 +22,15 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     error
   } = useMessageQuery(sessionId, isMinimized);
 
+  console.log('Message query state:', { 
+    realtimeMessages: realtimeMessages.length,
+    queryData: data?.pages?.length,
+    status,
+    error 
+  });
+
   const allMessages = useCombinedMessages(realtimeMessages, data);
+  console.log('Combined messages:', allMessages.length);
 
   return {
     messages: allMessages,
@@ -30,6 +40,7 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     isLoading: status === 'pending',
     error,
     addOptimisticMessage: async (content: string) => {
+      console.log('Adding optimistic message', { content });
       try {
         await addOptimisticMessage(content);
       } catch (error) {

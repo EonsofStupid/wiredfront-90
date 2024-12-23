@@ -11,6 +11,8 @@ import { useUIStore } from '@/stores/ui/store';
 import { ChatContainer } from './ChatContainer';
 
 export const DraggableChat = () => {
+  console.log('DraggableChat render');
+  
   const CHAT_WIDTH = 414;
   const CHAT_HEIGHT = 500;
   const MARGIN = 32;
@@ -37,6 +39,7 @@ export const DraggableChat = () => {
   const { toast } = useToast();
 
   const currentSession = currentSessionId ? sessions[currentSessionId] : null;
+  console.log('Current session:', { currentSessionId, currentSession });
 
   const {
     messages,
@@ -50,12 +53,15 @@ export const DraggableChat = () => {
 
   // Initialize session if none exists
   useEffect(() => {
+    console.log('Session initialization effect running', { currentSessionId });
     if (!currentSessionId) {
+      console.log('Creating new session');
       createSession();
     }
   }, [currentSessionId, createSession]);
 
   const handleDragStart = (event: DragStartEvent) => {
+    console.log('Drag start', event);
     setIsDragging(true);
     if (currentSession?.isTacked) {
       updateSession(currentSessionId!, { isTacked: false });
@@ -63,6 +69,7 @@ export const DraggableChat = () => {
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
+    console.log('Drag end', event);
     setIsDragging(false);
     if (currentSessionId && !currentSession?.isTacked) {
       const { delta } = event;
@@ -76,6 +83,7 @@ export const DraggableChat = () => {
   };
 
   const handleMinimize = () => {
+    console.log('Minimize clicked', { currentSessionId, currentSession });
     if (currentSessionId && currentSession) {
       updateSession(currentSessionId, { 
         isMinimized: !currentSession.isMinimized 
@@ -84,6 +92,7 @@ export const DraggableChat = () => {
   };
 
   const handleClose = () => {
+    console.log('Close clicked');
     toast({
       title: "Chat minimized",
       description: "You can restore the chat from the AI button",
@@ -94,6 +103,7 @@ export const DraggableChat = () => {
   };
 
   const handleTackToggle = () => {
+    console.log('Tack toggle clicked');
     if (currentSessionId && currentSession) {
       const newIsTacked = !currentSession.isTacked;
       updateSession(currentSessionId, { isTacked: newIsTacked });
@@ -104,12 +114,14 @@ export const DraggableChat = () => {
   };
 
   const handleLoadMore = () => {
+    console.log('Load more clicked', { hasNextPage, isFetchingNextPage });
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   };
 
   const handleNewSession = () => {
+    console.log('New session clicked');
     createSession();
     toast({
       title: "New chat session created",
@@ -118,6 +130,7 @@ export const DraggableChat = () => {
   };
 
   const handleCloseSession = (sessionId: string) => {
+    console.log('Close session clicked', { sessionId });
     if (Object.keys(sessions).length > 1) {
       removeSession(sessionId);
       toast({
@@ -134,6 +147,7 @@ export const DraggableChat = () => {
   };
 
   const handleSendMessage = async (content: string) => {
+    console.log('Send message clicked', { content });
     try {
       await addOptimisticMessage(content);
     } catch (error) {
@@ -146,8 +160,12 @@ export const DraggableChat = () => {
     }
   };
 
-  if (!currentSession) return null;
+  if (!currentSession) {
+    console.log('No current session, rendering null');
+    return null;
+  }
 
+  console.log('Rendering chat components');
   return (
     <ChatDragContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex flex-col gap-2" style={{ zIndex: zIndex.floating }}>
