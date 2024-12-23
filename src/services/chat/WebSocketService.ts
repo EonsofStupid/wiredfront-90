@@ -1,6 +1,6 @@
 import { WebSocketLogger } from './websocket/monitoring/WebSocketLogger';
 import { ConnectionState, ConnectionMetrics, WebSocketCallbacks } from '@/types/websocket';
-import { HEARTBEAT_INTERVAL } from '@/constants/websocket';
+import { HEARTBEAT_INTERVAL, WEBSOCKET_URL } from '@/constants/websocket';
 import { toast } from 'sonner';
 
 /**
