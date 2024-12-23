@@ -28,13 +28,14 @@ export interface UseAPISettingsReturn {
 
 export interface SettingValue {
   key: string;
+  [key: string]: any;
 }
 
 export function isSettingValue(value: unknown): value is SettingValue {
   return (
     typeof value === 'object' && 
     value !== null && 
-    'key' in value && 
+    'key' in value &&
     typeof (value as SettingValue).key === 'string'
   );
 }

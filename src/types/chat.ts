@@ -13,4 +13,8 @@ export interface Message {
   position: Json;
   window_state: Json;
   last_accessed: string;
+  retry_count?: number;
+  last_retry?: string;
+  rate_limit_window?: string;
+  message_status?: 'pending' | 'sent' | 'failed' | 'cached';
 }
