@@ -4,6 +4,8 @@ import { ChatHeader } from './ChatHeader';
 import { ChatMessageList } from './ChatMessageList';
 import { ChatInput } from './ChatInput';
 import { ConnectionState } from '@/types/websocket';
+import { DebugMetrics } from '../debug/DebugPanel/DebugMetrics';
+import { ConnectionStatus } from './ConnectionStatus';
 
 interface ChatWindowProps {
   position: { x: number; y: number };
@@ -42,7 +44,7 @@ export const ChatWindow = ({
   onSendMessage,
   onSwitchAPI,
   currentAPI,
-  connectionState
+  connectionState = 'initial' // Provide default value
 }: ChatWindowProps) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: 'chat-window',
@@ -70,39 +72,43 @@ export const ChatWindow = ({
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="glass-card flex flex-col"
-    >
-      <ChatHeader
-        onMinimize={onMinimize}
-        onClose={onClose}
-        onTackToggle={onTackToggle}
-        isTacked={isTacked}
-        isDragging={isDragging}
-        dragHandleProps={{ ...attributes, ...listeners }}
-        currentAPI={currentAPI}
-        connectionState={connectionState}
-      />
+    <>
+      <div
+        ref={setNodeRef}
+        style={style}
+        className="glass-card flex flex-col"
+      >
+        <ChatHeader
+          onMinimize={onMinimize}
+          onClose={onClose}
+          onTackToggle={onTackToggle}
+          isTacked={isTacked}
+          isDragging={isDragging}
+          dragHandleProps={{ ...attributes, ...listeners }}
+          currentAPI={currentAPI}
+          connectionState={connectionState}
+        />
 
-      {!isMinimized && (
-        <>
-          <ChatMessageList
-            messages={messages}
-            isLoading={isLoading}
-            isLoadingMore={isLoadingMore}
-            hasMoreMessages={hasMoreMessages}
-            onLoadMore={onLoadMore}
-            onScroll={handleScroll}
-          />
-          <ChatInput 
-            onSendMessage={onSendMessage}
-            onSwitchAPI={onSwitchAPI}
-            isLoading={isLoading}
-          />
-        </>
-      )}
-    </div>
+        {!isMinimized && (
+          <>
+            <ChatMessageList
+              messages={messages}
+              isLoading={isLoading}
+              isLoadingMore={isLoadingMore}
+              hasMoreMessages={hasMoreMessages}
+              onLoadMore={onLoadMore}
+              onScroll={handleScroll}
+            />
+            <ChatInput 
+              onSendMessage={onSendMessage}
+              onSwitchAPI={onSwitchAPI}
+              isLoading={isLoading}
+            />
+          </>
+        )}
+      </div>
+      <DebugMetrics />
+      <ConnectionStatus state={connectionState || 'initial'} />
+    </>
   );
 };

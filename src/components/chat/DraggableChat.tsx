@@ -1,43 +1,44 @@
 import { useState, useEffect } from 'react';
 import { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
-import { useSessionManager } from '@/hooks/useSessionManager';
 import { useWindowPosition } from '@/hooks/useWindowPosition';
 import { useMessages } from '@/hooks/useMessages';
 import { ChatWindow } from './ChatWindow';
 import { ChatDragContext } from './ChatDragContext';
 import { useToast } from "@/components/ui/use-toast";
 import { ChatSessionControls } from './ChatSessionControls';
+import { useChatStore } from '@/stores/chat/store';
+import { useUIStore } from '@/stores/ui/store';
 import { supabase } from "@/integrations/supabase/client";
-import { useWebSocketConnection } from '@/hooks/chat/useWebSocketConnection';
+import { logger } from '@/services/chat/LoggingService';
 
 export const DraggableChat = () => {
   const CHAT_WIDTH = 414;
   const CHAT_HEIGHT = 500;
   const MARGIN = 32;
 
-  const { currentSessionId, sessions, switchSession, createSession } = useSessionManager();
+  const { 
+    sessions,
+    currentSessionId,
+    createSession,
+    switchSession,
+    updateSession,
+    removeSession,
+    connectionState,
+    setConnectionState
+  } = useChatStore();
+
+  const zIndex = useUIStore((state) => state.zIndex);
+
   const { position, setPosition, resetPosition } = useWindowPosition({
     width: CHAT_WIDTH,
     height: CHAT_HEIGHT,
     margin: MARGIN,
   });
 
-  const [isMinimized, setIsMinimized] = useState(() => {
-    const stored = localStorage.getItem('chat-minimized');
-    return stored ? JSON.parse(stored) : false;
-  });
-  
   const [isDragging, setIsDragging] = useState(false);
-  const [isTacked, setIsTacked] = useState(() => {
-    const stored = localStorage.getItem('chat-tacked');
-    return stored ? JSON.parse(stored) : true;
-  });
-
-  const [currentAPI, setCurrentAPI] = useState<string>(() => {
-    return localStorage.getItem('current-api') || 'openai';
-  });
-
   const { toast } = useToast();
+
+  const currentSession = currentSessionId ? sessions[currentSessionId] : null;
 
   const {
     messages,
@@ -46,57 +47,77 @@ export const DraggableChat = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    addOptimisticMessage,
-    ws,
-    connectionState,
-    reconnect
-  } = useMessages(currentSessionId, isMinimized);
+    addOptimisticMessage
+  } = useMessages(currentSessionId, currentSession?.isMinimized ?? false);
 
+  // Initialize session if none exists
   useEffect(() => {
-    localStorage.setItem('chat-minimized', JSON.stringify(isMinimized));
-  }, [isMinimized]);
-
-  useEffect(() => {
-    localStorage.setItem('chat-tacked', JSON.stringify(isTacked));
-  }, [isTacked]);
-
-  useEffect(() => {
-    localStorage.setItem('current-api', currentAPI);
-  }, [currentAPI]);
-
-  useEffect(() => {
-    const storedPosition = localStorage.getItem('chat-position');
-    if (storedPosition) {
-      setPosition(JSON.parse(storedPosition));
+    if (!currentSessionId) {
+      createSession();
     }
-  }, []);
+  }, [currentSessionId, createSession]);
 
+  // Set up real-time subscription
   useEffect(() => {
-    if (!isDragging) {
-      localStorage.setItem('chat-position', JSON.stringify(position));
-    }
-  }, [position, isDragging]);
+    if (!currentSessionId) return;
+
+    setConnectionState('connecting');
+
+    const channel = supabase
+      .channel(`messages:${currentSessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+          filter: `chat_session_id=eq.${currentSessionId}`,
+        },
+        (payload) => {
+          logger.debug('Real-time message update:', { payload, sessionId: currentSessionId });
+        }
+      )
+      .subscribe((status) => {
+        logger.info(`Subscription status for session ${currentSessionId}:`, { status });
+        if (status === 'SUBSCRIBED') {
+          setConnectionState('connected');
+          logger.info('Successfully subscribed to message updates');
+        }
+      });
+
+    return () => {
+      logger.info(`Unsubscribing from session ${currentSessionId}`);
+      setConnectionState('disconnected');
+      supabase.removeChannel(channel);
+    };
+  }, [currentSessionId, setConnectionState]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setIsDragging(true);
-    if (isTacked) {
-      setIsTacked(false);
+    if (currentSession?.isTacked) {
+      updateSession(currentSessionId!, { isTacked: false });
     }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     setIsDragging(false);
-    if (!isTacked) {
+    if (currentSessionId && !currentSession?.isTacked) {
       const { delta } = event;
-      setPosition((prev) => ({
-        x: prev.x + delta.x,
-        y: prev.y + delta.y,
-      }));
+      const newPosition = {
+        x: position.x + delta.x,
+        y: position.y + delta.y,
+      };
+      setPosition(newPosition);
+      updateSession(currentSessionId, { position: newPosition });
     }
   };
 
   const handleMinimize = () => {
-    setIsMinimized(!isMinimized);
+    if (currentSessionId && currentSession) {
+      updateSession(currentSessionId, { 
+        isMinimized: !currentSession.isMinimized 
+      });
+    }
   };
 
   const handleClose = () => {
@@ -104,13 +125,18 @@ export const DraggableChat = () => {
       title: "Chat minimized",
       description: "You can restore the chat from the AI button",
     });
-    setIsMinimized(true);
+    if (currentSessionId) {
+      updateSession(currentSessionId, { isMinimized: true });
+    }
   };
 
   const handleTackToggle = () => {
-    setIsTacked(!isTacked);
-    if (!isTacked) {
-      resetPosition();
+    if (currentSessionId && currentSession) {
+      const newIsTacked = !currentSession.isTacked;
+      updateSession(currentSessionId, { isTacked: newIsTacked });
+      if (newIsTacked) {
+        resetPosition();
+      }
     }
   };
 
@@ -120,16 +146,28 @@ export const DraggableChat = () => {
     }
   };
 
-  const handleNewSession = async () => {
-    const newSessionId = await createSession();
+  const handleNewSession = () => {
+    createSession();
     toast({
       title: "New chat session created",
       description: "You can switch between sessions using the menu",
     });
   };
 
-  const handleSwitchAPI = async (provider: string) => {
-    setCurrentAPI(provider);
+  const handleCloseSession = (sessionId: string) => {
+    if (Object.keys(sessions).length > 1) {
+      removeSession(sessionId);
+      toast({
+        title: "Session closed",
+        description: "Chat session has been closed",
+      });
+    } else {
+      toast({
+        title: "Cannot close session",
+        description: "You must have at least one active session",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleSendMessage = async (content: string) => {
@@ -145,32 +183,33 @@ export const DraggableChat = () => {
     }
   };
 
+  if (!currentSession) return null;
+
   return (
     <ChatDragContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2" style={{ zIndex: zIndex.floating }}>
         <ChatSessionControls
-          sessions={sessions}
-          currentSessionId={currentSessionId}
+          sessions={Object.values(sessions)}
+          currentSessionId={currentSessionId!}
           onNewSession={handleNewSession}
           onSwitchSession={switchSession}
+          onCloseSession={handleCloseSession}
         />
         <ChatWindow
-          position={position}
-          isMinimized={isMinimized}
+          position={currentSession.position}
+          isMinimized={currentSession.isMinimized}
           messages={messages}
           isLoading={isLoading}
           onMinimize={handleMinimize}
           onClose={handleClose}
           isDragging={isDragging}
-          isTacked={isTacked}
+          isTacked={currentSession.isTacked}
           onTackToggle={handleTackToggle}
           dimensions={{ width: CHAT_WIDTH, height: CHAT_HEIGHT }}
           hasMoreMessages={hasNextPage}
           isLoadingMore={isFetchingNextPage}
           onLoadMore={handleLoadMore}
           onSendMessage={handleSendMessage}
-          onSwitchAPI={handleSwitchAPI}
-          currentAPI={currentAPI}
           connectionState={connectionState}
         />
       </div>
