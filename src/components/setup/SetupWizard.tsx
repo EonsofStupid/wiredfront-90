@@ -6,14 +6,18 @@ import { WelcomeStep } from "./steps/WelcomeStep";
 import { APIConfigStep } from "./steps/APIConfigStep";
 import { PreferencesStep } from "./steps/PreferencesStep";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuthStore } from "@/stores/auth";
 
 interface SetupWizardProps {
   onComplete: () => void;
+  isFirstTimeUser?: boolean;
 }
 
-export function SetupWizard({ onComplete }: SetupWizardProps) {
+export function SetupWizard({ onComplete, isFirstTimeUser = false }: SetupWizardProps) {
   const [isOpen, setIsOpen] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
+  const { user } = useAuthStore();
 
   const steps = [
     { title: "Welcome", component: WelcomeStep },
@@ -23,11 +27,32 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
 
   const CurrentStepComponent = steps[currentStep].component;
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
+      
+      // Track step completion
+      if (user) {
+        await supabase.from('onboarding_steps').upsert({
+          user_id: user.id,
+          step_name: steps[currentStep].title.toLowerCase(),
+          completed: true,
+          completed_at: new Date().toISOString(),
+        });
+      }
     } else {
-      localStorage.setItem('setupComplete', 'true');
+      // Mark setup as completed
+      if (user) {
+        await supabase.from('profiles').update({
+          setup_completed_at: new Date().toISOString(),
+          onboarding_status: {
+            completed: true,
+            current_step: 'completed',
+            steps_completed: steps.map(s => s.title.toLowerCase())
+          }
+        }).eq('id', user.id);
+      }
+      
       setIsOpen(false);
       onComplete();
       toast.success("Setup completed successfully!");
@@ -51,7 +76,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
             </div>
           </div>
 
-          <CurrentStepComponent />
+          <CurrentStepComponent isFirstTimeUser={isFirstTimeUser} />
 
           <div className="flex justify-between mt-6">
             <Button

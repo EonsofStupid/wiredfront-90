@@ -227,13 +227,57 @@ export type Database = {
           },
         ]
       }
+      onboarding_steps: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          data: Json | null
+          id: string
+          step_name: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          step_name: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          step_name?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_steps_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string | null
           full_name: string | null
           id: string
+          last_api_verification: string | null
+          onboarding_status: Json | null
           preferences: Json | null
+          setup_completed_at: string | null
           updated_at: string | null
           username: string | null
         }
@@ -242,7 +286,10 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id: string
+          last_api_verification?: string | null
+          onboarding_status?: Json | null
           preferences?: Json | null
+          setup_completed_at?: string | null
           updated_at?: string | null
           username?: string | null
         }
@@ -251,7 +298,10 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id?: string
+          last_api_verification?: string | null
+          onboarding_status?: Json | null
           preferences?: Json | null
+          setup_completed_at?: string | null
           updated_at?: string | null
           username?: string | null
         }
