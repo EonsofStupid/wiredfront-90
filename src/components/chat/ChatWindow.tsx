@@ -5,7 +5,7 @@ import { ChatMessageList } from './ChatMessageList';
 import { ChatInput } from './ChatInput';
 import { ConnectionState } from '@/types/websocket';
 import { DebugMetrics } from '../debug/DebugPanel/DebugMetrics';
-import { ConnectionStatus } from '../debug/DebugPanel/ConnectionStatus';
+import { ConnectionStatus } from './ConnectionStatus';
 
 interface ChatWindowProps {
   position: { x: number; y: number };
@@ -44,7 +44,7 @@ export const ChatWindow = ({
   onSendMessage,
   onSwitchAPI,
   currentAPI,
-  connectionState
+  connectionState = 'initial' // Provide default value
 }: ChatWindowProps) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: 'chat-window',
@@ -108,7 +108,7 @@ export const ChatWindow = ({
         )}
       </div>
       <DebugMetrics />
-      <ConnectionStatus />
+      <ConnectionStatus state={connectionState || 'initial'} />
     </>
   );
 };

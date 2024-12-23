@@ -1,5 +1,5 @@
 import { logger } from '@/services/chat/LoggingService';
-import { ConnectionMetrics } from '../types/connection';
+import { ConnectionMetrics } from '@/types/websocket';
 import { toast } from 'sonner';
 
 export class WebSocketMessageHandler {
