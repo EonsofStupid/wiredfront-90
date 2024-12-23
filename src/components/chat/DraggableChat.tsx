@@ -9,6 +9,7 @@ import { ChatSessionControls } from './ChatSessionControls';
 import { useChatStore } from '@/stores/chat/store';
 import { useUIStore } from '@/stores/ui/store';
 import { ChatContainer } from './ChatContainer';
+import { useChatAPI } from '@/hooks/chat/useChatAPI';
 
 export const DraggableChat = () => {
   console.log('DraggableChat render');
@@ -27,7 +28,28 @@ export const DraggableChat = () => {
     connectionState
   } = useChatStore();
 
-  const zIndex = useUIStore((state) => state.zIndex);
+  const { apiSettings, getDefaultProvider } = useChatAPI();
+  const [currentAPI, setCurrentAPI] = useState<string | null>(null);
+
+  // Initialize current API based on available settings
+  useEffect(() => {
+    if (!currentAPI && apiSettings) {
+      const defaultProvider = getDefaultProvider();
+      if (defaultProvider) {
+        setCurrentAPI(defaultProvider);
+        toast({
+          title: "API Provider Selected",
+          description: `Using ${defaultProvider.toUpperCase()} as the default provider`,
+        });
+      } else {
+        toast({
+          title: "No API Provider",
+          description: "Please configure an API provider in settings",
+          variant: "destructive"
+        });
+      }
+    }
+  }, [apiSettings, currentAPI, getDefaultProvider]);
 
   const { position, setPosition, resetPosition } = useWindowPosition({
     width: CHAT_WIDTH,
@@ -165,7 +187,6 @@ export const DraggableChat = () => {
     return null;
   }
 
-  console.log('Rendering chat components');
   return (
     <ChatDragContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex flex-col gap-2" style={{ zIndex: zIndex.floating }}>
@@ -191,6 +212,8 @@ export const DraggableChat = () => {
           isLoadingMore={isFetchingNextPage}
           onLoadMore={handleLoadMore}
           onSendMessage={handleSendMessage}
+          onSwitchAPI={handleSwitchAPI}
+          currentAPI={currentAPI}
           connectionState={connectionState}
         />
         {currentSessionId && <ChatContainer sessionId={currentSessionId} />}

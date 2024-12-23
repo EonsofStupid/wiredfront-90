@@ -1,0 +1,50 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+export const useChatAPI = () => {
+  const { data: apiSettings } = useQuery({
+    queryKey: ['api-settings'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data: settings, error } = await supabase
+        .from('user_settings')
+        .select(`
+          value,
+          settings!inner(key)
+        `)
+        .eq('user_id', user.id)
+        .in('settings.key', [
+          'openai-api-key',
+          'gemini-api-key',
+          'anthropic-api-key'
+        ]);
+
+      if (error) {
+        console.error('Error fetching API settings:', error);
+        toast.error('Failed to load API settings');
+        return null;
+      }
+
+      // Transform settings into a more usable format
+      return settings?.reduce((acc, setting) => {
+        const key = setting.settings.key.replace(/-api-key$/, "");
+        acc[key] = setting.value.key;
+        return acc;
+      }, {} as Record<string, string>) || null;
+    }
+  });
+
+  return {
+    apiSettings,
+    getDefaultProvider: () => {
+      if (!apiSettings) return null;
+      if (apiSettings.openai) return 'openai';
+      if (apiSettings.gemini) return 'gemini';
+      if (apiSettings.anthropic) return 'anthropic';
+      return null;
+    }
+  };
+};
