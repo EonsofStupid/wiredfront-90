@@ -8,19 +8,30 @@ export class WebSocketAuthenticator {
 
   async validateSession(token: string): Promise<{ isValid: boolean }> {
     try {
-      const { data: { user }, error } = await supabase.auth.getUser(token);
-      this.token = token;
+      // First check if we have a current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (error || !user) {
+      if (sessionError) {
         logger.error('Session validation failed', {
-          error,
+          error: sessionError,
           sessionId: this.sessionId,
           context: { component: 'WebSocketAuthenticator', action: 'validateSession' }
         });
         return { isValid: false };
       }
-      
+
+      if (!session) {
+        logger.warn('No active session found', {
+          sessionId: this.sessionId,
+          context: { component: 'WebSocketAuthenticator', action: 'validateSession' }
+        });
+        return { isValid: false };
+      }
+
+      // Store the valid token
+      this.token = session.access_token;
       return { isValid: true };
+      
     } catch (error) {
       logger.error('Session validation error', {
         error,

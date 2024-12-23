@@ -5,6 +5,7 @@ import { WebSocketMessageHandler } from '../message/WebSocketMessageHandler';
 import { WebSocketMetricsService } from '../monitoring/WebSocketMetricsService';
 import { logger } from '../../LoggingService';
 import { WEBSOCKET_URL } from '@/constants/websocket';
+import { supabase } from "@/integrations/supabase/client";
 
 export class WebSocketConnection {
   private ws: WebSocket | null = null;
@@ -33,12 +34,19 @@ export class WebSocketConnection {
 
   async connect(token: string): Promise<void> {
     try {
-      const { isValid } = await this.authenticator.validateSession(token);
+      // First validate the session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        throw new Error('No valid session found');
+      }
+
+      const { isValid } = await this.authenticator.validateSession(session.access_token);
       if (!isValid) {
         throw new Error('Invalid session');
       }
 
-      const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${token}`;
+      const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${session.access_token}`;
       
       if (this.ws) {
         this.ws.close();
@@ -85,7 +93,10 @@ export class WebSocketConnection {
   }
 
   private async handleReconnect() {
-    await this.reconnection.attempt(() => this.connect(this.authenticator.getToken()));
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      await this.reconnection.attempt(() => this.connect(session.access_token));
+    }
   }
 
   send(message: any): boolean {
