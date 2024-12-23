@@ -1,206 +1,39 @@
 import { WebSocketLogger } from './websocket/monitoring/WebSocketLogger';
-import { ConnectionState, ConnectionMetrics, WebSocketCallbacks } from '@/types/websocket';
-import { WEBSOCKET_URL, HEARTBEAT_INTERVAL } from '@/constants/websocket';
+import { ConnectionState, ConnectionMetrics } from '@/types/websocket';
+import { WEBSOCKET_URL } from '@/constants/websocket';
 import { toast } from 'sonner';
+import { supabase } from "@/integrations/supabase/client";
 
-/**
- * WebSocketService handles the core WebSocket functionality including:
- * - Connection management
- * - Message handling
- * - State management
- * - Reconnection logic
- * - Heartbeat management
- */
 export class WebSocketService {
   private ws: WebSocket | null = null;
   private logger: WebSocketLogger;
-  private reconnectTimeout: NodeJS.Timeout | null = null;
-  private heartbeatInterval: NodeJS.Timeout | null = null;
-  private callbacks: WebSocketCallbacks;
+  private reconnectAttempts = 0;
+  private readonly MAX_RECONNECT_ATTEMPTS = 5;
 
-  constructor(private sessionId: string) {
+  constructor(
+    private sessionId: string,
+    private onMessage?: (data: any) => void,
+    private onStateChange?: (state: ConnectionState) => void
+  ) {
     this.logger = WebSocketLogger.getInstance();
-    
-    this.logger.log('info', 'WebSocket service initialized', {
-      sessionId,
-      timestamp: new Date().toISOString()
-    });
+    console.log('WebSocket Service initialized:', { sessionId });
   }
 
-  /**
-   * Sets up callback functions for WebSocket events
-   */
-  public async setCallbacks(callbacks: WebSocketCallbacks): Promise<void> {
-    this.callbacks = callbacks;
-    this.logger.log('info', 'WebSocket callbacks configured', {
-      sessionId: this.sessionId,
-      hasMessageCallback: !!callbacks.onMessage,
-      hasStateCallback: !!callbacks.onStateChange,
-      hasMetricsCallback: !!callbacks.onMetricsUpdate
-    });
-  }
-
-  /**
-   * Starts the heartbeat mechanism
-   * @private
-   */
-  private startHeartbeat(): void {
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval);
-    }
-
-    this.heartbeatInterval = setInterval(() => {
-      if (this.ws?.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify({ type: 'ping' }));
-        this.logger.log('info', 'Heartbeat ping sent', {
-          sessionId: this.sessionId,
-          timestamp: new Date().toISOString()
-        });
-      }
-    }, HEARTBEAT_INTERVAL);
-
-    this.logger.log('info', 'Heartbeat mechanism started', {
-      sessionId: this.sessionId,
-      interval: HEARTBEAT_INTERVAL
-    });
-  }
-
-  /**
-   * Stops the heartbeat mechanism
-   * @private
-   */
-  private stopHeartbeat(): void {
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval);
-      this.heartbeatInterval = null;
-      this.logger.log('info', 'Heartbeat mechanism stopped', {
-        sessionId: this.sessionId
-      });
-    }
-  }
-
-  private handleMessage(data: any) {
-    this.logger.log('info', 'Message received', {
-      type: data?.type,
-      sessionId: this.sessionId,
-      timestamp: new Date().toISOString()
-    });
-    this.callbacks?.onMessage(data);
-  }
-
-  private setupEventHandlers() {
-    if (!this.ws) return;
-
-    this.ws.onopen = () => {
-      const connectedAt = new Date();
-      this.logger.updateConnectionState('connected');
-      this.logger.updateMetrics({
-        lastConnected: connectedAt,
-        reconnectAttempts: 0,
-        lastError: null
-      });
-      this.callbacks?.onStateChange('connected');
-      this.startHeartbeat(); // Start heartbeat when connection opens
-      toast.success('Connected to chat service');
-    };
-
-    this.ws.onmessage = (event) => {
-      try {
-        const startTime = Date.now();
-        const data = JSON.parse(event.data);
-        
-        this.logger.log('info', 'Message received', {
-          sessionId: this.sessionId,
-          messageType: data?.type,
-          timestamp: new Date().toISOString()
-        });
-        
-        this.logger.updateMetrics({
-          messagesReceived: this.logger.getMetrics().messagesReceived + 1,
-          latency: Date.now() - startTime
-        });
-        
-        this.callbacks?.onMessage(data);
-      } catch (error) {
-        this.logger.log('error', 'Failed to process message', {
-          error,
-          sessionId: this.sessionId
-        });
-        toast.error('Failed to process message');
-      }
-    };
-
-    this.ws.onerror = () => {
-      const error = new Error('WebSocket error occurred');
-      this.logger.updateConnectionState('error');
-      this.logger.log('error', 'WebSocket error occurred', {
-        sessionId: this.sessionId,
-        error
-      });
-      this.callbacks?.onStateChange('error');
-      this.stopHeartbeat(); // Stop heartbeat on error
-      toast.error('Connection error occurred');
-    };
-
-    this.ws.onclose = () => {
-      this.logger.updateConnectionState('disconnected');
-      this.logger.log('info', 'WebSocket disconnected', {
-        sessionId: this.sessionId
-      });
-      this.callbacks?.onStateChange('disconnected');
-      this.stopHeartbeat(); // Stop heartbeat on close
-      toast.error('Disconnected from chat service');
-      this.handleReconnect();
-    };
-  }
-
-  private async handleReconnect() {
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-    }
-
-    this.logger.updateConnectionState('reconnecting');
-    this.logger.log('info', 'Attempting to reconnect', {
-      sessionId: this.sessionId
-    });
-    toast.info('Attempting to reconnect...');
-
-    const delay = Math.min(1000 * Math.pow(2, this.logger.getMetrics().reconnectAttempts), 30000);
-    this.reconnectTimeout = setTimeout(async () => {
-      try {
-        const token = await this.refreshToken();
-        await this.connect(token);
-      } catch (error) {
-        this.logger.log('error', 'Reconnection attempt failed', {
-          error,
-          sessionId: this.sessionId
-        });
-      }
-    }, delay);
-  }
-
-  private async refreshToken(): Promise<string> {
-    // Implement token refresh logic here
-    return '';
-  }
-
-  /**
-   * Establishes WebSocket connection with authentication
-   */
-  public async connect(accessToken: string) {
+  async connect() {
     try {
-      if (!accessToken) {
-        const error = new Error('No auth token provided');
-        this.logger.log('error', 'Connection failed: No auth token', { error });
-        toast.error('Authentication failed: No token provided');
-        throw error;
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error || !session?.access_token) {
+        console.error('No valid session found');
+        toast.error('Authentication required');
+        throw new Error('No valid session found');
       }
 
-      const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${accessToken}`;
+      const wsUrl = `${WEBSOCKET_URL}?session_id=${this.sessionId}&access_token=${session.access_token}`;
       
-      this.logger.log('info', 'Attempting WebSocket connection', {
+      console.log('Attempting WebSocket connection:', {
         sessionId: this.sessionId,
-        url: wsUrl
+        hasToken: !!session.access_token
       });
 
       if (this.ws) {
@@ -214,69 +47,97 @@ export class WebSocketService {
       toast.info('Connecting to chat service...');
       
     } catch (error) {
-      this.logger.log('error', 'Connection failed', {
+      console.error('Connection failed:', {
         error,
-        sessionId: this.sessionId
+        sessionId: this.sessionId,
+        retryAttempt: this.reconnectAttempts
       });
       toast.error('Failed to connect to chat service');
+      this.handleReconnect();
       throw error;
     }
   }
 
-  /**
-   * Sends a message through the WebSocket connection
-   */
-  public send(message: any): boolean {
+  private setupEventHandlers() {
+    if (!this.ws) return;
+
+    this.ws.onopen = () => {
+      console.log('WebSocket connected');
+      this.reconnectAttempts = 0;
+      this.onStateChange?.('connected');
+      toast.success('Connected to chat service');
+    };
+
+    this.ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('Message received:', data);
+        this.onMessage?.(data);
+      } catch (error) {
+        console.error('Failed to process message:', error);
+      }
+    };
+
+    this.ws.onerror = () => {
+      console.error('WebSocket error occurred');
+      this.onStateChange?.('error');
+      toast.error('Connection error occurred');
+    };
+
+    this.ws.onclose = () => {
+      console.log('WebSocket disconnected');
+      this.onStateChange?.('disconnected');
+      toast.error('Disconnected from chat service');
+      this.handleReconnect();
+    };
+  }
+
+  private async handleReconnect() {
+    if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
+      this.onStateChange?.('failed');
+      toast.error('Maximum reconnection attempts reached');
+      return;
+    }
+
+    this.reconnectAttempts++;
+    this.onStateChange?.('reconnecting');
+    toast.info('Attempting to reconnect...');
+    
+    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+    await new Promise(resolve => setTimeout(resolve, delay));
+
+    try {
+      await this.connect();
+    } catch (error) {
+      console.error('Reconnection attempt failed:', {
+        error,
+        attempt: this.reconnectAttempts
+      });
+    }
+  }
+
+  send(message: any): boolean {
     if (this.ws?.readyState === WebSocket.OPEN) {
       try {
         this.ws.send(JSON.stringify(message));
-        
-        this.logger.log('info', 'Message sent', {
-          sessionId: this.sessionId,
-          messageType: message?.type,
-          timestamp: new Date().toISOString()
-        });
-        
+        console.log('Message sent:', message);
         return true;
       } catch (error) {
-        this.logger.log('error', 'Failed to send message', {
-          error,
-          sessionId: this.sessionId
-        });
+        console.error('Failed to send message:', error);
         toast.error('Failed to send message');
         return false;
       }
     }
-    
+    console.error('Connection not ready');
     toast.error('Connection not ready');
     return false;
   }
 
-  /**
-   * Cleanly disconnects the WebSocket connection
-   */
-  public disconnect() {
-    this.logger.log('info', 'Disconnecting WebSocket', {
-      sessionId: this.sessionId
-    });
-    
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-      this.reconnectTimeout = null;
-    }
-    
-    this.stopHeartbeat();
-    
+  disconnect() {
     if (this.ws) {
+      console.log('Disconnecting WebSocket');
       this.ws.close();
       this.ws = null;
     }
-  }
-
-  /**
-   * Returns the current connection state
-   */
-  public getState(): ConnectionState {
-    return this.logger.getConnectionState();
   }
 }
