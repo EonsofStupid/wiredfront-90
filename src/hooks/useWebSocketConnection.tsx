@@ -48,6 +48,7 @@ export const useWebSocketConnection = (
           sessionId,
           context: 'initialization_error'
         });
+        toast.error('Failed to connect to chat service');
       }
     };
 
@@ -80,7 +81,8 @@ export const useWebSocketConnection = (
         }
       } catch (error) {
         logger.error('Failed to reconnect', { error, sessionId });
+        toast.error('Failed to reconnect to chat service');
       }
-    },
+    }
   };
 };

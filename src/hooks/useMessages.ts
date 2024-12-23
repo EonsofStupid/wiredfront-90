@@ -9,7 +9,6 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
   const { realtimeMessages, addMessage, addOptimisticMessage } = useMessageManagement(sessionId);
   const { 
     connectionState, 
-    metrics, 
     sendMessage, 
     isConnected, 
     reconnect
@@ -42,7 +41,6 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
       await addOptimisticMessage(content, sendMessage);
     },
     connectionState,
-    metrics,
     isConnected,
     reconnect
   };

@@ -3,6 +3,11 @@ import { WEBSOCKET_URL } from '@/constants/websocket';
 import { supabase } from "@/integrations/supabase/client";
 import { ConnectionState } from '@/types/websocket';
 
+interface WebSocketCallbacks {
+  onMessage: (data: any) => void;
+  onStateChange?: (state: ConnectionState) => void;
+}
+
 export class WebSocketService {
   private ws: WebSocket | null = null;
   private logger: WebSocketLogger;
@@ -16,10 +21,7 @@ export class WebSocketService {
     console.log('WebSocket service initialized', { sessionId });
   }
 
-  setCallbacks(callbacks: { 
-    onMessage: (data: any) => void;
-    onStateChange?: (state: ConnectionState) => void;
-  }) {
+  setCallbacks(callbacks: WebSocketCallbacks) {
     this.onMessage = callbacks.onMessage;
     this.onStateChange = callbacks.onStateChange;
   }
