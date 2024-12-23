@@ -115,7 +115,7 @@ export class WebSocketConnection {
       toast.error('Connection error occurred');
     };
 
-    this.ws.onclose = () => {
+    this.ws.onclose = (event) => {
       this.logger.updateConnectionState('disconnected');
       this.logger.log('info', 'WebSocket disconnected', {
         sessionId: this.sessionId

@@ -1,10 +1,11 @@
-import { ConnectionState, ConnectionMetrics, WebSocketCallbacks } from './types/websocket';
+import { ConnectionState, ConnectionMetrics, WebSocketCallbacks } from '@/types/websocket';
 import { WebSocketLogger } from './websocket/monitoring/WebSocketLogger';
-import { WebSocketStateManager } from './websocket/monitoring/WebSocketStateManager';
+import { WebSocketStateManager } from './services/websocket/WebSocketStateManager';
 import { WebSocketMessageHandler } from './websocket/message/WebSocketMessageHandler';
 import { WEBSOCKET_URL } from '@/constants/websocket';
 import { toast } from 'sonner';
 
+// Split into smaller files for better maintainability
 export class WebSocketService {
   private ws: WebSocket | null = null;
   private logger: WebSocketLogger;
@@ -193,7 +194,6 @@ export class WebSocketService {
     
     this.reconnectTimeout = setTimeout(async () => {
       try {
-        // Attempt to get a fresh token here if needed
         const token = await this.refreshToken();
         await this.connect(token);
       } catch (error) {
