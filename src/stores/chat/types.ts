@@ -29,6 +29,7 @@ export interface ChatActions {
   addMessage: (sessionId: string, message: Message) => void;
   updatePreferences: (updates: Partial<ChatState['preferences']>) => void;
   setConnectionState: (state: ConnectionState) => void;
+  removeSession: (sessionId: string) => void;
 }
 
 export type ChatStore = ChatState & ChatActions;

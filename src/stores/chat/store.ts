@@ -77,6 +77,25 @@ export const useChatStore = create<ChatStore>()(
       setConnectionState: (state) => {
         set({ connectionState: state });
       },
+
+      removeSession: (sessionId) => {
+        set((state) => {
+          const newSessions = { ...state.sessions };
+          delete newSessions[sessionId];
+          
+          // If we're removing the current session, switch to another one
+          let newCurrentSessionId = state.currentSessionId;
+          if (sessionId === state.currentSessionId) {
+            const remainingSessionIds = Object.keys(newSessions);
+            newCurrentSessionId = remainingSessionIds.length > 0 ? remainingSessionIds[0] : null;
+          }
+          
+          return {
+            sessions: newSessions,
+            currentSessionId: newCurrentSessionId,
+          };
+        });
+      },
     }),
     {
       name: 'chat-storage',
