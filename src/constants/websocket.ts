@@ -1,4 +1,4 @@
-export const WEBSOCKET_URL = `wss://ewjisqyvspdvhyppkhnm.functions.supabase.co/functions/v1/realtime-chat`;
+export const WEBSOCKET_URL = `wss://ewjisqyvspdvhyppkhnm.functions.supabase.co/realtime-chat`;
 export const INITIAL_RETRY_DELAY = 1000;
 export const MAX_RETRY_DELAY = 30000;
 export const MAX_RETRIES = 5;
