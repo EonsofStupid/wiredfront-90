@@ -7,6 +7,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const MAX_CONNECTIONS = 100;
+let activeConnections = 0;
+
 serve(async (req) => {
   try {
     // Handle CORS preflight
@@ -20,6 +23,15 @@ serve(async (req) => {
       console.error('Request is not trying to upgrade to WebSocket');
       return new Response("request isn't trying to upgrade to websocket.", { 
         status: 400,
+        headers: corsHeaders
+      });
+    }
+
+    // Check connection limits
+    if (activeConnections >= MAX_CONNECTIONS) {
+      console.error('Maximum connections reached:', activeConnections);
+      return new Response('Server is at capacity', { 
+        status: 503,
         headers: corsHeaders
       });
     }
@@ -60,6 +72,9 @@ serve(async (req) => {
     // Upgrade to WebSocket
     const { socket, response } = Deno.upgradeWebSocket(req);
     
+    activeConnections++;
+    console.log('Active connections:', activeConnections);
+    
     socket.onopen = () => {
       console.log('Client connected:', { userId: user.id, sessionId });
       socket.send(JSON.stringify({
@@ -74,6 +89,14 @@ serve(async (req) => {
       try {
         console.log('Received message from client:', event.data);
         const data = JSON.parse(event.data);
+        
+        if (data.type === 'ping') {
+          socket.send(JSON.stringify({
+            type: 'pong',
+            timestamp: new Date().toISOString()
+          }));
+          return;
+        }
         
         console.log('Parsed client message:', {
           type: data.type,
@@ -100,7 +123,6 @@ serve(async (req) => {
           console.error('Failed to log message to database:', dbError);
         }
 
-        // Echo back to client for testing
         socket.send(JSON.stringify({
           type: 'message_received',
           content: data,
@@ -127,9 +149,11 @@ serve(async (req) => {
     };
 
     socket.onclose = () => {
+      activeConnections--;
       console.log('Client disconnected:', { 
         userId: user.id,
         sessionId,
+        activeConnections,
         timestamp: new Date().toISOString()
       });
     };

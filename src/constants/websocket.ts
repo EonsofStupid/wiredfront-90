@@ -6,6 +6,8 @@ export const HEARTBEAT_INTERVAL = 30000;
 export const RECONNECT_JITTER = 0.2;
 export const RECONNECT_INTERVALS = [1000, 2000, 5000, 10000, 30000];
 export const MAX_RECONNECT_ATTEMPTS = 5;
+export const MAX_CONCURRENT_CONNECTIONS = 3;
+export const CONNECTION_TIMEOUT = 10000;
 
 export const INITIAL_METRICS = {
   lastConnected: null,
@@ -16,4 +18,5 @@ export const INITIAL_METRICS = {
   lastHeartbeat: null,
   latency: 0,
   uptime: 0,
+  activeConnections: 0
 };
