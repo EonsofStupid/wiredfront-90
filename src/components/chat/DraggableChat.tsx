@@ -36,6 +36,7 @@ export const DraggableChat = () => {
   });
 
   const [isDragging, setIsDragging] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const currentSession = useMemo(() => 
     currentSessionId ? sessions[currentSessionId] : null,
@@ -54,10 +55,18 @@ export const DraggableChat = () => {
 
   // Initialize session if none exists
   useEffect(() => {
-    if (!currentSessionId) {
-      createSession();
-    }
-  }, [currentSessionId, createSession]);
+    const initializeChat = async () => {
+      if (!currentSessionId && !isInitialized) {
+        await createSession();
+        setIsInitialized(true);
+      }
+    };
+
+    initializeChat().catch(error => {
+      console.error('Failed to initialize chat:', error);
+      toast.error('Failed to initialize chat session');
+    });
+  }, [currentSessionId, createSession, isInitialized]);
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setIsDragging(true);

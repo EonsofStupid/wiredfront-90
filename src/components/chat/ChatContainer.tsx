@@ -8,6 +8,8 @@ export const ChatContainer = ({ sessionId }: { sessionId: string }) => {
   const { setConnectionState } = useChatStore();
 
   useEffect(() => {
+    let isMounted = true;
+
     if (!sessionId) {
       logger.warn('No session ID provided for realtime subscription');
       return;
@@ -19,12 +21,16 @@ export const ChatContainer = ({ sessionId }: { sessionId: string }) => {
         
         if (!session) {
           logger.warn('No active session found for realtime subscription');
-          setConnectionState('error');
+          if (isMounted) {
+            setConnectionState('error');
+          }
           return;
         }
 
         logger.info('Setting up realtime subscription for session:', sessionId);
-        setConnectionState('connecting');
+        if (isMounted) {
+          setConnectionState('connecting');
+        }
 
         const channel = supabase
           .channel(`messages:${sessionId}`)
@@ -37,6 +43,8 @@ export const ChatContainer = ({ sessionId }: { sessionId: string }) => {
               filter: `chat_session_id=eq.${sessionId}`,
             },
             (payload) => {
+              if (!isMounted) return;
+              
               logger.debug('Received realtime message update:', payload);
               
               if (payload.eventType === 'INSERT') {
@@ -48,7 +56,9 @@ export const ChatContainer = ({ sessionId }: { sessionId: string }) => {
               }
             }
           )
-          .subscribe(async (status) => {
+          .subscribe((status) => {
+            if (!isMounted) return;
+
             logger.info(`Subscription status for session ${sessionId}:`, status);
             
             if (status === 'SUBSCRIBED') {
@@ -67,21 +77,28 @@ export const ChatContainer = ({ sessionId }: { sessionId: string }) => {
           });
 
         return () => {
-          logger.info(`Cleaning up subscription for session ${sessionId}`);
-          setConnectionState('disconnected');
-          supabase.removeChannel(channel);
+          if (channel) {
+            logger.info(`Cleaning up subscription for session ${sessionId}`);
+            supabase.removeChannel(channel);
+          }
         };
       } catch (error) {
+        if (!isMounted) return;
+        
         logger.error('Error setting up realtime subscription:', error);
         setConnectionState('error');
         toast.error('Failed to setup chat connection');
       }
     };
 
-    const subscription = setupRealtimeSubscription();
-    
+    const cleanup = setupRealtimeSubscription();
+
     return () => {
-      subscription.then(cleanup => cleanup?.());
+      isMounted = false;
+      if (cleanup) {
+        cleanup.then(cleanupFn => cleanupFn?.());
+      }
+      setConnectionState('disconnected');
     };
   }, [sessionId, setConnectionState]);
 
