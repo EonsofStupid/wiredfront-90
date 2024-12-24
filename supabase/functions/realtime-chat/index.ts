@@ -1,8 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { WebSocketHandler } from './utils/websocket.ts';
-import { logger } from './utils/logger.ts';
-import { validateUser } from './utils/auth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,29 +19,49 @@ serve(async (req) => {
   }
 
   try {
-    // Get session ID and JWT from URL params
+    // Get session ID from URL params
     const url = new URL(req.url);
     const sessionId = url.searchParams.get('session_id');
-    const jwt = url.searchParams.get('access_token');
+    
+    console.log('Attempting WebSocket connection for session:', sessionId);
 
-    if (!sessionId) {
-      throw new Error('Session ID not provided');
-    }
+    const { socket, response } = Deno.upgradeWebSocket(req);
 
-    // Validate user
-    const user = await validateUser(jwt);
-    logger.info('User authenticated', { userId: user.id, sessionId });
+    socket.onopen = () => {
+      console.log('WebSocket opened for session:', sessionId);
+      socket.send(JSON.stringify({
+        type: 'connection_established',
+        sessionId: sessionId,
+        timestamp: new Date().toISOString()
+      }));
+    };
 
-    // Initialize WebSocket connection
-    const wsHandler = new WebSocketHandler(req, {
-      userId: user.id,
-      sessionId: sessionId
-    });
+    socket.onmessage = (event) => {
+      console.log('Received message:', event.data);
+      try {
+        // Echo the message back for testing
+        socket.send(JSON.stringify({
+          type: 'echo',
+          data: event.data,
+          timestamp: new Date().toISOString()
+        }));
+      } catch (error) {
+        console.error('Error processing message:', error);
+      }
+    };
 
-    return wsHandler.response;
+    socket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    socket.onclose = () => {
+      console.log('WebSocket closed for session:', sessionId);
+    };
+
+    return response;
 
   } catch (error) {
-    logger.error('Error in realtime-chat function:', error);
+    console.error('Error in realtime-chat function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
