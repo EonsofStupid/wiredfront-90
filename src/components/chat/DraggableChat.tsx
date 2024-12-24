@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { useWindowPosition } from '@/hooks/useWindowPosition';
 import { useMessages } from '@/hooks/useMessages';
@@ -28,6 +28,7 @@ export const DraggableChat = () => {
 
   const { currentAPI, handleSwitchAPI } = useAPISwitch();
   const { floating: zIndexValue } = useUIStore((state) => state.zIndex);
+  const initializingRef = useRef(false);
 
   const { position, setPosition, resetPosition } = useWindowPosition({
     width: CHAT_WIDTH,
@@ -36,7 +37,6 @@ export const DraggableChat = () => {
   });
 
   const [isDragging, setIsDragging] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
 
   const currentSession = useMemo(() => 
     currentSessionId ? sessions[currentSessionId] : null,
@@ -46,27 +46,28 @@ export const DraggableChat = () => {
   const {
     messages,
     isLoading,
-    error,
-    fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    fetchNextPage,
     addOptimisticMessage
   } = useMessages(currentSessionId, currentSession?.isMinimized ?? false);
 
-  // Initialize session if none exists
   useEffect(() => {
     const initializeChat = async () => {
-      if (!currentSessionId && !isInitialized) {
-        await createSession();
-        setIsInitialized(true);
+      if (!currentSessionId && !initializingRef.current) {
+        initializingRef.current = true;
+        try {
+          await createSession();
+        } catch (error) {
+          console.error('Failed to initialize chat:', error);
+          toast.error('Failed to initialize chat session');
+        }
+        initializingRef.current = false;
       }
     };
 
-    initializeChat().catch(error => {
-      console.error('Failed to initialize chat:', error);
-      toast.error('Failed to initialize chat session');
-    });
-  }, [currentSessionId, createSession, isInitialized]);
+    initializeChat();
+  }, [currentSessionId, createSession]);
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setIsDragging(true);
@@ -97,9 +98,11 @@ export const DraggableChat = () => {
   }, [currentSession, currentSessionId, updateSession]);
 
   const handleClose = useCallback(() => {
-    toast.info("Chat minimized - You can restore the chat from the AI button");
     if (currentSessionId) {
       updateSession(currentSessionId, { isMinimized: true });
+      toast.info("Chat minimized - You can restore the chat from the AI button", {
+        id: 'chat-minimized'
+      });
     }
   }, [currentSessionId, updateSession]);
 
@@ -121,15 +124,15 @@ export const DraggableChat = () => {
 
   const handleNewSession = useCallback(() => {
     createSession();
-    toast.success("New chat session created");
+    toast.success("New chat session created", { id: 'new-session' });
   }, [createSession]);
 
   const handleCloseSession = useCallback((sessionId: string) => {
     if (Object.keys(sessions).length > 1) {
       removeSession(sessionId);
-      toast.success("Chat session closed");
+      toast.success("Chat session closed", { id: 'session-closed' });
     } else {
-      toast.error("You must have at least one active session");
+      toast.error("You must have at least one active session", { id: 'session-error' });
     }
   }, [removeSession, sessions]);
 
@@ -138,7 +141,7 @@ export const DraggableChat = () => {
       await addOptimisticMessage(content);
     } catch (error) {
       console.error('Failed to send message:', error);
-      toast.error("Failed to send message. Please try again.");
+      toast.error("Failed to send message. Please try again.", { id: 'send-error' });
     }
   }, [addOptimisticMessage]);
 

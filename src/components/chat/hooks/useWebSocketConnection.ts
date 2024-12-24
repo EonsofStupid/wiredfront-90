@@ -1,66 +1,73 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
+import { logger } from '@/services/chat/LoggingService';
 
 export const useWebSocketConnection = (onMessage: (content: string) => void) => {
   const [isConnected, setIsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
 
-  useEffect(() => {
-    const connectWebSocket = () => {
-      const ws = new WebSocket(`wss://ewjisqyvspdvhyppkhnm.functions.supabase.co/functions/v1/realtime-chat`);
+  const cleanup = useCallback(() => {
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+    }
+  }, []);
 
-      ws.onopen = () => {
-        console.log('Connected to chat WebSocket');
-        setIsConnected(true);
-        toast.success('Connected to AI chat');
-      };
+  const connect = useCallback(() => {
+    cleanup();
 
-      ws.onclose = () => {
-        console.log('Disconnected from chat WebSocket');
-        setIsConnected(false);
-        toast.error('Disconnected from AI chat');
-        // Attempt to reconnect after a delay
-        setTimeout(connectWebSocket, 3000);
-      };
+    const ws = new WebSocket(`wss://ewjisqyvspdvhyppkhnm.functions.supabase.co/functions/v1/realtime-chat`);
+    wsRef.current = ws;
 
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        toast.error('Chat connection error');
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          console.log('Received message:', data);
-          
-          if (data.type === 'response.message.delta') {
-            onMessage(data.delta);
-          }
-        } catch (error) {
-          console.error('Error processing message:', error);
-        }
-      };
-
-      wsRef.current = ws;
+    ws.onopen = () => {
+      logger.info('Connected to chat WebSocket');
+      setIsConnected(true);
+      toast.success('Connected to AI chat');
     };
 
-    connectWebSocket();
+    ws.onclose = () => {
+      logger.info('Disconnected from chat WebSocket');
+      setIsConnected(false);
+      wsRef.current = null;
 
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
+      // Only attempt reconnect if not manually closed
+      if (!ws.wasClean) {
+        reconnectTimeoutRef.current = setTimeout(connect, 3000);
       }
     };
-  }, [onMessage]);
 
-  const sendMessage = async (message: any) => {
+    ws.onerror = (error) => {
+      logger.error('WebSocket error:', error);
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'response.message.delta') {
+          onMessage(data.delta);
+        }
+      } catch (error) {
+        logger.error('Error processing message:', error);
+      }
+    };
+  }, [cleanup, onMessage]);
+
+  useEffect(() => {
+    connect();
+    return cleanup;
+  }, [connect, cleanup]);
+
+  const sendMessage = useCallback(async (message: any) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(message));
       return true;
     }
-    toast.error('Chat connection not ready');
     return false;
-  };
+  }, []);
 
   return { isConnected, sendMessage };
 };
