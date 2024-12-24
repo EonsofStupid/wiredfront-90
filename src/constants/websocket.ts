@@ -9,6 +9,7 @@ export const MAX_RECONNECT_ATTEMPTS = 5;
 export const MAX_CONCURRENT_CONNECTIONS = 3;
 export const CONNECTION_TIMEOUT = 10000;
 
+// Initialize with default values to prevent undefined errors
 export const INITIAL_METRICS = {
   lastConnected: null,
   reconnectAttempts: 0,
@@ -18,5 +19,30 @@ export const INITIAL_METRICS = {
   lastHeartbeat: null,
   latency: 0,
   uptime: 0,
-  activeConnections: 0
+  activeConnections: 0,
+  initialized: false
+};
+
+// Safe initialization check
+export const isInitialized = () => {
+  try {
+    return INITIAL_METRICS.initialized;
+  } catch (error) {
+    console.error('Error checking initialization status:', error);
+    return false;
+  }
+};
+
+// Safe initialization function
+export const initialize = () => {
+  try {
+    if (!INITIAL_METRICS.initialized) {
+      INITIAL_METRICS.initialized = true;
+      console.log('WebSocket metrics initialized successfully');
+    }
+    return true;
+  } catch (error) {
+    console.error('Error during initialization:', error);
+    return false;
+  }
 };

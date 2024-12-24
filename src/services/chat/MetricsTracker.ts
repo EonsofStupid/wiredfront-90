@@ -1,45 +1,38 @@
-import { ConnectionMetrics } from '@/types/websocket';
+import { INITIAL_METRICS, initialize } from '@/constants/websocket';
+import { logger } from './LoggingService';
 
 export class MetricsTracker {
-  private metrics: ConnectionMetrics = {
-    lastConnected: null,
-    reconnectAttempts: 0,
-    lastError: null,
-    messagesSent: 0,
-    messagesReceived: 0,
-    lastHeartbeat: null,
-    latency: 0,
-    uptime: 0,
-  };
+  private metrics;
+  private initialized = false;
 
-  setLastConnected() {
-    this.metrics.lastConnected = new Date();
+  constructor() {
+    this.metrics = { ...INITIAL_METRICS };
+    this.initializeMetrics();
   }
 
-  setLastError(error: Error) {
-    this.metrics.lastError = error;
-  }
-
-  setReconnectAttempts(attempts: number) {
-    this.metrics.reconnectAttempts = attempts;
-  }
-
-  incrementMessagesSent() {
-    this.metrics.messagesSent++;
-  }
-
-  incrementMessagesReceived() {
-    this.metrics.messagesReceived++;
-  }
-
-  updateLastHeartbeat() {
-    this.metrics.lastHeartbeat = new Date();
-  }
-
-  getMetrics(): ConnectionMetrics {
-    if (this.metrics.lastConnected) {
-      this.metrics.uptime = Date.now() - this.metrics.lastConnected.getTime();
+  private initializeMetrics() {
+    try {
+      if (!this.initialized) {
+        initialize();
+        this.initialized = true;
+        logger.info('MetricsTracker initialized successfully');
+      }
+    } catch (error) {
+      logger.error('Failed to initialize MetricsTracker:', error);
     }
-    return { ...this.metrics };
+  }
+
+  getMetrics() {
+    return this.metrics;
+  }
+
+  updateMetrics(updates: Partial<typeof INITIAL_METRICS>) {
+    this.metrics = { ...this.metrics, ...updates };
+    logger.debug('Metrics updated', { metrics: this.metrics });
+  }
+
+  resetMetrics() {
+    this.metrics = { ...INITIAL_METRICS };
+    logger.info('Metrics reset to initial values');
   }
 }
