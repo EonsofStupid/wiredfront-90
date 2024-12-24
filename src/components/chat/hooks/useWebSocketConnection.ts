@@ -29,13 +29,13 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
       toast.success('Connected to AI chat');
     };
 
-    ws.onclose = () => {
+    ws.onclose = (event: CloseEvent) => {
       logger.info('Disconnected from chat WebSocket');
       setIsConnected(false);
       wsRef.current = null;
 
       // Only attempt reconnect if not manually closed
-      if (!ws.wasClean) {
+      if (!event.wasClean) {
         reconnectTimeoutRef.current = setTimeout(connect, 3000);
       }
     };
