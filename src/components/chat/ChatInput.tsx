@@ -18,7 +18,7 @@ interface ChatInputProps {
 export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputProps) => {
   const [message, setMessage] = useState("");
   const { isConnected, sendMessage } = useWebSocketConnection(onSendMessage);
-  const { attachments, handleFileSelect, handlePaste } = useFileUpload();
+  const { attachments, setAttachments, handleFileSelect, handlePaste } = useFileUpload();
   const { handleCommand } = useCommandHandler(onSwitchAPI, setMessage, setAttachments);
 
   const handleSubmit = async (e: React.FormEvent) => {
