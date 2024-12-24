@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Send, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,6 +15,56 @@ interface ChatInputProps {
 export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputProps) => {
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
+  const wsRef = useRef<WebSocket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+
+  useEffect(() => {
+    const connectWebSocket = () => {
+      const ws = new WebSocket(`wss://ewjisqyvspdvhyppkhnm.functions.supabase.co/realtime-chat`);
+
+      ws.onopen = () => {
+        console.log('Connected to chat WebSocket');
+        setIsConnected(true);
+        toast.success('Connected to AI chat');
+      };
+
+      ws.onclose = () => {
+        console.log('Disconnected from chat WebSocket');
+        setIsConnected(false);
+        toast.error('Disconnected from AI chat');
+        // Attempt to reconnect after a delay
+        setTimeout(connectWebSocket, 3000);
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        toast.error('Chat connection error');
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('Received message:', data);
+          
+          if (data.type === 'response.message.delta') {
+            onSendMessage(data.delta);
+          }
+        } catch (error) {
+          console.error('Error processing message:', error);
+        }
+      };
+
+      wsRef.current = ws;
+    };
+
+    connectWebSocket();
+
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [onSendMessage]);
 
   const handleCommand = (command: string) => {
     const parsed = parseCommand(command);
@@ -80,21 +130,20 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
         })
       );
 
-      // Create the message content with attachments if any
-      let finalContent = message;
-      if (uploadedFiles.length > 0) {
-        finalContent = JSON.stringify({
-          text: message,
+      // Send message through WebSocket
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({
+          content: message,
           attachments: uploadedFiles
-        });
+        }));
+        setMessage("");
+        setAttachments([]);
+      } else {
+        toast.error('Chat connection not ready');
       }
-
-      onSendMessage(finalContent);
-      setMessage("");
-      setAttachments([]);
     } catch (error) {
-      console.error('Upload error:', error);
-      toast.error("Failed to upload file(s)");
+      console.error('Error sending message:', error);
+      toast.error("Failed to send message");
     }
   };
 
@@ -135,7 +184,7 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
           onPaste={handlePaste}
           placeholder="Type a message or command (type /help for commands)..."
           className="min-h-[88px] max-h-[200px] resize-none pr-24"
-          disabled={isLoading}
+          disabled={isLoading || !isConnected}
         />
         <div className="absolute bottom-3 right-3 flex gap-2">
           <input
@@ -152,13 +201,14 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
             size="icon"
             className="h-8 w-8"
             onClick={() => document.getElementById('file-upload')?.click()}
+            disabled={!isConnected}
           >
             <Paperclip className="h-4 w-4" />
           </Button>
           <Button 
             type="submit" 
             size="icon"
-            disabled={isLoading || (!message.trim() && attachments.length === 0)}
+            disabled={isLoading || !isConnected || (!message.trim() && attachments.length === 0)}
             className="h-8 w-8"
           >
             <Send className="h-4 w-4" />

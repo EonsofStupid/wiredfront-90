@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { logger } from './utils/logger.ts';
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,29 +8,19 @@ const corsHeaders = {
 
 console.log('Edge Function: realtime-chat initializing...');
 
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+
 serve(async (req) => {
   const startTime = Date.now();
   const requestId = crypto.randomUUID();
 
-  logger.info('Received WebSocket request', {
-    requestId,
-    method: req.method,
-    url: req.url,
-    headers: Object.fromEntries(req.headers.entries())
-  });
-
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    logger.debug('Handling CORS preflight request', { requestId });
     return new Response(null, { headers: corsHeaders });
   }
 
   const upgrade = req.headers.get('upgrade') || '';
   if (upgrade.toLowerCase() !== 'websocket') {
-    logger.warn('Invalid connection attempt - not a WebSocket upgrade', {
-      requestId,
-      upgrade
-    });
     return new Response("Request isn't trying to upgrade to websocket.", { 
       status: 400,
       headers: { ...corsHeaders }
@@ -38,86 +28,75 @@ serve(async (req) => {
   }
 
   try {
-    // Get session ID from URL params
-    const url = new URL(req.url);
-    const sessionId = url.searchParams.get('session_id');
+    // Create WebSocket connection
+    const { socket: clientSocket, response } = Deno.upgradeWebSocket(req);
     
-    logger.info('WebSocket connection attempt', { 
-      requestId,
-      sessionId,
-      timestamp: new Date().toISOString()
-    });
-
-    const { socket, response } = Deno.upgradeWebSocket(req);
-
-    socket.onopen = () => {
-      logger.info('WebSocket connection established', {
-        requestId,
-        sessionId,
-        connectionTime: Date.now() - startTime,
-        timestamp: new Date().toISOString()
-      });
+    // Connect to OpenAI's WebSocket
+    const openAIWs = new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01');
+    
+    openAIWs.onopen = () => {
+      console.log('Connected to OpenAI WebSocket');
       
-      socket.send(JSON.stringify({
-        type: 'connection_established',
-        sessionId,
-        timestamp: new Date().toISOString()
+      // Send initial session configuration
+      openAIWs.send(JSON.stringify({
+        "type": "session.update",
+        "session": {
+          "modalities": ["text"],
+          "instructions": "You are a helpful AI assistant. Your knowledge cutoff is 2023-10.",
+          "temperature": 0.7,
+          "max_response_output_tokens": "inf"
+        }
       }));
     };
 
-    socket.onmessage = (event) => {
-      logger.debug('Received message', {
-        requestId,
-        sessionId,
-        data: event.data,
-        timestamp: new Date().toISOString()
-      });
-      
+    // Handle messages from client
+    clientSocket.onmessage = async (event) => {
       try {
-        // Echo the message back for testing
-        socket.send(JSON.stringify({
-          type: 'echo',
-          data: event.data,
-          timestamp: new Date().toISOString()
-        }));
+        const message = JSON.parse(event.data);
+        console.log('Received message from client:', message);
+        
+        // Forward message to OpenAI
+        if (openAIWs.readyState === WebSocket.OPEN) {
+          openAIWs.send(JSON.stringify({
+            type: 'conversation.item.create',
+            item: {
+              type: 'message',
+              role: 'user',
+              content: [{
+                type: 'input_text',
+                text: message.content
+              }]
+            }
+          }));
+          openAIWs.send(JSON.stringify({type: 'response.create'}));
+        }
       } catch (error) {
-        logger.error('Error processing message', {
-          requestId,
-          sessionId,
-          error: error.message,
-          timestamp: new Date().toISOString()
-        });
+        console.error('Error processing client message:', error);
       }
     };
 
-    socket.onerror = (error) => {
-      logger.error('WebSocket error occurred', {
-        requestId,
-        sessionId,
-        error: error.message,
-        timestamp: new Date().toISOString()
-      });
+    // Handle messages from OpenAI
+    openAIWs.onmessage = (event) => {
+      if (clientSocket.readyState === WebSocket.OPEN) {
+        clientSocket.send(event.data);
+      }
     };
 
-    socket.onclose = () => {
-      logger.info('WebSocket connection closed', {
-        requestId,
-        sessionId,
-        duration: Date.now() - startTime,
-        timestamp: new Date().toISOString()
-      });
+    // Handle client disconnect
+    clientSocket.onclose = () => {
+      console.log('Client disconnected');
+      openAIWs.close();
+    };
+
+    // Handle OpenAI disconnect
+    openAIWs.onclose = () => {
+      console.log('OpenAI WebSocket closed');
+      clientSocket.close();
     };
 
     return response;
-
   } catch (error) {
-    logger.error('Error in realtime-chat function', {
-      requestId,
-      error: error.message,
-      stack: error.stack,
-      timestamp: new Date().toISOString()
-    });
-    
+    console.error('Error in realtime-chat function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
