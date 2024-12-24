@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from '@/services/chat/LoggingService';
 import { useChatStore } from '@/stores/chat/store';
+import { toast } from 'sonner';
 
 export const ChatContainer = ({ sessionId }: { sessionId: string }) => {
   const { setConnectionState } = useChatStore();
@@ -32,6 +33,15 @@ export const ChatContainer = ({ sessionId }: { sessionId: string }) => {
           },
           (payload) => {
             logger.debug('Real-time message update:', { payload, sessionId });
+            
+            // Handle different types of changes
+            if (payload.eventType === 'INSERT') {
+              toast.success('New message received');
+            } else if (payload.eventType === 'UPDATE') {
+              toast.info('Message updated');
+            } else if (payload.eventType === 'DELETE') {
+              toast.info('Message deleted');
+            }
           }
         )
         .subscribe((status) => {
@@ -39,6 +49,11 @@ export const ChatContainer = ({ sessionId }: { sessionId: string }) => {
           if (status === 'SUBSCRIBED') {
             setConnectionState('connected');
             logger.info('Successfully subscribed to message updates');
+            toast.success('Connected to chat session');
+          } else if (status === 'CHANNEL_ERROR') {
+            setConnectionState('error');
+            logger.error('Failed to connect to chat session');
+            toast.error('Failed to connect to chat session');
           }
         });
 
