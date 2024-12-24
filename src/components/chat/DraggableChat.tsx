@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { useWindowPosition } from '@/hooks/useWindowPosition';
 import { useMessages } from '@/hooks/useMessages';
@@ -12,8 +12,6 @@ import { ChatContainer } from './ChatContainer';
 import { useAPISwitch } from '@/hooks/chat/useAPISwitch';
 
 export const DraggableChat = () => {
-  console.log('DraggableChat render');
-  
   const CHAT_WIDTH = 414;
   const CHAT_HEIGHT = 500;
   const MARGIN = 32;
@@ -39,8 +37,10 @@ export const DraggableChat = () => {
 
   const [isDragging, setIsDragging] = useState(false);
 
-  const currentSession = currentSessionId ? sessions[currentSessionId] : null;
-  console.log('Current session:', { currentSessionId, currentSession });
+  const currentSession = useMemo(() => 
+    currentSessionId ? sessions[currentSessionId] : null,
+    [currentSessionId, sessions]
+  );
 
   const {
     messages,
@@ -54,23 +54,19 @@ export const DraggableChat = () => {
 
   // Initialize session if none exists
   useEffect(() => {
-    console.log('Session initialization effect running', { currentSessionId });
     if (!currentSessionId) {
-      console.log('Creating new session');
       createSession();
     }
   }, [currentSessionId, createSession]);
 
-  const handleDragStart = (event: DragStartEvent) => {
-    console.log('Drag start', event);
+  const handleDragStart = useCallback((event: DragStartEvent) => {
     setIsDragging(true);
     if (currentSession?.isTacked) {
       updateSession(currentSessionId!, { isTacked: false });
     }
-  };
+  }, [currentSession?.isTacked, currentSessionId, updateSession]);
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    console.log('Drag end', event);
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
     setIsDragging(false);
     if (currentSessionId && !currentSession?.isTacked) {
       const { delta } = event;
@@ -81,27 +77,24 @@ export const DraggableChat = () => {
       setPosition(newPosition);
       updateSession(currentSessionId, { position: newPosition });
     }
-  };
+  }, [currentSession?.isTacked, currentSessionId, position.x, position.y, setPosition, updateSession]);
 
-  const handleMinimize = () => {
-    console.log('Minimize clicked', { currentSessionId, currentSession });
+  const handleMinimize = useCallback(() => {
     if (currentSessionId && currentSession) {
       updateSession(currentSessionId, { 
         isMinimized: !currentSession.isMinimized 
       });
     }
-  };
+  }, [currentSession, currentSessionId, updateSession]);
 
-  const handleClose = () => {
-    console.log('Close clicked');
+  const handleClose = useCallback(() => {
     toast.info("Chat minimized - You can restore the chat from the AI button");
     if (currentSessionId) {
       updateSession(currentSessionId, { isMinimized: true });
     }
-  };
+  }, [currentSessionId, updateSession]);
 
-  const handleTackToggle = () => {
-    console.log('Tack toggle clicked');
+  const handleTackToggle = useCallback(() => {
     if (currentSessionId && currentSession) {
       const newIsTacked = !currentSession.isTacked;
       updateSession(currentSessionId, { isTacked: newIsTacked });
@@ -109,43 +102,38 @@ export const DraggableChat = () => {
         resetPosition();
       }
     }
-  };
+  }, [currentSession, currentSessionId, resetPosition, updateSession]);
 
-  const handleLoadMore = () => {
-    console.log('Load more clicked', { hasNextPage, isFetchingNextPage });
+  const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
-  };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  const handleNewSession = () => {
-    console.log('New session clicked');
+  const handleNewSession = useCallback(() => {
     createSession();
     toast.success("New chat session created");
-  };
+  }, [createSession]);
 
-  const handleCloseSession = (sessionId: string) => {
-    console.log('Close session clicked', { sessionId });
+  const handleCloseSession = useCallback((sessionId: string) => {
     if (Object.keys(sessions).length > 1) {
       removeSession(sessionId);
       toast.success("Chat session closed");
     } else {
       toast.error("You must have at least one active session");
     }
-  };
+  }, [removeSession, sessions]);
 
-  const handleSendMessage = async (content: string) => {
-    console.log('Send message clicked', { content });
+  const handleSendMessage = useCallback(async (content: string) => {
     try {
       await addOptimisticMessage(content);
     } catch (error) {
       console.error('Failed to send message:', error);
       toast.error("Failed to send message. Please try again.");
     }
-  };
+  }, [addOptimisticMessage]);
 
   if (!currentSession) {
-    console.log('No current session, rendering null');
     return null;
   }
 
