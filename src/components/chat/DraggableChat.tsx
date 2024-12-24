@@ -29,6 +29,7 @@ export const DraggableChat = () => {
   const { currentAPI, handleSwitchAPI } = useAPISwitch();
   const { floating: zIndexValue } = useUIStore((state) => state.zIndex);
   const initializingRef = useRef(false);
+  const positionUpdateTimeoutRef = useRef<NodeJS.Timeout>();
 
   const { position, setPosition, resetPosition } = useWindowPosition({
     width: CHAT_WIDTH,
@@ -60,7 +61,7 @@ export const DraggableChat = () => {
           await createSession();
         } catch (error) {
           console.error('Failed to initialize chat:', error);
-          toast.error('Failed to initialize chat session');
+          toast.error('Failed to initialize chat session', { id: 'chat-init-error' });
         }
         initializingRef.current = false;
       }
@@ -84,8 +85,16 @@ export const DraggableChat = () => {
         x: position.x + delta.x,
         y: position.y + delta.y,
       };
+
+      // Debounce position updates
+      if (positionUpdateTimeoutRef.current) {
+        clearTimeout(positionUpdateTimeoutRef.current);
+      }
+
       setPosition(newPosition);
-      updateSession(currentSessionId, { position: newPosition });
+      positionUpdateTimeoutRef.current = setTimeout(() => {
+        updateSession(currentSessionId, { position: newPosition });
+      }, 100);
     }
   }, [currentSession?.isTacked, currentSessionId, position.x, position.y, setPosition, updateSession]);
 
@@ -144,6 +153,14 @@ export const DraggableChat = () => {
       toast.error("Failed to send message. Please try again.", { id: 'send-error' });
     }
   }, [addOptimisticMessage]);
+
+  useEffect(() => {
+    return () => {
+      if (positionUpdateTimeoutRef.current) {
+        clearTimeout(positionUpdateTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (!currentSession) {
     return null;

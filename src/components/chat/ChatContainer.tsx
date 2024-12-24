@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from '@/services/chat/LoggingService';
 import { useChatStore } from '@/stores/chat/store';
@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 export const ChatContainer = ({ sessionId }: { sessionId: string }) => {
   const { setConnectionState } = useChatStore();
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const setupRealtimeSubscription = useCallback(async () => {
     try {
@@ -20,7 +21,7 @@ export const ChatContainer = ({ sessionId }: { sessionId: string }) => {
       logger.info('Setting up realtime subscription for session:', sessionId);
       setConnectionState('connecting');
 
-      return supabase
+      channelRef.current = supabase
         .channel(`messages:${sessionId}`)
         .on(
           'postgres_changes',
@@ -34,7 +35,7 @@ export const ChatContainer = ({ sessionId }: { sessionId: string }) => {
             logger.debug('Received realtime message update:', payload);
             
             if (payload.eventType === 'INSERT') {
-              toast.success('New message received', { id: 'new-message' });
+              toast.success('New message received', { id: `new-message-${payload.new.id}` });
             }
           }
         )
@@ -49,6 +50,8 @@ export const ChatContainer = ({ sessionId }: { sessionId: string }) => {
             logger.error('Failed to connect to chat session');
           }
         });
+
+      return channelRef.current;
     } catch (error) {
       logger.error('Error setting up realtime subscription:', error);
       setConnectionState('error');
@@ -62,16 +65,13 @@ export const ChatContainer = ({ sessionId }: { sessionId: string }) => {
       return;
     }
 
-    let channel: ReturnType<typeof supabase.channel> | null = null;
-
-    setupRealtimeSubscription().then((ch) => {
-      channel = ch;
-    });
+    setupRealtimeSubscription();
 
     return () => {
-      if (channel) {
+      if (channelRef.current) {
         logger.info(`Cleaning up subscription for session ${sessionId}`);
-        supabase.removeChannel(channel);
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
       }
       setConnectionState('disconnected');
     };
