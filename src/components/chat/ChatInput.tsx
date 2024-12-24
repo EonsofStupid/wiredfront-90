@@ -5,6 +5,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { parseCommand, getCommandHelp } from "@/utils/chat/commandParser";
+import { useWebSocketConnection } from "./hooks/useWebSocketConnection";
+import { useFileUpload } from "./hooks/useFileUpload";
+import { useCommandHandler } from "./hooks/useCommandHandler";
 
 interface ChatInputProps {
   onSendMessage: (content: string) => void;
@@ -14,84 +17,9 @@ interface ChatInputProps {
 
 export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputProps) => {
   const [message, setMessage] = useState("");
-  const [attachments, setAttachments] = useState<File[]>([]);
-  const wsRef = useRef<WebSocket | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
-
-  useEffect(() => {
-    const connectWebSocket = () => {
-      const ws = new WebSocket(`wss://ewjisqyvspdvhyppkhnm.functions.supabase.co/realtime-chat`);
-
-      ws.onopen = () => {
-        console.log('Connected to chat WebSocket');
-        setIsConnected(true);
-        toast.success('Connected to AI chat');
-      };
-
-      ws.onclose = () => {
-        console.log('Disconnected from chat WebSocket');
-        setIsConnected(false);
-        toast.error('Disconnected from AI chat');
-        // Attempt to reconnect after a delay
-        setTimeout(connectWebSocket, 3000);
-      };
-
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        toast.error('Chat connection error');
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          console.log('Received message:', data);
-          
-          if (data.type === 'response.message.delta') {
-            onSendMessage(data.delta);
-          }
-        } catch (error) {
-          console.error('Error processing message:', error);
-        }
-      };
-
-      wsRef.current = ws;
-    };
-
-    connectWebSocket();
-
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
-    };
-  }, [onSendMessage]);
-
-  const handleCommand = (command: string) => {
-    const parsed = parseCommand(command);
-    if (!parsed) return false;
-
-    switch (parsed.type) {
-      case 'switch-api':
-        if (parsed.args.length > 0 && onSwitchAPI) {
-          onSwitchAPI(parsed.args[0]);
-          toast.success(`Switched to ${parsed.args[0]} API`);
-        } else {
-          toast.error("Please specify an API provider");
-        }
-        return true;
-      case 'help':
-        toast.info(getCommandHelp());
-        return true;
-      case 'clear':
-        setMessage("");
-        setAttachments([]);
-        toast.success("Chat input cleared");
-        return true;
-      case 'unknown':
-        toast.error("Unknown command. Type /help for available commands");
-        return true;
-    }
-  };
+  const { isConnected, sendMessage } = useWebSocketConnection(onSendMessage);
+  const { attachments, handleFileSelect, handlePaste } = useFileUpload();
+  const { handleCommand } = useCommandHandler(onSwitchAPI, setMessage, setAttachments);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,17 +58,13 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
         })
       );
 
-      // Send message through WebSocket
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify({
-          content: message,
-          attachments: uploadedFiles
-        }));
-        setMessage("");
-        setAttachments([]);
-      } else {
-        toast.error('Chat connection not ready');
-      }
+      await sendMessage({
+        content: message,
+        attachments: uploadedFiles
+      });
+      
+      setMessage("");
+      setAttachments([]);
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error("Failed to send message");
@@ -152,26 +76,6 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
       e.preventDefault();
       handleSubmit(e);
     }
-  };
-
-  const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
-    const items = Array.from(e.clipboardData.items);
-    
-    items.forEach((item) => {
-      if (item.type.indexOf('image') !== -1) {
-        const file = item.getAsFile();
-        if (file) {
-          setAttachments(prev => [...prev, file]);
-          toast.success("Image added to message");
-        }
-      }
-    });
-  }, []);
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setAttachments(prev => [...prev, ...files]);
-    toast.success(`${files.length} file(s) added to message`);
   };
 
   return (
