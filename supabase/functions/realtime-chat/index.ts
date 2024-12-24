@@ -15,7 +15,10 @@ serve(async (req) => {
 
   const upgrade = req.headers.get('upgrade') || '';
   if (upgrade.toLowerCase() !== 'websocket') {
-    return new Response("Request isn't trying to upgrade to websocket.", { status: 400 });
+    return new Response("Request isn't trying to upgrade to websocket.", { 
+      status: 400,
+      headers: { ...corsHeaders }
+    });
   }
 
   try {
@@ -23,7 +26,7 @@ serve(async (req) => {
     const url = new URL(req.url);
     const sessionId = url.searchParams.get('session_id');
     
-    console.log('Attempting WebSocket connection for session:', sessionId);
+    console.log('WebSocket connection attempt:', { sessionId });
 
     const { socket, response } = Deno.upgradeWebSocket(req);
 
@@ -31,7 +34,7 @@ serve(async (req) => {
       console.log('WebSocket opened for session:', sessionId);
       socket.send(JSON.stringify({
         type: 'connection_established',
-        sessionId: sessionId,
+        sessionId,
         timestamp: new Date().toISOString()
       }));
     };

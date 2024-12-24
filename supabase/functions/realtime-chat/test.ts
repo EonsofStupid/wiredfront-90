@@ -1,8 +1,13 @@
 // Test script to verify Edge Function
-const ws = new WebSocket('wss://ewjisqyvspdvhyppkhnm.functions.supabase.co/realtime-chat');
+const ws = new WebSocket('wss://ewjisqyvspdvhyppkhnm.functions.supabase.co/realtime-chat?session_id=test');
 
 ws.onopen = () => {
   console.log('Connected to WebSocket');
+  // Send a test message
+  ws.send(JSON.stringify({
+    type: 'test',
+    message: 'Hello WebSocket!'
+  }));
 };
 
 ws.onmessage = (event) => {
