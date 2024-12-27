@@ -8,6 +8,9 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
   const mountedRef = useRef(true);
+  const connectionAttemptsRef = useRef(0);
+  const MAX_RECONNECT_ATTEMPTS = 3;
+  const RECONNECT_DELAY = 3000;
 
   const cleanup = useCallback(() => {
     if (wsRef.current) {
@@ -21,50 +24,74 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
   }, []);
 
   const connect = useCallback(() => {
-    if (!mountedRef.current) return;
+    if (!mountedRef.current || connectionAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+      if (connectionAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+        logger.error('Maximum reconnection attempts reached');
+        toast.error('Unable to establish connection. Please try again later.', {
+          id: 'ws-max-attempts'
+        });
+      }
+      return;
+    }
+
     cleanup();
+    connectionAttemptsRef.current++;
 
-    const ws = new WebSocket(WEBSOCKET_URL);
-    wsRef.current = ws;
+    try {
+      const ws = new WebSocket(WEBSOCKET_URL);
+      wsRef.current = ws;
 
-    ws.onopen = () => {
-      if (!mountedRef.current) return;
-      logger.info('Connected to chat WebSocket');
-      setIsConnected(true);
-      toast.success('Connected to AI chat', { id: 'ws-connected' });
-    };
+      ws.onopen = () => {
+        if (!mountedRef.current) return;
+        logger.info('Connected to chat WebSocket');
+        setIsConnected(true);
+        connectionAttemptsRef.current = 0;
+        toast.success('Connected to AI chat', { id: 'ws-connected' });
+      };
 
-    ws.onclose = (event: CloseEvent) => {
-      if (!mountedRef.current) return;
-      logger.info('Disconnected from chat WebSocket');
-      setIsConnected(false);
-      wsRef.current = null;
+      ws.onclose = (event: CloseEvent) => {
+        if (!mountedRef.current) return;
+        logger.info('Disconnected from chat WebSocket');
+        setIsConnected(false);
+        wsRef.current = null;
 
-      if (!event.wasClean && mountedRef.current) {
-        reconnectTimeoutRef.current = setTimeout(connect, 3000);
-      }
-    };
-
-    ws.onerror = (error) => {
-      if (!mountedRef.current) return;
-      logger.error('WebSocket error:', error);
-    };
-
-    ws.onmessage = (event) => {
-      if (!mountedRef.current) return;
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'response.message.delta') {
-          onMessage(data.delta);
+        if (!event.wasClean && mountedRef.current && connectionAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
+          reconnectTimeoutRef.current = setTimeout(connect, RECONNECT_DELAY);
         }
-      } catch (error) {
-        logger.error('Error processing message:', error);
+      };
+
+      ws.onerror = (error: Event) => {
+        if (!mountedRef.current) return;
+        logger.error('WebSocket error:', error);
+        
+        // Only show error toast if we've exhausted our reconnection attempts
+        if (connectionAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+          toast.error('Connection error occurred', { id: 'ws-error' });
+        }
+      };
+
+      ws.onmessage = (event) => {
+        if (!mountedRef.current) return;
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'response.message.delta') {
+            onMessage(data.delta);
+          }
+        } catch (error) {
+          logger.error('Error processing message:', error);
+        }
+      };
+    } catch (error) {
+      logger.error('Failed to create WebSocket connection:', error);
+      if (mountedRef.current && connectionAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
+        reconnectTimeoutRef.current = setTimeout(connect, RECONNECT_DELAY);
       }
-    };
+    }
   }, [cleanup, onMessage]);
 
   useEffect(() => {
     mountedRef.current = true;
+    connectionAttemptsRef.current = 0;
     connect();
     
     return () => {
