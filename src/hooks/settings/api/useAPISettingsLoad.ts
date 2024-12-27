@@ -20,8 +20,7 @@ export function useAPISettingsLoad(
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-          toast.error("Please log in to manage API settings");
-          navigate("/login");
+          logger.warn('No authenticated user found');
           return;
         }
         setUser(session.user);
@@ -29,30 +28,22 @@ export function useAPISettingsLoad(
         if (session.user) {
           logger.info('Loading API settings...');
           
-          const { data: allSettings, error: settingsError } = await supabase
-            .from('settings')
-            .select('id, key');
-          
-          if (settingsError) throw settingsError;
-
-          const settingKeyToId = allSettings?.reduce((acc: Record<string, string>, setting) => {
-            acc[setting.key] = setting.id;
-            return acc;
-          }, {}) || {};
-
           const { data: userSettings, error: userSettingsError } = await supabase
             .from('user_settings')
             .select('setting_id, value, encrypted_value')
             .eq('user_id', session.user.id);
 
-          if (userSettingsError) throw userSettingsError;
+          if (userSettingsError) {
+            logger.error('Error fetching user settings:', userSettingsError);
+            throw userSettingsError;
+          }
 
           logger.info('Fetched user settings');
 
           if (userSettings) {
             const newSettings = {} as APISettingsState;
             
-            await Promise.all(userSettings.map(async (setting) => {
+            for (const setting of userSettings) {
               let settingValue: SettingValue | null = null;
               
               if (setting.encrypted_value) {
@@ -64,22 +55,25 @@ export function useAPISettingsLoad(
                 settingValue = setting.value;
               }
               
-              if (!settingValue?.key) return;
-              
-              const settingKey = Object.entries(settingKeyToId).find(
-                ([_, id]) => id === setting.setting_id
-              )?.[0];
+              if (settingValue?.key) {
+                const { data: settingInfo } = await supabase
+                  .from('settings')
+                  .select('key')
+                  .eq('id', setting.setting_id)
+                  .single();
 
-              if (!settingKey) return;
+                if (settingInfo) {
+                  const key = settingInfo.key
+                    .replace(/-api-key$/, "Key")
+                    .replace(/-token$/, "Token")
+                    .replace(/^aws-/, "aws")
+                    .replace(/^google-drive/, "googleDrive")
+                    .replace(/^elevenlabs-voice/, "selectedVoice");
 
-              const key = settingKey.replace(/-api-key$/, "Key")
-                .replace(/-token$/, "Token")
-                .replace(/^aws-/, "aws")
-                .replace(/^google-drive/, "googleDrive")
-                .replace(/^elevenlabs-voice/, "selectedVoice");
-
-              (newSettings as any)[key] = settingValue.key;
-            }));
+                  (newSettings as any)[key] = settingValue.key;
+                }
+              }
+            }
             
             logger.info('Setting processed API settings');
             setSettings(newSettings);
@@ -92,19 +86,6 @@ export function useAPISettingsLoad(
           retryCount++;
           retryTimeout = setTimeout(loadSettings, 1000 * Math.pow(2, retryCount));
           toast.error(`Failed to load API settings. Retrying... (${retryCount}/3)`);
-        } else {
-          toast.error("Failed to load API settings. Loading from offline cache...");
-          const cached = localStorage.getItem('api_settings');
-          if (cached) {
-            try {
-              const offlineSettings = JSON.parse(cached);
-              setSettings(offlineSettings);
-              toast.info('Loaded settings from offline cache');
-            } catch (error) {
-              logger.error('Error parsing cached settings:', error);
-              toast.error('Failed to load cached settings');
-            }
-          }
         }
       }
     };
