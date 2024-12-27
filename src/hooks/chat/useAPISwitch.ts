@@ -42,14 +42,14 @@ export const useAPISwitch = () => {
           // Public user flow - use default OpenAI configuration
           try {
             logger.info('Setting up public API access');
-            const { data: publicConfig, error } = await supabase
+            const { data: publicConfigs, error } = await supabase
               .from('api_configurations')
               .select('*')
               .eq('api_type', 'openai')
-              .eq('is_default', true)
-              .maybeSingle();
+              .eq('is_default', true);
 
-            if (publicConfig && !error) {
+            if (publicConfigs?.length > 0 && !error) {
+              // Use the first available public configuration
               setCurrentAPI('openai');
               if (!hasShownToast) {
                 toast.success('Using public API access');
