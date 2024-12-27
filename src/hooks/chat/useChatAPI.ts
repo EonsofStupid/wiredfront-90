@@ -54,7 +54,7 @@ export const useChatAPI = () => {
     },
     staleTime: 30 * 1000, // Consider data stale after 30 seconds
     retry: 3,
-    initialData: null,
+    enabled: true, // Always enable the query to handle both authenticated and public cases
   });
 
   if (error) {
