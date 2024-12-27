@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { logger } from '@/services/chat/LoggingService';
 
 export const useChatAPI = () => {
-  const { data: apiSettings } = useQuery({
+  const { data: apiSettings, error } = useQuery({
     queryKey: ['api-settings'],
     queryFn: async () => {
       try {
@@ -27,8 +27,7 @@ export const useChatAPI = () => {
         }
 
         const settings: Record<string, string> = {};
-
-        // Add settings from api_configurations
+        
         apiConfigs?.forEach(config => {
           if (config.is_enabled) {
             settings[config.api_type.toLowerCase()] = 'configured';
@@ -45,6 +44,10 @@ export const useChatAPI = () => {
     },
     staleTime: 30 * 1000, // Consider data stale after 30 seconds
   });
+
+  if (error) {
+    logger.error('Error in useChatAPI hook:', error);
+  }
 
   const getDefaultProvider = () => {
     if (!apiSettings || Object.keys(apiSettings).length === 0) {
