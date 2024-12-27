@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { parseCommand, getCommandHelp } from "@/utils/chat/commandParser";
-import { useWebSocketConnection } from "./hooks/useWebSocketConnection";
+import { useWebSocketConnection } from "@/hooks/chat/useWebSocketConnection";
 import { useFileUpload } from "./hooks/useFileUpload";
 import { useCommandHandler } from "./hooks/useCommandHandler";
 import { useSessionStore } from "@/stores/session/store";
