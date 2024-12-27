@@ -28,62 +28,72 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
     e.preventDefault();
     if (!message.trim() && attachments.length === 0) return;
     
-    // If not authenticated, show limited mode message
-    if (!user && message.startsWith('/')) {
-      toast.error('Commands are only available in authenticated mode');
-      return;
-    }
-    
-    // For non-authenticated users, just send the message directly
+    // Handle non-authenticated mode (Limited Mode)
     if (!user) {
+      if (message.startsWith('/')) {
+        toast.error('Commands are only available in authenticated mode');
+        return;
+      }
       onSendMessage(message);
       setMessage("");
       return;
     }
     
-    // Handle authenticated mode with API configuration check
-    if (!isConnected) {
-      toast.error('Please configure an AI provider in settings and ensure connection is established');
-      return;
-    }
-    
-    // Handle commands for authenticated users
-    if (message.startsWith('/')) {
-      if (handleCommand(message)) {
-        setMessage("");
-        return;
-      }
-    }
-    
+    // Handle authenticated mode
     try {
-      // Handle file uploads for authenticated users
-      const uploadedFiles = await Promise.all(
-        attachments.map(async (file) => {
-          const fileExt = file.name.split('.').pop();
-          const filePath = `${crypto.randomUUID()}.${fileExt}`;
-          
-          const { data, error } = await supabase.storage
-            .from('chat-attachments')
-            .upload(filePath, file);
-            
-          if (error) throw error;
-          
-          const { data: { publicUrl } } = supabase.storage
-            .from('chat-attachments')
-            .getPublicUrl(filePath);
-            
-          return {
-            url: publicUrl,
-            type: file.type,
-            name: file.name
-          };
-        })
-      );
+      if (message.startsWith('/')) {
+        if (!isConnected) {
+          toast.error('Please configure an AI provider in settings');
+          return;
+        }
+        if (handleCommand(message)) {
+          setMessage("");
+          return;
+        }
+      }
 
-      await sendMessage({
-        content: message,
-        attachments: uploadedFiles
-      });
+      // Handle file uploads for authenticated users
+      if (attachments.length > 0) {
+        if (!isConnected) {
+          toast.error('Please configure an AI provider to use file attachments');
+          return;
+        }
+
+        const uploadedFiles = await Promise.all(
+          attachments.map(async (file) => {
+            const fileExt = file.name.split('.').pop();
+            const filePath = `${crypto.randomUUID()}.${fileExt}`;
+            
+            const { data, error } = await supabase.storage
+              .from('chat-attachments')
+              .upload(filePath, file);
+              
+            if (error) throw error;
+            
+            const { data: { publicUrl } } = supabase.storage
+              .from('chat-attachments')
+              .getPublicUrl(filePath);
+              
+            return {
+              url: publicUrl,
+              type: file.type,
+              name: file.name
+            };
+          })
+        );
+
+        await sendMessage({
+          content: message,
+          attachments: uploadedFiles
+        });
+      } else {
+        // Send regular message
+        if (isConnected) {
+          await sendMessage({ content: message });
+        } else {
+          onSendMessage(message);
+        }
+      }
       
       setMessage("");
       setAttachments([]);

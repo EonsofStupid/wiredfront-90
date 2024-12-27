@@ -14,6 +14,11 @@ export const ConnectionStatus = ({ state }: ConnectionStatusProps) => {
   const user = useSessionStore((state) => state.user);
 
   useEffect(() => {
+    if (!user) {
+      setStatus("disconnected");
+      return;
+    }
+
     if (!isConfigured) {
       setStatus("disconnected");
       return;
@@ -21,29 +26,38 @@ export const ConnectionStatus = ({ state }: ConnectionStatusProps) => {
 
     switch (state) {
       case "connected":
-        setStatus("connected");
-        break;
       case "connecting":
       case "reconnecting":
-        setStatus("connected"); // Show as connected while attempting to connect
+        setStatus("connected");
         break;
       default:
         setStatus("disconnected");
     }
-  }, [isConfigured, state]);
+  }, [isConfigured, state, user]);
 
   const getStatusText = () => {
-    if (!isConfigured) {
-      return user ? "Configure API in Settings" : "Limited Mode";
+    if (!user) {
+      return "Limited Mode";
     }
+    
+    if (!isConfigured) {
+      return "Configure API in Settings";
+    }
+    
     return status === "connected" 
-      ? user ? `Connected (${user.email})` : "Connected" 
+      ? `Connected (${user.email})` 
       : "Disconnected";
+  };
+
+  const getStatusVariant = () => {
+    if (!user) return "secondary";
+    if (!isConfigured) return "warning";
+    return status === "connected" ? "default" : "destructive";
   };
 
   return (
     <Badge 
-      variant={status === "connected" ? "default" : "secondary"}
+      variant={getStatusVariant()}
       className="whitespace-nowrap"
     >
       {getStatusText()}
