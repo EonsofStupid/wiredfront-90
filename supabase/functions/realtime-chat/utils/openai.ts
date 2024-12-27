@@ -1,99 +1,72 @@
-import { logger } from './logger.ts';
-
 export class OpenAIWebSocket {
-  private ws: WebSocket;
-  private clientSocket: WebSocket;
-  private requestId: string;
+  private socket: WebSocket;
   private apiKey: string;
+  private userId: string | null;
 
-  constructor(clientSocket: WebSocket, apiKey: string) {
-    this.requestId = crypto.randomUUID();
-    this.clientSocket = clientSocket;
+  constructor(socket: WebSocket, apiKey: string, userId: string | null = null) {
+    this.socket = socket;
     this.apiKey = apiKey;
+    this.userId = userId;
+
+    this.socket.onmessage = async (event) => {
+      try {
+        await this.handleMessage(event);
+      } catch (error) {
+        console.error('Error handling message:', error);
+        this.sendError(error.message);
+      }
+    };
+
+    this.socket.onclose = () => {
+      console.log('Client disconnected');
+    };
+
+    console.log(`WebSocket initialized for ${this.userId ? 'authenticated' : 'public'} user`);
+  }
+
+  private async handleMessage(event: MessageEvent) {
+    const data = JSON.parse(event.data);
     
-    this.ws = new WebSocket(
-      'wss://api.openai.com/v1/chat/completions',
-      [
-        'realtime',
-        `openai-insecure-api-key.${this.apiKey}`,
-        'openai-beta.realtime-v1',
-      ]
-    );
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { 
+              role: 'system', 
+              content: 'You are a helpful AI assistant. Keep responses concise and friendly.'
+            },
+            { role: 'user', content: data.content }
+          ],
+          max_tokens: this.userId ? undefined : 150, // Limit tokens for public users
+        }),
+      });
 
-    this.setupEventHandlers();
-  }
+      if (!response.ok) {
+        throw new Error('OpenAI API request failed');
+      }
 
-  private setupEventHandlers() {
-    this.ws.onopen = () => {
-      console.log('Connected to OpenAI');
-      this.clientSocket.send(JSON.stringify({ 
-        type: 'status', 
-        status: 'connected',
-        timestamp: new Date().toISOString()
+      const result = await response.json();
+      this.socket.send(JSON.stringify({
+        type: 'message',
+        content: result.choices[0].message.content,
       }));
-    };
 
-    this.ws.onmessage = (event) => {
-      if (this.clientSocket.readyState === WebSocket.OPEN) {
-        try {
-          console.log('Received message from OpenAI:', event.data);
-          this.clientSocket.send(event.data);
-        } catch (error) {
-          console.error('Failed to forward OpenAI message:', error);
-        }
-      }
-    };
-
-    this.ws.onerror = (error) => {
-      console.error('OpenAI WebSocket error:', error);
-      try {
-        this.clientSocket.send(JSON.stringify({
-          type: 'error',
-          error: 'OpenAI connection error',
-          timestamp: new Date().toISOString()
-        }));
-      } catch (sendError) {
-        console.error('Failed to send error to client:', sendError);
-      }
-    };
-
-    this.ws.onclose = (event) => {
-      console.log('OpenAI connection closed:', event.code, event.reason);
-      try {
-        this.clientSocket.send(JSON.stringify({
-          type: 'status',
-          status: 'disconnected',
-          reason: 'OpenAI connection closed',
-          timestamp: new Date().toISOString()
-        }));
-      } catch (error) {
-        console.error('Failed to send disconnection notice:', error);
-      }
-    };
-  }
-
-  public sendMessage(data: string) {
-    if (this.ws.readyState === WebSocket.OPEN) {
-      try {
-        console.log('Sending message to OpenAI:', data);
-        this.ws.send(data);
-      } catch (error) {
-        console.error('Failed to send message to OpenAI:', error);
-        throw error;
-      }
-    } else {
-      console.error('OpenAI WebSocket not ready. State:', this.ws.readyState);
-      this.clientSocket.send(JSON.stringify({
-        type: 'error',
-        error: 'OpenAI connection not ready',
-        readyState: this.ws.readyState,
-        timestamp: new Date().toISOString()
-      }));
+    } catch (error) {
+      console.error('Error processing message:', error);
+      this.sendError('Failed to process message');
     }
   }
 
-  public close() {
-    console.log('Closing OpenAI WebSocket connection');
-    this.ws.close();
+  private sendError(message: string) {
+    this.socket.send(JSON.stringify({
+      type: 'error',
+      content: message,
+    }));
   }
 }

@@ -22,6 +22,7 @@ serve(async (req) => {
     );
 
     let apiKey: string;
+    let userId: string | null = null;
     
     if (isPublic) {
       // Use public API key for non-authenticated users
@@ -29,6 +30,7 @@ serve(async (req) => {
       if (!apiKey) {
         throw new Error('Public API key not configured');
       }
+      console.log('Using public API key for non-authenticated user');
     } else {
       // Get user-specific API key for authenticated users
       const authHeader = req.headers.get('Authorization');
@@ -44,23 +46,40 @@ serve(async (req) => {
         throw new Error('Invalid authentication');
       }
 
-      const { data: settings, error: settingsError } = await supabase
+      userId = user.id;
+
+      // Get user's API configuration
+      const { data: apiConfig, error: configError } = await supabase
+        .from('api_configurations')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_enabled', true)
+        .eq('api_type', 'openai')
+        .single();
+
+      if (configError || !apiConfig) {
+        throw new Error('No API configuration found for user');
+      }
+
+      // Get chat settings to verify API key
+      const { data: chatSettings, error: settingsError } = await supabase
         .from('chat_settings')
         .select('api_key')
         .eq('user_id', user.id)
         .single();
 
-      if (settingsError || !settings?.api_key) {
+      if (settingsError || !chatSettings?.api_key) {
         throw new Error('API key not configured for user');
       }
 
-      apiKey = settings.api_key;
+      apiKey = chatSettings.api_key;
+      console.log('Using user-specific API key for authenticated user:', userId);
     }
 
     // Upgrade the connection to WebSocket
     const { response, socket } = Deno.upgradeWebSocket(req);
     
-    const openAI = new OpenAIWebSocket(socket, apiKey);
+    const openAI = new OpenAIWebSocket(socket, apiKey, userId);
     
     return response;
   } catch (error) {

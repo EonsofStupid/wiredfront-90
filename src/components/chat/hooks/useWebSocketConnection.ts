@@ -52,18 +52,21 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
         }
         wsUrl = `${WEBSOCKET_URL}?access_token=${session.access_token}`;
       } else {
-        // Public user flow
-        const { data: publicConfig } = await supabase
+        // Public user flow - use default public API configuration
+        const { data: publicConfig, error } = await supabase
           .from('api_configurations')
           .select('*')
           .eq('api_type', 'openai')
           .eq('is_default', true)
           .single();
 
-        if (!publicConfig) {
+        if (error || !publicConfig) {
+          logger.error('Error fetching public API configuration:', error);
           throw new Error('No public API configuration found');
         }
+
         wsUrl = `${WEBSOCKET_URL}?public=true`;
+        logger.info('Using public API configuration');
       }
 
       cleanup();
@@ -97,8 +100,8 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
       }
     };
 
-    wsRef.current.onerror = () => {
-      logger.error('WebSocket error occurred');
+    wsRef.current.onerror = (error) => {
+      logger.error('WebSocket error occurred:', error);
       setIsConnected(false);
     };
 
