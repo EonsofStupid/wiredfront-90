@@ -8,6 +8,7 @@ import { parseCommand, getCommandHelp } from "@/utils/chat/commandParser";
 import { useWebSocketConnection } from "./hooks/useWebSocketConnection";
 import { useFileUpload } from "./hooks/useFileUpload";
 import { useCommandHandler } from "./hooks/useCommandHandler";
+import { useSessionStore } from "@/stores/session/store";
 
 interface ChatInputProps {
   onSendMessage: (content: string) => void;
@@ -21,17 +22,32 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
   const { attachments, setAttachments, handleFileSelect, handlePaste } = useFileUpload();
   const { handleCommand } = useCommandHandler(onSwitchAPI, setMessage, setAttachments);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const user = useSessionStore((state) => state.user);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() && attachments.length === 0) return;
     
+    // If not authenticated, show limited mode message
+    if (!user && message.startsWith('/')) {
+      toast.error('Commands are only available in authenticated mode');
+      return;
+    }
+    
+    // For non-authenticated users, just send the message directly
+    if (!user) {
+      onSendMessage(message);
+      setMessage("");
+      return;
+    }
+    
+    // Handle authenticated mode with API configuration check
     if (!isConnected) {
       toast.error('Please configure an AI provider in settings and ensure connection is established');
       return;
     }
     
-    // Handle commands
+    // Handle commands for authenticated users
     if (message.startsWith('/')) {
       if (handleCommand(message)) {
         setMessage("");
@@ -40,7 +56,7 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
     }
     
     try {
-      // Handle file uploads first
+      // Handle file uploads for authenticated users
       const uploadedFiles = await Promise.all(
         attachments.map(async (file) => {
           const fileExt = file.name.split('.').pop();
@@ -85,12 +101,14 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
   };
 
   useEffect(() => {
-    if (!isConnected) {
-      inputRef.current?.setAttribute('placeholder', 'Please configure an AI provider in settings...');
-    } else {
-      inputRef.current?.setAttribute('placeholder', 'Type a message or command (type /help for commands)...');
-    }
-  }, [isConnected]);
+    const placeholder = user 
+      ? (!isConnected 
+          ? 'Please configure an AI provider in settings...' 
+          : 'Type a message or command (type /help for commands)...')
+      : 'Type a message... (Limited Mode)';
+    
+    inputRef.current?.setAttribute('placeholder', placeholder);
+  }, [isConnected, user]);
 
   return (
     <form onSubmit={handleSubmit} className="p-4">
@@ -102,31 +120,35 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
           className="min-h-[88px] max-h-[200px] resize-none pr-24"
-          disabled={isLoading || !isConnected}
+          disabled={isLoading}
         />
         <div className="absolute bottom-3 right-3 flex gap-2">
-          <input
-            type="file"
-            id="file-upload"
-            className="hidden"
-            onChange={handleFileSelect}
-            multiple
-            accept="image/*,.pdf,.doc,.docx"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => document.getElementById('file-upload')?.click()}
-            disabled={!isConnected}
-          >
-            <Paperclip className="h-4 w-4" />
-          </Button>
+          {user && (
+            <>
+              <input
+                type="file"
+                id="file-upload"
+                className="hidden"
+                onChange={handleFileSelect}
+                multiple
+                accept="image/*,.pdf,.doc,.docx"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => document.getElementById('file-upload')?.click()}
+                disabled={!isConnected}
+              >
+                <Paperclip className="h-4 w-4" />
+              </Button>
+            </>
+          )}
           <Button 
             type="submit" 
             size="icon"
-            disabled={isLoading || !isConnected || (!message.trim() && attachments.length === 0)}
+            disabled={isLoading || (!message.trim() && attachments.length === 0)}
             className="h-8 w-8"
           >
             <Send className="h-4 w-4" />

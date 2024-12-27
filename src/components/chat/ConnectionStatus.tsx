@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useChatAPI } from "@/hooks/chat/useChatAPI";
 import { ConnectionState } from "@/types/websocket";
+import { useSessionStore } from "@/stores/session/store";
 
 interface ConnectionStatusProps {
   state: ConnectionState;
@@ -10,6 +11,7 @@ interface ConnectionStatusProps {
 export const ConnectionStatus = ({ state }: ConnectionStatusProps) => {
   const { isConfigured } = useChatAPI();
   const [status, setStatus] = useState<"connected" | "disconnected">("disconnected");
+  const user = useSessionStore((state) => state.user);
 
   useEffect(() => {
     if (!isConfigured) {
@@ -30,9 +32,21 @@ export const ConnectionStatus = ({ state }: ConnectionStatusProps) => {
     }
   }, [isConfigured, state]);
 
+  const getStatusText = () => {
+    if (!isConfigured) {
+      return user ? "Configure API in Settings" : "Limited Mode";
+    }
+    return status === "connected" 
+      ? user ? `Connected (${user.email})` : "Connected" 
+      : "Disconnected";
+  };
+
   return (
-    <Badge variant={status === "connected" ? "default" : "destructive"}>
-      {status === "connected" ? "Connected" : "Disconnected"}
+    <Badge 
+      variant={status === "connected" ? "default" : "secondary"}
+      className="whitespace-nowrap"
+    >
+      {getStatusText()}
     </Badge>
   );
 };
