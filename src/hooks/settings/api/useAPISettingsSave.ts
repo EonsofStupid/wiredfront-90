@@ -31,12 +31,17 @@ export function useAPISettingsSave() {
         const apiKey = settings[config.key as keyof APISettingsState];
         if (apiKey) {
           // First, check if configuration exists
-          const { data: existingConfig } = await supabase
+          const { data: existingConfig, error: queryError } = await supabase
             .from('api_configurations')
             .select('id')
             .eq('user_id', user.id)
             .eq('api_type', config.type)
-            .single();
+            .maybeSingle();
+
+          if (queryError) {
+            logger.error('Error querying API configuration:', queryError);
+            throw queryError;
+          }
 
           if (existingConfig) {
             // Update existing configuration
@@ -69,16 +74,21 @@ export function useAPISettingsSave() {
         }
       }
 
-      // Update chat settings with the API key
+      // Update chat settings
       const { error: chatSettingsError } = await supabase
         .from('chat_settings')
         .upsert({
           user_id: user.id,
-          api_key: settings.openaiKey || settings.geminiKey || settings.anthropicKey || settings.huggingfaceKey,
           api_provider: settings.openaiKey ? 'openai' : 
                        settings.geminiKey ? 'gemini' : 
                        settings.anthropicKey ? 'anthropic' : 
-                       settings.huggingfaceKey ? 'huggingface' : 'openai'
+                       settings.huggingfaceKey ? 'huggingface' : 'openai',
+          enabled: true,
+          ui_customizations: {
+            theme: 'default',
+            chatbot_name: 'AI Assistant',
+            placeholder_text: 'Type a message...'
+          }
         });
 
       if (chatSettingsError) {
@@ -90,6 +100,7 @@ export function useAPISettingsSave() {
     } catch (error) {
       logger.error('Error saving API settings:', error);
       toast.error("Failed to save API settings");
+      throw error;
     } finally {
       setIsSaving(false);
     }

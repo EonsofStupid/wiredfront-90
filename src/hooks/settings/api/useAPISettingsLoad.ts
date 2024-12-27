@@ -23,7 +23,8 @@ export function useAPISettingsLoad(
         const { data: apiConfigs, error: configError } = await supabase
           .from('api_configurations')
           .select('*')
-          .eq('user_id', session.user.id);
+          .eq('user_id', session.user.id)
+          .eq('is_enabled', true);
 
         if (configError) {
           logger.error('Error fetching API configurations:', configError);
