@@ -2,50 +2,43 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { logger } from '@/services/chat/LoggingService';
+import { useSessionStore } from '@/stores/session/store';
 
 export const useChatAPI = () => {
+  const user = useSessionStore(state => state.user);
+
   const { data: apiSettings, error } = useQuery({
-    queryKey: ['api-settings'],
+    queryKey: ['api-settings', user?.id],
     queryFn: async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          logger.warn('No authenticated user found');
-          return null;
-        }
-
-        // Get enabled API configurations
-        const { data: apiConfigs, error: configError } = await supabase
+        let query = supabase
           .from('api_configurations')
           .select('*')
-          .eq('user_id', user.id)
           .eq('is_enabled', true);
+
+        // If user is authenticated, get their configurations
+        if (user) {
+          query = query.eq('user_id', user.id);
+        } else {
+          // For non-authenticated users, get default public configurations
+          query = query.eq('is_default', true);
+        }
+
+        const { data: apiConfigs, error: configError } = await query;
 
         if (configError) {
           logger.error('Error fetching API configurations:', configError);
           throw configError;
         }
 
-        // Get chat settings to verify API key
-        const { data: chatSettings, error: settingsError } = await supabase
-          .from('chat_settings')
-          .select('api_key, api_provider')
-          .eq('user_id', user.id)
-          .maybeSingle(); // Changed from .single() to .maybeSingle()
-
-        if (settingsError) {
-          logger.error('Error fetching chat settings:', settingsError);
-          throw settingsError;
-        }
-
-        if (!chatSettings?.api_key) {
-          logger.warn('No API key configured');
+        if (!apiConfigs || apiConfigs.length === 0) {
+          logger.warn('No API configurations found');
           return null;
         }
 
         const settings: Record<string, string> = {};
         
-        apiConfigs?.forEach(config => {
+        apiConfigs.forEach(config => {
           if (config.is_enabled) {
             settings[config.api_type.toLowerCase()] = 'configured';
             logger.info(`Found enabled API configuration for ${config.api_type}`);
