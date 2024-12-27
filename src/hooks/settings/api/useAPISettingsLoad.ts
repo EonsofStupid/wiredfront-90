@@ -32,14 +32,6 @@ export function useAPISettingsLoad(
         setUser(session.user);
 
         if (session.user) {
-          // Load API configurations
-          const { data: configs, error: configError } = await supabase
-            .from('api_configurations')
-            .select('*')
-            .eq('user_id', session.user.id);
-
-          if (configError) throw configError;
-
           // Load settings
           const { data: allSettings, error: settingsError } = await supabase
             .from('settings')
@@ -58,6 +50,8 @@ export function useAPISettingsLoad(
             .eq('user_id', session.user.id);
 
           if (userSettingsError) throw userSettingsError;
+
+          logger.info('Fetched user settings:', userSettings);
 
           if (userSettings) {
             const newSettings = {} as APISettingsState;
@@ -91,14 +85,8 @@ export function useAPISettingsLoad(
               (newSettings as any)[key] = settingValue.key;
             }));
             
-            // Cache settings for offline use
-            localStorage.setItem('api_settings', JSON.stringify({
-              ...newSettings,
-              configs: configs || []
-            }));
-            
+            logger.info('Processed settings:', newSettings);
             setSettings(newSettings);
-            logger.info('API settings loaded successfully');
           }
         }
       } catch (error) {

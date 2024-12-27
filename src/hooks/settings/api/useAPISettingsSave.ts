@@ -49,6 +49,8 @@ export function useAPISettingsSave() {
           'docker-token': settings.dockerToken,
         };
 
+        logger.info('Saving API settings:', apiKeys);
+
         // Save settings with encryption
         for (const [key, value] of Object.entries(apiKeys)) {
           if (value && settingKeyToId[key]) {
