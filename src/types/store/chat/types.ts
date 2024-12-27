@@ -1,8 +1,9 @@
+import { Message } from '@/types/chat';
 import { ConnectionState } from '@/types/websocket';
 
 export interface ChatSession {
   id: string;
-  messages: any[];
+  messages: Message[];
   isMinimized: boolean;
   position: { x: number; y: number };
   isTacked: boolean;
