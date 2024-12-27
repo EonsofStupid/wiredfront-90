@@ -5,43 +5,85 @@ import { SetupWizard } from "@/components/setup/SetupWizard";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
-import { useLoadingStates } from "@/hooks/useLoadingStates";
+import { useAuthenticatedSession } from "@/hooks/useAuthenticatedSession";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Index() {
   const navigate = useNavigate();
   const [showSetup, setShowSetup] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
-  
-  const { 
-    isLoading, 
-    user, 
-    profile, 
-    apiConfigurations,
-    error 
-  } = useLoadingStates();
+  const [isLoadingAPI, setIsLoadingAPI] = useState(true);
+  const { isLoading, error, user } = useAuthenticatedSession();
 
   useEffect(() => {
-    const checkUserSetup = async () => {
-      if (!isLoading && user) {
-        // If we have a profile and it's not completed setup
-        if (profile && !profile.setup_completed_at) {
-          setIsFirstTimeUser(true);
-          setShowSetup(true);
-        } 
-        // If we have a profile and setup is completed
-        else if (profile?.setup_completed_at) {
-          // Check role and redirect accordingly
-          const userRole = profile.preferences?.role || 'user';
-          const redirectPath = userRole === 'admin' ? '/admin/dashboard' : '/dashboard';
-          navigate(redirectPath, { replace: true });
+    let mounted = true;
+    let apiConfigSubscription: ReturnType<typeof supabase.channel> | null = null;
+
+    const loadAPIConfigurations = async () => {
+      if (!user) return;
+
+      try {
+        // Load API configurations
+        const { data: apiConfigs, error: configError } = await supabase
+          .from('api_configurations')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_enabled', true);
+
+        if (configError) throw configError;
+
+        // Set up real-time API configuration updates
+        apiConfigSubscription = supabase
+          .channel('api-config-changes')
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'api_configurations',
+              filter: `user_id=eq.${user.id}`
+            },
+            (payload) => {
+              if (mounted) {
+                // Handle API configuration changes
+                if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
+                  toast.success('API configuration updated');
+                }
+              }
+            }
+          )
+          .subscribe();
+
+        if (mounted) {
+          setIsLoadingAPI(false);
+          
+          // Check if setup is needed
+          if (!apiConfigs?.length) {
+            setIsFirstTimeUser(true);
+            setShowSetup(true);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading API configurations:', err);
+        if (mounted) {
+          toast.error('Failed to load API configurations');
+          setIsLoadingAPI(false);
         }
       }
     };
 
-    checkUserSetup();
-  }, [user, profile, isLoading, navigate]);
+    if (user) {
+      loadAPIConfigurations();
+    }
+
+    return () => {
+      mounted = false;
+      if (apiConfigSubscription) {
+        supabase.removeChannel(apiConfigSubscription);
+      }
+    };
+  }, [user]);
 
   // Show error state if something went wrong
   if (error) {
@@ -58,8 +100,8 @@ export default function Index() {
     );
   }
 
-  // Show loading state while checking auth and loading profile
-  if (isLoading) {
+  // Show loading state while checking auth and loading configurations
+  if (isLoading || isLoadingAPI) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-6 w-6 animate-spin" />
@@ -68,7 +110,7 @@ export default function Index() {
   }
 
   // Guest mode view
-  if (!user && !isLoading) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-background/80 px-4">
         <div className="container mx-auto max-w-6xl py-16 text-center">
@@ -136,7 +178,9 @@ export default function Index() {
           onComplete={() => {
             setShowSetup(false);
             toast.success("Setup completed successfully!");
-            navigate('/dashboard', { replace: true });
+            // Redirect based on role
+            const userRole = user?.app_metadata?.role || 'user';
+            navigate(userRole === 'admin' ? '/admin/dashboard' : '/dashboard', { replace: true });
           }} 
         />
       )}
