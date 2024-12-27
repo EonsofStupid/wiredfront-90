@@ -20,10 +20,16 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
   const { isConnected, sendMessage } = useWebSocketConnection(onSendMessage);
   const { attachments, setAttachments, handleFileSelect, handlePaste } = useFileUpload();
   const { handleCommand } = useCommandHandler(onSwitchAPI, setMessage, setAttachments);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() && attachments.length === 0) return;
+    
+    if (!isConnected) {
+      toast.error('Please configure an AI provider in settings and ensure connection is established');
+      return;
+    }
     
     // Handle commands
     if (message.startsWith('/')) {
@@ -78,15 +84,23 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
     }
   };
 
+  useEffect(() => {
+    if (!isConnected) {
+      inputRef.current?.setAttribute('placeholder', 'Please configure an AI provider in settings...');
+    } else {
+      inputRef.current?.setAttribute('placeholder', 'Type a message or command (type /help for commands)...');
+    }
+  }, [isConnected]);
+
   return (
     <form onSubmit={handleSubmit} className="p-4">
       <div className="relative">
         <Textarea
+          ref={inputRef}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          placeholder="Type a message or command (type /help for commands)..."
           className="min-h-[88px] max-h-[200px] resize-none pr-24"
           disabled={isLoading || !isConnected}
         />

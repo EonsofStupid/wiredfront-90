@@ -25,6 +25,7 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = undefined;
     }
+    setIsConnected(false);
   }, []);
 
   const connect = useCallback(async () => {
@@ -41,7 +42,8 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
     // Check for valid API configuration
     const defaultProvider = getDefaultProvider();
     if (!defaultProvider || !apiSettings?.[defaultProvider]) {
-      logger.error('No valid API configuration found');
+      logger.warn('No valid API configuration found');
+      setIsConnected(false);
       toast.error('Please configure an AI provider in settings', {
         id: 'missing-api-config'
       });
@@ -67,7 +69,7 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
         logger.info('Connected to chat WebSocket');
         setIsConnected(true);
         connectionAttemptsRef.current = 0;
-        toast.success('Connected to AI chat', { id: 'ws-connected' });
+        toast.success(`Connected to ${defaultProvider.toUpperCase()} chat`, { id: 'ws-connected' });
       };
 
       ws.onclose = (event: CloseEvent) => {
@@ -84,6 +86,7 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
       ws.onerror = (error: Event) => {
         if (!mountedRef.current) return;
         logger.error('WebSocket error:', error);
+        setIsConnected(false);
         
         if (connectionAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
           toast.error('Connection error occurred', { id: 'ws-error' });
@@ -103,6 +106,7 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
       };
     } catch (error) {
       logger.error('Failed to create WebSocket connection:', error);
+      setIsConnected(false);
       if (mountedRef.current && connectionAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
         reconnectTimeoutRef.current = setTimeout(connect, RECONNECT_DELAY);
       }
@@ -118,6 +122,7 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
       connect();
     } else {
       logger.warn('No API settings configured, skipping WebSocket connection');
+      setIsConnected(false);
     }
     
     return () => {
@@ -127,12 +132,17 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
   }, [connect, cleanup, apiSettings]);
 
   const sendMessage = useCallback(async (message: any) => {
+    if (!isConnected) {
+      toast.error('Not connected to chat service', { id: 'ws-not-connected' });
+      return false;
+    }
+    
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(message));
       return true;
     }
     return false;
-  }, []);
+  }, [isConnected]);
 
   return { isConnected, sendMessage };
 };
