@@ -178,7 +178,7 @@ export type Database = {
           retry_count: number | null
           type: Database["public"]["Enums"]["message_type"]
           updated_at: string | null
-          user_id: string
+          user_id: string | null
           window_state: Json | null
         }
         Insert: {
@@ -196,7 +196,7 @@ export type Database = {
           retry_count?: number | null
           type?: Database["public"]["Enums"]["message_type"]
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
           window_state?: Json | null
         }
         Update: {
@@ -214,7 +214,7 @@ export type Database = {
           retry_count?: number | null
           type?: Database["public"]["Enums"]["message_type"]
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
           window_state?: Json | null
         }
         Relationships: [

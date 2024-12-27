@@ -35,7 +35,10 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
           toast.error('Commands are only available in authenticated mode');
           return;
         }
-        await onSendMessage(message);
+        await sendMessage({ 
+          content: message,
+          user_id: null // Set user_id to null for anonymous users
+        });
         setMessage("");
         return;
       }
@@ -84,12 +87,16 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
 
         await sendMessage({
           content: message,
-          attachments: uploadedFiles
+          attachments: uploadedFiles,
+          user_id: user.id
         });
       } else {
         // Send regular message
         if (isConnected) {
-          await sendMessage({ content: message });
+          await sendMessage({ 
+            content: message,
+            user_id: user.id
+          });
         } else {
           await onSendMessage(message);
         }
