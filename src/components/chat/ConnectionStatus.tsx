@@ -1,56 +1,18 @@
-import { SignalHigh, CloudOff, Loader2, AlertTriangle } from 'lucide-react';
-import { ConnectionState } from '@/types/websocket';
-import { cn } from '@/lib/utils';
+import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { useChatAPI } from "@/hooks/chat/useChatAPI";
 
-interface ConnectionStatusProps {
-  state: ConnectionState;
-  className?: string;
-}
+export const ConnectionStatus = () => {
+  const { isConfigured } = useChatAPI();
+  const [status, setStatus] = useState<"connected" | "disconnected">("disconnected");
 
-export const ConnectionStatus = ({ state, className }: ConnectionStatusProps) => {
-  const getIcon = () => {
-    switch (state) {
-      case 'connected':
-        return <SignalHigh className="w-4 h-4 text-green-500" />;
-      case 'connecting':
-      case 'reconnecting':
-        return <Loader2 className="w-4 h-4 text-yellow-500 animate-spin" />;
-      case 'disconnected':
-      case 'error':
-        return <CloudOff className="w-4 h-4 text-red-500" />;
-      case 'failed':
-        return <AlertTriangle className="w-4 h-4 text-red-500" />;
-      default:
-        return null;
-    }
-  };
-
-  const getTitle = () => {
-    switch (state) {
-      case 'connected':
-        return 'Connected';
-      case 'connecting':
-        return 'Connecting...';
-      case 'reconnecting':
-        return 'Reconnecting...';
-      case 'disconnected':
-        return 'Disconnected';
-      case 'error':
-        return 'Connection Error';
-      case 'failed':
-        return 'Connection Failed';
-      default:
-        return '';
-    }
-  };
+  useEffect(() => {
+    setStatus(isConfigured ? "connected" : "disconnected");
+  }, [isConfigured]);
 
   return (
-    <div 
-      className={cn("flex items-center gap-1", className)} 
-      title={getTitle()}
-    >
-      {getIcon()}
-      <span className="text-xs text-muted-foreground">{getTitle()}</span>
-    </div>
+    <Badge variant={status === "connected" ? "default" : "destructive"}>
+      {status === "connected" ? "Connected" : "Disconnected"}
+    </Badge>
   );
 };

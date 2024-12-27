@@ -26,6 +26,23 @@ export const useChatAPI = () => {
           throw configError;
         }
 
+        // Get chat settings to verify API key
+        const { data: chatSettings, error: settingsError } = await supabase
+          .from('chat_settings')
+          .select('api_key, api_provider')
+          .eq('user_id', user.id)
+          .single();
+
+        if (settingsError) {
+          logger.error('Error fetching chat settings:', settingsError);
+          throw settingsError;
+        }
+
+        if (!chatSettings?.api_key) {
+          logger.warn('No API key configured');
+          return null;
+        }
+
         const settings: Record<string, string> = {};
         
         apiConfigs?.forEach(config => {
@@ -67,6 +84,7 @@ export const useChatAPI = () => {
 
   return {
     apiSettings,
-    getDefaultProvider
+    getDefaultProvider,
+    isConfigured: !!apiSettings && Object.keys(apiSettings).length > 0
   };
 };
