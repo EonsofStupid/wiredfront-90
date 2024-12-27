@@ -2,7 +2,7 @@ import { User } from '@supabase/supabase-js';
 
 export interface SessionAuditLog {
   timestamp: Date;
-  action: 'login' | 'logout' | 'session_refresh' | 'token_refresh' | 'setup_complete' | 'error';
+  action: 'login' | 'logout' | 'session_refresh' | 'token_refresh' | 'setup_complete' | 'error' | 'session_initialized';
   userId?: string;
   metadata?: Record<string, any>;
   error?: string;
@@ -27,3 +27,18 @@ export interface SessionActions {
 }
 
 export type SessionStore = SessionState & SessionActions;
+
+// Add type for profile data
+export interface UserProfile {
+  id: string;
+  username?: string | null;
+  full_name?: string | null;
+  avatar_url?: string | null;
+  preferences?: {
+    role?: string;
+    theme?: string;
+    [key: string]: any;
+  } | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}

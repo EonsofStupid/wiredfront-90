@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
 import { useSessionStore } from '@/stores/session/store';
+import type { UserProfile } from '@/stores/session/types';
 
 export const useAuthenticatedSession = () => {
   const navigate = useNavigate();
@@ -34,6 +35,8 @@ export const useAuthenticatedSession = () => {
 
         if (profileError) throw profileError;
 
+        const typedProfile = profile as UserProfile;
+
         // 3. Set up real-time profile updates
         profileSubscription = supabase
           .channel('profile-changes')
@@ -47,9 +50,12 @@ export const useAuthenticatedSession = () => {
             },
             async (payload) => {
               if (mounted) {
+                const oldProfile = payload.old as UserProfile;
+                const newProfile = payload.new as UserProfile;
+                
                 // Handle role changes
-                if (payload.new?.preferences?.role !== payload.old?.preferences?.role) {
-                  const newRole = payload.new.preferences?.role;
+                if (newProfile?.preferences?.role !== oldProfile?.preferences?.role) {
+                  const newRole = newProfile?.preferences?.role;
                   toast.info(`Your role has been updated to ${newRole}`);
                   
                   // Redirect based on new role
@@ -71,7 +77,7 @@ export const useAuthenticatedSession = () => {
             userId: session.user.id,
             metadata: { 
               hasProfile: !!profile,
-              role: profile?.preferences?.role 
+              role: typedProfile?.preferences?.role 
             }
           });
         }
