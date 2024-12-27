@@ -50,6 +50,9 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
           throw new Error('No valid session found');
         }
         wsUrl = `${WEBSOCKET_URL}?access_token=${session.access_token}`;
+      } else {
+        // Anonymous connection - no access token needed
+        logger.info('Setting up public API access');
       }
 
       cleanup();
