@@ -14,6 +14,7 @@ export interface ChatState {
   sessions: Record<string, ChatSession>;
   currentSessionId: string | null;
   connectionState: ConnectionState;
+  isInitialized: boolean;
   preferences: {
     messageBehavior: 'enter_send' | 'enter_newline';
     notifications: boolean;
@@ -23,6 +24,7 @@ export interface ChatState {
 }
 
 export interface ChatActions {
+  initialize: () => void;
   createSession: () => string;
   switchSession: (sessionId: string) => void;
   updateSession: (sessionId: string, updates: Partial<ChatSession>) => void;
