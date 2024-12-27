@@ -23,8 +23,7 @@ export function useAPISettingsLoad(
         const { data: apiConfigs, error: configError } = await supabase
           .from('api_configurations')
           .select('*')
-          .eq('user_id', session.user.id)
-          .eq('is_enabled', true);
+          .eq('user_id', session.user.id);
 
         if (configError) {
           logger.error('Error fetching API configurations:', configError);
@@ -32,11 +31,25 @@ export function useAPISettingsLoad(
         }
 
         // Map configurations to settings state
-        const newSettings = {} as APISettingsState;
+        const newSettings = {
+          openaiKey: '',
+          huggingfaceKey: '',
+          geminiKey: '',
+          anthropicKey: '',
+          perplexityKey: '',
+          elevenLabsKey: '',
+          selectedVoice: '',
+          googleDriveKey: '',
+          dropboxKey: '',
+          awsAccessKey: '',
+          awsSecretKey: '',
+          githubToken: '',
+          dockerToken: '',
+        };
         
         apiConfigs?.forEach(config => {
-          const key = `${config.api_type}Key`;
           if (config.is_enabled) {
+            const key = `${config.api_type}Key` as keyof APISettingsState;
             (newSettings as any)[key] = 'configured';
           }
         });

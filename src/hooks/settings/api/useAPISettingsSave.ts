@@ -74,16 +74,20 @@ export function useAPISettingsSave() {
         }
       }
 
+      // Determine the active API provider
+      const activeProvider = settings.openaiKey ? 'openai' : 
+                           settings.geminiKey ? 'gemini' : 
+                           settings.anthropicKey ? 'anthropic' : 
+                           settings.huggingfaceKey ? 'huggingface' : 'openai';
+
       // Update chat settings
       const { error: chatSettingsError } = await supabase
         .from('chat_settings')
         .upsert({
           user_id: user.id,
-          api_provider: settings.openaiKey ? 'openai' : 
-                       settings.geminiKey ? 'gemini' : 
-                       settings.anthropicKey ? 'anthropic' : 
-                       settings.huggingfaceKey ? 'huggingface' : 'openai',
+          api_provider: activeProvider,
           enabled: true,
+          message_behavior: 'enter_send',
           ui_customizations: {
             theme: 'default',
             chatbot_name: 'AI Assistant',
@@ -92,6 +96,7 @@ export function useAPISettingsSave() {
         });
 
       if (chatSettingsError) {
+        logger.error('Error updating chat settings:', chatSettingsError);
         throw chatSettingsError;
       }
 
