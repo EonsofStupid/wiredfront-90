@@ -31,7 +31,7 @@ export const useChatAPI = () => {
           .from('chat_settings')
           .select('api_key, api_provider')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle(); // Changed from .single() to .maybeSingle()
 
         if (settingsError) {
           logger.error('Error fetching chat settings:', settingsError);
