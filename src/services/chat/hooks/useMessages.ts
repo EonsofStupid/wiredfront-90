@@ -1,11 +1,11 @@
-import { useMessageQuery } from './chat/useMessageQuery';
-import { useCombinedMessages } from './chat/useCombinedMessages';
-import { useSupabaseMessages } from './chat/useSupabaseMessages';
+import { useMessageQuery } from './useMessageQuery';
+import { useCombinedMessages } from './useCombinedMessages';
+import { useSupabaseMessages } from './useSupabaseMessages';
 import { toast } from 'sonner';
-import { logger } from '@/services/chat/LoggingService';
+import { logger } from '../LoggingService';
 
 export const useMessages = (sessionId: string, isMinimized: boolean) => {
-  console.log('useMessages hook called', { sessionId, isMinimized });
+  logger.info('useMessages hook called', { sessionId, isMinimized });
 
   const {
     messages: realtimeMessages,
@@ -22,7 +22,7 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     error
   } = useMessageQuery(sessionId, isMinimized);
 
-  console.log('Message query state:', { 
+  logger.info('Message query state:', { 
     realtimeMessages: realtimeMessages.length,
     queryData: data?.pages?.length,
     status,
@@ -30,7 +30,7 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
   });
 
   const allMessages = useCombinedMessages(realtimeMessages, data);
-  console.log('Combined messages:', allMessages.length);
+  logger.info('Combined messages:', allMessages.length);
 
   return {
     messages: allMessages,
@@ -40,7 +40,7 @@ export const useMessages = (sessionId: string, isMinimized: boolean) => {
     isLoading: status === 'pending',
     error,
     addOptimisticMessage: async (content: string) => {
-      console.log('Adding optimistic message', { content });
+      logger.info('Adding optimistic message', { content });
       try {
         await addOptimisticMessage(content);
       } catch (error) {
