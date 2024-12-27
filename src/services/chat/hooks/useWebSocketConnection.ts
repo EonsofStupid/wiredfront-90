@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { webSocketService } from '../WebSocketService';
 import { logger } from '../LoggingService';
 import { toast } from 'sonner';
+import { ConnectionState } from '@/types/websocket';
 
 export const useWebSocketConnection = (onMessage: (content: string) => void) => {
   const [isConnected, setIsConnected] = useState(false);
@@ -21,11 +22,15 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
   }, []);
 
   useEffect(() => {
-    webSocketService.setCallbacks({
+    const handleStateChange = (state: ConnectionState) => {
+      setIsConnected(state === 'connected');
+    };
+
+    webSocketService.setCallbacks(
       onMessage,
-      onStateChange: (state) => setIsConnected(state === 'connected'),
-      onMetricsUpdate: () => {}
-    });
+      handleStateChange,
+      () => {} // Empty metrics update handler
+    );
 
     webSocketService.connect();
 

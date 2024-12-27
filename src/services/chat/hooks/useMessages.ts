@@ -38,7 +38,7 @@ export const useMessages = (sessionId: string | null, isMinimized: boolean) => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isLoading: status === 'pending',
+    isLoading: status === 'loading',
     error,
     addOptimisticMessage: async (content: string) => {
       logger.info('Adding optimistic message', { content });
