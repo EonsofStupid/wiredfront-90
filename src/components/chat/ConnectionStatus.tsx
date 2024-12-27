@@ -51,7 +51,7 @@ export const ConnectionStatus = ({ state }: ConnectionStatusProps) => {
 
   const getStatusVariant = () => {
     if (!user) return "secondary";
-    if (!isConfigured) return "warning";
+    if (!isConfigured) return "outline";
     return status === "connected" ? "default" : "destructive";
   };
 
