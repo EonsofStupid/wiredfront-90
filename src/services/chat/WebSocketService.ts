@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { logger } from './LoggingService';
 import { ConnectionState } from '@/types/websocket';
 import { WEBSOCKET_URL } from '@/constants/websocket';
+import { toast } from 'sonner';
 
 class WebSocketService {
   private static instance: WebSocketService;
@@ -27,6 +28,7 @@ class WebSocketService {
       
       if (!session?.access_token) {
         logger.info('No authenticated session found, operating in limited mode');
+        toast.error('Please sign in to enable real-time updates');
         this.onStateChangeCallback?.('disconnected');
         return;
       }
@@ -43,6 +45,7 @@ class WebSocketService {
       
     } catch (error) {
       logger.error('Connection failed:', error);
+      toast.error('Failed to establish connection');
       this.handleReconnect();
     }
   }
@@ -52,8 +55,13 @@ class WebSocketService {
 
     this.ws.onopen = () => {
       logger.info('WebSocket connected');
+      toast.success('Connected to chat service');
       this.reconnectAttempts = 0;
       this.onStateChangeCallback?.('connected');
+      this.onMetricsUpdateCallback?.({
+        lastConnected: new Date(),
+        reconnectAttempts: 0
+      });
     };
 
     this.ws.onmessage = (event) => {
@@ -62,11 +70,13 @@ class WebSocketService {
         this.onMessageCallback?.(data);
       } catch (error) {
         logger.error('Failed to process message:', error);
+        toast.error('Failed to process incoming message');
       }
     };
 
     this.ws.onerror = (error) => {
       logger.error('WebSocket error occurred:', error);
+      toast.error('Connection error occurred');
       this.onStateChangeCallback?.('error');
     };
 
@@ -80,13 +90,14 @@ class WebSocketService {
   private async handleReconnect() {
     if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
       logger.error('Maximum reconnection attempts reached');
+      toast.error('Unable to reconnect. Please refresh the page.');
       this.onStateChangeCallback?.('error');
       return;
     }
 
     this.reconnectAttempts++;
     this.onStateChangeCallback?.('reconnecting');
-    logger.info('Attempting to reconnect...');
+    toast.info('Attempting to reconnect...');
 
     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
     await new Promise(resolve => setTimeout(resolve, delay));
@@ -111,9 +122,11 @@ class WebSocketService {
         return true;
       } catch (error) {
         logger.error('Failed to send message:', error);
+        toast.error('Failed to send message');
         return false;
       }
     }
+    toast.error('Connection not ready');
     return false;
   }
 
