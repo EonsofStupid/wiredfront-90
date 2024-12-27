@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
 import { useSessionStore } from '@/stores/session/store';
-import type { UserProfile } from '@/stores/session/types';
+import type { SessionAuditLog } from '@/stores/session/types';
 import type { Tables } from '@/integrations/supabase/types/tables';
+import { toast } from 'sonner';
+import { logger } from '@/services/chat/LoggingService';
 
 export const useAuthenticatedSession = () => {
   const navigate = useNavigate();
@@ -18,76 +19,81 @@ export const useAuthenticatedSession = () => {
 
     const initializeSession = async () => {
       try {
-        // 1. Check authentication
+        setIsLoading(true);
+        setError(null);
+
+        // 1. Check auth state
         const { data: { session }, error: authError } = await supabase.auth.getSession();
         if (authError) throw authError;
 
-        if (!session?.user) {
-          navigate('/login');
-          return;
-        }
+        if (mounted) {
+          setUser(session?.user ?? null);
 
-        // 2. Load profile and preferences
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
+          if (session?.user) {
+            // 2. Load profile
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
 
-        if (profileError) throw profileError;
+            if (profileError) throw profileError;
 
-        const typedProfile = profile as Tables['profiles']['Row'];
+            const typedProfile = profile as Tables['profiles']['Row'];
 
-        // 3. Set up real-time profile updates
-        profileSubscription = supabase
-          .channel('profile-changes')
-          .on(
-            'postgres_changes',
-            {
-              event: '*',
-              schema: 'public',
-              table: 'profiles',
-              filter: `id=eq.${session.user.id}`
-            },
-            async (payload) => {
-              if (mounted) {
-                const oldProfile = payload.old as Tables['profiles']['Row'];
-                const newProfile = payload.new as Tables['profiles']['Row'];
-                
-                // Handle role changes
-                const oldRole = oldProfile?.preferences as { role?: string } | null;
-                const newRole = newProfile?.preferences as { role?: string } | null;
-                
-                if (newRole?.role !== oldRole?.role) {
-                  toast.info(`Your role has been updated to ${newRole?.role}`);
-                  
-                  // Redirect based on new role
-                  if (newRole?.role === 'admin') {
-                    navigate('/admin/dashboard');
-                  } else {
-                    navigate('/dashboard');
+            // 3. Set up real-time profile updates
+            profileSubscription = supabase
+              .channel('profile-changes')
+              .on(
+                'postgres_changes',
+                {
+                  event: 'UPDATE',
+                  schema: 'public',
+                  table: 'profiles',
+                  filter: `id=eq.${session.user.id}`
+                },
+                async (payload) => {
+                  if (mounted) {
+                    const oldProfile = payload.old as Tables['profiles']['Row'];
+                    const newProfile = payload.new as Tables['profiles']['Row'];
+                    
+                    const oldPrefs = oldProfile?.preferences as { role?: string } | null;
+                    const newPrefs = newProfile?.preferences as { role?: string } | null;
+                    
+                    if (newPrefs?.role !== oldPrefs?.role) {
+                      toast.info(`Your role has been updated to ${newPrefs?.role || 'user'}`);
+                      
+                      // Redirect based on new role
+                      if (newPrefs?.role === 'admin') {
+                        navigate('/admin/dashboard');
+                      } else {
+                        navigate('/dashboard');
+                      }
+                    }
                   }
                 }
-              }
-            }
-          )
-          .subscribe();
+              )
+              .subscribe();
 
-        if (mounted) {
-          setUser(session.user);
-          logActivity({
-            action: 'session_initialized',
-            userId: session.user.id,
-            metadata: { 
-              hasProfile: !!profile,
-              role: (typedProfile?.preferences as { role?: string } | null)?.role 
-            }
-          });
+            // Log successful initialization
+            logActivity({
+              action: 'session_initialized' as SessionAuditLog['action'],
+              userId: session.user.id,
+              metadata: { 
+                hasProfile: !!profile,
+                role: (typedProfile?.preferences as { role?: string } | null)?.role || 'user'
+              }
+            });
+          }
         }
       } catch (err) {
-        console.error('Session initialization error:', err);
+        logger.error('Session initialization error:', err);
         if (mounted) {
           setError(err as Error);
+          logActivity({
+            action: 'error',
+            metadata: { error: (err as Error).message }
+          });
           toast.error('Failed to initialize session');
         }
       } finally {
@@ -99,7 +105,6 @@ export const useAuthenticatedSession = () => {
 
     initializeSession();
 
-    // Cleanup subscriptions
     return () => {
       mounted = false;
       if (profileSubscription) {

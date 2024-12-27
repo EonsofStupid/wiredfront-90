@@ -28,7 +28,6 @@ export interface SessionActions {
 
 export type SessionStore = SessionState & SessionActions;
 
-// Add type for profile data
 export interface UserProfile {
   id: string;
   username?: string | null;
