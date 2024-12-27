@@ -7,7 +7,7 @@ import { useSessionStore } from '@/stores/session/store';
 export const useChatAPI = () => {
   const user = useSessionStore(state => state.user);
 
-  const { data: apiSettings, error, isInitialized = true } = useQuery({
+  const { data: apiSettings, error } = useQuery({
     queryKey: ['api-settings', user?.id],
     queryFn: async () => {
       try {
@@ -80,7 +80,6 @@ export const useChatAPI = () => {
   return {
     apiSettings,
     getDefaultProvider,
-    isConfigured: !!apiSettings && Object.keys(apiSettings).length > 0,
-    isInitialized
+    isConfigured: !!apiSettings && Object.keys(apiSettings).length > 0
   };
 };
