@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
 import { useSessionStore } from '@/stores/session/store';
 import type { UserProfile } from '@/stores/session/types';
+import type { Tables } from '@/integrations/supabase/types/tables';
 
 export const useAuthenticatedSession = () => {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ export const useAuthenticatedSession = () => {
 
         if (profileError) throw profileError;
 
-        const typedProfile = profile as UserProfile;
+        const typedProfile = profile as Tables['profiles']['Row'];
 
         // 3. Set up real-time profile updates
         profileSubscription = supabase
@@ -50,16 +51,18 @@ export const useAuthenticatedSession = () => {
             },
             async (payload) => {
               if (mounted) {
-                const oldProfile = payload.old as UserProfile;
-                const newProfile = payload.new as UserProfile;
+                const oldProfile = payload.old as Tables['profiles']['Row'];
+                const newProfile = payload.new as Tables['profiles']['Row'];
                 
                 // Handle role changes
-                if (newProfile?.preferences?.role !== oldProfile?.preferences?.role) {
-                  const newRole = newProfile?.preferences?.role;
-                  toast.info(`Your role has been updated to ${newRole}`);
+                const oldRole = oldProfile?.preferences as { role?: string } | null;
+                const newRole = newProfile?.preferences as { role?: string } | null;
+                
+                if (newRole?.role !== oldRole?.role) {
+                  toast.info(`Your role has been updated to ${newRole?.role}`);
                   
                   // Redirect based on new role
-                  if (newRole === 'admin') {
+                  if (newRole?.role === 'admin') {
                     navigate('/admin/dashboard');
                   } else {
                     navigate('/dashboard');
@@ -77,7 +80,7 @@ export const useAuthenticatedSession = () => {
             userId: session.user.id,
             metadata: { 
               hasProfile: !!profile,
-              role: typedProfile?.preferences?.role 
+              role: (typedProfile?.preferences as { role?: string } | null)?.role 
             }
           });
         }
