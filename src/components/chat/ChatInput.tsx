@@ -35,15 +35,13 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
           toast.error('Commands are only available in authenticated mode');
           return;
         }
-        await sendMessage({ 
-          content: message,
-          user_id: null // Set user_id to null for anonymous users
-        });
+        // Allow basic message sending in limited mode
+        await onSendMessage(message);
         setMessage("");
         return;
       }
       
-      // Handle authenticated mode
+      // Handle authenticated mode with full features
       if (message.startsWith('/')) {
         if (!isConnected) {
           toast.error('Please configure an AI provider in settings');
@@ -55,10 +53,10 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
         }
       }
 
-      // Handle file uploads for authenticated users
+      // Handle file uploads (authenticated only)
       if (attachments.length > 0) {
         if (!isConnected) {
-          toast.error('Please configure an AI provider to use file attachments');
+          toast.error('Please sign in to use file attachments');
           return;
         }
 
@@ -92,14 +90,10 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
         });
       } else {
         // Send regular message
-        if (isConnected) {
-          await sendMessage({ 
-            content: message,
-            user_id: user.id
-          });
-        } else {
-          await onSendMessage(message);
-        }
+        await sendMessage({ 
+          content: message,
+          user_id: user?.id || null
+        });
       }
       
       setMessage("");

@@ -1,53 +1,39 @@
+import { useEffect, useState } from 'react';
 import { useMessageQuery } from './useMessageQuery';
-import { useCombinedMessages } from './useCombinedMessages';
-import { useSupabaseMessages } from './useSupabaseMessages';
-import { toast } from 'sonner';
+import { useMessageSubscription } from '@/hooks/useMessageSubscription';
+import type { Message } from '@/types/chat';
 import { logger } from '../LoggingService';
-import { Message } from '@/types/chat';
 
 export const useMessages = (sessionId: string | null, isMinimized: boolean) => {
-  logger.info('useMessages hook called', { sessionId, isMinimized });
+  const [realtimeMessages, setRealtimeMessages] = useState<Message[]>([]);
+  const { data, status, error } = useMessageQuery(sessionId, isMinimized);
 
-  const {
-    messages: realtimeMessages,
-    addMessage,
-    addOptimisticMessage
-  } = useSupabaseMessages(sessionId);
+  const onNewMessage = (message: Message) => {
+    setRealtimeMessages(prev => [message, ...prev]);
+  };
 
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    status,
-    error
-  } = useMessageQuery(sessionId, isMinimized);
+  useMessageSubscription(sessionId, onNewMessage);
 
-  logger.info('Message query state:', { 
-    realtimeMessages: realtimeMessages.length,
-    queryData: data?.pages?.length,
-    status,
-    error 
-  });
+  useEffect(() => {
+    logger.info('Message query state:', {
+      realtimeMessages: realtimeMessages.length,
+      queryData: data?.pages[0]?.length,
+      status,
+      error
+    });
+  }, [realtimeMessages, data, status, error]);
 
-  const allMessages = useCombinedMessages(realtimeMessages, data);
-  logger.info('Combined messages:', allMessages.length);
+  const combinedMessages = [
+    ...realtimeMessages,
+    ...(data?.pages.flatMap(page => page) || [])
+  ];
+
+  logger.info('Combined messages:', combinedMessages);
 
   return {
-    messages: allMessages,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading: status === 'pending',
+    messages: combinedMessages,
+    isLoading: status === 'loading',
     error,
-    addOptimisticMessage: async (content: string) => {
-      logger.info('Adding optimistic message', { content });
-      try {
-        await addOptimisticMessage(content);
-      } catch (error) {
-        logger.error('Failed to send message', { error, sessionId });
-        toast.error('Failed to send message');
-      }
-    }
+    hasMore: data?.pages[data.pages.length - 1]?.length === 20
   };
 };
