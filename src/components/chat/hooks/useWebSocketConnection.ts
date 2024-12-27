@@ -44,9 +44,6 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
     if (!defaultProvider || !apiSettings?.[defaultProvider]) {
       logger.warn('No valid API configuration found');
       setIsConnected(false);
-      toast.error('Please configure an AI provider in settings', {
-        id: 'missing-api-config'
-      });
       return;
     }
 
@@ -60,6 +57,7 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
       }
 
       const wsUrl = `${WEBSOCKET_URL}?access_token=${session.access_token}&provider=${defaultProvider}`;
+      logger.info('Connecting to WebSocket with URL:', wsUrl);
       
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
@@ -119,6 +117,7 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
 
     // Only attempt connection if we have valid API settings
     if (apiSettings && Object.keys(apiSettings).length > 0) {
+      logger.info('API settings found, attempting connection');
       connect();
     } else {
       logger.warn('No API settings configured, skipping WebSocket connection');
