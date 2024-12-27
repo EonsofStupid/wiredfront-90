@@ -6,11 +6,6 @@ import { isSettingValue, SettingValue } from "../types";
 import { APISettingsState } from "@/types/store/settings/api";
 import { logger } from "@/services/chat/LoggingService";
 
-interface DecryptedValue {
-  key: string;
-  [key: string]: any;
-}
-
 export function useAPISettingsLoad(
   setUser: (user: any) => void,
   setSettings: (settings: APISettingsState) => void,
@@ -32,7 +27,8 @@ export function useAPISettingsLoad(
         setUser(session.user);
 
         if (session.user) {
-          // Load settings
+          logger.info('Loading API settings...');
+          
           const { data: allSettings, error: settingsError } = await supabase
             .from('settings')
             .select('id, key');
@@ -51,7 +47,7 @@ export function useAPISettingsLoad(
 
           if (userSettingsError) throw userSettingsError;
 
-          logger.info('Fetched user settings:', userSettings);
+          logger.info('Fetched user settings');
 
           if (userSettings) {
             const newSettings = {} as APISettingsState;
@@ -85,7 +81,7 @@ export function useAPISettingsLoad(
               (newSettings as any)[key] = settingValue.key;
             }));
             
-            logger.info('Processed settings:', newSettings);
+            logger.info('Setting processed API settings');
             setSettings(newSettings);
           }
         }

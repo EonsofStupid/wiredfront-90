@@ -22,6 +22,8 @@ export function useAPISettingsSave() {
 
     const attemptSave = async (): Promise<boolean> => {
       try {
+        logger.info('Starting API settings save...');
+        
         const { data: allSettings, error: settingsError } = await supabase
           .from('settings')
           .select('id, key');
@@ -49,7 +51,7 @@ export function useAPISettingsSave() {
           'docker-token': settings.dockerToken,
         };
 
-        logger.info('Saving API settings:', apiKeys);
+        logger.info('Saving API settings...');
 
         // Save settings with encryption
         for (const [key, value] of Object.entries(apiKeys)) {
@@ -62,7 +64,10 @@ export function useAPISettingsSave() {
                 value: { key: value }
               });
 
-            if (error) throw error;
+            if (error) {
+              logger.error(`Error saving setting ${key}:`, error);
+              throw error;
+            }
           }
         }
 
@@ -71,6 +76,7 @@ export function useAPISettingsSave() {
         
         logger.info('API settings saved successfully');
         toast.success("API settings have been saved successfully");
+        setIsSaving(false);
         return true;
       } catch (error) {
         logger.error('Error saving API settings:', error);
@@ -82,7 +88,8 @@ export function useAPISettingsSave() {
           return attemptSave();
         }
         
-        toast.error("Failed to save API settings. Changes saved locally.");
+        setIsSaving(false);
+        toast.error("Failed to save API settings");
         return false;
       }
     };
