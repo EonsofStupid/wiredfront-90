@@ -10,6 +10,7 @@ class WebSocketService {
   private readonly MAX_RECONNECT_ATTEMPTS = 3;
   private onMessageCallback: ((data: any) => void) | null = null;
   private onStateChangeCallback: ((state: ConnectionState) => void) | null = null;
+  private onMetricsUpdateCallback: ((metrics: any) => void) | null = null;
 
   private constructor() {}
 
@@ -23,15 +24,15 @@ class WebSocketService {
   async connect() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      let wsUrl = WEBSOCKET_URL;
       
-      if (session?.access_token) {
-        wsUrl = `${WEBSOCKET_URL}?access_token=${session.access_token}`;
-        logger.info('Setting up authenticated connection');
-      } else {
-        logger.info('Setting up public API access');
+      if (!session?.access_token) {
+        logger.info('No authenticated session found, operating in limited mode');
+        this.onStateChangeCallback?.('disconnected');
+        return;
       }
 
+      const wsUrl = `${WEBSOCKET_URL}?access_token=${session.access_token}`;
+      
       if (this.ws) {
         this.ws.close();
         this.ws = null;
@@ -93,9 +94,14 @@ class WebSocketService {
     this.connect();
   }
 
-  setCallbacks(onMessage: (data: any) => void, onStateChange: (state: ConnectionState) => void) {
+  setCallbacks(
+    onMessage: (data: any) => void,
+    onStateChange: (state: ConnectionState) => void,
+    onMetricsUpdate: (metrics: any) => void
+  ) {
     this.onMessageCallback = onMessage;
     this.onStateChangeCallback = onStateChange;
+    this.onMetricsUpdateCallback = onMetricsUpdate;
   }
 
   send(message: any): boolean {
