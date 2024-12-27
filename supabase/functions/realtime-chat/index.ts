@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { OpenAIWebSocket } from './utils/openai.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,82 +7,82 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const url = new URL(req.url);
-  const isPublic = url.searchParams.get('public') === 'true';
-  
   try {
+    const url = new URL(req.url);
+    const accessToken = url.searchParams.get('access_token');
+
+    if (!accessToken) {
+      throw new Error('No access token provided');
+    }
+
+    // Initialize Supabase client
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    let apiKey: string;
-    let userId: string | null = null;
+    // Verify the user's session
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
     
-    if (isPublic) {
-      // Use public API key for non-authenticated users
-      apiKey = Deno.env.get('PUBLIC_OPENAI_KEY') ?? '';
-      if (!apiKey) {
-        throw new Error('Public API key not configured');
-      }
-      console.log('Using public API key for non-authenticated user');
-    } else {
-      // Get user-specific API key for authenticated users
-      const authHeader = req.headers.get('Authorization');
-      if (!authHeader) {
-        throw new Error('No authorization header');
-      }
-
-      const { data: { user }, error: authError } = await supabase.auth.getUser(
-        authHeader.replace('Bearer ', '')
-      );
-
-      if (authError || !user) {
-        throw new Error('Invalid authentication');
-      }
-
-      userId = user.id;
-
-      // Get user's API configuration
-      const { data: apiConfig, error: configError } = await supabase
-        .from('api_configurations')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_enabled', true)
-        .eq('api_type', 'openai')
-        .single();
-
-      if (configError || !apiConfig) {
-        throw new Error('No API configuration found for user');
-      }
-
-      // Get chat settings to verify API key
-      const { data: chatSettings, error: settingsError } = await supabase
-        .from('chat_settings')
-        .select('api_key')
-        .eq('user_id', user.id)
-        .single();
-
-      if (settingsError || !chatSettings?.api_key) {
-        throw new Error('API key not configured for user');
-      }
-
-      apiKey = chatSettings.api_key;
-      console.log('Using user-specific API key for authenticated user:', userId);
+    if (authError || !user) {
+      throw new Error('Invalid authentication');
     }
+
+    console.log('User authenticated:', user.id);
 
     // Upgrade the connection to WebSocket
     const { response, socket } = Deno.upgradeWebSocket(req);
-    
-    const openAI = new OpenAIWebSocket(socket, apiKey, userId);
-    
+
+    socket.onopen = () => {
+      console.log('Client connected');
+      
+      // Send welcome message
+      socket.send(JSON.stringify({
+        type: 'connection_established',
+        userId: user.id,
+        timestamp: new Date().toISOString()
+      }));
+    };
+
+    socket.onmessage = async (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('Received message:', data);
+
+        // Echo back the message for now
+        socket.send(JSON.stringify({
+          type: 'message_received',
+          data,
+          timestamp: new Date().toISOString()
+        }));
+
+      } catch (error) {
+        console.error('Error processing message:', error);
+        socket.send(JSON.stringify({
+          type: 'error',
+          error: error.message,
+          timestamp: new Date().toISOString()
+        }));
+      }
+    };
+
+    socket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    socket.onclose = () => {
+      console.log('Client disconnected');
+    };
+
     return response;
+
   } catch (error) {
-    console.error('WebSocket connection error:', error);
+    console.error('Connection error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
