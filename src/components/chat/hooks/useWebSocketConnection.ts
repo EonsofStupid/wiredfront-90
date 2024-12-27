@@ -4,6 +4,7 @@ import { logger } from '@/services/chat/LoggingService';
 import { WEBSOCKET_URL } from '@/constants/websocket';
 import { supabase } from "@/integrations/supabase/client";
 import { useChatAPI } from '@/hooks/chat/useChatAPI';
+import { useSessionStore } from '@/stores/session/store';
 
 export const useWebSocketConnection = (onMessage: (content: string) => void) => {
   const [isConnected, setIsConnected] = useState(false);
@@ -12,6 +13,7 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
   const mountedRef = useRef(true);
   const connectionAttemptsRef = useRef(0);
   const { apiSettings, getDefaultProvider } = useChatAPI();
+  const user = useSessionStore(state => state.user);
   
   const MAX_RECONNECT_ATTEMPTS = 3;
   const RECONNECT_DELAY = 3000;
@@ -39,96 +41,90 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
       return;
     }
 
-    // Check for valid API configuration
-    const defaultProvider = getDefaultProvider();
-    if (!defaultProvider || !apiSettings?.[defaultProvider]) {
-      logger.warn('No valid API configuration found');
-      setIsConnected(false);
-      return;
-    }
-
-    cleanup();
-    connectionAttemptsRef.current++;
-
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error('No valid session found');
-      }
-
-      const wsUrl = `${WEBSOCKET_URL}?access_token=${session.access_token}&provider=${defaultProvider}`;
-      logger.info('Connecting to WebSocket with URL:', wsUrl);
+      let wsUrl: string;
       
-      const ws = new WebSocket(wsUrl);
-      wsRef.current = ws;
-
-      ws.onopen = () => {
-        if (!mountedRef.current) return;
-        logger.info('Connected to chat WebSocket');
-        setIsConnected(true);
-        connectionAttemptsRef.current = 0;
-        toast.success(`Connected to ${defaultProvider.toUpperCase()} chat`, { id: 'ws-connected' });
-      };
-
-      ws.onclose = (event: CloseEvent) => {
-        if (!mountedRef.current) return;
-        logger.info('Disconnected from chat WebSocket');
-        setIsConnected(false);
-        wsRef.current = null;
-
-        if (!event.wasClean && mountedRef.current && connectionAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
-          reconnectTimeoutRef.current = setTimeout(connect, RECONNECT_DELAY);
+      if (user) {
+        // Authenticated user flow
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          throw new Error('No valid session found');
         }
-      };
+        wsUrl = `${WEBSOCKET_URL}?access_token=${session.access_token}`;
+      } else {
+        // Public user flow
+        const { data: publicConfig } = await supabase
+          .from('api_configurations')
+          .select('*')
+          .eq('api_type', 'openai')
+          .eq('is_default', true)
+          .single();
 
-      ws.onerror = (error: Event) => {
-        if (!mountedRef.current) return;
-        logger.error('WebSocket error:', error);
-        setIsConnected(false);
-        
-        if (connectionAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
-          toast.error('Connection error occurred', { id: 'ws-error' });
+        if (!publicConfig) {
+          throw new Error('No public API configuration found');
         }
-      };
-
-      ws.onmessage = (event) => {
-        if (!mountedRef.current) return;
-        try {
-          const data = JSON.parse(event.data);
-          if (data.type === 'response.message.delta') {
-            onMessage(data.delta);
-          }
-        } catch (error) {
-          logger.error('Error processing message:', error);
-        }
-      };
-    } catch (error) {
-      logger.error('Failed to create WebSocket connection:', error);
-      setIsConnected(false);
-      if (mountedRef.current && connectionAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
-        reconnectTimeoutRef.current = setTimeout(connect, RECONNECT_DELAY);
+        wsUrl = `${WEBSOCKET_URL}?public=true`;
       }
+
+      cleanup();
+      connectionAttemptsRef.current++;
+
+      logger.info('Connecting to WebSocket:', { wsUrl });
+      wsRef.current = new WebSocket(wsUrl);
+      setupEventHandlers();
+      
+    } catch (error) {
+      logger.error('Connection failed:', error);
+      await handleReconnect();
     }
-  }, [cleanup, onMessage, apiSettings, getDefaultProvider]);
+  }, [cleanup, user]);
+
+  const setupEventHandlers = () => {
+    if (!wsRef.current) return;
+
+    wsRef.current.onopen = () => {
+      logger.info('WebSocket connected');
+      setIsConnected(true);
+      connectionAttemptsRef.current = 0;
+    };
+
+    wsRef.current.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        onMessage?.(data);
+      } catch (error) {
+        logger.error('Failed to process message:', error);
+      }
+    };
+
+    wsRef.current.onerror = () => {
+      logger.error('WebSocket error occurred');
+      setIsConnected(false);
+    };
+
+    wsRef.current.onclose = () => {
+      logger.info('WebSocket disconnected');
+      setIsConnected(false);
+      handleReconnect();
+    };
+  };
+
+  const handleReconnect = async () => {
+    if (connectionAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
+      logger.info('Attempting to reconnect...');
+      reconnectTimeoutRef.current = setTimeout(connect, RECONNECT_DELAY);
+    }
+  };
 
   useEffect(() => {
     mountedRef.current = true;
-    connectionAttemptsRef.current = 0;
+    connect();
 
-    // Only attempt connection if we have valid API settings
-    if (apiSettings && Object.keys(apiSettings).length > 0) {
-      logger.info('API settings found, attempting connection');
-      connect();
-    } else {
-      logger.warn('No API settings configured, skipping WebSocket connection');
-      setIsConnected(false);
-    }
-    
     return () => {
       mountedRef.current = false;
       cleanup();
     };
-  }, [connect, cleanup, apiSettings]);
+  }, [connect, cleanup]);
 
   const sendMessage = useCallback(async (message: any) => {
     if (!isConnected) {
@@ -137,8 +133,13 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
     }
     
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(message));
-      return true;
+      try {
+        wsRef.current.send(JSON.stringify(message));
+        return true;
+      } catch (error) {
+        logger.error('Failed to send message:', error);
+        return false;
+      }
     }
     return false;
   }, [isConnected]);

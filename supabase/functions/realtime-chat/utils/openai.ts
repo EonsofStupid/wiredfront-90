@@ -4,21 +4,18 @@ export class OpenAIWebSocket {
   private ws: WebSocket;
   private clientSocket: WebSocket;
   private requestId: string;
+  private apiKey: string;
 
-  constructor(clientSocket: WebSocket) {
+  constructor(clientSocket: WebSocket, apiKey: string) {
     this.requestId = crypto.randomUUID();
     this.clientSocket = clientSocket;
-    const apiKey = Deno.env.get('OPENAI_API_KEY');
+    this.apiKey = apiKey;
     
-    if (!apiKey) {
-      throw new Error('OpenAI API key not configured');
-    }
-
     this.ws = new WebSocket(
       'wss://api.openai.com/v1/chat/completions',
       [
         'realtime',
-        `openai-insecure-api-key.${apiKey}`,
+        `openai-insecure-api-key.${this.apiKey}`,
         'openai-beta.realtime-v1',
       ]
     );
