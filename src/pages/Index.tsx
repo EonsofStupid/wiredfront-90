@@ -2,50 +2,73 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DraggableChat } from "@/components/chat/DraggableChat";
 import { SetupWizard } from "@/components/setup/SetupWizard";
-import { useAuthStore } from "@/stores/auth";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
+import { useLoadingStates } from "@/hooks/useLoadingStates";
 
 export default function Index() {
-  const { user, loading } = useAuthStore();
   const navigate = useNavigate();
   const [showSetup, setShowSetup] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
+  
+  const { 
+    isLoading, 
+    user, 
+    profile, 
+    apiConfigurations,
+    error 
+  } = useLoadingStates();
 
   useEffect(() => {
     const checkUserSetup = async () => {
-      if (!loading && user) {
-        // Check if user has completed setup
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('setup_completed_at, onboarding_status')
-          .eq('id', user.id)
-          .single();
-
-        if (!profile?.setup_completed_at) {
+      if (!isLoading && user) {
+        // If we have a profile and it's not completed setup
+        if (profile && !profile.setup_completed_at) {
           setIsFirstTimeUser(true);
           setShowSetup(true);
-        } else {
-          navigate('/dashboard', { replace: true });
+        } 
+        // If we have a profile and setup is completed
+        else if (profile?.setup_completed_at) {
+          // Check role and redirect accordingly
+          const userRole = profile.preferences?.role || 'user';
+          const redirectPath = userRole === 'admin' ? '/admin/dashboard' : '/dashboard';
+          navigate(redirectPath, { replace: true });
         }
       }
     };
 
     checkUserSetup();
-  }, [user, loading, navigate]);
+  }, [user, profile, isLoading, navigate]);
 
-  if (loading) {
+  // Show error state if something went wrong
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="text-destructive mb-4">Error loading application</div>
+        <Button 
+          variant="outline" 
+          onClick={() => window.location.reload()}
+        >
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
+  // Show loading state while checking auth and loading profile
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-pulse">Loading...</div>
+        <Loader2 className="h-6 w-6 animate-spin" />
       </div>
     );
   }
 
   // Guest mode view
-  if (!user && !loading) {
+  if (!user && !isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-background/80 px-4">
         <div className="container mx-auto max-w-6xl py-16 text-center">
