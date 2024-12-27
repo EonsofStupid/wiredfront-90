@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { useWindowPosition } from '@/hooks/useWindowPosition';
-import { useMessages } from '@/hooks/useMessages';
+import { useMessages } from '@/services/chat/hooks/useMessages';
 import { ChatWindow } from './ChatWindow';
 import { ChatDragContext } from './ChatDragContext';
 import { toast } from 'sonner';
@@ -9,7 +9,7 @@ import { ChatSessionControls } from './ChatSessionControls';
 import { useChatStore } from '@/stores/chat/store';
 import { useUIStore } from '@/stores/ui/store';
 import { ChatContainer } from './ChatContainer';
-import { useAPISwitch } from '@/hooks/chat/useAPISwitch';
+import { useAPISwitch } from '@/services/chat/hooks/useAPISwitch';
 
 export const DraggableChat = () => {
   const CHAT_WIDTH = 414;

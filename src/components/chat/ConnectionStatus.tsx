@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { useChatAPI } from "@/hooks/chat/useChatAPI";
+import { useChatAPI } from "@/services/chat/hooks/useChatAPI";
 import { ConnectionState } from "@/types/websocket";
 import { useSessionStore } from "@/stores/session/store";
 

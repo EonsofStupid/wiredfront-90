@@ -1,0 +1,23 @@
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+
+export const useMessageQuery = (sessionId: string, isMinimized: boolean) => {
+  return useInfiniteQuery({
+    queryKey: ['messages', sessionId],
+    queryFn: async ({ pageParam = 0 }) => {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('chat_session_id', sessionId)
+        .order('created_at', { ascending: false })
+        .range(pageParam * 20, (pageParam + 1) * 20 - 1);
+
+      if (error) throw error;
+      return data;
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage?.length === 20 ? allPages.length : undefined;
+    },
+    enabled: !isMinimized,
+  });
+};
