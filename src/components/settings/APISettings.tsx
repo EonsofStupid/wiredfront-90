@@ -5,6 +5,8 @@ import { CloudStorageSettings } from "./api/CloudStorageSettings";
 import { DevelopmentSettings } from "./api/DevelopmentSettings";
 import { VoiceSettings } from "./api/VoiceSettings";
 import { useAPISettings } from "@/hooks/settings/api";
+import { toast } from "sonner";
+
 export function APISettings() {
   const {
     settings,
@@ -13,6 +15,16 @@ export function APISettings() {
     handleSave,
     user
   } = useAPISettings();
+
+  const onSave = async () => {
+    try {
+      await handleSave();
+      toast.success("API settings saved successfully");
+    } catch (error) {
+      console.error('Failed to save API settings:', error);
+      toast.error("Failed to save API settings. Please try again.");
+    }
+  };
 
   if (!user) {
     return null;
@@ -83,11 +95,18 @@ export function APISettings() {
       </Tabs>
 
       <Button 
-        onClick={handleSave}
+        onClick={onSave}
         disabled={isSaving}
         className="w-full md:w-auto"
       >
-        {isSaving ? "Saving..." : "Save API Settings"}
+        {isSaving ? (
+          <span className="flex items-center gap-2">
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            Saving...
+          </span>
+        ) : (
+          "Save API Settings"
+        )}
       </Button>
     </div>
   );
