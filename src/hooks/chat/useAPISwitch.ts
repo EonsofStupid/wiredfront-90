@@ -4,12 +4,19 @@ import { toast } from 'sonner';
 import { useSessionStore } from '@/stores/session/store';
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from '@/services/chat/LoggingService';
+import { useChatStore } from '@/stores/chat/store';
 
 export const useAPISwitch = () => {
-  const { apiSettings, getDefaultProvider } = useChatAPI();
+  const { apiSettings, getDefaultProvider, isError } = useChatAPI();
   const [currentAPI, setCurrentAPI] = useState<string | null>(null);
   const [hasShownToast, setHasShownToast] = useState(false);
   const user = useSessionStore(state => state.user);
+  const initialize = useChatStore(state => state.initialize);
+
+  useEffect(() => {
+    // Initialize the chat store
+    initialize();
+  }, [initialize]);
 
   const initializeAPI = useCallback(async () => {
     try {
@@ -33,27 +40,43 @@ export const useAPISwitch = () => {
           }
         } else {
           // Public user flow - use default OpenAI configuration
-          logger.info('Setting up public API access');
-          const { data: publicConfig, error } = await supabase
-            .from('api_configurations')
-            .select('*')
-            .eq('api_type', 'openai')
-            .eq('is_default', true)
-            .maybeSingle();
+          try {
+            logger.info('Setting up public API access');
+            const { data: publicConfig, error } = await supabase
+              .from('api_configurations')
+              .select('*')
+              .eq('api_type', 'openai')
+              .eq('is_default', true)
+              .maybeSingle();
 
-          if (publicConfig && !error) {
-            setCurrentAPI('openai');
+            if (publicConfig && !error) {
+              setCurrentAPI('openai');
+              if (!hasShownToast) {
+                toast.success('Using public API access');
+                setHasShownToast(true);
+              }
+            } else {
+              logger.error('No public API configuration found:', error);
+              if (!hasShownToast) {
+                toast.error('Unable to access API configuration');
+                setHasShownToast(true);
+              }
+            }
+          } catch (error) {
+            logger.error('Failed to fetch public API configuration:', error);
             if (!hasShownToast) {
-              toast.success('Using public API access');
+              toast.error('Unable to connect to API service');
               setHasShownToast(true);
             }
-          } else {
-            logger.error('No public API configuration found:', error);
           }
         }
       }
     } catch (error) {
       logger.error('Error initializing API:', error);
+      if (!hasShownToast) {
+        toast.error('Failed to initialize API service');
+        setHasShownToast(true);
+      }
     }
   }, [apiSettings, currentAPI, getDefaultProvider, hasShownToast, user]);
 
@@ -63,7 +86,6 @@ export const useAPISwitch = () => {
 
   const handleSwitchAPI = useCallback((provider: string) => {
     if (user) {
-      // Only allow API switching for authenticated users
       if (apiSettings?.[provider.toLowerCase()]) {
         setCurrentAPI(provider);
         toast.success(`Now using ${provider.toUpperCase()} as the provider`);

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { ChatStore, ChatSession } from './types';
+import { logger } from '@/services/chat/LoggingService';
 
 const initialPreferences = {
   messageBehavior: 'enter_send' as const,
@@ -9,13 +10,25 @@ const initialPreferences = {
   typingIndicators: true,
 };
 
+const initialState = {
+  sessions: {},
+  currentSessionId: null,
+  connectionState: 'initial' as const,
+  preferences: initialPreferences,
+  isInitialized: false
+};
+
 export const useChatStore = create<ChatStore>()(
   persist(
     (set, get) => ({
-      sessions: {},
-      currentSessionId: null,
-      connectionState: 'initial',
-      preferences: initialPreferences,
+      ...initialState,
+
+      initialize: () => {
+        if (!get().isInitialized) {
+          set({ isInitialized: true });
+          logger.info('Chat store initialized');
+        }
+      },
 
       createSession: () => {
         const sessionId = crypto.randomUUID();
@@ -33,12 +46,14 @@ export const useChatStore = create<ChatStore>()(
           currentSessionId: sessionId,
         }));
 
+        logger.info('New chat session created:', { sessionId });
         return sessionId;
       },
 
       switchSession: (sessionId) => {
         if (get().sessions[sessionId]) {
           set({ currentSessionId: sessionId });
+          logger.info('Switched to session:', { sessionId });
         }
       },
 
@@ -76,6 +91,7 @@ export const useChatStore = create<ChatStore>()(
 
       setConnectionState: (state) => {
         set({ connectionState: state });
+        logger.info('Connection state updated:', { state });
       },
 
       removeSession: (sessionId) => {
@@ -83,7 +99,6 @@ export const useChatStore = create<ChatStore>()(
           const newSessions = { ...state.sessions };
           delete newSessions[sessionId];
           
-          // If we're removing the current session, switch to another one
           let newCurrentSessionId = state.currentSessionId;
           if (sessionId === state.currentSessionId) {
             const remainingSessionIds = Object.keys(newSessions);
