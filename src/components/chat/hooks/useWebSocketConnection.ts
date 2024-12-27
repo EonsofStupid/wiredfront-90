@@ -12,7 +12,7 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
   const mountedRef = useRef(true);
   const connectionAttemptsRef = useRef(0);
-  const { apiSettings, getDefaultProvider } = useChatAPI();
+  const { apiSettings } = useChatAPI();
   const user = useSessionStore(state => state.user);
   
   const MAX_RECONNECT_ATTEMPTS = 3;
@@ -34,45 +34,25 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
     if (!mountedRef.current || connectionAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
       if (connectionAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
         logger.error('Maximum reconnection attempts reached');
-        toast.error('Unable to establish connection. Please try again later.', {
-          id: 'ws-max-attempts'
-        });
+        toast.error('Unable to establish connection. Please try again later.');
+        return;
       }
       return;
     }
 
     try {
-      let wsUrl: string;
-      
-      if (user) {
-        // Authenticated user flow
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.access_token) {
-          throw new Error('No valid session found');
-        }
-        wsUrl = `${WEBSOCKET_URL}?access_token=${session.access_token}`;
-      } else {
-        // Public user flow - use default public API configuration
-        const { data: publicConfig, error } = await supabase
-          .from('api_configurations')
-          .select('*')
-          .eq('api_type', 'openai')
-          .eq('is_default', true)
-          .single();
-
-        if (error || !publicConfig) {
-          logger.error('Error fetching public API configuration:', error);
-          throw new Error('No public API configuration found');
-        }
-
-        wsUrl = `${WEBSOCKET_URL}?public=true`;
-        logger.info('Using public API configuration');
+      // Get current session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No valid session found');
       }
 
       cleanup();
       connectionAttemptsRef.current++;
 
+      const wsUrl = `${WEBSOCKET_URL}?access_token=${session.access_token}`;
       logger.info('Connecting to WebSocket:', { wsUrl });
+      
       wsRef.current = new WebSocket(wsUrl);
       setupEventHandlers();
       
@@ -80,7 +60,7 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
       logger.error('Connection failed:', error);
       await handleReconnect();
     }
-  }, [cleanup, user]);
+  }, [cleanup]);
 
   const setupEventHandlers = () => {
     if (!wsRef.current) return;
@@ -89,11 +69,13 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
       logger.info('WebSocket connected');
       setIsConnected(true);
       connectionAttemptsRef.current = 0;
+      toast.success('Connected to chat service');
     };
 
     wsRef.current.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        logger.debug('Received message:', data);
         onMessage?.(data);
       } catch (error) {
         logger.error('Failed to process message:', error);
@@ -103,35 +85,40 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
     wsRef.current.onerror = (error) => {
       logger.error('WebSocket error occurred:', error);
       setIsConnected(false);
+      toast.error('Connection error occurred');
     };
 
     wsRef.current.onclose = () => {
       logger.info('WebSocket disconnected');
       setIsConnected(false);
       handleReconnect();
+      toast.error('Disconnected from chat service');
     };
   };
 
   const handleReconnect = async () => {
     if (connectionAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
       logger.info('Attempting to reconnect...');
+      toast.info('Attempting to reconnect...');
       reconnectTimeoutRef.current = setTimeout(connect, RECONNECT_DELAY);
     }
   };
 
   useEffect(() => {
     mountedRef.current = true;
-    connect();
+    if (user) {
+      connect();
+    }
 
     return () => {
       mountedRef.current = false;
       cleanup();
     };
-  }, [connect, cleanup]);
+  }, [connect, cleanup, user]);
 
   const sendMessage = useCallback(async (message: any) => {
     if (!isConnected) {
-      toast.error('Not connected to chat service', { id: 'ws-not-connected' });
+      toast.error('Not connected to chat service');
       return false;
     }
     
