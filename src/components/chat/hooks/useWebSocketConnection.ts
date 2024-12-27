@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';
 import { WEBSOCKET_URL } from '@/constants/websocket';
+import { supabase } from "@/integrations/supabase/client";
+import { useChatAPI } from '@/hooks/chat/useChatAPI';
 
 export const useWebSocketConnection = (onMessage: (content: string) => void) => {
   const [isConnected, setIsConnected] = useState(false);
@@ -9,6 +11,8 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
   const mountedRef = useRef(true);
   const connectionAttemptsRef = useRef(0);
+  const { apiSettings, getDefaultProvider } = useChatAPI();
+  
   const MAX_RECONNECT_ATTEMPTS = 3;
   const RECONNECT_DELAY = 3000;
 
@@ -23,7 +27,7 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
     }
   }, []);
 
-  const connect = useCallback(() => {
+  const connect = useCallback(async () => {
     if (!mountedRef.current || connectionAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
       if (connectionAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
         logger.error('Maximum reconnection attempts reached');
@@ -34,11 +38,28 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
       return;
     }
 
+    // Check for valid API configuration
+    const defaultProvider = getDefaultProvider();
+    if (!defaultProvider || !apiSettings?.[defaultProvider]) {
+      logger.error('No valid API configuration found');
+      toast.error('Please configure an AI provider in settings', {
+        id: 'missing-api-config'
+      });
+      return;
+    }
+
     cleanup();
     connectionAttemptsRef.current++;
 
     try {
-      const ws = new WebSocket(WEBSOCKET_URL);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No valid session found');
+      }
+
+      const wsUrl = `${WEBSOCKET_URL}?access_token=${session.access_token}&provider=${defaultProvider}`;
+      
+      const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {
@@ -64,7 +85,6 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
         if (!mountedRef.current) return;
         logger.error('WebSocket error:', error);
         
-        // Only show error toast if we've exhausted our reconnection attempts
         if (connectionAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
           toast.error('Connection error occurred', { id: 'ws-error' });
         }
@@ -87,18 +107,24 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
         reconnectTimeoutRef.current = setTimeout(connect, RECONNECT_DELAY);
       }
     }
-  }, [cleanup, onMessage]);
+  }, [cleanup, onMessage, apiSettings, getDefaultProvider]);
 
   useEffect(() => {
     mountedRef.current = true;
     connectionAttemptsRef.current = 0;
-    connect();
+
+    // Only attempt connection if we have valid API settings
+    if (apiSettings && Object.keys(apiSettings).length > 0) {
+      connect();
+    } else {
+      logger.warn('No API settings configured, skipping WebSocket connection');
+    }
     
     return () => {
       mountedRef.current = false;
       cleanup();
     };
-  }, [connect, cleanup]);
+  }, [connect, cleanup, apiSettings]);
 
   const sendMessage = useCallback(async (message: any) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {

@@ -1,18 +1,21 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-console.log('Edge Function: realtime-chat initializing...');
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+);
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+console.log('Edge Function: realtime-chat initializing...');
 
 serve(async (req) => {
   const startTime = Date.now();
-  const requestId = crypto.randomUUID();
 
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -28,6 +31,37 @@ serve(async (req) => {
   }
 
   try {
+    // Get access token and provider from URL
+    const url = new URL(req.url);
+    const accessToken = url.searchParams.get('access_token');
+    const provider = url.searchParams.get('provider');
+
+    if (!accessToken) {
+      throw new Error('No access token provided');
+    }
+
+    if (!provider) {
+      throw new Error('No AI provider specified');
+    }
+
+    // Verify user and get their API configuration
+    const { data: { user }, error: userError } = await supabase.auth.getUser(accessToken);
+    if (userError || !user) {
+      throw new Error('Invalid access token');
+    }
+
+    const { data: apiConfig, error: configError } = await supabase
+      .from('api_configurations')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('api_type', provider)
+      .eq('is_enabled', true)
+      .single();
+
+    if (configError || !apiConfig) {
+      throw new Error(`No valid ${provider} configuration found`);
+    }
+
     // Create WebSocket connection
     const { socket: clientSocket, response } = Deno.upgradeWebSocket(req);
     
@@ -72,6 +106,10 @@ serve(async (req) => {
         }
       } catch (error) {
         console.error('Error processing client message:', error);
+        clientSocket.send(JSON.stringify({
+          type: 'error',
+          error: 'Failed to process message'
+        }));
       }
     };
 
