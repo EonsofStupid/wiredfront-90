@@ -57,10 +57,6 @@ export const useChatAPI = () => {
     enabled: true, // Always enable the query to handle both authenticated and public cases
   });
 
-  if (error) {
-    logger.error('Error in useChatAPI hook:', error);
-  }
-
   const getDefaultProvider = () => {
     if (!apiSettings || Object.keys(apiSettings).length === 0) {
       logger.warn('No API settings found');
@@ -80,6 +76,7 @@ export const useChatAPI = () => {
   return {
     apiSettings,
     getDefaultProvider,
-    isConfigured: !!apiSettings && Object.keys(apiSettings).length > 0
+    isConfigured: !!apiSettings && Object.keys(apiSettings).length > 0,
+    isError: !!error
   };
 };
