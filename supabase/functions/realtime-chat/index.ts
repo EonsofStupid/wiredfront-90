@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -14,11 +15,7 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     const accessToken = url.searchParams.get('access_token');
-
-    if (!accessToken) {
-      console.error('No access token provided');
-      throw new Error('No access token provided');
-    }
+    const isPublicAccess = !accessToken;
 
     // Initialize Supabase client with service role key for admin access
     const supabase = createClient(
@@ -31,26 +28,32 @@ serve(async (req) => {
         }
     });
 
-    // First verify the user's session
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    let user = null;
     
-    if (authError || !user) {
-      console.error('Authentication failed:', authError);
-      throw new Error('Invalid authentication');
+    if (!isPublicAccess) {
+      // Verify authenticated user's session
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(accessToken);
+      
+      if (authError) {
+        console.error('Authentication failed:', authError);
+        throw new Error('Invalid authentication');
+      }
+      user = authUser;
     }
 
-    console.log('User authenticated:', user.id);
+    console.log(`${isPublicAccess ? 'Public' : 'Authenticated'} access request`);
 
     // Upgrade the connection to WebSocket
     const { response, socket } = Deno.upgradeWebSocket(req);
 
     socket.onopen = () => {
-      console.log('WebSocket connection established for user:', user.id);
+      console.log(`WebSocket connection established for ${isPublicAccess ? 'public' : 'user:'} ${user?.id || 'anonymous'}`);
       
       // Send connection confirmation
       socket.send(JSON.stringify({
         type: 'connection_established',
-        userId: user.id,
+        userId: user?.id || 'anonymous',
+        isPublicAccess,
         timestamp: new Date().toISOString()
       }));
     };
@@ -58,17 +61,25 @@ serve(async (req) => {
     socket.onmessage = async (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log('Received message from user:', user.id, data);
+        console.log('Received message:', { userId: user?.id || 'anonymous', isPublicAccess, data });
+
+        if (isPublicAccess && data.type !== 'chat') {
+          throw new Error('Public access limited to chat messages only');
+        }
 
         // Insert message into database using service role client
         const { error: insertError } = await supabase
           .from('messages')
           .insert({
             content: data.content,
-            user_id: user.id,
-            chat_session_id: data.sessionId,
+            user_id: user?.id || 'public',
+            chat_session_id: data.sessionId || crypto.randomUUID(),
             type: 'text',
-            metadata: data.metadata || {}
+            metadata: {
+              ...data.metadata,
+              isPublicAccess,
+              timestamp: new Date().toISOString()
+            }
           });
 
         if (insertError) {
@@ -94,11 +105,11 @@ serve(async (req) => {
     };
 
     socket.onerror = (error) => {
-      console.error('WebSocket error for user:', user.id, error);
+      console.error('WebSocket error:', error);
     };
 
     socket.onclose = () => {
-      console.log('WebSocket connection closed for user:', user.id);
+      console.log(`WebSocket connection closed for ${isPublicAccess ? 'public' : 'user:'} ${user?.id || 'anonymous'}`);
     };
 
     return response;

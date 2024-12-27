@@ -41,17 +41,21 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
     }
 
     try {
-      // Get current session
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error('No valid session found');
+      let wsUrl = WEBSOCKET_URL;
+      
+      if (user) {
+        // Authenticated connection
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          throw new Error('No valid session found');
+        }
+        wsUrl = `${WEBSOCKET_URL}?access_token=${session.access_token}`;
       }
 
       cleanup();
       connectionAttemptsRef.current++;
 
-      const wsUrl = `${WEBSOCKET_URL}?access_token=${session.access_token}`;
-      logger.info('Connecting to WebSocket:', { wsUrl });
+      logger.info('Connecting to WebSocket:', { wsUrl, isAuthenticated: !!user });
       
       wsRef.current = new WebSocket(wsUrl);
       setupEventHandlers();
@@ -60,7 +64,7 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
       logger.error('Connection failed:', error);
       await handleReconnect();
     }
-  }, [cleanup]);
+  }, [cleanup, user]);
 
   const setupEventHandlers = () => {
     if (!wsRef.current) return;
@@ -69,7 +73,7 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
       logger.info('WebSocket connected');
       setIsConnected(true);
       connectionAttemptsRef.current = 0;
-      toast.success('Connected to chat service');
+      toast.success(`Connected to chat service ${user ? '' : '(Limited Mode)'}`);
     };
 
     wsRef.current.onmessage = (event) => {
@@ -92,7 +96,7 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
       logger.info('WebSocket disconnected');
       setIsConnected(false);
       handleReconnect();
-      toast.error('Disconnected from chat service');
+      toast.error(`Disconnected from chat service ${user ? '' : '(Limited Mode)'}`);
     };
   };
 
@@ -106,9 +110,7 @@ export const useWebSocketConnection = (onMessage: (content: string) => void) => 
 
   useEffect(() => {
     mountedRef.current = true;
-    if (user) {
-      connect();
-    }
+    connect();
 
     return () => {
       mountedRef.current = false;
