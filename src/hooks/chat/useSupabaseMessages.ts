@@ -47,44 +47,37 @@ export const useSupabaseMessages = (sessionId: string) => {
   }, [sessionId]);
 
   const addMessage = async (message: Message) => {
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (!user) {
-      logger.error('No authenticated user found when trying to add message');
-      toast.error('You must be logged in to send messages');
-      throw new Error('Not authenticated');
-    }
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .insert([{
+          ...message,
+          user_id: message.user_id || 'anonymous',
+          chat_session_id: sessionId
+        }])
+        .select()
+        .single();
 
-    const { data, error } = await supabase
-      .from('messages')
-      .insert([{
-        ...message,
-        user_id: user.id
-      }])
-      .select()
-      .single();
+      if (error) {
+        logger.error('Failed to add message', { error, sessionId });
+        throw error;
+      }
 
-    if (error) {
-      logger.error('Failed to add message', { error, sessionId });
+      return data;
+    } catch (error) {
+      logger.error('Error in addMessage:', error);
       throw error;
     }
-
-    return data;
   };
 
   const addOptimisticMessage = async (content: string) => {
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (!user) {
-      toast.error('You must be logged in to send messages');
-      throw new Error('Not authenticated');
-    }
-
+    const { data: { user } } = await supabase.auth.getUser();
     const now = new Date().toISOString();
+    
     const optimisticMessage: Message = {
       id: crypto.randomUUID(),
       content,
-      user_id: user.id,
+      user_id: user?.id || 'anonymous',
       chat_session_id: sessionId,
       type: 'text',
       metadata: {},

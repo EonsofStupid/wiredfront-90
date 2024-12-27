@@ -28,19 +28,19 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
     e.preventDefault();
     if (!message.trim() && attachments.length === 0) return;
     
-    // Handle non-authenticated mode (Limited Mode)
-    if (!user) {
-      if (message.startsWith('/')) {
-        toast.error('Commands are only available in authenticated mode');
+    try {
+      // Handle non-authenticated mode (Limited Mode)
+      if (!user) {
+        if (message.startsWith('/')) {
+          toast.error('Commands are only available in authenticated mode');
+          return;
+        }
+        await onSendMessage(message);
+        setMessage("");
         return;
       }
-      onSendMessage(message);
-      setMessage("");
-      return;
-    }
-    
-    // Handle authenticated mode
-    try {
+      
+      // Handle authenticated mode
       if (message.startsWith('/')) {
         if (!isConnected) {
           toast.error('Please configure an AI provider in settings');
@@ -91,7 +91,7 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
         if (isConnected) {
           await sendMessage({ content: message });
         } else {
-          onSendMessage(message);
+          await onSendMessage(message);
         }
       }
       
