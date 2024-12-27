@@ -1,10 +1,13 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { Message } from '@/types/chat';
 
-export const useMessageQuery = (sessionId: string, isMinimized: boolean) => {
+export const useMessageQuery = (sessionId: string | null, isMinimized: boolean) => {
   return useInfiniteQuery({
     queryKey: ['messages', sessionId],
     queryFn: async ({ pageParam = 0 }) => {
+      if (!sessionId) return [];
+      
       const { data, error } = await supabase
         .from('messages')
         .select('*')
@@ -13,11 +16,12 @@ export const useMessageQuery = (sessionId: string, isMinimized: boolean) => {
         .range(pageParam * 20, (pageParam + 1) * 20 - 1);
 
       if (error) throw error;
-      return data;
+      return data as Message[];
     },
+    initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {
-      return lastPage?.length === 20 ? allPages.length : undefined;
+      return lastPage.length === 20 ? allPages.length : undefined;
     },
-    enabled: !isMinimized,
+    enabled: !isMinimized && !!sessionId,
   });
 };

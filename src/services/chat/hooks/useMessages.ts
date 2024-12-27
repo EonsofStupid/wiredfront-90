@@ -3,8 +3,9 @@ import { useCombinedMessages } from './useCombinedMessages';
 import { useSupabaseMessages } from './useSupabaseMessages';
 import { toast } from 'sonner';
 import { logger } from '../LoggingService';
+import { Message } from '@/types/chat';
 
-export const useMessages = (sessionId: string, isMinimized: boolean) => {
+export const useMessages = (sessionId: string | null, isMinimized: boolean) => {
   logger.info('useMessages hook called', { sessionId, isMinimized });
 
   const {
