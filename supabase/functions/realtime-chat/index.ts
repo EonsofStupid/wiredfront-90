@@ -17,19 +17,26 @@ serve(async (req) => {
     const accessToken = url.searchParams.get('access_token');
 
     if (!accessToken) {
+      console.error('No access token provided');
       throw new Error('No access token provided');
     }
 
-    // Initialize Supabase client
+    // Initialize Supabase client with service role key for admin access
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+    });
 
-    // Verify the user's session
+    // First verify the user's session
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
     
     if (authError || !user) {
+      console.error('Authentication failed:', authError);
       throw new Error('Invalid authentication');
     }
 
@@ -39,9 +46,9 @@ serve(async (req) => {
     const { response, socket } = Deno.upgradeWebSocket(req);
 
     socket.onopen = () => {
-      console.log('Client connected');
+      console.log('WebSocket connection established for user:', user.id);
       
-      // Send welcome message
+      // Send connection confirmation
       socket.send(JSON.stringify({
         type: 'connection_established',
         userId: user.id,
@@ -52,9 +59,25 @@ serve(async (req) => {
     socket.onmessage = async (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log('Received message:', data);
+        console.log('Received message from user:', user.id, data);
 
-        // Echo back the message for now
+        // Insert message into database using service role client
+        const { error: insertError } = await supabase
+          .from('messages')
+          .insert({
+            content: data.content,
+            user_id: user.id,
+            chat_session_id: data.sessionId,
+            type: 'text',
+            metadata: data.metadata || {}
+          });
+
+        if (insertError) {
+          console.error('Failed to insert message:', insertError);
+          throw insertError;
+        }
+
+        // Send confirmation back to client
         socket.send(JSON.stringify({
           type: 'message_received',
           data,
@@ -72,11 +95,11 @@ serve(async (req) => {
     };
 
     socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
+      console.error('WebSocket error for user:', user.id, error);
     };
 
     socket.onclose = () => {
-      console.log('Client disconnected');
+      console.log('WebSocket connection closed for user:', user.id);
     };
 
     return response;
