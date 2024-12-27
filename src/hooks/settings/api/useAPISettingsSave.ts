@@ -30,7 +30,7 @@ export function useAPISettingsSave() {
       for (const config of apiConfigs) {
         const apiKey = settings[config.key as keyof APISettingsState];
         if (apiKey) {
-          // First, check if configuration exists
+          // Check if configuration exists using maybeSingle()
           const { data: existingConfig, error: queryError } = await supabase
             .from('api_configurations')
             .select('id')
@@ -80,7 +80,7 @@ export function useAPISettingsSave() {
                            settings.anthropicKey ? 'anthropic' : 
                            settings.huggingfaceKey ? 'huggingface' : 'openai';
 
-      // Update chat settings
+      // Update chat settings with all required fields
       const { error: chatSettingsError } = await supabase
         .from('chat_settings')
         .upsert({
@@ -92,7 +92,12 @@ export function useAPISettingsSave() {
             theme: 'default',
             chatbot_name: 'AI Assistant',
             placeholder_text: 'Type a message...'
-          }
+          },
+          max_tokens: 1000,
+          temperature: 0.7,
+          offline_mode_enabled: true,
+          max_offline_messages: 100,
+          rate_limit_per_minute: 60
         });
 
       if (chatSettingsError) {

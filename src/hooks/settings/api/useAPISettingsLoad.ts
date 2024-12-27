@@ -19,7 +19,7 @@ export function useAPISettingsLoad(
 
         setUser(session.user);
         
-        // Get API configurations
+        // Get API configurations with less restrictive query
         const { data: apiConfigs, error: configError } = await supabase
           .from('api_configurations')
           .select('*')
@@ -30,8 +30,8 @@ export function useAPISettingsLoad(
           throw configError;
         }
 
-        // Map configurations to settings state
-        const newSettings = {
+        // Initialize settings with default values
+        const newSettings: APISettingsState = {
           openaiKey: '',
           huggingfaceKey: '',
           geminiKey: '',
@@ -47,10 +47,11 @@ export function useAPISettingsLoad(
           dockerToken: '',
         };
         
+        // Only update settings for enabled configurations
         apiConfigs?.forEach(config => {
           if (config.is_enabled) {
             const key = `${config.api_type}Key` as keyof APISettingsState;
-            (newSettings as any)[key] = 'configured';
+            newSettings[key] = 'configured';
           }
         });
 
