@@ -5,7 +5,7 @@ import type { Message } from "@/types/chat";
 export const useMessageQuery = (sessionId: string | null, isMinimized: boolean) => {
   return useInfiniteQuery<Message[]>({
     queryKey: ['messages', sessionId],
-    queryFn: async ({ pageParam }) => {
+    queryFn: async ({ pageParam = 0 }) => {
       if (!sessionId) return [];
       
       const { data, error } = await supabase
@@ -16,7 +16,7 @@ export const useMessageQuery = (sessionId: string | null, isMinimized: boolean) 
         .range(pageParam * 20, (pageParam + 1) * 20 - 1);
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as Message[];
     },
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {

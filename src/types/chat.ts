@@ -5,7 +5,7 @@ export type MessageStatus = 'pending' | 'sent' | 'failed' | 'cached';
 export interface Message {
   id: string;
   content: string;
-  user_id: string;
+  user_id: string | null;
   type: 'text' | 'command' | 'system';
   metadata: Json;
   created_at: string;

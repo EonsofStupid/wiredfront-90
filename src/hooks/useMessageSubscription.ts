@@ -1,54 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Database } from '@/integrations/supabase/types';
+import { Message } from '@/types/chat';
+import { logger } from '@/services/chat/LoggingService';
 
-type Message = Database['public']['Tables']['messages']['Row'];
-
-interface UseMessageSubscriptionProps {
-  sessionId: string;
-  isMinimized: boolean;
-  limit?: number;
-}
-
-export const useMessageSubscription = ({ 
-  sessionId, 
-  isMinimized, 
-  limit = 50 
-}: UseMessageSubscriptionProps) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Fetch initial messages
+export const useMessageSubscription = (
+  sessionId: string | null,
+  onNewMessage: (message: Message) => void
+) => {
   useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        setIsLoading(true);
-        const { data, error } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('chat_session_id', sessionId)
-          .order('created_at', { ascending: false })
-          .limit(limit);
-
-        if (error) throw error;
-        setMessages(data || []);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch messages');
-        console.error('Error fetching messages:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (sessionId && !isMinimized) {
-      fetchMessages();
+    if (!sessionId) {
+      logger.warn('No session ID provided for message subscription');
+      return;
     }
-  }, [sessionId, limit, isMinimized]);
-
-  // Subscribe to real-time updates
-  useEffect(() => {
-    if (!sessionId || isMinimized) return;
 
     const channel = supabase
       .channel(`messages:${sessionId}`)
@@ -61,39 +24,19 @@ export const useMessageSubscription = ({
           filter: `chat_session_id=eq.${sessionId}`,
         },
         (payload) => {
-          console.log('Real-time message update:', payload);
-          
+          logger.debug('Real-time message update:', payload);
           if (payload.eventType === 'INSERT') {
-            setMessages((prev) => [payload.new as Message, ...prev].slice(0, limit));
-          } else if (payload.eventType === 'UPDATE') {
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === payload.new.id ? (payload.new as Message) : msg
-              )
-            );
-          } else if (payload.eventType === 'DELETE') {
-            setMessages((prev) =>
-              prev.filter((msg) => msg.id !== payload.old.id)
-            );
+            onNewMessage(payload.new as Message);
           }
         }
       )
       .subscribe((status) => {
-        console.log(`Subscription status for session ${sessionId}:`, status);
-        if (status === 'SUBSCRIBED') {
-          console.log('Successfully subscribed to message updates');
-        }
+        logger.info(`Subscription status for session ${sessionId}:`, status);
       });
 
     return () => {
-      console.log(`Unsubscribing from session ${sessionId}`);
+      logger.info(`Unsubscribing from session ${sessionId}`);
       supabase.removeChannel(channel);
     };
-  }, [sessionId, isMinimized, limit]);
-
-  return {
-    messages,
-    isLoading,
-    error,
-  };
+  }, [sessionId, onNewMessage]);
 };
