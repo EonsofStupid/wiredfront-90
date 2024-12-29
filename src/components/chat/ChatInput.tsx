@@ -36,10 +36,12 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
           return;
         }
 
-        // Use the limited API endpoint for unauthenticated users
-        const response = await fetch('/api/chat/limited', {
+        const response = await fetch('https://ewjisqyvspdvhyppkhnm.supabase.co/functions/v1/chat-limited', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`,
+          },
           body: JSON.stringify({ message: message.trim() })
         });
 
@@ -48,7 +50,8 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
         }
 
         const data = await response.json();
-        await onSendMessage(data.response);
+        onSendMessage(message.trim());
+        onSendMessage(data.response);
         setMessage("");
         return;
       }
@@ -104,7 +107,7 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
         // Send regular message
         await sendMessage({ 
           content: message,
-          user_id: user?.id || null
+          user_id: user.id
         });
       }
       
