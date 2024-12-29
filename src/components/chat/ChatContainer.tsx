@@ -4,7 +4,7 @@ import { logger } from '@/services/chat/LoggingService';
 import { useChatStore } from '@/stores/chat/store';
 import { toast } from 'sonner';
 
-const MAX_RECONNECT_ATTEMPTS = 3;
+const MAX_RECONNECT_ATTEMPTS = 3; // Reduced from 20 to prevent excessive attempts
 const RECONNECT_DELAY = 2000;
 
 export const ChatContainer = ({ sessionId }: { sessionId: string }) => {
@@ -32,7 +32,12 @@ export const ChatContainer = ({ sessionId }: { sessionId: string }) => {
       }
 
       channelRef.current = supabase
-        .channel(`messages:${sessionId}`)
+        .channel(`messages:${sessionId}`, {
+          config: {
+            broadcast: { ack: true },
+            presence: { key: session.user.id }
+          }
+        })
         .on(
           'postgres_changes',
           {
@@ -45,7 +50,7 @@ export const ChatContainer = ({ sessionId }: { sessionId: string }) => {
             logger.debug('Received realtime message update:', payload);
             
             if (payload.eventType === 'INSERT') {
-              toast.success('New message received', { id: `new-message-${payload.new.id}` });
+              toast.success('New message received');
             }
           }
         )
@@ -58,6 +63,9 @@ export const ChatContainer = ({ sessionId }: { sessionId: string }) => {
             logger.info('Successfully subscribed to message updates');
           } else if (status === 'CHANNEL_ERROR') {
             logger.error('Channel error occurred');
+            await handleReconnect();
+          } else if (status === 'TIMED_OUT') {
+            logger.error('Channel connection timed out');
             await handleReconnect();
           }
         });
@@ -79,6 +87,7 @@ export const ChatContainer = ({ sessionId }: { sessionId: string }) => {
 
     reconnectAttemptsRef.current++;
     setConnectionState('reconnecting');
+    toast.info(`Reconnecting... Attempt ${reconnectAttemptsRef.current} of ${MAX_RECONNECT_ATTEMPTS}`);
 
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
