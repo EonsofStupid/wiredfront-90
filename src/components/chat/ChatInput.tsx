@@ -36,23 +36,16 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
           return;
         }
 
-        const response = await fetch('https://ewjisqyvspdvhyppkhnm.supabase.co/functions/v1/chat-limited', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({ message: message.trim() })
+        const response = await supabase.functions.invoke('chat-limited', {
+          body: { message: message.trim() }
         });
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to send message');
+        if (response.error) {
+          throw new Error(response.error.message || 'Failed to send message');
         }
 
-        const data = await response.json();
         onSendMessage(message.trim());
-        onSendMessage(data.response);
+        onSendMessage(response.data.response);
         setMessage("");
         return;
       }
