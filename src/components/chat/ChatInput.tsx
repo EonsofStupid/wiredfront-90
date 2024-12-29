@@ -46,7 +46,8 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
         });
 
         if (!response.ok) {
-          throw new Error('Failed to send message');
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to send message');
         }
 
         const data = await response.json();
@@ -115,7 +116,7 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
       setAttachments([]);
     } catch (error) {
       console.error('Error sending message:', error);
-      toast.error("Failed to send message");
+      toast.error("Failed to send message. Please try again.");
     }
   };
 

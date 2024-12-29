@@ -6,7 +6,12 @@ const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY') ?? '';
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: {
+        ...corsHeaders,
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      }
+    });
   }
 
   try {
@@ -15,10 +20,13 @@ serve(async (req) => {
     }
 
     if (req.method !== 'POST') {
-      return new Response('Method not allowed', { 
-        status: 405,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return new Response(
+        JSON.stringify({ error: 'Method not allowed' }), 
+        { 
+          status: 405,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     const { message } = await req.json();
@@ -71,7 +79,11 @@ serve(async (req) => {
         response: data.choices[0].message.content 
       }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store, no-cache, must-revalidate'
+        }
       }
     );
 
@@ -81,7 +93,11 @@ serve(async (req) => {
       JSON.stringify({ error: error.message }), 
       { 
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store, no-cache, must-revalidate'
+        }
       }
     );
   }
