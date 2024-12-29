@@ -8,7 +8,7 @@ export const useMessages = (sessionId: string | null, isMinimized: boolean) => {
   const [realtimeMessages, setRealtimeMessages] = useState<Message[]>([]);
   const { 
     data, 
-    status, 
+    status,
     error,
     hasNextPage,
     isFetchingNextPage,
