@@ -35,8 +35,20 @@ export const ChatInput = ({ onSendMessage, onSwitchAPI, isLoading }: ChatInputPr
           toast.error('Commands are only available in authenticated mode');
           return;
         }
-        // Allow basic message sending in limited mode
-        await onSendMessage(message);
+
+        // Use the limited API endpoint for unauthenticated users
+        const response = await fetch('/api/chat/limited', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: message.trim() })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to send message');
+        }
+
+        const data = await response.json();
+        await onSendMessage(data.response);
         setMessage("");
         return;
       }
