@@ -16,7 +16,12 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     const accessToken = url.searchParams.get('access_token');
+    const sessionId = url.searchParams.get('session_id');
     
+    if (!sessionId) {
+      throw new Error('No session ID provided');
+    }
+
     // Initialize Supabase client with service role key for admin access
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -37,14 +42,14 @@ serve(async (req) => {
       
       if (authError) {
         logger.error('Authentication failed:', { error: authError });
-        // Don't throw error, fallback to public access
       } else {
         user = authUser;
       }
     }
 
     logger.info(`${isPublicAccess ? 'Public' : 'Authenticated'} access request initiated`, {
-      userId: user?.id || 'anonymous'
+      userId: user?.id || 'anonymous',
+      sessionId
     });
 
     // Upgrade the connection to WebSocket
@@ -53,6 +58,7 @@ serve(async (req) => {
     socket.onopen = () => {
       logger.info('WebSocket connection established', {
         userId: user?.id || 'anonymous',
+        sessionId,
         isPublicAccess
       });
       
@@ -61,6 +67,7 @@ serve(async (req) => {
         type: 'connection_established',
         userId: user?.id || 'anonymous',
         isPublicAccess,
+        sessionId,
         timestamp: new Date().toISOString()
       }));
     };
@@ -70,7 +77,7 @@ serve(async (req) => {
         const data = JSON.parse(event.data);
         logger.info('Received message:', {
           userId: user?.id || 'anonymous',
-          isPublicAccess,
+          sessionId,
           messageType: data.type
         });
 
@@ -84,8 +91,8 @@ serve(async (req) => {
           .from('messages')
           .insert({
             content: data.content,
-            user_id: user?.id || null, // Now using null for anonymous users
-            chat_session_id: data.sessionId || crypto.randomUUID(),
+            user_id: user?.id || null,
+            chat_session_id: sessionId,
             type: 'text',
             metadata: {
               ...data.metadata,
@@ -103,6 +110,7 @@ serve(async (req) => {
         socket.send(JSON.stringify({
           type: 'message_received',
           data,
+          sessionId,
           timestamp: new Date().toISOString()
         }));
 
@@ -117,12 +125,13 @@ serve(async (req) => {
     };
 
     socket.onerror = (error) => {
-      logger.error('WebSocket error:', { error });
+      logger.error('WebSocket error:', { error, sessionId });
     };
 
     socket.onclose = () => {
       logger.info('WebSocket connection closed', {
         userId: user?.id || 'anonymous',
+        sessionId,
         isPublicAccess
       });
     };
