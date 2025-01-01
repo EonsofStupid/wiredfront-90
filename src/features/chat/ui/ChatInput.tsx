@@ -62,6 +62,6 @@ export const ChatInput: React.FC = () => {
           console.log('File selected:', e.target.files?.[0]);
         }}
       />
-    </div>
+    </form>
   );
 };
