@@ -1,15 +1,32 @@
 import { HfInference } from '@huggingface/inference';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/services/chat/LoggingService';
 
 let hf: HfInference | null = null;
 
 export const initializeHuggingFace = async () => {
-  const { data: { secret } } = await supabase.rpc('get_secret', { secret_name: 'huggingface_api_key' });
-  if (!secret) {
-    throw new Error('Hugging Face API key not found');
+  try {
+    const { data, error } = await supabase
+      .from('user_settings')
+      .select('value')
+      .eq('setting_id', 'huggingface_api_key')
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data?.value) {
+      throw new Error('Hugging Face API key not found');
+    }
+
+    const apiKey = data.value as string;
+    hf = new HfInference(apiKey);
+    return hf;
+  } catch (error) {
+    logger.error('Failed to initialize Hugging Face:', error);
+    throw error;
   }
-  hf = new HfInference(secret);
-  return hf;
 };
 
 export const getHuggingFaceClient = async () => {
@@ -33,7 +50,7 @@ export const generateResponse = async (prompt: string) => {
     });
     return response.generated_text;
   } catch (error) {
-    console.error('Error generating response:', error);
+    logger.error('Error generating response:', error);
     throw error;
   }
 };
