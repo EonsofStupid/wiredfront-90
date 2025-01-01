@@ -11,6 +11,7 @@ import { ChatContainer } from './ChatContainer';
 import { useAPISwitch } from '@/services/chat/hooks/useAPISwitch';
 import { useMessageStatus } from '@/services/chat/hooks/useMessageStatus';
 import { ChatSessionManager } from './ChatSessionManager';
+import { Message } from '@/types/chat';
 
 export const DraggableChat = () => {
   const CHAT_WIDTH = 414;
@@ -90,7 +91,7 @@ export const DraggableChat = () => {
   const handleSendMessage = useCallback(async (content: string) => {
     try {
       const message = await addOptimisticMessage(content);
-      if (message?.id) {
+      if (message && 'id' in message) {  // Type guard to ensure message has an id property
         await updateMessageStatus(message.id, 'processing');
       }
     } catch (error) {
