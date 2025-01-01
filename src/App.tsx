@@ -52,38 +52,17 @@ const App = () => {
           <MobileLayout>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route 
-                path="/dashboard" 
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                } 
-              />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/editor" element={<div>Editor Page</div>} />
               <Route path="/documents" element={<div>Documents Page</div>} />
               <Route path="/ai" element={<div>AI Assistant Page</div>} />
               <Route path="/analytics" element={<div>Analytics Page</div>} />
               <Route path="/reports" element={<div>Reports Page</div>} />
               <Route path="/data" element={<div>Data Page</div>} />
-              <Route 
-                path="/settings/*" 
-                element={
-                  <ProtectedRoute>
-                    <Settings />
-                  </ProtectedRoute>
-                } 
-              />
+              <Route path="/settings/*" element={<Settings />} />
               <Route path="/search" element={<div>Search Page</div>} />
               <Route path="/notifications" element={<div>Notifications Page</div>} />
-              <Route 
-                path="/profile" 
-                element={
-                  <ProtectedRoute>
-                    <div>Profile Page</div>
-                  </ProtectedRoute>
-                } 
-              />
+              <Route path="/profile" element={<div>Profile Page</div>} />
               <Route path="/login" element={<Login />} />
             </Routes>
           </MobileLayout>
