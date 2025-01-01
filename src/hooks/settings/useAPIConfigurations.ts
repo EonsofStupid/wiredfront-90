@@ -22,8 +22,7 @@ export const useAPIConfigurations = () => {
         const { data, error } = await supabase
           .from('api_configurations')
           .select('*')
-          .eq('user_id', session.user.id)
-          .eq('is_enabled', true);
+          .eq('user_id', session.user.id);
 
         if (error) {
           logger.error('Error fetching API configurations:', error);
@@ -60,7 +59,11 @@ export const useAPIConfigurations = () => {
           api_type: apiType,
           is_enabled: true,
           is_default: false,
-          priority: 0
+          priority: 0,
+          validation_status: 'pending',
+          model_preferences: {},
+          provider_settings: {},
+          training_enabled: false
         })
         .select()
         .single();
@@ -95,7 +98,10 @@ export const useAPIConfigurations = () => {
 
       const { data, error } = await supabase
         .from('api_configurations')
-        .update(updates)
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', id)
         .eq('user_id', session.user.id)
         .select()

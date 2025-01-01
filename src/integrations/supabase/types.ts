@@ -12,33 +12,60 @@ export type Database = {
       api_configurations: {
         Row: {
           api_type: Database["public"]["Enums"]["api_type"]
+          assistant_id: string | null
+          assistant_name: string | null
           created_at: string | null
           id: string
           is_default: boolean | null
           is_enabled: boolean | null
+          last_validated: string | null
+          model_preferences: Json | null
           priority: number | null
+          provider_settings: Json | null
+          training_enabled: boolean | null
           updated_at: string | null
           user_id: string | null
+          validation_status:
+            | Database["public"]["Enums"]["validation_status_type"]
+            | null
         }
         Insert: {
           api_type: Database["public"]["Enums"]["api_type"]
+          assistant_id?: string | null
+          assistant_name?: string | null
           created_at?: string | null
           id?: string
           is_default?: boolean | null
           is_enabled?: boolean | null
+          last_validated?: string | null
+          model_preferences?: Json | null
           priority?: number | null
+          provider_settings?: Json | null
+          training_enabled?: boolean | null
           updated_at?: string | null
           user_id?: string | null
+          validation_status?:
+            | Database["public"]["Enums"]["validation_status_type"]
+            | null
         }
         Update: {
           api_type?: Database["public"]["Enums"]["api_type"]
+          assistant_id?: string | null
+          assistant_name?: string | null
           created_at?: string | null
           id?: string
           is_default?: boolean | null
           is_enabled?: boolean | null
+          last_validated?: string | null
+          model_preferences?: Json | null
           priority?: number | null
+          provider_settings?: Json | null
+          training_enabled?: boolean | null
           updated_at?: string | null
           user_id?: string | null
+          validation_status?:
+            | Database["public"]["Enums"]["validation_status_type"]
+            | null
         }
         Relationships: [
           {
@@ -91,14 +118,64 @@ export type Database = {
           },
         ]
       }
+      assistant_configurations: {
+        Row: {
+          assistant_id: string | null
+          capabilities: Json | null
+          configuration: Json | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string | null
+          provider: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          assistant_id?: string | null
+          capabilities?: Json | null
+          configuration?: Json | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string | null
+          provider: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          assistant_id?: string | null
+          capabilities?: Json | null
+          configuration?: Json | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string | null
+          provider?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_configurations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_settings: {
         Row: {
           active_providers: Json | null
           api_key: string | null
           api_provider: Database["public"]["Enums"]["chat_api_provider"] | null
           created_at: string | null
+          default_provider: string | null
           enabled: boolean | null
           hybrid_mode_enabled: boolean | null
+          hybrid_providers: Json | null
+          hybrid_routing_rules: Json | null
           id: string
           max_offline_messages: number | null
           max_tokens: number | null
@@ -107,6 +184,7 @@ export type Database = {
             | null
           model: string | null
           offline_mode_enabled: boolean | null
+          provider_fallback_order: Json | null
           provider_settings: Json | null
           rate_limit_per_minute: number | null
           subscription_tier: string | null
@@ -121,8 +199,11 @@ export type Database = {
           api_key?: string | null
           api_provider?: Database["public"]["Enums"]["chat_api_provider"] | null
           created_at?: string | null
+          default_provider?: string | null
           enabled?: boolean | null
           hybrid_mode_enabled?: boolean | null
+          hybrid_providers?: Json | null
+          hybrid_routing_rules?: Json | null
           id?: string
           max_offline_messages?: number | null
           max_tokens?: number | null
@@ -131,6 +212,7 @@ export type Database = {
             | null
           model?: string | null
           offline_mode_enabled?: boolean | null
+          provider_fallback_order?: Json | null
           provider_settings?: Json | null
           rate_limit_per_minute?: number | null
           subscription_tier?: string | null
@@ -145,8 +227,11 @@ export type Database = {
           api_key?: string | null
           api_provider?: Database["public"]["Enums"]["chat_api_provider"] | null
           created_at?: string | null
+          default_provider?: string | null
           enabled?: boolean | null
           hybrid_mode_enabled?: boolean | null
+          hybrid_providers?: Json | null
+          hybrid_routing_rules?: Json | null
           id?: string
           max_offline_messages?: number | null
           max_tokens?: number | null
@@ -155,6 +240,7 @@ export type Database = {
             | null
           model?: string | null
           offline_mode_enabled?: boolean | null
+          provider_fallback_order?: Json | null
           provider_settings?: Json | null
           rate_limit_per_minute?: number | null
           subscription_tier?: string | null
@@ -432,6 +518,50 @@ export type Database = {
         }
         Relationships: []
       }
+      training_configurations: {
+        Row: {
+          created_at: string | null
+          dataset_config: Json | null
+          id: string
+          model_id: string | null
+          provider: string
+          status: string | null
+          training_params: Json | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dataset_config?: Json | null
+          id?: string
+          model_id?: string | null
+          provider: string
+          status?: string | null
+          training_params?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dataset_config?: Json | null
+          id?: string
+          model_id?: string | null
+          provider?: string
+          status?: string | null
+          training_params?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_configurations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_settings: {
         Row: {
           cache_ttl: unknown | null
@@ -513,6 +643,7 @@ export type Database = {
       message_behavior_type: "enter_send" | "enter_newline"
       message_type: "text" | "command" | "system"
       setting_type: "string" | "number" | "boolean" | "json" | "array"
+      validation_status_type: "pending" | "valid" | "invalid" | "expired"
     }
     CompositeTypes: {
       [_ in never]: never

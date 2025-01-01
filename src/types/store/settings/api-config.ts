@@ -1,4 +1,5 @@
 export type APIType = 'openai' | 'gemini' | 'anthropic' | 'huggingface';
+export type ValidationStatusType = 'pending' | 'valid' | 'invalid' | 'expired';
 
 export interface APIConfiguration {
   id: string;
@@ -7,6 +8,13 @@ export interface APIConfiguration {
   is_enabled: boolean;
   is_default: boolean;
   priority: number;
+  assistant_id?: string;
+  assistant_name?: string;
+  last_validated?: string;
+  model_preferences?: Record<string, any>;
+  provider_settings?: Record<string, any>;
+  training_enabled?: boolean;
+  validation_status?: ValidationStatusType;
   created_at?: string;
   updated_at?: string;
 }
