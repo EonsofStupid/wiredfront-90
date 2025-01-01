@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect } from 'react';
 import { ChatWindow } from './ui/ChatWindow';
 import { useMessageStore } from './core/messaging/MessageManager';
 import { useWindowStore } from './core/window/WindowManager';
+import { useCommandStore } from './core/commands/CommandRegistry';
+import { toast } from 'sonner';
 
 interface ChatContextValue {
   sendMessage: (content: string) => Promise<void>;
@@ -21,11 +23,26 @@ export const useChat = () => {
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { addMessage, clearMessages } = useMessageStore();
   const { resetPosition } = useWindowStore();
+  const { registerCommand } = useCommandStore();
 
   useEffect(() => {
     // Initialize chat position
     resetPosition();
-  }, [resetPosition]);
+
+    // Register basic commands
+    registerCommand('clear', async () => {
+      clearMessages();
+      toast.success('Chat cleared');
+    });
+
+    registerCommand('help', async () => {
+      addMessage({
+        content: 'Available commands:\n/clear - Clear chat\n/help - Show this message',
+        role: 'system',
+        status: 'sent',
+      });
+    });
+  }, [resetPosition, registerCommand, clearMessages, addMessage]);
 
   const sendMessage = async (content: string) => {
     await addMessage({
@@ -33,7 +50,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       role: 'user',
       status: 'sending',
     });
-    // TODO: Implement AI response handling
+    // AI response handling will be implemented next
   };
 
   const value = {

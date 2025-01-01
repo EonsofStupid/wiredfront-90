@@ -3,6 +3,8 @@ import { Card } from '@/components/ui/card';
 import { useWindowStore } from '../core/window/WindowManager';
 import { Button } from '@/components/ui/button';
 import { Minus, Maximize2, X } from 'lucide-react';
+import { ChatMessageList } from './ChatMessageList';
+import { ChatInput } from './ChatInput';
 
 export const ChatWindow: React.FC = () => {
   const {
@@ -36,7 +38,7 @@ export const ChatWindow: React.FC = () => {
 
   return (
     <Card
-      className="fixed shadow-lg rounded-lg overflow-hidden bg-background"
+      className="fixed shadow-lg rounded-lg overflow-hidden bg-background flex flex-col"
       style={{
         transform: `translate(${position.x}px, ${position.y}px)`,
         width: size.width,
@@ -71,7 +73,7 @@ export const ChatWindow: React.FC = () => {
             size="icon"
             className="h-6 w-6"
             onClick={() => {
-              // TODO: Implement close functionality
+              // Close functionality will be implemented with window state management
             }}
           >
             <X className="h-4 w-4" />
@@ -80,11 +82,9 @@ export const ChatWindow: React.FC = () => {
       </div>
 
       {!isMinimized && (
-        <div className="p-4">
-          {/* Message list and input will go here */}
-          <div className="text-center text-muted-foreground">
-            Chat interface coming soon...
-          </div>
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <ChatMessageList />
+          <ChatInput />
         </div>
       )}
     </Card>
