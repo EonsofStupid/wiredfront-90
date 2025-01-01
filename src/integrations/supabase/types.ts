@@ -93,10 +93,12 @@ export type Database = {
       }
       chat_settings: {
         Row: {
+          active_providers: Json | null
           api_key: string | null
           api_provider: Database["public"]["Enums"]["chat_api_provider"] | null
           created_at: string | null
           enabled: boolean | null
+          hybrid_mode_enabled: boolean | null
           id: string
           max_offline_messages: number | null
           max_tokens: number | null
@@ -105,7 +107,9 @@ export type Database = {
             | null
           model: string | null
           offline_mode_enabled: boolean | null
+          provider_settings: Json | null
           rate_limit_per_minute: number | null
+          subscription_tier: string | null
           system_prompt: string | null
           temperature: number | null
           ui_customizations: Json | null
@@ -113,10 +117,12 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          active_providers?: Json | null
           api_key?: string | null
           api_provider?: Database["public"]["Enums"]["chat_api_provider"] | null
           created_at?: string | null
           enabled?: boolean | null
+          hybrid_mode_enabled?: boolean | null
           id?: string
           max_offline_messages?: number | null
           max_tokens?: number | null
@@ -125,7 +131,9 @@ export type Database = {
             | null
           model?: string | null
           offline_mode_enabled?: boolean | null
+          provider_settings?: Json | null
           rate_limit_per_minute?: number | null
+          subscription_tier?: string | null
           system_prompt?: string | null
           temperature?: number | null
           ui_customizations?: Json | null
@@ -133,10 +141,12 @@ export type Database = {
           user_id: string
         }
         Update: {
+          active_providers?: Json | null
           api_key?: string | null
           api_provider?: Database["public"]["Enums"]["chat_api_provider"] | null
           created_at?: string | null
           enabled?: boolean | null
+          hybrid_mode_enabled?: boolean | null
           id?: string
           max_offline_messages?: number | null
           max_tokens?: number | null
@@ -145,7 +155,9 @@ export type Database = {
             | null
           model?: string | null
           offline_mode_enabled?: boolean | null
+          provider_settings?: Json | null
           rate_limit_per_minute?: number | null
+          subscription_tier?: string | null
           system_prompt?: string | null
           temperature?: number | null
           ui_customizations?: Json | null
@@ -390,6 +402,33 @@ export type Database = {
           type?: Database["public"]["Enums"]["setting_type"]
           updated_at?: string | null
           value?: Json
+        }
+        Relationships: []
+      }
+      simulated_responses: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          id: string
+          pattern: string
+          response: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          pattern: string
+          response: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          pattern?: string
+          response?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
