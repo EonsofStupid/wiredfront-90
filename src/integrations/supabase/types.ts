@@ -265,6 +265,9 @@ export type Database = {
           chat_session_id: string | null
           content: string
           created_at: string | null
+          file_name: string | null
+          file_type: string | null
+          file_url: string | null
           id: string
           is_minimized: boolean | null
           last_accessed: string | null
@@ -286,6 +289,9 @@ export type Database = {
           chat_session_id?: string | null
           content: string
           created_at?: string | null
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
           id?: string
           is_minimized?: boolean | null
           last_accessed?: string | null
@@ -307,6 +313,9 @@ export type Database = {
           chat_session_id?: string | null
           content?: string
           created_at?: string | null
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
           id?: string
           is_minimized?: boolean | null
           last_accessed?: string | null
