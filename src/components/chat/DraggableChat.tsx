@@ -4,12 +4,13 @@ import { useWindowPosition } from '@/hooks/useWindowPosition';
 import { useMessages } from '@/services/chat/hooks/useMessages';
 import { ChatWindow } from './ChatWindow';
 import { ChatDragContext } from './ChatDragContext';
-import { toast } from 'sonner';
 import { ChatSessionControls } from './ChatSessionControls';
 import { useChatStore } from '@/stores/chat/store';
 import { useUIStore } from '@/stores/ui/store';
 import { ChatContainer } from './ChatContainer';
 import { useAPISwitch } from '@/services/chat/hooks/useAPISwitch';
+import { useMessageStatus } from '@/services/chat/hooks/useMessageStatus';
+import { ChatSessionManager } from './ChatSessionManager';
 
 export const DraggableChat = () => {
   const CHAT_WIDTH = 414;
@@ -29,7 +30,6 @@ export const DraggableChat = () => {
   const { currentAPI, handleSwitchAPI } = useAPISwitch();
   const { floating: zIndexValue } = useUIStore((state) => state.zIndex);
   const initializingRef = useRef(false);
-  const positionUpdateTimeoutRef = useRef<NodeJS.Timeout>();
 
   const { position, setPosition, resetPosition } = useWindowPosition({
     width: CHAT_WIDTH,
@@ -38,6 +38,7 @@ export const DraggableChat = () => {
   });
 
   const [isDragging, setIsDragging] = useState(false);
+  const { updateMessageStatus } = useMessageStatus(currentSessionId || '');
 
   const currentSession = useMemo(() => 
     currentSessionId ? sessions[currentSessionId] : null,
@@ -59,11 +60,9 @@ export const DraggableChat = () => {
         initializingRef.current = true;
         try {
           await createSession();
-        } catch (error) {
-          console.error('Failed to initialize chat:', error);
-          toast.error('Failed to initialize chat session', { id: 'chat-init-error' });
+        } finally {
+          initializingRef.current = false;
         }
-        initializingRef.current = false;
       }
     };
 
@@ -81,86 +80,23 @@ export const DraggableChat = () => {
     setIsDragging(false);
     if (currentSessionId && !currentSession?.isTacked) {
       const { delta } = event;
-      const newPosition = {
+      setPosition({
         x: position.x + delta.x,
         y: position.y + delta.y,
-      };
-
-      // Debounce position updates
-      if (positionUpdateTimeoutRef.current) {
-        clearTimeout(positionUpdateTimeoutRef.current);
-      }
-
-      setPosition(newPosition);
-      positionUpdateTimeoutRef.current = setTimeout(() => {
-        updateSession(currentSessionId, { position: newPosition });
-      }, 100);
-    }
-  }, [currentSession?.isTacked, currentSessionId, position.x, position.y, setPosition, updateSession]);
-
-  const handleMinimize = useCallback(() => {
-    if (currentSessionId && currentSession) {
-      updateSession(currentSessionId, { 
-        isMinimized: !currentSession.isMinimized 
       });
     }
-  }, [currentSession, currentSessionId, updateSession]);
-
-  const handleClose = useCallback(() => {
-    if (currentSessionId) {
-      updateSession(currentSessionId, { isMinimized: true });
-      toast.info("Chat minimized - You can restore the chat from the AI button", {
-        id: 'chat-minimized'
-      });
-    }
-  }, [currentSessionId, updateSession]);
-
-  const handleTackToggle = useCallback(() => {
-    if (currentSessionId && currentSession) {
-      const newIsTacked = !currentSession.isTacked;
-      updateSession(currentSessionId, { isTacked: newIsTacked });
-      if (newIsTacked) {
-        resetPosition();
-      }
-    }
-  }, [currentSession, currentSessionId, resetPosition, updateSession]);
-
-  const handleLoadMore = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
-
-  const handleNewSession = useCallback(() => {
-    createSession();
-    toast.success("New chat session created", { id: 'new-session' });
-  }, [createSession]);
-
-  const handleCloseSession = useCallback((sessionId: string) => {
-    if (Object.keys(sessions).length > 1) {
-      removeSession(sessionId);
-      toast.success("Chat session closed", { id: 'session-closed' });
-    } else {
-      toast.error("You must have at least one active session", { id: 'session-error' });
-    }
-  }, [removeSession, sessions]);
+  }, [currentSession?.isTacked, currentSessionId, position.x, position.y, setPosition]);
 
   const handleSendMessage = useCallback(async (content: string) => {
     try {
-      await addOptimisticMessage(content);
+      const message = await addOptimisticMessage(content);
+      if (message?.id) {
+        await updateMessageStatus(message.id, 'processing');
+      }
     } catch (error) {
       console.error('Failed to send message:', error);
-      toast.error("Failed to send message. Please try again.", { id: 'send-error' });
     }
-  }, [addOptimisticMessage]);
-
-  useEffect(() => {
-    return () => {
-      if (positionUpdateTimeoutRef.current) {
-        clearTimeout(positionUpdateTimeoutRef.current);
-      }
-    };
-  }, []);
+  }, [addOptimisticMessage, updateMessageStatus]);
 
   if (!currentSession) {
     return null;
@@ -172,28 +108,42 @@ export const DraggableChat = () => {
         <ChatSessionControls
           sessions={Object.values(sessions)}
           currentSessionId={currentSessionId!}
-          onNewSession={handleNewSession}
+          onNewSession={createSession}
           onSwitchSession={switchSession}
-          onCloseSession={handleCloseSession}
+          onCloseSession={removeSession}
         />
         <ChatWindow
           position={currentSession?.position || position}
           isMinimized={currentSession?.isMinimized || false}
           messages={messages}
           isLoading={isLoading}
-          onMinimize={handleMinimize}
-          onClose={handleClose}
+          onMinimize={() => updateSession(currentSessionId!, { 
+            isMinimized: !currentSession.isMinimized 
+          })}
+          onClose={() => updateSession(currentSessionId!, { isMinimized: true })}
           isDragging={isDragging}
           isTacked={currentSession?.isTacked || false}
-          onTackToggle={handleTackToggle}
+          onTackToggle={() => {
+            updateSession(currentSessionId!, { 
+              isTacked: !currentSession.isTacked 
+            });
+            if (!currentSession.isTacked) {
+              resetPosition();
+            }
+          }}
           dimensions={{ width: CHAT_WIDTH, height: CHAT_HEIGHT }}
           hasMoreMessages={hasNextPage}
           isLoadingMore={isFetchingNextPage}
-          onLoadMore={handleLoadMore}
+          onLoadMore={fetchNextPage}
           onSendMessage={handleSendMessage}
           onSwitchAPI={handleSwitchAPI}
           currentAPI={currentAPI}
           connectionState={connectionState}
+        />
+        <ChatSessionManager
+          onNewSession={createSession}
+          onSwitchSession={switchSession}
+          onCloseSession={removeSession}
         />
         {currentSessionId && <ChatContainer sessionId={currentSessionId} />}
       </div>

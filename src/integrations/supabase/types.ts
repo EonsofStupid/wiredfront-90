@@ -174,8 +174,11 @@ export type Database = {
           message_status: string | null
           metadata: Json | null
           position: Json | null
+          processing_status: string | null
+          provider: string | null
           rate_limit_window: string | null
           retry_count: number | null
+          source_type: string | null
           type: Database["public"]["Enums"]["message_type"]
           updated_at: string | null
           user_id: string | null
@@ -192,8 +195,11 @@ export type Database = {
           message_status?: string | null
           metadata?: Json | null
           position?: Json | null
+          processing_status?: string | null
+          provider?: string | null
           rate_limit_window?: string | null
           retry_count?: number | null
+          source_type?: string | null
           type?: Database["public"]["Enums"]["message_type"]
           updated_at?: string | null
           user_id?: string | null
@@ -210,8 +216,11 @@ export type Database = {
           message_status?: string | null
           metadata?: Json | null
           position?: Json | null
+          processing_status?: string | null
+          provider?: string | null
           rate_limit_window?: string | null
           retry_count?: number | null
+          source_type?: string | null
           type?: Database["public"]["Enums"]["message_type"]
           updated_at?: string | null
           user_id?: string | null
