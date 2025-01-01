@@ -34,8 +34,8 @@ export const useMessages = (sessionId: string | null, isMinimized: boolean) => {
     error
   });
 
-  const addOptimisticMessage = async (content: string) => {
-    if (!sessionId) return;
+  const addOptimisticMessage = async (content: string): Promise<Message | null> => {
+    if (!sessionId) return null;
 
     const optimisticMessage: Message = {
       id: crypto.randomUUID(),
@@ -55,6 +55,7 @@ export const useMessages = (sessionId: string | null, isMinimized: boolean) => {
     };
 
     setRealtimeMessages(prev => [optimisticMessage, ...prev]);
+    return optimisticMessage;
   };
 
   return {

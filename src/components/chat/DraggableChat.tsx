@@ -91,7 +91,7 @@ export const DraggableChat = () => {
   const handleSendMessage = useCallback(async (content: string) => {
     try {
       const message = await addOptimisticMessage(content);
-      if (message && 'id' in message) {  // Type guard to ensure message has an id property
+      if (message) {
         await updateMessageStatus(message.id, 'processing');
       }
     } catch (error) {
