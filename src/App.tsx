@@ -9,7 +9,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
-import { DraggableChat } from "@/components/chat/DraggableChat";
+import { ChatProvider } from "@/features/chat/ChatProvider";
 import { useSession } from "@/hooks/useSession";
 import { storeLastVisitedPath } from "@/utils/auth";
 
@@ -22,21 +22,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useSession();
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate(`/login?returnTo=${encodeURIComponent(location.pathname)}`, { replace: true });
-    }
-  }, [user, loading, location, navigate]);
-
-  if (loading) return null;
-  return user ? <>{children}</> : null;
-};
 
 const App = () => {
   const location = useLocation();
@@ -63,45 +48,46 @@ const App = () => {
       <TooltipProvider>
         <Sonner position="top-right" />
         <Toaster />
-        <MobileLayout>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="/editor" element={<div>Editor Page</div>} />
-            <Route path="/documents" element={<div>Documents Page</div>} />
-            <Route path="/ai" element={<div>AI Assistant Page</div>} />
-            <Route path="/analytics" element={<div>Analytics Page</div>} />
-            <Route path="/reports" element={<div>Reports Page</div>} />
-            <Route path="/data" element={<div>Data Page</div>} />
-            <Route 
-              path="/settings/*" 
-              element={
-                <ProtectedRoute>
-                  <Settings />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="/search" element={<div>Search Page</div>} />
-            <Route path="/notifications" element={<div>Notifications Page</div>} />
-            <Route 
-              path="/profile" 
-              element={
-                <ProtectedRoute>
-                  <div>Profile Page</div>
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="/login" element={<Login />} />
-          </Routes>
-          <DraggableChat />
-        </MobileLayout>
+        <ChatProvider>
+          <MobileLayout>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route path="/editor" element={<div>Editor Page</div>} />
+              <Route path="/documents" element={<div>Documents Page</div>} />
+              <Route path="/ai" element={<div>AI Assistant Page</div>} />
+              <Route path="/analytics" element={<div>Analytics Page</div>} />
+              <Route path="/reports" element={<div>Reports Page</div>} />
+              <Route path="/data" element={<div>Data Page</div>} />
+              <Route 
+                path="/settings/*" 
+                element={
+                  <ProtectedRoute>
+                    <Settings />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route path="/search" element={<div>Search Page</div>} />
+              <Route path="/notifications" element={<div>Notifications Page</div>} />
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute>
+                    <div>Profile Page</div>
+                  </ProtectedRoute>
+                } 
+              />
+              <Route path="/login" element={<Login />} />
+            </Routes>
+          </MobileLayout>
+        </ChatProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
