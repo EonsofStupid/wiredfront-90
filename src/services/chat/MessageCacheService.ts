@@ -1,24 +1,57 @@
-import { Message } from '@/features/chat/core/messaging/MessageManager';
+interface CacheMetrics {
+  cacheHits: number;
+  cacheMisses: number;
+  syncAttempts: number;
+  syncSuccesses: number;
+  errors: Array<{ timestamp: number; error: string }>;
+}
 
 class MessageCacheService {
-  private cache: Map<string, Message[]> = new Map();
-  
-  addMessage(sessionId: string, message: Message) {
-    const messages = this.cache.get(sessionId) || [];
-    messages.push(message);
-    this.cache.set(sessionId, messages);
+  private cache: Map<string, any> = new Map();
+  private metrics: CacheMetrics = {
+    cacheHits: 0,
+    cacheMisses: 0,
+    syncAttempts: 0,
+    syncSuccesses: 0,
+    errors: []
+  };
+
+  getMetrics(): CacheMetrics {
+    return { ...this.metrics };
   }
-  
-  getMessages(sessionId: string): Message[] {
-    return this.cache.get(sessionId) || [];
-  }
-  
-  clearSession(sessionId: string) {
-    this.cache.delete(sessionId);
-  }
-  
-  clearAll() {
+
+  async clearAllCache(): Promise<void> {
     this.cache.clear();
+    this.metrics = {
+      cacheHits: 0,
+      cacheMisses: 0,
+      syncAttempts: 0,
+      syncSuccesses: 0,
+      errors: []
+    };
+  }
+
+  addError(error: string) {
+    this.metrics.errors.push({
+      timestamp: Date.now(),
+      error
+    });
+  }
+
+  incrementCacheHit() {
+    this.metrics.cacheHits++;
+  }
+
+  incrementCacheMiss() {
+    this.metrics.cacheMisses++;
+  }
+
+  incrementSyncAttempt() {
+    this.metrics.syncAttempts++;
+  }
+
+  incrementSyncSuccess() {
+    this.metrics.syncSuccesses++;
   }
 }
 
