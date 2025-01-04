@@ -23,7 +23,7 @@ export const ChatMessageList: React.FC = () => {
               }`}
             >
               <p className="text-sm">{message.content}</p>
-              {message.status === 'error' && (
+              {message.message_status === 'error' && (
                 <p className="text-xs text-destructive mt-1">
                   Failed to send message
                 </p>

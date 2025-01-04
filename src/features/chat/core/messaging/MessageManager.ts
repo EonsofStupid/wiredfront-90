@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Message } from '@/types/chat';
+import { Message, MessageStatus } from '@/types/chat';
 
 interface MessageState {
   messages: Message[];
@@ -36,8 +36,8 @@ export const useMessageStore = create<MessageState>()(
           last_accessed: new Date().toISOString(),
           retry_count: 0,
           message_status: 'pending',
-          source_type: 'limited',
-          provider: 'openai',
+          role: message.user_id ? 'user' : 'assistant',
+          provider: message.provider || 'openai',
           processing_status: 'pending'
         };
 
@@ -61,7 +61,7 @@ export const useMessageStore = create<MessageState>()(
 
           set((state) => ({
             messages: state.messages.map((m) =>
-              m.id === newMessage.id ? { ...m, message_status: 'sent' } : m
+              m.id === newMessage.id ? { ...m, message_status: 'sent' as MessageStatus } : m
             ),
             isLoading: false,
           }));
@@ -70,7 +70,7 @@ export const useMessageStore = create<MessageState>()(
           toast.error('Failed to save message');
           set((state) => ({
             messages: state.messages.map((m) =>
-              m.id === newMessage.id ? { ...m, message_status: 'error' } : m
+              m.id === newMessage.id ? { ...m, message_status: 'error' as MessageStatus } : m
             ),
             isLoading: false,
             error: 'Failed to save message',
