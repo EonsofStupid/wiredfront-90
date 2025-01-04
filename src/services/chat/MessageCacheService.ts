@@ -1,66 +1,24 @@
-import { logger } from './LoggingService';
-
-interface CacheMetrics {
-  cacheHits: number;
-  cacheMisses: number;
-  syncAttempts: number;
-  syncSuccesses: number;
-  errors: Array<{ timestamp: number; error: string }>;
-}
+import { Message } from '@/features/chat/core/messaging/MessageManager';
 
 class MessageCacheService {
-  private cache: Map<string, any> = new Map();
-  private metrics: CacheMetrics = {
-    cacheHits: 0,
-    cacheMisses: 0,
-    syncAttempts: 0,
-    syncSuccesses: 0,
-    errors: [],
-  };
-
-  async get(key: string): Promise<any> {
-    const value = this.cache.get(key);
-    if (value) {
-      this.metrics.cacheHits++;
-      return value;
-    }
-    this.metrics.cacheMisses++;
-    return null;
+  private cache: Map<string, Message[]> = new Map();
+  
+  addMessage(sessionId: string, message: Message) {
+    const messages = this.cache.get(sessionId) || [];
+    messages.push(message);
+    this.cache.set(sessionId, messages);
   }
-
-  async set(key: string, value: any): Promise<void> {
-    this.cache.set(key, value);
+  
+  getMessages(sessionId: string): Message[] {
+    return this.cache.get(sessionId) || [];
   }
-
-  async delete(key: string): Promise<void> {
-    this.cache.delete(key);
+  
+  clearSession(sessionId: string) {
+    this.cache.delete(sessionId);
   }
-
-  async clearAllCache(): Promise<void> {
+  
+  clearAll() {
     this.cache.clear();
-    logger.info('Cache cleared');
-  }
-
-  getMetrics(): CacheMetrics {
-    return this.metrics;
-  }
-
-  logError(error: string): void {
-    this.metrics.errors.push({
-      timestamp: Date.now(),
-      error,
-    });
-    logger.error('Cache error:', error);
-  }
-
-  resetMetrics(): void {
-    this.metrics = {
-      cacheHits: 0,
-      cacheMisses: 0,
-      syncAttempts: 0,
-      syncSuccesses: 0,
-      errors: [],
-    };
   }
 }
 
