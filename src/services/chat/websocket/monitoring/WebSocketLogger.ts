@@ -1,84 +1,81 @@
-import { ConnectionState } from '@/types/websocket';
-
-interface LogEntry {
-  timestamp: number;
-  level: 'info' | 'warn' | 'error';
-  message: string;
-}
+import { create } from 'zustand';
+import { logger } from '@/services/chat/LoggingService';
 
 interface WebSocketMetrics {
-  messagesSent: number;
-  messagesReceived: number;
-  latency: number;
-  uptime: number;
-  reconnectAttempts: number;
+  totalMessages: number;
+  connectedAt: Date | null;
+  lastMessageAt: Date | null;
+  reconnectCount: number;
+  currentState: 'CONNECTING' | 'CONNECTED' | 'DISCONNECTED' | 'ERROR';
 }
 
-export class WebSocketLogger {
-  private static instance: WebSocketLogger;
-  private logs: LogEntry[] = [];
-  private connectionState: ConnectionState = 'initial';
-  private metrics: WebSocketMetrics = {
-    messagesSent: 0,
-    messagesReceived: 0,
-    latency: 0,
-    uptime: 0,
-    reconnectAttempts: 0
-  };
-
-  private constructor() {}
-
-  static getInstance(): WebSocketLogger {
-    if (!WebSocketLogger.instance) {
-      WebSocketLogger.instance = new WebSocketLogger();
-    }
-    return WebSocketLogger.instance;
-  }
-
-  getConnectionState(): ConnectionState {
-    return this.connectionState;
-  }
-
-  setConnectionState(state: ConnectionState) {
-    this.connectionState = state;
-    this.log('info', `Connection state changed to: ${state}`);
-  }
-
-  getMetrics(): WebSocketMetrics {
-    return { ...this.metrics };
-  }
-
-  getLogs(): LogEntry[] {
-    return [...this.logs];
-  }
-
-  log(level: 'info' | 'warn' | 'error', message: string) {
-    const entry: LogEntry = {
-      timestamp: Date.now(),
-      level,
-      message
-    };
-    this.logs.push(entry);
-    console[level](`[WebSocket] ${message}`);
-  }
-
-  incrementMessagesSent() {
-    this.metrics.messagesSent++;
-  }
-
-  incrementMessagesReceived() {
-    this.metrics.messagesReceived++;
-  }
-
-  updateLatency(latency: number) {
-    this.metrics.latency = latency;
-  }
-
-  updateUptime(uptime: number) {
-    this.metrics.uptime = uptime;
-  }
-
-  incrementReconnectAttempts() {
-    this.metrics.reconnectAttempts++;
-  }
+interface WebSocketLoggerState {
+  metrics: WebSocketMetrics;
+  logMessage: (message: string, metadata?: Record<string, any>) => void;
+  updateConnectionState: (state: WebSocketMetrics['currentState']) => void;
+  incrementReconnectCount: () => void;
+  resetMetrics: () => void;
+  getMetrics: () => WebSocketMetrics;
 }
+
+export const useWebSocketLogger = create<WebSocketLoggerState>((set, get) => ({
+  metrics: {
+    totalMessages: 0,
+    connectedAt: null,
+    lastMessageAt: null,
+    reconnectCount: 0,
+    currentState: 'DISCONNECTED',
+  },
+
+  logMessage: (message, metadata) => {
+    logger.debug(`WebSocket: ${message}`, metadata);
+    set((state) => ({
+      metrics: {
+        ...state.metrics,
+        totalMessages: state.metrics.totalMessages + 1,
+        lastMessageAt: new Date(),
+      },
+    }));
+  },
+
+  updateConnectionState: (currentState) => {
+    set((state) => ({
+      metrics: {
+        ...state.metrics,
+        currentState,
+        connectedAt: currentState === 'CONNECTED' ? new Date() : state.metrics.connectedAt,
+      },
+    }));
+  },
+
+  incrementReconnectCount: () => {
+    set((state) => ({
+      metrics: {
+        ...state.metrics,
+        reconnectCount: state.metrics.reconnectCount + 1,
+      },
+    }));
+  },
+
+  resetMetrics: () => {
+    set({
+      metrics: {
+        totalMessages: 0,
+        connectedAt: null,
+        lastMessageAt: null,
+        reconnectCount: 0,
+        currentState: 'DISCONNECTED',
+      },
+    });
+  },
+
+  getMetrics: () => get().metrics,
+}));
+
+export const WebSocketLogger = {
+  logMessage: useWebSocketLogger.getState().logMessage,
+  updateConnectionState: useWebSocketLogger.getState().updateConnectionState,
+  incrementReconnectCount: useWebSocketLogger.getState().incrementReconnectCount,
+  resetMetrics: useWebSocketLogger.getState().resetMetrics,
+  getMetrics: useWebSocketLogger.getState().getMetrics,
+};
