@@ -38,7 +38,7 @@ export const ChatWindow: React.FC = () => {
 
   return (
     <Card
-      className="fixed shadow-lg rounded-lg overflow-hidden bg-background flex flex-col"
+      className="fixed shadow-lg rounded-lg overflow-hidden bg-background flex flex-col z-[9999]"
       style={{
         transform: `translate(${position.x}px, ${position.y}px)`,
         width: size.width,
