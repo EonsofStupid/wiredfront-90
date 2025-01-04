@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Message } from '@/types/chat';
 import { logger } from '@/services/chat/LoggingService';
+import { REALTIME_SUBSCRIBE_STATES } from '@supabase/supabase-js';
 
 export const useMessageSubscription = (
   sessionId: string | null,
@@ -30,8 +31,11 @@ export const useMessageSubscription = (
           }
         }
       )
-      .subscribe((status) => {
-        logger.info(`Subscription status for session ${sessionId}:`, status);
+      .subscribe((status: REALTIME_SUBSCRIBE_STATES) => {
+        logger.info(`Subscription status for session ${sessionId}:`, {
+          status: status.toString(),
+          timestamp: new Date().toISOString()
+        });
       });
 
     return () => {
