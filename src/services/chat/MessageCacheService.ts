@@ -3,96 +3,102 @@ import { persist } from 'zustand/middleware';
 import { Message } from '@/types/chat';
 
 interface CacheMetrics {
-  totalMessages: number;
-  oldestMessage: Date | null;
-  newestMessage: Date | null;
-  cacheSize: number;
+  cacheHits: number;
+  cacheMisses: number;
+  syncAttempts: number;
+  syncSuccesses: number;
+  errors: Array<{ timestamp: number; error: string }>;
 }
 
 interface MessageCacheState {
   messages: Map<string, Message>;
-  maxSize: number;
   metrics: CacheMetrics;
   addMessage: (message: Message) => void;
   getMessage: (id: string) => Message | undefined;
   clearAllCache: () => void;
   getMetrics: () => CacheMetrics;
-  setMaxSize: (size: number) => void;
+  recordError: (error: string) => void;
 }
 
-export const useMessageCacheStore = create<MessageCacheState>()(
+const useMessageCacheStore = create<MessageCacheState>()(
   persist(
     (set, get) => ({
       messages: new Map(),
-      maxSize: 1000,
       metrics: {
-        totalMessages: 0,
-        oldestMessage: null,
-        newestMessage: null,
-        cacheSize: 0,
+        cacheHits: 0,
+        cacheMisses: 0,
+        syncAttempts: 0,
+        syncSuccesses: 0,
+        errors: [],
       },
 
-      addMessage: (message) => set((state) => {
-        const messages = new Map(state.messages);
-        messages.set(message.id, message);
-        
-        // Remove oldest messages if we exceed maxSize
-        while (messages.size > state.maxSize) {
-          const oldestKey = messages.keys().next().value;
-          messages.delete(oldestKey);
-        }
-        
-        return {
-          messages,
-          metrics: get().getMetrics(),
-        };
-      }),
-
-      getMessage: (id) => get().messages.get(id),
-
-      clearAllCache: () => set({
-        messages: new Map(),
-        metrics: {
-          totalMessages: 0,
-          oldestMessage: null,
-          newestMessage: null,
-          cacheSize: 0,
-        },
-      }),
-
-      getMetrics: () => {
-        const messages = Array.from(get().messages.values());
-        const dates = messages.map(m => new Date(m.created_at));
-        
-        return {
-          totalMessages: messages.length,
-          oldestMessage: dates.length ? new Date(Math.min(...dates.map(d => d.getTime()))) : null,
-          newestMessage: dates.length ? new Date(Math.max(...dates.map(d => d.getTime()))) : null,
-          cacheSize: JSON.stringify(messages).length,
-        };
+      addMessage: (message) => {
+        set((state) => {
+          const messages = new Map(state.messages);
+          messages.set(message.id, message);
+          return { messages };
+        });
       },
 
-      setMaxSize: (maxSize) => set({ maxSize }),
+      getMessage: (id) => {
+        const state = get();
+        const message = state.messages.get(id);
+        set((state) => ({
+          metrics: {
+            ...state.metrics,
+            [message ? 'cacheHits' : 'cacheMisses']: 
+              state.metrics[message ? 'cacheHits' : 'cacheMisses'] + 1
+          }
+        }));
+        return message;
+      },
+
+      clearAllCache: () => {
+        set({ 
+          messages: new Map(),
+          metrics: {
+            cacheHits: 0,
+            cacheMisses: 0,
+            syncAttempts: 0,
+            syncSuccesses: 0,
+            errors: [],
+          }
+        });
+      },
+
+      getMetrics: () => get().metrics,
+
+      recordError: (error: string) => {
+        set((state) => ({
+          metrics: {
+            ...state.metrics,
+            errors: [
+              { timestamp: Date.now(), error },
+              ...state.metrics.errors
+            ].slice(0, 50) // Keep last 50 errors
+          }
+        }));
+      },
     }),
     {
-      name: 'message-cache-storage',
+      name: 'message-cache',
       partialize: (state) => ({
-        maxSize: state.maxSize,
         messages: Array.from(state.messages.entries()),
+        metrics: state.metrics,
       }),
       merge: (persistedState: any, currentState) => ({
         ...currentState,
-        ...persistedState,
         messages: new Map(persistedState.messages || []),
+        metrics: persistedState.metrics || currentState.metrics,
       }),
     }
   )
 );
 
-export const MessageCacheService = {
+export const messageCache = {
   addMessage: useMessageCacheStore.getState().addMessage,
   getMessage: useMessageCacheStore.getState().getMessage,
   clearAllCache: useMessageCacheStore.getState().clearAllCache,
   getMetrics: useMessageCacheStore.getState().getMetrics,
-  setMaxSize: useMessageCacheStore.getState().setMaxSize,
+  recordError: useMessageCacheStore.getState().recordError,
 };

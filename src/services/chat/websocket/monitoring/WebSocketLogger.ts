@@ -1,81 +1,120 @@
 import { create } from 'zustand';
-import { logger } from '@/services/chat/LoggingService';
+import { ConnectionState } from '@/types/websocket';
+
+interface WebSocketLog {
+  timestamp: number;
+  level: 'info' | 'warn' | 'error';
+  message: string;
+}
 
 interface WebSocketMetrics {
-  totalMessages: number;
-  connectedAt: Date | null;
-  lastMessageAt: Date | null;
-  reconnectCount: number;
-  currentState: 'CONNECTING' | 'CONNECTED' | 'DISCONNECTED' | 'ERROR';
+  messagesSent: number;
+  messagesReceived: number;
+  latency: number;
+  uptime: number;
+  reconnectAttempts: number;
 }
 
 interface WebSocketLoggerState {
+  logs: WebSocketLog[];
   metrics: WebSocketMetrics;
-  logMessage: (message: string, metadata?: Record<string, any>) => void;
-  updateConnectionState: (state: WebSocketMetrics['currentState']) => void;
-  incrementReconnectCount: () => void;
-  resetMetrics: () => void;
+  connectionState: ConnectionState;
+  addLog: (level: WebSocketLog['level'], message: string) => void;
+  updateMetrics: (updates: Partial<WebSocketMetrics>) => void;
+  updateConnectionState: (state: ConnectionState) => void;
+  getLogs: () => WebSocketLog[];
   getMetrics: () => WebSocketMetrics;
+  getConnectionState: () => ConnectionState;
+  resetMetrics: () => void;
 }
 
-export const useWebSocketLogger = create<WebSocketLoggerState>((set, get) => ({
+const useWebSocketLogger = create<WebSocketLoggerState>((set, get) => ({
+  logs: [],
   metrics: {
-    totalMessages: 0,
-    connectedAt: null,
-    lastMessageAt: null,
-    reconnectCount: 0,
-    currentState: 'DISCONNECTED',
+    messagesSent: 0,
+    messagesReceived: 0,
+    latency: 0,
+    uptime: 0,
+    reconnectAttempts: 0,
   },
+  connectionState: 'initial',
 
-  logMessage: (message, metadata) => {
-    logger.debug(`WebSocket: ${message}`, metadata);
+  addLog: (level, message) => {
     set((state) => ({
-      metrics: {
-        ...state.metrics,
-        totalMessages: state.metrics.totalMessages + 1,
-        lastMessageAt: new Date(),
-      },
+      logs: [
+        { timestamp: Date.now(), level, message },
+        ...state.logs,
+      ].slice(0, 1000), // Keep last 1000 logs
     }));
   },
 
-  updateConnectionState: (currentState) => {
+  updateMetrics: (updates) => {
     set((state) => ({
-      metrics: {
-        ...state.metrics,
-        currentState,
-        connectedAt: currentState === 'CONNECTED' ? new Date() : state.metrics.connectedAt,
-      },
+      metrics: { ...state.metrics, ...updates },
     }));
   },
 
-  incrementReconnectCount: () => {
-    set((state) => ({
-      metrics: {
-        ...state.metrics,
-        reconnectCount: state.metrics.reconnectCount + 1,
-      },
-    }));
+  updateConnectionState: (state) => {
+    set({ connectionState: state });
   },
+
+  getLogs: () => get().logs,
+  getMetrics: () => get().metrics,
+  getConnectionState: () => get().connectionState,
 
   resetMetrics: () => {
     set({
       metrics: {
-        totalMessages: 0,
-        connectedAt: null,
-        lastMessageAt: null,
-        reconnectCount: 0,
-        currentState: 'DISCONNECTED',
+        messagesSent: 0,
+        messagesReceived: 0,
+        latency: 0,
+        uptime: 0,
+        reconnectAttempts: 0,
       },
     });
   },
-
-  getMetrics: () => get().metrics,
 }));
 
+// Singleton instance for global access
+class WebSocketLoggerInstance {
+  private static instance: WebSocketLoggerInstance;
+
+  private constructor() {}
+
+  static getInstance(): WebSocketLoggerInstance {
+    if (!WebSocketLoggerInstance.instance) {
+      WebSocketLoggerInstance.instance = new WebSocketLoggerInstance();
+    }
+    return WebSocketLoggerInstance.instance;
+  }
+
+  getMetrics() {
+    return useWebSocketLogger.getState().getMetrics();
+  }
+
+  getLogs() {
+    return useWebSocketLogger.getState().getLogs();
+  }
+
+  getConnectionState() {
+    return useWebSocketLogger.getState().getConnectionState();
+  }
+}
+
 export const WebSocketLogger = {
-  logMessage: useWebSocketLogger.getState().logMessage,
-  updateConnectionState: useWebSocketLogger.getState().updateConnectionState,
-  incrementReconnectCount: useWebSocketLogger.getState().incrementReconnectCount,
-  resetMetrics: useWebSocketLogger.getState().resetMetrics,
-  getMetrics: useWebSocketLogger.getState().getMetrics,
+  getInstance: () => WebSocketLoggerInstance.getInstance(),
+  logMessage: (message: string, metadata?: Record<string, any>) => {
+    useWebSocketLogger.getState().addLog('info', message);
+  },
+  updateConnectionState: (state: ConnectionState) => {
+    useWebSocketLogger.getState().updateConnectionState(state);
+  },
+  incrementReconnectCount: () => {
+    const currentMetrics = useWebSocketLogger.getState().getMetrics();
+    useWebSocketLogger.getState().updateMetrics({
+      reconnectAttempts: currentMetrics.reconnectAttempts + 1,
+    });
+  },
+  resetMetrics: () => useWebSocketLogger.getState().resetMetrics(),
+  getMetrics: () => useWebSocketLogger.getState().getMetrics(),
 };
