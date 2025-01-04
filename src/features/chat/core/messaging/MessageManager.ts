@@ -1,72 +1,99 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-export interface Message {
-  id: string;
-  content: string;
-  role: 'user' | 'assistant' | 'system';
-  timestamp: Date;
-  status: 'sending' | 'sent' | 'error';
-  metadata?: Record<string, any>;
-}
+import { Message } from '@/types/chat';
 
 interface MessageState {
   messages: Message[];
   isLoading: boolean;
   error: string | null;
-  addMessage: (message: Omit<Message, 'id' | 'timestamp'>) => Promise<void>;
+  addMessage: (message: Partial<Message>) => Promise<void>;
   setError: (error: string | null) => void;
   clearMessages: () => void;
 }
 
-export const useMessageStore = create<MessageState>((set, get) => ({
-  messages: [],
-  isLoading: false,
-  error: null,
+export const useMessageStore = create<MessageState>()(
+  persist(
+    (set, get) => ({
+      messages: [],
+      isLoading: false,
+      error: null,
 
-  addMessage: async (message) => {
-    const newMessage: Message = {
-      id: crypto.randomUUID(),
-      timestamp: new Date(),
-      ...message,
-    };
-
-    set((state) => ({
-      messages: [...state.messages, newMessage],
-      isLoading: true,
-    }));
-
-    try {
-      const { error } = await supabase
-        .from('messages')
-        .insert([{
-          content: message.content,
-          type: message.role === 'user' ? 'text' : 'system',
+      addMessage: async (message) => {
+        const newMessage: Message = {
+          id: crypto.randomUUID(),
+          content: message.content || '',
+          user_id: message.user_id || null,
+          type: message.type || 'text',
           metadata: message.metadata || {},
-        }]);
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          chat_session_id: message.chat_session_id || crypto.randomUUID(),
+          is_minimized: false,
+          position: { x: null, y: null },
+          window_state: { width: 350, height: 500 },
+          last_accessed: new Date().toISOString(),
+          retry_count: 0,
+          message_status: 'pending',
+          source_type: 'limited',
+          provider: 'openai',
+          processing_status: 'pending'
+        };
 
-      if (error) throw error;
+        set((state) => ({
+          messages: [...state.messages, newMessage],
+          isLoading: true,
+        }));
 
-      set((state) => ({
-        messages: state.messages.map((m) =>
-          m.id === newMessage.id ? { ...m, status: 'sent' } : m
-        ),
-        isLoading: false,
-      }));
-    } catch (error) {
-      console.error('Error saving message:', error);
-      toast.error('Failed to save message');
-      set((state) => ({
-        messages: state.messages.map((m) =>
-          m.id === newMessage.id ? { ...m, status: 'error' } : m
-        ),
-        isLoading: false,
-        error: 'Failed to save message',
-      }));
+        try {
+          const { error } = await supabase
+            .from('messages')
+            .insert([{
+              content: message.content,
+              type: message.type || 'text',
+              metadata: message.metadata || {},
+              chat_session_id: message.chat_session_id,
+              user_id: message.user_id
+            }]);
+
+          if (error) throw error;
+
+          set((state) => ({
+            messages: state.messages.map((m) =>
+              m.id === newMessage.id ? { ...m, message_status: 'sent' } : m
+            ),
+            isLoading: false,
+          }));
+        } catch (error) {
+          console.error('Error saving message:', error);
+          toast.error('Failed to save message');
+          set((state) => ({
+            messages: state.messages.map((m) =>
+              m.id === newMessage.id ? { ...m, message_status: 'error' } : m
+            ),
+            isLoading: false,
+            error: 'Failed to save message',
+          }));
+        }
+      },
+
+      setError: (error) => set({ error }),
+      clearMessages: () => set({ messages: [], error: null }),
+    }),
+    {
+      name: 'chat-messages',
+      partialize: (state) => ({
+        messages: state.messages,
+      }),
     }
-  },
+  )
+);
 
-  setError: (error) => set({ error }),
-  clearMessages: () => set({ messages: [], error: null }),
-}));
+// Export a singleton instance for global access
+export const messageCache = {
+  addMessage: useMessageStore.getState().addMessage,
+  clearMessages: useMessageStore.getState().clearMessages,
+  getMessages: () => useMessageStore.getState().messages,
+  getError: () => useMessageStore.getState().error,
+};

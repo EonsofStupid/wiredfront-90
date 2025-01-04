@@ -34,7 +34,8 @@ export const useMessageSubscription = (
       .subscribe((status: REALTIME_SUBSCRIBE_STATES) => {
         logger.info(`Subscription status for session ${sessionId}:`, {
           status: status.toString(),
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          sessionId
         });
       });
 

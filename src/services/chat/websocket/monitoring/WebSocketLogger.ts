@@ -44,7 +44,7 @@ const useWebSocketLogger = create<WebSocketLoggerState>((set, get) => ({
       logs: [
         { timestamp: Date.now(), level, message },
         ...state.logs,
-      ].slice(0, 1000), // Keep last 1000 logs
+      ].slice(0, 1000),
     }));
   },
 
@@ -75,7 +75,6 @@ const useWebSocketLogger = create<WebSocketLoggerState>((set, get) => ({
   },
 }));
 
-// Singleton instance for global access
 class WebSocketLoggerInstance {
   private static instance: WebSocketLoggerInstance;
 

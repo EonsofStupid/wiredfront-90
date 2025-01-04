@@ -5,6 +5,7 @@ import { useWindowStore } from './core/window/WindowManager';
 import { useCommandStore } from './core/commands/CommandRegistry';
 import { generateResponse } from './core/ai/huggingFaceService';
 import { toast } from 'sonner';
+import { useSession } from '@/hooks/useSession';
 
 interface ChatContextValue {
   sendMessage: (content: string) => Promise<void>;
@@ -25,6 +26,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { addMessage, clearMessages } = useMessageStore();
   const { resetPosition } = useWindowStore();
   const { registerCommand } = useCommandStore();
+  const { user } = useSession();
 
   useEffect(() => {
     resetPosition();
@@ -38,11 +40,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     registerCommand('help', async () => {
       addMessage({
         content: 'Available commands:\n/clear - Clear chat\n/help - Show this message',
-        role: 'system',
-        status: 'sent',
+        type: 'system',
+        user_id: user?.id,
       });
     });
-  }, [resetPosition, registerCommand, clearMessages, addMessage]);
+  }, [resetPosition, registerCommand, clearMessages, addMessage, user]);
 
   const sendMessage = async (content: string) => {
     if (content.startsWith('/')) {
@@ -58,8 +60,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Add user message
     await addMessage({
       content,
-      role: 'user',
-      status: 'sent',
+      type: 'text',
+      user_id: user?.id,
     });
 
     try {
@@ -67,8 +69,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await generateResponse(content);
       await addMessage({
         content: response,
-        role: 'assistant',
-        status: 'sent',
+        type: 'text',
+        user_id: null, // AI message
       });
     } catch (error) {
       toast.error('Failed to generate response');
