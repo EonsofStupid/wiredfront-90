@@ -5,6 +5,12 @@ import { APIConfiguration, APIType } from '@/types/store/settings/api-config';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { logger } from '@/services/chat/LoggingService';
 
+interface CreateConfigurationOptions {
+  assistant_name?: string;
+  provider_settings?: Record<string, any>;
+  is_default?: boolean;
+}
+
 export const useAPIConfigurations = () => {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +28,8 @@ export const useAPIConfigurations = () => {
         const { data, error } = await supabase
           .from('api_configurations')
           .select('*')
-          .eq('user_id', session.user.id);
+          .eq('user_id', session.user.id)
+          .order('created_at', { ascending: false });
 
         if (error) {
           logger.error('Error fetching API configurations:', error);
@@ -30,7 +37,6 @@ export const useAPIConfigurations = () => {
           return [];
         }
 
-        logger.info('Successfully fetched API configurations:', { count: data?.length });
         return data as APIConfiguration[];
       } catch (error) {
         logger.error('Error in API configurations query:', error);
@@ -42,7 +48,7 @@ export const useAPIConfigurations = () => {
     staleTime: 30000
   });
 
-  const createConfiguration = async (apiType: APIType) => {
+  const createConfiguration = async (apiType: APIType, options: CreateConfigurationOptions = {}) => {
     try {
       setIsLoading(true);
       
@@ -58,12 +64,10 @@ export const useAPIConfigurations = () => {
           user_id: session.user.id,
           api_type: apiType,
           is_enabled: true,
-          is_default: false,
-          priority: 0,
-          validation_status: 'pending',
-          model_preferences: {},
-          provider_settings: {},
-          training_enabled: false
+          is_default: options.is_default ?? false,
+          assistant_name: options.assistant_name,
+          provider_settings: options.provider_settings,
+          validation_status: 'pending'
         })
         .select()
         .single();
@@ -75,7 +79,6 @@ export const useAPIConfigurations = () => {
       }
 
       queryClient.invalidateQueries({ queryKey: ['api-configurations'] });
-      toast.success('API configuration created successfully');
       return data;
     } catch (error) {
       logger.error('Error creating API configuration:', error);
@@ -114,7 +117,6 @@ export const useAPIConfigurations = () => {
       }
 
       queryClient.invalidateQueries({ queryKey: ['api-configurations'] });
-      toast.success('API configuration updated successfully');
       return data;
     } catch (error) {
       logger.error('Error updating API configuration:', error);
