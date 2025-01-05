@@ -11,7 +11,9 @@ export const ChatWindow: React.FC = () => {
     position,
     size,
     isMinimized,
+    isDragging,
     setPosition,
+    setDragging,
     toggleMinimize,
     resetPosition,
   } = useWindowStore();
@@ -55,6 +57,7 @@ export const ChatWindow: React.FC = () => {
     e.preventDefault();
     const startX = e.clientX - position.x;
     const startY = e.clientY - position.y;
+    setDragging(true);
 
     const handleDrag = (moveEvent: MouseEvent) => {
       const margin = 20;
@@ -74,6 +77,7 @@ export const ChatWindow: React.FC = () => {
     };
 
     const handleDragEnd = () => {
+      setDragging(false);
       document.removeEventListener('mousemove', handleDrag);
       document.removeEventListener('mouseup', handleDragEnd);
     };
@@ -85,12 +89,14 @@ export const ChatWindow: React.FC = () => {
   return (
     <Card
       ref={cardRef}
-      className="fixed shadow-lg rounded-lg overflow-hidden bg-background flex flex-col z-[9999]"
+      className={`fixed shadow-lg rounded-lg overflow-hidden bg-background flex flex-col z-[9999] ${
+        isDragging ? 'cursor-grabbing' : ''
+      }`}
       style={{
         transform: `translate(${position.x}px, ${position.y}px)`,
         width: size.width,
         height: isMinimized ? 'auto' : size.height,
-        transition: 'height 0.2s ease-in-out',
+        transition: isDragging ? 'none' : 'height 0.2s ease-in-out',
       }}
     >
       <div

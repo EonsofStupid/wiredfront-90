@@ -32,7 +32,7 @@ const calculateDefaultPosition = () => {
   
   return {
     x: Math.min(window.innerWidth - width - margin, window.innerWidth * 0.7),
-    y: Math.min(window.innerHeight - height - margin, window.innerHeight * 0.7),
+    y: Math.min(window.innerHeight - height - margin, window.innerHeight * 0.5), // Adjusted to 50% instead of 70%
   };
 };
 
