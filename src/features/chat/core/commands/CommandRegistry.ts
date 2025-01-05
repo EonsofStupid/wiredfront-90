@@ -4,7 +4,7 @@ export type CommandHandler = (args: string) => Promise<void>;
 
 interface CommandStore {
   commands: Map<string, CommandHandler>;
-  registerCommand: (name: string, handler: CommandHandler) => void;
+  registerCommand: (name: string, handler: CommandHandler) => () => void;
   executeCommand: (name: string, args: string) => Promise<void>;
 }
 
@@ -15,6 +15,13 @@ export const useCommandStore = create<CommandStore>((set, get) => ({
     set((state) => ({
       commands: new Map(state.commands).set(name, handler)
     }));
+    return () => {
+      set((state) => {
+        const newCommands = new Map(state.commands);
+        newCommands.delete(name);
+        return { commands: newCommands };
+      });
+    };
   },
   
   executeCommand: async (name: string, args: string) => {

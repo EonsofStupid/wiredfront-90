@@ -61,21 +61,19 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const cleanupFns: (() => void)[] = [];
 
     // Clear command
-    const clearCleanup = registerCommand('clear', () => {
+    const clearCleanup = registerCommand('clear', async () => {
       clearMessages();
       toast.success('Chat cleared');
-      return () => {}; // Return cleanup function
     });
     cleanupFns.push(clearCleanup);
 
     // Help command
-    const helpCleanup = registerCommand('help', () => {
-      debouncedAddMessage({
+    const helpCleanup = registerCommand('help', async () => {
+      await debouncedAddMessage({
         content: 'Available commands:\n/clear - Clear chat\n/help - Show this message',
         type: 'system',
         user_id: user?.id,
       });
-      return () => {}; // Return cleanup function
     });
     cleanupFns.push(helpCleanup);
 
