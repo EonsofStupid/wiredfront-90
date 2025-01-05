@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, Suspense } from "react";
+import React from "react"; // Add explicit React import
 import { useNavigate } from "react-router-dom";
-import { DraggableChat } from "@/components/chat/DraggableChat";
 import { SetupWizard } from "@/components/setup/SetupWizard";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -10,7 +10,9 @@ import { useAuthenticatedSession } from "@/hooks/useAuthenticatedSession";
 import { supabase } from "@/integrations/supabase/client";
 
 // Lazy load components that aren't immediately needed
-const LazyDraggableChat = React.lazy(() => import("@/components/chat/DraggableChat"));
+const LazyDraggableChat = React.lazy(() => import("@/components/chat/DraggableChat").then(module => ({ 
+  default: module.DraggableChat 
+})));
 
 export default function Index() {
   const navigate = useNavigate();

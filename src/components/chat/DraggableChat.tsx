@@ -1,5 +1,8 @@
 import { ChatWindow } from "@/features/chat/ui/ChatWindow";
 
-export const DraggableChat = () => {
+const DraggableChat = () => {
   return <ChatWindow />;
 };
+
+export { DraggableChat };
+export default DraggableChat;
