@@ -2,7 +2,7 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { useWindowStore } from '../core/window/WindowManager';
 import { Button } from '@/components/ui/button';
-import { Minus, ArrowLeft, ArrowRight, Edit2, Robot, FileText } from 'lucide-react';
+import { Minus, ArrowLeft, ArrowRight, Edit2, Bot, FileText } from 'lucide-react';
 import { ChatMessageList } from './ChatMessageList';
 import { ChatInput } from './ChatInput';
 import { Input } from '@/components/ui/input';
@@ -93,7 +93,7 @@ export const ChatWindow: React.FC = () => {
             className="h-6 w-6 hover:bg-background/20"
             onClick={() => toast.info('AI Provider Settings')}
           >
-            <Robot className="h-4 w-4" />
+            <Bot className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
