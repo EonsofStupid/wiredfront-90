@@ -4,7 +4,6 @@
 
 @layer base {
   :root {
-    /* Original theme variables */
     --background: 0 0% 10%;
     --foreground: 0 0% 98%;
     --card: 0 0% 15%;
@@ -31,6 +30,10 @@
     --z-content: 500;
     --z-background: 400;
     --z-base: 300;
+
+    /* Color variables for rgb values */
+    --color-neon-blue: 0 255 255;
+    --color-neon-pink: 255 0 127;
   }
 
   * {
@@ -43,13 +46,18 @@
                 radial-gradient(circle at bottom left, theme('colors.neon.pink'), transparent 50%),
                 theme('colors.dark.DEFAULT');
   }
+
+  /* Ensure inputs are always clickable */
+  input, button, a {
+    @apply relative z-[var(--z-content)];
+  }
 }
 
 @layer components {
   .glass-card {
     @apply bg-dark-lighter/30 backdrop-blur-md border border-white/10 rounded-xl shadow-xl;
     position: relative;
-    overflow: hidden;
+    isolation: isolate;
   }
   
   .glass-card::before {
@@ -64,6 +72,7 @@
     );
     opacity: 0.1;
     pointer-events: none;
+    z-index: -1;
   }
   
   .neon-glow {
@@ -80,23 +89,5 @@
   
   .gradient-text {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-neon-blue via-neon-pink to-neon-violet animate-gradient-x;
-  }
-
-  .animate-hover-button {
-    @apply transition-all duration-300 ease-out transform hover:scale-115 hover:translate-y-[-8px];
-    will-change: transform;
-  }
-
-  .animate-hover-button:hover {
-    animation: button-float 2s ease-in-out infinite;
-  }
-
-  @keyframes button-float {
-    0%, 100% {
-      transform: translateY(-8px) scale(1.15);
-    }
-    50% {
-      transform: translateY(-12px) scale(1.15);
-    }
   }
 }
