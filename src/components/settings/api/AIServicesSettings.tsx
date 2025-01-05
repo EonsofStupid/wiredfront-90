@@ -13,19 +13,6 @@ interface APIKeyConfig {
   key: string;
 }
 
-interface AIServicesSettingsProps {
-  openaiKey: string;
-  huggingfaceKey: string;
-  geminiKey: string;
-  anthropicKey: string;
-  perplexityKey: string;
-  onOpenAIKeyChange: (value: string) => void;
-  onHuggingfaceKeyChange: (value: string) => void;
-  onGeminiKeyChange: (value: string) => void;
-  onAnthropicKeyChange: (value: string) => void;
-  onPerplexityKeyChange: (value: string) => void;
-}
-
 export function AIServicesSettings() {
   const { configurations, createConfiguration, updateConfiguration } = useAPIConfigurations();
   const [newConfigs, setNewConfigs] = useState<Record<APIType, APIKeyConfig>>({

@@ -48,18 +48,7 @@ export function APISettings() {
         </TabsList>
 
         <TabsContent value="ai-services">
-          <AIServicesSettings
-            openaiKey={settings.openaiKey}
-            huggingfaceKey={settings.huggingfaceKey}
-            geminiKey={settings.geminiKey}
-            anthropicKey={settings.anthropicKey}
-            perplexityKey={settings.perplexityKey}
-            onOpenAIKeyChange={(value) => updateSetting('openaiKey', value)}
-            onHuggingfaceKeyChange={(value) => updateSetting('huggingfaceKey', value)}
-            onGeminiKeyChange={(value) => updateSetting('geminiKey', value)}
-            onAnthropicKeyChange={(value) => updateSetting('anthropicKey', value)}
-            onPerplexityKeyChange={(value) => updateSetting('perplexityKey', value)}
-          />
+          <AIServicesSettings />
         </TabsContent>
 
         <TabsContent value="voice">
