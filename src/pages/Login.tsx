@@ -56,6 +56,7 @@ const Login = () => {
           theme="dark"
           providers={["github", "google"]}
           redirectTo={window.location.origin}
+          onlyThirdPartyProviders={false}
         />
       </div>
     </div>
