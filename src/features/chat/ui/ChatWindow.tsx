@@ -18,31 +18,28 @@ export const ChatWindow: React.FC = () => {
 
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // Ensure chat window is within viewport bounds on mount and window resize
+  // Ensure chat window stays within viewport bounds
   useEffect(() => {
     const adjustPosition = () => {
       if (!cardRef.current) return;
       
       const rect = cardRef.current.getBoundingClientRect();
+      const margin = 20;
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       
       let newX = position.x;
       let newY = position.y;
 
-      // Adjust X position if window is too far right
-      if (newX + rect.width > viewportWidth) {
-        newX = viewportWidth - rect.width - 20; // 20px margin
+      // Adjust position if window is outside viewport bounds
+      if (newX + rect.width > viewportWidth - margin) {
+        newX = viewportWidth - rect.width - margin;
       }
-
-      // Adjust Y position if window is too far down
-      if (newY + rect.height > viewportHeight) {
-        newY = viewportHeight - rect.height - 20; // 20px margin
+      if (newY + rect.height > viewportHeight - margin) {
+        newY = viewportHeight - rect.height - margin;
       }
-
-      // Ensure window isn't positioned off-screen to the left or top
-      if (newX < 0) newX = 20;
-      if (newY < 0) newY = 20;
+      if (newX < margin) newX = margin;
+      if (newY < margin) newY = margin;
 
       if (newX !== position.x || newY !== position.y) {
         setPosition({ x: newX, y: newY });
@@ -60,19 +57,20 @@ export const ChatWindow: React.FC = () => {
     const startY = e.clientY - position.y;
 
     const handleDrag = (moveEvent: MouseEvent) => {
-      const newX = moveEvent.clientX - startX;
-      const newY = moveEvent.clientY - startY;
-
-      // Ensure the window stays within viewport bounds
+      const margin = 20;
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       const windowWidth = cardRef.current?.offsetWidth || 0;
       const windowHeight = cardRef.current?.offsetHeight || 0;
 
-      const boundedX = Math.min(Math.max(0, newX), viewportWidth - windowWidth);
-      const boundedY = Math.min(Math.max(0, newY), viewportHeight - windowHeight);
+      let newX = moveEvent.clientX - startX;
+      let newY = moveEvent.clientY - startY;
 
-      setPosition({ x: boundedX, y: boundedY });
+      // Ensure window stays within viewport bounds with margin
+      newX = Math.min(Math.max(margin, newX), viewportWidth - windowWidth - margin);
+      newY = Math.min(Math.max(margin, newY), viewportHeight - windowHeight - margin);
+
+      setPosition({ x: newX, y: newY });
     };
 
     const handleDragEnd = () => {

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface Position {
   x: number;
@@ -24,21 +25,39 @@ interface WindowState {
   resetPosition: () => void;
 }
 
-const getDefaultPosition = () => ({
-  x: window.innerWidth - 400,
-  y: window.innerHeight - 600,
-});
+const calculateDefaultPosition = () => {
+  const margin = 20;
+  const width = 380;
+  const height = 500;
+  
+  return {
+    x: Math.min(window.innerWidth - width - margin, window.innerWidth * 0.7),
+    y: Math.min(window.innerHeight - height - margin, window.innerHeight * 0.7),
+  };
+};
 
-export const useWindowStore = create<WindowState>((set) => ({
-  position: getDefaultPosition(),
-  size: { width: 380, height: 500 },
-  isMinimized: false,
-  isDragging: false,
-  isResizing: false,
-  setPosition: (position) => set({ position }),
-  setSize: (size) => set({ size }),
-  toggleMinimize: () => set((state) => ({ isMinimized: !state.isMinimized })),
-  setDragging: (isDragging) => set({ isDragging }),
-  setResizing: (isResizing) => set({ isResizing }),
-  resetPosition: () => set({ position: getDefaultPosition() }),
-}));
+export const useWindowStore = create<WindowState>()(
+  persist(
+    (set) => ({
+      position: calculateDefaultPosition(),
+      size: { width: 380, height: 500 },
+      isMinimized: false,
+      isDragging: false,
+      isResizing: false,
+      setPosition: (position) => set({ position }),
+      setSize: (size) => set({ size }),
+      toggleMinimize: () => set((state) => ({ isMinimized: !state.isMinimized })),
+      setDragging: (isDragging) => set({ isDragging }),
+      setResizing: (isResizing) => set({ isResizing }),
+      resetPosition: () => set({ position: calculateDefaultPosition() }),
+    }),
+    {
+      name: 'chat-window-state',
+      partialize: (state) => ({
+        position: state.position,
+        size: state.size,
+        isMinimized: state.isMinimized,
+      }),
+    }
+  )
+);
