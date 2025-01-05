@@ -18,7 +18,6 @@ export const UserMenu = () => {
     try {
       await logout();
       navigate('/login');
-      toast.success('Logged out successfully');
     } catch (error) {
       toast.error('Error logging out');
     }

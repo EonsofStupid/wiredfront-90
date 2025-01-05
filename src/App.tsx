@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { MobileLayout } from "./components/layout/MobileLayout";
 import Index from "./pages/Index";
@@ -10,7 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import { ChatProvider } from "@/features/chat/ChatProvider";
-import { useSession } from "@/hooks/useSession";
+import { useAuthStore } from "@/stores/auth";
 import { storeLastVisitedPath } from "@/utils/auth";
 
 const queryClient = new QueryClient({
@@ -25,11 +25,19 @@ const queryClient = new QueryClient({
 
 const App = () => {
   const location = useLocation();
-  const { user, loading } = useSession();
+  const { user, loading, initializeAuth } = useAuthStore();
+
+  // Initialize auth state
+  useEffect(() => {
+    const cleanup = initializeAuth();
+    return () => {
+      cleanup.then(unsubscribe => unsubscribe());
+    };
+  }, [initializeAuth]);
 
   // Store last visited path
   useEffect(() => {
-    if (!loading) {  // Only store path after loading is complete
+    if (!loading) {
       storeLastVisitedPath(location.pathname);
     }
   }, [location, loading]);

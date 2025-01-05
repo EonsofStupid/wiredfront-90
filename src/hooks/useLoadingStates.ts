@@ -1,51 +1,42 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useSessionStore } from '@/stores/session/store';
+import { useAuthStore } from '@/stores/auth';
 
 export const useLoadingStates = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [apiConfigurations, setApiConfigurations] = useState<any[]>([]);
-  const { user, setUser } = useSessionStore();
+  const { user } = useAuthStore();
 
   useEffect(() => {
     let isMounted = true;
 
-    const loadEverything = async () => {
+    const loadData = async () => {
       try {
-        // 1. Check auth state
-        const { data: { session }, error: authError } = await supabase.auth.getSession();
-        if (authError) throw authError;
+        if (user) {
+          const [profileResult, apiConfigResult] = await Promise.all([
+            // Load profile
+            supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', user.id)
+              .single(),
+            
+            // Load API configurations
+            supabase
+              .from('api_configurations')
+              .select('*')
+              .eq('user_id', user.id)
+          ]);
 
-        if (isMounted) {
-          setUser(session?.user ?? null);
+          if (profileResult.error) throw profileResult.error;
+          if (apiConfigResult.error) throw apiConfigResult.error;
 
-          // If we have a user, load their data in parallel
-          if (session?.user) {
-            const [profileResult, apiConfigResult] = await Promise.all([
-              // 2. Load profile
-              supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .single(),
-              
-              // 3. Load API configurations
-              supabase
-                .from('api_configurations')
-                .select('*')
-                .eq('user_id', session.user.id)
-            ]);
-
-            if (profileResult.error) throw profileResult.error;
-            if (apiConfigResult.error) throw apiConfigResult.error;
-
-            if (isMounted) {
-              setProfile(profileResult.data);
-              setApiConfigurations(apiConfigResult.data);
-            }
+          if (isMounted) {
+            setProfile(profileResult.data);
+            setApiConfigurations(apiConfigResult.data);
           }
         }
       } catch (err) {
@@ -61,9 +52,9 @@ export const useLoadingStates = () => {
       }
     };
 
-    loadEverything();
+    loadData();
 
-    // Set up real-time subscription for role updates
+    // Set up real-time subscription for profile changes
     const channel = supabase
       .channel('profile-changes')
       .on(
@@ -86,7 +77,7 @@ export const useLoadingStates = () => {
       isMounted = false;
       supabase.removeChannel(channel);
     };
-  }, [setUser, user]);
+  }, [user]);
 
   return {
     isLoading,
