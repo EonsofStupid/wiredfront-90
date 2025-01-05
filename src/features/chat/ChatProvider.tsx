@@ -45,7 +45,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const messagesToRemove = messages.slice(0, messages.length - MAX_MESSAGES);
         messagesToRemove.forEach(msg => {
           // Cleanup any associated resources (e.g., file attachments)
-          if (msg.file_url) {
+          if ('file_url' in msg) {
             // Add cleanup logic for files if needed
           }
         });
@@ -61,19 +61,21 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const cleanupFns: (() => void)[] = [];
 
     // Clear command
-    const clearCleanup = registerCommand('clear', async () => {
+    const clearCleanup = registerCommand('clear', () => {
       clearMessages();
       toast.success('Chat cleared');
+      return () => {}; // Return cleanup function
     });
     cleanupFns.push(clearCleanup);
 
     // Help command
-    const helpCleanup = registerCommand('help', async () => {
-      await debouncedAddMessage({
+    const helpCleanup = registerCommand('help', () => {
+      debouncedAddMessage({
         content: 'Available commands:\n/clear - Clear chat\n/help - Show this message',
         type: 'system',
         user_id: user?.id,
       });
+      return () => {}; // Return cleanup function
     });
     cleanupFns.push(helpCleanup);
 
