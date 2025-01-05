@@ -3,7 +3,7 @@ import { devtools } from 'zustand/middleware';
 import type { DashboardStore } from './types';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { TimeFrame } from '@/types/dashboard/metrics';
+import { TimeFrame, MetricStatus } from '@/types/dashboard/metrics';
 
 const initialState = {
   metrics: [],
@@ -48,7 +48,7 @@ export const useDashboardStore = create<DashboardStore>()(
             percentage: Number(metric.percentage || 0),
             trend: (metric.trend as 'up' | 'down' | 'neutral') || 'neutral',
             timeframe: (metric.timeframe as TimeFrame) || 'daily',
-            status: metric.status || 'success'
+            status: (metric.status as MetricStatus) || 'success'
           })) || [];
 
           setMetrics(transformedMetrics);
