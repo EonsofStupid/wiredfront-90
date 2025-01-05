@@ -30,6 +30,7 @@ export default {
         float: "float 6s ease-in-out infinite",
         glow: "glow 2s ease-in-out infinite",
         "button-float": "button-float 2s ease-in-out infinite",
+        "letter-gradient": "letter-gradient 3s ease infinite",
       },
       keyframes: {
         "gradient-y": {
