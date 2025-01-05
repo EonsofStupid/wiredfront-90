@@ -4,6 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Message, MessageStatus } from '@/types/chat';
 
+const MAX_CACHED_MESSAGES = 100;
+const CLEANUP_THRESHOLD = 80;
+
 interface MessageState {
   messages: Message[];
   isLoading: boolean;
@@ -21,6 +24,14 @@ export const useMessageStore = create<MessageState>()(
       error: null,
 
       addMessage: async (message) => {
+        const messages = get().messages;
+        
+        // Implement cleanup if we're approaching the limit
+        if (messages.length >= CLEANUP_THRESHOLD) {
+          const messagesToKeep = messages.slice(-MAX_CACHED_MESSAGES);
+          set({ messages: messagesToKeep });
+        }
+
         const newMessage: Message = {
           id: crypto.randomUUID(),
           content: message.content || '',
@@ -79,12 +90,17 @@ export const useMessageStore = create<MessageState>()(
       },
 
       setError: (error) => set({ error }),
-      clearMessages: () => set({ messages: [], error: null }),
+      
+      clearMessages: () => {
+        set({ messages: [], error: null });
+        // Clear persisted messages from storage
+        localStorage.removeItem('chat-messages');
+      },
     }),
     {
       name: 'chat-messages',
       partialize: (state) => ({
-        messages: state.messages,
+        messages: state.messages.slice(-MAX_CACHED_MESSAGES), // Only persist limited messages
       }),
     }
   )
