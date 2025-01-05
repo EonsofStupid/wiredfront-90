@@ -343,6 +343,53 @@ export type Database = {
           },
         ]
       }
+      metrics: {
+        Row: {
+          created_at: string | null
+          id: string
+          label: string
+          percentage: number
+          status: string | null
+          timeframe: string | null
+          trend: string | null
+          updated_at: string | null
+          user_id: string | null
+          value: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          label: string
+          percentage: number
+          status?: string | null
+          timeframe?: string | null
+          trend?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          value: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          label?: string
+          percentage?: number
+          status?: string | null
+          timeframe?: string | null
+          trend?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metrics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       onboarding_steps: {
         Row: {
           completed: boolean | null

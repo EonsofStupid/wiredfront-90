@@ -40,15 +40,15 @@ export const useDashboardStore = create<DashboardStore>()(
           if (error) throw error;
 
           // Transform the data to match DashboardMetric type
-          const transformedMetrics = metricsData.map(metric => ({
+          const transformedMetrics = metricsData?.map(metric => ({
             id: metric.id,
-            label: metric.label,
-            value: Number(metric.value),
-            percentage: Number(metric.percentage),
-            trend: metric.trend as 'up' | 'down' | 'neutral',
-            timeframe: metric.timeframe,
-            status: metric.status
-          }));
+            label: metric.label || '',
+            value: Number(metric.value || 0),
+            percentage: Number(metric.percentage || 0),
+            trend: (metric.trend as 'up' | 'down' | 'neutral') || 'neutral',
+            timeframe: metric.timeframe || 'daily',
+            status: metric.status || 'success'
+          })) || [];
 
           setMetrics(transformedMetrics);
           set({ lastUpdated: new Date() });
