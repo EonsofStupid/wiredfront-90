@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useAuthenticatedSession } from "@/hooks/useAuthenticatedSession";
 import { supabase } from "@/integrations/supabase/client";
+import { useCallback } from "react";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -16,74 +17,43 @@ export default function Index() {
   const [isLoadingAPI, setIsLoadingAPI] = useState(true);
   const { isLoading, error, user } = useAuthenticatedSession();
 
+  // Memoize the API configuration loading function
+  const loadAPIConfigurations = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const { data: apiConfigs, error: configError } = await supabase
+        .from('api_configurations')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_enabled', true)
+        .limit(1); // Limit to only what we need
+
+      if (configError) throw configError;
+
+      if (!apiConfigs?.length) {
+        setIsFirstTimeUser(true);
+        setShowSetup(true);
+      }
+    } catch (err) {
+      console.error('Error loading API configurations:', err);
+      toast.error('Failed to load API configurations');
+    } finally {
+      setIsLoadingAPI(false);
+    }
+  }, [user]);
+
   useEffect(() => {
     let mounted = true;
-    let apiConfigSubscription: ReturnType<typeof supabase.channel> | null = null;
 
-    const loadAPIConfigurations = async () => {
-      if (!user) return;
-
-      try {
-        // Load API configurations
-        const { data: apiConfigs, error: configError } = await supabase
-          .from('api_configurations')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('is_enabled', true);
-
-        if (configError) throw configError;
-
-        // Set up real-time API configuration updates
-        apiConfigSubscription = supabase
-          .channel('api-config-changes')
-          .on(
-            'postgres_changes',
-            {
-              event: '*',
-              schema: 'public',
-              table: 'api_configurations',
-              filter: `user_id=eq.${user.id}`
-            },
-            (payload) => {
-              if (mounted) {
-                // Handle API configuration changes
-                if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
-                  toast.success('API configuration updated');
-                }
-              }
-            }
-          )
-          .subscribe();
-
-        if (mounted) {
-          setIsLoadingAPI(false);
-          
-          // Check if setup is needed
-          if (!apiConfigs?.length) {
-            setIsFirstTimeUser(true);
-            setShowSetup(true);
-          }
-        }
-      } catch (err) {
-        console.error('Error loading API configurations:', err);
-        if (mounted) {
-          toast.error('Failed to load API configurations');
-          setIsLoadingAPI(false);
-        }
-      }
-    };
-
-    if (user) {
+    if (user && mounted) {
       loadAPIConfigurations();
     }
 
     return () => {
       mounted = false;
-      if (apiConfigSubscription) {
-        supabase.removeChannel(apiConfigSubscription);
-      }
     };
-  }, [user]);
+  }, [user, loadAPIConfigurations]);
 
   // Show error state if something went wrong
   if (error) {
@@ -178,7 +148,6 @@ export default function Index() {
           onComplete={() => {
             setShowSetup(false);
             toast.success("Setup completed successfully!");
-            // Redirect based on role
             const userRole = user?.app_metadata?.role || 'user';
             navigate(userRole === 'admin' ? '/admin/dashboard' : '/dashboard', { replace: true });
           }} 

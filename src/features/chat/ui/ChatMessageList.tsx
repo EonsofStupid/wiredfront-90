@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useMessageStore } from '../core/messaging/MessageManager';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { Message } from '@/types/chat';
 
 export const ChatMessageList: React.FC = () => {
   const { messages } = useMessageStore();
@@ -12,19 +13,57 @@ export const ChatMessageList: React.FC = () => {
   const rowVirtualizer = useVirtualizer({
     count: messages.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => 50, // Estimated height of each message
-    overscan: 5, // Number of items to render outside of the visible area
+    estimateSize: (index) => {
+      // Estimate based on content length
+      const message = messages[index];
+      const contentLength = message?.content?.length || 0;
+      return Math.max(50, Math.min(200, 20 + contentLength * 0.5));
+    },
+    overscan: 5,
   });
 
-  // Auto-scroll to bottom on new messages
+  // Optimized scroll handling
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (!scrollRef.current || messages.length === 0) return;
+    
+    const scrollElement = scrollRef.current;
+    const isAtBottom = 
+      scrollElement.scrollHeight - scrollElement.scrollTop <= scrollElement.clientHeight + 100;
+
+    if (isAtBottom) {
+      requestAnimationFrame(() => {
+        scrollElement.scrollTop = scrollElement.scrollHeight;
+      });
     }
   }, [messages.length]);
 
+  const renderMessage = (message: Message, index: number) => {
+    return (
+      <div
+        className={`px-4 py-2 ${
+          message.role === 'user' ? 'flex justify-end' : 'flex justify-start'
+        }`}
+      >
+        <div
+          className={`rounded-lg px-4 py-2 max-w-[80%] ${
+            message.role === 'user'
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-muted'
+          }`}
+        >
+          <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+          {message.message_status === 'error' && (
+            <p className="text-xs text-destructive mt-1">
+              Failed to send message
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+    <ScrollArea className="flex-1" ref={scrollRef}>
       <div
         ref={parentRef}
         className="relative w-full"
@@ -35,28 +74,13 @@ export const ChatMessageList: React.FC = () => {
           return (
             <div
               key={message.id}
-              className={`absolute top-0 left-0 w-full ${
-                message.role === 'user' ? 'flex justify-end' : 'flex justify-start'
-              }`}
+              className="absolute top-0 left-0 w-full"
               style={{
                 height: virtualRow.size,
                 transform: `translateY(${virtualRow.start}px)`,
               }}
             >
-              <div
-                className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                  message.role === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted'
-                }`}
-              >
-                <p className="text-sm">{message.content}</p>
-                {message.message_status === 'error' && (
-                  <p className="text-xs text-destructive mt-1">
-                    Failed to send message
-                  </p>
-                )}
-              </div>
+              {renderMessage(message, virtualRow.index)}
             </div>
           );
         })}
