@@ -32,14 +32,25 @@ export const useDashboardStore = create<DashboardStore>()(
           setLoading(true);
           setError(null);
 
-          const { data, error } = await supabase
+          const { data: metricsData, error } = await supabase
             .from('metrics')
             .select('*')
             .order('created_at', { ascending: false });
 
           if (error) throw error;
 
-          setMetrics(data);
+          // Transform the data to match DashboardMetric type
+          const transformedMetrics = metricsData.map(metric => ({
+            id: metric.id,
+            label: metric.label,
+            value: Number(metric.value),
+            percentage: Number(metric.percentage),
+            trend: metric.trend as 'up' | 'down' | 'neutral',
+            timeframe: metric.timeframe,
+            status: metric.status
+          }));
+
+          setMetrics(transformedMetrics);
           set({ lastUpdated: new Date() });
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Failed to fetch metrics';
