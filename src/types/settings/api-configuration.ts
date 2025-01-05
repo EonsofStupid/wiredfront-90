@@ -21,3 +21,10 @@ export interface APIConfigurationCardProps {
   onConfigurationChange: (checked: boolean, config: any | undefined, apiType: APIType) => void;
   onSetDefault: (configId: string) => void;
 }
+
+export interface CreateConfigurationOptions {
+  assistant_name?: string;
+  assistant_id?: string | null;
+  provider_settings?: Record<string, any>;
+  is_default?: boolean;
+}

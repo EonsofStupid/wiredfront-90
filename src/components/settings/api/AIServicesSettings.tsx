@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useAPIConfigurations } from "@/hooks/settings/useAPIConfigurations";
 import { APIType } from "@/types/store/settings/api-config";
+import { CreateConfigurationOptions } from "@/types/settings/api-configuration";
 import { toast } from "sonner";
 
 interface APIKeyConfig {
@@ -31,11 +32,13 @@ export function AIServicesSettings() {
         return;
       }
 
-      await createConfiguration(type, {
+      const configOptions: CreateConfigurationOptions = {
         assistant_name: config.name,
         assistant_id: config.assistantId || null,
         provider_settings: { api_key: config.key }
-      });
+      };
+
+      await createConfiguration(type, configOptions);
 
       setNewConfigs(prev => ({
         ...prev,
