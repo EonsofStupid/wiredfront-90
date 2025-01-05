@@ -14,13 +14,19 @@ const UserMenuTrigger = React.forwardRef<
           ref={ref}
           variant="ghost" 
           size="icon"
-          className="animate-hover-button text-neon-pink hover:text-neon-blue relative"
+          className="relative animate-hover-button text-neon-pink hover:text-neon-blue"
+          style={{ zIndex: 'var(--z-dropdown)' }}
           {...props}
         >
           <User className="w-5 h-5" />
         </Button>
       </TooltipTrigger>
-      <TooltipContent>Account</TooltipContent>
+      <TooltipContent 
+        sideOffset={4}
+        style={{ zIndex: 'var(--z-dropdown)' }}
+      >
+        Account
+      </TooltipContent>
     </Tooltip>
   );
 });

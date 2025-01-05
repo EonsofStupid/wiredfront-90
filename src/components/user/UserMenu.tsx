@@ -25,15 +25,25 @@ export const UserMenu = () => {
   };
 
   return (
-    <div className="relative" style={{ zIndex: 'var(--z-dropdown)' }}>
+    <div 
+      className="relative isolate"
+      style={{ 
+        zIndex: 'var(--z-dropdown)',
+      }}
+    >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <UserMenuTrigger />
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end" 
-          className="glass-card"
-          style={{ position: 'relative', zIndex: 'var(--z-dropdown)' }}
+          className="glass-card w-56"
+          style={{ 
+            position: 'relative',
+            zIndex: 'var(--z-dropdown)',
+          }}
+          sideOffset={8}
+          alignOffset={0}
         >
           <UserMenuItems user={user} onLogout={handleLogout} />
         </DropdownMenuContent>

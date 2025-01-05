@@ -25,16 +25,32 @@ export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
 
   return (
     <>
-      <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
+      <DropdownMenuLabel className="font-normal">
+        <div className="flex flex-col space-y-1">
+          <p className="text-sm font-medium leading-none">{user.email}</p>
+          <p className="text-xs leading-none text-muted-foreground">
+            {user.user_metadata?.full_name || 'User'}
+          </p>
+        </div>
+      </DropdownMenuLabel>
       <DropdownMenuSeparator />
-      <DropdownMenuItem onClick={() => navigate('/profile')}>
+      <DropdownMenuItem 
+        className="cursor-pointer"
+        onClick={() => navigate('/profile')}
+      >
         Profile
       </DropdownMenuItem>
-      <DropdownMenuItem onClick={() => navigate('/settings')}>
+      <DropdownMenuItem 
+        className="cursor-pointer"
+        onClick={() => navigate('/settings')}
+      >
         Settings
       </DropdownMenuItem>
       <DropdownMenuSeparator />
-      <DropdownMenuItem onClick={onLogout}>
+      <DropdownMenuItem 
+        className="cursor-pointer text-red-500 focus:text-red-500"
+        onClick={onLogout}
+      >
         Logout
       </DropdownMenuItem>
     </>
