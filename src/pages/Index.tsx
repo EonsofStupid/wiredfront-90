@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { DraggableChat } from "@/components/chat/DraggableChat";
 import { SetupWizard } from "@/components/setup/SetupWizard";
@@ -8,7 +8,9 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useAuthenticatedSession } from "@/hooks/useAuthenticatedSession";
 import { supabase } from "@/integrations/supabase/client";
-import { useCallback } from "react";
+
+// Lazy load components that aren't immediately needed
+const LazyDraggableChat = React.lazy(() => import("@/components/chat/DraggableChat"));
 
 export default function Index() {
   const navigate = useNavigate();
@@ -24,14 +26,15 @@ export default function Index() {
     try {
       const { data: apiConfigs, error: configError } = await supabase
         .from('api_configurations')
-        .select('*')
+        .select('id, is_enabled')
         .eq('user_id', user.id)
         .eq('is_enabled', true)
-        .limit(1); // Limit to only what we need
+        .limit(1)
+        .single();
 
       if (configError) throw configError;
 
-      if (!apiConfigs?.length) {
+      if (!apiConfigs) {
         setIsFirstTimeUser(true);
         setShowSetup(true);
       }
@@ -94,7 +97,6 @@ export default function Index() {
           <div className="mt-12 space-y-8">
             {/* Guest Chat Preview */}
             <div className="relative">
-              <DraggableChat />
               <div className="absolute inset-0 bg-black/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -153,7 +155,13 @@ export default function Index() {
           }} 
         />
       )}
-      <DraggableChat />
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
+      }>
+        <LazyDraggableChat />
+      </Suspense>
     </div>
   );
 }
