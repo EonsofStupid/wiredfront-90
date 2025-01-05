@@ -31,8 +31,8 @@ const calculateDefaultPosition = () => {
   const height = 500;
   
   return {
-    x: Math.min(window.innerWidth - width - margin, window.innerWidth * 0.7),
-    y: Math.min(window.innerHeight - height - margin, window.innerHeight * 0.5), // Adjusted to 50% instead of 70%
+    x: window.innerWidth - width - margin,
+    y: window.innerHeight - height - margin - 48, // Added extra offset for bottom bar
   };
 };
 
