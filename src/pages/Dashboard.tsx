@@ -1,11 +1,23 @@
 import { motion } from "framer-motion";
 import { Activity, Code, Database, Settings, Search, User, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DashboardProps, DashboardMetric } from "@/types/dashboard/common";
+import { useDashboardStore } from "@/stores/dashboard/store";
+import { selectMetrics, selectIsLoading, selectError } from "@/stores/dashboard/selectors";
 import { MetricsPanel } from "@/types/dashboard/metrics";
 import { AnalyticsPanel } from "@/types/dashboard/analytics";
+import { useEffect } from "react";
 
-const Dashboard: React.FC<DashboardProps> = ({ initialData, refreshInterval = 30000 }) => {
+const Dashboard = () => {
+  const metrics = useDashboardStore(selectMetrics);
+  const isLoading = useDashboardStore(selectIsLoading);
+  const error = useDashboardStore(selectError);
+  const fetchMetrics = useDashboardStore(state => state.fetchMetrics);
+  const refreshDashboard = useDashboardStore(state => state.refreshDashboard);
+
+  useEffect(() => {
+    fetchMetrics();
+  }, [fetchMetrics]);
+
   return (
     <div className="min-h-screen bg-dark grid-bg">
       {/* Header */}
@@ -14,6 +26,14 @@ const Dashboard: React.FC<DashboardProps> = ({ initialData, refreshInterval = 30
           <h1 className="gradient-text text-2xl font-bold">wiredFRONT</h1>
           
           <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-neon-pink hover:text-neon-blue"
+              onClick={() => refreshDashboard()}
+            >
+              <Activity className="w-5 h-5" />
+            </Button>
             <Button variant="ghost" size="icon" className="text-neon-pink hover:text-neon-blue">
               <Search className="w-5 h-5" />
             </Button>
@@ -29,6 +49,12 @@ const Dashboard: React.FC<DashboardProps> = ({ initialData, refreshInterval = 30
 
       {/* Main Content */}
       <main className="pt-24 pb-8 px-4 md:px-8">
+        {error && (
+          <div className="mb-4 p-4 bg-red-500/10 border border-red-500 rounded-lg text-red-500">
+            {error}
+          </div>
+        )}
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Code Editor Panel */}
           <motion.div
