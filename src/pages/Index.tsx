@@ -1,15 +1,14 @@
 import { useEffect, useState, useCallback, Suspense } from "react";
-import React from "react"; // Add explicit React import
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { SetupWizard } from "@/components/setup/SetupWizard";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { useAuthenticatedSession } from "@/hooks/useAuthenticatedSession";
+import { useAuthStore } from "@/stores/auth";
 import { supabase } from "@/integrations/supabase/client";
 
-// Lazy load components that aren't immediately needed
 const LazyDraggableChat = React.lazy(() => import("@/components/chat/DraggableChat").then(module => ({ 
   default: module.DraggableChat 
 })));
@@ -19,7 +18,7 @@ export default function Index() {
   const [showSetup, setShowSetup] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [isLoadingAPI, setIsLoadingAPI] = useState(true);
-  const { isLoading, error, user } = useAuthenticatedSession();
+  const { user, loading, error } = useAuthStore();
 
   // Memoize the API configuration loading function
   const loadAPIConfigurations = useCallback(async () => {
@@ -76,7 +75,7 @@ export default function Index() {
   }
 
   // Show loading state while checking auth and loading configurations
-  if (isLoading || isLoadingAPI) {
+  if (loading || isLoadingAPI) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-6 w-6 animate-spin" />
@@ -152,8 +151,7 @@ export default function Index() {
           onComplete={() => {
             setShowSetup(false);
             toast.success("Setup completed successfully!");
-            const userRole = user?.app_metadata?.role || 'user';
-            navigate(userRole === 'admin' ? '/admin/dashboard' : '/dashboard', { replace: true });
+            navigate('/dashboard', { replace: true });
           }} 
         />
       )}

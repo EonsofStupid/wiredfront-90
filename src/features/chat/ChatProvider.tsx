@@ -5,11 +5,11 @@ import { useWindowStore } from './core/window/WindowManager';
 import { useCommandStore } from './core/commands/CommandRegistry';
 import { generateResponse } from './core/ai/huggingFaceService';
 import { toast } from 'sonner';
-import { useSession } from '@/hooks/useSession';
+import { useAuthStore } from '@/stores/auth';
 import { debounce } from 'lodash';
 
-const MAX_MESSAGES = 50; // Limit stored messages
-const DEBOUNCE_DELAY = 300; // ms
+const MAX_MESSAGES = 50;
+const DEBOUNCE_DELAY = 300;
 
 interface ChatContextValue {
   sendMessage: (content: string) => Promise<void>;
@@ -30,7 +30,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { addMessage, clearMessages, messages } = useMessageStore();
   const { setPosition } = useWindowStore();
   const { registerCommand } = useCommandStore();
-  const { user } = useSession();
+  const { user } = useAuthStore();
   
   // Refs for cleanup
   const commandCleanupRef = useRef<(() => void)[]>([]);

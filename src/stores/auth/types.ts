@@ -14,6 +14,7 @@ export interface AuthActions {
   login: (credentials: { email: string; password: string }) => Promise<void>;
   logout: () => void;
   refreshToken: () => Promise<void>;
+  initializeAuth: () => Promise<() => void>;
 }
 
 export type AuthStore = AuthState & AuthActions;
