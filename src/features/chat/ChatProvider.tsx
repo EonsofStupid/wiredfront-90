@@ -24,12 +24,13 @@ export const useChat = () => {
 
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { addMessage, clearMessages } = useMessageStore();
-  const { resetPosition } = useWindowStore();
+  const { setPosition } = useWindowStore();
   const { registerCommand } = useCommandStore();
   const { user } = useSession();
 
   useEffect(() => {
-    resetPosition();
+    // Set initial position
+    setPosition('bottom-right');
 
     // Register basic commands
     registerCommand('clear', async () => {
@@ -44,7 +45,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user_id: user?.id,
       });
     });
-  }, [resetPosition, registerCommand, clearMessages, addMessage, user]);
+  }, [setPosition, registerCommand, clearMessages, addMessage, user]);
 
   const sendMessage = async (content: string) => {
     if (content.startsWith('/')) {

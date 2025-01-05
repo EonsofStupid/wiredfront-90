@@ -6,6 +6,7 @@ interface WindowState {
   position: 'bottom-left' | 'bottom-right';
   toggleMinimize: () => void;
   setPosition: (position: 'bottom-left' | 'bottom-right') => void;
+  resetPosition: () => void;
 }
 
 export const useWindowStore = create<WindowState>()(
@@ -15,6 +16,7 @@ export const useWindowStore = create<WindowState>()(
       isMinimized: false,
       toggleMinimize: () => set((state) => ({ isMinimized: !state.isMinimized })),
       setPosition: (position) => set({ position }),
+      resetPosition: () => set({ position: 'bottom-right', isMinimized: false }),
     }),
     {
       name: 'chat-window-state',
