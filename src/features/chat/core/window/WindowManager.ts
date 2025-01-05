@@ -24,12 +24,14 @@ interface WindowState {
   resetPosition: () => void;
 }
 
-const DEFAULT_POSITION = { x: window.innerWidth - 400, y: window.innerHeight - 600 };
-const DEFAULT_SIZE = { width: 380, height: 500 };
+const getDefaultPosition = () => ({
+  x: window.innerWidth - 400,
+  y: window.innerHeight - 600,
+});
 
 export const useWindowStore = create<WindowState>((set) => ({
-  position: DEFAULT_POSITION,
-  size: DEFAULT_SIZE,
+  position: getDefaultPosition(),
+  size: { width: 380, height: 500 },
   isMinimized: false,
   isDragging: false,
   isResizing: false,
@@ -38,5 +40,5 @@ export const useWindowStore = create<WindowState>((set) => ({
   toggleMinimize: () => set((state) => ({ isMinimized: !state.isMinimized })),
   setDragging: (isDragging) => set({ isDragging }),
   setResizing: (isResizing) => set({ isResizing }),
-  resetPosition: () => set({ position: DEFAULT_POSITION }),
+  resetPosition: () => set({ position: getDefaultPosition() }),
 }));
