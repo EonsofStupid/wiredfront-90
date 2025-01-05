@@ -11,15 +11,16 @@ import { toast } from "sonner";
 interface APIKeyConfig {
   name: string;
   key: string;
+  assistantId?: string;
 }
 
 export function AIServicesSettings() {
   const { configurations, createConfiguration, updateConfiguration } = useAPIConfigurations();
   const [newConfigs, setNewConfigs] = useState<Record<APIType, APIKeyConfig>>({
-    openai: { name: '', key: '' },
-    huggingface: { name: '', key: '' },
-    gemini: { name: '', key: '' },
-    anthropic: { name: '', key: '' }
+    openai: { name: '', key: '', assistantId: '' },
+    huggingface: { name: '', key: '', assistantId: '' },
+    gemini: { name: '', key: '', assistantId: '' },
+    anthropic: { name: '', key: '', assistantId: '' }
   });
 
   const handleSaveConfig = async (type: APIType) => {
@@ -32,12 +33,13 @@ export function AIServicesSettings() {
 
       await createConfiguration(type, {
         assistant_name: config.name,
+        assistant_id: config.assistantId || null,
         provider_settings: { api_key: config.key }
       });
 
       setNewConfigs(prev => ({
         ...prev,
-        [type]: { name: '', key: '' }
+        [type]: { name: '', key: '', assistantId: '' }
       }));
 
       toast.success(`${type} configuration saved successfully`);
@@ -75,6 +77,11 @@ export function AIServicesSettings() {
                 value="••••••••••••••••"
                 disabled
               />
+              {config.assistant_id && (
+                <div className="text-sm text-muted-foreground">
+                  Assistant ID: {config.assistant_id}
+                </div>
+              )}
             </div>
           ))}
 
@@ -96,6 +103,14 @@ export function AIServicesSettings() {
                 onChange={(e) => setNewConfigs(prev => ({
                   ...prev,
                   [type]: { ...prev[type], key: e.target.value }
+                }))}
+              />
+              <Input
+                placeholder="Assistant ID (optional)"
+                value={newConfig.assistantId}
+                onChange={(e) => setNewConfigs(prev => ({
+                  ...prev,
+                  [type]: { ...prev[type], assistantId: e.target.value }
                 }))}
               />
               <Button 
