@@ -9,6 +9,10 @@ import { ChatInput } from './ChatInput';
 export const ChatWindow: React.FC = () => {
   const { position, isMinimized, toggleMinimize, setPosition } = useWindowStore();
 
+  const handlePositionToggle = () => {
+    setPosition(position === 'bottom-right' ? 'bottom-left' : 'bottom-right');
+  };
+
   return (
     <Card
       className={`fixed shadow-lg rounded-lg overflow-hidden bg-background flex flex-col z-[9999] transition-all duration-300 ${
@@ -24,7 +28,7 @@ export const ChatWindow: React.FC = () => {
             variant="ghost"
             size="icon"
             className="h-6 w-6"
-            onClick={() => setPosition(position === 'bottom-right' ? 'bottom-left' : 'bottom-right')}
+            onClick={handlePositionToggle}
           >
             {position === 'bottom-right' ? (
               <ArrowLeft className="h-4 w-4" />
