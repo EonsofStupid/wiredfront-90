@@ -20,6 +20,7 @@ export const ChatWindow: React.FC = () => {
       } bottom-20 w-[380px] ${
         isMinimized ? 'h-auto' : 'h-[500px]'
       }`}
+      style={{ pointerEvents: 'auto' }}
     >
       <div className="p-2 bg-muted flex items-center justify-between select-none">
         <span className="text-sm font-medium">AI Assistant</span>
