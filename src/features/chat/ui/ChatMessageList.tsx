@@ -5,17 +5,20 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { Message } from '@/types/chat';
 import { Loader2 } from 'lucide-react';
 
+interface MessageMetadata {
+  status?: 'connecting' | 'connected' | 'error';
+  [key: string]: any;
+}
+
 export const ChatMessageList: React.FC = () => {
   const { messages } = useMessageStore();
   const parentRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Virtual list implementation for efficient rendering
   const rowVirtualizer = useVirtualizer({
     count: messages.length,
     getScrollElement: () => scrollRef.current,
     estimateSize: (index) => {
-      // Estimate based on content length
       const message = messages[index];
       const contentLength = message?.content?.length || 0;
       return Math.max(50, Math.min(200, 20 + contentLength * 0.5));
@@ -23,7 +26,6 @@ export const ChatMessageList: React.FC = () => {
     overscan: 5,
   });
 
-  // Optimized scroll handling
   useEffect(() => {
     if (!scrollRef.current || messages.length === 0) return;
     
@@ -40,7 +42,8 @@ export const ChatMessageList: React.FC = () => {
 
   const renderMessage = (message: Message) => {
     const isSystem = message.type === 'system';
-    const isConnectionMessage = isSystem && message.metadata?.status;
+    const metadata = message.metadata as MessageMetadata;
+    const isConnectionMessage = isSystem && metadata?.status;
 
     return (
       <div
@@ -58,13 +61,13 @@ export const ChatMessageList: React.FC = () => {
               : 'bg-muted'
           }`}
         >
-          {isConnectionMessage && message.metadata?.status === 'connecting' && (
+          {isConnectionMessage && metadata.status === 'connecting' && (
             <div className="flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
               <span>{message.content}</span>
             </div>
           )}
-          {(!isConnectionMessage || message.metadata?.status !== 'connecting') && (
+          {(!isConnectionMessage || metadata.status !== 'connecting') && (
             <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
           )}
           {message.message_status === 'error' && (
