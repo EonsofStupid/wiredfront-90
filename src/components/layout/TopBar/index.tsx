@@ -1,9 +1,12 @@
 import { cn } from "@/lib/utils";
-import { Bell, Search, PanelLeftClose, PanelLeft } from "lucide-react";
+import { Bell, Search, PanelLeftClose, PanelLeft, X } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { UserMenu } from "@/components/user/UserMenu";
+import { useMessageStore } from "@/features/chat/core/messaging/MessageManager";
+import { useSessionManager } from "@/hooks/useSessionManager";
+import { toast } from "sonner";
 
 interface TopBarProps {
   className?: string;
@@ -13,6 +16,19 @@ interface TopBarProps {
 
 export const TopBar = ({ className, isCompact, onToggleCompact }: TopBarProps) => {
   const navigate = useNavigate();
+  const { clearMessages } = useMessageStore();
+  const { refreshSessions } = useSessionManager();
+
+  const handleTerminateSessions = async () => {
+    try {
+      clearMessages();
+      await refreshSessions();
+      toast.success("Successfully terminated all active sessions");
+    } catch (error) {
+      console.error('Error terminating sessions:', error);
+      toast.error("Failed to terminate sessions");
+    }
+  };
 
   return (
     <header className={cn("h-16 border-b border-neon-blue/20 glass-card px-6 relative z-40", className)}>
@@ -26,6 +42,15 @@ export const TopBar = ({ className, isCompact, onToggleCompact }: TopBarProps) =
           >
             {isCompact ? <PanelLeft className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
           </button>
+          <Button 
+            variant="destructive" 
+            size="sm"
+            onClick={handleTerminateSessions}
+            className="ml-4"
+          >
+            <X className="h-4 w-4 mr-2" />
+            Terminate Sessions
+          </Button>
         </div>
         
         <TooltipProvider delayDuration={0}>
