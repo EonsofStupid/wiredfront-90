@@ -3,10 +3,12 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, prefer',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -28,17 +30,20 @@ serve(async (req) => {
       .single();
 
     if (configError || !config) {
+      console.error('Configuration not found:', configError);
       throw new Error('Configuration not found');
     }
 
     // Get the API key from secrets
     const apiKeySecret = config.provider_settings?.api_key_secret;
     if (!apiKeySecret) {
+      console.error('API key secret not found in configuration');
       throw new Error('API key secret not found in configuration');
     }
 
     const apiKey = Deno.env.get(apiKeySecret);
     if (!apiKey) {
+      console.error('API key not found in secrets');
       throw new Error('API key not found in secrets');
     }
 
@@ -63,7 +68,10 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ success: testResult }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
+      }
     );
 
   } catch (error) {
