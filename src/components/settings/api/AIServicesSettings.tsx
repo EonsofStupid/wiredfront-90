@@ -1,8 +1,3 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Plus, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useAPIConfigurations } from "@/hooks/settings/useAPIConfigurations";
 import { APIType } from "@/types/store/settings/api-config";
@@ -11,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMessageStore } from "@/features/chat/core/messaging/MessageManager";
 import { useSessionManager } from "@/hooks/useSessionManager";
+import { ServiceCard } from "./components/ServiceCard";
 
 interface APIKeyConfig {
   name: string;
@@ -31,6 +27,13 @@ export function AIServicesSettings() {
     anthropic: { name: '', key: '', assistantId: '' }
   });
 
+  const handleConfigChange = (type: APIType, field: string, value: string) => {
+    setNewConfigs(prev => ({
+      ...prev,
+      [type]: { ...prev[type], [field]: value }
+    }));
+  };
+
   const handleSaveConfig = async (type: APIType) => {
     try {
       const config = newConfigs[type];
@@ -39,10 +42,8 @@ export function AIServicesSettings() {
         return;
       }
 
-      // Store API key in Supabase secrets
       const secretName = `${type.toUpperCase()}_API_KEY_${config.name.replace(/\s+/g, '_').toUpperCase()}`;
       
-      // Save API key to Supabase secrets using Edge Function
       const { error: secretError } = await supabase.functions.invoke('save-api-secret', {
         body: { 
           secretName,
@@ -55,7 +56,6 @@ export function AIServicesSettings() {
         throw new Error('Failed to save API key securely');
       }
       
-      // Create configuration with placeholder
       const configOptions: CreateConfigurationOptions = {
         assistant_name: config.name,
         assistant_id: config.assistantId || null,
@@ -89,10 +89,8 @@ export function AIServicesSettings() {
         throw new Error('Configuration not found');
       }
 
-      // Create a new chat session
       const sessionId = await createSession();
 
-      // Add initial connection message
       await addMessage({
         content: `Establishing connection to ${config.assistant_name}...`,
         type: 'system',
@@ -103,7 +101,6 @@ export function AIServicesSettings() {
         }
       });
 
-      // Test connection using Edge Function
       const { data, error } = await supabase.functions.invoke('test-ai-connection', {
         body: {
           provider: config.api_type,
@@ -116,7 +113,6 @@ export function AIServicesSettings() {
       }
 
       if (data.success) {
-        // Add success message to chat
         await addMessage({
           content: `Successfully connected to ${config.assistant_name}. You can now start chatting!`,
           type: 'system',
@@ -130,7 +126,6 @@ export function AIServicesSettings() {
 
         toast.success(`Connected to ${config.assistant_name} successfully`);
         
-        // Update configuration status
         await updateConfiguration(config.id, {
           validation_status: 'valid',
           last_validated: new Date().toISOString()
@@ -143,7 +138,6 @@ export function AIServicesSettings() {
       console.error('Connection error:', error);
       toast.error("Failed to connect to AI service");
       
-      // Add error message to chat if we have a session
       if (sessionId) {
         await addMessage({
           content: `Failed to connect: ${error.message}`,
@@ -162,142 +156,56 @@ export function AIServicesSettings() {
     }
   };
 
-  const renderServiceCard = (
-    type: APIType,
-    title: string,
-    description: string,
-    docsUrl: string,
-    docsText: string,
-    placeholder: string
-  ) => {
-    const configs = configurations.filter(c => c.api_type === type);
-    const newConfig = newConfigs[type];
-
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {configs.map((config) => (
-            <div key={config.id} className="space-y-2 border-b pb-4">
-              <div className="flex items-center justify-between">
-                <Label>{config.assistant_name}</Label>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleConnect(config.id)}
-                  disabled={isConnecting && selectedConfig === config.id}
-                >
-                  {isConnecting && selectedConfig === config.id ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Connecting...
-                    </>
-                  ) : (
-                    'Connect'
-                  )}
-                </Button>
-              </div>
-              {config.assistant_id && (
-                <div className="text-sm text-muted-foreground">
-                  Assistant ID: {config.assistant_id}
-                </div>
-              )}
-              <div className="text-sm text-muted-foreground">
-                Status: {config.validation_status}
-              </div>
-            </div>
-          ))}
-
-          <div className="space-y-2 pt-4">
-            <Label>Add New Configuration</Label>
-            <div className="space-y-2">
-              <Input
-                placeholder="Configuration Name"
-                value={newConfig.name}
-                onChange={(e) => setNewConfigs(prev => ({
-                  ...prev,
-                  [type]: { ...prev[type], name: e.target.value }
-                }))}
-              />
-              <Input
-                type="password"
-                placeholder={placeholder}
-                value={newConfig.key}
-                onChange={(e) => setNewConfigs(prev => ({
-                  ...prev,
-                  [type]: { ...prev[type], key: e.target.value }
-                }))}
-              />
-              <Input
-                placeholder="Assistant ID (optional)"
-                value={newConfig.assistantId}
-                onChange={(e) => setNewConfigs(prev => ({
-                  ...prev,
-                  [type]: { ...prev[type], assistantId: e.target.value }
-                }))}
-              />
-              <Button 
-                onClick={() => handleSaveConfig(type)}
-                className="w-full"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Configuration
-              </Button>
-            </div>
-          </div>
-
-          <p className="text-sm text-muted-foreground">
-            Get your API key from the{" "}
-            <a
-              href={docsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              {docsText}
-            </a>
-          </p>
-        </CardContent>
-      </Card>
-    );
-  };
+  const serviceConfigs = [
+    {
+      type: 'openai' as APIType,
+      title: 'OpenAI',
+      description: 'Configure OpenAI API for GPT models and other AI services.',
+      docsUrl: 'https://platform.openai.com/api-keys',
+      docsText: 'OpenAI dashboard',
+      placeholder: 'sk-...'
+    },
+    {
+      type: 'anthropic' as APIType,
+      title: 'Anthropic Claude',
+      description: 'Set up Anthropic Claude for advanced AI capabilities.',
+      docsUrl: 'https://console.anthropic.com/account/keys',
+      docsText: 'Anthropic Console',
+      placeholder: 'sk-ant-...'
+    },
+    {
+      type: 'gemini' as APIType,
+      title: 'Google Gemini',
+      description: 'Configure Google Gemini API for AI services.',
+      docsUrl: 'https://makersuite.google.com/app/apikey',
+      docsText: 'Google AI Studio',
+      placeholder: 'Enter Gemini API key'
+    },
+    {
+      type: 'huggingface' as APIType,
+      title: 'Hugging Face',
+      description: 'Set up Hugging Face for access to open-source AI models.',
+      docsUrl: 'https://huggingface.co/settings/tokens',
+      docsText: 'Hugging Face settings',
+      placeholder: 'hf_...'
+    }
+  ];
 
   return (
     <div className="space-y-6">
-      {renderServiceCard(
-        'openai',
-        'OpenAI',
-        'Configure OpenAI API for GPT models and other AI services.',
-        'https://platform.openai.com/api-keys',
-        'OpenAI dashboard',
-        'sk-...'
-      )}
-      {renderServiceCard(
-        'anthropic',
-        'Anthropic Claude',
-        'Set up Anthropic Claude for advanced AI capabilities.',
-        'https://console.anthropic.com/account/keys',
-        'Anthropic Console',
-        'sk-ant-...'
-      )}
-      {renderServiceCard(
-        'gemini',
-        'Google Gemini',
-        'Configure Google Gemini API for AI services.',
-        'https://makersuite.google.com/app/apikey',
-        'Google AI Studio',
-        'Enter Gemini API key'
-      )}
-      {renderServiceCard(
-        'huggingface',
-        'Hugging Face',
-        'Set up Hugging Face for access to open-source AI models.',
-        'https://huggingface.co/settings/tokens',
-        'Hugging Face settings',
-        'hf_...'
-      )}
+      {serviceConfigs.map(config => (
+        <ServiceCard
+          key={config.type}
+          {...config}
+          configurations={configurations.filter(c => c.api_type === config.type)}
+          newConfig={newConfigs[config.type]}
+          isConnecting={isConnecting}
+          selectedConfig={selectedConfig}
+          onConnect={handleConnect}
+          onConfigChange={handleConfigChange}
+          onSaveConfig={handleSaveConfig}
+        />
+      ))}
     </div>
   );
+}

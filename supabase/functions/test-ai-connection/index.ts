@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,30 +13,15 @@ serve(async (req) => {
 
   try {
     const { provider, configId } = await req.json();
-
-    // Create Supabase admin client
-    const supabaseAdmin = createClient(
+    
+    // Create Supabase client
+    const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Verify user authentication
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(
-      req.headers.get('Authorization')?.split('Bearer ')[1] ?? ''
-    );
-
-    if (authError || !user) {
-      throw new Error('Unauthorized');
-    }
-
-    // Get configuration
-    const { data: config, error: configError } = await supabaseAdmin
+    // Get the configuration
+    const { data: config, error: configError } = await supabaseClient
       .from('api_configurations')
       .select('*')
       .eq('id', configId)
@@ -46,84 +31,106 @@ serve(async (req) => {
       throw new Error('Configuration not found');
     }
 
-    // Get API key from provider settings
+    // Get the API key from secrets
     const apiKeySecret = config.provider_settings?.api_key_secret;
     if (!apiKeySecret) {
-      throw new Error('API key not found in configuration');
+      throw new Error('API key secret not found in configuration');
     }
 
-    // Test connection based on provider
-    let isValid = false;
+    const apiKey = Deno.env.get(apiKeySecret);
+    if (!apiKey) {
+      throw new Error('API key not found in secrets');
+    }
+
+    // Test the connection based on the provider
+    let testResult = false;
     switch (provider) {
       case 'openai':
-        isValid = await testOpenAIConnection(apiKeySecret);
+        testResult = await testOpenAIConnection(apiKey);
         break;
       case 'anthropic':
-        isValid = await testAnthropicConnection(apiKeySecret);
+        testResult = await testAnthropicConnection(apiKey);
         break;
       case 'gemini':
-        isValid = await testGeminiConnection(apiKeySecret);
+        testResult = await testGeminiConnection(apiKey);
         break;
       case 'huggingface':
-        isValid = await testHuggingFaceConnection(apiKeySecret);
+        testResult = await testHuggingFaceConnection(apiKey);
         break;
       default:
         throw new Error('Unsupported provider');
     }
 
     return new Response(
-      JSON.stringify({ success: isValid }),
+      JSON.stringify({ success: testResult }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Error testing AI connection:', error);
+    console.error('Error in test-ai-connection:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }
 });
 
 async function testOpenAIConnection(apiKey: string): Promise<boolean> {
-  const response = await fetch('https://api.openai.com/v1/models', {
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-  });
-  return response.ok;
+  try {
+    const response = await fetch('https://api.openai.com/v1/models', {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
 async function testAnthropicConnection(apiKey: string): Promise<boolean> {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'claude-3-opus-20240229',
-      max_tokens: 1,
-      messages: [{ role: 'user', content: 'test' }],
-    }),
-  });
-  return response.ok;
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: 'Hello' }],
+        model: 'claude-3-haiku-20240307',
+        max_tokens: 1,
+      }),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
 async function testGeminiConnection(apiKey: string): Promise<boolean> {
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-  return response.ok;
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
 async function testHuggingFaceConnection(apiKey: string): Promise<boolean> {
-  const response = await fetch('https://api-inference.huggingface.co/models/gpt2', {
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-    },
-  });
-  return response.ok;
+  try {
+    const response = await fetch('https://api-inference.huggingface.co/models', {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+      },
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
