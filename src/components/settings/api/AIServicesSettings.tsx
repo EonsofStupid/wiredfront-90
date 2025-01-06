@@ -36,7 +36,7 @@ export function AIServicesSettings() {
       const secretName = `${type.toUpperCase()}_API_KEY_${config.name.replace(/\s+/g, '_').toUpperCase()}`;
       
       // Call the Edge Function to save the secret
-      const { error: secretError } = await supabase.functions.invoke('manage-api-secret', {
+      const { data: secretData, error: secretError } = await supabase.functions.invoke('manage-api-secret', {
         body: { 
           secretName,
           secretValue: config.key,
@@ -46,7 +46,11 @@ export function AIServicesSettings() {
 
       if (secretError) {
         console.error('Error saving secret:', secretError);
-        throw new Error('Failed to save API key securely');
+        throw new Error(secretError.message || 'Failed to save API key securely');
+      }
+
+      if (!secretData?.success) {
+        throw new Error('Failed to save API key');
       }
 
       const configOptions: CreateConfigurationOptions = {
@@ -68,7 +72,7 @@ export function AIServicesSettings() {
       toast.success(`${type} configuration saved successfully`);
     } catch (error) {
       console.error('Error saving configuration:', error);
-      toast.error("Failed to save configuration");
+      toast.error(error instanceof Error ? error.message : "Failed to save configuration");
     }
   };
 
