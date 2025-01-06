@@ -2,12 +2,13 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { useWindowStore } from '../core/window/WindowManager';
 import { Button } from '@/components/ui/button';
-import { Minus, ArrowLeft, ArrowRight, Edit2, Bot, FileText } from 'lucide-react';
+import { Minus, ArrowLeft, ArrowRight, Edit2, Bot, FileText, Code } from 'lucide-react';
 import { ChatMessageList } from './ChatMessageList';
 import { ChatInput } from './ChatInput';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useChat } from '../ChatProvider';
 
 export const ChatWindow: React.FC = () => {
   const { position, isMinimized, toggleMinimize, setPosition } = useWindowStore();
@@ -15,6 +16,7 @@ export const ChatWindow: React.FC = () => {
   const [chatName, setChatName] = useState('WFAI');
   const [isExpanded, setIsExpanded] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
+  const { isDevelopmentMode } = useChat();
 
   const handlePositionToggle = () => {
     setPosition(position === 'bottom-right' ? 'bottom-left' : 'bottom-right');
@@ -49,18 +51,9 @@ export const ChatWindow: React.FC = () => {
 
     return (
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium">
-          {chatName.split('').map((letter, index) => (
-            <span
-              key={index}
-              className="inline-block animate-gradient-x bg-gradient-to-r from-neon-blue via-neon-pink to-neon-violet bg-clip-text text-transparent"
-              style={{
-                animationDelay: `${index * 0.1}s`,
-              }}
-            >
-              {letter}
-            </span>
-          ))}
+        <span className="text-sm font-medium flex items-center gap-2">
+          {isDevelopmentMode && <Code className="h-4 w-4 text-blue-500" />}
+          {chatName}
         </span>
         <Button
           variant="ghost"
@@ -85,7 +78,7 @@ export const ChatWindow: React.FC = () => {
       } transition-all duration-300 ease-in-out`}
       style={{ pointerEvents: 'auto' }}
     >
-      <div className="p-2 bg-muted flex items-center justify-between select-none">
+      <div className={`p-2 ${isDevelopmentMode ? 'bg-blue-50' : 'bg-muted'} flex items-center justify-between select-none`}>
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"

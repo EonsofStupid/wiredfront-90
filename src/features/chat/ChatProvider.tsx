@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useEffect, useCallback, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ChatWindow } from './ui/ChatWindow';
 import { useMessageStore } from './core/messaging/MessageManager';
 import { useWindowStore } from './core/window/WindowManager';
 import { useCommandStore } from './core/commands/CommandRegistry';
-import { generateResponse } from './core/ai/huggingFaceService';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth';
 import { debounce } from 'lodash';
+import { supabase } from '@/integrations/supabase/client';
 
 const MAX_MESSAGES = 50;
 const DEBOUNCE_DELAY = 300;
@@ -14,6 +15,7 @@ const DEBOUNCE_DELAY = 300;
 interface ChatContextValue {
   sendMessage: (content: string) => Promise<void>;
   clearChat: () => void;
+  isDevelopmentMode: boolean;
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -27,26 +29,48 @@ export const useChat = () => {
 };
 
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const location = useLocation();
   const { addMessage, clearMessages, messages } = useMessageStore();
   const { setPosition } = useWindowStore();
   const { registerCommand } = useCommandStore();
   const { user } = useAuthStore();
   
+  // Determine if we're in development mode based on route
+  const isDevelopmentMode = location.pathname === '/editor';
+  
   // Refs for cleanup
   const commandCleanupRef = useRef<(() => void)[]>([]);
+
+  // Fetch active API configuration
+  const fetchActiveConfig = async () => {
+    try {
+      const { data: config, error } = await supabase
+        .from('api_configurations')
+        .select('*')
+        .eq('user_id', user?.id)
+        .eq('is_enabled', true)
+        .eq('is_default', true)
+        .single();
+
+      if (error) throw error;
+      return config;
+    } catch (error) {
+      console.error('Error fetching API configuration:', error);
+      toast.error('Failed to load AI provider configuration');
+      return null;
+    }
+  };
 
   // Debounced message handler
   const debouncedAddMessage = useCallback(
     debounce(async (message) => {
       await addMessage(message);
       
-      // Cleanup old messages if we exceed the limit
       if (messages.length > MAX_MESSAGES) {
         const messagesToRemove = messages.slice(0, messages.length - MAX_MESSAGES);
         messagesToRemove.forEach(msg => {
-          // Cleanup any associated resources (e.g., file attachments)
           if ('file_url' in msg) {
-            // Add cleanup logic for files if needed
+            // Cleanup logic for files if needed
           }
         });
         clearMessages();
@@ -56,7 +80,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     [addMessage, messages, clearMessages]
   );
 
-  // Register commands with cleanup
+  // Register commands
   useEffect(() => {
     const cleanupFns: (() => void)[] = [];
 
@@ -70,7 +94,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Help command
     const helpCleanup = registerCommand('help', async () => {
       await debouncedAddMessage({
-        content: 'Available commands:\n/clear - Clear chat\n/help - Show this message',
+        content: isDevelopmentMode 
+          ? 'Development Mode Commands:\n/clear - Clear chat\n/help - Show this message\n/generate - Generate code'
+          : 'Available commands:\n/clear - Clear chat\n/help - Show this message',
         type: 'system',
         user_id: user?.id,
       });
@@ -80,17 +106,16 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Store cleanup functions
     commandCleanupRef.current = cleanupFns;
 
-    // Cleanup on unmount
     return () => {
       debouncedAddMessage.cancel();
       cleanupFns.forEach(cleanup => cleanup());
     };
-  }, [registerCommand, clearMessages, debouncedAddMessage, user]);
+  }, [registerCommand, clearMessages, debouncedAddMessage, user, isDevelopmentMode]);
 
-  // Set initial position with cleanup
+  // Set initial position
   useEffect(() => {
     setPosition('bottom-right');
-    return () => setPosition('bottom-right'); // Reset position on unmount
+    return () => setPosition('bottom-right');
   }, [setPosition]);
 
   const sendMessage = useCallback(async (content: string) => {
@@ -109,25 +134,43 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       content,
       type: 'text',
       user_id: user?.id,
+      metadata: { mode: isDevelopmentMode ? 'development' : 'chat' }
     });
 
     try {
-      // Generate AI response
-      const response = await generateResponse(content);
+      const config = await fetchActiveConfig();
+      if (!config) {
+        toast.error('No active AI provider configured');
+        return;
+      }
+
+      // Call the appropriate edge function based on mode
+      const functionName = isDevelopmentMode ? 'generate-code' : 'chat-completion';
+      const { data, error } = await supabase.functions.invoke(functionName, {
+        body: { message: content, config_id: config.id }
+      });
+
+      if (error) throw error;
+
       await debouncedAddMessage({
-        content: response,
+        content: data.response,
         type: 'text',
-        user_id: null, // AI message
+        user_id: null,
+        metadata: {
+          provider: config.api_type,
+          mode: isDevelopmentMode ? 'development' : 'chat'
+        }
       });
     } catch (error) {
       toast.error('Failed to generate response');
       console.error('Error:', error);
     }
-  }, [debouncedAddMessage, user]);
+  }, [debouncedAddMessage, user, isDevelopmentMode]);
 
   const value = {
     sendMessage,
     clearChat: clearMessages,
+    isDevelopmentMode
   };
 
   return (
