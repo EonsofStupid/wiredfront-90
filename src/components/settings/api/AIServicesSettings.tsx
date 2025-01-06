@@ -33,9 +33,14 @@ export function AIServicesSettings() {
         return;
       }
 
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("You must be logged in to save configurations");
+        return;
+      }
+
       const secretName = `${type.toUpperCase()}_API_KEY_${config.name.replace(/\s+/g, '_').toUpperCase()}`;
       
-      // Call the Edge Function to save the secret
       const { data: secretData, error: secretError } = await supabase.functions.invoke('manage-api-secret', {
         body: { 
           secretName,

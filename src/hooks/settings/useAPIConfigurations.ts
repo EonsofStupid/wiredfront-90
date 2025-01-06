@@ -4,12 +4,7 @@ import { toast } from 'sonner';
 import { APIConfiguration, APIType } from '@/types/store/settings/api-config';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { logger } from '@/services/chat/LoggingService';
-
-interface CreateConfigurationOptions {
-  assistant_name?: string;
-  provider_settings?: Record<string, any>;
-  is_default?: boolean;
-}
+import { CreateConfigurationOptions } from '@/types/settings/api-configuration';
 
 export const useAPIConfigurations = () => {
   const queryClient = useQueryClient();
@@ -58,6 +53,40 @@ export const useAPIConfigurations = () => {
         return null;
       }
 
+      // Check for existing configuration with same api_type
+      const { data: existingConfig } = await supabase
+        .from('api_configurations')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .eq('api_type', apiType)
+        .single();
+
+      if (existingConfig) {
+        // Update existing configuration
+        const { data, error } = await supabase
+          .from('api_configurations')
+          .update({
+            is_enabled: true,
+            assistant_name: options.assistant_name,
+            assistant_id: options.assistant_id,
+            provider_settings: options.provider_settings,
+            validation_status: 'pending'
+          })
+          .eq('id', existingConfig.id)
+          .select()
+          .single();
+
+        if (error) {
+          logger.error('Error updating API configuration:', error);
+          toast.error('Failed to update API configuration');
+          return null;
+        }
+
+        queryClient.invalidateQueries({ queryKey: ['api-configurations'] });
+        return data;
+      }
+
+      // Create new configuration
       const { data, error } = await supabase
         .from('api_configurations')
         .insert({
@@ -66,6 +95,7 @@ export const useAPIConfigurations = () => {
           is_enabled: true,
           is_default: options.is_default ?? false,
           assistant_name: options.assistant_name,
+          assistant_id: options.assistant_id,
           provider_settings: options.provider_settings,
           validation_status: 'pending'
         })
