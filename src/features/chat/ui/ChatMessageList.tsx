@@ -7,7 +7,9 @@ import { Loader2 } from 'lucide-react';
 
 interface MessageMetadata {
   status?: 'connecting' | 'connected' | 'error';
-  [key: string]: any;
+  configId?: string;
+  provider?: string;
+  error?: string;
 }
 
 export const ChatMessageList: React.FC = () => {

@@ -4,23 +4,14 @@ import { APIType } from "@/types/store/settings/api-config";
 import { CreateConfigurationOptions } from "@/types/settings/api-configuration";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useMessageStore } from "@/features/chat/core/messaging/MessageManager";
-import { useSessionManager } from "@/hooks/useSessionManager";
 import { ServiceCard } from "./components/ServiceCard";
-
-interface APIKeyConfig {
-  name: string;
-  key: string;
-  assistantId?: string;
-}
+import { useServiceConnection } from "./hooks/useServiceConnection";
+import { ServiceConfig, NewConfigState } from "./types";
 
 export function AIServicesSettings() {
   const { configurations, createConfiguration, updateConfiguration } = useAPIConfigurations();
-  const { addMessage } = useMessageStore();
-  const { createSession } = useSessionManager();
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [selectedConfig, setSelectedConfig] = useState<string | null>(null);
-  const [newConfigs, setNewConfigs] = useState<Record<APIType, APIKeyConfig>>({
+  const { isConnecting, selectedConfig, handleConnect } = useServiceConnection();
+  const [newConfigs, setNewConfigs] = useState<Record<APIType, NewConfigState>>({
     openai: { name: '', key: '', assistantId: '' },
     huggingface: { name: '', key: '', assistantId: '' },
     gemini: { name: '', key: '', assistantId: '' },
@@ -79,89 +70,9 @@ export function AIServicesSettings() {
     }
   };
 
-  const handleConnect = async (configId: string) => {
-    let currentSessionId: string | null = null;
-    let selectedConfiguration = configurations.find(c => c.id === configId);
-
-    try {
-      setIsConnecting(true);
-      setSelectedConfig(configId);
-
-      if (!selectedConfiguration) {
-        throw new Error('Configuration not found');
-      }
-
-      currentSessionId = await createSession();
-
-      await addMessage({
-        content: `Establishing connection to ${selectedConfiguration.assistant_name}...`,
-        type: 'system',
-        chat_session_id: currentSessionId,
-        metadata: {
-          configId: selectedConfiguration.id,
-          provider: selectedConfiguration.api_type,
-          status: 'connecting'
-        }
-      });
-
-      const { data, error } = await supabase.functions.invoke('test-ai-connection', {
-        body: {
-          provider: selectedConfiguration.api_type,
-          configId: selectedConfiguration.id
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data.success) {
-        await addMessage({
-          content: `Successfully connected to ${selectedConfiguration.assistant_name}. You can now start chatting!`,
-          type: 'system',
-          chat_session_id: currentSessionId,
-          metadata: {
-            configId: selectedConfiguration.id,
-            provider: selectedConfiguration.api_type,
-            status: 'connected'
-          }
-        });
-
-        toast.success(`Connected to ${selectedConfiguration.assistant_name} successfully`);
-        
-        await updateConfiguration(selectedConfiguration.id, {
-          validation_status: 'valid',
-          last_validated: new Date().toISOString()
-        });
-      } else {
-        throw new Error('Failed to connect to AI service');
-      }
-
-    } catch (error) {
-      console.error('Connection error:', error);
-      toast.error("Failed to connect to AI service");
-      
-      if (currentSessionId && selectedConfiguration) {
-        await addMessage({
-          content: `Failed to connect: ${error.message}`,
-          type: 'system',
-          chat_session_id: currentSessionId,
-          metadata: {
-            configId: selectedConfiguration.id,
-            provider: selectedConfiguration.api_type,
-            status: 'error'
-          }
-        });
-      }
-    } finally {
-      setIsConnecting(false);
-      setSelectedConfig(null);
-    }
-  };
-
-  const serviceConfigs = [
+  const serviceConfigs: ServiceConfig[] = [
     {
-      type: 'openai' as APIType,
+      type: 'openai',
       title: 'OpenAI',
       description: 'Configure OpenAI API for GPT models and other AI services.',
       docsUrl: 'https://platform.openai.com/api-keys',
@@ -169,7 +80,7 @@ export function AIServicesSettings() {
       placeholder: 'sk-...'
     },
     {
-      type: 'anthropic' as APIType,
+      type: 'anthropic',
       title: 'Anthropic Claude',
       description: 'Set up Anthropic Claude for advanced AI capabilities.',
       docsUrl: 'https://console.anthropic.com/account/keys',
@@ -177,7 +88,7 @@ export function AIServicesSettings() {
       placeholder: 'sk-ant-...'
     },
     {
-      type: 'gemini' as APIType,
+      type: 'gemini',
       title: 'Google Gemini',
       description: 'Configure Google Gemini API for AI services.',
       docsUrl: 'https://makersuite.google.com/app/apikey',
@@ -185,7 +96,7 @@ export function AIServicesSettings() {
       placeholder: 'Enter Gemini API key'
     },
     {
-      type: 'huggingface' as APIType,
+      type: 'huggingface',
       title: 'Hugging Face',
       description: 'Set up Hugging Face for access to open-source AI models.',
       docsUrl: 'https://huggingface.co/settings/tokens',
@@ -204,7 +115,12 @@ export function AIServicesSettings() {
           newConfig={newConfigs[config.type]}
           isConnecting={isConnecting}
           selectedConfig={selectedConfig}
-          onConnect={handleConnect}
+          onConnect={(configId) => {
+            const configuration = configurations.find(c => c.id === configId);
+            if (configuration) {
+              handleConnect(configId, configuration.assistant_name || 'AI Service', configuration.api_type);
+            }
+          }}
           onConfigChange={handleConfigChange}
           onSaveConfig={handleSaveConfig}
         />
