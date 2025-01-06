@@ -1,1 +1,4 @@
 project_id = "ewjisqyvspdvhyppkhnm"
+
+[initialize-llm-session]
+verify_jwt = true
