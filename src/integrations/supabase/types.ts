@@ -692,6 +692,13 @@ export type Database = {
         }
         Returns: string
       }
+      set_secret: {
+        Args: {
+          name: string
+          value: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       api_type: "openai" | "gemini" | "anthropic" | "huggingface"
