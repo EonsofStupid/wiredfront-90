@@ -35,3 +35,11 @@ export const useCommandStore = create<CommandStore>((set, get) => ({
     await handler(args);
   },
 }));
+
+// Export development mode commands
+export const DEV_COMMANDS = {
+  GENERATE: 'generate',
+  CREATE_FILE: 'create',
+  MODIFY_FILE: 'modify',
+  DELETE_FILE: 'delete',
+};

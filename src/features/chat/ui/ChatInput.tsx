@@ -1,14 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Paperclip } from 'lucide-react';
+import { Send, Paperclip, Code } from 'lucide-react';
 import { useChat } from '../ChatProvider';
 import { useCommandStore } from '../core/commands/CommandRegistry';
 
 export const ChatInput: React.FC = () => {
   const [message, setMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { sendMessage } = useChat();
+  const { sendMessage, isDevelopmentMode } = useChat();
   const { executeCommand } = useCommandStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,6 +35,16 @@ export const ChatInput: React.FC = () => {
   return (
     <form onSubmit={handleSubmit} className="p-4 border-t">
       <div className="flex items-center gap-2">
+        {isDevelopmentMode && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="text-blue-500"
+          >
+            <Code className="h-5 w-5" />
+          </Button>
+        )}
         <Button
           type="button"
           variant="ghost"
@@ -46,7 +56,7 @@ export const ChatInput: React.FC = () => {
         <Input
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type a message or command..."
+          placeholder={isDevelopmentMode ? "Ask me to generate or modify code..." : "Type a message or command..."}
           className="flex-1"
         />
         <Button type="submit" size="icon">

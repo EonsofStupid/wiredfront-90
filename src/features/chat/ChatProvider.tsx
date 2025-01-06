@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { ChatWindow } from './ui/ChatWindow';
 import { useMessageStore } from './core/messaging/MessageManager';
 import { useWindowStore } from './core/window/WindowManager';
-import { useCommandStore } from './core/commands/CommandRegistry';
+import { useCommandStore, DEV_COMMANDS } from './core/commands/CommandRegistry';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth';
 import { debounce } from 'lodash';
@@ -102,6 +102,29 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     });
     cleanupFns.push(helpCleanup);
+
+    // Development mode commands
+    if (isDevelopmentMode) {
+      // Generate code command
+      const generateCleanup = registerCommand(DEV_COMMANDS.GENERATE, async (args) => {
+        await debouncedAddMessage({
+          content: `Generating code: ${args}`,
+          type: 'system',
+          user_id: user?.id,
+        });
+      });
+      cleanupFns.push(generateCleanup);
+
+      // Create file command
+      const createFileCleanup = registerCommand(DEV_COMMANDS.CREATE_FILE, async (args) => {
+        await debouncedAddMessage({
+          content: `Creating file: ${args}`,
+          type: 'system',
+          user_id: user?.id,
+        });
+      });
+      cleanupFns.push(createFileCleanup);
+    }
 
     // Store cleanup functions
     commandCleanupRef.current = cleanupFns;
