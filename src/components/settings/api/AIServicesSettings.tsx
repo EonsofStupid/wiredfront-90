@@ -9,7 +9,7 @@ import { useServiceConnection } from "./hooks/useServiceConnection";
 import { ServiceConfig, NewConfigState } from "./types";
 
 export function AIServicesSettings() {
-  const { configurations, createConfiguration, updateConfiguration } = useAPIConfigurations();
+  const { configurations, createConfiguration } = useAPIConfigurations();
   const { isConnecting, selectedConfig, handleConnect } = useServiceConnection();
   const [newConfigs, setNewConfigs] = useState<Record<APIType, NewConfigState>>({
     openai: { name: '', key: '', assistantId: '' },
@@ -35,7 +35,8 @@ export function AIServicesSettings() {
 
       const secretName = `${type.toUpperCase()}_API_KEY_${config.name.replace(/\s+/g, '_').toUpperCase()}`;
       
-      const { error: secretError } = await supabase.functions.invoke('save-api-secret', {
+      // Call the Edge Function to save the secret
+      const { error: secretError } = await supabase.functions.invoke('manage-api-secret', {
         body: { 
           secretName,
           secretValue: config.key,
@@ -44,13 +45,14 @@ export function AIServicesSettings() {
       });
 
       if (secretError) {
+        console.error('Error saving secret:', secretError);
         throw new Error('Failed to save API key securely');
       }
-      
+
       const configOptions: CreateConfigurationOptions = {
         assistant_name: config.name,
         assistant_id: config.assistantId || null,
-        provider_settings: { 
+        provider_settings: {
           api_key_secret: secretName,
           provider: type
         }
