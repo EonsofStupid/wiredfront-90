@@ -27,12 +27,13 @@ serve(async (req) => {
       {
         auth: {
           autoRefreshToken: false,
-          persistSession: false
+          persistSession: false,
+          detectSessionInUrl: false
         }
       }
     )
 
-    // Verify the user is authenticated
+    // Verify the user is authenticated using service role
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       throw new Error('No authorization header')
@@ -46,7 +47,9 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    // Save the secret using Supabase's secret management
+    console.log(`Setting secret ${secretName} for provider ${provider}`);
+
+    // Save the secret using service role
     const { error: secretError } = await supabaseAdmin.rpc('set_secret', {
       name: secretName,
       value: secretValue
@@ -55,6 +58,26 @@ serve(async (req) => {
     if (secretError) {
       console.error('Error saving secret:', secretError)
       throw new Error('Failed to save secret')
+    }
+
+    // Update api_configurations table with service role
+    const { error: configError } = await supabaseAdmin
+      .from('api_configurations')
+      .upsert({
+        user_id: user.id,
+        api_type: provider,
+        is_enabled: true,
+        provider_settings: {
+          api_key_secret: secretName
+        },
+        validation_status: 'pending'
+      }, {
+        onConflict: 'user_id,api_type'
+      })
+
+    if (configError) {
+      console.error('Error updating api configuration:', configError)
+      throw new Error('Failed to update API configuration')
     }
 
     return new Response(
