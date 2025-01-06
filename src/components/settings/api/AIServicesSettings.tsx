@@ -9,6 +9,8 @@ import { APIType } from "@/types/store/settings/api-config";
 import { CreateConfigurationOptions } from "@/types/settings/api-configuration";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useMessageStore } from "@/features/chat/core/messaging/MessageManager";
+import { useSessionManager } from "@/hooks/useSessionManager";
 
 interface APIKeyConfig {
   name: string;
@@ -18,6 +20,8 @@ interface APIKeyConfig {
 
 export function AIServicesSettings() {
   const { configurations, createConfiguration, updateConfiguration } = useAPIConfigurations();
+  const { addMessage } = useMessageStore();
+  const { createSession } = useSessionManager();
   const [isConnecting, setIsConnecting] = useState(false);
   const [selectedConfig, setSelectedConfig] = useState<string | null>(null);
   const [newConfigs, setNewConfigs] = useState<Record<APIType, APIKeyConfig>>({
@@ -85,6 +89,20 @@ export function AIServicesSettings() {
         throw new Error('Configuration not found');
       }
 
+      // Create a new chat session
+      const sessionId = await createSession();
+
+      // Add initial connection message
+      await addMessage({
+        content: `Establishing connection to ${config.assistant_name}...`,
+        type: 'system',
+        chat_session_id: sessionId,
+        metadata: {
+          configId: config.id,
+          provider: config.api_type
+        }
+      });
+
       // Test connection using Edge Function
       const { data, error } = await supabase.functions.invoke('test-ai-connection', {
         body: {
@@ -98,6 +116,18 @@ export function AIServicesSettings() {
       }
 
       if (data.success) {
+        // Add success message to chat
+        await addMessage({
+          content: `Successfully connected to ${config.assistant_name}. You can now start chatting!`,
+          type: 'system',
+          chat_session_id: sessionId,
+          metadata: {
+            configId: config.id,
+            provider: config.api_type,
+            status: 'connected'
+          }
+        });
+
         toast.success(`Connected to ${config.assistant_name} successfully`);
         
         // Update configuration status
@@ -112,6 +142,20 @@ export function AIServicesSettings() {
     } catch (error) {
       console.error('Connection error:', error);
       toast.error("Failed to connect to AI service");
+      
+      // Add error message to chat if we have a session
+      if (sessionId) {
+        await addMessage({
+          content: `Failed to connect: ${error.message}`,
+          type: 'system',
+          chat_session_id: sessionId,
+          metadata: {
+            configId: config.id,
+            provider: config.api_type,
+            status: 'error'
+          }
+        });
+      }
     } finally {
       setIsConnecting(false);
       setSelectedConfig(null);
@@ -257,4 +301,3 @@ export function AIServicesSettings() {
       )}
     </div>
   );
-}

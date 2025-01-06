@@ -133,9 +133,9 @@ export const ChatWindow: React.FC = () => {
         <div className="flex-1 flex overflow-hidden">
           {showSidebar && (
             <div className="w-[120px] border-r border-border bg-muted/50 p-2">
-              <div className="text-xs font-medium mb-2">Chat Sessions</div>
+              <div className="text-xs font-medium mb-2">Active Sessions</div>
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">No active sessions</div>
+                {/* Add session list here if needed */}
               </div>
             </div>
           )}

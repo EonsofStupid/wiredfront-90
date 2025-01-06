@@ -3,6 +3,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useMessageStore } from '../core/messaging/MessageManager';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Message } from '@/types/chat';
+import { Loader2 } from 'lucide-react';
 
 export const ChatMessageList: React.FC = () => {
   const { messages } = useMessageStore();
@@ -37,21 +38,35 @@ export const ChatMessageList: React.FC = () => {
     }
   }, [messages.length]);
 
-  const renderMessage = (message: Message, index: number) => {
+  const renderMessage = (message: Message) => {
+    const isSystem = message.type === 'system';
+    const isConnectionMessage = isSystem && message.metadata?.status;
+
     return (
       <div
         className={`px-4 py-2 ${
+          isSystem ? 'flex justify-center' : 
           message.role === 'user' ? 'flex justify-end' : 'flex justify-start'
         }`}
       >
         <div
           className={`rounded-lg px-4 py-2 max-w-[80%] ${
-            message.role === 'user'
+            isSystem 
+              ? 'bg-muted/50 text-muted-foreground text-sm'
+              : message.role === 'user'
               ? 'bg-primary text-primary-foreground'
               : 'bg-muted'
           }`}
         >
-          <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+          {isConnectionMessage && message.metadata?.status === 'connecting' && (
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>{message.content}</span>
+            </div>
+          )}
+          {(!isConnectionMessage || message.metadata?.status !== 'connecting') && (
+            <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+          )}
           {message.message_status === 'error' && (
             <p className="text-xs text-destructive mt-1">
               Failed to send message
@@ -80,7 +95,7 @@ export const ChatMessageList: React.FC = () => {
                 transform: `translateY(${virtualRow.start}px)`,
               }}
             >
-              {renderMessage(message, virtualRow.index)}
+              {renderMessage(message)}
             </div>
           );
         })}
