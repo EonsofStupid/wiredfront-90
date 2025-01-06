@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, config_id } = await req.json();
+    const { prompt, config_id } = await req.json();
 
     // Initialize Supabase client
     const supabaseClient = createClient(
@@ -32,10 +32,11 @@ serve(async (req) => {
       throw new Error('Failed to fetch API configuration');
     }
 
-    // Prepare the system message based on the provider
+    // Prepare the system message for code generation
     const systemMessage = `You are an AI assistant specialized in writing code. 
     Generate clean, maintainable code following best practices. 
-    Focus on TypeScript and React. Include comments for complex logic.`;
+    Focus on TypeScript and React. Include comments for complex logic.
+    Return only the code without any additional text or markdown formatting.`;
 
     // Make the API request based on the provider
     let response;
@@ -51,7 +52,7 @@ serve(async (req) => {
             model: 'gpt-4o-mini',
             messages: [
               { role: 'system', content: systemMessage },
-              { role: 'user', content: message }
+              { role: 'user', content: prompt }
             ],
           }),
         });
@@ -62,10 +63,13 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log('Generated response:', data);
+    console.log('Generated code response:', data);
 
     return new Response(
-      JSON.stringify({ response: data.choices[0].message.content }),
+      JSON.stringify({ 
+        code: data.choices[0].message.content,
+        language: 'typescript' // You can enhance this to detect the language
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {

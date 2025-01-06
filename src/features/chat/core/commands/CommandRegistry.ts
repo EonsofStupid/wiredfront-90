@@ -8,6 +8,23 @@ interface CommandStore {
   executeCommand: (name: string, args: string) => Promise<void>;
 }
 
+// Export development mode commands
+export const DEV_COMMANDS = {
+  GENERATE: 'generate',
+  CREATE_FILE: 'create',
+  MODIFY_FILE: 'modify',
+  DELETE_FILE: 'delete',
+  REFACTOR: 'refactor',
+  TEST: 'test',
+  OPTIMIZE: 'optimize',
+  DEBUG: 'debug',
+  EXPLAIN: 'explain',
+  LINT: 'lint',
+  FORMAT: 'format',
+  SEARCH: 'search',
+  DOCS: 'docs'
+};
+
 export const useCommandStore = create<CommandStore>((set, get) => ({
   commands: new Map(),
   
@@ -35,11 +52,3 @@ export const useCommandStore = create<CommandStore>((set, get) => ({
     await handler(args);
   },
 }));
-
-// Export development mode commands
-export const DEV_COMMANDS = {
-  GENERATE: 'generate',
-  CREATE_FILE: 'create',
-  MODIFY_FILE: 'modify',
-  DELETE_FILE: 'delete',
-};
