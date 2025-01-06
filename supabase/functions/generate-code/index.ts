@@ -7,7 +7,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -15,7 +14,6 @@ serve(async (req) => {
   try {
     const { prompt, config_id } = await req.json();
 
-    // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -39,28 +37,20 @@ serve(async (req) => {
     Return only the code without any additional text or markdown formatting.`;
 
     // Make the API request based on the provider
-    let response;
-    switch (config.api_type) {
-      case 'openai':
-        response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${config.provider_settings.api_key}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              { role: 'system', content: systemMessage },
-              { role: 'user', content: prompt }
-            ],
-          }),
-        });
-        break;
-      // Add other provider implementations here
-      default:
-        throw new Error('Unsupported provider');
-    }
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${config.provider_settings.api_key}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemMessage },
+          { role: 'user', content: prompt }
+        ],
+      }),
+    });
 
     const data = await response.json();
     console.log('Generated code response:', data);
@@ -68,7 +58,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         code: data.choices[0].message.content,
-        language: 'typescript' // You can enhance this to detect the language
+        fileName: 'generated.tsx'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
