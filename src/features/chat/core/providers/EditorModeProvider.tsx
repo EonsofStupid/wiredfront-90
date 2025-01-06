@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useCallback } from 'react';
+import React, { createContext, useContext, useCallback, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,6 +8,8 @@ interface EditorModeContextValue {
   generateCode: (prompt: string) => Promise<void>;
   modifyFile: (filePath: string, content: string) => Promise<void>;
   viewProject: () => Promise<void>;
+  currentFiles: Record<string, string>;
+  activeFile: string;
 }
 
 const EditorModeContext = createContext<EditorModeContextValue | null>(null);
@@ -23,6 +25,10 @@ export const useEditorMode = () => {
 export const EditorModeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const isEditorMode = location.pathname === '/editor';
+  const [currentFiles, setCurrentFiles] = useState<Record<string, string>>({
+    'src/App.tsx': 'export default function App() { return <div>Hello World</div> }',
+  });
+  const [activeFile, setActiveFile] = useState('src/App.tsx');
 
   const generateCode = useCallback(async (prompt: string) => {
     try {
@@ -32,10 +38,12 @@ export const EditorModeProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
       if (error) throw error;
 
-      // Open the generated code in a new window/iframe
-      const previewUrl = `https://stackblitz.com/edit/react-ts-preview?file=src/${data.fileName}`;
-      window.open(previewUrl, '_blank');
-
+      // Update current files with the generated code
+      setCurrentFiles(prev => ({
+        ...prev,
+        [data.fileName]: data.content
+      }));
+      setActiveFile(data.fileName);
       toast.success('Code generated successfully');
     } catch (error) {
       console.error('Error generating code:', error);
@@ -50,6 +58,12 @@ export const EditorModeProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       });
 
       if (error) throw error;
+      
+      setCurrentFiles(prev => ({
+        ...prev,
+        [filePath]: content
+      }));
+      setActiveFile(filePath);
       toast.success('File modified successfully');
     } catch (error) {
       console.error('Error modifying file:', error);
@@ -65,9 +79,9 @@ export const EditorModeProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
       if (error) throw error;
 
-      // Open project in StackBlitz
-      const previewUrl = `https://stackblitz.com/edit/react-ts-preview?file=${data.entryFile}`;
-      window.open(previewUrl, '_blank');
+      // Update current files with the project files
+      setCurrentFiles(data.files);
+      setActiveFile(data.entryFile);
     } catch (error) {
       console.error('Error viewing project:', error);
       toast.error('Failed to view project');
@@ -78,7 +92,9 @@ export const EditorModeProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     isEditorMode,
     generateCode,
     modifyFile,
-    viewProject
+    viewProject,
+    currentFiles,
+    activeFile
   };
 
   return (
