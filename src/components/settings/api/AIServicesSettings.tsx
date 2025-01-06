@@ -85,29 +85,29 @@ export function AIServicesSettings() {
         throw new Error('Configuration not found');
       }
 
-      // Test connection logic here
-      const testResponse = await fetch('/api/test-ai-connection', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      // Test connection using Edge Function
+      const { data, error } = await supabase.functions.invoke('test-ai-connection', {
+        body: {
           provider: config.api_type,
           configId: config.id
-        })
+        }
       });
 
-      if (!testResponse.ok) {
-        throw new Error('Failed to connect to AI service');
+      if (error) {
+        throw error;
       }
 
-      toast.success(`Connected to ${config.assistant_name} successfully`);
-      
-      // Update configuration status
-      await updateConfiguration(config.id, {
-        validation_status: 'valid',
-        last_validated: new Date().toISOString()
-      });
+      if (data.success) {
+        toast.success(`Connected to ${config.assistant_name} successfully`);
+        
+        // Update configuration status
+        await updateConfiguration(config.id, {
+          validation_status: 'valid',
+          last_validated: new Date().toISOString()
+        });
+      } else {
+        throw new Error('Failed to connect to AI service');
+      }
 
     } catch (error) {
       console.error('Connection error:', error);

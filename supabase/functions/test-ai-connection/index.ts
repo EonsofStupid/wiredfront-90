@@ -13,15 +13,30 @@ serve(async (req) => {
 
   try {
     const { provider, configId } = await req.json();
-    
-    // Create Supabase client
-    const supabaseClient = createClient(
+
+    // Create Supabase admin client
+    const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
     );
 
+    // Verify user authentication
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(
+      req.headers.get('Authorization')?.split('Bearer ')[1] ?? ''
+    );
+
+    if (authError || !user) {
+      throw new Error('Unauthorized');
+    }
+
     // Get configuration
-    const { data: config, error: configError } = await supabaseClient
+    const { data: config, error: configError } = await supabaseAdmin
       .from('api_configurations')
       .select('*')
       .eq('id', configId)
@@ -31,42 +46,43 @@ serve(async (req) => {
       throw new Error('Configuration not found');
     }
 
-    // Get API key from secrets
-    const apiKey = Deno.env.get(config.provider_settings.api_key_secret);
-    if (!apiKey) {
-      throw new Error('API key not found');
+    // Get API key from provider settings
+    const apiKeySecret = config.provider_settings?.api_key_secret;
+    if (!apiKeySecret) {
+      throw new Error('API key not found in configuration');
     }
 
     // Test connection based on provider
-    let testResult = false;
+    let isValid = false;
     switch (provider) {
       case 'openai':
-        testResult = await testOpenAIConnection(apiKey);
+        isValid = await testOpenAIConnection(apiKeySecret);
         break;
       case 'anthropic':
-        testResult = await testAnthropicConnection(apiKey);
+        isValid = await testAnthropicConnection(apiKeySecret);
         break;
       case 'gemini':
-        testResult = await testGeminiConnection(apiKey);
+        isValid = await testGeminiConnection(apiKeySecret);
         break;
       case 'huggingface':
-        testResult = await testHuggingFaceConnection(apiKey);
+        isValid = await testHuggingFaceConnection(apiKeySecret);
         break;
       default:
         throw new Error('Unsupported provider');
     }
 
     return new Response(
-      JSON.stringify({ success: testResult }),
+      JSON.stringify({ success: isValid }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
+    console.error('Error testing AI connection:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400
       }
     );
   }
