@@ -6,7 +6,7 @@ import { useCallback } from "react";
 import { APIConfigurationList } from "./api/APIConfigurationList";
 
 export function APIConfigurationPanel() {
-  const { configurations, loading, updateConfiguration, createConfiguration } = useAPIConfigurations();
+  const { configurations, loading, updateConfiguration, createConfiguration, deleteConfiguration } = useAPIConfigurations();
 
   const handleConfigurationChange = useCallback(async (checked: boolean, config: typeof configurations[0] | undefined, apiType: APIType) => {
     if (config) {
@@ -19,6 +19,10 @@ export function APIConfigurationPanel() {
   const handleSetDefault = useCallback(async (configId: string) => {
     await updateConfiguration(configId, { is_default: true });
   }, [updateConfiguration]);
+
+  const handleDelete = useCallback(async (configId: string) => {
+    await deleteConfiguration(configId);
+  }, [deleteConfiguration]);
 
   if (loading) {
     return (
@@ -40,6 +44,7 @@ export function APIConfigurationPanel() {
         configurations={configurations}
         onConfigurationChange={handleConfigurationChange}
         onSetDefault={handleSetDefault}
+        onDelete={handleDelete}
       />
     </div>
   );

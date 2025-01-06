@@ -2,7 +2,12 @@ import { APIConfigurationProps } from "@/types/settings/api-configuration";
 import { API_CONFIGURATIONS } from "@/constants/api-configurations";
 import { APIConfigurationCard } from "./APIConfigurationCard";
 
-export function APIConfigurationList({ configurations, onConfigurationChange, onSetDefault }: APIConfigurationProps) {
+export function APIConfigurationList({ 
+  configurations, 
+  onConfigurationChange, 
+  onSetDefault,
+  onDelete 
+}: APIConfigurationProps) {
   return (
     <div className="grid gap-4">
       {API_CONFIGURATIONS.map((api) => {
@@ -14,6 +19,7 @@ export function APIConfigurationList({ configurations, onConfigurationChange, on
             api={api}
             onConfigurationChange={onConfigurationChange}
             onSetDefault={onSetDefault}
+            onDelete={onDelete}
           />
         );
       })}

@@ -13,6 +13,7 @@ export interface APIConfigurationProps {
   configurations: any[];
   onConfigurationChange: (checked: boolean, config: any | undefined, apiType: APIType) => void;
   onSetDefault: (configId: string) => void;
+  onDelete: (configId: string) => void;
 }
 
 export interface APIConfigurationCardProps {
@@ -20,6 +21,7 @@ export interface APIConfigurationCardProps {
   api: APIConfigurationItem;
   onConfigurationChange: (checked: boolean, config: any | undefined, apiType: APIType) => void;
   onSetDefault: (configId: string) => void;
+  onDelete: (configId: string) => void;
 }
 
 export interface CreateConfigurationOptions {

@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Key, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Key, CheckCircle, XCircle, Clock, Trash2 } from "lucide-react";
 import { APIConfigurationCardProps } from "@/types/settings/api-configuration";
 import { ValidationStatusType } from "@/types/store/settings/api-config";
 
@@ -19,7 +19,13 @@ const getValidationStatusIcon = (status: ValidationStatusType | undefined) => {
   }
 };
 
-export function APIConfigurationCard({ config, api, onConfigurationChange, onSetDefault }: APIConfigurationCardProps) {
+export function APIConfigurationCard({ 
+  config, 
+  api, 
+  onConfigurationChange, 
+  onSetDefault,
+  onDelete 
+}: APIConfigurationCardProps) {
   return (
     <Card>
       <CardHeader className="pb-4">
@@ -67,6 +73,13 @@ export function APIConfigurationCard({ config, api, onConfigurationChange, onSet
                 disabled={config.is_default}
               >
                 {config.is_default ? 'Default API' : 'Set as Default'}
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => onDelete?.(config.id)}
+              >
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           </div>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { APIConfiguration, APIType } from '@/types/store/settings/api-config';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { logger } from '@/services/chat/LoggingService';
 
 interface CreateConfigurationOptions {
@@ -127,10 +127,45 @@ export const useAPIConfigurations = () => {
     }
   };
 
+  const deleteConfiguration = async (id: string) => {
+    try {
+      setIsLoading(true);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        toast.error('You must be logged in to delete API configurations');
+        return null;
+      }
+
+      const { error } = await supabase
+        .from('api_configurations')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', session.user.id);
+
+      if (error) {
+        logger.error('Error deleting API configuration:', error);
+        toast.error('Failed to delete API configuration');
+        return null;
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['api-configurations'] });
+      toast.success('API configuration deleted successfully');
+      return true;
+    } catch (error) {
+      logger.error('Error deleting API configuration:', error);
+      toast.error('Failed to delete API configuration');
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     configurations,
     loading: isLoading || isLoadingConfigs,
     createConfiguration,
     updateConfiguration,
+    deleteConfiguration,
   };
 };
