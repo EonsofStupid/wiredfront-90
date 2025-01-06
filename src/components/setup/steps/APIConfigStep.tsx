@@ -10,7 +10,7 @@ interface APIConfigStepProps {
 }
 
 export function APIConfigStep({ isFirstTimeUser = false }: APIConfigStepProps) {
-  const { configurations, loading, updateConfiguration, createConfiguration } = useAPIConfigurations();
+  const { configurations, loading, updateConfiguration, createConfiguration, deleteConfiguration } = useAPIConfigurations();
   const { settings } = useAPISettings();
 
   const handleConfigurationChange = useCallback(async (checked: boolean, config: typeof configurations[0] | undefined, apiType: APIType) => {
@@ -25,6 +25,10 @@ export function APIConfigStep({ isFirstTimeUser = false }: APIConfigStepProps) {
     await updateConfiguration(configId, { is_default: true });
   }, [updateConfiguration]);
 
+  const handleDelete = useCallback(async (configId: string) => {
+    await deleteConfiguration(configId);
+  }, [deleteConfiguration]);
+
   return (
     <Card>
       <CardContent className="pt-6">
@@ -38,6 +42,7 @@ export function APIConfigStep({ isFirstTimeUser = false }: APIConfigStepProps) {
             configurations={configurations}
             onConfigurationChange={handleConfigurationChange}
             onSetDefault={handleSetDefault}
+            onDelete={handleDelete}
           />
         </div>
       </CardContent>

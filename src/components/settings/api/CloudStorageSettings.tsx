@@ -1,6 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface CloudStorageSettingsProps {
   googleDriveKey: string;
@@ -23,6 +25,54 @@ export function CloudStorageSettings({
   onAwsAccessKeyChange,
   onAwsSecretKeyChange,
 }: CloudStorageSettingsProps) {
+  const handleSaveSecret = async (provider: string, value: string) => {
+    try {
+      const secretName = `${provider.toUpperCase()}_API_KEY`;
+      
+      const { data, error } = await supabase.functions.invoke('manage-api-secret', {
+        body: { 
+          secretName,
+          secretValue: value,
+          provider
+        }
+      });
+
+      if (error) {
+        console.error('Error saving secret:', error);
+        throw new Error(error.message || 'Failed to save secret');
+      }
+
+      if (!data?.success) {
+        throw new Error('Failed to save secret');
+      }
+
+      toast.success(`${provider} API key saved successfully`);
+    } catch (error) {
+      console.error('Error saving secret:', error);
+      toast.error(error instanceof Error ? error.message : "Failed to save secret");
+    }
+  };
+
+  const handleGoogleDriveKeyChange = (value: string) => {
+    onGoogleDriveKeyChange(value);
+    if (value) handleSaveSecret('google_drive', value);
+  };
+
+  const handleDropboxKeyChange = (value: string) => {
+    onDropboxKeyChange(value);
+    if (value) handleSaveSecret('dropbox', value);
+  };
+
+  const handleAwsAccessKeyChange = (value: string) => {
+    onAwsAccessKeyChange(value);
+    if (value) handleSaveSecret('aws_access', value);
+  };
+
+  const handleAwsSecretKeyChange = (value: string) => {
+    onAwsSecretKeyChange(value);
+    if (value) handleSaveSecret('aws_secret', value);
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -39,7 +89,7 @@ export function CloudStorageSettings({
               id="google-drive-key"
               type="password"
               value={googleDriveKey}
-              onChange={(e) => onGoogleDriveKeyChange(e.target.value)}
+              onChange={(e) => handleGoogleDriveKeyChange(e.target.value)}
               placeholder="Enter Google Drive API key"
             />
           </div>
@@ -60,7 +110,7 @@ export function CloudStorageSettings({
               id="dropbox-key"
               type="password"
               value={dropboxKey}
-              onChange={(e) => onDropboxKeyChange(e.target.value)}
+              onChange={(e) => handleDropboxKeyChange(e.target.value)}
               placeholder="Enter Dropbox API key"
             />
           </div>
@@ -81,7 +131,7 @@ export function CloudStorageSettings({
               id="aws-access-key"
               type="password"
               value={awsAccessKey}
-              onChange={(e) => onAwsAccessKeyChange(e.target.value)}
+              onChange={(e) => handleAwsAccessKeyChange(e.target.value)}
               placeholder="Enter AWS Access Key ID"
             />
           </div>
@@ -91,7 +141,7 @@ export function CloudStorageSettings({
               id="aws-secret-key"
               type="password"
               value={awsSecretKey}
-              onChange={(e) => onAwsSecretKeyChange(e.target.value)}
+              onChange={(e) => handleAwsSecretKeyChange(e.target.value)}
               placeholder="Enter AWS Secret Access Key"
             />
           </div>

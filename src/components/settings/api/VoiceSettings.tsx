@@ -2,6 +2,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface VoiceSettingsProps {
   elevenLabsKey: string;
@@ -28,6 +30,35 @@ export function VoiceSettings({
     { id: "yoZ06aMxZJJ28mfd3POQ", name: "Sam" },
   ];
 
+  const handleElevenLabsKeyChange = async (value: string) => {
+    onElevenLabsKeyChange(value);
+    if (value) {
+      try {
+        const { data, error } = await supabase.functions.invoke('manage-api-secret', {
+          body: { 
+            secretName: 'ELEVENLABS_API_KEY',
+            secretValue: value,
+            provider: 'elevenlabs'
+          }
+        });
+
+        if (error) {
+          console.error('Error saving ElevenLabs key:', error);
+          throw new Error(error.message || 'Failed to save API key');
+        }
+
+        if (!data?.success) {
+          throw new Error('Failed to save API key');
+        }
+
+        toast.success('ElevenLabs API key saved successfully');
+      } catch (error) {
+        console.error('Error saving ElevenLabs key:', error);
+        toast.error(error instanceof Error ? error.message : "Failed to save API key");
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -44,7 +75,7 @@ export function VoiceSettings({
               id="elevenlabs-key"
               type="password"
               value={elevenLabsKey}
-              onChange={(e) => onElevenLabsKeyChange(e.target.value)}
+              onChange={(e) => handleElevenLabsKeyChange(e.target.value)}
               placeholder="Enter ElevenLabs API key"
             />
           </div>
