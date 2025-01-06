@@ -3,7 +3,7 @@ import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { MobileLayout } from "@/components/layout/MobileLayout";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
@@ -15,7 +15,7 @@ import { storeLastVisitedPath } from "@/utils/auth";
 import { EditorModeProvider } from "@/features/chat/core/providers/EditorModeProvider";
 
 const App = () => {
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const { user } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
