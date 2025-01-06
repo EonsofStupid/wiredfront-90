@@ -40,8 +40,8 @@ export const LivePreview = ({ files, activeFile }: LivePreviewProps) => {
           theme: 'dark'
         });
 
-        // Get the project URL using the VM's properties
-        const projectUrl = `https://stackblitz.com/edit/${await vm.getFsid()}`;
+        // Get the project URL using the VM's id property
+        const projectUrl = `https://stackblitz.com/edit/${vm.id}`;
         setStackBlitzUrl(projectUrl);
 
         // Create Vite URL
