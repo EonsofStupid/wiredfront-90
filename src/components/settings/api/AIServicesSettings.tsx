@@ -38,6 +38,19 @@ export function AIServicesSettings() {
       // Store API key in Supabase secrets
       const secretName = `${type.toUpperCase()}_API_KEY_${config.name.replace(/\s+/g, '_').toUpperCase()}`;
       
+      // Save API key to Supabase secrets using Edge Function
+      const { error: secretError } = await supabase.functions.invoke('save-api-secret', {
+        body: { 
+          secretName,
+          secretValue: config.key,
+          provider: type
+        }
+      });
+
+      if (secretError) {
+        throw new Error('Failed to save API key securely');
+      }
+      
       // Create configuration with placeholder
       const configOptions: CreateConfigurationOptions = {
         assistant_name: config.name,
