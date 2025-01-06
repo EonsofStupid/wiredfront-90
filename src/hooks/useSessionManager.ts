@@ -20,26 +20,29 @@ export const useSessionManager = () => {
     try {
       const { data, error } = await supabase
         .from('messages')
-        .select<'*', Database['public']['Tables']['messages']['Row']>('*')
+        .select('chat_session_id, last_accessed')
         .order('last_accessed', { ascending: false })
         .limit(10);
 
       if (error) throw error;
 
-      const uniqueSessions = Array.from(
-        new Map(
-          data.map(item => [
-            item.chat_session_id,
-            {
-              id: item.chat_session_id!,
-              lastAccessed: new Date(item.last_accessed!),
-              isActive: item.chat_session_id === currentSessionId
-            }
-          ])
-        ).values()
-      );
+      // Process the data only if we have results
+      if (data) {
+        const uniqueSessions = Array.from(
+          new Map(
+            data.map(item => [
+              item.chat_session_id,
+              {
+                id: item.chat_session_id!,
+                lastAccessed: new Date(item.last_accessed!),
+                isActive: item.chat_session_id === currentSessionId
+              }
+            ])
+          ).values()
+        );
 
-      setSessions(uniqueSessions);
+        setSessions(uniqueSessions);
+      }
     } catch (error) {
       console.error('Error fetching sessions:', error);
       toast.error('Failed to fetch sessions');
@@ -50,19 +53,24 @@ export const useSessionManager = () => {
   const switchSession = useCallback(async (sessionId: string) => {
     try {
       // Update last_accessed for the current session
-      await supabase
+      const { error } = await supabase
         .from('messages')
         .update({ last_accessed: new Date().toISOString() })
         .eq('chat_session_id', sessionId);
 
+      if (error) throw error;
+
       setCurrentSessionId(sessionId);
       localStorage.setItem('chat_session_id', sessionId);
       toast.success('Switched to different chat session');
+      
+      // Refresh sessions after switching
+      await fetchSessions();
     } catch (error) {
       console.error('Error switching sessions:', error);
       toast.error('Failed to switch sessions');
     }
-  }, []);
+  }, [fetchSessions]);
 
   // Create a new session
   const createSession = useCallback(async () => {
@@ -79,13 +87,15 @@ export const useSessionManager = () => {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      await supabase
+      const { error } = await supabase
         .from('messages')
         .delete()
         .lt('last_accessed', sevenDaysAgo.toISOString());
 
+      if (error) throw error;
+
       toast.success('Cleaned up inactive sessions');
-      fetchSessions();
+      await fetchSessions();
     } catch (error) {
       console.error('Error cleaning up sessions:', error);
       toast.error('Failed to cleanup sessions');
@@ -96,10 +106,12 @@ export const useSessionManager = () => {
   useEffect(() => {
     const updateLastAccessed = async () => {
       try {
-        await supabase
+        const { error } = await supabase
           .from('messages')
           .update({ last_accessed: new Date().toISOString() })
           .eq('chat_session_id', currentSessionId);
+
+        if (error) throw error;
       } catch (error) {
         console.error('Error updating last_accessed:', error);
       }
