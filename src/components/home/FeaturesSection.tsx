@@ -1,5 +1,7 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Activity, Code, Database, Settings } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const features = [
   {
@@ -25,15 +27,29 @@ const features = [
 ];
 
 export const FeaturesSection = () => {
+  const prefersReducedMotion = useReducedMotion();
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    // Defer loading to prevent initial render jank
+    const timer = setTimeout(() => setIsLoaded(true), 200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!isLoaded) {
+    return <LoadingSkeleton />;
+  }
+
   return (
     <section className="container mx-auto px-4 py-20">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {features.map((feature, index) => (
           <motion.div
             key={index}
-            initial={{ opacity: 0, y: 20 }}
+            initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
             className="glass-card p-6 hover:scale-105 transition-transform duration-300"
           >
             <div className="text-neon-blue mb-4">
@@ -49,3 +65,17 @@ export const FeaturesSection = () => {
     </section>
   );
 };
+
+const LoadingSkeleton = () => (
+  <section className="container mx-auto px-4 py-20">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      {[...Array(4)].map((_, index) => (
+        <div key={index} className="glass-card p-6">
+          <Skeleton className="w-8 h-8 mb-4" />
+          <Skeleton className="h-6 w-3/4 mb-2" />
+          <Skeleton className="h-4 w-full" />
+        </div>
+      ))}
+    </div>
+  </section>
+);
