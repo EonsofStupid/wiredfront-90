@@ -6,17 +6,7 @@ import { useEffect, useState } from "react";
 
 export const HeroSection = () => {
   const prefersReducedMotion = useReducedMotion();
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  useEffect(() => {
-    // Simulate content loading and prevent animation jank
-    const timer = setTimeout(() => setIsLoaded(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (!isLoaded) {
-    return <LoadingSkeleton />;
-  }
+  const [isLoaded, setIsLoaded] = useState(true);
 
   return (
     <section className="relative flex items-center justify-center py-20">
@@ -35,9 +25,9 @@ export const HeroSection = () => {
           </p>
         </div>
 
-        <Link to="/dashboard">
+        <Link to="/login">
           <Button className="neon-glow bg-dark-lighter hover:bg-dark-lighter/80 text-neon-blue border border-neon-blue/50 text-lg px-8 py-6">
-            Launch Dashboard
+            Get Started
           </Button>
         </Link>
       </motion.div>
@@ -46,13 +36,6 @@ export const HeroSection = () => {
     </section>
   );
 };
-
-const LoadingSkeleton = () => (
-  <div className="flex flex-col items-center justify-center py-20 space-y-8">
-    <Skeleton className="h-32 w-3/4 max-w-2xl" />
-    <Skeleton className="h-16 w-48" />
-  </div>
-);
 
 const BackgroundElements = () => {
   const prefersReducedMotion = useReducedMotion();
@@ -63,7 +46,6 @@ const BackgroundElements = () => {
     return () => setMounted(false);
   }, []);
 
-  // Limit to 3 background elements for better performance
   return (
     <div className="absolute inset-0 pointer-events-none">
       {mounted && [...Array(3)].map((_, i) => (

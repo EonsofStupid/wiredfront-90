@@ -1,15 +1,11 @@
-import { useEffect, useState, useCallback, Suspense } from "react";
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { SetupWizard } from "@/components/setup/SetupWizard";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { toast } from "sonner";
+import React, { useEffect, useState, useCallback, Suspense } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { HeroSection } from "@/components/home/HeroSection";
 import { FeaturesSection } from "@/components/home/FeaturesSection";
+import { toast } from "sonner";
 
 const LazyDraggableChat = React.lazy(() => import("@/components/chat/DraggableChat"));
 
@@ -17,8 +13,8 @@ export default function Index() {
   const navigate = useNavigate();
   const [showSetup, setShowSetup] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
-  const [isLoadingAPI, setIsLoadingAPI] = useState(true);
-  const { user, loading, error } = useAuthStore();
+  const [isLoadingAPI, setIsLoadingAPI] = useState(false);
+  const { user, loading } = useAuthStore();
 
   const loadAPIConfigurations = useCallback(async () => {
     if (!user) {
@@ -26,6 +22,7 @@ export default function Index() {
       return;
     }
 
+    setIsLoadingAPI(true);
     try {
       const { data: apiConfigs, error: configError } = await supabase
         .from('api_configurations')
@@ -52,32 +49,21 @@ export default function Index() {
   useEffect(() => {
     let mounted = true;
 
-    if (user && mounted) {
-      loadAPIConfigurations();
-    } else {
-      setIsLoadingAPI(false);
-    }
+    const initializeUser = async () => {
+      if (user && mounted) {
+        await loadAPIConfigurations();
+      }
+    };
+
+    initializeUser();
 
     return () => {
       mounted = false;
     };
   }, [user, loadAPIConfigurations]);
 
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <div className="text-destructive mb-4">Error loading application</div>
-        <Button 
-          variant="outline" 
-          onClick={() => window.location.reload()}
-        >
-          Retry
-        </Button>
-      </div>
-    );
-  }
-
-  if (loading || isLoadingAPI) {
+  // Show loading state only when authenticating
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-6 w-6 animate-spin" />
@@ -85,6 +71,7 @@ export default function Index() {
     );
   }
 
+  // Public landing page - always renders for non-authenticated users
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
@@ -96,6 +83,7 @@ export default function Index() {
     );
   }
 
+  // Authenticated user view
   return (
     <div className="relative min-h-screen">
       {showSetup && (
