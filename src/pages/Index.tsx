@@ -5,6 +5,7 @@ import { useAuthStore } from "@/stores/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { HeroSection } from "@/components/home/HeroSection";
 import { FeaturesSection } from "@/components/home/FeaturesSection";
+import { SetupWizard } from "@/components/setup/SetupWizard";
 import { toast } from "sonner";
 
 const LazyDraggableChat = React.lazy(() => import("@/components/chat/DraggableChat"));
