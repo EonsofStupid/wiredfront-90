@@ -674,6 +674,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_stale_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       decrypt_setting_value: {
         Args: {
           encrypted_value: string
