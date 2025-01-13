@@ -62,6 +62,11 @@ export const useSettingsStore = create<SettingsStore>()(
           largeText: false,
           username: '',
           language: 'en',
+          livePreview: {
+            enabled: false,
+            autoStart: false,
+            logLevel: 'info'
+          }
         },
         dashboardLayout: {
           panels: [],

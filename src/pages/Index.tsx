@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, Suspense } from "react";
+import React, { useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth";
@@ -9,7 +9,6 @@ import { SetupWizard } from "@/components/setup/SetupWizard";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { toast } from "sonner";
 
-// Proper lazy loading with retry logic
 const LazyDraggableChat = React.lazy(() => 
   import("@/components/chat/DraggableChat").catch(error => {
     console.error("Failed to load DraggableChat:", error);
@@ -26,16 +25,14 @@ const LoadingSpinner = () => (
 
 export default function Index() {
   const navigate = useNavigate();
-  const [showSetup, setShowSetup] = useState(false);
-  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
-  const [isLoadingAPI, setIsLoadingAPI] = useState(false);
-  const { user, loading } = useAuthStore();
+  const { user, loading, setLoading } = useAuthStore();
+  const mountedRef = useRef(true);
+  const [showSetup, setShowSetup] = React.useState(false);
+  const [isFirstTimeUser, setIsFirstTimeUser] = React.useState(false);
+  const [isLoadingAPI, setIsLoadingAPI] = React.useState(false);
 
   const loadAPIConfigurations = useCallback(async () => {
-    if (!user) {
-      setIsLoadingAPI(false);
-      return;
-    }
+    if (!user || !mountedRef.current) return;
 
     setIsLoadingAPI(true);
     try {
@@ -45,34 +42,40 @@ export default function Index() {
         .eq('user_id', user.id)
         .eq('is_enabled', true)
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      if (configError) throw configError;
+      if (configError && configError.code !== 'PGRST116') {
+        throw configError;
+      }
 
-      if (!apiConfigs) {
+      if (!apiConfigs && mountedRef.current) {
         setIsFirstTimeUser(true);
         setShowSetup(true);
       }
     } catch (err) {
-      console.error('Error loading API configurations:', err);
+      console.error('[Index] Error loading API configurations:', err);
       toast.error('Failed to load API configurations');
     } finally {
-      setIsLoadingAPI(false);
+      if (mountedRef.current) {
+        setIsLoadingAPI(false);
+        setLoading(false);
+      }
     }
-  }, [user]);
+  }, [user, setLoading]);
 
   useEffect(() => {
-    let mounted = true;
+    mountedRef.current = true;
 
     const initializeUser = async () => {
-      if (user && mounted) {
+      if (user && mountedRef.current) {
         await loadAPIConfigurations();
+      } else {
+        setLoading(false);
       }
     };
 
     initializeUser();
 
-    // Set up subscription for real-time updates
     let subscription;
     if (user) {
       const channel = supabase.channel('api_config_changes')
@@ -82,7 +85,7 @@ export default function Index() {
           table: 'api_configurations',
           filter: `user_id=eq.${user.id}`
         }, () => {
-          if (mounted) {
+          if (mountedRef.current) {
             loadAPIConfigurations();
           }
         })
@@ -94,12 +97,12 @@ export default function Index() {
     }
 
     return () => {
-      mounted = false;
+      mountedRef.current = false;
       if (subscription) {
         subscription();
       }
     };
-  }, [user, loadAPIConfigurations]);
+  }, [user, loadAPIConfigurations, setLoading]);
 
   if (loading) {
     return (
@@ -135,11 +138,11 @@ export default function Index() {
             }} 
           />
         )}
-        <Suspense fallback={<LoadingSpinner />}>
+        <React.Suspense fallback={<LoadingSpinner />}>
           <ErrorBoundary>
             <LazyDraggableChat />
           </ErrorBoundary>
-        </Suspense>
+        </React.Suspense>
       </div>
     </ErrorBoundary>
   );

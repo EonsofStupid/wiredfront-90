@@ -14,6 +14,9 @@ import { useAuthStore } from "@/stores/auth";
 import { storeLastVisitedPath } from "@/utils/auth";
 import { EditorModeProvider } from "@/features/chat/core/providers/EditorModeProvider";
 
+// Define protected routes
+const PROTECTED_ROUTES = ['/dashboard', '/editor', '/documents', '/ai', '/analytics', '/settings'];
+
 const App = () => {
   const isMobile = useIsMobile();
   const { user } = useAuthStore();
@@ -22,7 +25,8 @@ const App = () => {
 
   useEffect(() => {
     const handleAuth = () => {
-      if (!user && location.pathname !== "/login") {
+      const isProtectedRoute = PROTECTED_ROUTES.includes(location.pathname);
+      if (!user && isProtectedRoute) {
         storeLastVisitedPath(location.pathname);
         navigate("/login");
       }
