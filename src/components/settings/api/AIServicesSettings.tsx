@@ -81,7 +81,12 @@ export function AIServicesSettings() {
       {API_CONFIGURATIONS.map(config => (
         <ServiceCard
           key={config.type}
-          {...config}
+          type={config.type}
+          title={config.label}
+          description={config.description}
+          docsUrl={config.docsUrl}
+          docsText={config.docsText}
+          placeholder={config.placeholder}
           configurations={configurations.filter(c => c.api_type === config.type)}
           newConfig={newConfigs[config.type] || { name: '', key: '' }}
           isConnecting={isConnecting}

@@ -17,4 +17,6 @@ export interface APIConfiguration {
   created_at?: string;
   updated_at?: string;
   name?: string;
+  assistant_id?: string;
+  assistant_name?: string;
 }
