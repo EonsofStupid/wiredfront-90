@@ -62,25 +62,10 @@ export default function Index() {
 
   useEffect(() => {
     let mounted = true;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
 
     const initializeUser = async () => {
       if (user && mounted) {
         await loadAPIConfigurations();
-        
-        // Set up realtime subscription
-        channel = supabase.channel('api-configs')
-          .on('postgres_changes', {
-            event: '*',
-            schema: 'public',
-            table: 'api_configurations',
-            filter: `user_id=eq.${user.id}`
-          }, () => {
-            if (mounted) {
-              loadAPIConfigurations();
-            }
-          })
-          .subscribe();
       }
     };
 
@@ -88,10 +73,8 @@ export default function Index() {
 
     return () => {
       mounted = false;
-      // Cleanup channel subscription
-      if (channel) {
-        channel.unsubscribe();
-      }
+      // Cleanup Supabase subscriptions if any
+      supabase.getSubscriptions().forEach(sub => supabase.removeSubscription(sub));
     };
   }, [user, loadAPIConfigurations]);
 
