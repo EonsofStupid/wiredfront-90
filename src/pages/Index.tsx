@@ -9,7 +9,6 @@ import { SetupWizard } from "@/components/setup/SetupWizard";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { toast } from "sonner";
 
-// Proper lazy loading with retry logic
 const LazyDraggableChat = React.lazy(() => 
   import("@/components/chat/DraggableChat").catch(error => {
     console.error("Failed to load DraggableChat:", error);
@@ -74,6 +73,8 @@ export default function Index() {
 
     return () => {
       mounted = false;
+      // Cleanup Supabase subscriptions if any
+      supabase.getSubscriptions().forEach(sub => supabase.removeSubscription(sub));
     };
   }, [user, loadAPIConfigurations]);
 
