@@ -15,6 +15,8 @@ const initialState: AuthState = {
   loading: true,
 };
 
+const SESSION_EXPIRY_BUFFER = 60 * 1000; // 1 minute buffer before token expires
+
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => ({
@@ -36,15 +38,25 @@ export const useAuthStore = create<AuthStore>()(
           const { data, error } = await supabase.auth.signInWithPassword(credentials);
           if (error) throw error;
           
+          const { session, user } = data;
+          if (!session) throw new Error('No session returned after login');
+
           set({ 
-            user: data.user,
+            user,
             isAuthenticated: true,
-            token: data.session?.access_token || null,
+            token: session.access_token,
             status: 'success',
             error: null,
             lastUpdated: Date.now(),
             loading: false
           });
+
+          // Set up token refresh timer
+          const expiresAt = new Date(session.expires_at!).getTime() - SESSION_EXPIRY_BUFFER;
+          const refreshIn = expiresAt - Date.now();
+          if (refreshIn > 0) {
+            setTimeout(() => get().refreshToken(), refreshIn);
+          }
         } catch (error) {
           set({ 
             status: 'error', 
@@ -58,8 +70,23 @@ export const useAuthStore = create<AuthStore>()(
 
       logout: async () => {
         try {
-          await supabase.auth.signOut();
-          set(initialState);
+          const { error } = await supabase.auth.signOut();
+          if (error) throw error;
+
+          // Clear all auth state
+          set({
+            ...initialState,
+            loading: false,
+            status: 'idle',
+            lastUpdated: Date.now()
+          });
+
+          // Clear any stored sessions
+          await supabase.auth.clearSession();
+          
+          // Unsubscribe from all realtime subscriptions
+          supabase.removeAllChannels();
+          
           toast.success('Logged out successfully');
         } catch (error) {
           toast.error('Error logging out');
@@ -69,22 +96,41 @@ export const useAuthStore = create<AuthStore>()(
 
       refreshToken: async () => {
         try {
-          const { data: { session } } = await supabase.auth.getSession();
+          const { data: { session }, error } = await supabase.auth.refreshSession();
+          if (error) {
+            // If refresh fails, log out the user
+            await get().logout();
+            throw error;
+          }
+
           if (session) {
             set({ 
               token: session.access_token,
+              user: session.user,
+              isAuthenticated: true,
+              status: 'success',
               lastUpdated: Date.now()
             });
+
+            // Set up next token refresh
+            const expiresAt = new Date(session.expires_at!).getTime() - SESSION_EXPIRY_BUFFER;
+            const refreshIn = expiresAt - Date.now();
+            if (refreshIn > 0) {
+              setTimeout(() => get().refreshToken(), refreshIn);
+            }
           }
         } catch (error) {
           console.error('Token refresh error:', error);
+          // Don't throw here as this is typically called from a setTimeout
         }
       },
 
       initializeAuth: async () => {
         set({ loading: true });
         try {
-          const { data: { session } } = await supabase.auth.getSession();
+          const { data: { session }, error } = await supabase.auth.getSession();
+          if (error) throw error;
+
           if (session?.user) {
             set({
               user: session.user,
@@ -94,6 +140,13 @@ export const useAuthStore = create<AuthStore>()(
               loading: false,
               lastUpdated: Date.now()
             });
+
+            // Set up token refresh timer
+            const expiresAt = new Date(session.expires_at!).getTime() - SESSION_EXPIRY_BUFFER;
+            const refreshIn = expiresAt - Date.now();
+            if (refreshIn > 0) {
+              setTimeout(() => get().refreshToken(), refreshIn);
+            }
           } else {
             set({ ...initialState, loading: false });
           }
@@ -105,7 +158,11 @@ export const useAuthStore = create<AuthStore>()(
         // Set up auth state change listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
-            if (session?.user) {
+            console.log('Auth state changed:', event, session?.user?.id);
+            
+            if (event === 'SIGNED_OUT') {
+              await get().logout();
+            } else if (session?.user) {
               set({
                 user: session.user,
                 isAuthenticated: true,
@@ -114,8 +171,13 @@ export const useAuthStore = create<AuthStore>()(
                 loading: false,
                 lastUpdated: Date.now()
               });
-            } else {
-              set({ ...initialState, loading: false });
+
+              // Set up token refresh timer
+              const expiresAt = new Date(session.expires_at!).getTime() - SESSION_EXPIRY_BUFFER;
+              const refreshIn = expiresAt - Date.now();
+              if (refreshIn > 0) {
+                setTimeout(() => get().refreshToken(), refreshIn);
+              }
             }
           }
         );
