@@ -1,5 +1,6 @@
 export type APIType = 'openai' | 'gemini' | 'anthropic' | 'huggingface' | 'stability' | 
   'replicate' | 'ai21' | 'mosaic' | 'databricks' | 'azure' | 'aws' | 'watson' | 'forefront';
+
 export type ValidationStatusType = 'pending' | 'valid' | 'invalid' | 'expired';
 
 export interface APIConfiguration {
