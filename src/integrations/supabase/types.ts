@@ -177,6 +177,7 @@ export type Database = {
           hybrid_providers: Json | null
           hybrid_routing_rules: Json | null
           id: string
+          live_preview_enabled: boolean | null
           max_offline_messages: number | null
           max_tokens: number | null
           message_behavior:
@@ -205,6 +206,7 @@ export type Database = {
           hybrid_providers?: Json | null
           hybrid_routing_rules?: Json | null
           id?: string
+          live_preview_enabled?: boolean | null
           max_offline_messages?: number | null
           max_tokens?: number | null
           message_behavior?:
@@ -233,6 +235,7 @@ export type Database = {
           hybrid_providers?: Json | null
           hybrid_routing_rules?: Json | null
           id?: string
+          live_preview_enabled?: boolean | null
           max_offline_messages?: number | null
           max_tokens?: number | null
           message_behavior?:
