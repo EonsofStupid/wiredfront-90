@@ -9,35 +9,40 @@ interface MainLayoutProps {
 }
 
 export const MainLayout = ({ children }: MainLayoutProps) => {
+  console.log("MainLayout rendering");
   const [isCompact, setIsCompact] = useState(false);
 
   return (
-    <div className="min-h-screen w-full">
+    <div className="min-h-screen w-full bg-background">
       <TopBar 
-        className="fixed top-0 left-0 right-0 z-50" 
+        className="fixed top-0 left-0 right-0 z-[var(--z-navbar)]" 
         isCompact={isCompact} 
         onToggleCompact={() => setIsCompact(!isCompact)} 
       />
+      
       <div className="flex pt-16 pb-12">
         <Sidebar 
           side="left" 
           isCompact={isCompact}
-          className="fixed left-0 top-16 bottom-12" 
+          className="fixed left-0 top-16 bottom-12 z-[var(--z-navbar)]" 
         />
+        
         <main className={cn(
           "flex-1 transition-all duration-300 ease-in-out",
-          isCompact ? "ml-20" : "ml-32", // 8rem (32) default, 5rem (20) when compact
-          "mr-32" // Fixed right sidebar width
+          isCompact ? "ml-20" : "ml-32",
+          "mr-32"
         )}>
           {children}
         </main>
+        
         <Sidebar 
           side="right" 
           isCompact={isCompact}
-          className="fixed right-0 top-16 bottom-12" 
+          className="fixed right-0 top-16 bottom-12 z-[var(--z-navbar)]" 
         />
       </div>
-      <BottomBar className="fixed bottom-0 left-0 right-0 z-50" />
+      
+      <BottomBar className="fixed bottom-0 left-0 right-0 z-[var(--z-navbar)]" />
     </div>
   );
 };

@@ -8,6 +8,7 @@ import { FeaturesSection } from "@/components/home/FeaturesSection";
 import { SetupWizard } from "@/components/setup/SetupWizard";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { toast } from "sonner";
+import { MainLayout } from "@/components/layout/MainLayout";
 
 const LazyDraggableChat = React.lazy(() => 
   import("@/components/chat/DraggableChat").catch(error => {
@@ -127,23 +128,12 @@ export default function Index() {
 
   return (
     <ErrorBoundary>
-      <div className="relative min-h-screen">
-        {showSetup && (
-          <SetupWizard 
-            isFirstTimeUser={isFirstTimeUser}
-            onComplete={() => {
-              setShowSetup(false);
-              toast.success("Setup completed successfully!");
-              navigate('/dashboard', { replace: true });
-            }} 
-          />
-        )}
-        <React.Suspense fallback={<LoadingSpinner />}>
-          <ErrorBoundary>
-            <LazyDraggableChat />
-          </ErrorBoundary>
-        </React.Suspense>
-      </div>
+      <MainLayout>
+        <div className="p-6">
+          <h1 className="text-4xl font-bold mb-8 gradient-text">Dashboard</h1>
+          {/* Dashboard content will go here */}
+        </div>
+      </MainLayout>
     </ErrorBoundary>
   );
 }

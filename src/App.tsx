@@ -14,10 +14,10 @@ import { useAuthStore } from "@/stores/auth";
 import { storeLastVisitedPath } from "@/utils/auth";
 import { EditorModeProvider } from "@/features/chat/core/providers/EditorModeProvider";
 
-// Define protected routes
 const PROTECTED_ROUTES = ['/dashboard', '/editor', '/documents', '/ai', '/analytics', '/settings'];
 
 const App = () => {
+  console.log("App component rendering");
   const isMobile = useIsMobile();
   const { user } = useAuthStore();
   const location = useLocation();
@@ -34,53 +34,31 @@ const App = () => {
     handleAuth();
   }, [user, location.pathname, navigate]);
 
+  const Layout = isMobile ? MobileLayout : AppLayout;
+
   return (
-    <>
-      <ChatProvider>
-        {isMobile ? (
-          <MobileLayout>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route 
-                path="/editor" 
-                element={
-                  <EditorModeProvider>
-                    <Editor />
-                  </EditorModeProvider>
-                } 
-              />
-              <Route path="/documents" element={<div>Documents Page</div>} />
-              <Route path="/ai" element={<div>AI Assistant Page</div>} />
-              <Route path="/analytics" element={<div>Analytics Page</div>} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/login" element={<Login />} />
-            </Routes>
-          </MobileLayout>
-        ) : (
-          <AppLayout>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route 
-                path="/editor" 
-                element={
-                  <EditorModeProvider>
-                    <Editor />
-                  </EditorModeProvider>
-                } 
-              />
-              <Route path="/documents" element={<div>Documents Page</div>} />
-              <Route path="/ai" element={<div>AI Assistant Page</div>} />
-              <Route path="/analytics" element={<div>Analytics Page</div>} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/login" element={<Login />} />
-            </Routes>
-          </AppLayout>
-        )}
-      </ChatProvider>
+    <ChatProvider>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route 
+            path="/editor" 
+            element={
+              <EditorModeProvider>
+                <Editor />
+              </EditorModeProvider>
+            } 
+          />
+          <Route path="/documents" element={<div>Documents Page</div>} />
+          <Route path="/ai" element={<div>AI Assistant Page</div>} />
+          <Route path="/analytics" element={<div>Analytics Page</div>} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/login" element={<Login />} />
+        </Routes>
+      </Layout>
       <Toaster />
-    </>
+    </ChatProvider>
   );
 };
 
