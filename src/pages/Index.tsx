@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, Suspense } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth";
@@ -8,14 +8,6 @@ import { FeaturesSection } from "@/components/home/FeaturesSection";
 import { SetupWizard } from "@/components/setup/SetupWizard";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { toast } from "sonner";
-
-const LazyDraggableChat = React.lazy(() => 
-  import("@/components/chat/DraggableChat").catch(error => {
-    console.error("Failed to load DraggableChat:", error);
-    toast.error("Failed to load chat interface");
-    throw error;
-  })
-);
 
 const LoadingSpinner = () => (
   <div className="fixed bottom-4 right-4 p-4 rounded-lg bg-background/80 backdrop-blur">
@@ -30,7 +22,7 @@ export default function Index() {
   const [isLoadingAPI, setIsLoadingAPI] = useState(false);
   const { user, loading } = useAuthStore();
 
-  const loadAPIConfigurations = useCallback(async () => {
+  const loadAPIConfigurations = async () => {
     if (!user) {
       setIsLoadingAPI(false);
       return;
@@ -58,7 +50,7 @@ export default function Index() {
     } finally {
       setIsLoadingAPI(false);
     }
-  }, [user]);
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -73,10 +65,8 @@ export default function Index() {
 
     return () => {
       mounted = false;
-      // Cleanup Supabase subscriptions if any
-      supabase.getSubscriptions().forEach(sub => supabase.removeSubscription(sub));
     };
-  }, [user, loadAPIConfigurations]);
+  }, [user]);
 
   if (loading) {
     return (
@@ -112,11 +102,7 @@ export default function Index() {
             }} 
           />
         )}
-        <Suspense fallback={<LoadingSpinner />}>
-          <ErrorBoundary>
-            <LazyDraggableChat />
-          </ErrorBoundary>
-        </Suspense>
+        {isLoadingAPI && <LoadingSpinner />}
       </div>
     </ErrorBoundary>
   );
