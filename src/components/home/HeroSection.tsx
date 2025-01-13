@@ -1,12 +1,10 @@
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 export const HeroSection = () => {
   const prefersReducedMotion = useReducedMotion();
-  const [isLoaded, setIsLoaded] = useState(true);
 
   return (
     <section className="relative flex items-center justify-center py-20">
@@ -39,41 +37,60 @@ export const HeroSection = () => {
 
 const BackgroundElements = () => {
   const prefersReducedMotion = useReducedMotion();
-  const [mounted, setMounted] = useState(false);
+  const animationRef = useRef<Array<{ stop: () => void }>>([]);
+
+  // Cleanup function for animations
+  const cleanupAnimations = useCallback(() => {
+    animationRef.current.forEach(control => control.stop());
+    animationRef.current = [];
+  }, []);
 
   useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
+    // Cleanup on unmount
+    return () => {
+      cleanupAnimations();
+    };
+  }, [cleanupAnimations]);
+
+  if (prefersReducedMotion) {
+    return null;
+  }
 
   return (
     <div className="absolute inset-0 pointer-events-none">
-      {mounted && [...Array(3)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute glass-card neon-glow w-32 h-32"
-          initial={prefersReducedMotion ? {} : { scale: 0.8, opacity: 0 }}
-          animate={
-            prefersReducedMotion 
-              ? { opacity: 1 }
-              : {
-                  x: [0, 20, 0],
-                  y: [0, 30, 0],
-                  rotate: [0, 90, 0],
+      <AnimatePresence>
+        {[...Array(3)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute glass-card neon-glow w-32 h-32"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{
+              x: [0, 20, 0],
+              y: [0, 30, 0],
+              rotate: [0, 90, 0],
+            }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{
+              duration: 15,
+              repeat: Infinity,
+              delay: i * 2,
+              ease: "linear",
+            }}
+            onAnimationStart={(definition) => {
+              // Store animation control for cleanup
+              animationRef.current.push({
+                stop: () => {
+                  if (definition.stop) definition.stop();
                 }
-          }
-          transition={{
-            duration: 15,
-            repeat: Infinity,
-            delay: i * 2,
-            ease: "linear",
-          }}
-          style={{
-            left: `${30 + i * 20}%`,
-            top: `${20 + i * 20}%`,
-          }}
-        />
-      ))}
+              });
+            }}
+            style={{
+              left: `${30 + i * 20}%`,
+              top: `${20 + i * 20}%`,
+            }}
+          />
+        ))}
+      </AnimatePresence>
     </div>
   );
 };
