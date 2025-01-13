@@ -35,6 +35,6 @@ export const supabase = createClient<Database>(
 supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_OUT') {
     // Clear any cached data
-    supabase.removeAllSubscriptions();
+    supabase.channel('*').unsubscribe();
   }
 });

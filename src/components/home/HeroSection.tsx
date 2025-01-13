@@ -1,4 +1,4 @@
-import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
+import { motion, useReducedMotion, AnimatePresence, AnimationControls } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useRef } from "react";
@@ -37,11 +37,15 @@ export const HeroSection = () => {
 
 const BackgroundElements = () => {
   const prefersReducedMotion = useReducedMotion();
-  const animationRef = useRef<Array<{ stop: () => void }>>([]);
+  const animationRef = useRef<Array<AnimationControls>>([]);
 
   // Cleanup function for animations
   const cleanupAnimations = useCallback(() => {
-    animationRef.current.forEach(control => control.stop());
+    animationRef.current.forEach(control => {
+      if (control && typeof control.stop === 'function') {
+        control.stop();
+      }
+    });
     animationRef.current = [];
   }, []);
 
@@ -76,13 +80,10 @@ const BackgroundElements = () => {
               delay: i * 2,
               ease: "linear",
             }}
-            onAnimationStart={(definition) => {
-              // Store animation control for cleanup
-              animationRef.current.push({
-                stop: () => {
-                  if (definition.stop) definition.stop();
-                }
-              });
+            onAnimationStart={(controls) => {
+              if (controls && typeof controls.stop === 'function') {
+                animationRef.current.push(controls);
+              }
             }}
             style={{
               left: `${30 + i * 20}%`,
