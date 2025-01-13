@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth";
@@ -24,41 +24,31 @@ const LoadingSpinner = () => (
 );
 
 export default function Index() {
-  console.log("[Index] Component rendering");
   const navigate = useNavigate();
-  const [showSetup, setShowSetup] = useState(false);
-  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
-  const [isLoadingAPI, setIsLoadingAPI] = useState(false);
   const { user, loading, setLoading } = useAuthStore();
-
-  console.log("[Index] Auth state:", { user, loading, showSetup, isFirstTimeUser, isLoadingAPI });
+  const mountedRef = useRef(true);
+  const [showSetup, setShowSetup] = React.useState(false);
+  const [isFirstTimeUser, setIsFirstTimeUser] = React.useState(false);
+  const [isLoadingAPI, setIsLoadingAPI] = React.useState(false);
 
   const loadAPIConfigurations = useCallback(async () => {
-    if (!user) {
-      console.log("[Index] No user, skipping API config load");
-      setIsLoadingAPI(false);
-      return;
-    }
+    if (!user || !mountedRef.current) return;
 
     setIsLoadingAPI(true);
     try {
-      console.log("[Index] Loading API configurations for user:", user.id);
       const { data: apiConfigs, error: configError } = await supabase
         .from('api_configurations')
         .select('id, is_enabled')
         .eq('user_id', user.id)
         .eq('is_enabled', true)
         .limit(1)
-        .single();
-
-      console.log("[Index] API configs loaded:", { apiConfigs, error: configError });
+        .maybeSingle();
 
       if (configError && configError.code !== 'PGRST116') {
         throw configError;
       }
 
-      if (!apiConfigs) {
-        console.log("[Index] No API configs found, showing setup");
+      if (!apiConfigs && mountedRef.current) {
         setIsFirstTimeUser(true);
         setShowSetup(true);
       }
@@ -66,30 +56,28 @@ export default function Index() {
       console.error('[Index] Error loading API configurations:', err);
       toast.error('Failed to load API configurations');
     } finally {
-      setIsLoadingAPI(false);
-      setLoading(false); // Ensure we exit loading state
+      if (mountedRef.current) {
+        setIsLoadingAPI(false);
+        setLoading(false);
+      }
     }
   }, [user, setLoading]);
 
   useEffect(() => {
-    console.log("[Index] useEffect running");
-    let mounted = true;
-    let subscription;
+    mountedRef.current = true;
 
     const initializeUser = async () => {
-      if (user && mounted) {
-        console.log("[Index] Initializing user");
+      if (user && mountedRef.current) {
         await loadAPIConfigurations();
       } else {
-        console.log("[Index] No user or component unmounted");
-        setLoading(false); // Ensure we exit loading state even if no user
+        setLoading(false);
       }
     };
 
     initializeUser();
 
+    let subscription;
     if (user) {
-      console.log("[Index] Setting up real-time subscription");
       const channel = supabase.channel('api_config_changes')
         .on('postgres_changes', {
           event: '*',
@@ -97,22 +85,19 @@ export default function Index() {
           table: 'api_configurations',
           filter: `user_id=eq.${user.id}`
         }, () => {
-          console.log("[Index] Real-time update received");
-          if (mounted) {
+          if (mountedRef.current) {
             loadAPIConfigurations();
           }
         })
         .subscribe();
 
       subscription = () => {
-        console.log("[Index] Cleaning up subscription");
         supabase.removeChannel(channel);
       };
     }
 
     return () => {
-      console.log("[Index] Component cleanup");
-      mounted = false;
+      mountedRef.current = false;
       if (subscription) {
         subscription();
       }
@@ -120,7 +105,6 @@ export default function Index() {
   }, [user, loadAPIConfigurations, setLoading]);
 
   if (loading) {
-    console.log("[Index] Showing loading spinner");
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-6 w-6 animate-spin" />
@@ -128,10 +112,7 @@ export default function Index() {
     );
   }
 
-  console.log("[Index] Rendering main content, user:", user);
-
   if (!user) {
-    console.log("[Index] Rendering public landing page");
     return (
       <ErrorBoundary>
         <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
@@ -151,7 +132,6 @@ export default function Index() {
           <SetupWizard 
             isFirstTimeUser={isFirstTimeUser}
             onComplete={() => {
-              console.log("[Index] Setup completed");
               setShowSetup(false);
               toast.success("Setup completed successfully!");
               navigate('/dashboard', { replace: true });
