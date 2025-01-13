@@ -1,4 +1,4 @@
-import { motion, useReducedMotion, AnimatePresence, AnimationControls } from "framer-motion";
+import { motion, useReducedMotion, AnimatePresence, AnimationControls, useAnimation } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useRef } from "react";
@@ -37,7 +37,7 @@ export const HeroSection = () => {
 
 const BackgroundElements = () => {
   const prefersReducedMotion = useReducedMotion();
-  const animationRef = useRef<Array<AnimationControls>>([]);
+  const animationRef = useRef<ReturnType<typeof useAnimation>[]>([]);
 
   // Cleanup function for animations
   const cleanupAnimations = useCallback(() => {
@@ -63,34 +63,30 @@ const BackgroundElements = () => {
   return (
     <div className="absolute inset-0 pointer-events-none">
       <AnimatePresence>
-        {[...Array(3)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute glass-card neon-glow w-32 h-32"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{
-              x: [0, 20, 0],
-              y: [0, 30, 0],
-              rotate: [0, 90, 0],
-            }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{
-              duration: 15,
-              repeat: Infinity,
-              delay: i * 2,
-              ease: "linear",
-            }}
-            onAnimationStart={(controls) => {
-              if (controls && typeof controls.stop === 'function') {
-                animationRef.current.push(controls);
-              }
-            }}
-            style={{
-              left: `${30 + i * 20}%`,
-              top: `${20 + i * 20}%`,
-            }}
-          />
-        ))}
+        {[...Array(3)].map((_, i) => {
+          const controls = useAnimation();
+          animationRef.current.push(controls);
+          
+          return (
+            <motion.div
+              key={i}
+              className="absolute glass-card neon-glow w-32 h-32"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={controls}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{
+                duration: 15,
+                repeat: Infinity,
+                delay: i * 2,
+                ease: "linear",
+              }}
+              style={{
+                left: `${30 + i * 20}%`,
+                top: `${20 + i * 20}%`,
+              }}
+            />
+          );
+        })}
       </AnimatePresence>
     </div>
   );
