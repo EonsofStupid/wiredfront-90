@@ -1,6 +1,8 @@
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, AnimatePresence, useAnimation } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 
 export const HeroSection = () => {
   console.log("HeroSection rendering");
@@ -29,6 +31,98 @@ export const HeroSection = () => {
           </Button>
         </Link>
       </motion.div>
+
+      <BackgroundElements />
     </section>
+  );
+};
+
+const BackgroundElements = () => {
+  console.log("BackgroundElements rendering");
+  const prefersReducedMotion = useReducedMotion();
+  const controls = useAnimation();
+  const [mounted, setMounted] = useState(true);
+  const performanceRef = useRef<{ startTime: number; frames: number }>({
+    startTime: performance.now(),
+    frames: 0
+  });
+
+  useEffect(() => {
+    console.log("BackgroundElements useEffect running");
+    if (prefersReducedMotion) {
+      console.log("Reduced motion enabled, skipping animations");
+      return;
+    }
+
+    const cleanup = () => {
+      console.log("BackgroundElements cleanup");
+      controls.stop();
+      setMounted(false);
+    };
+
+    const animate = async () => {
+      try {
+        console.log("Starting background animation");
+        await controls.start({
+          scale: [0.8, 1.2, 0.8],
+          opacity: [0.3, 0.6, 0.3],
+          transition: {
+            duration: 15,
+            repeat: Infinity,
+            ease: "linear"
+          }
+        });
+      } catch (error) {
+        console.error("Animation error:", error);
+      }
+    };
+
+    animate();
+
+    const monitorPerformance = () => {
+      const currentTime = performance.now();
+      const elapsed = currentTime - performanceRef.current.startTime;
+      performanceRef.current.frames++;
+      
+      if (elapsed >= 1000) {
+        const fps = Math.round((performanceRef.current.frames * 1000) / elapsed);
+        console.log(`Background Animation FPS: ${fps}`);
+        performanceRef.current = {
+          startTime: currentTime,
+          frames: 0
+        };
+      }
+      
+      if (mounted) {
+        requestAnimationFrame(monitorPerformance);
+      }
+    };
+
+    requestAnimationFrame(monitorPerformance);
+
+    return cleanup;
+  }, [prefersReducedMotion, controls, mounted]);
+
+  if (prefersReducedMotion) return null;
+
+  return (
+    <div className="absolute inset-0 pointer-events-none">
+      <AnimatePresence>
+        {[...Array(3)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute glass-card neon-glow w-32 h-32 transform"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={controls}
+            exit={{ scale: 0, opacity: 0 }}
+            style={{
+              left: `${30 + i * 20}%`,
+              top: `${20 + i * 20}%`,
+              transform: `translate3d(0, 0, 0)`
+            }}
+          />
+        ))}
+      </AnimatePresence>
+    </div>
   );
 };
