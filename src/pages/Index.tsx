@@ -1,14 +1,28 @@
 import React, { useEffect, useState, useCallback, Suspense } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { HeroSection } from "@/components/home/HeroSection";
 import { FeaturesSection } from "@/components/home/FeaturesSection";
 import { SetupWizard } from "@/components/setup/SetupWizard";
+import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { toast } from "sonner";
 
-const LazyDraggableChat = React.lazy(() => import("@/components/chat/DraggableChat"));
+// Proper lazy loading with retry logic
+const LazyDraggableChat = React.lazy(() => 
+  import("@/components/chat/DraggableChat").catch(error => {
+    console.error("Failed to load DraggableChat:", error);
+    toast.error("Failed to load chat interface");
+    throw error;
+  })
+);
+
+const LoadingSpinner = () => (
+  <div className="fixed bottom-4 right-4 p-4 rounded-lg bg-background/80 backdrop-blur">
+    <Loader2 className="h-6 w-6 animate-spin" />
+  </div>
+);
 
 export default function Index() {
   const navigate = useNavigate();
@@ -63,7 +77,6 @@ export default function Index() {
     };
   }, [user, loadAPIConfigurations]);
 
-  // Show loading state only when authenticating
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -72,38 +85,38 @@ export default function Index() {
     );
   }
 
-  // Public landing page - always renders for non-authenticated users
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
-        <main className="container mx-auto max-w-6xl">
-          <HeroSection />
-          <FeaturesSection />
-        </main>
-      </div>
+      <ErrorBoundary>
+        <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
+          <main className="container mx-auto max-w-6xl">
+            <HeroSection />
+            <FeaturesSection />
+          </main>
+        </div>
+      </ErrorBoundary>
     );
   }
 
-  // Authenticated user view
   return (
-    <div className="relative min-h-screen">
-      {showSetup && (
-        <SetupWizard 
-          isFirstTimeUser={isFirstTimeUser}
-          onComplete={() => {
-            setShowSetup(false);
-            toast.success("Setup completed successfully!");
-            navigate('/dashboard', { replace: true });
-          }} 
-        />
-      )}
-      <Suspense fallback={
-        <div className="fixed bottom-4 right-4 p-4 rounded-lg bg-background/80 backdrop-blur">
-          <Loader2 className="h-6 w-6 animate-spin" />
-        </div>
-      }>
-        <LazyDraggableChat />
-      </Suspense>
-    </div>
+    <ErrorBoundary>
+      <div className="relative min-h-screen">
+        {showSetup && (
+          <SetupWizard 
+            isFirstTimeUser={isFirstTimeUser}
+            onComplete={() => {
+              setShowSetup(false);
+              toast.success("Setup completed successfully!");
+              navigate('/dashboard', { replace: true });
+            }} 
+          />
+        )}
+        <Suspense fallback={<LoadingSpinner />}>
+          <ErrorBoundary>
+            <LazyDraggableChat />
+          </ErrorBoundary>
+        </Suspense>
+      </div>
+    </ErrorBoundary>
   );
 }
