@@ -2,6 +2,7 @@ import React, { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import { ChatWindow } from "@/features/chat/ui/ChatWindow";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 const LoadingFallback = () => (
@@ -27,7 +28,7 @@ const DraggableChat = () => {
   }, []);
 
   return (
-    <ErrorBoundary>
+    <ErrorBoundary fallback={<ErrorFallback />}>
       <Suspense fallback={<LoadingFallback />}>
         <ChatWindow />
       </Suspense>
