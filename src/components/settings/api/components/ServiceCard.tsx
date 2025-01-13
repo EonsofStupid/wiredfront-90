@@ -3,27 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
-import { APIType } from "@/types/store/settings/api-config";
-
-interface ServiceCardProps {
-  type: APIType;
-  title: string;
-  description: string;
-  docsUrl: string;
-  docsText: string;
-  placeholder: string;
-  configurations: any[];
-  newConfig: {
-    name: string;
-    key: string;
-    assistantId?: string;
-  };
-  isConnecting: boolean;
-  selectedConfig: string | null;
-  onConnect: (configId: string) => void;
-  onConfigChange: (type: APIType, field: string, value: string) => void;
-  onSaveConfig: (type: APIType) => void;
-}
+import { ServiceCardProps } from "@/types/settings/api-configuration";
 
 export function ServiceCard({
   type,
@@ -50,7 +30,7 @@ export function ServiceCard({
         {configurations.map((config) => (
           <div key={config.id} className="space-y-2 border-b pb-4">
             <div className="flex items-center justify-between">
-              <Label>{config.assistant_name}</Label>
+              <Label>{config.name}</Label>
               <Button
                 variant="outline"
                 size="sm"
@@ -67,11 +47,6 @@ export function ServiceCard({
                 )}
               </Button>
             </div>
-            {config.assistant_id && (
-              <div className="text-sm text-muted-foreground">
-                Assistant ID: {config.assistant_id}
-              </div>
-            )}
             <div className="text-sm text-muted-foreground">
               Status: {config.validation_status}
             </div>
@@ -91,11 +66,6 @@ export function ServiceCard({
               placeholder={placeholder}
               value={newConfig.key}
               onChange={(e) => onConfigChange(type, 'key', e.target.value)}
-            />
-            <Input
-              placeholder="Assistant ID (optional)"
-              value={newConfig.assistantId}
-              onChange={(e) => onConfigChange(type, 'assistantId', e.target.value)}
             />
             <Button 
               onClick={() => onSaveConfig(type)}
