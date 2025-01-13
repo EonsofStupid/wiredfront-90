@@ -14,12 +14,6 @@ export interface CacheSettings {
   redis: RedisConfig;
 }
 
-export interface LivePreviewSettings {
-  enabled: boolean;
-  autoStart?: boolean;
-  logLevel?: 'debug' | 'info' | 'warn' | 'error';
-}
-
 export interface UserPreferences {
   defaultView: string;
   refreshInterval: number;
@@ -30,7 +24,6 @@ export interface UserPreferences {
   largeText: boolean;
   username: string;
   language: string;
-  livePreview: LivePreviewSettings;
 }
 
 export interface NotificationSettings {

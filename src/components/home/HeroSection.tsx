@@ -5,7 +5,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 
 export const HeroSection = () => {
-  console.log("HeroSection rendering");
   const prefersReducedMotion = useReducedMotion();
 
   return (
@@ -38,7 +37,6 @@ export const HeroSection = () => {
 };
 
 const BackgroundElements = () => {
-  console.log("BackgroundElements rendering");
   const prefersReducedMotion = useReducedMotion();
   const controls = useAnimation();
   const [mounted, setMounted] = useState(true);
@@ -48,21 +46,15 @@ const BackgroundElements = () => {
   });
 
   useEffect(() => {
-    console.log("BackgroundElements useEffect running");
-    if (prefersReducedMotion) {
-      console.log("Reduced motion enabled, skipping animations");
-      return;
-    }
+    if (prefersReducedMotion) return;
 
     const cleanup = () => {
-      console.log("BackgroundElements cleanup");
       controls.stop();
       setMounted(false);
     };
 
     const animate = async () => {
       try {
-        console.log("Starting background animation");
         await controls.start({
           scale: [0.8, 1.2, 0.8],
           opacity: [0.3, 0.6, 0.3],
@@ -79,6 +71,7 @@ const BackgroundElements = () => {
 
     animate();
 
+    // Performance monitoring
     const monitorPerformance = () => {
       const currentTime = performance.now();
       const elapsed = currentTime - performanceRef.current.startTime;
@@ -118,11 +111,116 @@ const BackgroundElements = () => {
             style={{
               left: `${30 + i * 20}%`,
               top: `${20 + i * 20}%`,
-              transform: `translate3d(0, 0, 0)`
+              transform: `translate3d(0, 0, 0)` // Force GPU acceleration
             }}
           />
         ))}
       </AnimatePresence>
     </div>
+  );
+};
+
+export const FeaturesSection = () => {
+  const prefersReducedMotion = useReducedMotion();
+  const [visibleItems, setVisibleItems] = useState<number[]>([]);
+  const featuresRef = useRef<(HTMLDivElement | null)[]>([]);
+  const controls = useAnimation();
+  const performanceRef = useRef<{ startTime: number; frames: number }>({
+    startTime: performance.now(),
+    frames: 0
+  });
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const index = featuresRef.current.findIndex(ref => ref === entry.target);
+          if (entry.isIntersecting && !visibleItems.includes(index)) {
+            setVisibleItems(prev => [...prev, index]);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    featuresRef.current.forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
+    // Performance monitoring
+    const monitorPerformance = () => {
+      const currentTime = performance.now();
+      const elapsed = currentTime - performanceRef.current.startTime;
+      performanceRef.current.frames++;
+      
+      if (elapsed >= 1000) {
+        const fps = Math.round((performanceRef.current.frames * 1000) / elapsed);
+        console.log(`Features Animation FPS: ${fps}`);
+        performanceRef.current = {
+          startTime: currentTime,
+          frames: 0
+        };
+      }
+      
+      requestAnimationFrame(monitorPerformance);
+    };
+
+    requestAnimationFrame(monitorPerformance);
+
+    return () => {
+      observer.disconnect();
+      controls.stop();
+    };
+  }, [controls, visibleItems]);
+
+  const features = [
+    {
+      icon: "Code",
+      title: "Advanced Editor",
+      description: "Next-gen code editing with real-time collaboration.",
+    },
+    {
+      icon: "Activity",
+      title: "Live Analytics",
+      description: "Real-time performance monitoring and insights.",
+    },
+    {
+      icon: "Database",
+      title: "Smart Storage",
+      description: "Intelligent data management and version control.",
+    },
+    {
+      icon: "Settings",
+      title: "Full Control",
+      description: "Customizable workspace and powerful integrations.",
+    },
+  ];
+
+  return (
+    <ErrorBoundary>
+      <section className="container mx-auto px-4 py-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {features.map((feature, index) => (
+            <motion.div
+              key={index}
+              ref={el => featuresRef.current[index] = el}
+              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
+              animate={visibleItems.includes(index) ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.3, delay: index * 0.1 }}
+              className="glass-card p-6 hover:scale-105 transition-transform duration-300 transform"
+            >
+              <div className="text-neon-blue mb-4">
+                {/* Dynamic icon import */}
+                <span className="w-8 h-8 block">{feature.icon}</span>
+              </div>
+              <h3 className="text-xl font-semibold mb-2 gradient-text">
+                {feature.title}
+              </h3>
+              <p className="text-gray-400">{feature.description}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+    </ErrorBoundary>
   );
 };
