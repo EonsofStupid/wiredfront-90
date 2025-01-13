@@ -25,8 +25,28 @@ export interface APIConfigurationCardProps {
 }
 
 export interface CreateConfigurationOptions {
+  name?: string;
   assistant_name?: string;
   assistant_id?: string | null;
   provider_settings?: Record<string, any>;
   is_default?: boolean;
+}
+
+export interface ServiceCardProps {
+  type: APIType;
+  title: string;
+  description: string;
+  docsUrl: string;
+  docsText: string;
+  placeholder: string;
+  configurations: any[];
+  newConfig: {
+    name: string;
+    key: string;
+  };
+  isConnecting: boolean;
+  selectedConfig: string | null;
+  onConnect: (configId: string) => void;
+  onConfigChange: (type: APIType, field: string, value: string) => void;
+  onSaveConfig: (type: APIType) => void;
 }

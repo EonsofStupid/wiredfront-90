@@ -3,26 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
-import { APIType } from "@/types/store/settings/api-config";
-
-interface ServiceCardProps {
-  type: APIType;
-  title: string;
-  description: string;
-  docsUrl: string;
-  docsText: string;
-  placeholder: string;
-  configurations: any[];
-  newConfig: {
-    name: string;
-    key: string;
-  };
-  isConnecting: boolean;
-  selectedConfig: string | null;
-  onConnect: (configId: string) => void;
-  onConfigChange: (type: APIType, field: string, value: string) => void;
-  onSaveConfig: (type: APIType) => void;
-}
+import { ServiceCardProps } from "@/types/settings/api-configuration";
 
 export function ServiceCard({
   type,
