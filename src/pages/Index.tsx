@@ -9,7 +9,6 @@ import { SetupWizard } from "@/components/setup/SetupWizard";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { toast } from "sonner";
 
-// Proper lazy loading with retry logic
 const LazyDraggableChat = React.lazy(() => 
   import("@/components/chat/DraggableChat").catch(error => {
     console.error("Failed to load DraggableChat:", error);
@@ -25,14 +24,19 @@ const LoadingSpinner = () => (
 );
 
 export default function Index() {
+  console.log("Index component rendering");
   const navigate = useNavigate();
   const [showSetup, setShowSetup] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [isLoadingAPI, setIsLoadingAPI] = useState(false);
   const { user, loading } = useAuthStore();
 
+  console.log("Auth state:", { user, loading, showSetup, isFirstTimeUser, isLoadingAPI });
+
   const loadAPIConfigurations = useCallback(async () => {
+    console.log("Loading API configurations");
     if (!user) {
+      console.log("No user, skipping API config load");
       setIsLoadingAPI(false);
       return;
     }
@@ -47,9 +51,12 @@ export default function Index() {
         .limit(1)
         .single();
 
+      console.log("API configs loaded:", { apiConfigs, error: configError });
+
       if (configError) throw configError;
 
       if (!apiConfigs) {
+        console.log("No API configs found, showing setup");
         setIsFirstTimeUser(true);
         setShowSetup(true);
       }
@@ -62,19 +69,21 @@ export default function Index() {
   }, [user]);
 
   useEffect(() => {
+    console.log("Index useEffect running");
     let mounted = true;
 
     const initializeUser = async () => {
       if (user && mounted) {
+        console.log("Initializing user");
         await loadAPIConfigurations();
       }
     };
 
     initializeUser();
 
-    // Set up subscription for real-time updates
     let subscription;
     if (user) {
+      console.log("Setting up real-time subscription");
       const channel = supabase.channel('api_config_changes')
         .on('postgres_changes', {
           event: '*',
@@ -82,6 +91,7 @@ export default function Index() {
           table: 'api_configurations',
           filter: `user_id=eq.${user.id}`
         }, () => {
+          console.log("Real-time update received");
           if (mounted) {
             loadAPIConfigurations();
           }
@@ -89,11 +99,13 @@ export default function Index() {
         .subscribe();
 
       subscription = () => {
+        console.log("Cleaning up subscription");
         supabase.removeChannel(channel);
       };
     }
 
     return () => {
+      console.log("Index component cleanup");
       mounted = false;
       if (subscription) {
         subscription();
@@ -102,6 +114,7 @@ export default function Index() {
   }, [user, loadAPIConfigurations]);
 
   if (loading) {
+    console.log("Showing loading spinner");
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-6 w-6 animate-spin" />
@@ -109,7 +122,10 @@ export default function Index() {
     );
   }
 
+  console.log("Rendering main content, user:", user);
+
   if (!user) {
+    console.log("Rendering public landing page");
     return (
       <ErrorBoundary>
         <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
@@ -129,6 +145,7 @@ export default function Index() {
           <SetupWizard 
             isFirstTimeUser={isFirstTimeUser}
             onComplete={() => {
+              console.log("Setup completed");
               setShowSetup(false);
               toast.success("Setup completed successfully!");
               navigate('/dashboard', { replace: true });
