@@ -16,6 +16,7 @@ interface ServiceCardProps {
   newConfig: {
     name: string;
     key: string;
+    assistantId?: string;
   };
   isConnecting: boolean;
   selectedConfig: string | null;
@@ -49,7 +50,7 @@ export function ServiceCard({
         {configurations.map((config) => (
           <div key={config.id} className="space-y-2 border-b pb-4">
             <div className="flex items-center justify-between">
-              <Label>{config.name}</Label>
+              <Label>{config.assistant_name}</Label>
               <Button
                 variant="outline"
                 size="sm"
@@ -66,6 +67,11 @@ export function ServiceCard({
                 )}
               </Button>
             </div>
+            {config.assistant_id && (
+              <div className="text-sm text-muted-foreground">
+                Assistant ID: {config.assistant_id}
+              </div>
+            )}
             <div className="text-sm text-muted-foreground">
               Status: {config.validation_status}
             </div>
@@ -85,6 +91,11 @@ export function ServiceCard({
               placeholder={placeholder}
               value={newConfig.key}
               onChange={(e) => onConfigChange(type, 'key', e.target.value)}
+            />
+            <Input
+              placeholder="Assistant ID (optional)"
+              value={newConfig.assistantId}
+              onChange={(e) => onConfigChange(type, 'assistantId', e.target.value)}
             />
             <Button 
               onClick={() => onSaveConfig(type)}
