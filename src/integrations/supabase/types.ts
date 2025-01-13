@@ -263,6 +263,44 @@ export type Database = {
           },
         ]
       }
+      live_preview_status: {
+        Row: {
+          created_at: string | null
+          current_step: string | null
+          id: string
+          logs: Json | null
+          status: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_step?: string | null
+          id?: string
+          logs?: Json | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_step?: string | null
+          id?: string
+          logs?: Json | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_preview_status_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           chat_session_id: string | null
