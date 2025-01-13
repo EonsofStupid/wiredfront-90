@@ -13,10 +13,15 @@ export const LivePreview = ({ files, activeFile }: LivePreviewProps) => {
   const [stackBlitzUrl, setStackBlitzUrl] = useState<string>('');
   const [viteUrl, setViteUrl] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let mounted = true;
     const createStackBlitzProject = async () => {
       try {
+        setIsLoading(true);
+        setError(null);
+        
         // Create StackBlitz project configuration
         const project = {
           files: files,
@@ -37,32 +42,62 @@ export const LivePreview = ({ files, activeFile }: LivePreviewProps) => {
         const vm = await sdk.embedProject('live-preview', project, {
           openFile: activeFile,
           hideNavigation: true,
-          theme: 'dark'
+          theme: 'dark',
+          clickToLoad: true // Add this to prevent immediate loading
         });
+
+        if (!mounted) return;
 
         // Get the project URL using the project ID from the VM
         const projectId = vm.getDependencies ? await vm.getDependencies() : '';
         const projectUrl = `https://stackblitz.com/edit/${projectId}`;
-        setStackBlitzUrl(projectUrl);
+        
+        if (mounted) {
+          setStackBlitzUrl(projectUrl);
 
-        // Create Vite URL
-        const viteParams = new URLSearchParams({
-          file: activeFile,
-          terminal: 'dev',
-          preview: '5173'
-        });
-        const viteProjectUrl = `https://vite.new/react-ts?${viteParams}`;
-        setViteUrl(viteProjectUrl);
-
-        setIsLoading(false);
+          // Create Vite URL
+          const viteParams = new URLSearchParams({
+            file: activeFile,
+            terminal: 'dev',
+            preview: '5173'
+          });
+          const viteProjectUrl = `https://vite.new/react-ts?${viteParams}`;
+          setViteUrl(viteProjectUrl);
+        }
       } catch (error) {
         console.error('Error creating preview:', error);
-        setIsLoading(false);
+        if (mounted) {
+          setError('Failed to load preview');
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     createStackBlitzProject();
+
+    return () => {
+      mounted = false;
+    };
   }, [files, activeFile]);
+
+  if (error) {
+    return (
+      <Card className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-destructive">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md"
+          >
+            Retry
+          </button>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="h-full">
@@ -85,6 +120,7 @@ export const LivePreview = ({ files, activeFile }: LivePreviewProps) => {
               title="StackBlitz Editor"
               allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
               sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+              loading="lazy"
             />
           )}
         </TabsContent>
@@ -101,6 +137,7 @@ export const LivePreview = ({ files, activeFile }: LivePreviewProps) => {
               title="Vite Editor"
               allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
               sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+              loading="lazy"
             />
           )}
         </TabsContent>
@@ -117,6 +154,7 @@ export const LivePreview = ({ files, activeFile }: LivePreviewProps) => {
               title="Live Preview"
               allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
               sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+              loading="lazy"
             />
           )}
         </TabsContent>
