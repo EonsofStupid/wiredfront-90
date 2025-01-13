@@ -72,8 +72,32 @@ export default function Index() {
 
     initializeUser();
 
+    // Set up subscription for real-time updates
+    let subscription;
+    if (user) {
+      const channel = supabase.channel('api_config_changes')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'api_configurations',
+          filter: `user_id=eq.${user.id}`
+        }, () => {
+          if (mounted) {
+            loadAPIConfigurations();
+          }
+        })
+        .subscribe();
+
+      subscription = () => {
+        supabase.removeChannel(channel);
+      };
+    }
+
     return () => {
       mounted = false;
+      if (subscription) {
+        subscription();
+      }
     };
   }, [user, loadAPIConfigurations]);
 
