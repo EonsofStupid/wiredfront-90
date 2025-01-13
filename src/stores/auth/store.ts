@@ -80,11 +80,8 @@ export const useAuthStore = create<AuthStore>()(
             status: 'idle',
             lastUpdated: Date.now()
           });
-
-          // Clear any stored sessions
-          await supabase.auth.clearSession();
           
-          // Unsubscribe from all realtime subscriptions
+          // Remove all realtime subscriptions
           supabase.removeAllChannels();
           
           toast.success('Logged out successfully');
