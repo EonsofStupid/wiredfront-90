@@ -1,23 +1,34 @@
 import { Auth } from "@supabase/auth-ui-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
+import { toast } from "sonner";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const returnTo = searchParams.get('returnTo');
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    // Check if user is already logged in
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate(returnTo || '/dashboard', { replace: true });
+        navigate('/dashboard');
+      }
+    };
+    checkUser();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, session);
+      if (event === 'SIGNED_IN' && session) {
+        toast.success('Successfully logged in!');
+        navigate('/dashboard');
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, returnTo]);
+  }, [navigate]);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-dark/80 backdrop-blur-sm">
@@ -56,7 +67,6 @@ const Login = () => {
             theme="dark"
             providers={["github", "google"]}
             redirectTo={window.location.origin}
-            onlyThirdPartyProviders={false}
           />
         </div>
       </div>

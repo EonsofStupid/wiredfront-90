@@ -13,26 +13,38 @@ import { ChatProvider } from "@/features/chat/ChatProvider";
 import { useAuthStore } from "@/stores/auth";
 import { storeLastVisitedPath } from "@/utils/auth";
 import { EditorModeProvider } from "@/features/chat/core/providers/EditorModeProvider";
+import { toast } from "sonner";
 
 const PROTECTED_ROUTES = ['/dashboard', '/editor', '/documents', '/ai', '/analytics', '/settings'];
 
 const App = () => {
   console.log("App component rendering");
   const isMobile = useIsMobile();
-  const { user } = useAuthStore();
+  const { user, loading } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
     const handleAuth = () => {
-      const isProtectedRoute = PROTECTED_ROUTES.includes(location.pathname);
-      if (!user && isProtectedRoute) {
+      const isProtectedRoute = PROTECTED_ROUTES.some(route => 
+        location.pathname.startsWith(route)
+      );
+
+      if (!loading && isProtectedRoute && !user) {
+        console.log("User not authenticated, redirecting to login");
         storeLastVisitedPath(location.pathname);
+        toast.error('Please log in to access this page');
         navigate("/login");
       }
     };
+
     handleAuth();
-  }, [user, location.pathname, navigate]);
+  }, [user, loading, location.pathname, navigate]);
+
+  // Show loading state
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   const Layout = isMobile ? MobileLayout : AppLayout;
 
