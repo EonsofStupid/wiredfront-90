@@ -747,7 +747,20 @@ export type Database = {
     }
     Enums: {
       api_type: "openai" | "gemini" | "anthropic" | "huggingface"
-      chat_api_provider: "openai" | "anthropic" | "gemini" | "huggingface"
+      chat_api_provider:
+        | "openai"
+        | "anthropic"
+        | "gemini"
+        | "huggingface"
+        | "stability"
+        | "replicate"
+        | "ai21"
+        | "mosaic"
+        | "databricks"
+        | "azure"
+        | "aws"
+        | "watson"
+        | "forefront"
       message_behavior_type: "enter_send" | "enter_newline"
       message_type: "text" | "command" | "system"
       setting_type: "string" | "number" | "boolean" | "json" | "array"
