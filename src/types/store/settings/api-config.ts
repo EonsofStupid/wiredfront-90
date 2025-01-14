@@ -1,7 +1,9 @@
-export type APIType = 'openai' | 'gemini' | 'anthropic' | 'huggingface' | 'stability' | 
-  'replicate' | 'ai21' | 'mosaic' | 'databricks' | 'azure' | 'aws' | 'watson' | 'forefront';
+import { Database } from "@/integrations/supabase/types";
 
-export type ValidationStatusType = 'pending' | 'valid' | 'invalid' | 'expired';
+// Use the Supabase database enum as source of truth
+export type APIType = Database['public']['Enums']['api_type'];
+
+export type ValidationStatusType = Database['public']['Enums']['validation_status_type'];
 
 export interface APIConfiguration {
   id: string;
