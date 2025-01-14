@@ -14,6 +14,14 @@ export function LivePreviewSettings() {
   const livePreviewEnabled = preferences?.livePreview?.enabled || false;
 
   const handleToggleLivePreview = async (enabled: boolean) => {
+    // First update local state
+    updatePreferences({ 
+      livePreview: { 
+        ...preferences?.livePreview,
+        enabled 
+      } 
+    });
+
     try {
       const { error } = await supabase
         .from('live_preview_status')
@@ -24,18 +32,29 @@ export function LivePreviewSettings() {
           logs: []
         });
 
-      if (error) throw error;
-
-      updatePreferences({ 
-        livePreview: { 
-          ...preferences?.livePreview,
-          enabled 
-        } 
-      });
+      if (error) {
+        console.error('Error updating live preview status:', error);
+        // Revert local state if database update fails
+        updatePreferences({ 
+          livePreview: { 
+            ...preferences?.livePreview,
+            enabled: !enabled 
+          } 
+        });
+        toast.error('Failed to update Live Preview status');
+        return;
+      }
 
       toast.success(`Live Preview ${enabled ? 'enabled' : 'disabled'}`);
     } catch (error) {
       console.error('Error updating live preview status:', error);
+      // Revert local state if database update fails
+      updatePreferences({ 
+        livePreview: { 
+          ...preferences?.livePreview,
+          enabled: !enabled 
+        } 
+      });
       toast.error('Failed to update Live Preview status');
     }
   };
