@@ -1,15 +1,12 @@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useSettingsStore } from "@/stores/settings";
-import { useCallback } from "react";
 
 export function NotificationSettings() {
-  const notifications = useSettingsStore((state) => state.notifications);
-  const updateNotifications = useSettingsStore((state) => state.updateNotifications);
-
-  const handleNotificationChange = useCallback((key: keyof typeof notifications, checked: boolean) => {
-    updateNotifications({ [key]: checked });
-  }, [updateNotifications]);
+  const { notifications, updateNotifications } = useSettingsStore((state) => ({
+    notifications: state.notifications,
+    updateNotifications: state.updateNotifications,
+  }));
 
   return (
     <div className="space-y-6">
@@ -31,7 +28,9 @@ export function NotificationSettings() {
           <Switch
             id="email-notifications"
             checked={notifications.email}
-            onCheckedChange={(checked) => handleNotificationChange('email', checked)}
+            onCheckedChange={(checked) =>
+              updateNotifications({ email: checked })
+            }
           />
         </div>
 
@@ -45,7 +44,9 @@ export function NotificationSettings() {
           <Switch
             id="push-notifications"
             checked={notifications.push}
-            onCheckedChange={(checked) => handleNotificationChange('push', checked)}
+            onCheckedChange={(checked) =>
+              updateNotifications({ push: checked })
+            }
           />
         </div>
 
@@ -59,7 +60,9 @@ export function NotificationSettings() {
           <Switch
             id="marketing-notifications"
             checked={notifications.marketing}
-            onCheckedChange={(checked) => handleNotificationChange('marketing', checked)}
+            onCheckedChange={(checked) =>
+              updateNotifications({ marketing: checked })
+            }
           />
         </div>
       </div>

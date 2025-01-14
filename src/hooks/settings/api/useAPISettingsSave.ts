@@ -30,6 +30,7 @@ export function useAPISettingsSave() {
       for (const config of apiConfigs) {
         const apiKey = settings[config.key as keyof APISettingsState];
         if (apiKey) {
+          // Check if configuration exists using maybeSingle()
           const { data: existingConfig, error: queryError } = await supabase
             .from('api_configurations')
             .select('id')
@@ -43,6 +44,7 @@ export function useAPISettingsSave() {
           }
 
           if (existingConfig) {
+            // Update existing configuration
             const { error: updateError } = await supabase
               .from('api_configurations')
               .update({
@@ -55,6 +57,7 @@ export function useAPISettingsSave() {
               throw updateError;
             }
           } else {
+            // Create new configuration
             const { error: insertError } = await supabase
               .from('api_configurations')
               .insert({

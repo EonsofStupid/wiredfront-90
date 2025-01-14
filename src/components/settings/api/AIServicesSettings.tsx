@@ -7,12 +7,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { ServiceCard } from "./components/ServiceCard";
 import { useServiceConnection } from "./hooks/useServiceConnection";
 import { ServiceConfig, NewConfigState } from "./types";
-import { API_CONFIGURATIONS } from "@/constants/api-configurations";
 
 export function AIServicesSettings() {
   const { configurations, createConfiguration } = useAPIConfigurations();
   const { isConnecting, selectedConfig, handleConnect } = useServiceConnection();
-  const [newConfigs, setNewConfigs] = useState<Record<APIType, NewConfigState>>({} as Record<APIType, NewConfigState>);
+  const [newConfigs, setNewConfigs] = useState<Record<APIType, NewConfigState>>({
+    openai: { name: '', key: '', assistantId: '' },
+    huggingface: { name: '', key: '', assistantId: '' },
+    gemini: { name: '', key: '', assistantId: '' },
+    anthropic: { name: '', key: '', assistantId: '' }
+  });
 
   const handleConfigChange = (type: APIType, field: string, value: string) => {
     setNewConfigs(prev => ({
@@ -24,7 +28,7 @@ export function AIServicesSettings() {
   const handleSaveConfig = async (type: APIType) => {
     try {
       const config = newConfigs[type];
-      if (!config?.name || !config?.key) {
+      if (!config.name || !config.key) {
         toast.error("Please provide both name and API key");
         return;
       }
@@ -55,7 +59,8 @@ export function AIServicesSettings() {
       }
 
       const configOptions: CreateConfigurationOptions = {
-        name: config.name,
+        assistant_name: config.name,
+        assistant_id: config.assistantId || null,
         provider_settings: {
           api_key_secret: secretName,
           provider: type
@@ -66,7 +71,7 @@ export function AIServicesSettings() {
 
       setNewConfigs(prev => ({
         ...prev,
-        [type]: { name: '', key: '' }
+        [type]: { name: '', key: '', assistantId: '' }
       }));
 
       toast.success(`${type} configuration saved successfully`);
@@ -76,25 +81,55 @@ export function AIServicesSettings() {
     }
   };
 
+  const serviceConfigs: ServiceConfig[] = [
+    {
+      type: 'openai',
+      title: 'OpenAI',
+      description: 'Configure OpenAI API for GPT models and other AI services.',
+      docsUrl: 'https://platform.openai.com/api-keys',
+      docsText: 'OpenAI dashboard',
+      placeholder: 'sk-...'
+    },
+    {
+      type: 'anthropic',
+      title: 'Anthropic Claude',
+      description: 'Set up Anthropic Claude for advanced AI capabilities.',
+      docsUrl: 'https://console.anthropic.com/account/keys',
+      docsText: 'Anthropic Console',
+      placeholder: 'sk-ant-...'
+    },
+    {
+      type: 'gemini',
+      title: 'Google Gemini',
+      description: 'Configure Google Gemini API for AI services.',
+      docsUrl: 'https://makersuite.google.com/app/apikey',
+      docsText: 'Google AI Studio',
+      placeholder: 'Enter Gemini API key'
+    },
+    {
+      type: 'huggingface',
+      title: 'Hugging Face',
+      description: 'Set up Hugging Face for access to open-source AI models.',
+      docsUrl: 'https://huggingface.co/settings/tokens',
+      docsText: 'Hugging Face settings',
+      placeholder: 'hf_...'
+    }
+  ];
+
   return (
     <div className="space-y-6">
-      {API_CONFIGURATIONS.map(config => (
+      {serviceConfigs.map(config => (
         <ServiceCard
           key={config.type}
-          type={config.type}
-          title={config.label}
-          description={config.description}
-          docsUrl={config.docsUrl}
-          docsText={config.docsText}
-          placeholder={config.placeholder}
+          {...config}
           configurations={configurations.filter(c => c.api_type === config.type)}
-          newConfig={newConfigs[config.type] || { name: '', key: '' }}
+          newConfig={newConfigs[config.type]}
           isConnecting={isConnecting}
           selectedConfig={selectedConfig}
           onConnect={(configId) => {
             const configuration = configurations.find(c => c.id === configId);
             if (configuration) {
-              handleConnect(configId, configuration.name || 'AI Service', configuration.api_type);
+              handleConnect(configId, configuration.assistant_name || 'AI Service', configuration.api_type);
             }
           }}
           onConfigChange={handleConfigChange}

@@ -53,6 +53,7 @@ export const useAPIConfigurations = () => {
         return null;
       }
 
+      // Check for existing configuration with same api_type
       const { data: existingConfig } = await supabase
         .from('api_configurations')
         .select('*')
@@ -61,6 +62,7 @@ export const useAPIConfigurations = () => {
         .single();
 
       if (existingConfig) {
+        // Update existing configuration
         const { data, error } = await supabase
           .from('api_configurations')
           .update({
@@ -84,6 +86,7 @@ export const useAPIConfigurations = () => {
         return data;
       }
 
+      // Create new configuration
       const { data, error } = await supabase
         .from('api_configurations')
         .insert({

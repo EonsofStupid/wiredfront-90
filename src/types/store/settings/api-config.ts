@@ -1,17 +1,15 @@
-import { Database } from "@/integrations/supabase/types";
-
-// Use the Supabase database enum as source of truth
-export type APIType = Database['public']['Enums']['api_type'];
-
-export type ValidationStatusType = Database['public']['Enums']['validation_status_type'];
+export type APIType = 'openai' | 'gemini' | 'anthropic' | 'huggingface';
+export type ValidationStatusType = 'pending' | 'valid' | 'invalid' | 'expired';
 
 export interface APIConfiguration {
   id: string;
-  user_id?: string;
+  user_id: string;
   api_type: APIType;
-  is_enabled?: boolean;
-  is_default?: boolean;
-  priority?: number;
+  is_enabled: boolean;
+  is_default: boolean;
+  priority: number;
+  assistant_id?: string;
+  assistant_name?: string;
   last_validated?: string;
   model_preferences?: Record<string, any>;
   provider_settings?: Record<string, any>;
@@ -19,7 +17,12 @@ export interface APIConfiguration {
   validation_status?: ValidationStatusType;
   created_at?: string;
   updated_at?: string;
-  name?: string;
-  assistant_id?: string;
-  assistant_name?: string;
+}
+
+export interface APIProfile {
+  id: string;
+  name: string;
+  description?: string;
+  configuration: Record<string, any>;
+  is_active: boolean;
 }

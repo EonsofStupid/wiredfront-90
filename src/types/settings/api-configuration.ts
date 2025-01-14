@@ -1,4 +1,4 @@
-import { APIType, APIConfiguration } from "@/types/store/settings/api-config";
+import { APIType } from "@/types/store/settings/api-config";
 
 export interface APIConfigurationItem {
   type: APIType;
@@ -10,43 +10,23 @@ export interface APIConfigurationItem {
 }
 
 export interface APIConfigurationProps {
-  configurations: APIConfiguration[];
-  onConfigurationChange: (checked: boolean, config: APIConfiguration | undefined, apiType: APIType) => void;
+  configurations: any[];
+  onConfigurationChange: (checked: boolean, config: any | undefined, apiType: APIType) => void;
   onSetDefault: (configId: string) => void;
   onDelete: (configId: string) => void;
 }
 
 export interface APIConfigurationCardProps {
-  config: APIConfiguration;
+  config: any;
   api: APIConfigurationItem;
-  onConfigurationChange: (checked: boolean, config: APIConfiguration | undefined, apiType: APIType) => void;
+  onConfigurationChange: (checked: boolean, config: any | undefined, apiType: APIType) => void;
   onSetDefault: (configId: string) => void;
   onDelete: (configId: string) => void;
 }
 
 export interface CreateConfigurationOptions {
-  name?: string;
   assistant_name?: string;
   assistant_id?: string | null;
   provider_settings?: Record<string, any>;
   is_default?: boolean;
-}
-
-export interface ServiceCardProps {
-  type: APIType;
-  title: string;
-  description: string;
-  docsUrl: string;
-  docsText: string;
-  placeholder: string;
-  configurations: APIConfiguration[];
-  newConfig: {
-    name: string;
-    key: string;
-  };
-  isConnecting: boolean;
-  selectedConfig: string | null;
-  onConnect: (configId: string) => void;
-  onConfigChange: (type: APIType, field: string, value: string) => void;
-  onSaveConfig: (type: APIType) => void;
 }
