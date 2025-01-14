@@ -77,6 +77,78 @@ export type Database = {
           },
         ]
       }
+      api_keys: {
+        Row: {
+          api_key_secret: string
+          capabilities: Json | null
+          created_at: string
+          custom_label: string | null
+          endpoint_url: string | null
+          extra_fields: Json | null
+          id: string
+          last_used_at: string | null
+          last_validated: string | null
+          provider_name: string
+          updated_at: string
+          usage_count: number | null
+          user_id: string
+          validation_status:
+            | Database["public"]["Enums"]["api_key_status"]
+            | null
+        }
+        Insert: {
+          api_key_secret: string
+          capabilities?: Json | null
+          created_at?: string
+          custom_label?: string | null
+          endpoint_url?: string | null
+          extra_fields?: Json | null
+          id?: string
+          last_used_at?: string | null
+          last_validated?: string | null
+          provider_name: string
+          updated_at?: string
+          usage_count?: number | null
+          user_id: string
+          validation_status?:
+            | Database["public"]["Enums"]["api_key_status"]
+            | null
+        }
+        Update: {
+          api_key_secret?: string
+          capabilities?: Json | null
+          created_at?: string
+          custom_label?: string | null
+          endpoint_url?: string | null
+          extra_fields?: Json | null
+          id?: string
+          last_used_at?: string | null
+          last_validated?: string | null
+          provider_name?: string
+          updated_at?: string
+          usage_count?: number | null
+          user_id?: string
+          validation_status?:
+            | Database["public"]["Enums"]["api_key_status"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_provider_name_fkey"
+            columns: ["provider_name"]
+            isOneToOne: false
+            referencedRelation: "api_providers"
+            referencedColumns: ["provider_name"]
+          },
+          {
+            foreignKeyName: "api_keys_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       api_profiles: {
         Row: {
           configuration: Json
@@ -117,6 +189,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      api_providers: {
+        Row: {
+          capabilities: Json
+          config_presets: Json
+          created_at: string
+          default_endpoint: string
+          provider_name: string
+          updated_at: string
+        }
+        Insert: {
+          capabilities?: Json
+          config_presets?: Json
+          created_at?: string
+          default_endpoint: string
+          provider_name: string
+          updated_at?: string
+        }
+        Update: {
+          capabilities?: Json
+          config_presets?: Json
+          created_at?: string
+          default_endpoint?: string
+          provider_name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       assistant_configurations: {
         Row: {
@@ -746,6 +845,7 @@ export type Database = {
       }
     }
     Enums: {
+      api_key_status: "pending" | "valid" | "invalid" | "expired"
       api_type: "openai" | "gemini" | "anthropic" | "huggingface"
       chat_api_provider:
         | "openai"
