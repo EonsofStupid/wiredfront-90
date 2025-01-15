@@ -1,17 +1,13 @@
-import React from "react";
-import { HeroSection } from "@/components/home/HeroSection";
-import { FeaturesSection } from "@/components/home/FeaturesSection";
-import { MainLayout } from "@/components/layout/MainLayout";
+import React from 'react';
+import { DocumentUpload } from '@/components/documents/DocumentUpload';
 
-export default function Index() {
-  console.log("Index page rendering");
-  
+const Index = () => {
   return (
-    <MainLayout>
-      <div className="container mx-auto">
-        <HeroSection />
-        <FeaturesSection />
-      </div>
-    </MainLayout>
+    <div className="container mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-6">Document Upload</h1>
+      <DocumentUpload />
+    </div>
   );
-}
+};
+
+export default Index;

@@ -362,6 +362,132 @@ export type Database = {
           },
         ]
       }
+      document_chunks: {
+        Row: {
+          chunk_index: number
+          content: string
+          created_at: string | null
+          document_id: string | null
+          embedding: string | null
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          chunk_index: number
+          content: string
+          created_at?: string | null
+          document_id?: string | null
+          embedding?: string | null
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          chunk_index?: number
+          content?: string
+          created_at?: string | null
+          document_id?: string | null
+          embedding?: string | null
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_chunks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          content: string
+          created_at: string | null
+          error_message: string | null
+          file_type: string | null
+          file_url: string | null
+          id: string
+          metadata: Json | null
+          status: Database["public"]["Enums"]["document_status"] | null
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          error_message?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: Database["public"]["Enums"]["document_status"] | null
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          error_message?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: Database["public"]["Enums"]["document_status"] | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      embedding_configs: {
+        Row: {
+          config: Json
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          model_type: Database["public"]["Enums"]["embedding_model"]
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          config?: Json
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          model_type: Database["public"]["Enums"]["embedding_model"]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          config?: Json
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          model_type?: Database["public"]["Enums"]["embedding_model"]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "embedding_configs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       live_preview_status: {
         Row: {
           created_at: string | null
@@ -809,11 +935,62 @@ export type Database = {
           },
         ]
       }
+      vector_store_configs: {
+        Row: {
+          config: Json
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          store_type: Database["public"]["Enums"]["vector_store_type"]
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          config?: Json
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          store_type: Database["public"]["Enums"]["vector_store_type"]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          config?: Json
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          store_type?: Database["public"]["Enums"]["vector_store_type"]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vector_store_configs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      binary_quantize:
+        | {
+            Args: {
+              "": string
+            }
+            Returns: unknown
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: unknown
+          }
       cleanup_stale_sessions: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -836,12 +1013,171 @@ export type Database = {
         }
         Returns: string
       }
+      halfvec_avg: {
+        Args: {
+          "": number[]
+        }
+        Returns: unknown
+      }
+      halfvec_out: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      halfvec_send: {
+        Args: {
+          "": unknown
+        }
+        Returns: string
+      }
+      halfvec_typmod_in: {
+        Args: {
+          "": unknown[]
+        }
+        Returns: number
+      }
+      hnsw_bit_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      hnsw_halfvec_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      hnsw_sparsevec_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      hnswhandler: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ivfflat_bit_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ivfflat_halfvec_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ivfflathandler: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      l2_norm:
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: number
+          }
+      l2_normalize:
+        | {
+            Args: {
+              "": string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: unknown
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: unknown
+          }
       set_secret: {
         Args: {
           name: string
           value: string
         }
         Returns: undefined
+      }
+      sparsevec_out: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      sparsevec_send: {
+        Args: {
+          "": unknown
+        }
+        Returns: string
+      }
+      sparsevec_typmod_in: {
+        Args: {
+          "": unknown[]
+        }
+        Returns: number
+      }
+      vector_avg: {
+        Args: {
+          "": number[]
+        }
+        Returns: string
+      }
+      vector_dims:
+        | {
+            Args: {
+              "": string
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: number
+          }
+      vector_norm: {
+        Args: {
+          "": string
+        }
+        Returns: number
+      }
+      vector_out: {
+        Args: {
+          "": string
+        }
+        Returns: unknown
+      }
+      vector_send: {
+        Args: {
+          "": string
+        }
+        Returns: string
+      }
+      vector_typmod_in: {
+        Args: {
+          "": unknown[]
+        }
+        Returns: number
       }
     }
     Enums: {
@@ -861,10 +1197,13 @@ export type Database = {
         | "aws"
         | "watson"
         | "forefront"
+      document_status: "pending" | "processing" | "indexed" | "failed"
+      embedding_model: "openai" | "cohere" | "huggingface"
       message_behavior_type: "enter_send" | "enter_newline"
       message_type: "text" | "command" | "system"
       setting_type: "string" | "number" | "boolean" | "json" | "array"
       validation_status_type: "pending" | "valid" | "invalid" | "expired"
+      vector_store_type: "pinecone" | "weaviate" | "pgvector"
     }
     CompositeTypes: {
       [_ in never]: never
