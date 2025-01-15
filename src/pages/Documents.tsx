@@ -2,6 +2,8 @@ import React from 'react';
 import { DocumentUpload } from '@/components/documents/DocumentUpload';
 
 const Documents = () => {
+  console.log("Documents page rendering");
+  
   return (
     <div className="container mx-auto p-6">
       <div className="flex flex-col gap-6">
