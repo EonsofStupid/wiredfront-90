@@ -18,7 +18,6 @@ import { EditorModeProvider } from "@/features/chat/core/providers/EditorModePro
 const PROTECTED_ROUTES = ['/dashboard', '/editor', '/documents', '/ai', '/analytics', '/settings'];
 
 const App = () => {
-  console.log("App component rendering");
   const isMobile = useIsMobile();
   const { user } = useAuthStore();
   const location = useLocation();
