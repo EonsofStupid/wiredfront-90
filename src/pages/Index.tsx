@@ -1,15 +1,17 @@
-import React from 'react';
-import { MainLayout } from '@/components/layout/MainLayout';
-import { HeroSection } from '@/components/home/HeroSection';
-import { FeaturesSection } from '@/components/home/FeaturesSection';
+import React from "react";
+import { HeroSection } from "@/components/home/HeroSection";
+import { FeaturesSection } from "@/components/home/FeaturesSection";
+import { MainLayout } from "@/components/layout/MainLayout";
 
-const Index = () => {
+export default function Index() {
+  console.log("Index page rendering");
+  
   return (
     <MainLayout>
-      <HeroSection />
-      <FeaturesSection />
+      <div className="container mx-auto">
+        <HeroSection />
+        <FeaturesSection />
+      </div>
     </MainLayout>
   );
-};
-
-export default Index;
+}

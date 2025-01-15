@@ -9,7 +9,6 @@ import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import Editor from "./pages/Editor";
-import Documents from "./pages/Documents";
 import { ChatProvider } from "@/features/chat/ChatProvider";
 import { useAuthStore } from "@/stores/auth";
 import { storeLastVisitedPath } from "@/utils/auth";
@@ -51,7 +50,7 @@ const App = () => {
               </EditorModeProvider>
             } 
           />
-          <Route path="/documents" element={<Documents />} />
+          <Route path="/documents" element={<div>Documents Page</div>} />
           <Route path="/ai" element={<div>AI Assistant Page</div>} />
           <Route path="/analytics" element={<div>Analytics Page</div>} />
           <Route path="/settings" element={<Settings />} />
