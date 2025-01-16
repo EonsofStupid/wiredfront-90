@@ -24,9 +24,9 @@ export const initializePinecone = async () => {
 
     const configData = config.config as Record<string, string>;
     
+    // Updated Pinecone client initialization
     const client = new Pinecone({
       apiKey: configData.apiKey,
-      environment: configData.environment
     });
 
     pineconeClient = client;
