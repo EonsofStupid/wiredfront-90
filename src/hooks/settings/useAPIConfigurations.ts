@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { APIConfiguration, APIType } from '@/types/store/settings/api-config';
+import { APIConfiguration, APIType, ValidationStatusType } from '@/types/store/settings/api-config';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { logger } from '@/services/chat/LoggingService';
 import { CreateConfigurationOptions } from '@/types/settings/api-configuration';
@@ -61,7 +61,7 @@ export const useAPIConfigurations = () => {
         assistant_name: options.assistant_name,
         assistant_id: options.assistant_id,
         provider_settings: options.provider_settings,
-        validation_status: 'pending',
+        validation_status: 'pending' as ValidationStatusType,
         endpoint_url: options.provider_settings?.endpoint_url,
         grpc_endpoint: options.provider_settings?.grpc_endpoint,
         read_only_key: options.provider_settings?.read_only_key,

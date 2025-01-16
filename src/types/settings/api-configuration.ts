@@ -1,4 +1,4 @@
-import { APIType } from './api-config';
+import { APIType, APIConfiguration } from "@/types/store/settings/api-config";
 
 export interface APIConfigurationItem {
   type: APIType;
@@ -7,6 +7,21 @@ export interface APIConfigurationItem {
   docsUrl: string;
   docsText: string;
   placeholder: string;
+}
+
+export interface APIConfigurationProps {
+  configurations: APIConfiguration[];
+  onConfigurationChange: (checked: boolean, config: APIConfiguration | undefined, apiType: APIType) => void;
+  onSetDefault: (configId: string) => void;
+  onDelete: (configId: string) => void;
+}
+
+export interface APIConfigurationCardProps {
+  config: APIConfiguration;
+  api: APIConfigurationItem;
+  onConfigurationChange: (checked: boolean, config: APIConfiguration | undefined, apiType: APIType) => void;
+  onSetDefault: (configId: string) => void;
+  onDelete: (configId: string) => void;
 }
 
 export interface CreateConfigurationOptions {
