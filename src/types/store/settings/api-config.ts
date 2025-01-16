@@ -1,6 +1,6 @@
 export type APIType = 'openai' | 'anthropic' | 'gemini' | 'huggingface' | 'pinecone' | 'weaviate';
 
-export type ValidationStatusType = 'pending' | 'valid' | 'invalid';
+export type ValidationStatusType = 'pending' | 'valid' | 'invalid' | 'expired';
 
 export interface APIConfiguration {
   id: string;
@@ -35,7 +35,7 @@ export interface APIConfiguration {
 export interface VectorStoreConfig {
   id: string;
   user_id?: string;
-  store_type: 'pinecone' | 'weaviate';
+  store_type: 'pinecone' | 'weaviate' | 'pgvector';
   config: {
     endpoint_url?: string;
     grpc_endpoint?: string;
@@ -54,4 +54,10 @@ export interface VectorStoreConfig {
   is_active: boolean;
   created_at?: string;
   updated_at?: string;
+  endpoint_url?: string;
+  grpc_endpoint?: string;
+  read_only_key?: string;
+  environment?: string;
+  index_name?: string;
+  cluster_info?: Record<string, any>;
 }
