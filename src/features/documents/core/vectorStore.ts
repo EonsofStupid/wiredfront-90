@@ -1,4 +1,4 @@
-import { PineconeClient } from '@pinecone-database/pinecone';
+import { Pinecone } from '@pinecone-database/pinecone';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -9,7 +9,7 @@ export interface VectorStoreConfig {
   config: Record<string, any>;
 }
 
-let pineconeClient: PineconeClient | null = null;
+let pineconeClient: Pinecone | null = null;
 
 export const initializePinecone = async () => {
   try {
@@ -22,10 +22,11 @@ export const initializePinecone = async () => {
     if (error) throw error;
     if (!config) return null;
 
-    const client = new PineconeClient();
-    await client.init({
-      apiKey: config.config.apiKey,
-      environment: config.config.environment,
+    const configData = config.config as Record<string, string>;
+    
+    const client = new Pinecone({
+      apiKey: configData.apiKey,
+      environment: configData.environment,
     });
 
     pineconeClient = client;
@@ -53,7 +54,12 @@ export const getVectorStore = async (): Promise<VectorStoreConfig | null> => {
       .maybeSingle();
 
     if (error) throw error;
-    return config;
+    if (!config) return null;
+
+    return {
+      type: config.store_type,
+      config: config.config
+    };
   } catch (error) {
     console.error('Error getting vector store config:', error);
     return null;

@@ -55,7 +55,7 @@ export const processDocument = async (
     // Update document status
     await supabase
       .from('documents')
-      .update({ status: 'completed' })
+      .update({ status: 'indexed' })
       .eq('id', documentId);
 
     toast.success('Document processed successfully');

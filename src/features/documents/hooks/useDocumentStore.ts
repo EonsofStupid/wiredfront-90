@@ -58,6 +58,7 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
         .from('documents')
         .insert({
           title: file.name,
+          content: '', // Initialize with empty content
           file_type: file.type,
           file_url: filename,
           status: 'pending'
