@@ -937,28 +937,46 @@ export type Database = {
       }
       vector_store_configs: {
         Row: {
+          cluster_info: Json | null
           config: Json
           created_at: string | null
+          endpoint_url: string | null
+          environment: string | null
+          grpc_endpoint: string | null
           id: string
+          index_name: string | null
           is_active: boolean | null
+          read_only_key: string | null
           store_type: Database["public"]["Enums"]["vector_store_type"]
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
+          cluster_info?: Json | null
           config?: Json
           created_at?: string | null
+          endpoint_url?: string | null
+          environment?: string | null
+          grpc_endpoint?: string | null
           id?: string
+          index_name?: string | null
           is_active?: boolean | null
+          read_only_key?: string | null
           store_type: Database["public"]["Enums"]["vector_store_type"]
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
+          cluster_info?: Json | null
           config?: Json
           created_at?: string | null
+          endpoint_url?: string | null
+          environment?: string | null
+          grpc_endpoint?: string | null
           id?: string
+          index_name?: string | null
           is_active?: boolean | null
+          read_only_key?: string | null
           store_type?: Database["public"]["Enums"]["vector_store_type"]
           updated_at?: string | null
           user_id?: string | null

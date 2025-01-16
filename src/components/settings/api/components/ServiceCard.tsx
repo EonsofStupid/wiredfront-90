@@ -17,6 +17,11 @@ interface ServiceCardProps {
     name: string;
     key: string;
     assistantId?: string;
+    endpoint_url?: string;
+    grpc_endpoint?: string;
+    read_only_key?: string;
+    environment?: string;
+    index_name?: string;
   };
   isConnecting: boolean;
   selectedConfig: string | null;
@@ -40,6 +45,8 @@ export function ServiceCard({
   onConfigChange,
   onSaveConfig,
 }: ServiceCardProps) {
+  const isVectorDB = type === 'weaviate' || type === 'pinecone';
+
   return (
     <Card>
       <CardHeader>
@@ -50,7 +57,7 @@ export function ServiceCard({
         {configurations.map((config) => (
           <div key={config.id} className="space-y-2 border-b pb-4">
             <div className="flex items-center justify-between">
-              <Label>{config.assistant_name}</Label>
+              <Label>{config.assistant_name || config.provider_settings?.name || 'Unnamed Configuration'}</Label>
               <Button
                 variant="outline"
                 size="sm"
@@ -67,20 +74,57 @@ export function ServiceCard({
                 )}
               </Button>
             </div>
-            {config.assistant_id && (
-              <div className="text-sm text-muted-foreground">
-                Assistant ID: {config.assistant_id}
+            {config.provider_settings && (
+              <div className="text-sm text-muted-foreground space-y-1">
+                {config.provider_settings.endpoint_url && (
+                  <div>Endpoint: {config.provider_settings.endpoint_url}</div>
+                )}
+                {config.provider_settings.environment && (
+                  <div>Environment: {config.provider_settings.environment}</div>
+                )}
+                {config.provider_settings.index_name && (
+                  <div>Index: {config.provider_settings.index_name}</div>
+                )}
               </div>
             )}
-            <div className="text-sm text-muted-foreground">
-              Status: {config.validation_status}
-            </div>
           </div>
         ))}
 
         <div className="space-y-2 pt-4">
           <Label>Add New Configuration</Label>
           <div className="space-y-2">
+            {isVectorDB && (
+              <>
+                {type === 'weaviate' && (
+                  <>
+                    <Input
+                      placeholder="REST Endpoint"
+                      value={newConfig.endpoint_url || ''}
+                      onChange={(e) => onConfigChange(type, 'endpoint_url', e.target.value)}
+                    />
+                    <Input
+                      placeholder="gRPC Endpoint"
+                      value={newConfig.grpc_endpoint || ''}
+                      onChange={(e) => onConfigChange(type, 'grpc_endpoint', e.target.value)}
+                    />
+                  </>
+                )}
+                {type === 'pinecone' && (
+                  <>
+                    <Input
+                      placeholder="Environment"
+                      value={newConfig.environment || ''}
+                      onChange={(e) => onConfigChange(type, 'environment', e.target.value)}
+                    />
+                    <Input
+                      placeholder="Index Name"
+                      value={newConfig.index_name || ''}
+                      onChange={(e) => onConfigChange(type, 'index_name', e.target.value)}
+                    />
+                  </>
+                )}
+              </>
+            )}
             <Input
               placeholder="Configuration Name"
               value={newConfig.name}
@@ -92,11 +136,13 @@ export function ServiceCard({
               value={newConfig.key}
               onChange={(e) => onConfigChange(type, 'key', e.target.value)}
             />
-            <Input
-              placeholder="Assistant ID (optional)"
-              value={newConfig.assistantId}
-              onChange={(e) => onConfigChange(type, 'assistantId', e.target.value)}
-            />
+            {!isVectorDB && (
+              <Input
+                placeholder="Assistant ID (optional)"
+                value={newConfig.assistantId}
+                onChange={(e) => onConfigChange(type, 'assistantId', e.target.value)}
+              />
+            )}
             <Button 
               onClick={() => onSaveConfig(type)}
               className="w-full"

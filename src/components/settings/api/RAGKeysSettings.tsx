@@ -1,112 +1,222 @@
 import { useState } from "react";
 import { useAPIConfigurations } from "@/hooks/settings/useAPIConfigurations";
 import { APIType } from "@/types/store/settings/api-config";
-import { Database } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ServiceCard } from "./components/ServiceCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { useServiceConnection } from "./hooks/useServiceConnection";
 
 export function RAGKeysSettings() {
   const { configurations, createConfiguration } = useAPIConfigurations();
   const { isConnecting, selectedConfig, handleConnect } = useServiceConnection();
-  const [newConfigs, setNewConfigs] = useState<Record<APIType, { name: string; key: string; assistantId: string }>>({
-    pinecone: { name: '', key: '', assistantId: '' },
-    weaviate: { name: '', key: '', assistantId: '' }
+  const [weaviateConfig, setWeaviateConfig] = useState({
+    name: '',
+    restEndpoint: '',
+    grpcEndpoint: '',
+    adminKey: '',
+    readOnlyKey: '',
+    clusterInfo: {
+      version: '',
+      region: '',
+      type: '',
+      sla: '',
+      highAvailability: false
+    }
   });
 
-  const handleConfigChange = (type: APIType, field: string, value: string) => {
-    setNewConfigs(prev => ({
-      ...prev,
-      [type]: { ...prev[type], [field]: value }
-    }));
-  };
+  const [pineconeConfig, setPineconeConfig] = useState({
+    apiKey: '',
+    environment: '',
+    indexName: ''
+  });
 
-  const handleSaveConfig = async (type: APIType) => {
-    try {
-      const config = newConfigs[type];
-      if (!config.name || !config.key) {
-        toast.error("Please provide both name and API key");
-        return;
-      }
-
-      const secretName = `${type.toUpperCase()}_API_KEY_${config.name.replace(/\s+/g, '_').toUpperCase()}`;
-      
-      const { data: secretData, error: secretError } = await supabase.functions.invoke('manage-api-secret', {
-        body: { 
-          secretName,
-          secretValue: config.key,
-          provider: type
-        }
-      });
-
-      if (secretError) {
-        console.error('Error saving secret:', secretError);
-        throw new Error(secretError.message || 'Failed to save API key securely');
-      }
-
-      if (!secretData?.success) {
-        throw new Error('Failed to save API key');
-      }
-
-      await createConfiguration(type, {
-        assistant_name: config.name,
-        provider_settings: {
-          api_key_secret: secretName,
-          provider: type
-        }
-      });
-
-      setNewConfigs(prev => ({
+  const handleWeaviateChange = (field: string, value: string) => {
+    if (field.includes('.')) {
+      const [parent, child] = field.split('.');
+      setWeaviateConfig(prev => ({
         ...prev,
-        [type]: { name: '', key: '', assistantId: '' }
+        [parent]: {
+          ...prev[parent as keyof typeof prev],
+          [child]: value
+        }
       }));
-
-      toast.success(`${type} configuration saved successfully`);
-    } catch (error) {
-      console.error('Error saving configuration:', error);
-      toast.error(error instanceof Error ? error.message : "Failed to save configuration");
+    } else {
+      setWeaviateConfig(prev => ({ ...prev, [field]: value }));
     }
   };
 
-  const serviceConfigs = [
-    {
-      type: 'pinecone' as APIType,
-      title: 'Pinecone',
-      description: 'Vector database for embeddings and similarity search.',
-      docsUrl: 'https://console.pinecone.io/organizations/-/apikeys',
-      docsText: 'Pinecone Console',
-      placeholder: 'Enter Pinecone API key'
-    },
-    {
-      type: 'weaviate' as APIType,
-      title: 'Weaviate',
-      description: 'Vector database with semantic search capabilities.',
-      docsUrl: 'https://console.weaviate.cloud/dashboard',
-      docsText: 'Weaviate Cloud Console',
-      placeholder: 'Enter Weaviate API key'
+  const handlePineconeChange = (field: string, value: string) => {
+    setPineconeConfig(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveWeaviate = async () => {
+    try {
+      await createConfiguration('weaviate', {
+        assistant_name: weaviateConfig.name,
+        provider_settings: {
+          endpoint_url: weaviateConfig.restEndpoint,
+          grpc_endpoint: weaviateConfig.grpcEndpoint,
+          admin_key: weaviateConfig.adminKey,
+          read_only_key: weaviateConfig.readOnlyKey,
+          cluster_info: weaviateConfig.clusterInfo
+        }
+      });
+      toast.success("Weaviate configuration saved successfully");
+    } catch (error) {
+      console.error('Error saving Weaviate configuration:', error);
+      toast.error("Failed to save Weaviate configuration");
     }
-  ];
+  };
+
+  const handleSavePinecone = async () => {
+    try {
+      await createConfiguration('pinecone', {
+        provider_settings: {
+          api_key: pineconeConfig.apiKey,
+          environment: pineconeConfig.environment,
+          index_name: pineconeConfig.indexName
+        }
+      });
+      toast.success("Pinecone configuration saved successfully");
+    } catch (error) {
+      console.error('Error saving Pinecone configuration:', error);
+      toast.error("Failed to save Pinecone configuration");
+    }
+  };
 
   return (
     <div className="space-y-6">
-      {serviceConfigs.map(config => (
-        <ServiceCard
-          key={config.type}
-          {...config}
-          configurations={configurations.filter(c => c.api_type === config.type)}
-          newConfig={newConfigs[config.type]}
-          isConnecting={isConnecting}
-          selectedConfig={selectedConfig}
-          onConnect={(configId) => {
-            const configuration = configurations.find(c => c.id === configId);
-            if (configuration) {
-              handleConnect(configId, configuration.assistant_name || 'RAG Service', configuration.api_type);
-            }
-          }}
-          onConfigChange={handleConfigChange}
-          onSaveConfig={handleSaveConfig}
-        />
-      ))}
+      <div>
+        <h3 className="text-lg font-medium">Vector Database Settings</h3>
+        <p className="text-sm text-muted-foreground">
+          Configure your vector database connections for RAG capabilities.
+        </p>
+      </div>
+
+      <Tabs defaultValue="weaviate" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="weaviate">Weaviate</TabsTrigger>
+          <TabsTrigger value="pinecone">Pinecone</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="weaviate">
+          <Card>
+            <CardHeader>
+              <CardTitle>Weaviate Configuration</CardTitle>
+              <CardDescription>
+                Configure your Weaviate vector database connection settings.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="weaviate-name">Cluster Name</Label>
+                <Input
+                  id="weaviate-name"
+                  placeholder="e.g., my-weaviate-cluster"
+                  value={weaviateConfig.name}
+                  onChange={(e) => handleWeaviateChange('name', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="weaviate-rest">REST Endpoint</Label>
+                <Input
+                  id="weaviate-rest"
+                  placeholder="https://your-weaviate-url.cloud"
+                  value={weaviateConfig.restEndpoint}
+                  onChange={(e) => handleWeaviateChange('restEndpoint', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="weaviate-grpc">gRPC Endpoint</Label>
+                <Input
+                  id="weaviate-grpc"
+                  placeholder="https://grpc-your-weaviate-url.cloud"
+                  value={weaviateConfig.grpcEndpoint}
+                  onChange={(e) => handleWeaviateChange('grpcEndpoint', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="weaviate-admin">Admin API Key</Label>
+                <Input
+                  id="weaviate-admin"
+                  type="password"
+                  placeholder="Enter Admin API Key"
+                  value={weaviateConfig.adminKey}
+                  onChange={(e) => handleWeaviateChange('adminKey', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="weaviate-readonly">Read-Only API Key</Label>
+                <Input
+                  id="weaviate-readonly"
+                  type="password"
+                  placeholder="Enter Read-Only API Key"
+                  value={weaviateConfig.readOnlyKey}
+                  onChange={(e) => handleWeaviateChange('readOnlyKey', e.target.value)}
+                />
+              </div>
+
+              <Button onClick={handleSaveWeaviate} className="w-full">
+                Save Weaviate Configuration
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="pinecone">
+          <Card>
+            <CardHeader>
+              <CardTitle>Pinecone Configuration</CardTitle>
+              <CardDescription>
+                Configure your Pinecone vector database connection settings.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="pinecone-key">API Key</Label>
+                <Input
+                  id="pinecone-key"
+                  type="password"
+                  placeholder="Enter Pinecone API Key"
+                  value={pineconeConfig.apiKey}
+                  onChange={(e) => handlePineconeChange('apiKey', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="pinecone-env">Environment</Label>
+                <Input
+                  id="pinecone-env"
+                  placeholder="e.g., us-east-1-aws"
+                  value={pineconeConfig.environment}
+                  onChange={(e) => handlePineconeChange('environment', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="pinecone-index">Index Name</Label>
+                <Input
+                  id="pinecone-index"
+                  placeholder="e.g., my-index"
+                  value={pineconeConfig.indexName}
+                  onChange={(e) => handlePineconeChange('indexName', e.target.value)}
+                />
+              </div>
+
+              <Button onClick={handleSavePinecone} className="w-full">
+                Save Pinecone Configuration
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
