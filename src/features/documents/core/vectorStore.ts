@@ -56,13 +56,15 @@ export const getVectorStore = async (): Promise<VectorStoreConfig | null> => {
     if (error) throw error;
     if (!config) return null;
 
+    const storeType = config.store_type as VectorStoreType;
+    
     // Only return supported vector store types
-    if (config.store_type !== 'pinecone' && config.store_type !== 'supabase') {
+    if (storeType !== 'pinecone' && storeType !== 'supabase') {
       return null;
     }
 
     return {
-      type: config.store_type as VectorStoreType,
+      type: storeType,
       config: config.config as Record<string, any>
     };
   } catch (error) {
