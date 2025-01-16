@@ -26,7 +26,7 @@ export const initializePinecone = async () => {
     
     const client = new Pinecone({
       apiKey: configData.apiKey,
-      environment: configData.environment,
+      environment: configData.environment
     });
 
     pineconeClient = client;
@@ -56,9 +56,14 @@ export const getVectorStore = async (): Promise<VectorStoreConfig | null> => {
     if (error) throw error;
     if (!config) return null;
 
+    // Only return supported vector store types
+    if (config.store_type !== 'pinecone' && config.store_type !== 'supabase') {
+      return null;
+    }
+
     return {
-      type: config.store_type,
-      config: config.config
+      type: config.store_type as VectorStoreType,
+      config: config.config as Record<string, any>
     };
   } catch (error) {
     console.error('Error getting vector store config:', error);

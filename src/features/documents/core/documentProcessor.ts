@@ -107,24 +107,23 @@ const storeSupabaseVectors = async (documentId: string, chunks: string[]) => {
 
 const storePineconeVectors = async (documentId: string, chunks: string[]) => {
   const client = getPineconeClient();
-  const index = client.Index('documents');
+  const index = client.index('documents');
 
-  // Implementation will depend on your Pinecone setup
-  // This is a placeholder for the actual implementation
-  for (let i = 0; i < chunks.length; i++) {
-    await index.upsert({
-      upsertRequest: {
-        vectors: [{
-          id: `${documentId}_${i}`,
-          values: [], // Add your embedding values here
-          metadata: {
-            documentId,
-            chunkIndex: i,
-            content: chunks[i]
-          }
-        }],
-        namespace: 'default'
-      }
-    });
+  // Create records for Pinecone
+  const records = chunks.map((chunk, i) => ({
+    id: `${documentId}_${i}`,
+    values: new Array(1536).fill(0), // Placeholder for actual embeddings
+    metadata: {
+      documentId,
+      chunkIndex: i,
+      content: chunk
+    }
+  }));
+
+  // Upsert in batches of 100
+  const batchSize = 100;
+  for (let i = 0; i < records.length; i += batchSize) {
+    const batch = records.slice(i, i + batchSize);
+    await index.upsert(batch);
   }
 };
