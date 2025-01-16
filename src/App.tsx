@@ -13,7 +13,6 @@ import { ChatProvider } from "@/features/chat/ChatProvider";
 import { useAuthStore } from "@/stores/auth";
 import { storeLastVisitedPath } from "@/utils/auth";
 import { EditorModeProvider } from "@/features/chat/core/providers/EditorModeProvider";
-import { DocumentsPage } from "./pages/Documents"; // Updated import
 
 const PROTECTED_ROUTES = ['/dashboard', '/editor', '/documents', '/ai', '/analytics', '/settings'];
 
@@ -51,7 +50,9 @@ const App = () => {
               </EditorModeProvider>
             } 
           />
-          <Route path="/documents" element={<DocumentsPage />} />
+          <Route path="/documents" element={<div>Documents Page</div>} />
+          <Route path="/ai" element={<div>AI Assistant Page</div>} />
+          <Route path="/analytics" element={<div>Analytics Page</div>} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/login" element={<Login />} />
         </Routes>

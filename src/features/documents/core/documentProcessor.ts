@@ -55,7 +55,7 @@ export const processDocument = async (
     // Update document status
     await supabase
       .from('documents')
-      .update({ status: 'indexed' })
+      .update({ status: 'completed' })
       .eq('id', documentId);
 
     toast.success('Document processed successfully');
@@ -107,9 +107,10 @@ const storeSupabaseVectors = async (documentId: string, chunks: string[]) => {
 
 const storePineconeVectors = async (documentId: string, chunks: string[]) => {
   const client = getPineconeClient();
-  const index = client.index('documents');
+  const index = client.Index('documents');
 
   // Implementation will depend on your Pinecone setup
+  // This is a placeholder for the actual implementation
   for (let i = 0; i < chunks.length; i++) {
     await index.upsert({
       upsertRequest: {
