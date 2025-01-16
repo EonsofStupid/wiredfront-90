@@ -32,5 +32,21 @@ export const API_CONFIGURATIONS: APIConfigurationItem[] = [
     docsUrl: "https://huggingface.co/settings/tokens",
     docsText: "Hugging Face settings",
     placeholder: "hf_..."
+  },
+  {
+    type: 'pinecone',
+    label: 'Pinecone',
+    description: 'Vector database for embeddings and similarity search',
+    docsUrl: "https://console.pinecone.io/organizations/-/apikeys",
+    docsText: "Pinecone Console",
+    placeholder: "Enter Pinecone API key"
+  },
+  {
+    type: 'weaviate',
+    label: 'Weaviate',
+    description: 'Vector database with semantic search capabilities',
+    docsUrl: "https://console.weaviate.cloud/dashboard",
+    docsText: "Weaviate Cloud Console",
+    placeholder: "Enter Weaviate API key"
   }
 ];

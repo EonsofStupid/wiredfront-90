@@ -1,4 +1,4 @@
-export type APIType = 'openai' | 'gemini' | 'anthropic' | 'huggingface';
+export type APIType = 'openai' | 'gemini' | 'anthropic' | 'huggingface' | 'pinecone' | 'weaviate';
 export type ValidationStatusType = 'pending' | 'valid' | 'invalid' | 'expired';
 
 export interface APIConfiguration {
