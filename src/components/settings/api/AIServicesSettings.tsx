@@ -15,7 +15,9 @@ export function AIServicesSettings() {
     openai: { name: '', key: '', assistantId: '' },
     huggingface: { name: '', key: '', assistantId: '' },
     gemini: { name: '', key: '', assistantId: '' },
-    anthropic: { name: '', key: '', assistantId: '' }
+    anthropic: { name: '', key: '', assistantId: '' },
+    pinecone: { name: '', key: '', assistantId: '' },
+    weaviate: { name: '', key: '', assistantId: '' }
   });
 
   const handleConfigChange = (type: APIType, field: string, value: string) => {
@@ -113,6 +115,22 @@ export function AIServicesSettings() {
       docsUrl: 'https://huggingface.co/settings/tokens',
       docsText: 'Hugging Face settings',
       placeholder: 'hf_...'
+    },
+    {
+      type: 'pinecone',
+      title: 'Pinecone',
+      description: 'Vector database for embeddings and similarity search.',
+      docsUrl: 'https://console.pinecone.io/organizations/-/apikeys',
+      docsText: 'Pinecone Console',
+      placeholder: 'Enter Pinecone API key'
+    },
+    {
+      type: 'weaviate',
+      title: 'Weaviate',
+      description: 'Vector database with semantic search capabilities.',
+      docsUrl: 'https://console.weaviate.cloud/dashboard',
+      docsText: 'Weaviate Cloud Console',
+      placeholder: 'Enter Weaviate API key'
     }
   ];
 
