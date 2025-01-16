@@ -26,7 +26,9 @@ export const HeroSection = () => {
         </div>
 
         <Link to="/login">
-          <Button className="neon-glow bg-dark-lighter hover:bg-dark-lighter/80 text-neon-blue border border-neon-blue/50 text-lg px-8 py-6">
+          <Button 
+            className="neon-glow bg-dark-lighter hover:bg-dark-lighter/80 text-neon-blue border border-neon-blue/50 text-lg px-8 py-6 transform hover:scale-115 transition-all duration-300 animate-button-float"
+          >
             Get Started
           </Button>
         </Link>

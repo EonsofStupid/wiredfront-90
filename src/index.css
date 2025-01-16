@@ -90,4 +90,18 @@
   .gradient-text {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-neon-blue via-neon-pink to-neon-violet animate-gradient-x;
   }
+
+  .neon-border {
+    @apply relative;
+  }
+
+  .neon-border::before {
+    @apply content-[''] absolute inset-0 rounded-xl;
+    border: 2px solid transparent;
+    background: linear-gradient(45deg, theme('colors.neon.blue'), theme('colors.neon.pink')) border-box;
+    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+  }
 }
