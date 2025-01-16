@@ -15,6 +15,12 @@ export interface APIConfiguration {
   provider_settings?: Record<string, any>;
   training_enabled?: boolean;
   validation_status?: ValidationStatusType;
+  endpoint_url?: string;
+  grpc_endpoint?: string;
+  read_only_key?: string;
+  environment?: string;
+  index_name?: string;
+  cluster_info?: Record<string, any>;
   created_at?: string;
   updated_at?: string;
 }

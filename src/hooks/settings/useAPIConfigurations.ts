@@ -53,52 +53,26 @@ export const useAPIConfigurations = () => {
         return null;
       }
 
-      // Check for existing configuration with same api_type
-      const { data: existingConfig } = await supabase
-        .from('api_configurations')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .eq('api_type', apiType)
-        .single();
+      const configData = {
+        user_id: session.user.id,
+        api_type: apiType,
+        is_enabled: true,
+        is_default: options.is_default ?? false,
+        assistant_name: options.assistant_name,
+        assistant_id: options.assistant_id,
+        provider_settings: options.provider_settings,
+        validation_status: 'pending',
+        endpoint_url: options.provider_settings?.endpoint_url,
+        grpc_endpoint: options.provider_settings?.grpc_endpoint,
+        read_only_key: options.provider_settings?.read_only_key,
+        environment: options.provider_settings?.environment,
+        index_name: options.provider_settings?.index_name,
+        cluster_info: options.provider_settings?.cluster_info
+      };
 
-      if (existingConfig) {
-        // Update existing configuration
-        const { data, error } = await supabase
-          .from('api_configurations')
-          .update({
-            is_enabled: true,
-            assistant_name: options.assistant_name,
-            assistant_id: options.assistant_id,
-            provider_settings: options.provider_settings,
-            validation_status: 'pending'
-          })
-          .eq('id', existingConfig.id)
-          .select()
-          .single();
-
-        if (error) {
-          logger.error('Error updating API configuration:', error);
-          toast.error('Failed to update API configuration');
-          return null;
-        }
-
-        queryClient.invalidateQueries({ queryKey: ['api-configurations'] });
-        return data;
-      }
-
-      // Create new configuration
       const { data, error } = await supabase
         .from('api_configurations')
-        .insert({
-          user_id: session.user.id,
-          api_type: apiType,
-          is_enabled: true,
-          is_default: options.is_default ?? false,
-          assistant_name: options.assistant_name,
-          assistant_id: options.assistant_id,
-          provider_settings: options.provider_settings,
-          validation_status: 'pending'
-        })
+        .insert(configData)
         .select()
         .single();
 

@@ -14,14 +14,20 @@ export type Database = {
           api_type: Database["public"]["Enums"]["api_type"]
           assistant_id: string | null
           assistant_name: string | null
+          cluster_info: Json | null
           created_at: string | null
+          endpoint_url: string | null
+          environment: string | null
+          grpc_endpoint: string | null
           id: string
+          index_name: string | null
           is_default: boolean | null
           is_enabled: boolean | null
           last_validated: string | null
           model_preferences: Json | null
           priority: number | null
           provider_settings: Json | null
+          read_only_key: string | null
           training_enabled: boolean | null
           updated_at: string | null
           user_id: string | null
@@ -33,14 +39,20 @@ export type Database = {
           api_type: Database["public"]["Enums"]["api_type"]
           assistant_id?: string | null
           assistant_name?: string | null
+          cluster_info?: Json | null
           created_at?: string | null
+          endpoint_url?: string | null
+          environment?: string | null
+          grpc_endpoint?: string | null
           id?: string
+          index_name?: string | null
           is_default?: boolean | null
           is_enabled?: boolean | null
           last_validated?: string | null
           model_preferences?: Json | null
           priority?: number | null
           provider_settings?: Json | null
+          read_only_key?: string | null
           training_enabled?: boolean | null
           updated_at?: string | null
           user_id?: string | null
@@ -52,14 +64,20 @@ export type Database = {
           api_type?: Database["public"]["Enums"]["api_type"]
           assistant_id?: string | null
           assistant_name?: string | null
+          cluster_info?: Json | null
           created_at?: string | null
+          endpoint_url?: string | null
+          environment?: string | null
+          grpc_endpoint?: string | null
           id?: string
+          index_name?: string | null
           is_default?: boolean | null
           is_enabled?: boolean | null
           last_validated?: string | null
           model_preferences?: Json | null
           priority?: number | null
           provider_settings?: Json | null
+          read_only_key?: string | null
           training_enabled?: boolean | null
           updated_at?: string | null
           user_id?: string | null
@@ -1200,7 +1218,13 @@ export type Database = {
     }
     Enums: {
       api_key_status: "pending" | "valid" | "invalid" | "expired"
-      api_type: "openai" | "gemini" | "anthropic" | "huggingface"
+      api_type:
+        | "openai"
+        | "gemini"
+        | "anthropic"
+        | "huggingface"
+        | "pinecone"
+        | "weaviate"
       chat_api_provider:
         | "openai"
         | "anthropic"

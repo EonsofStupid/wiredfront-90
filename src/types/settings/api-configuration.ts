@@ -1,4 +1,4 @@
-import { APIType } from "@/types/store/settings/api-config";
+import { APIType } from './api-config';
 
 export interface APIConfigurationItem {
   type: APIType;
@@ -9,24 +9,17 @@ export interface APIConfigurationItem {
   placeholder: string;
 }
 
-export interface APIConfigurationProps {
-  configurations: any[];
-  onConfigurationChange: (checked: boolean, config: any | undefined, apiType: APIType) => void;
-  onSetDefault: (configId: string) => void;
-  onDelete: (configId: string) => void;
-}
-
-export interface APIConfigurationCardProps {
-  config: any;
-  api: APIConfigurationItem;
-  onConfigurationChange: (checked: boolean, config: any | undefined, apiType: APIType) => void;
-  onSetDefault: (configId: string) => void;
-  onDelete: (configId: string) => void;
-}
-
 export interface CreateConfigurationOptions {
-  assistant_name?: string;
-  assistant_id?: string | null;
-  provider_settings?: Record<string, any>;
   is_default?: boolean;
+  assistant_name?: string;
+  assistant_id?: string;
+  provider_settings?: {
+    endpoint_url?: string;
+    grpc_endpoint?: string;
+    read_only_key?: string;
+    environment?: string;
+    index_name?: string;
+    cluster_info?: Record<string, any>;
+    [key: string]: any;
+  };
 }
