@@ -50,9 +50,9 @@ const App = () => {
               </EditorModeProvider>
             } 
           />
-          <Route path="/documents" element={<div>Documents Page</div>} />
-          <Route path="/ai" element={<div>AI Assistant Page</div>} />
-          <Route path="/analytics" element={<div>Analytics Page</div>} />
+          <Route path="/documents" element={Documents Page} />
+          <Route path="/ai" element={AI Assistant Page} />
+          <Route path="/analytics" element={Analytics Page} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/login" element={<Login />} />
         </Routes>
