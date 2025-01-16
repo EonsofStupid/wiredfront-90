@@ -9,10 +9,31 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useServiceConnection } from "./hooks/useServiceConnection";
 
+interface WeaviateConfig {
+  name: string;
+  restEndpoint: string;
+  grpcEndpoint: string;
+  adminKey: string;
+  readOnlyKey: string;
+  clusterInfo: {
+    version: string;
+    region: string;
+    type: string;
+    sla: string;
+    highAvailability: boolean;
+  };
+}
+
+interface PineconeConfig {
+  apiKey: string;
+  environment: string;
+  indexName: string;
+}
+
 export function RAGKeysSettings() {
   const { configurations, createConfiguration } = useAPIConfigurations();
   const { isConnecting, selectedConfig, handleConnect } = useServiceConnection();
-  const [weaviateConfig, setWeaviateConfig] = useState({
+  const [weaviateConfig, setWeaviateConfig] = useState<WeaviateConfig>({
     name: '',
     restEndpoint: '',
     grpcEndpoint: '',
@@ -27,7 +48,7 @@ export function RAGKeysSettings() {
     }
   });
 
-  const [pineconeConfig, setPineconeConfig] = useState({
+  const [pineconeConfig, setPineconeConfig] = useState<PineconeConfig>({
     apiKey: '',
     environment: '',
     indexName: ''
@@ -39,7 +60,7 @@ export function RAGKeysSettings() {
       setWeaviateConfig(prev => ({
         ...prev,
         [parent]: {
-          ...prev[parent as keyof typeof prev],
+          ...(prev[parent as keyof WeaviateConfig] as Record<string, any>),
           [child]: value
         }
       }));
@@ -48,7 +69,7 @@ export function RAGKeysSettings() {
     }
   };
 
-  const handlePineconeChange = (field: string, value: string) => {
+  const handlePineconeChange = (field: keyof PineconeConfig, value: string) => {
     setPineconeConfig(prev => ({ ...prev, [field]: value }));
   };
 
