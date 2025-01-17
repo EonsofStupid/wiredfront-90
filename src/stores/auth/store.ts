@@ -79,6 +79,28 @@ export const useAuthStore = create<AuthStore>()(
         }
       },
 
+      refreshToken: async () => {
+        try {
+          const { data, error } = await supabase.auth.refreshSession();
+          if (error) throw error;
+          
+          const { session } = data;
+          if (session) {
+            set({
+              token: session.access_token,
+              user: session.user,
+              isAuthenticated: true,
+              status: 'success',
+              lastUpdated: Date.now()
+            });
+          }
+        } catch (error) {
+          console.error('Token refresh error:', error);
+          // If refresh fails, we should probably log the user out
+          get().logout();
+        }
+      },
+
       initializeAuth: async () => {
         set({ loading: true });
         try {
