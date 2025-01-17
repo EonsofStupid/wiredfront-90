@@ -6,9 +6,9 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Toaster } from "@/components/ui/sonner";
 import { Routes, Route } from "react-router-dom";
 import { Settings } from "@/pages/Settings";
-import { Dashboard } from "@/pages/Dashboard";
-import { Documents } from "@/pages/Documents";
-import { Editor } from "@/pages/Editor";
+import Dashboard from "@/pages/Dashboard";
+import Documents from "@/pages/Documents";
+import Editor from "@/pages/Editor";
 import Index from "@/pages/Index";
 
 function App() {
