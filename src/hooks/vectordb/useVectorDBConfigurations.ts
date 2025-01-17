@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useVectorDBStore } from '@/stores/vectordb/store';
 import { VectorDBService } from '@/services/supabase/VectorDBService';
-import { VectorStoreConfig, VectorDBConfig } from '@/types/store/settings/api-config';
+import { VectorStoreConfig } from '@/types/store/settings/api-config';
 
 export const useVectorDBConfigurations = () => {
   const {
