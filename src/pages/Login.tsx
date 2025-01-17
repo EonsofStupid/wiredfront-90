@@ -1,23 +1,22 @@
 import { Auth } from "@supabase/auth-ui-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
+import { useAuthStore } from "@/stores/auth";
+import { getLoginRedirectUrl } from "@/utils/auth";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const returnTo = searchParams.get('returnTo');
-
+  const { user } = useAuthStore();
+  
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
-        navigate(returnTo || '/dashboard', { replace: true });
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate, returnTo]);
+    // If user is already authenticated, redirect
+    if (user) {
+      const redirectUrl = getLoginRedirectUrl();
+      navigate(redirectUrl, { replace: true });
+    }
+  }, [user, navigate]);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-dark/80 backdrop-blur-sm">
