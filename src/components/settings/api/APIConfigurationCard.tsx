@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Key, CheckCircle, XCircle, Clock, Trash2 } from "lucide-react";
 import { APIConfigurationCardProps } from "@/types/settings/api-configuration";
 import { ValidationStatusType } from "@/types/store/settings/api-config";
-import { useCallback } from "react";
 
 const getValidationStatusIcon = (status: ValidationStatusType | undefined) => {
   switch (status) {
@@ -27,22 +26,6 @@ export function APIConfigurationCard({
   onSetDefault,
   onDelete 
 }: APIConfigurationCardProps) {
-  const handleConfigChange = useCallback((checked: boolean) => {
-    onConfigurationChange(checked, config, api.type);
-  }, [config, api.type, onConfigurationChange]);
-
-  const handleSetDefault = useCallback(() => {
-    if (config) {
-      onSetDefault(config.id);
-    }
-  }, [config, onSetDefault]);
-
-  const handleDelete = useCallback(() => {
-    if (config) {
-      onDelete(config.id);
-    }
-  }, [config, onDelete]);
-
   return (
     <Card>
       <CardHeader className="pb-4">
@@ -58,7 +41,9 @@ export function APIConfigurationCard({
           </div>
           <Switch
             checked={config?.is_enabled ?? false}
-            onCheckedChange={handleConfigChange}
+            onCheckedChange={(checked) => {
+              onConfigurationChange(checked, config, api.type);
+            }}
           />
         </div>
         <CardDescription>{api.description}</CardDescription>
@@ -84,7 +69,7 @@ export function APIConfigurationCard({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleSetDefault}
+                onClick={() => onSetDefault(config.id)}
                 disabled={config.is_default}
               >
                 {config.is_default ? 'Default API' : 'Set as Default'}
@@ -92,7 +77,7 @@ export function APIConfigurationCard({
               <Button
                 variant="destructive"
                 size="sm"
-                onClick={handleDelete}
+                onClick={() => onDelete?.(config.id)}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>

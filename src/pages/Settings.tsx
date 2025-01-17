@@ -11,7 +11,7 @@ import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export const Settings = () => {
+const Settings = () => {
   const settingsTabs = [
     { 
       value: "general", 
@@ -100,3 +100,5 @@ export const Settings = () => {
     </ErrorBoundary>
   );
 };
+
+export default Settings;
