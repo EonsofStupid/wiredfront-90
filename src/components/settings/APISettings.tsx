@@ -43,7 +43,7 @@ export function APISettings() {
       <Tabs defaultValue="ai-services" className="space-y-4">
         <TabsList>
           <TabsTrigger value="ai-services">AI Services</TabsTrigger>
-          <TabsTrigger value="rag-keys">RAG Keys</TabsTrigger>
+          <TabsTrigger value="rag-keys">Vector DB Keys and Configuration</TabsTrigger>
           <TabsTrigger value="voice">Voice</TabsTrigger>
           <TabsTrigger value="cloud-storage">Cloud Storage</TabsTrigger>
           <TabsTrigger value="development">Development</TabsTrigger>
