@@ -4,13 +4,20 @@ import { queryClient } from "@/lib/queryClient";
 import { ChatProvider } from "@/features/chat/ChatProvider";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Toaster } from "@/components/ui/sonner";
+import { Routes, Route } from "react-router-dom";
+import { Settings } from "@/pages/Settings";
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <ChatProvider>
-          <MainLayout />
+          <MainLayout>
+            <Routes>
+              <Route path="/settings" element={<Settings />} />
+              {/* Add other routes here */}
+            </Routes>
+          </MainLayout>
           <Toaster />
         </ChatProvider>
       </BrowserRouter>
