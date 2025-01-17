@@ -97,9 +97,37 @@ export const useAuthStore = create<AuthStore>()(
           } else {
             set({ ...initialState, loading: false });
           }
+
+          // Set up auth state change listener and return cleanup function
+          const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+              set({
+                user: session?.user ?? null,
+                isAuthenticated: !!session?.user,
+                token: session?.access_token ?? null,
+                status: 'success',
+                loading: false,
+                lastUpdated: Date.now()
+              });
+            } else if (event === 'SIGNED_OUT') {
+              set({
+                ...initialState,
+                loading: false,
+                status: 'idle',
+                lastUpdated: Date.now()
+              });
+            }
+          });
+
+          // Return cleanup function
+          return () => {
+            subscription.unsubscribe();
+          };
         } catch (error) {
           console.error('Auth initialization error:', error);
           set({ ...initialState, loading: false });
+          // Still need to return a cleanup function even in error case
+          return () => {};
         }
       },
     }),
@@ -113,12 +141,3 @@ export const useAuthStore = create<AuthStore>()(
     }
   )
 );
-
-// Initialize auth state and set up single listener
-supabase.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-    useAuthStore.getState().setUser(session?.user ?? null);
-  } else if (event === 'SIGNED_OUT') {
-    useAuthStore.getState().setUser(null);
-  }
-});
