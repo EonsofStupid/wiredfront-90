@@ -6,6 +6,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Toaster } from "@/components/ui/sonner";
 import { Routes, Route } from "react-router-dom";
 import { Settings } from "@/pages/Settings";
+import Index from "@/pages/Index";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <ChatProvider>
           <MainLayout>
             <Routes>
+              <Route path="/" element={<Index />} />
               <Route path="/settings" element={<Settings />} />
               {/* Add other routes here */}
             </Routes>
