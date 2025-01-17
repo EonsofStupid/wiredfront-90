@@ -14,6 +14,7 @@ import { ChatProvider } from "@/features/chat/ChatProvider";
 import { useAuthStore } from "@/stores/auth";
 import { storeLastVisitedPath } from "@/utils/auth";
 import { EditorModeProvider } from "@/features/chat/core/providers/EditorModeProvider";
+import { MainLayout } from "@/components/layout/MainLayout";
 
 const PROTECTED_ROUTES = ['/dashboard', '/editor', '/documents', '/ai', '/analytics', '/settings'];
 
@@ -34,13 +35,29 @@ const App = () => {
     handleAuth();
   }, [user, location.pathname, navigate]);
 
-  const Layout = isMobile ? MobileLayout : AppLayout;
+  // If we're on the login page or index page, don't show the main layout
+  const isPublicRoute = location.pathname === '/login' || location.pathname === '/';
+  
+  if (isPublicRoute) {
+    return (
+      <ChatProvider>
+        <AppLayout>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+          </Routes>
+        </AppLayout>
+        <Toaster />
+      </ChatProvider>
+    );
+  }
+
+  const Layout = isMobile ? MobileLayout : MainLayout;
 
   return (
     <ChatProvider>
       <Layout>
         <Routes>
-          <Route path="/" element={<Index />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/editor" element={
             <EditorModeProvider>
@@ -51,7 +68,6 @@ const App = () => {
           <Route path="/ai" element={<div>AI Assistant Page</div>} />
           <Route path="/analytics" element={<div>Analytics Page</div>} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/login" element={<Login />} />
         </Routes>
       </Layout>
       <Toaster />

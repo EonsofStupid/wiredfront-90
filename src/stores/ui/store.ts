@@ -13,29 +13,20 @@ const Z_INDEX = {
   base: 300,
 } as const;
 
-const initialState: UIStore = {
-  theme: 'system',
-  layout: {
-    sidebarExpanded: true,
-    contentWidth: 'contained',
-  },
-  accessibility: {
-    reducedMotion: false,
-    highContrast: false,
-    fontSize: 'normal',
-  },
-  zIndex: Z_INDEX,
-
-  setTheme: () => {},
-  toggleSidebar: () => {},
-  updateLayout: () => {},
-  updateAccessibility: () => {},
-};
-
 export const useUIStore = create<UIStore>()(
   persist(
     (set) => ({
-      ...initialState,
+      theme: 'system',
+      layout: {
+        sidebarExpanded: true,
+        contentWidth: 'contained',
+      },
+      accessibility: {
+        reducedMotion: false,
+        highContrast: false,
+        fontSize: 'normal',
+      },
+      zIndex: Z_INDEX,
 
       setTheme: (theme) => set({ theme }),
 
@@ -61,8 +52,10 @@ export const useUIStore = create<UIStore>()(
       name: 'ui-storage',
       partialize: (state) => ({
         theme: state.theme,
+        layout: state.layout,
         accessibility: state.accessibility,
       }),
+      version: 1,
     }
   )
 );

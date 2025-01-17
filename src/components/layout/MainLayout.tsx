@@ -3,21 +3,22 @@ import { TopBar } from "./TopBar";
 import { Sidebar } from "./Sidebar";
 import { BottomBar } from "./BottomBar";
 import { cn } from "@/lib/utils";
+import { useUIStore } from "@/stores";
 
 interface MainLayoutProps {
   children: React.ReactNode;
 }
 
 export const MainLayout = ({ children }: MainLayoutProps) => {
-  console.log("MainLayout rendering");
-  const [isCompact, setIsCompact] = useState(false);
+  const isCompact = useUIStore((state) => state.layout.sidebarExpanded);
+  const toggleSidebar = useUIStore((state) => state.toggleSidebar);
 
   return (
     <div className="min-h-screen w-full bg-background">
       <TopBar 
         className="fixed top-0 left-0 right-0 z-[var(--z-navbar)]" 
         isCompact={isCompact} 
-        onToggleCompact={() => setIsCompact(!isCompact)} 
+        onToggleCompact={toggleSidebar} 
       />
       
       <div className="flex pt-16 pb-12">
