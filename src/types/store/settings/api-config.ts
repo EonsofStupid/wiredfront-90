@@ -16,7 +16,7 @@ export interface APIConfiguration {
   provider_settings?: {
     endpoint_url?: string;
     grpc_endpoint?: string;
-    admin_key?: string;
+    api_key_secret?: string;
     read_only_key?: string;
     environment?: string;
     index_name?: string;
@@ -27,7 +27,6 @@ export interface APIConfiguration {
       sla?: string;
       highAvailability?: boolean;
     };
-    api_key_secret?: string;
     provider?: string;
   };
   training_enabled?: boolean;

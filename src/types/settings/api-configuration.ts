@@ -17,7 +17,7 @@ export interface APIConfigurationProps {
 }
 
 export interface APIConfigurationCardProps {
-  config: APIConfiguration;
+  config: APIConfiguration | undefined;
   api: APIConfigurationItem;
   onConfigurationChange: (checked: boolean, config: APIConfiguration | undefined, apiType: APIType) => void;
   onSetDefault: (configId: string) => void;
