@@ -80,7 +80,7 @@ export function RAGKeysSettings() {
         provider_settings: {
           endpoint_url: weaviateConfig.restEndpoint,
           grpc_endpoint: weaviateConfig.grpcEndpoint,
-          admin_key: weaviateConfig.adminKey,
+          api_key_secret: weaviateConfig.adminKey,
           read_only_key: weaviateConfig.readOnlyKey,
           cluster_info: weaviateConfig.clusterInfo
         }
@@ -96,7 +96,7 @@ export function RAGKeysSettings() {
     try {
       await createConfiguration('pinecone', {
         provider_settings: {
-          api_key: pineconeConfig.apiKey,
+          api_key_secret: pineconeConfig.apiKey,
           environment: pineconeConfig.environment,
           index_name: pineconeConfig.indexName
         }
