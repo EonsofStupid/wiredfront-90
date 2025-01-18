@@ -6,6 +6,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { logger } from '@/services/chat/LoggingService';
 import { CreateConfigurationOptions } from '@/types/settings/api-configuration';
 
+type SupabaseAPIConfiguration = Omit<APIConfiguration, 'cost_tracking'> & {
+  cost_tracking: {
+    total_cost: number;
+    last_month_cost: number;
+  } | null;
+};
+
 export const useAPIConfigurations = () => {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
@@ -32,10 +39,10 @@ export const useAPIConfigurations = () => {
           return [];
         }
 
-        return (data as APIConfiguration[]).map(config => ({
+        return (data as SupabaseAPIConfiguration[]).map(config => ({
           ...config,
           cost_tracking: config.cost_tracking || { total_cost: 0, last_month_cost: 0 }
-        }));
+        })) as APIConfiguration[];
       } catch (error) {
         logger.error('Error in API configurations query:', error);
         toast.error('Failed to load API configurations');
