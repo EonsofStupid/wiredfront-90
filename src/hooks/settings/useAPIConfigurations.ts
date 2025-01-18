@@ -32,7 +32,10 @@ export const useAPIConfigurations = () => {
           return [];
         }
 
-        return data as APIConfiguration[];
+        return (data as APIConfiguration[]).map(config => ({
+          ...config,
+          cost_tracking: config.cost_tracking || { total_cost: 0, last_month_cost: 0 }
+        }));
       } catch (error) {
         logger.error('Error in API configurations query:', error);
         toast.error('Failed to load API configurations');
