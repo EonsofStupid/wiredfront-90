@@ -2,10 +2,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Key, CheckCircle, XCircle, Clock, Trash2 } from "lucide-react";
+import { Key, CheckCircle, XCircle, Clock, Trash2, AlertTriangle, Ban } from "lucide-react";
 import { APIConfigurationCardProps } from "@/types/settings/api-configuration";
 import { ValidationStatusType } from "@/types/store/settings/api-config";
 import { useCallback } from "react";
+import { Progress } from "@/components/ui/progress";
 
 const getValidationStatusIcon = (status: ValidationStatusType | undefined) => {
   switch (status) {
@@ -15,9 +16,17 @@ const getValidationStatusIcon = (status: ValidationStatusType | undefined) => {
       return <XCircle className="h-4 w-4 text-red-500" />;
     case 'expired':
       return <Clock className="h-4 w-4 text-yellow-500" />;
+    case 'rate_limited':
+      return <Ban className="h-4 w-4 text-orange-500" />;
+    case 'error':
+      return <AlertTriangle className="h-4 w-4 text-red-500" />;
     default:
       return <Clock className="h-4 w-4 text-gray-500" />;
   }
+};
+
+const formatNumber = (num: number) => {
+  return new Intl.NumberFormat().format(num);
 };
 
 export function APIConfigurationCard({ 
@@ -43,6 +52,11 @@ export function APIConfigurationCard({
     }
   }, [config, onDelete]);
 
+  const getUsagePercentage = () => {
+    if (!config?.daily_request_limit) return 0;
+    return (config.usage_count / config.daily_request_limit) * 100;
+  };
+
   return (
     <Card>
       <CardHeader className="pb-4">
@@ -50,7 +64,14 @@ export function APIConfigurationCard({
           <div className="flex items-center gap-2">
             <CardTitle className="text-base">{api.label}</CardTitle>
             {config?.validation_status && (
-              <Badge variant={config.validation_status === 'valid' ? 'success' : 'secondary'} className="ml-2">
+              <Badge 
+                variant={
+                  config.validation_status === 'valid' ? 'success' : 
+                  config.validation_status === 'rate_limited' ? 'warning' : 
+                  'secondary'
+                } 
+                className="ml-2"
+              >
                 {getValidationStatusIcon(config.validation_status)}
                 <span className="ml-1 capitalize">{config.validation_status}</span>
               </Badge>
@@ -70,16 +91,41 @@ export function APIConfigurationCard({
               <Key className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">API Key configured</span>
             </div>
+            
             {config.assistant_name && (
               <div className="text-sm">
                 <span className="font-medium">Assistant:</span> {config.assistant_name}
               </div>
             )}
-            {config.training_enabled && (
+
+            {config.usage_count > 0 && (
+              <div className="space-y-2">
+                <div className="text-sm">
+                  <span className="font-medium">Usage:</span> {formatNumber(config.usage_count)} requests
+                </div>
+                {config.daily_request_limit && (
+                  <div className="space-y-1">
+                    <div className="text-sm text-muted-foreground">
+                      Daily limit: {formatNumber(config.usage_count)}/{formatNumber(config.daily_request_limit)}
+                    </div>
+                    <Progress value={getUsagePercentage()} className="h-2" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {config.last_error_message && (
+              <div className="text-sm text-red-500">
+                <span className="font-medium">Last Error:</span> {config.last_error_message}
+              </div>
+            )}
+
+            {config.environment && config.environment !== 'production' && (
               <Badge variant="outline" className="bg-blue-500/10 text-blue-500">
-                Training Enabled
+                {config.environment}
               </Badge>
             )}
+
             <div className="mt-4 flex gap-2">
               <Button
                 variant="outline"
