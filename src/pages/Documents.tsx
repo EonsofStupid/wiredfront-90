@@ -1,31 +1,24 @@
-import React, { useEffect } from "react";
+import React from "react";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { FileText } from "lucide-react";
-import { DocumentList } from "@/features/documents/ui/DocumentList";
-import { DocumentUpload } from "@/features/documents/ui/DocumentUpload";
-import { useDocumentStore } from "@/features/documents/hooks/useDocumentStore";
-import { Card } from "@/components/ui/card";
 
 const Documents = () => {
-  const { fetchDocuments } = useDocumentStore();
-
-  useEffect(() => {
-    fetchDocuments();
-  }, [fetchDocuments]);
-
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+    <MainLayout>
+      <div className="container mx-auto p-6">
+        <div className="flex items-center gap-2 mb-6">
           <FileText className="h-6 w-6 text-muted-foreground" />
           <h1 className="text-2xl font-bold">Documents</h1>
         </div>
-        <DocumentUpload />
+        
+        {/* Your document system will be integrated here */}
+        <div className="rounded-lg border bg-card p-8">
+          <p className="text-muted-foreground">
+            Document management system loading...
+          </p>
+        </div>
       </div>
-      
-      <Card className="p-6 bg-card">
-        <DocumentList />
-      </Card>
-    </div>
+    </MainLayout>
   );
 };
 

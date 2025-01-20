@@ -21,14 +21,12 @@ export const DocumentUpload = () => {
   };
 
   return (
-    <div>
+    <div className="flex justify-end mb-6">
       <Button 
-        variant="outline"
-        className="flex items-center gap-2"
         disabled={loading}
         onClick={() => document.getElementById('file-upload')?.click()}
       >
-        <Upload className="h-4 w-4" />
+        <Upload className="h-4 w-4 mr-2" />
         Upload Document
       </Button>
       <input
@@ -36,7 +34,7 @@ export const DocumentUpload = () => {
         type="file"
         className="hidden"
         onChange={handleFileChange}
-        accept=".txt,.pdf,.doc,.docx"
+        accept=".pdf,.doc,.docx,.txt"
       />
     </div>
   );

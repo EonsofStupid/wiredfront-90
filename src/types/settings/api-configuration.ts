@@ -17,7 +17,7 @@ export interface APIConfigurationProps {
 }
 
 export interface APIConfigurationCardProps {
-  config: APIConfiguration | undefined;
+  config: APIConfiguration;
   api: APIConfigurationItem;
   onConfigurationChange: (checked: boolean, config: APIConfiguration | undefined, apiType: APIType) => void;
   onSetDefault: (configId: string) => void;
@@ -35,20 +35,6 @@ export interface CreateConfigurationOptions {
     environment?: string;
     index_name?: string;
     cluster_info?: Record<string, any>;
-    api_key_secret?: string;
-    provider?: string;
+    [key: string]: any;
   };
-  validation_status?: 'pending' | 'valid' | 'invalid' | 'expired' | 'rate_limited' | 'error';
-  usage_count?: number;
-  daily_request_limit?: number;
-  monthly_token_limit?: number;
-  cost_tracking?: {
-    total_cost: number;
-    last_month_cost: number;
-  };
-  error_count?: number;
-  last_error_message?: string;
-  last_successful_use?: string;
-  environment?: string;
-  rotation_priority?: number;
 }

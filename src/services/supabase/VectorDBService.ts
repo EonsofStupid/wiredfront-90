@@ -23,8 +23,8 @@ export class VectorDBService {
     try {
       const configToSave = {
         ...config,
-        config: typeof config.config === 'string' ? config.config : JSON.stringify(config.config),
-        cluster_info: config.cluster_info ? JSON.stringify(config.cluster_info) : null
+        config: JSON.stringify(config.config),
+        cluster_info: JSON.stringify(config.cluster_info)
       };
 
       const { data, error } = await supabase

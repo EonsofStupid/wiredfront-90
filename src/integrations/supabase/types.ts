@@ -15,32 +15,24 @@ export type Database = {
           assistant_id: string | null
           assistant_name: string | null
           cluster_info: Json | null
-          cost_tracking: Json | null
           created_at: string | null
-          daily_request_limit: number | null
           endpoint_url: string | null
           environment: string | null
-          error_count: number | null
           grpc_endpoint: string | null
           id: string
           index_name: string | null
           is_default: boolean | null
           is_enabled: boolean | null
-          last_error_message: string | null
-          last_successful_use: string | null
           last_validated: string | null
           model_preferences: Json | null
-          monthly_token_limit: number | null
           priority: number | null
           provider_settings: Json | null
           read_only_key: string | null
-          rotation_priority: number | null
           training_enabled: boolean | null
           updated_at: string | null
-          usage_count: number | null
           user_id: string | null
           validation_status:
-            | Database["public"]["Enums"]["extended_validation_status"]
+            | Database["public"]["Enums"]["validation_status_type"]
             | null
         }
         Insert: {
@@ -48,32 +40,24 @@ export type Database = {
           assistant_id?: string | null
           assistant_name?: string | null
           cluster_info?: Json | null
-          cost_tracking?: Json | null
           created_at?: string | null
-          daily_request_limit?: number | null
           endpoint_url?: string | null
           environment?: string | null
-          error_count?: number | null
           grpc_endpoint?: string | null
           id?: string
           index_name?: string | null
           is_default?: boolean | null
           is_enabled?: boolean | null
-          last_error_message?: string | null
-          last_successful_use?: string | null
           last_validated?: string | null
           model_preferences?: Json | null
-          monthly_token_limit?: number | null
           priority?: number | null
           provider_settings?: Json | null
           read_only_key?: string | null
-          rotation_priority?: number | null
           training_enabled?: boolean | null
           updated_at?: string | null
-          usage_count?: number | null
           user_id?: string | null
           validation_status?:
-            | Database["public"]["Enums"]["extended_validation_status"]
+            | Database["public"]["Enums"]["validation_status_type"]
             | null
         }
         Update: {
@@ -81,32 +65,24 @@ export type Database = {
           assistant_id?: string | null
           assistant_name?: string | null
           cluster_info?: Json | null
-          cost_tracking?: Json | null
           created_at?: string | null
-          daily_request_limit?: number | null
           endpoint_url?: string | null
           environment?: string | null
-          error_count?: number | null
           grpc_endpoint?: string | null
           id?: string
           index_name?: string | null
           is_default?: boolean | null
           is_enabled?: boolean | null
-          last_error_message?: string | null
-          last_successful_use?: string | null
           last_validated?: string | null
           model_preferences?: Json | null
-          monthly_token_limit?: number | null
           priority?: number | null
           provider_settings?: Json | null
           read_only_key?: string | null
-          rotation_priority?: number | null
           training_enabled?: boolean | null
           updated_at?: string | null
-          usage_count?: number | null
           user_id?: string | null
           validation_status?:
-            | Database["public"]["Enums"]["extended_validation_status"]
+            | Database["public"]["Enums"]["validation_status_type"]
             | null
         }
         Relationships: [
@@ -1265,13 +1241,6 @@ export type Database = {
         | "forefront"
       document_status: "pending" | "processing" | "indexed" | "failed"
       embedding_model: "openai" | "cohere" | "huggingface"
-      extended_validation_status:
-        | "pending"
-        | "valid"
-        | "invalid"
-        | "expired"
-        | "rate_limited"
-        | "error"
       message_behavior_type: "enter_send" | "enter_newline"
       message_type: "text" | "command" | "system"
       setting_type: "string" | "number" | "boolean" | "json" | "array"
