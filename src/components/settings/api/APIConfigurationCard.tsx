@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Key, CheckCircle, XCircle, Clock, Trash2 } from "lucide-react";
 import { APIConfigurationCardProps } from "@/types/settings/api-configuration";
 import { ValidationStatusType } from "@/types/store/settings/api-config";
+import { memo } from 'react';
 
 const getValidationStatusIcon = (status: ValidationStatusType | undefined) => {
   switch (status) {
@@ -19,7 +20,7 @@ const getValidationStatusIcon = (status: ValidationStatusType | undefined) => {
   }
 };
 
-export function APIConfigurationCard({ 
+export const APIConfigurationCard = memo(function APIConfigurationCard({ 
   config, 
   api, 
   onConfigurationChange, 
@@ -87,4 +88,4 @@ export function APIConfigurationCard({
       )}
     </Card>
   );
-}
+});
