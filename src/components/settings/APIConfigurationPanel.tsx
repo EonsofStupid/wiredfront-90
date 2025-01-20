@@ -9,31 +9,19 @@ export function APIConfigurationPanel() {
   const { configurations, loading, updateConfiguration, createConfiguration, deleteConfiguration } = useAPIConfigurations();
 
   const handleConfigurationChange = useCallback(async (checked: boolean, config: typeof configurations[0] | undefined, apiType: APIType) => {
-    try {
-      if (config) {
-        await updateConfiguration(config.id, { is_enabled: checked });
-      } else {
-        await createConfiguration(apiType);
-      }
-    } catch (error) {
-      console.error('Error handling configuration change:', error);
+    if (config) {
+      await updateConfiguration(config.id, { is_enabled: checked });
+    } else {
+      await createConfiguration(apiType);
     }
   }, [updateConfiguration, createConfiguration]);
 
   const handleSetDefault = useCallback(async (configId: string) => {
-    try {
-      await updateConfiguration(configId, { is_default: true });
-    } catch (error) {
-      console.error('Error setting default configuration:', error);
-    }
+    await updateConfiguration(configId, { is_default: true });
   }, [updateConfiguration]);
 
   const handleDelete = useCallback(async (configId: string) => {
-    try {
-      await deleteConfiguration(configId);
-    } catch (error) {
-      console.error('Error deleting configuration:', error);
-    }
+    await deleteConfiguration(configId);
   }, [deleteConfiguration]);
 
   if (loading) {
