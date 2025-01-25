@@ -4,24 +4,44 @@ import { APIType } from "@/types/store/settings/api-config";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCallback } from "react";
 import { APIConfigurationList } from "./api/APIConfigurationList";
+import { toast } from "sonner";
 
 export function APIConfigurationPanel() {
   const { configurations, loading, updateConfiguration, createConfiguration, deleteConfiguration } = useAPIConfigurations();
 
   const handleConfigurationChange = useCallback(async (checked: boolean, config: typeof configurations[0] | undefined, apiType: APIType) => {
-    if (config) {
-      await updateConfiguration(config.id, { is_enabled: checked });
-    } else {
-      await createConfiguration(apiType);
+    try {
+      if (config) {
+        await updateConfiguration(config.id, { is_enabled: checked });
+        toast.success(`${apiType} configuration ${checked ? 'enabled' : 'disabled'}`);
+      } else {
+        await createConfiguration(apiType);
+        toast.success(`New ${apiType} configuration created`);
+      }
+    } catch (error) {
+      console.error('Error updating configuration:', error);
+      toast.error('Failed to update configuration');
     }
   }, [updateConfiguration, createConfiguration]);
 
   const handleSetDefault = useCallback(async (configId: string) => {
-    await updateConfiguration(configId, { is_default: true });
+    try {
+      await updateConfiguration(configId, { is_default: true });
+      toast.success('Default configuration updated');
+    } catch (error) {
+      console.error('Error setting default configuration:', error);
+      toast.error('Failed to set default configuration');
+    }
   }, [updateConfiguration]);
 
   const handleDelete = useCallback(async (configId: string) => {
-    await deleteConfiguration(configId);
+    try {
+      await deleteConfiguration(configId);
+      toast.success('Configuration deleted successfully');
+    } catch (error) {
+      console.error('Error deleting configuration:', error);
+      toast.error('Failed to delete configuration');
+    }
   }, [deleteConfiguration]);
 
   if (loading) {
