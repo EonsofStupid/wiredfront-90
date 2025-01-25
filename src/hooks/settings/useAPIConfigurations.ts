@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { APIConfiguration, APIType } from '@/types/store/settings/api-config';
+import { APIType } from '@/types/store/settings/api-config';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { logger } from '@/services/chat/LoggingService';
+import { CreateConfigurationOptions } from '@/types/settings/api-configuration';
 
 export const useAPIConfigurations = () => {
   const queryClient = useQueryClient();
@@ -31,7 +32,7 @@ export const useAPIConfigurations = () => {
           return [];
         }
 
-        return data as APIConfiguration[];
+        return data;
       } catch (error) {
         logger.error('Error in API configurations query:', error);
         toast.error('Failed to load API configurations');
@@ -42,7 +43,7 @@ export const useAPIConfigurations = () => {
     staleTime: 30000
   });
 
-  const createConfiguration = async (apiType: APIType) => {
+  const createConfiguration = async (apiType: APIType, options?: CreateConfigurationOptions) => {
     try {
       setIsLoading(true);
       
@@ -57,7 +58,11 @@ export const useAPIConfigurations = () => {
         .insert({
           user_id: session.user.id,
           api_type: apiType,
-          is_enabled: true
+          is_enabled: true,
+          is_default: options?.is_default || false,
+          assistant_name: options?.assistant_name,
+          assistant_id: options?.assistant_id,
+          provider_settings: options?.provider_settings || {},
         })
         .select()
         .single();
@@ -76,7 +81,7 @@ export const useAPIConfigurations = () => {
     }
   };
 
-  const updateConfiguration = async (id: string, updates: Partial<APIConfiguration>) => {
+  const updateConfiguration = async (id: string, updates: Partial<any>) => {
     try {
       setIsLoading(true);
       

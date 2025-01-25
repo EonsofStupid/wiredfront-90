@@ -1,4 +1,3 @@
 project_id = "ewjisqyvspdvhyppkhnm"
-
-[initialize-llm-session]
+[chat-completion]
 verify_jwt = true
