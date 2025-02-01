@@ -306,6 +306,45 @@ export type Database = {
           },
         ]
       }
+      available_providers: {
+        Row: {
+          capabilities: Json | null
+          created_at: string | null
+          description: string | null
+          display_name: string
+          id: string
+          is_active: boolean | null
+          name: string
+          provider_type: Database["public"]["Enums"]["ai_provider_type"] | null
+          required_keys: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          capabilities?: Json | null
+          created_at?: string | null
+          description?: string | null
+          display_name: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          provider_type?: Database["public"]["Enums"]["ai_provider_type"] | null
+          required_keys?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          capabilities?: Json | null
+          created_at?: string | null
+          description?: string | null
+          display_name?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          provider_type?: Database["public"]["Enums"]["ai_provider_type"] | null
+          required_keys?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       chat_settings: {
         Row: {
           active_providers: Json | null
@@ -739,6 +778,59 @@ export type Database = {
           },
         ]
       }
+      printer_images: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          features: Json | null
+          id: string
+          metadata: Json | null
+          printer_type: string | null
+          source_url: string | null
+          storage_path: string | null
+          title: string
+          updated_at: string | null
+          url: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          metadata?: Json | null
+          printer_type?: string | null
+          source_url?: string | null
+          storage_path?: string | null
+          title: string
+          updated_at?: string | null
+          url: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          metadata?: Json | null
+          printer_type?: string | null
+          source_url?: string | null
+          storage_path?: string | null
+          title?: string
+          updated_at?: string | null
+          url?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "printer_images_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -919,6 +1011,48 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "training_configurations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_provider_preferences: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          provider_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          provider_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          provider_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_provider_preferences_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "available_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_provider_preferences_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -1241,6 +1375,7 @@ export type Database = {
       }
     }
     Enums: {
+      ai_provider_type: "text" | "image" | "both"
       api_key_status: "pending" | "valid" | "invalid" | "expired"
       api_type:
         | "openai"
