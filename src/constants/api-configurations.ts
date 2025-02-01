@@ -32,7 +32,10 @@ export const API_CONFIGURATIONS: APIConfigurationItem[] = [
     docsUrl: "https://huggingface.co/settings/tokens",
     docsText: "Hugging Face settings",
     placeholder: "hf_..."
-  },
+  }
+];
+
+export const VECTOR_DB_CONFIGURATIONS: APIConfigurationItem[] = [
   {
     type: 'pinecone',
     label: 'Pinecone',
