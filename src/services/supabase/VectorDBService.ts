@@ -21,15 +21,13 @@ export class VectorDBService {
 
   static async createConfiguration(config: Omit<VectorStoreConfig, 'id'>) {
     try {
-      const configToSave = {
-        ...config,
-        config: JSON.stringify(config.config),
-        cluster_info: JSON.stringify(config.cluster_info)
-      };
-
       const { data, error } = await supabase
         .from('vector_store_configs')
-        .insert(configToSave)
+        .insert({
+          ...config,
+          config: JSON.stringify(config.config),
+          cluster_info: JSON.stringify(config.cluster_info)
+        })
         .select()
         .single();
 
@@ -45,15 +43,13 @@ export class VectorDBService {
 
   static async updateConfiguration(id: string, updates: Partial<VectorStoreConfig>) {
     try {
-      const configToUpdate = {
-        ...updates,
-        config: updates.config ? JSON.stringify(updates.config) : undefined,
-        cluster_info: updates.cluster_info ? JSON.stringify(updates.cluster_info) : undefined
-      };
-
       const { data, error } = await supabase
         .from('vector_store_configs')
-        .update(configToUpdate)
+        .update({
+          ...updates,
+          config: updates.config ? JSON.stringify(updates.config) : undefined,
+          cluster_info: updates.cluster_info ? JSON.stringify(updates.cluster_info) : undefined
+        })
         .eq('id', id)
         .select()
         .single();
