@@ -15,7 +15,15 @@ serve(async (req) => {
   }
 
   try {
-    const { redirect_url } = await req.json()
+    const { redirect_url, state } = await req.json()
+    
+    if (!redirect_url) {
+      throw new Error('Redirect URL is required')
+    }
+
+    if (!state) {
+      throw new Error('State parameter is required')
+    }
     
     // GitHub OAuth configuration
     const clientId = Deno.env.get('GITHUB_CLIENT_ID')
@@ -23,15 +31,27 @@ serve(async (req) => {
       throw new Error('GitHub client ID not configured')
     }
 
-    // Generate a random state value for security
-    const state = crypto.randomUUID()
+    // Define required scopes
+    const scopes = [
+      'repo',           // Repository access
+      'user',           // Basic user information
+      'read:org',       // Read organization information
+      'workflow'        // Workflow access
+    ].join(' ')
     
     // Construct the authorization URL
     const authUrl = new URL('https://github.com/login/oauth/authorize')
     authUrl.searchParams.append('client_id', clientId)
     authUrl.searchParams.append('redirect_uri', redirect_url)
     authUrl.searchParams.append('state', state)
-    authUrl.searchParams.append('scope', 'repo user')
+    authUrl.searchParams.append('scope', scopes)
+
+    console.log('Initiating GitHub OAuth flow:', {
+      clientId,
+      redirectUrl: redirect_url,
+      scopes,
+      state: state.slice(0, 8) + '...' // Log partial state for debugging
+    })
 
     return new Response(
       JSON.stringify({ 
@@ -48,7 +68,9 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error initiating GitHub OAuth:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message 
+      }),
       { 
         status: 400,
         headers: {

@@ -57,7 +57,6 @@ export function OAuthConnectionsSettings() {
 
   const toggleDefaultMutation = useMutation({
     mutationFn: async ({ connectionId, isDefault }: { connectionId: string; isDefault: boolean }) => {
-      // First, if setting as default, remove default from others
       if (isDefault) {
         await supabase
           .from('oauth_connections')
@@ -65,7 +64,6 @@ export function OAuthConnectionsSettings() {
           .eq('provider', 'github');
       }
       
-      // Then update the selected connection
       const { error } = await supabase
         .from('oauth_connections')
         .update({ is_default: isDefault })
@@ -84,20 +82,50 @@ export function OAuthConnectionsSettings() {
   });
 
   const handleConnect = async () => {
+    if (isConnecting) return;
     setIsConnecting(true);
+
     try {
+      // Generate a random state value
+      const state = crypto.randomUUID();
+      // Store state in localStorage for validation
+      localStorage.setItem('github_oauth_state', state);
+
       const { data, error } = await supabase.functions.invoke('github-oauth-init', {
-        body: { redirect_url: window.location.origin + '/settings' }
+        body: { 
+          redirect_url: window.location.origin + '/settings',
+          state
+        }
       });
 
       if (error) throw error;
       
       if (data?.authUrl) {
-        window.location.href = data.authUrl;
+        // Open popup window
+        const popup = window.open(
+          data.authUrl,
+          'GitHub Login',
+          'width=600,height=700,left=200,top=100'
+        );
+
+        // Check if popup was blocked
+        if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+          throw new Error('Popup blocked! Please allow popups for this site.');
+        }
+
+        // Poll for popup closure
+        const pollTimer = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(pollTimer);
+            setIsConnecting(false);
+            // Check if connection was successful by querying connections
+            queryClient.invalidateQueries({ queryKey: ['oauth-connections'] });
+          }
+        }, 500);
       }
     } catch (error) {
       console.error('Connection error:', error);
-      toast.error('Failed to initiate GitHub connection');
+      toast.error(error instanceof Error ? error.message : 'Failed to initiate GitHub connection');
     } finally {
       setIsConnecting(false);
     }

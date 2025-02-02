@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, prefer',
 }
 
 serve(async (req) => {
@@ -19,6 +19,10 @@ serve(async (req) => {
       throw new Error('No code provided')
     }
 
+    if (!state) {
+      throw new Error('No state provided')
+    }
+
     // Exchange the code for an access token
     const clientId = Deno.env.get('GITHUB_CLIENT_ID')
     const clientSecret = Deno.env.get('GITHUB_CLIENT_SECRET')
@@ -26,6 +30,8 @@ serve(async (req) => {
     if (!clientId || !clientSecret) {
       throw new Error('GitHub OAuth credentials not configured')
     }
+
+    console.log('Exchanging code for access token...')
 
     const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
       method: 'POST',
@@ -37,12 +43,14 @@ serve(async (req) => {
         client_id: clientId,
         client_secret: clientSecret,
         code,
+        state,
       }),
     })
 
     const tokenData = await tokenResponse.json()
     
     if (tokenData.error) {
+      console.error('GitHub OAuth error:', tokenData)
       throw new Error(`GitHub OAuth error: ${tokenData.error_description}`)
     }
 
@@ -55,6 +63,10 @@ serve(async (req) => {
     })
 
     const userData = await userResponse.json()
+
+    if (userData.message) {
+      throw new Error(`GitHub API error: ${userData.message}`)
+    }
 
     // Create Supabase admin client
     const supabaseAdmin = createClient(
@@ -77,6 +89,8 @@ serve(async (req) => {
     if (authError || !user) {
       throw new Error('Unauthorized')
     }
+
+    console.log('Saving OAuth connection for user:', user.id)
 
     // Save the OAuth connection
     const { error: insertError } = await supabaseAdmin
