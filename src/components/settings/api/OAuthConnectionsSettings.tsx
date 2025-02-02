@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { GitHubLogoIcon } from "@radix-ui/react-icons";
+import { Github } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface OAuthConnection {
@@ -117,7 +117,7 @@ export function OAuthConnectionsSettings() {
           disabled={isConnecting}
           className="flex items-center gap-2"
         >
-          <GitHubLogoIcon className="h-4 w-4" />
+          <Github className="h-4 w-4" />
           {isConnecting ? 'Connecting...' : 'Connect GitHub'}
         </Button>
       </div>
@@ -143,7 +143,7 @@ export function OAuthConnectionsSettings() {
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle className="text-base flex items-center gap-2">
-                      <GitHubLogoIcon className="h-4 w-4" />
+                      <Github className="h-4 w-4" />
                       {connection.account_username}
                     </CardTitle>
                     <CardDescription>
