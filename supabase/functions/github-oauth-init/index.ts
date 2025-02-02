@@ -3,27 +3,26 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, prefer',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { 
-      headers: corsHeaders 
-    })
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
     const { redirect_url } = await req.json()
     
     if (!redirect_url) {
+      console.error('Missing redirect_url in request')
       throw new Error('Redirect URL is required')
     }
     
     // GitHub OAuth configuration
     const clientId = Deno.env.get('GITHUB_CLIENT_ID')
     if (!clientId) {
+      console.error('GitHub client ID not configured')
       throw new Error('GitHub client ID not configured')
     }
 
@@ -46,7 +45,6 @@ serve(async (req) => {
     authUrl.searchParams.append('scope', scopes)
 
     console.log('Initiating GitHub OAuth flow:', {
-      clientId,
       redirectUrl: redirect_url,
       scopes,
       state: state.slice(0, 8) + '...' // Log partial state for debugging
@@ -55,7 +53,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         authUrl: authUrl.toString(),
-        state: state
+        state
       }),
       { 
         headers: {
