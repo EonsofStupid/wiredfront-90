@@ -5,9 +5,6 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Icons } from "@/components/ui/icons";
-import { oauthProviders } from "./config/oauthProviders";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface OAuthConnection {
   id: string;
@@ -21,7 +18,6 @@ interface OAuthConnection {
 
 export function OAuthConnectionsSettings() {
   const [isConnecting, setIsConnecting] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const { data: connections, isLoading } = useQuery({
@@ -75,43 +71,17 @@ export function OAuthConnectionsSettings() {
     }
   });
 
-  const handleConnect = async (providerId: string) => {
+  const handleConnect = async () => {
     setIsConnecting(true);
-    setSelectedProvider(providerId);
-    
     try {
-      const provider = oauthProviders.find(p => p.id === providerId);
-      if (!provider) throw new Error('Invalid provider');
-
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No active session');
-
-      // Get OAuth configuration from Supabase
-      const { data: providerConfig, error: configError } = await supabase.functions.invoke('get-oauth-config', {
-        body: { provider: providerId }
-      });
-
-      if (configError) throw configError;
-
-      // Build OAuth URL
-      const state = crypto.randomUUID();
-      sessionStorage.setItem('oauth_state', state);
-      
-      const params = new URLSearchParams({
-        client_id: providerConfig.clientId,
-        redirect_uri: `${window.location.origin}/api/oauth/callback`,
-        scope: provider.scopes.join(' '),
-        state,
-        response_type: 'code'
-      });
-
-      // Redirect to provider's auth page
-      window.location.href = `${provider.authUrl}?${params.toString()}`;
+      // Here we'll implement the OAuth flow
+      // For now, just show a toast
+      toast.info('OAuth connection flow will be implemented here');
     } catch (error) {
       console.error('Connection error:', error);
       toast.error('Failed to establish connection');
+    } finally {
       setIsConnecting(false);
-      setSelectedProvider(null);
     }
   };
 
@@ -124,33 +94,12 @@ export function OAuthConnectionsSettings() {
             Manage your OAuth connections for different services
           </p>
         </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>Connect New Account</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Choose a Provider</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              {oauthProviders.map((provider) => (
-                <Button
-                  key={provider.id}
-                  variant="outline"
-                  className="w-full justify-start gap-2"
-                  onClick={() => handleConnect(provider.id)}
-                  disabled={isConnecting && selectedProvider === provider.id}
-                >
-                  <Icons.provider[provider.icon as keyof typeof Icons.provider] className="h-4 w-4" />
-                  {isConnecting && selectedProvider === provider.id ? 
-                    'Connecting...' : 
-                    `Connect with ${provider.name}`
-                  }
-                </Button>
-              ))}
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button
+          onClick={handleConnect}
+          disabled={isConnecting}
+        >
+          {isConnecting ? 'Connecting...' : 'Connect New Account'}
+        </Button>
       </div>
 
       {isLoading ? (
