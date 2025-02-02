@@ -5,8 +5,9 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Github } from "lucide-react";
+import { Github, Loader2, CheckCircle, XCircle, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 interface OAuthConnection {
   id: string;
@@ -38,20 +39,42 @@ export function OAuthConnectionsSettings() {
 
   const deleteMutation = useMutation({
     mutationFn: async (connectionId: string) => {
+      // Log the disconnection attempt
+      await supabase
+        .from('oauth_connection_logs')
+        .insert({
+          event_type: 'disconnect',
+          status: 'pending',
+          metadata: { connection_id: connectionId }
+        });
+
       const { error } = await supabase
         .from('oauth_connections')
         .delete()
         .eq('id', connectionId);
       
       if (error) throw error;
+
+      // Log successful disconnection
+      await supabase
+        .from('oauth_connection_logs')
+        .insert({
+          event_type: 'disconnect',
+          status: 'success',
+          metadata: { connection_id: connectionId }
+        });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['oauth-connections'] });
-      toast.success('GitHub connection removed successfully');
+      toast.success('GitHub connection removed successfully', {
+        icon: <XCircle className="h-4 w-4 text-destructive" />
+      });
     },
     onError: (error) => {
       console.error('Error removing connection:', error);
-      toast.error('Failed to remove GitHub connection');
+      toast.error('Failed to remove GitHub connection', {
+        icon: <XCircle className="h-4 w-4" />
+      });
     }
   });
 
@@ -73,11 +96,15 @@ export function OAuthConnectionsSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['oauth-connections'] });
-      toast.success('Default GitHub connection updated');
+      toast.success('Default GitHub connection updated', {
+        icon: <CheckCircle className="h-4 w-4 text-success" />
+      });
     },
     onError: (error) => {
       console.error('Error updating default connection:', error);
-      toast.error('Failed to update default connection');
+      toast.error('Failed to update default connection', {
+        icon: <XCircle className="h-4 w-4" />
+      });
     }
   });
 
@@ -86,9 +113,15 @@ export function OAuthConnectionsSettings() {
     setIsConnecting(true);
 
     try {
-      // Generate a random state value
+      // Log connection attempt
+      await supabase
+        .from('oauth_connection_logs')
+        .insert({
+          event_type: 'connect',
+          status: 'pending'
+        });
+
       const state = crypto.randomUUID();
-      // Store state in localStorage for validation
       localStorage.setItem('github_oauth_state', state);
 
       const { data, error } = await supabase.functions.invoke('github-oauth-init', {
@@ -101,31 +134,38 @@ export function OAuthConnectionsSettings() {
       if (error) throw error;
       
       if (data?.authUrl) {
-        // Open popup window
         const popup = window.open(
           data.authUrl,
           'GitHub Login',
           'width=600,height=700,left=200,top=100'
         );
 
-        // Check if popup was blocked
         if (!popup || popup.closed || typeof popup.closed === 'undefined') {
           throw new Error('Popup blocked! Please allow popups for this site.');
         }
 
-        // Poll for popup closure
         const pollTimer = setInterval(() => {
           if (popup.closed) {
             clearInterval(pollTimer);
             setIsConnecting(false);
-            // Check if connection was successful by querying connections
             queryClient.invalidateQueries({ queryKey: ['oauth-connections'] });
           }
         }, 500);
       }
     } catch (error) {
       console.error('Connection error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to initiate GitHub connection');
+      toast.error(error instanceof Error ? error.message : 'Failed to initiate GitHub connection', {
+        icon: <XCircle className="h-4 w-4" />
+      });
+      
+      // Log connection failure
+      await supabase
+        .from('oauth_connection_logs')
+        .insert({
+          event_type: 'connect',
+          status: 'error',
+          error_message: error instanceof Error ? error.message : 'Unknown error'
+        });
     } finally {
       setIsConnecting(false);
     }
@@ -143,10 +183,22 @@ export function OAuthConnectionsSettings() {
         <Button
           onClick={handleConnect}
           disabled={isConnecting}
-          className="flex items-center gap-2"
+          className={cn(
+            "flex items-center gap-2 transition-all",
+            isConnecting && "animate-pulse"
+          )}
         >
-          <Github className="h-4 w-4" />
-          {isConnecting ? 'Connecting...' : 'Connect GitHub'}
+          {isConnecting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Connecting...
+            </>
+          ) : (
+            <>
+              <Github className="h-4 w-4" />
+              Connect GitHub
+            </>
+          )}
         </Button>
       </div>
 
@@ -166,18 +218,29 @@ export function OAuthConnectionsSettings() {
       ) : (
         <div className="space-y-4">
           {connections?.map((connection) => (
-            <Card key={connection.id}>
+            <Card key={connection.id} className="transition-all hover:shadow-md">
               <CardHeader className="pb-4">
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle className="text-base flex items-center gap-2">
                       <Github className="h-4 w-4" />
                       {connection.account_username}
+                      {connection.is_default && (
+                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                          Default
+                        </span>
+                      )}
                     </CardTitle>
-                    <CardDescription>
-                      Type: {connection.account_type}
+                    <CardDescription className="flex items-center gap-2">
+                      <span>Type: {connection.account_type}</span>
                       {connection.last_used && (
-                        <> · Last used: {new Date(connection.last_used).toLocaleDateString()}</>
+                        <>
+                          <span>•</span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            Last used: {new Date(connection.last_used).toLocaleDateString()}
+                          </span>
+                        </>
                       )}
                     </CardDescription>
                   </div>
@@ -198,7 +261,9 @@ export function OAuthConnectionsSettings() {
                       variant="destructive"
                       size="sm"
                       onClick={() => deleteMutation.mutate(connection.id)}
+                      className="flex items-center gap-1"
                     >
+                      <XCircle className="h-4 w-4" />
                       Disconnect
                     </Button>
                   </div>
