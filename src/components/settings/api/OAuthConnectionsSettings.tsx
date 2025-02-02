@@ -5,6 +5,8 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { GitHubLogoIcon } from "@radix-ui/react-icons";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface OAuthConnection {
   id: string;
@@ -26,6 +28,7 @@ export function OAuthConnectionsSettings() {
       const { data, error } = await supabase
         .from('oauth_connections')
         .select('*')
+        .eq('provider', 'github')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -44,16 +47,25 @@ export function OAuthConnectionsSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['oauth-connections'] });
-      toast.success('Connection removed successfully');
+      toast.success('GitHub connection removed successfully');
     },
     onError: (error) => {
       console.error('Error removing connection:', error);
-      toast.error('Failed to remove connection');
+      toast.error('Failed to remove GitHub connection');
     }
   });
 
   const toggleDefaultMutation = useMutation({
     mutationFn: async ({ connectionId, isDefault }: { connectionId: string; isDefault: boolean }) => {
+      // First, if setting as default, remove default from others
+      if (isDefault) {
+        await supabase
+          .from('oauth_connections')
+          .update({ is_default: false })
+          .eq('provider', 'github');
+      }
+      
+      // Then update the selected connection
       const { error } = await supabase
         .from('oauth_connections')
         .update({ is_default: isDefault })
@@ -63,7 +75,7 @@ export function OAuthConnectionsSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['oauth-connections'] });
-      toast.success('Default connection updated');
+      toast.success('Default GitHub connection updated');
     },
     onError: (error) => {
       console.error('Error updating default connection:', error);
@@ -74,12 +86,18 @@ export function OAuthConnectionsSettings() {
   const handleConnect = async () => {
     setIsConnecting(true);
     try {
-      // Here we'll implement the OAuth flow
-      // For now, just show a toast
-      toast.info('OAuth connection flow will be implemented here');
+      const { data, error } = await supabase.functions.invoke('github-oauth-init', {
+        body: { redirect_url: window.location.origin + '/settings' }
+      });
+
+      if (error) throw error;
+      
+      if (data?.authUrl) {
+        window.location.href = data.authUrl;
+      }
     } catch (error) {
       console.error('Connection error:', error);
-      toast.error('Failed to establish connection');
+      toast.error('Failed to initiate GitHub connection');
     } finally {
       setIsConnecting(false);
     }
@@ -89,29 +107,31 @@ export function OAuthConnectionsSettings() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-medium">OAuth Connections</h3>
+          <h3 className="text-lg font-medium">GitHub Connections</h3>
           <p className="text-sm text-muted-foreground">
-            Manage your OAuth connections for different services
+            Manage your connected GitHub accounts
           </p>
         </div>
         <Button
           onClick={handleConnect}
           disabled={isConnecting}
+          className="flex items-center gap-2"
         >
-          {isConnecting ? 'Connecting...' : 'Connect New Account'}
+          <GitHubLogoIcon className="h-4 w-4" />
+          {isConnecting ? 'Connecting...' : 'Connect GitHub'}
         </Button>
       </div>
 
       {isLoading ? (
         <div className="space-y-4">
-          <div className="h-24 bg-muted rounded-lg animate-pulse" />
-          <div className="h-24 bg-muted rounded-lg animate-pulse" />
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-24 w-full" />
         </div>
       ) : connections?.length === 0 ? (
         <Card>
           <CardContent className="py-8">
             <div className="text-center text-muted-foreground">
-              No OAuth connections configured yet
+              No GitHub accounts connected yet
             </div>
           </CardContent>
         </Card>
@@ -122,8 +142,9 @@ export function OAuthConnectionsSettings() {
               <CardHeader className="pb-4">
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="text-base">
-                      {connection.provider} - {connection.account_username}
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <GitHubLogoIcon className="h-4 w-4" />
+                      {connection.account_username}
                     </CardTitle>
                     <CardDescription>
                       Type: {connection.account_type}
@@ -150,7 +171,7 @@ export function OAuthConnectionsSettings() {
                       size="sm"
                       onClick={() => deleteMutation.mutate(connection.id)}
                     >
-                      Remove
+                      Disconnect
                     </Button>
                   </div>
                 </div>

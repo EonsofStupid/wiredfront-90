@@ -613,6 +613,71 @@ export type Database = {
           },
         ]
       }
+      github_tokens: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          last_used: string | null
+          last_validated: string | null
+          memorable_name: string | null
+          rate_limit_remaining: number | null
+          rate_limit_reset: string | null
+          scopes: string[] | null
+          token_hash: string
+          token_type: string
+          updated_at: string | null
+          user_id: string
+          validation_status:
+            | Database["public"]["Enums"]["token_validation_status"]
+            | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          last_used?: string | null
+          last_validated?: string | null
+          memorable_name?: string | null
+          rate_limit_remaining?: number | null
+          rate_limit_reset?: string | null
+          scopes?: string[] | null
+          token_hash: string
+          token_type: string
+          updated_at?: string | null
+          user_id: string
+          validation_status?:
+            | Database["public"]["Enums"]["token_validation_status"]
+            | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          last_used?: string | null
+          last_validated?: string | null
+          memorable_name?: string | null
+          rate_limit_remaining?: number | null
+          rate_limit_reset?: string | null
+          scopes?: string[] | null
+          token_hash?: string
+          token_type?: string
+          updated_at?: string | null
+          user_id?: string
+          validation_status?:
+            | Database["public"]["Enums"]["token_validation_status"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "github_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       live_preview_status: {
         Row: {
           created_at: string | null
@@ -1604,6 +1669,7 @@ export type Database = {
       message_behavior_type: "enter_send" | "enter_newline"
       message_type: "text" | "command" | "system"
       setting_type: "string" | "number" | "boolean" | "json" | "array"
+      token_validation_status: "valid" | "invalid" | "expired" | "rate_limited"
       validation_status_type: "pending" | "valid" | "invalid" | "expired"
       vector_store_type: "pinecone" | "weaviate" | "pgvector"
     }
