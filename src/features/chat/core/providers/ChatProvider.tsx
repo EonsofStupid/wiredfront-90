@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useCallback } from 'react';
-import { ChatWindow } from '../../ui/ChatWindow';
 import { useMessageStore } from '../messaging/MessageManager';
 import { useWindowStore } from '../window/WindowManager';
 import { useCommandStore } from '../commands/CommandRegistry';
@@ -122,7 +121,6 @@ const ChatProviderInner: React.FC<{ children: React.ReactNode }> = ({ children }
   return (
     <ChatContext.Provider value={value}>
       {children}
-      <ChatWindow />
     </ChatContext.Provider>
   );
 };

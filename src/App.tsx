@@ -10,7 +10,7 @@ import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import Editor from "./pages/Editor";
 import Documents from "./pages/Documents";
-import { ChatProvider } from "@/features/chat/ChatProvider";
+import { ChatProvider } from "@/features/chat/core/providers/ChatProvider";
 import { useAuthStore } from "@/stores/auth";
 import { storeLastVisitedPath } from "@/utils/auth";
 import { EditorModeProvider } from "@/features/chat/core/providers/EditorModeProvider";
@@ -55,38 +55,33 @@ const App = () => {
   // If we're on the login page or index page, don't show the main layout
   const isPublicRoute = location.pathname === '/login' || location.pathname === '/';
   
-  if (isPublicRoute) {
-    return (
-      <ChatProvider>
+  const Layout = isMobile ? MobileLayout : MainLayout;
+
+  return (
+    <ChatProvider>
+      {isPublicRoute ? (
         <AppLayout>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
           </Routes>
         </AppLayout>
-        <Toaster />
-      </ChatProvider>
-    );
-  }
-
-  const Layout = isMobile ? MobileLayout : MainLayout;
-
-  return (
-    <ChatProvider>
-      <Layout>
-        <Routes>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/editor" element={
-            <EditorModeProvider>
-              <Editor />
-            </EditorModeProvider>
-          } />
-          <Route path="/documents" element={<Documents />} />
-          <Route path="/ai" element={<div>AI Assistant Page</div>} />
-          <Route path="/analytics" element={<div>Analytics Page</div>} />
-          <Route path="/settings" element={<Settings />} />
-        </Routes>
-      </Layout>
+      ) : (
+        <Layout>
+          <Routes>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/editor" element={
+              <EditorModeProvider>
+                <Editor />
+              </EditorModeProvider>
+            } />
+            <Route path="/documents" element={<Documents />} />
+            <Route path="/ai" element={<div>AI Assistant Page</div>} />
+            <Route path="/analytics" element={<div>Analytics Page</div>} />
+            <Route path="/settings" element={<Settings />} />
+          </Routes>
+        </Layout>
+      )}
       <Toaster />
     </ChatProvider>
   );
