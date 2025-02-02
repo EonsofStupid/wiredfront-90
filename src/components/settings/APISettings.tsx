@@ -5,6 +5,7 @@ import { CloudStorageSettings } from "./api/CloudStorageSettings";
 import { DevelopmentSettings } from "./api/DevelopmentSettings";
 import { VoiceSettings } from "./api/VoiceSettings";
 import { RAGKeysSettings } from "./api/RAGKeysSettings";
+import { OAuthConnectionsSettings } from "./api/OAuthConnectionsSettings";
 import { useAPISettings } from "@/hooks/settings/api";
 import { toast } from "sonner";
 
@@ -43,7 +44,8 @@ export function APISettings() {
       <Tabs defaultValue="ai-services" className="space-y-4">
         <TabsList>
           <TabsTrigger value="ai-services">AI Services</TabsTrigger>
-          <TabsTrigger value="rag-keys">Vector DB Keys and Configuration</TabsTrigger>
+          <TabsTrigger value="oauth">OAuth Connections</TabsTrigger>
+          <TabsTrigger value="rag-keys">Vector DB Keys</TabsTrigger>
           <TabsTrigger value="voice">Voice</TabsTrigger>
           <TabsTrigger value="cloud-storage">Cloud Storage</TabsTrigger>
           <TabsTrigger value="development">Development</TabsTrigger>
@@ -51,6 +53,10 @@ export function APISettings() {
 
         <TabsContent value="ai-services">
           <AIServicesSettings />
+        </TabsContent>
+
+        <TabsContent value="oauth">
+          <OAuthConnectionsSettings />
         </TabsContent>
 
         <TabsContent value="rag-keys">

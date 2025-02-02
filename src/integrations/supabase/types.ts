@@ -259,6 +259,50 @@ export type Database = {
         }
         Relationships: []
       }
+      api_usage_metrics: {
+        Row: {
+          calls_count: number | null
+          created_at: string | null
+          id: string
+          rate_limit_remaining: number | null
+          rate_limit_total: number | null
+          reset_at: string | null
+          token_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          calls_count?: number | null
+          created_at?: string | null
+          id?: string
+          rate_limit_remaining?: number | null
+          rate_limit_total?: number | null
+          reset_at?: string | null
+          token_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          calls_count?: number | null
+          created_at?: string | null
+          id?: string
+          rate_limit_remaining?: number | null
+          rate_limit_total?: number | null
+          reset_at?: string | null
+          token_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_usage_metrics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assistant_configurations: {
         Row: {
           assistant_id: string | null
@@ -737,6 +781,53 @@ export type Database = {
           },
         ]
       }
+      oauth_connections: {
+        Row: {
+          account_type: string | null
+          account_username: string
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          last_used: string | null
+          provider: string
+          scopes: Json | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          account_type?: string | null
+          account_username: string
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          last_used?: string | null
+          provider: string
+          scopes?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          account_type?: string | null
+          account_username?: string
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          last_used?: string | null
+          provider?: string
+          scopes?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_connections_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       onboarding_steps: {
         Row: {
           completed: boolean | null
@@ -771,6 +862,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "onboarding_steps_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_access_tokens: {
+        Row: {
+          created_at: string | null
+          expiration_date: string | null
+          id: string
+          last_used: string | null
+          memorable_name: string
+          provider: string
+          scopes: Json | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expiration_date?: string | null
+          id?: string
+          last_used?: string | null
+          memorable_name: string
+          provider: string
+          scopes?: Json | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expiration_date?: string | null
+          id?: string
+          last_used?: string | null
+          memorable_name?: string
+          provider?: string
+          scopes?: Json | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_access_tokens_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -869,6 +1007,58 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
+      }
+      project_token_preferences: {
+        Row: {
+          created_at: string | null
+          id: string
+          oauth_connection_id: string | null
+          pat_id: string | null
+          project_name: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          oauth_connection_id?: string | null
+          pat_id?: string | null
+          project_name: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          oauth_connection_id?: string | null
+          pat_id?: string | null
+          project_name?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_token_preferences_oauth_connection_id_fkey"
+            columns: ["oauth_connection_id"]
+            isOneToOne: false
+            referencedRelation: "oauth_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_token_preferences_pat_id_fkey"
+            columns: ["pat_id"]
+            isOneToOne: false
+            referencedRelation: "personal_access_tokens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_token_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       retry_configurations: {
         Row: {
@@ -1329,6 +1519,10 @@ export type Database = {
           "": unknown[]
         }
         Returns: number
+      }
+      update_api_usage_metrics: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       vector_avg: {
         Args: {
