@@ -8,10 +8,14 @@ export interface AuthState extends AsyncState {
   loading: boolean;
 }
 
+export interface LoginResponse {
+  success: boolean;
+}
+
 export interface AuthActions {
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
-  login: (credentials: { email: string; password: string }) => Promise<void>;
+  login: (credentials: { email: string; password: string }) => Promise<LoginResponse>;
   logout: () => void;
   refreshToken: () => Promise<void>;
   initializeAuth: () => Promise<() => void>;

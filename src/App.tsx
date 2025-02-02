@@ -26,9 +26,18 @@ const App = () => {
 
   // Initialize auth state
   useEffect(() => {
-    const cleanup = initializeAuth();
+    let cleanup: (() => void) | undefined;
+    
+    const init = async () => {
+      cleanup = await initializeAuth();
+    };
+
+    init();
+
     return () => {
-      cleanup();
+      if (cleanup) {
+        cleanup();
+      }
     };
   }, [initializeAuth]);
 

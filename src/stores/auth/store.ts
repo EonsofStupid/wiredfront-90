@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { AuthState, AuthStore } from './types';
+import type { AuthState, AuthStore, LoginResponse } from './types';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -30,7 +30,7 @@ export const useAuthStore = create<AuthStore>()(
 
       setLoading: (loading) => set({ loading }),
 
-      login: async (credentials) => {
+      login: async (credentials): Promise<LoginResponse> => {
         set({ status: 'loading', loading: true, error: null });
         try {
           const { data, error } = await supabase.auth.signInWithPassword({
