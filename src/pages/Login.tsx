@@ -8,15 +8,15 @@ import { getLoginRedirectUrl } from "@/utils/auth";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   
   useEffect(() => {
     // If user is already authenticated, redirect
-    if (user) {
+    if (isAuthenticated && user) {
       const redirectUrl = getLoginRedirectUrl();
       navigate(redirectUrl, { replace: true });
     }
-  }, [user, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-dark/80 backdrop-blur-sm">
@@ -53,9 +53,10 @@ const Login = () => {
               }
             }}
             theme="dark"
-            providers={["github", "google"]}
+            providers={[]}
             redirectTo={window.location.origin}
             onlyThirdPartyProviders={false}
+            view="sign_in"
           />
         </div>
       </div>

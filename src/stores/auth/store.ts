@@ -31,9 +31,13 @@ export const useAuthStore = create<AuthStore>()(
       setLoading: (loading) => set({ loading }),
 
       login: async (credentials) => {
-        set({ status: 'loading', loading: true });
+        set({ status: 'loading', loading: true, error: null });
         try {
-          const { data, error } = await supabase.auth.signInWithPassword(credentials);
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: credentials.email,
+            password: credentials.password,
+          });
+          
           if (error) throw error;
           
           const { session, user } = data;
@@ -48,13 +52,18 @@ export const useAuthStore = create<AuthStore>()(
             lastUpdated: Date.now(),
             loading: false
           });
+
+          toast.success('Logged in successfully');
+          return { success: true };
         } catch (error) {
+          const errorMessage = (error as Error).message;
           set({ 
             status: 'error', 
-            error: (error as Error).message,
+            error: errorMessage,
             lastUpdated: Date.now(),
             loading: false
           });
+          toast.error(`Login failed: ${errorMessage}`);
           throw error;
         }
       },
@@ -71,7 +80,6 @@ export const useAuthStore = create<AuthStore>()(
             lastUpdated: Date.now()
           });
           
-          supabase.removeAllChannels();
           toast.success('Logged out successfully');
         } catch (error) {
           toast.error('Error logging out');
@@ -96,7 +104,6 @@ export const useAuthStore = create<AuthStore>()(
           }
         } catch (error) {
           console.error('Token refresh error:', error);
-          // If refresh fails, we should probably log the user out
           get().logout();
         }
       },
@@ -141,14 +148,12 @@ export const useAuthStore = create<AuthStore>()(
             }
           });
 
-          // Return cleanup function
           return () => {
             subscription.unsubscribe();
           };
         } catch (error) {
           console.error('Auth initialization error:', error);
           set({ ...initialState, loading: false });
-          // Still need to return a cleanup function even in error case
           return () => {};
         }
       },

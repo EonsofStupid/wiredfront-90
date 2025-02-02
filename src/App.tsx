@@ -20,20 +20,28 @@ const PROTECTED_ROUTES = ['/dashboard', '/editor', '/documents', '/ai', '/analyt
 
 const App = () => {
   const isMobile = useIsMobile();
-  const { user } = useAuthStore();
+  const { user, isAuthenticated, initializeAuth } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Initialize auth state
+  useEffect(() => {
+    const cleanup = initializeAuth();
+    return () => {
+      cleanup();
+    };
+  }, [initializeAuth]);
 
   useEffect(() => {
     const handleAuth = () => {
       const isProtectedRoute = PROTECTED_ROUTES.includes(location.pathname);
-      if (!user && isProtectedRoute) {
+      if (!isAuthenticated && isProtectedRoute) {
         storeLastVisitedPath(location.pathname);
         navigate("/login");
       }
     };
     handleAuth();
-  }, [user, location.pathname, navigate]);
+  }, [isAuthenticated, location.pathname, navigate]);
 
   // If we're on the login page or index page, don't show the main layout
   const isPublicRoute = location.pathname === '/login' || location.pathname === '/';
