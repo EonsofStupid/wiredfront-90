@@ -15,14 +15,10 @@ serve(async (req) => {
   }
 
   try {
-    const { redirect_url, state } = await req.json()
+    const { redirect_url } = await req.json()
     
     if (!redirect_url) {
       throw new Error('Redirect URL is required')
-    }
-
-    if (!state) {
-      throw new Error('State parameter is required')
     }
     
     // GitHub OAuth configuration
@@ -30,6 +26,9 @@ serve(async (req) => {
     if (!clientId) {
       throw new Error('GitHub client ID not configured')
     }
+
+    // Generate a random state value
+    const state = crypto.randomUUID()
 
     // Define required scopes
     const scopes = [
