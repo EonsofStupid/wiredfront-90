@@ -21,8 +21,8 @@ serve(async (req) => {
       console.error('Missing redirect_url in request')
       throw new Error('Redirect URL is required')
     }
-    
-    // GitHub OAuth configuration
+
+    // Get GitHub OAuth configuration from secrets
     const clientId = Deno.env.get('GITHUB_CLIENT_ID')
     if (!clientId) {
       console.error('GitHub client ID not configured')
