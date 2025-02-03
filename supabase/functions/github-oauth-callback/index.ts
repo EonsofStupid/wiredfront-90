@@ -7,32 +7,38 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
+  console.log('GitHub OAuth callback function called')
+
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
+    console.log('Parsing JSON from callback request body')
     const { code, state } = await req.json()
-    
+    console.log('Received callback with:', { code, state })
+
     if (!code) {
+      console.error('No code provided in request')
       throw new Error('No code provided')
     }
 
     if (!state) {
+      console.error('No state provided in request')
       throw new Error('No state provided')
     }
 
-    // Exchange the code for an access token
+    // Fetch secrets
     const clientId = Deno.env.get('GITHUB_CLIENT_ID')
     const clientSecret = Deno.env.get('GITHUB_CLIENT_SECRET')
 
     if (!clientId || !clientSecret) {
+      console.error('Missing GitHub OAuth credentials')
       throw new Error('GitHub OAuth credentials not configured')
     }
 
     console.log('Exchanging code for access token...')
-
     const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
       method: 'POST',
       headers: {
@@ -48,13 +54,15 @@ serve(async (req) => {
     })
 
     const tokenData = await tokenResponse.json()
-    
+    console.log('GitHub token response data:', tokenData)
+
     if (tokenData.error) {
       console.error('GitHub OAuth error:', tokenData)
       throw new Error(`GitHub OAuth error: ${tokenData.error_description}`)
     }
 
-    // Get user info using the access token
+    // Use the token to get user info
+    console.log('Fetching GitHub user data...')
     const userResponse = await fetch('https://api.github.com/user', {
       headers: {
         'Authorization': `Bearer ${tokenData.access_token}`,
@@ -63,12 +71,13 @@ serve(async (req) => {
     })
 
     const userData = await userResponse.json()
+    console.log('GitHub user data:', userData)
 
     if (userData.message) {
       throw new Error(`GitHub API error: ${userData.message}`)
     }
 
-    // Create Supabase admin client
+    // Create Supabase admin client to save the connection
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -81,18 +90,17 @@ serve(async (req) => {
     )
 
     // Verify the user is authenticated
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseAdmin.auth.getUser(req.headers.get('Authorization')?.split('Bearer ')[1] ?? '')
+    console.log('Verifying Supabase user auth...')
+    const tokenFromHeader = req.headers.get('Authorization')?.split('Bearer ')[1] ?? ''
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(tokenFromHeader)
 
     if (authError || !user) {
+      console.error('Supabase user not found or unauthorized:', authError)
       throw new Error('Unauthorized')
     }
 
     console.log('Saving OAuth connection for user:', user.id)
-
-    // Save the OAuth connection
+    // Save the OAuth connection in your DB (adjust table/columns as needed)
     const { error: insertError } = await supabaseAdmin
       .from('oauth_connections')
       .insert({
@@ -105,9 +113,12 @@ serve(async (req) => {
       })
 
     if (insertError) {
+      console.error('Error inserting OAuth connection:', insertError)
       throw insertError
     }
 
+    // Return success with user info
+    console.log('GitHub OAuth callback succeeded for user:', user.id)
     return new Response(
       JSON.stringify({ 
         success: true,
