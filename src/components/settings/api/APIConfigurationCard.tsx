@@ -14,6 +14,11 @@ const getValidationStatusIcon = (status: ValidationStatusType | undefined) => {
       return <XCircle className="h-4 w-4 text-red-500" />;
     case 'expired':
       return <Clock className="h-4 w-4 text-yellow-500" />;
+    case 'rate_limited':
+      return <Clock className="h-4 w-4 text-orange-500" />;
+    case 'error':
+      return <XCircle className="h-4 w-4 text-red-500" />;
+    case 'pending':
     default:
       return <Clock className="h-4 w-4 text-gray-500" />;
   }
