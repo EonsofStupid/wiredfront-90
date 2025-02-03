@@ -20,7 +20,7 @@ export interface Document {
     version: string;
     custom_fields: Record<string, unknown>;
   };
-  source_metadata: any; // Changed to match database schema
+  source_metadata: Record<string, any>;
   tags: string[];
   author: string | null;
   created_at: string;
