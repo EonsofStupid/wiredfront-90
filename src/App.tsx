@@ -10,13 +10,29 @@ import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import Editor from "./pages/Editor";
 import Documents from "./pages/Documents";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import { ChatProvider } from "@/features/chat/ChatProvider";
 import { useAuthStore } from "@/stores/auth";
 import { storeLastVisitedPath } from "@/utils/auth";
 import { EditorModeProvider } from "@/features/chat/core/providers/EditorModeProvider";
 import { MainLayout } from "@/components/layout/MainLayout";
 
-const PROTECTED_ROUTES = ['/dashboard', '/editor', '/documents', '/ai', '/analytics', '/settings'];
+const PROTECTED_ROUTES = [
+  '/dashboard', 
+  '/editor', 
+  '/documents', 
+  '/ai', 
+  '/analytics', 
+  '/settings',
+  '/admin',
+  '/admin/users',
+  '/admin/models',
+  '/admin/queues',
+  '/admin/cache',
+  '/admin/activity',
+  '/admin/database',
+  '/admin/settings'
+];
 
 const App = () => {
   const isMobile = useIsMobile();
@@ -85,6 +101,16 @@ const App = () => {
           <Route path="/ai" element={<div>AI Assistant Page</div>} />
           <Route path="/analytics" element={<div>Analytics Page</div>} />
           <Route path="/settings" element={<Settings />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/users" element={<div>Users Management</div>} />
+          <Route path="/admin/models" element={<div>Models Configuration</div>} />
+          <Route path="/admin/queues" element={<div>Queue Management</div>} />
+          <Route path="/admin/cache" element={<div>Cache Control</div>} />
+          <Route path="/admin/activity" element={<div>Activity Logs</div>} />
+          <Route path="/admin/database" element={<div>Database Management</div>} />
+          <Route path="/admin/settings" element={<div>Admin Settings</div>} />
         </Routes>
       </Layout>
       <Toaster />
