@@ -2,7 +2,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Github, Clock, XCircle } from "lucide-react";
-import type { ConnectionCardProps } from "../types";
+import type { ConnectionCardProps } from "../../types/connections";
 
 export function ConnectionCard({ 
   connection,

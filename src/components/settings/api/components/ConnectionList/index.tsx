@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConnectionCard } from "../ConnectionCard";
-import type { ConnectionListProps } from "../types";
+import type { ConnectionListProps } from "../../types/connections";
 
 export function ConnectionsList({
   connections,
