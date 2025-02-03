@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { DocumentGrid } from "@/components/documents/DocumentGrid";
+import { DocumentHeader } from "@/components/documents/DocumentHeader";
 import { useDocumentStore } from "@/stores/documents/store";
 
 const Documents = () => {
@@ -11,6 +12,7 @@ const Documents = () => {
 
   return (
     <div className="flex flex-col h-full bg-gradient-to-br from-dark-lighter/30 to-transparent">
+      <DocumentHeader />
       <DocumentGrid />
     </div>
   );
