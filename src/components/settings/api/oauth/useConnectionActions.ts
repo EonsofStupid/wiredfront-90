@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ConnectionActionProps } from "./types";
-import { logger } from "@/services/chat/LoggingService"; // Your custom logger
+import { logger } from "@/services/chat/LoggingService";
+import { generateGitHubAppJWT, getGitHubAppInstallations } from "@/utils/github/auth";
 
 export const useConnectionActions = (): ConnectionActionProps => {
   const [isConnecting, setIsConnecting] = useState(false);
@@ -17,7 +18,25 @@ export const useConnectionActions = (): ConnectionActionProps => {
     toast.info("Connecting to GitHub...");
 
     try {
-      // Log the connection attempt in your DB
+      // Get GitHub App credentials from Supabase
+      const { data: appConfig, error: configError } = await supabase
+        .from('github_app_config')
+        .select('app_id, private_key')
+        .single();
+
+      if (configError || !appConfig) {
+        throw new Error('GitHub App configuration not found');
+      }
+
+      // Generate JWT
+      const jwt = await generateGitHubAppJWT(appConfig.app_id, appConfig.private_key);
+      logger.info("Generated GitHub App JWT");
+
+      // Get installations
+      const installations = await getGitHubAppInstallations(jwt);
+      logger.info("Fetched GitHub App installations", { count: installations.length });
+
+      // Log the connection attempt
       await supabase
         .from("oauth_connection_logs")
         .insert({
@@ -30,7 +49,6 @@ export const useConnectionActions = (): ConnectionActionProps => {
       localStorage.setItem("github_oauth_state", state);
       logger.info("Generated OAuth state", { statePrefix: state.slice(0, 8) });
 
-      // Invoke our init function
       const { data, error } = await supabase.functions.invoke("github-oauth-init", {
         body: {
           redirect_url: window.location.origin + "/settings",
@@ -66,12 +84,11 @@ export const useConnectionActions = (): ConnectionActionProps => {
         }, 500);
       }
     } catch (error) {
-      logger.error("Connection error:", error);
+      logger.error("GitHub connection error:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to initiate GitHub connection"
       );
 
-      // Log the error in DB
       await supabase
         .from("oauth_connection_logs")
         .insert({
