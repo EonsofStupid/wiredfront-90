@@ -9,7 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import Editor from "./pages/Editor";
-import Documents from "./pages/Documents";
+import Documents from "@/features/documents/pages/Documents";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import { ChatProvider } from "@/features/chat/ChatProvider";
 import { useAuthStore } from "@/stores/auth";
