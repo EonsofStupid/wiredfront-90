@@ -487,6 +487,41 @@ export type Database = {
           },
         ]
       }
+      document_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          parent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "document_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_chunks: {
         Row: {
           chunk_index: number
@@ -527,45 +562,79 @@ export type Database = {
       }
       documents: {
         Row: {
+          category_id: string | null
           content: string
           created_at: string | null
           error_message: string | null
           file_type: string | null
           file_url: string | null
           id: string
+          import_error: string | null
+          import_progress: number | null
+          import_status:
+            | Database["public"]["Enums"]["document_import_status"]
+            | null
           metadata: Json | null
+          source_metadata: Json | null
+          source_type: string | null
+          source_url: string | null
           status: Database["public"]["Enums"]["document_status"] | null
           title: string
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
+          category_id?: string | null
           content: string
           created_at?: string | null
           error_message?: string | null
           file_type?: string | null
           file_url?: string | null
           id?: string
+          import_error?: string | null
+          import_progress?: number | null
+          import_status?:
+            | Database["public"]["Enums"]["document_import_status"]
+            | null
           metadata?: Json | null
+          source_metadata?: Json | null
+          source_type?: string | null
+          source_url?: string | null
           status?: Database["public"]["Enums"]["document_status"] | null
           title: string
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
+          category_id?: string | null
           content?: string
           created_at?: string | null
           error_message?: string | null
           file_type?: string | null
           file_url?: string | null
           id?: string
+          import_error?: string | null
+          import_progress?: number | null
+          import_status?:
+            | Database["public"]["Enums"]["document_import_status"]
+            | null
           metadata?: Json | null
+          source_metadata?: Json | null
+          source_type?: string | null
+          source_url?: string | null
           status?: Database["public"]["Enums"]["document_status"] | null
           title?: string
           updated_at?: string | null
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "documents_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "document_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "documents_user_id_fkey"
             columns: ["user_id"]
@@ -1742,6 +1811,7 @@ export type Database = {
         | "aws"
         | "watson"
         | "forefront"
+      document_import_status: "pending" | "processing" | "completed" | "failed"
       document_status: "pending" | "processing" | "indexed" | "failed"
       embedding_model: "openai" | "cohere" | "huggingface"
       extended_validation_status:
