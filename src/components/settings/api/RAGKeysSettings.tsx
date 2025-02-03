@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useAPIConfigurations } from "@/hooks/settings/useAPIConfigurations";
 import { APIType } from "@/types/store/settings/api-config";
 import { toast } from "sonner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,7 +41,7 @@ export function RAGKeysSettings() {
           return (
             <ServiceCard
               key={config.type}
-              type={config.type}
+              type={config.type as APIType}
               title={config.label}
               description={config.description}
               docsUrl={config.docsUrl}

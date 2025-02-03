@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { OAuthConnection } from "@/types/settings/api-configuration";
-import { ConnectionCard } from "./ConnectionCard";
+import { ConnectionCard } from "../oauth/ConnectionCard";
 
 interface ConnectionsListProps {
   connections: OAuthConnection[] | undefined;
