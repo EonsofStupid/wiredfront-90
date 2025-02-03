@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ConnectionActionProps } from "./types";
+import { logger } from "@/services/chat/LoggingService";
 
 export const useConnectionActions = (): ConnectionActionProps => {
   const [isConnecting, setIsConnecting] = useState(false);
@@ -11,8 +12,11 @@ export const useConnectionActions = (): ConnectionActionProps => {
   const handleConnect = async () => {
     if (isConnecting) return;
     setIsConnecting(true);
+    logger.info('Initiating GitHub connection');
+    toast.info('Connecting to GitHub...');
 
     try {
+      // Log the connection attempt
       await supabase
         .from('oauth_connection_logs')
         .insert({
@@ -22,6 +26,7 @@ export const useConnectionActions = (): ConnectionActionProps => {
 
       const state = crypto.randomUUID();
       localStorage.setItem('github_oauth_state', state);
+      logger.info('Generated OAuth state', { statePrefix: state.slice(0, 8) });
 
       const { data, error } = await supabase.functions.invoke('github-oauth-init', {
         body: { 
@@ -30,9 +35,13 @@ export const useConnectionActions = (): ConnectionActionProps => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        logger.error('GitHub OAuth initialization failed', { error });
+        throw error;
+      }
       
       if (data?.authUrl) {
+        logger.info('Opening GitHub OAuth popup');
         const popup = window.open(
           data.authUrl,
           'GitHub Login',
@@ -48,11 +57,12 @@ export const useConnectionActions = (): ConnectionActionProps => {
             clearInterval(pollTimer);
             setIsConnecting(false);
             queryClient.invalidateQueries({ queryKey: ['oauth-connections'] });
+            logger.info('GitHub OAuth popup closed');
           }
         }, 500);
       }
     } catch (error) {
-      console.error('Connection error:', error);
+      logger.error('Connection error:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to initiate GitHub connection');
       
       await supabase
@@ -69,6 +79,7 @@ export const useConnectionActions = (): ConnectionActionProps => {
 
   const handleDisconnect = async (connectionId: string) => {
     try {
+      logger.info('Disconnecting GitHub connection', { connectionId });
       await supabase
         .from('oauth_connection_logs')
         .insert({
@@ -94,14 +105,16 @@ export const useConnectionActions = (): ConnectionActionProps => {
 
       queryClient.invalidateQueries({ queryKey: ['oauth-connections'] });
       toast.success('GitHub connection removed successfully');
+      logger.info('GitHub connection removed successfully', { connectionId });
     } catch (error) {
-      console.error('Error removing connection:', error);
+      logger.error('Error removing connection:', error);
       toast.error('Failed to remove GitHub connection');
     }
   };
 
   const handleToggleDefault = async (connectionId: string, isDefault: boolean) => {
     try {
+      logger.info('Toggling default GitHub connection', { connectionId, isDefault });
       if (isDefault) {
         await supabase
           .from('oauth_connections')
@@ -118,8 +131,9 @@ export const useConnectionActions = (): ConnectionActionProps => {
 
       queryClient.invalidateQueries({ queryKey: ['oauth-connections'] });
       toast.success('Default GitHub connection updated');
+      logger.info('Default GitHub connection updated successfully', { connectionId });
     } catch (error) {
-      console.error('Error updating default connection:', error);
+      logger.error('Error updating default connection:', error);
       toast.error('Failed to update default connection');
     }
   };
