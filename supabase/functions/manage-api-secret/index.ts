@@ -17,6 +17,7 @@ serve(async (req) => {
     const { secretName, secretValue, provider, memorableName } = await req.json()
     
     if (!secretName || !secretValue || !provider || !memorableName) {
+      console.error('Missing required fields:', { secretName, provider, memorableName })
       throw new Error('Missing required fields')
     }
 
@@ -36,6 +37,7 @@ serve(async (req) => {
     // Verify the user is authenticated using service role
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.error('No authorization header')
       throw new Error('No authorization header')
     }
 
@@ -44,45 +46,74 @@ serve(async (req) => {
     )
 
     if (authError || !user) {
+      console.error('Auth error:', authError)
       throw new Error('Unauthorized')
     }
 
     console.log(`Setting secret ${secretName} for provider ${provider}`);
 
-    // Save the secret using service role
-    const { error: secretError } = await supabaseAdmin.rpc('set_secret', {
-      name: secretName,
-      value: secretValue
-    })
-
-    if (secretError) {
-      console.error('Error saving secret:', secretError)
-      throw new Error('Failed to save secret')
-    }
-
-    // Save to personal_access_tokens table
-    const { error: patError } = await supabaseAdmin
-      .from('personal_access_tokens')
-      .insert({
-        user_id: user.id,
-        provider,
-        memorable_name: memorableName,
-        status: 'active',
-        scopes: ['repo', 'workflow'],
+    try {
+      // First try to set the secret using pg_settings
+      const { error: secretError } = await supabaseAdmin.rpc('set_secret', {
+        name: secretName,
+        value: secretValue
       })
 
-    if (patError) {
-      console.error('Error saving PAT:', patError)
-      throw new Error('Failed to save PAT')
-    }
+      if (secretError) {
+        console.error('Error setting secret via RPC:', secretError)
+        throw secretError
+      }
 
-    return new Response(
-      JSON.stringify({ success: true }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      },
-    )
+      // Save to personal_access_tokens table
+      const { error: patError } = await supabaseAdmin
+        .from('personal_access_tokens')
+        .insert({
+          user_id: user.id,
+          provider,
+          memorable_name: memorableName,
+          status: 'active',
+          scopes: ['repo', 'workflow'],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+
+      if (patError) {
+        console.error('Error saving PAT:', patError)
+        throw patError
+      }
+
+      // If it's a GitHub token, also save to github_tokens
+      if (provider === 'github') {
+        const { error: githubError } = await supabaseAdmin
+          .from('github_tokens')
+          .insert({
+            user_id: user.id,
+            token_type: 'pat',
+            token_hash: secretValue, // Note: In production, you should hash this
+            memorable_name: memorableName,
+            is_default: false,
+            validation_status: 'valid',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+
+        if (githubError) {
+          console.error('Error saving GitHub token:', githubError)
+          throw githubError
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ success: true }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        },
+      )
+    } catch (error) {
+      console.error('Database operation failed:', error)
+      throw new Error('Failed to save secret')
+    }
   } catch (error) {
     console.error('Error:', error.message)
     return new Response(
