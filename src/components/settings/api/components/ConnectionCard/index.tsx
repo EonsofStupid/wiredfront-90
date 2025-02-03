@@ -1,14 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Github, Clock, XCircle } from "lucide-react";
-import type { OAuthConnection } from "@/types/settings/api-configuration";
-
-interface ConnectionCardProps {
-  connection: OAuthConnection;
-  onToggleDefault: (connectionId: string, isDefault: boolean) => void;
-  onDelete: (connectionId: string) => void;
-}
+import type { ConnectionCardProps } from "../types";
 
 export function ConnectionCard({ 
   connection,

@@ -1,12 +1,10 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Github, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { cn } from "@/lib/utils";
+import type { ConnectionActionProps } from "../types";
 
-export function GitHubConnectButton() {
+export const useConnectionActions = (): ConnectionActionProps => {
   const [isConnecting, setIsConnecting] = useState(false);
   const queryClient = useQueryClient();
 
@@ -69,26 +67,66 @@ export function GitHubConnectButton() {
     }
   };
 
-  return (
-    <Button
-      onClick={handleConnect}
-      disabled={isConnecting}
-      className={cn(
-        "flex items-center gap-2 transition-all",
-        isConnecting && "animate-pulse"
-      )}
-    >
-      {isConnecting ? (
-        <>
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Connecting...
-        </>
-      ) : (
-        <>
-          <Github className="h-4 w-4" />
-          Connect GitHub
-        </>
-      )}
-    </Button>
-  );
-}
+  const handleDisconnect = async (connectionId: string) => {
+    try {
+      await supabase
+        .from('oauth_connection_logs')
+        .insert({
+          event_type: 'disconnect',
+          status: 'pending',
+          metadata: { connection_id: connectionId }
+        });
+
+      const { error } = await supabase
+        .from('oauth_connections')
+        .delete()
+        .eq('id', connectionId);
+      
+      if (error) throw error;
+
+      await supabase
+        .from('oauth_connection_logs')
+        .insert({
+          event_type: 'disconnect',
+          status: 'success',
+          metadata: { connection_id: connectionId }
+        });
+
+      queryClient.invalidateQueries({ queryKey: ['oauth-connections'] });
+      toast.success('GitHub connection removed successfully');
+    } catch (error) {
+      console.error('Error removing connection:', error);
+      toast.error('Failed to remove GitHub connection');
+    }
+  };
+
+  const handleToggleDefault = async (connectionId: string, isDefault: boolean) => {
+    try {
+      if (isDefault) {
+        await supabase
+          .from('oauth_connections')
+          .update({ is_default: false })
+          .eq('provider', 'github');
+      }
+      
+      const { error } = await supabase
+        .from('oauth_connections')
+        .update({ is_default: isDefault })
+        .eq('id', connectionId);
+      
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ['oauth-connections'] });
+      toast.success('Default GitHub connection updated');
+    } catch (error) {
+      console.error('Error updating default connection:', error);
+      toast.error('Failed to update default connection');
+    }
+  };
+
+  return {
+    onConnect: handleConnect,
+    onDisconnect: handleDisconnect,
+    onToggleDefault: handleToggleDefault
+  };
+};
