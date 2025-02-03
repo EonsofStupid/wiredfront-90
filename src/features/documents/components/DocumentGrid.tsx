@@ -1,5 +1,5 @@
 import React from 'react';
-import { useDocumentStore } from '../stores/documentStore';
+import { useDocumentStore } from '@/features/documents/stores/documentStore';
 import { Card } from '@/components/ui/card';
 import { FileText, Folder } from 'lucide-react';
 import { motion } from 'framer-motion';
