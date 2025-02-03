@@ -6,7 +6,7 @@ import { Key, CheckCircle, XCircle, Clock, Trash2 } from "lucide-react";
 import { APIConfigurationCardProps } from "@/types/settings/api-configuration";
 import { ValidationStatusType } from "@/types/store/settings/api-config";
 
-const getValidationStatusIcon = (status: ValidationStatusType | undefined) => {
+const getValidationStatusIcon = (status: ValidationStatusType) => {
   switch (status) {
     case 'valid':
       return <CheckCircle className="h-4 w-4 text-green-500" />;
@@ -42,7 +42,7 @@ export function APIConfigurationCard({
                 variant={config.validation_status === 'valid' ? 'success' : 'secondary'} 
                 className="ml-2"
               >
-                {getValidationStatusIcon(config.validation_status)}
+                {getValidationStatusIcon(config.validation_status as ValidationStatusType)}
                 <span className="ml-1 capitalize">{config.validation_status}</span>
               </Badge>
             )}
