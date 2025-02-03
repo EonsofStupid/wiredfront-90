@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import type { ConnectionActionProps } from "../types";
+import type { ConnectionActionProps } from "./types";
 
 export const useConnectionActions = (): ConnectionActionProps => {
   const [isConnecting, setIsConnecting] = useState(false);

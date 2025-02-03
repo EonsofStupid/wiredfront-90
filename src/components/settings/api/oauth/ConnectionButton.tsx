@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Github, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { ConnectionButtonProps } from "../types";
+import type { ConnectionButtonProps } from "./types";
 
 export function ConnectionButton({ isConnecting, onConnect }: ConnectionButtonProps) {
   return (
