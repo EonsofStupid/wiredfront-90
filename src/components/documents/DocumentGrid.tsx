@@ -34,9 +34,28 @@ export const DocumentGrid = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              {new Date(doc.created_at).toLocaleDateString()}
-            </p>
+            <div className="flex flex-col gap-1">
+              <p className="text-sm text-muted-foreground">
+                {new Date(doc.created_at || '').toLocaleDateString()}
+              </p>
+              {doc.author && (
+                <p className="text-sm text-muted-foreground">
+                  Author: {doc.author}
+                </p>
+              )}
+              {doc.tags && doc.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {doc.tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="text-xs bg-muted px-2 py-1 rounded-full"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       ))}

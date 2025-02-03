@@ -10,7 +10,7 @@ export const useDocumentStore = create<DocumentStore>((set, get) => ({
   error: null,
   view: 'grid',
   sortBy: 'date',
-  sortOrder: 'desc', // Added missing initialization
+  sortOrder: 'desc',
   filters: {
     category: null,
     type: null,

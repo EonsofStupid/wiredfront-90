@@ -562,6 +562,7 @@ export type Database = {
       }
       documents: {
         Row: {
+          author: string | null
           category_id: string | null
           content: string
           created_at: string | null
@@ -575,15 +576,18 @@ export type Database = {
             | Database["public"]["Enums"]["document_import_status"]
             | null
           metadata: Json | null
+          retry_count: number | null
           source_metadata: Json | null
           source_type: string | null
           source_url: string | null
           status: Database["public"]["Enums"]["document_status"] | null
+          tags: string[] | null
           title: string
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
+          author?: string | null
           category_id?: string | null
           content: string
           created_at?: string | null
@@ -597,15 +601,18 @@ export type Database = {
             | Database["public"]["Enums"]["document_import_status"]
             | null
           metadata?: Json | null
+          retry_count?: number | null
           source_metadata?: Json | null
           source_type?: string | null
           source_url?: string | null
           status?: Database["public"]["Enums"]["document_status"] | null
+          tags?: string[] | null
           title: string
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
+          author?: string | null
           category_id?: string | null
           content?: string
           created_at?: string | null
@@ -619,10 +626,12 @@ export type Database = {
             | Database["public"]["Enums"]["document_import_status"]
             | null
           metadata?: Json | null
+          retry_count?: number | null
           source_metadata?: Json | null
           source_type?: string | null
           source_url?: string | null
           status?: Database["public"]["Enums"]["document_status"] | null
+          tags?: string[] | null
           title?: string
           updated_at?: string | null
           user_id?: string | null
@@ -1812,7 +1821,14 @@ export type Database = {
         | "watson"
         | "forefront"
       document_import_status: "pending" | "processing" | "completed" | "failed"
-      document_status: "pending" | "processing" | "indexed" | "failed"
+      document_status:
+        | "pending"
+        | "processing"
+        | "indexed"
+        | "failed"
+        | "queued"
+        | "retrying"
+        | "canceled"
       embedding_model: "openai" | "cohere" | "huggingface"
       extended_validation_status:
         | "pending"
