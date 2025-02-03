@@ -21,7 +21,7 @@ export const useConnectionActions = (): ConnectionActionProps => {
       // Get GitHub App credentials from Supabase
       const { data: appConfig, error: configError } = await supabase
         .from('github_app_config')
-        .select('app_id, private_key')
+        .select('*')
         .single();
 
       if (configError || !appConfig) {

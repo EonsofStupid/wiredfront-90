@@ -613,6 +613,47 @@ export type Database = {
           },
         ]
       }
+      github_app_config: {
+        Row: {
+          app_id: string
+          created_at: string | null
+          id: string
+          installation_id: string | null
+          private_key: string
+          updated_at: string | null
+          user_id: string | null
+          webhook_secret: string | null
+        }
+        Insert: {
+          app_id: string
+          created_at?: string | null
+          id?: string
+          installation_id?: string | null
+          private_key: string
+          updated_at?: string | null
+          user_id?: string | null
+          webhook_secret?: string | null
+        }
+        Update: {
+          app_id?: string
+          created_at?: string | null
+          id?: string
+          installation_id?: string | null
+          private_key?: string
+          updated_at?: string | null
+          user_id?: string | null
+          webhook_secret?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "github_app_config_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       github_tokens: {
         Row: {
           created_at: string | null
