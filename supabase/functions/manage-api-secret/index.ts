@@ -14,9 +14,9 @@ serve(async (req) => {
   }
 
   try {
-    const { secretName, secretValue, provider } = await req.json()
+    const { secretName, secretValue, provider, memorableName } = await req.json()
     
-    if (!secretName || !secretValue || !provider) {
+    if (!secretName || !secretValue || !provider || !memorableName) {
       throw new Error('Missing required fields')
     }
 
@@ -60,24 +60,20 @@ serve(async (req) => {
       throw new Error('Failed to save secret')
     }
 
-    // Update api_configurations table with service role
-    const { error: configError } = await supabaseAdmin
-      .from('api_configurations')
-      .upsert({
+    // Save to personal_access_tokens table
+    const { error: patError } = await supabaseAdmin
+      .from('personal_access_tokens')
+      .insert({
         user_id: user.id,
-        api_type: provider,
-        is_enabled: true,
-        provider_settings: {
-          api_key_secret: secretName
-        },
-        validation_status: 'pending'
-      }, {
-        onConflict: 'user_id,api_type'
+        provider,
+        memorable_name: memorableName,
+        status: 'active',
+        scopes: ['repo', 'workflow'],
       })
 
-    if (configError) {
-      console.error('Error updating api configuration:', configError)
-      throw new Error('Failed to update API configuration')
+    if (patError) {
+      console.error('Error saving PAT:', patError)
+      throw new Error('Failed to save PAT')
     }
 
     return new Response(

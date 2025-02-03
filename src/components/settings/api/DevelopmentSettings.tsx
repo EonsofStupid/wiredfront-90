@@ -1,8 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useState } from "react";
 
 interface DevelopmentSettingsProps {
   githubToken: string;
@@ -17,15 +19,23 @@ export function DevelopmentSettings({
   onGithubTokenChange,
   onDockerTokenChange,
 }: DevelopmentSettingsProps) {
+  const [memorableName, setMemorableName] = useState("");
+
   const handleSaveToken = async (tokenType: 'github' | 'docker', value: string) => {
+    if (!memorableName) {
+      toast.error("Please provide a memorable name for your token");
+      return;
+    }
+
     try {
-      const secretName = `${tokenType.toUpperCase()}_API_TOKEN`;
+      const secretName = `${tokenType.toUpperCase()}_${memorableName}`;
       
       const { data, error } = await supabase.functions.invoke('manage-api-secret', {
         body: { 
           secretName,
           secretValue: value,
-          provider: tokenType
+          provider: tokenType,
+          memorableName
         }
       });
 
@@ -38,24 +48,11 @@ export function DevelopmentSettings({
         throw new Error('Failed to save token');
       }
 
-      toast.success(`${tokenType.toUpperCase()} token saved successfully`);
+      toast.success(`${tokenType.toUpperCase()} token saved successfully as ${memorableName}`);
+      setMemorableName(""); // Reset the memorable name field
     } catch (error) {
       console.error('Error saving token:', error);
       toast.error(error instanceof Error ? error.message : "Failed to save token");
-    }
-  };
-
-  const handleGithubTokenChange = (value: string) => {
-    onGithubTokenChange(value);
-    if (value) {
-      handleSaveToken('github', value);
-    }
-  };
-
-  const handleDockerTokenChange = (value: string) => {
-    onDockerTokenChange(value);
-    if (value) {
-      handleSaveToken('docker', value);
     }
   };
 
@@ -70,15 +67,30 @@ export function DevelopmentSettings({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
+            <Label htmlFor="github-token-name">Token Name</Label>
+            <Input
+              id="github-token-name"
+              placeholder="e.g., github-main-prod"
+              value={memorableName}
+              onChange={(e) => setMemorableName(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="github-token">Personal Access Token</Label>
             <Input
               id="github-token"
               type="password"
               value={githubToken}
-              onChange={(e) => handleGithubTokenChange(e.target.value)}
+              onChange={(e) => onGithubTokenChange(e.target.value)}
               placeholder="ghp_..."
             />
           </div>
+          <Button 
+            onClick={() => handleSaveToken('github', githubToken)}
+            className="w-full"
+          >
+            Save GitHub Token
+          </Button>
           <p className="text-sm text-muted-foreground">
             Generate a token in your{" "}
             <a
@@ -102,15 +114,30 @@ export function DevelopmentSettings({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
+            <Label htmlFor="docker-token-name">Token Name</Label>
+            <Input
+              id="docker-token-name"
+              placeholder="e.g., docker-prod"
+              value={memorableName}
+              onChange={(e) => setMemorableName(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="docker-token">API Token</Label>
             <Input
               id="docker-token"
               type="password"
               value={dockerToken}
-              onChange={(e) => handleDockerTokenChange(e.target.value)}
+              onChange={(e) => onDockerTokenChange(e.target.value)}
               placeholder="Enter Docker API token"
             />
           </div>
+          <Button 
+            onClick={() => handleSaveToken('docker', dockerToken)}
+            className="w-full"
+          >
+            Save Docker Token
+          </Button>
         </CardContent>
       </Card>
     </div>

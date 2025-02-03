@@ -1541,6 +1541,12 @@ export type Database = {
         }
         Returns: string
       }
+      get_secret: {
+        Args: {
+          secret_name: string
+        }
+        Returns: string
+      }
       halfvec_avg: {
         Args: {
           "": number[]
