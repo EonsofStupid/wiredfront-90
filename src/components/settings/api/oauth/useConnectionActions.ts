@@ -10,7 +10,11 @@ export const useConnectionActions = (): ConnectionActionProps => {
   const queryClient = useQueryClient();
 
   const handleConnect = async () => {
-    if (isConnecting) return;
+    if (isConnecting) {
+      logger.info('Connection already in progress, ignoring click');
+      return;
+    }
+
     setIsConnecting(true);
     logger.info('Initiating GitHub connection');
     toast.info('Connecting to GitHub...');
@@ -20,7 +24,7 @@ export const useConnectionActions = (): ConnectionActionProps => {
       await supabase
         .from('oauth_connection_logs')
         .insert({
-          event_type: 'connect',
+          event_type: 'connect_initiated',
           status: 'pending'
         });
 
@@ -30,7 +34,7 @@ export const useConnectionActions = (): ConnectionActionProps => {
 
       const { data, error } = await supabase.functions.invoke('github-oauth-init', {
         body: { 
-          redirect_url: window.location.origin + '/settings',
+          redirect_url: `${window.location.origin}/settings`,
           state
         }
       });
@@ -39,28 +43,39 @@ export const useConnectionActions = (): ConnectionActionProps => {
         logger.error('GitHub OAuth initialization failed', { error });
         throw error;
       }
-      
-      if (data?.authUrl) {
-        logger.info('Opening GitHub OAuth popup');
-        const popup = window.open(
-          data.authUrl,
-          'GitHub Login',
-          'width=600,height=700,left=200,top=100'
-        );
 
-        if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-          throw new Error('Popup blocked! Please allow popups for this site.');
-        }
-
-        const pollTimer = setInterval(() => {
-          if (popup.closed) {
-            clearInterval(pollTimer);
-            setIsConnecting(false);
-            queryClient.invalidateQueries({ queryKey: ['oauth-connections'] });
-            logger.info('GitHub OAuth popup closed');
-          }
-        }, 500);
+      if (!data?.authUrl) {
+        throw new Error('No authorization URL returned');
       }
+      
+      logger.info('Opening GitHub OAuth popup', { authUrl: data.authUrl });
+      
+      const popup = window.open(
+        data.authUrl,
+        'GitHub Login',
+        'width=600,height=700,left=200,top=100'
+      );
+
+      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+        throw new Error('Popup blocked! Please allow popups for this site.');
+      }
+
+      const checkPopup = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkPopup);
+          setIsConnecting(false);
+          queryClient.invalidateQueries({ queryKey: ['oauth-connections'] });
+          logger.info('GitHub OAuth popup closed');
+          
+          // Check localStorage for success flag
+          const success = localStorage.getItem('github_oauth_success');
+          if (success === 'true') {
+            localStorage.removeItem('github_oauth_success');
+            toast.success('Successfully connected to GitHub');
+          }
+        }
+      }, 500);
+
     } catch (error) {
       logger.error('Connection error:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to initiate GitHub connection');
@@ -68,7 +83,7 @@ export const useConnectionActions = (): ConnectionActionProps => {
       await supabase
         .from('oauth_connection_logs')
         .insert({
-          event_type: 'connect',
+          event_type: 'connect_failed',
           status: 'error',
           error_message: error instanceof Error ? error.message : 'Unknown error'
         });

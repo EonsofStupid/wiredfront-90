@@ -5,45 +5,65 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-serve(async (req) => {
-  console.log('GitHub OAuth init function called')
+function logEvent(type: string, data: any) {
+  const timestamp = new Date().toISOString()
+  console.log(JSON.stringify({
+    timestamp,
+    type,
+    data,
+    function: 'github-oauth-init'
+  }))
+}
 
-  // Handle CORS preflight requests
+serve(async (req) => {
+  logEvent('function_called', { method: req.method, url: req.url })
+
   if (req.method === 'OPTIONS') {
+    logEvent('cors_preflight', {})
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
     const { redirect_url, state } = await req.json()
-    console.log('Received request with:', { redirect_url, state })
-    
+    logEvent('request_received', { redirect_url, statePrefix: state?.slice(0, 8) })
+
     if (!redirect_url) {
-      console.error('Missing redirect_url in request')
-      throw new Error('Redirect URL is required')
+      const error = 'Missing redirect_url in request'
+      logEvent('validation_error', { error })
+      throw new Error(error)
     }
 
-    // Get GitHub OAuth configuration from secrets
     const clientId = Deno.env.get('GITHUB_CLIENT_ID')
     if (!clientId) {
-      console.error('GitHub client ID not configured')
-      throw new Error('GitHub client ID not configured')
+      const error = 'GitHub client ID not configured'
+      logEvent('configuration_error', { error })
+      throw new Error(error)
     }
 
-    // Define required scopes
+    logEvent('config_loaded', { 
+      clientIdExists: !!clientId,
+      clientIdLength: clientId.length
+    })
+
     const scopes = [
       'repo',
       'user',
       'read:org'
-    ].join(' ')
-    
-    // Construct the authorization URL
+    ]
+
+    logEvent('scopes_defined', { scopes })
+
     const authUrl = new URL('https://github.com/login/oauth/authorize')
     authUrl.searchParams.append('client_id', clientId)
     authUrl.searchParams.append('redirect_uri', redirect_url)
     authUrl.searchParams.append('state', state)
-    authUrl.searchParams.append('scope', scopes)
+    authUrl.searchParams.append('scope', scopes.join(' '))
 
-    console.log('Generated auth URL:', authUrl.toString())
+    logEvent('auth_url_generated', { 
+      url: authUrl.toString(),
+      statePrefix: state?.slice(0, 8),
+      scopes: scopes.join(' ')
+    })
 
     return new Response(
       JSON.stringify({ 
@@ -58,7 +78,11 @@ serve(async (req) => {
       }
     )
   } catch (error) {
-    console.error('Error in github-oauth-init:', error)
+    logEvent('error', {
+      message: error.message,
+      stack: error.stack
+    })
+
     return new Response(
       JSON.stringify({ 
         error: error.message 
