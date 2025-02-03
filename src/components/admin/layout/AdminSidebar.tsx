@@ -1,47 +1,100 @@
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { NavLink } from "react-router-dom";
 import { 
-  Users, 
   Settings, 
-  Database, 
-  Activity,
-  Queue,
-  Cpu,
-  Cache
+  Users, 
+  Database,
+  ListTodo,
+  HardDrive,
+  LayoutDashboard 
 } from "lucide-react";
 
-const adminRoutes = [
-  { path: "/admin/users", label: "Users", icon: Users },
-  { path: "/admin/models", label: "Models", icon: Cpu },
-  { path: "/admin/queues", label: "Queue Management", icon: Queue },
-  { path: "/admin/cache", label: "Cache Control", icon: Cache },
-  { path: "/admin/activity", label: "Activity Logs", icon: Activity },
-  { path: "/admin/database", label: "Database", icon: Database },
-  { path: "/admin/settings", label: "Settings", icon: Settings },
-];
-
-export function AdminSidebar() {
-  const location = useLocation();
-
+const AdminSidebar = () => {
   return (
-    <aside className="w-64 border-r border-border h-[calc(100vh-4rem)] p-4">
-      <nav className="space-y-2">
-        {adminRoutes.map((route) => (
-          <Link
-            key={route.path}
-            to={route.path}
-            className={cn(
-              "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors",
-              "hover:bg-accent hover:text-accent-foreground",
-              location.pathname === route.path ? "bg-accent text-accent-foreground" : "text-muted-foreground"
-            )}
-          >
-            <route.icon className="h-4 w-4" />
-            <span>{route.label}</span>
-          </Link>
-        ))}
+    <aside className="w-64 bg-background border-r h-full">
+      <nav className="p-4">
+        <ul className="space-y-2">
+          <li>
+            <NavLink
+              to="/admin"
+              className={({ isActive }) =>
+                `flex items-center space-x-2 p-2 rounded-lg transition-colors ${
+                  isActive ? 'bg-primary/10 text-primary' : 'hover:bg-primary/5'
+                }`
+              }
+            >
+              <LayoutDashboard className="w-5 h-5" />
+              <span>Dashboard</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/admin/users"
+              className={({ isActive }) =>
+                `flex items-center space-x-2 p-2 rounded-lg transition-colors ${
+                  isActive ? 'bg-primary/10 text-primary' : 'hover:bg-primary/5'
+                }`
+              }
+            >
+              <Users className="w-5 h-5" />
+              <span>Users</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/admin/database"
+              className={({ isActive }) =>
+                `flex items-center space-x-2 p-2 rounded-lg transition-colors ${
+                  isActive ? 'bg-primary/10 text-primary' : 'hover:bg-primary/5'
+                }`
+              }
+            >
+              <Database className="w-5 h-5" />
+              <span>Database</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/admin/queue"
+              className={({ isActive }) =>
+                `flex items-center space-x-2 p-2 rounded-lg transition-colors ${
+                  isActive ? 'bg-primary/10 text-primary' : 'hover:bg-primary/5'
+                }`
+              }
+            >
+              <ListTodo className="w-5 h-5" />
+              <span>Queue</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/admin/cache"
+              className={({ isActive }) =>
+                `flex items-center space-x-2 p-2 rounded-lg transition-colors ${
+                  isActive ? 'bg-primary/10 text-primary' : 'hover:bg-primary/5'
+                }`
+              }
+            >
+              <HardDrive className="w-5 h-5" />
+              <span>Cache</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/admin/settings"
+              className={({ isActive }) =>
+                `flex items-center space-x-2 p-2 rounded-lg transition-colors ${
+                  isActive ? 'bg-primary/10 text-primary' : 'hover:bg-primary/5'
+                }`
+              }
+            >
+              <Settings className="w-5 h-5" />
+              <span>Settings</span>
+            </NavLink>
+          </li>
+        </ul>
       </nav>
     </aside>
   );
-}
+};
+
+export default AdminSidebar;

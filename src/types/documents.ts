@@ -5,7 +5,8 @@ export type DocumentStatus =
   | 'failed'
   | 'queued'
   | 'retrying'
-  | 'canceled';
+  | 'canceled'
+  | 'indexed';
 
 export type DocumentImportStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
