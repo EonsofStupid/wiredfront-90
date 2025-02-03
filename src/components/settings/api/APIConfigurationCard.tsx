@@ -38,7 +38,10 @@ export function APIConfigurationCard({
           <div className="flex items-center gap-2">
             <CardTitle className="text-base">{api.label}</CardTitle>
             {config?.validation_status && (
-              <Badge variant={config.validation_status === 'valid' ? 'success' : 'secondary'} className="ml-2">
+              <Badge 
+                variant={config.validation_status === 'valid' ? 'success' : 'secondary'} 
+                className="ml-2"
+              >
                 {getValidationStatusIcon(config.validation_status)}
                 <span className="ml-1 capitalize">{config.validation_status}</span>
               </Badge>
