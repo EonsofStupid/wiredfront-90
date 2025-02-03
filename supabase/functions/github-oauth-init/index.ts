@@ -2,7 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, prefer',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
 serve(async (req) => {
@@ -14,7 +14,8 @@ serve(async (req) => {
   }
 
   try {
-    const { redirect_url } = await req.json()
+    const { redirect_url, state } = await req.json()
+    console.log('Received request with:', { redirect_url, state })
     
     if (!redirect_url) {
       console.error('Missing redirect_url in request')
@@ -28,15 +29,11 @@ serve(async (req) => {
       throw new Error('GitHub client ID not configured')
     }
 
-    // Generate a random state value
-    const state = crypto.randomUUID()
-
     // Define required scopes
     const scopes = [
-      'repo',           // Repository access
-      'user',           // Basic user information
-      'read:org',       // Read organization information
-      'workflow'        // Workflow access
+      'repo',
+      'user',
+      'read:org'
     ].join(' ')
     
     // Construct the authorization URL
@@ -46,11 +43,7 @@ serve(async (req) => {
     authUrl.searchParams.append('state', state)
     authUrl.searchParams.append('scope', scopes)
 
-    console.log('Initiating GitHub OAuth flow:', {
-      redirectUrl: redirect_url,
-      scopes,
-      state: state.slice(0, 8) + '...' // Log partial state for debugging
-    })
+    console.log('Generated auth URL:', authUrl.toString())
 
     return new Response(
       JSON.stringify({ 
@@ -65,7 +58,7 @@ serve(async (req) => {
       }
     )
   } catch (error) {
-    console.error('Error initiating GitHub OAuth:', error)
+    console.error('Error in github-oauth-init:', error)
     return new Response(
       JSON.stringify({ 
         error: error.message 
