@@ -5,7 +5,7 @@ import { CloudStorageSettings } from "./api/CloudStorageSettings";
 import { DevelopmentSettings } from "./api/DevelopmentSettings";
 import { VoiceSettings } from "./api/VoiceSettings";
 import { RAGKeysSettings } from "./api/RAGKeysSettings";
-import { OAuthConnectionsSettings } from "./api/OAuthConnectionsSettings";
+import { OAuthConnectionsSettings } from "./api/oauth/OAuthConnectionsSettings";
 import { useAPISettings } from "@/hooks/settings/api";
 import { toast } from "sonner";
 

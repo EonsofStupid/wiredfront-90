@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ConnectionButton } from "./ConnectionButton";
 import { ConnectionsList } from "./ConnectionList";
 import { useConnectionActions } from "./useConnectionActions";
+import { OAuthConnection } from "@/types/settings/api-configuration";
 
 export function OAuthConnectionsSettings() {
   const { onConnect, onDisconnect, onToggleDefault } = useConnectionActions();
@@ -17,7 +18,12 @@ export function OAuthConnectionsSettings() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      
+      // Transform the scopes from Json to string[]
+      return data?.map(conn => ({
+        ...conn,
+        scopes: Array.isArray(conn.scopes) ? conn.scopes : []
+      })) as OAuthConnection[];
     }
   });
 
