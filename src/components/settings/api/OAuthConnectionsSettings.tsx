@@ -2,11 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ConnectionButton } from "./components/ConnectionButton";
 import { ConnectionsList } from "./components/ConnectionList";
-import { useConnectionActions } from "./hooks/useConnectionActions";
-import type { OAuthConnection } from "./types/connections";
+import { useConnectionActions } from "./components/ConnectionActions";
 
 export function OAuthConnectionsSettings() {
-  const { onConnect, onDisconnect, onToggleDefault, isConnecting } = useConnectionActions();
+  const { onConnect, onDisconnect, onToggleDefault } = useConnectionActions();
 
   const { data: connections, isLoading } = useQuery({
     queryKey: ['oauth-connections'],
@@ -18,7 +17,7 @@ export function OAuthConnectionsSettings() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as OAuthConnection[];
+      return data;
     }
   });
 
@@ -32,7 +31,7 @@ export function OAuthConnectionsSettings() {
           </p>
         </div>
         <ConnectionButton
-          isConnecting={isConnecting}
+          isConnecting={false}
           onConnect={onConnect}
         />
       </div>
