@@ -1,5 +1,5 @@
 import React from "react";
-import { AdminSidebar } from "./AdminSidebar";
+import AdminSidebar from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
 
 interface AdminLayoutProps {
