@@ -20,14 +20,28 @@ export const useDocumentStore = create<DocumentStore>((set, get) => ({
   fetchDocuments: async () => {
     set({ loading: true, error: null });
     try {
-      let query = supabase
+      const { data, error } = await supabase
         .from('documents')
         .select('*, category:document_categories(*)');
 
-      const { data, error } = await query;
-
       if (error) throw error;
-      set({ documents: data || [] });
+
+      // Transform the data to ensure type safety
+      const transformedDocuments = (data || []).map(doc => ({
+        ...doc,
+        metadata: {
+          ...((doc.metadata as Record<string, unknown>) || {}),
+          author: ((doc.metadata as Record<string, unknown>) || {}).author as string,
+          created_by: ((doc.metadata as Record<string, unknown>) || {}).created_by as string,
+          last_modified_by: ((doc.metadata as Record<string, unknown>) || {}).last_modified_by as string,
+          version: ((doc.metadata as Record<string, unknown>) || {}).version as string,
+          custom_fields: ((doc.metadata as Record<string, unknown>) || {}).custom_fields as Record<string, unknown>,
+        },
+        tags: doc.tags || [],
+        retry_count: doc.retry_count || 0,
+      }));
+
+      set({ documents: transformedDocuments });
     } catch (error) {
       console.error('Error fetching documents:', error);
       set({ error: error.message });
