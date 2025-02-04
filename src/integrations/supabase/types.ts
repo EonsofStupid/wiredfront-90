@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_chat_usage: {
+        Row: {
+          created_at: string
+          id: string
+          last_request: string | null
+          request_count: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_request?: string | null
+          request_count?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_request?: string | null
+          request_count?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       api_configurations: {
         Row: {
           api_type: Database["public"]["Enums"]["api_type"]
@@ -1648,6 +1675,12 @@ export type Database = {
           secret_name: string
         }
         Returns: string
+      }
+      get_user_role: {
+        Args: {
+          user_id: string
+        }
+        Returns: Database["public"]["Enums"]["app_role"]
       }
       halfvec_avg: {
         Args: {
