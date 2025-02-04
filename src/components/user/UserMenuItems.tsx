@@ -6,6 +6,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { useEffect, useState } from "react";
 
 interface UserMenuItemsProps {
   user: any | null;
@@ -14,6 +15,25 @@ interface UserMenuItemsProps {
 
 export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
   const navigate = useNavigate();
+  const [userRole, setUserRole] = useState<string>('');
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (user) {
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+
+        if (data) {
+          setUserRole(data.role);
+        }
+      }
+    };
+
+    fetchUserRole();
+  }, [user]);
 
   if (!user) {
     return (
@@ -29,7 +49,7 @@ export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
         <div className="flex flex-col space-y-1">
           <p className="text-sm font-medium leading-none">{user.email}</p>
           <p className="text-xs leading-none text-muted-foreground">
-            {user.user_metadata?.full_name || 'User'}
+            {userRole || 'Loading...'}
           </p>
         </div>
       </DropdownMenuLabel>
