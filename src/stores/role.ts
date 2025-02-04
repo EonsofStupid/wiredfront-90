@@ -8,12 +8,14 @@ interface RoleState {
   error: string | null;
   checkUserRole: (userId: string) => Promise<void>;
   hasRole: (role: string) => boolean;
+  refreshRoles: () => Promise<void>;
 }
 
 export const useRoleStore = create<RoleState>((set, get) => ({
   roles: [],
   isLoading: false,
   error: null,
+
   checkUserRole: async (userId: string) => {
     set({ isLoading: true, error: null });
     try {
@@ -24,14 +26,27 @@ export const useRoleStore = create<RoleState>((set, get) => ({
 
       if (error) throw error;
 
-      set({ roles: data.map(r => r.role), isLoading: false });
+      // Important: Update roles array with all roles
+      const roles = data.map(r => r.role);
+      console.log('Fetched roles:', roles); // Debug log
+      set({ roles, isLoading: false });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to fetch user roles';
       set({ error: message, isLoading: false });
       toast.error('Failed to load user roles');
     }
   },
+
+  refreshRoles: async () => {
+    const { user } = await supabase.auth.getUser();
+    if (user?.id) {
+      await get().checkUserRole(user.id);
+    }
+  },
+
   hasRole: (role: string) => {
-    return get().roles.includes(role);
+    const roles = get().roles;
+    console.log('Current roles:', roles, 'Checking for:', role); // Debug log
+    return roles.includes(role);
   },
 }));

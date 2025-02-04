@@ -59,7 +59,7 @@ const DEVELOPER_ROUTES = [
 const App = () => {
   const isMobile = useIsMobile();
   const { user, isAuthenticated, initializeAuth } = useAuthStore();
-  const { checkUserRole } = useRoleStore();
+  const { checkUserRole, refreshRoles } = useRoleStore();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -71,6 +71,11 @@ const App = () => {
       cleanup = await initializeAuth();
       if (user?.id) {
         await checkUserRole(user.id);
+        // Add periodic refresh of roles
+        const refreshInterval = setInterval(() => {
+          refreshRoles();
+        }, 30000); // Refresh every 30 seconds
+        return () => clearInterval(refreshInterval);
       }
     };
 
@@ -81,7 +86,7 @@ const App = () => {
         cleanup();
       }
     };
-  }, [initializeAuth, user?.id, checkUserRole]);
+  }, [initializeAuth, user?.id, checkUserRole, refreshRoles]);
 
   useEffect(() => {
     const handleAuth = async () => {
