@@ -1621,13 +1621,6 @@ export type Database = {
             }
             Returns: unknown
           }
-      check_user_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
       cleanup_stale_sessions: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1703,14 +1696,6 @@ export type Database = {
           "": unknown
         }
         Returns: unknown
-      }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_super_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
       }
       ivfflat_bit_support: {
         Args: {
