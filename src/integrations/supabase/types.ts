@@ -718,6 +718,30 @@ export type Database = {
           },
         ]
       }
+      feature_access: {
+        Row: {
+          allowed_roles: string[]
+          created_at: string | null
+          feature_name: string
+          id: number
+          updated_at: string | null
+        }
+        Insert: {
+          allowed_roles?: string[]
+          created_at?: string | null
+          feature_name: string
+          id?: number
+          updated_at?: string | null
+        }
+        Update: {
+          allowed_roles?: string[]
+          created_at?: string | null
+          feature_name?: string
+          id?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       github_app_config: {
         Row: {
           app_id: string
@@ -1350,6 +1374,24 @@ export type Database = {
           },
         ]
       }
+      roles: {
+        Row: {
+          description: string | null
+          id: number
+          name: string
+        }
+        Insert: {
+          description?: string | null
+          id?: number
+          name: string
+        }
+        Update: {
+          description?: string | null
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
       settings: {
         Row: {
           category: string
@@ -1705,6 +1747,12 @@ export type Database = {
           "": unknown[]
         }
         Returns: number
+      }
+      has_feature_access: {
+        Args: {
+          feature_name: string
+        }
+        Returns: boolean
       }
       hnsw_bit_support: {
         Args: {
