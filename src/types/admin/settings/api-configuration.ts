@@ -4,22 +4,12 @@ export type APIType = Database["public"]["Enums"]["api_type"];
 export type ValidationStatusType = Database["public"]["Enums"]["extended_validation_status"];
 
 export interface APIConfigurationItem {
-  type: string;
+  type: APIType;
   label: string;
   description: string;
   docsUrl: string;
   docsText: string;
   placeholder: string;
-}
-
-export interface ServiceCardProps {
-  type: string;
-  title: string;
-  description: string;
-  docsUrl: string;
-  docsText: string;
-  placeholder: string;
-  onSaveConfig: (type: string) => void;
 }
 
 export interface APIConfiguration {

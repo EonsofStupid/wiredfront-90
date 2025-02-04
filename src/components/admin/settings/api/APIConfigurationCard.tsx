@@ -3,7 +3,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Key, CheckCircle, XCircle, Clock, Trash2 } from "lucide-react";
-import { APIConfigurationCardProps, ValidationStatusType } from "@/types/admin/settings/api-configuration";
+import { APIConfigurationCardProps, ValidationStatusType, APIType } from "@/types/admin/settings/api-configuration";
 
 const getValidationStatusIcon = (status: ValidationStatusType) => {
   switch (status) {
@@ -49,7 +49,7 @@ export function APIConfigurationCard({
           <Switch
             checked={config?.is_enabled ?? false}
             onCheckedChange={(checked) => {
-              onConfigurationChange(checked, config, api.type);
+              onConfigurationChange(checked, config, api.type as APIType);
             }}
           />
         </div>
