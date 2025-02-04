@@ -1,3 +1,4 @@
+// Move from src/components/settings/LivePreviewSettings.tsx
 import { useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { SettingsContainer } from "./layout/SettingsContainer";
@@ -103,34 +104,5 @@ export function LivePreviewSettings() {
         )}
       </div>
     </SettingsContainer>
-  );
-}
-
-function StatusIndicator({ status }: { status: 'inactive' | 'initializing' | 'active' | 'error' }) {
-  switch (status) {
-    case 'initializing':
-      return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
-    case 'active':
-      return <CheckCircle className="h-4 w-4 text-green-500" />;
-    case 'error':
-      return <AlertCircle className="h-4 w-4 text-red-500" />;
-    default:
-      return null;
-  }
-}
-
-function LogEntry({ type, message }: { type: 'info' | 'success' | 'error' | 'warning', message: string }) {
-  const colors = {
-    info: 'text-blue-500',
-    success: 'text-green-500',
-    error: 'text-red-500',
-    warning: 'text-yellow-500'
-  };
-
-  return (
-    <div className="text-sm flex items-center gap-2">
-      <span className={colors[type]}>●</span>
-      <span>{message}</span>
-    </div>
   );
 }

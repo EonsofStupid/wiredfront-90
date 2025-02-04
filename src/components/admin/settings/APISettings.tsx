@@ -1,3 +1,4 @@
+// Move from src/components/settings/APISettings.tsx
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { AIServicesSettings } from "./api/AIServicesSettings";

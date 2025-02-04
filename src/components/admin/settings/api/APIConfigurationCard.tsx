@@ -1,3 +1,4 @@
+// Move from src/components/settings/api/APIConfigurationCard.tsx
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";

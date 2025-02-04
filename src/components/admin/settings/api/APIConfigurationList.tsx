@@ -1,4 +1,4 @@
-import { APIConfigurationProps } from "@/types/settings/api-configuration";
+import { APIConfigurationProps } from "@/types/admin/settings/api-configuration";
 import { API_CONFIGURATIONS } from "@/constants/api-configurations";
 import { APIConfigurationCard } from "./APIConfigurationCard";
 

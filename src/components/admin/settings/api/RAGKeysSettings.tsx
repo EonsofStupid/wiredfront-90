@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useAPIConfigurations } from "@/hooks/settings/useAPIConfigurations";
-import { APIType } from "@/types/store/settings/api-config";
+import { useAPIConfigurations } from "@/hooks/admin/settings/useAPIConfigurations";
+import { APIType } from "@/types/admin/settings/api-config";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
