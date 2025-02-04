@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { APISettingsState } from "@/types/store/settings/api";
+import { APISettingsState } from "@/types/admin/settings/types";
 import { toast } from "sonner";
 import { logger } from "@/services/chat/LoggingService";
 
@@ -26,30 +26,7 @@ export function useAPISettingsState() {
   const [offlineMode, setOfflineMode] = useState(false);
 
   const updateSetting = (key: keyof APISettingsState, value: string) => {
-    try {
-      // Validate key format based on provider
-      if (key === 'openaiKey' && !value.startsWith('sk-')) {
-        toast.error('Invalid OpenAI API key format');
-        return;
-      }
-      if (key === 'anthropicKey' && !value.startsWith('sk-ant-')) {
-        toast.error('Invalid Anthropic API key format');
-        return;
-      }
-
-      setSettings(prev => ({ ...prev, [key]: value }));
-      
-      // Cache settings for offline use
-      localStorage.setItem('api_settings', JSON.stringify({
-        ...settings,
-        [key]: value
-      }));
-      
-      logger.info('API setting updated', { key });
-    } catch (error) {
-      logger.error('Error updating API setting', { error, key });
-      toast.error('Failed to update API setting');
-    }
+    setSettings(prev => ({ ...prev, [key]: value }));
   };
 
   const loadOfflineSettings = () => {
@@ -61,7 +38,7 @@ export function useAPISettingsState() {
         toast.info('Loaded settings from offline cache');
       }
     } catch (error) {
-      logger.error('Error loading offline settings', { error });
+      logger.error('Error loading offline settings:', error);
     }
   };
 

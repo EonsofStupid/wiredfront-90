@@ -1,17 +1,17 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SettingsContainer } from "./layout/SettingsContainer";
+import { useSettingsStore } from "@/stores/settings";
+import { useCallback } from "react";
 
-interface GeneralSettingsProps {
-  preferences: {
-    username: string;
-    language: string;
-    timezone: string;
-  };
-  onPreferenceChange: (key: string, value: string) => void;
-}
+export function GeneralSettings() {
+  const preferences = useSettingsStore(state => state.preferences);
+  const updatePreferences = useSettingsStore(state => state.updatePreferences);
 
-export function GeneralSettings({ preferences, onPreferenceChange }: GeneralSettingsProps) {
+  const handlePreferenceChange = useCallback((key: string, value: string) => {
+    updatePreferences({ [key]: value });
+  }, [updatePreferences]);
+
   return (
     <SettingsContainer
       title="General Settings"
@@ -23,7 +23,7 @@ export function GeneralSettings({ preferences, onPreferenceChange }: GeneralSett
           <Input
             id="username"
             value={preferences.username}
-            onChange={(e) => onPreferenceChange('username', e.target.value)}
+            onChange={(e) => handlePreferenceChange('username', e.target.value)}
           />
         </div>
 
@@ -32,7 +32,7 @@ export function GeneralSettings({ preferences, onPreferenceChange }: GeneralSett
           <Input
             id="language"
             value={preferences.language}
-            onChange={(e) => onPreferenceChange('language', e.target.value)}
+            onChange={(e) => handlePreferenceChange('language', e.target.value)}
           />
         </div>
 
@@ -41,7 +41,7 @@ export function GeneralSettings({ preferences, onPreferenceChange }: GeneralSett
           <Input
             id="timezone"
             value={preferences.timezone}
-            onChange={(e) => onPreferenceChange('timezone', e.target.value)}
+            onChange={(e) => handlePreferenceChange('timezone', e.target.value)}
           />
         </div>
       </div>

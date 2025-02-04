@@ -1,8 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
+import { APISettingsState } from "@/types/admin/settings/types";
 import { toast } from "sonner";
-import { APISettingsState } from "@/types/store/settings/api";
 import { logger } from "@/services/chat/LoggingService";
-import { APIType } from "@/types/store/settings/api-config";
+import { APIType } from "@/types/admin/settings/api-configuration";
 
 export function useAPISettingsSave() {
   const handleSave = async (
@@ -30,7 +30,6 @@ export function useAPISettingsSave() {
       for (const config of apiConfigs) {
         const apiKey = settings[config.key as keyof APISettingsState];
         if (apiKey) {
-          // Check if configuration exists using maybeSingle()
           const { data: existingConfig, error: queryError } = await supabase
             .from('api_configurations')
             .select('id')
@@ -38,13 +37,9 @@ export function useAPISettingsSave() {
             .eq('api_type', config.type)
             .maybeSingle();
 
-          if (queryError) {
-            logger.error('Error querying API configuration:', queryError);
-            throw queryError;
-          }
+          if (queryError) throw queryError;
 
           if (existingConfig) {
-            // Update existing configuration
             const { error: updateError } = await supabase
               .from('api_configurations')
               .update({
@@ -53,11 +48,8 @@ export function useAPISettingsSave() {
               })
               .eq('id', existingConfig.id);
 
-            if (updateError) {
-              throw updateError;
-            }
+            if (updateError) throw updateError;
           } else {
-            // Create new configuration
             const { error: insertError } = await supabase
               .from('api_configurations')
               .insert({
@@ -67,20 +59,16 @@ export function useAPISettingsSave() {
                 is_default: config.type === 'openai'
               });
 
-            if (insertError) {
-              throw insertError;
-            }
+            if (insertError) throw insertError;
           }
         }
       }
 
-      // Determine the active API provider
       const activeProvider = settings.openaiKey ? 'openai' : 
                            settings.geminiKey ? 'gemini' : 
                            settings.anthropicKey ? 'anthropic' : 
                            settings.huggingfaceKey ? 'huggingface' : 'openai';
 
-      // Update chat settings with all required fields
       const { error: chatSettingsError } = await supabase
         .from('chat_settings')
         .upsert({
@@ -100,10 +88,7 @@ export function useAPISettingsSave() {
           rate_limit_per_minute: 60
         });
 
-      if (chatSettingsError) {
-        logger.error('Error updating chat settings:', chatSettingsError);
-        throw chatSettingsError;
-      }
+      if (chatSettingsError) throw chatSettingsError;
 
       logger.info('API settings saved successfully');
       toast.success("API settings have been saved");

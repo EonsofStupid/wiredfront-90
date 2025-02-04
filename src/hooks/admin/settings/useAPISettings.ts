@@ -1,7 +1,6 @@
 import { useAPISettingsState } from "./api/useAPISettingsState";
 import { useAPISettingsLoad } from "./api/useAPISettingsLoad";
 import { useAPISettingsSave } from "./api/useAPISettingsSave";
-import { toast } from "sonner";
 
 export function useAPISettings() {
   const {
@@ -12,16 +11,36 @@ export function useAPISettings() {
     user,
     setUser,
     updateSetting,
+    offlineMode,
+    loadOfflineSettings
   } = useAPISettingsState();
 
   useAPISettingsLoad(setUser, setSettings);
-  const { handleSave } = useAPISettingsSave();
+  const { handleSave: saveSettings } = useAPISettingsSave();
+
+  const handleSave = async () => {
+    if (!user) {
+      throw new Error("You must be logged in to save settings");
+    }
+
+    setIsSaving(true);
+    try {
+      await saveSettings(user, settings, setIsSaving);
+    } catch (error) {
+      console.error('Error saving API settings:', error);
+      throw error;
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return {
     settings,
     updateSetting,
     isSaving,
-    handleSave: () => handleSave(user, settings, setIsSaving),
-    user
+    handleSave,
+    user,
+    offlineMode,
+    loadOfflineSettings
   };
 }

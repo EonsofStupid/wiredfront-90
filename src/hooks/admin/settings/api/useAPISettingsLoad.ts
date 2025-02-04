@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from 'sonner';
-import { APISettingsState } from "@/types/store/settings/api";
+import { APISettingsState } from "@/types/admin/settings/types";
+import { toast } from "sonner";
 import { logger } from "@/services/chat/LoggingService";
 
 export function useAPISettingsLoad(
@@ -19,7 +19,6 @@ export function useAPISettingsLoad(
 
         setUser(session.user);
         
-        // Get API configurations with less restrictive query
         const { data: apiConfigs, error: configError } = await supabase
           .from('api_configurations')
           .select('*')
@@ -30,7 +29,6 @@ export function useAPISettingsLoad(
           throw configError;
         }
 
-        // Initialize settings with default values
         const newSettings: APISettingsState = {
           openaiKey: '',
           huggingfaceKey: '',
@@ -47,7 +45,6 @@ export function useAPISettingsLoad(
           dockerToken: '',
         };
         
-        // Only update settings for enabled configurations
         apiConfigs?.forEach(config => {
           if (config.is_enabled) {
             const key = `${config.api_type}Key` as keyof APISettingsState;
@@ -55,8 +52,8 @@ export function useAPISettingsLoad(
           }
         });
 
-        logger.info('API settings loaded successfully');
         setSettings(newSettings);
+        logger.info('API settings loaded successfully');
         
       } catch (error) {
         logger.error('Error loading API settings:', error);
