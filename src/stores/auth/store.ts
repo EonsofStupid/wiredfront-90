@@ -1,170 +1,105 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { AuthState, AuthStore, LoginResponse } from './types';
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import React, { useEffect } from "react";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { Toaster } from "sonner";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { MobileLayout } from "@/components/layout/MobileLayout";
+import { useIsMobile } from "@/hooks/use-mobile";
+import Index from "./pages/Index";
+import Dashboard from "./pages/Dashboard";
+import Login from "./pages/Login";
+import Editor from "./pages/Editor";
+import Documents from "./pages/Documents";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import { ChatProvider } from "@/features/chat/ChatProvider";
+import { useAuthStore } from "@/stores/auth";
+import { EditorModeProvider } from "@/features/chat/core/providers/EditorModeProvider";
+import { MainLayout } from "@/components/layout/MainLayout";
+import { APISettings } from "@/components/admin/settings/APISettings";
+import { AccessibilitySettings } from "@/components/admin/settings/AccessibilitySettings";
+import { NotificationSettings } from "@/components/admin/settings/NotificationSettings";
+import { GeneralSettings } from "@/components/admin/settings/GeneralSettings";
+import { ChatSettings } from "@/components/admin/settings/ChatSettings";
+import { LivePreviewSettings } from "@/components/admin/settings/LivePreviewSettings";
+import { AdminLayout } from "@/components/admin/layout/AdminLayout";
 
-const initialState: AuthState = {
-  version: '1.0.0',
-  user: null,
-  isAuthenticated: false,
-  token: null,
-  status: 'idle',
-  error: null,
-  lastUpdated: null,
-  loading: true,
+const App = () => {
+  const isMobile = useIsMobile();
+  const { isAuthenticated, initializeAuth } = useAuthStore();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let cleanup: (() => void) | undefined;
+    
+    const init = async () => {
+      cleanup = await initializeAuth();
+    };
+
+    init();
+
+    return () => {
+      if (cleanup) {
+        cleanup();
+      }
+    };
+  }, [initializeAuth]);
+
+  // If we're on the login page or index page, don't show the main layout
+  const isPublicRoute = location.pathname === '/login' || location.pathname === '/';
+  
+  if (isPublicRoute) {
+    return (
+      <ChatProvider>
+        <AppLayout>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+          </Routes>
+        </AppLayout>
+        <Toaster />
+      </ChatProvider>
+    );
+  }
+
+  const Layout = isMobile ? MobileLayout : MainLayout;
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  const CurrentLayout = isAdminRoute ? AdminLayout : Layout;
+
+  return (
+    <ChatProvider>
+      <CurrentLayout>
+        <Routes>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/editor" element={
+            <EditorModeProvider>
+              <Editor />
+            </EditorModeProvider>
+          } />
+          <Route path="/documents" element={<Documents />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin/*" element={
+            <Routes>
+              <Route path="/" element={<AdminDashboard />} />
+              <Route path="settings/api" element={<APISettings />} />
+              <Route path="settings/accessibility" element={<AccessibilitySettings />} />
+              <Route path="settings/notifications" element={<NotificationSettings />} />
+              <Route path="settings/general" element={<GeneralSettings />} />
+              <Route path="settings/chat" element={<ChatSettings />} />
+              <Route path="settings/live-preview" element={<LivePreviewSettings />} />
+              <Route path="users" element={<div>Users Management</div>} />
+              <Route path="models" element={<div>Models Configuration</div>} />
+              <Route path="queues" element={<div>Queue Management</div>} />
+              <Route path="cache" element={<div>Cache Control</div>} />
+              <Route path="activity" element={<div>Activity Logs</div>} />
+              <Route path="database" element={<div>Database Management</div>} />
+            </Routes>
+          } />
+        </Routes>
+      </CurrentLayout>
+      <Toaster />
+    </ChatProvider>
+  );
 };
 
-export const useAuthStore = create<AuthStore>()(
-  persist(
-    (set, get) => ({
-      ...initialState,
-
-      setUser: (user) => set({ 
-        user, 
-        isAuthenticated: !!user,
-        status: 'success',
-        lastUpdated: Date.now(),
-        loading: false
-      }),
-
-      setLoading: (loading) => set({ loading }),
-
-      login: async (credentials): Promise<LoginResponse> => {
-        set({ status: 'loading', loading: true, error: null });
-        try {
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email: credentials.email,
-            password: credentials.password,
-          });
-          
-          if (error) throw error;
-          
-          const { session, user } = data;
-          if (!session) throw new Error('No session returned after login');
-
-          set({ 
-            user,
-            isAuthenticated: true,
-            token: session.access_token,
-            status: 'success',
-            error: null,
-            lastUpdated: Date.now(),
-            loading: false
-          });
-
-          toast.success('Logged in successfully');
-          return { success: true };
-        } catch (error) {
-          const errorMessage = (error as Error).message;
-          set({ 
-            status: 'error', 
-            error: errorMessage,
-            lastUpdated: Date.now(),
-            loading: false
-          });
-          toast.error(`Login failed: ${errorMessage}`);
-          throw error;
-        }
-      },
-
-      logout: async () => {
-        try {
-          const { error } = await supabase.auth.signOut();
-          if (error) throw error;
-
-          set({
-            ...initialState,
-            loading: false,
-            status: 'idle',
-            lastUpdated: Date.now()
-          });
-          
-          toast.success('Logged out successfully');
-        } catch (error) {
-          toast.error('Error logging out');
-          console.error('Logout error:', error);
-        }
-      },
-
-      refreshToken: async () => {
-        try {
-          const { data, error } = await supabase.auth.refreshSession();
-          if (error) throw error;
-          
-          const { session } = data;
-          if (session) {
-            set({
-              token: session.access_token,
-              user: session.user,
-              isAuthenticated: true,
-              status: 'success',
-              lastUpdated: Date.now()
-            });
-          }
-        } catch (error) {
-          console.error('Token refresh error:', error);
-          get().logout();
-        }
-      },
-
-      initializeAuth: async () => {
-        set({ loading: true });
-        try {
-          const { data: { session }, error } = await supabase.auth.getSession();
-          if (error) throw error;
-
-          if (session?.user) {
-            set({
-              user: session.user,
-              isAuthenticated: true,
-              token: session.access_token,
-              status: 'success',
-              loading: false,
-              lastUpdated: Date.now()
-            });
-          } else {
-            set({ ...initialState, loading: false });
-          }
-
-          // Set up auth state change listener and return cleanup function
-          const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-              set({
-                user: session?.user ?? null,
-                isAuthenticated: !!session?.user,
-                token: session?.access_token ?? null,
-                status: 'success',
-                loading: false,
-                lastUpdated: Date.now()
-              });
-            } else if (event === 'SIGNED_OUT') {
-              set({
-                ...initialState,
-                loading: false,
-                status: 'idle',
-                lastUpdated: Date.now()
-              });
-            }
-          });
-
-          return () => {
-            subscription.unsubscribe();
-          };
-        } catch (error) {
-          console.error('Auth initialization error:', error);
-          set({ ...initialState, loading: false });
-          return () => {};
-        }
-      },
-    }),
-    {
-      name: 'auth-storage',
-      partialize: (state) => ({
-        user: state.user,
-        token: state.token,
-        isAuthenticated: state.isAuthenticated,
-      }),
-    }
-  )
-);
+export default App;
