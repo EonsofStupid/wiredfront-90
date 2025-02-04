@@ -2,7 +2,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { ServiceCardProps } from "@/types/admin/settings/api-configuration";
+
+interface ServiceCardProps {
+  type: string;
+  title: string;
+  description: string;
+  docsUrl: string;
+  docsText: string;
+  placeholder: string;
+  onSaveConfig: (type: string) => void;
+}
 
 export function ServiceCard({
   type,

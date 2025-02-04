@@ -1,4 +1,4 @@
-import { APIConfigurationItem } from '@/types/admin/settings/api-configuration';
+import { APIConfigurationItem } from "@/types/settings/api-configuration";
 
 export const API_CONFIGURATIONS: APIConfigurationItem[] = [
   {

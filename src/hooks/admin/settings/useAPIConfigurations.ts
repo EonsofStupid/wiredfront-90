@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { APIType } from '@/types/admin/settings/api';
-import { APIConfiguration } from '@/types/admin/settings/api-configuration';
+import { APIType } from '@/types/store/settings/api-config';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { logger } from '@/services/chat/LoggingService';
+import { CreateConfigurationOptions } from '@/types/settings/api-configuration';
 
 export const useAPIConfigurations = () => {
   const queryClient = useQueryClient();
@@ -43,7 +43,7 @@ export const useAPIConfigurations = () => {
     staleTime: 30000
   });
 
-  const createConfiguration = async (apiType: APIType) => {
+  const createConfiguration = async (apiType: APIType, options?: CreateConfigurationOptions) => {
     try {
       setIsLoading(true);
       
@@ -59,12 +59,17 @@ export const useAPIConfigurations = () => {
           user_id: session.user.id,
           api_type: apiType,
           is_enabled: true,
-          is_default: false,
+          is_default: options?.is_default || false,
+          assistant_name: options?.assistant_name,
+          assistant_id: options?.assistant_id,
+          provider_settings: options?.provider_settings || {},
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       queryClient.invalidateQueries({ queryKey: ['api-configurations'] });
       return data;
@@ -76,7 +81,7 @@ export const useAPIConfigurations = () => {
     }
   };
 
-  const updateConfiguration = async (id: string, updates: Partial<APIConfiguration>) => {
+  const updateConfiguration = async (id: string, updates: Partial<any>) => {
     try {
       setIsLoading(true);
       
@@ -88,13 +93,18 @@ export const useAPIConfigurations = () => {
 
       const { data, error } = await supabase
         .from('api_configurations')
-        .update(updates)
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', id)
         .eq('user_id', session.user.id)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       queryClient.invalidateQueries({ queryKey: ['api-configurations'] });
       return data;
@@ -122,7 +132,9 @@ export const useAPIConfigurations = () => {
         .eq('id', id)
         .eq('user_id', session.user.id);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       queryClient.invalidateQueries({ queryKey: ['api-configurations'] });
       return true;

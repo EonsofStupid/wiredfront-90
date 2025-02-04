@@ -1,6 +1,6 @@
-import { APIConfigurationProps } from '@/types/admin/settings/api-configuration';
-import { API_CONFIGURATIONS } from '@/constants/api-configurations';
-import { APIConfigurationCard } from './APIConfigurationCard';
+import { APIConfigurationProps } from "@/types/admin/settings/api-configuration";
+import { API_CONFIGURATIONS } from "@/constants/api-configurations";
+import { APIConfigurationCard } from "./APIConfigurationCard";
 
 export function APIConfigurationList({ 
   configurations, 
