@@ -21,13 +21,19 @@ import { NotificationSettings } from "@/components/admin/settings/NotificationSe
 import { GeneralSettings } from "@/components/admin/settings/GeneralSettings";
 import { ChatSettings } from "@/components/admin/settings/ChatSettings";
 import { LivePreviewSettings } from "@/components/admin/settings/LivePreviewSettings";
+import { RoleGate } from "@/components/auth/RoleGate";
+import { GuestCTA } from "@/components/auth/GuestCTA";
+import { useRoleStore } from "@/stores/role";
 
 const PROTECTED_ROUTES = [
   '/dashboard', 
   '/editor', 
   '/documents', 
   '/ai', 
-  '/analytics',
+  '/analytics'
+];
+
+const ADMIN_ROUTES = [
   '/admin',
   '/admin/settings',
   '/admin/settings/api',
@@ -44,9 +50,16 @@ const PROTECTED_ROUTES = [
   '/admin/database'
 ];
 
+const DEVELOPER_ROUTES = [
+  '/editor',
+  '/documents',
+  '/ai'
+];
+
 const App = () => {
   const isMobile = useIsMobile();
   const { user, isAuthenticated, initializeAuth } = useAuthStore();
+  const { checkUserRole } = useRoleStore();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -56,6 +69,9 @@ const App = () => {
     
     const init = async () => {
       cleanup = await initializeAuth();
+      if (user?.id) {
+        await checkUserRole(user.id);
+      }
     };
 
     init();
@@ -65,14 +81,18 @@ const App = () => {
         cleanup();
       }
     };
-  }, [initializeAuth]);
+  }, [initializeAuth, user?.id, checkUserRole]);
 
   useEffect(() => {
-    const handleAuth = () => {
+    const handleAuth = async () => {
+      const isAdminRoute = ADMIN_ROUTES.includes(location.pathname);
       const isProtectedRoute = PROTECTED_ROUTES.includes(location.pathname);
-      if (!isAuthenticated && isProtectedRoute) {
+      const isDeveloperRoute = DEVELOPER_ROUTES.includes(location.pathname);
+
+      if (!isAuthenticated && (isProtectedRoute || isAdminRoute || isDeveloperRoute)) {
         storeLastVisitedPath(location.pathname);
         navigate("/login");
+        return;
       }
     };
     handleAuth();
@@ -102,30 +122,50 @@ const App = () => {
       <Layout>
         <Routes>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/editor" element={
-            <EditorModeProvider>
-              <Editor />
-            </EditorModeProvider>
-          } />
-          <Route path="/documents" element={<Documents />} />
-          <Route path="/ai" element={<div>AI Assistant Page</div>} />
-          <Route path="/analytics" element={<div>Analytics Page</div>} />
+          <Route 
+            path="/editor" 
+            element={
+              <RoleGate allowedRoles={['developer', 'admin', 'super_admin']}>
+                <EditorModeProvider>
+                  <Editor />
+                </EditorModeProvider>
+              </RoleGate>
+            } 
+          />
+          <Route 
+            path="/documents" 
+            element={
+              <RoleGate allowedRoles={['developer', 'admin', 'super_admin']}>
+                <Documents />
+              </RoleGate>
+            } 
+          />
           
           {/* Admin Routes */}
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/settings/api" element={<APISettings />} />
-          <Route path="/admin/settings/accessibility" element={<AccessibilitySettings />} />
-          <Route path="/admin/settings/notifications" element={<NotificationSettings />} />
-          <Route path="/admin/settings/general" element={<GeneralSettings />} />
-          <Route path="/admin/settings/chat" element={<ChatSettings />} />
-          <Route path="/admin/settings/live-preview" element={<LivePreviewSettings />} />
-          <Route path="/admin/users" element={<div>Users Management</div>} />
-          <Route path="/admin/models" element={<div>Models Configuration</div>} />
-          <Route path="/admin/queues" element={<div>Queue Management</div>} />
-          <Route path="/admin/cache" element={<div>Cache Control</div>} />
-          <Route path="/admin/activity" element={<div>Activity Logs</div>} />
-          <Route path="/admin/database" element={<div>Database Management</div>} />
+          <Route 
+            path="/admin/*" 
+            element={
+              <RoleGate allowedRoles={['admin', 'super_admin']}>
+                <Routes>
+                  <Route path="/" element={<AdminDashboard />} />
+                  <Route path="settings/api" element={<APISettings />} />
+                  <Route path="settings/accessibility" element={<AccessibilitySettings />} />
+                  <Route path="settings/notifications" element={<NotificationSettings />} />
+                  <Route path="settings/general" element={<GeneralSettings />} />
+                  <Route path="settings/chat" element={<ChatSettings />} />
+                  <Route path="settings/live-preview" element={<LivePreviewSettings />} />
+                  <Route path="users" element={<div>Users Management</div>} />
+                  <Route path="models" element={<div>Models Configuration</div>} />
+                  <Route path="queues" element={<div>Queue Management</div>} />
+                  <Route path="cache" element={<div>Cache Control</div>} />
+                  <Route path="activity" element={<div>Activity Logs</div>} />
+                  <Route path="database" element={<div>Database Management</div>} />
+                </Routes>
+              </RoleGate>
+            } 
+          />
         </Routes>
+        <GuestCTA />
       </Layout>
       <Toaster />
     </ChatProvider>

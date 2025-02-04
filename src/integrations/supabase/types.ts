@@ -1472,6 +1472,30 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_settings: {
         Row: {
           cache_ttl: unknown | null
@@ -1625,6 +1649,12 @@ export type Database = {
         }
         Returns: string
       }
+      get_user_roles: {
+        Args: {
+          _user_id?: string
+        }
+        Returns: Database["public"]["Enums"]["app_role"][]
+      }
       halfvec_avg: {
         Args: {
           "": number[]
@@ -1648,6 +1678,13 @@ export type Database = {
           "": unknown[]
         }
         Returns: number
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id?: string
+        }
+        Returns: boolean
       }
       hnsw_bit_support: {
         Args: {
@@ -1806,6 +1843,7 @@ export type Database = {
         | "huggingface"
         | "pinecone"
         | "weaviate"
+      app_role: "super_admin" | "admin" | "developer" | "user" | "guest"
       chat_api_provider:
         | "openai"
         | "anthropic"
