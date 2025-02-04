@@ -24,6 +24,7 @@ import { LivePreviewSettings } from "@/components/admin/settings/LivePreviewSett
 import { RoleGate } from "@/components/auth/RoleGate";
 import { GuestCTA } from "@/components/auth/GuestCTA";
 import { useRoleStore } from "@/stores/role";
+import { AdminLayout } from "@/components/admin/layout/AdminLayout";
 
 const PROTECTED_ROUTES = [
   '/dashboard', 
@@ -59,7 +60,7 @@ const DEVELOPER_ROUTES = [
 const App = () => {
   const isMobile = useIsMobile();
   const { user, isAuthenticated, initializeAuth } = useAuthStore();
-  const { checkUserRole, refreshRoles } = useRoleStore();
+  const { checkUserRole, refreshRoles, roles } = useRoleStore();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -90,18 +91,23 @@ const App = () => {
 
   useEffect(() => {
     const handleAuth = async () => {
-      const isAdminRoute = ADMIN_ROUTES.includes(location.pathname);
+      const isAdminRoute = ADMIN_ROUTES.some(route => location.pathname.startsWith(route));
       const isProtectedRoute = PROTECTED_ROUTES.includes(location.pathname);
       const isDeveloperRoute = DEVELOPER_ROUTES.includes(location.pathname);
 
-      if (!isAuthenticated && (isProtectedRoute || isAdminRoute || isDeveloperRoute)) {
-        storeLastVisitedPath(location.pathname);
-        navigate("/login");
+      if (!isAuthenticated) {
+        if (isProtectedRoute || isAdminRoute || isDeveloperRoute) {
+          storeLastVisitedPath(location.pathname);
+          navigate("/login");
+          return;
+        }
+      } else if (isAdminRoute && !roles.some(role => ['admin', 'super_admin'].includes(role))) {
+        navigate("/dashboard");
         return;
       }
     };
     handleAuth();
-  }, [isAuthenticated, location.pathname, navigate]);
+  }, [isAuthenticated, location.pathname, navigate, roles]);
 
   // If we're on the login page or index page, don't show the main layout
   const isPublicRoute = location.pathname === '/login' || location.pathname === '/';
@@ -122,9 +128,13 @@ const App = () => {
 
   const Layout = isMobile ? MobileLayout : MainLayout;
 
+  // Use AdminLayout for admin routes
+  const isAdminRoute = ADMIN_ROUTES.some(route => location.pathname.startsWith('/admin'));
+  const CurrentLayout = isAdminRoute ? AdminLayout : Layout;
+
   return (
     <ChatProvider>
-      <Layout>
+      <CurrentLayout>
         <Routes>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route 
@@ -171,7 +181,7 @@ const App = () => {
           />
         </Routes>
         <GuestCTA />
-      </Layout>
+      </CurrentLayout>
       <Toaster />
     </ChatProvider>
   );
