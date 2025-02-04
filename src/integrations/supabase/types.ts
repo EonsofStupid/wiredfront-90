@@ -1374,25 +1374,34 @@ export type Database = {
           },
         ]
       }
-      roles: {
+      simulated_responses: {
         Row: {
-          description: string | null
-          id: number
-          name: string
+          category: string | null
+          created_at: string | null
+          id: string
+          pattern: string
+          response: string
+          updated_at: string | null
         }
         Insert: {
-          description?: string | null
-          id?: number
-          name: string
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          pattern: string
+          response: string
+          updated_at?: string | null
         }
         Update: {
-          description?: string | null
-          id?: number
-          name?: string
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          pattern?: string
+          response?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
-      settings: {
+      site_core_settings: {
         Row: {
           category: string
           created_at: string | null
@@ -1425,33 +1434,6 @@ export type Database = {
           type?: Database["public"]["Enums"]["setting_type"]
           updated_at?: string | null
           value?: Json
-        }
-        Relationships: []
-      }
-      simulated_responses: {
-        Row: {
-          category: string | null
-          created_at: string | null
-          id: string
-          pattern: string
-          response: string
-          updated_at: string | null
-        }
-        Insert: {
-          category?: string | null
-          created_at?: string | null
-          id?: string
-          pattern: string
-          response: string
-          updated_at?: string | null
-        }
-        Update: {
-          category?: string | null
-          created_at?: string | null
-          id?: string
-          pattern?: string
-          response?: string
-          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1499,72 +1481,6 @@ export type Database = {
           },
         ]
       }
-      user_provider_preferences: {
-        Row: {
-          created_at: string | null
-          id: string
-          is_default: boolean | null
-          provider_id: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          is_default?: boolean | null
-          provider_id: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          is_default?: boolean | null
-          provider_id?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_provider_preferences_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "available_providers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_provider_preferences_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_roles: {
-        Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_settings: {
         Row: {
           cache_ttl: unknown | null
@@ -1604,7 +1520,7 @@ export type Database = {
             foreignKeyName: "user_settings_setting_id_fkey"
             columns: ["setting_id"]
             isOneToOne: false
-            referencedRelation: "settings"
+            referencedRelation: "site_core_settings"
             referencedColumns: ["id"]
           },
           {
