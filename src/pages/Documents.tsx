@@ -1,14 +1,12 @@
 import React from "react";
-import { DocumentsLayout } from "@/components/documents/layout/DocumentsLayout";
-import { DocumentHeader } from "@/components/documents/DocumentHeader";
-import { DocumentGrid } from "@/components/documents/DocumentGrid";
+import { DocumentsLayout } from "@/components/documents/DocumentsLayout";
 
 const Documents = () => {
   return (
     <DocumentsLayout>
       <div className="container mx-auto">
-        <DocumentHeader />
-        <DocumentGrid />
+        <h1 className="text-2xl font-bold mb-4 gradient-text">Documents</h1>
+        {/* Document content will go here */}
       </div>
     </DocumentsLayout>
   );
