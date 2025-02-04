@@ -20,7 +20,7 @@ export interface Document {
     version: string;
     custom_fields: Record<string, unknown>;
   };
-  source_metadata: Record<string, any>;
+  source_metadata: Record<string, unknown> | null;
   tags: string[];
   author: string | null;
   created_at: string;

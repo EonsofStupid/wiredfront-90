@@ -37,6 +37,7 @@ export const useDocumentStore = create<DocumentStore>((set, get) => ({
           version: ((doc.metadata as Record<string, unknown>) || {}).version as string,
           custom_fields: ((doc.metadata as Record<string, unknown>) || {}).custom_fields as Record<string, unknown>,
         },
+        source_metadata: doc.source_metadata as Record<string, unknown> | null,
         tags: doc.tags || [],
         retry_count: doc.retry_count || 0,
       }));
