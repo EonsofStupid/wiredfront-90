@@ -20,14 +20,27 @@ export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
   useEffect(() => {
     const fetchUserRole = async () => {
       if (user) {
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .single();
+        try {
+          const { data, error } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id)
+            .maybeSingle();
 
-        if (data) {
-          setUserRole(data.role);
+          if (error) {
+            console.error('Error fetching user role:', error);
+            setUserRole('visitor');
+            return;
+          }
+
+          if (data) {
+            setUserRole(data.role);
+          } else {
+            setUserRole('visitor');
+          }
+        } catch (error) {
+          console.error('Error fetching user role:', error);
+          setUserRole('visitor');
         }
       }
     };
