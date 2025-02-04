@@ -1,19 +1,12 @@
 import { useState } from "react";
 import { useAPIConfigurations } from "@/hooks/admin/settings/useAPIConfigurations";
-import { APIType } from "@/types/admin/settings/api-config";
+import { APIType } from "@/types/admin/settings/api-configuration";
 import { toast } from "sonner";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { VECTOR_DB_CONFIGURATIONS } from "@/constants/api-configurations";
 import { ServiceCard } from "./components/ServiceCard";
 
 export function RAGKeysSettings() {
-  const { configurations, createConfiguration } = useAPIConfigurations();
-  const vectorDBConfigs = configurations.filter(
-    config => config.api_type === 'pinecone' || config.api_type === 'weaviate'
-  );
+  const { createConfiguration } = useAPIConfigurations();
 
   const handleSaveConfig = async (type: APIType) => {
     try {
@@ -35,38 +28,18 @@ export function RAGKeysSettings() {
       </div>
 
       <div className="grid gap-6">
-        {VECTOR_DB_CONFIGURATIONS.map((config) => {
-          const existingConfigs = vectorDBConfigs.filter(c => c.api_type === config.type);
-          
-          return (
-            <ServiceCard
-              key={config.type}
-              type={config.type as APIType}
-              title={config.label}
-              description={config.description}
-              docsUrl={config.docsUrl}
-              docsText={config.docsText}
-              placeholder={config.placeholder}
-              configurations={existingConfigs}
-              newConfig={{
-                name: '',
-                key: '',
-                endpoint_url: '',
-                grpc_endpoint: '',
-                read_only_key: '',
-                environment: '',
-                index_name: ''
-              }}
-              isConnecting={false}
-              selectedConfig={null}
-              onConnect={() => {}}
-              onConfigChange={(type, field, value) => {
-                // Handle config changes
-              }}
-              onSaveConfig={handleSaveConfig}
-            />
-          );
-        })}
+        {VECTOR_DB_CONFIGURATIONS.map((config) => (
+          <ServiceCard
+            key={config.type}
+            type={config.type}
+            title={config.label}
+            description={config.description}
+            docsUrl={config.docsUrl}
+            docsText={config.docsText}
+            placeholder={config.placeholder}
+            onSaveConfig={handleSaveConfig}
+          />
+        ))}
       </div>
     </div>
   );

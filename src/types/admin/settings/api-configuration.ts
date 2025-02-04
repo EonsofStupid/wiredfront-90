@@ -12,15 +12,24 @@ export interface APIConfigurationItem {
   placeholder: string;
 }
 
+export interface ServiceCardProps {
+  type: string;
+  title: string;
+  description: string;
+  docsUrl: string;
+  docsText: string;
+  placeholder: string;
+  onSaveConfig: (type: string) => void;
+}
+
 export interface APIConfiguration {
   id: string;
-  user_id: string | null;
   api_type: APIType;
   is_enabled: boolean;
   is_default: boolean;
-  validation_status: ValidationStatusType;
-  created_at?: string;
-  updated_at?: string;
+  validation_status?: ValidationStatusType;
+  assistant_name?: string;
+  training_enabled?: boolean;
 }
 
 export interface APIConfigurationProps {
@@ -30,25 +39,42 @@ export interface APIConfigurationProps {
   onDelete: (configId: string) => void;
 }
 
-export interface ServiceCardProps {
-  type: APIType;
-  title: string;
-  description: string;
-  docsUrl: string;
-  docsText: string;
-  placeholder: string;
+export interface APIConfigurationCardProps {
+  config: APIConfiguration | undefined;
+  api: APIConfigurationItem;
+  onConfigurationChange: (checked: boolean, config: APIConfiguration | undefined, apiType: APIType) => void;
+  onSetDefault: (configId: string) => void;
+  onDelete: (configId: string) => void;
+}
+
+export interface OAuthConnection {
+  id: string;
+  account_username: string;
+  account_type: string;
+  is_default: boolean;
+  last_used?: string;
+}
+
+export interface ConnectionCardProps {
+  connection: OAuthConnection;
+  onToggleDefault: (connectionId: string, isDefault: boolean) => void;
+  onDelete: (connectionId: string) => void;
+}
+
+export interface ConnectionButtonProps {
   isConnecting: boolean;
-  selectedConfig: string | null;
-  newConfig: {
-    name: string;
-    key: string;
-    endpoint_url?: string;
-    grpc_endpoint?: string;
-    read_only_key?: string;
-    environment?: string;
-    index_name?: string;
-  };
   onConnect: () => void;
-  onConfigChange: (type: APIType, field: string, value: string) => void;
-  onSaveConfig: (type: APIType) => Promise<void>;
+}
+
+export interface ConnectionListProps {
+  connections: OAuthConnection[] | undefined;
+  isLoading: boolean;
+  onToggleDefault: (connectionId: string, isDefault: boolean) => void;
+  onDelete: (connectionId: string) => void;
+}
+
+export interface ConnectionActionProps {
+  onConnect: () => void;
+  onDisconnect: (connectionId: string) => void;
+  onToggleDefault: (connectionId: string, isDefault: boolean) => void;
 }
