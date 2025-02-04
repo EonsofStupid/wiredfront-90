@@ -46,35 +46,3 @@ export interface APIConfigurationCardProps {
   onSetDefault: (configId: string) => void;
   onDelete: (configId: string) => void;
 }
-
-export interface OAuthConnection {
-  id: string;
-  account_username: string;
-  account_type: string;
-  is_default: boolean;
-  last_used?: string;
-}
-
-export interface ConnectionCardProps {
-  connection: OAuthConnection;
-  onToggleDefault: (connectionId: string, isDefault: boolean) => void;
-  onDelete: (connectionId: string) => void;
-}
-
-export interface ConnectionButtonProps {
-  isConnecting: boolean;
-  onConnect: () => void;
-}
-
-export interface ConnectionListProps {
-  connections: OAuthConnection[] | undefined;
-  isLoading: boolean;
-  onToggleDefault: (connectionId: string, isDefault: boolean) => void;
-  onDelete: (connectionId: string) => void;
-}
-
-export interface ConnectionActionProps {
-  onConnect: () => void;
-  onDisconnect: (connectionId: string) => void;
-  onToggleDefault: (connectionId: string, isDefault: boolean) => void;
-}

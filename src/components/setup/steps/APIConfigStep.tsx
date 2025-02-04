@@ -1,9 +1,9 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { useAPIConfigurations } from "@/hooks/settings/useAPIConfigurations";
-import { APIType } from "@/types/store/settings/api-config";
+import { useAPIConfigurations } from "@/hooks/admin/settings/useAPIConfigurations";
+import { APIType } from "@/types/admin/settings/api-configuration";
 import { useCallback } from "react";
-import { APIConfigurationList } from "@/components/settings/api/APIConfigurationList";
-import { useAPISettings } from "@/hooks/settings/api";
+import { APIConfigurationList } from "@/components/admin/settings/api/APIConfigurationList";
+import { useAPISettings } from "@/hooks/admin/settings/useAPISettings";
 
 interface APIConfigStepProps {
   isFirstTimeUser?: boolean;
