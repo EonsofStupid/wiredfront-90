@@ -1,11 +1,9 @@
-// Move from src/components/settings/api/APIConfigurationCard.tsx
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Key, CheckCircle, XCircle, Clock, Trash2 } from "lucide-react";
-import { APIConfigurationCardProps } from "@/types/settings/api-configuration";
-import { ValidationStatusType } from "@/types/store/settings/api-config";
+import { APIConfigurationCardProps, ValidationStatusType } from "@/types/admin/settings/api-configuration";
 
 const getValidationStatusIcon = (status: ValidationStatusType) => {
   switch (status) {

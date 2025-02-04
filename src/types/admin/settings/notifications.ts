@@ -1,5 +1,3 @@
-import type { NotificationSettings } from "@/types/store/settings/types";
-
 export interface NotificationSettingsState {
   email: boolean;
   push: boolean;

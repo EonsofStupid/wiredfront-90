@@ -1,21 +1,16 @@
-import type { AsyncState } from './core/types';
-import type { RedisConfig } from './settings/types';
+import { CacheSettings } from "@/types/admin/settings/types";
 
-export interface CacheState extends AsyncState {
-  config: {
-    ttl: number;
-    maxSize: number;
-    enabled: boolean;
-    redis?: RedisConfig;
-  };
-  size: number;
-  lastCleared: number | null;
+export interface CacheState {
+  settings: CacheSettings;
+  isEnabled: boolean;
+  maxSize: number;
+  ttl: number;
 }
 
 export interface CacheActions {
-  updateConfig: (config: Partial<CacheState['config']>) => void;
+  updateSettings: (settings: Partial<CacheSettings>) => void;
   clearCache: () => void;
-  invalidateKey: (key: string) => void;
+  resetSettings: () => void;
 }
 
 export type CacheStore = CacheState & CacheActions;
