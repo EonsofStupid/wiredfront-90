@@ -1,4 +1,3 @@
-// Move from src/components/settings/APISettings.tsx
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { AIServicesSettings } from "./api/AIServicesSettings";
@@ -7,7 +6,7 @@ import { DevelopmentSettings } from "./api/DevelopmentSettings";
 import { VoiceSettings } from "./api/VoiceSettings";
 import { RAGKeysSettings } from "./api/RAGKeysSettings";
 import { OAuthConnectionsSettings } from "./api/oauth/OAuthConnectionsSettings";
-import { useAPISettings } from "@/hooks/settings/api";
+import { useAPISettings } from "@/hooks/admin/settings/api";
 import { toast } from "sonner";
 
 export function APISettings() {

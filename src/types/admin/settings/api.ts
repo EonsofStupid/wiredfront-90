@@ -1,93 +1,54 @@
 import { Database } from "@/integrations/supabase/types";
-import { Json } from "@/integrations/supabase/types";
 
 export type APIType = Database["public"]["Enums"]["api_type"];
 export type ValidationStatusType = Database["public"]["Enums"]["extended_validation_status"];
-export type VectorStoreType = Database["public"]["Enums"]["vector_store_type"];
+
+export interface APISettingsState {
+  openaiKey: string;
+  huggingfaceKey: string;
+  geminiKey: string;
+  anthropicKey: string;
+  perplexityKey: string;
+  elevenLabsKey: string;
+  selectedVoice: string;
+  googleDriveKey: string;
+  dropboxKey: string;
+  awsAccessKey: string;
+  awsSecretKey: string;
+  githubToken: string;
+  dockerToken: string;
+}
 
 export interface APIConfiguration {
   id: string;
   user_id: string | null;
   api_type: APIType;
-  is_enabled: boolean | null;
-  is_default: boolean | null;
-  priority: number | null;
-  assistant_id: string | null;
-  assistant_name: string | null;
-  last_validated: string | null;
-  model_preferences: Json | null;
-  provider_settings: Json | null;
-  training_enabled: boolean | null;
-  validation_status: ValidationStatusType | null;
-  endpoint_url: string | null;
-  grpc_endpoint: string | null;
-  read_only_key: string | null;
-  environment: string | null;
-  index_name: string | null;
-  cluster_info: Json | null;
-  usage_count: number | null;
-  daily_request_limit: number | null;
-  monthly_token_limit: number | null;
-  cost_tracking: Json | null;
-  error_count: number | null;
-  last_error_message: string | null;
-  last_successful_use: string | null;
-  rotation_priority: number | null;
-  created_at: string | null;
-  updated_at: string | null;
+  is_enabled: boolean;
+  is_default: boolean;
+  validation_status: ValidationStatusType;
+  created_at?: string;
+  updated_at?: string;
 }
 
-export interface VectorStoreConfig {
-  id: string;
-  user_id: string | null;
-  store_type: VectorStoreType;
-  config: Json;
-  is_active: boolean | null;
-  endpoint_url: string | null;
-  grpc_endpoint: string | null;
-  read_only_key: string | null;
-  environment: string | null;
-  index_name: string | null;
-  cluster_info: Json | null;
-  created_at: string | null;
-  updated_at: string | null;
-}
-
-export interface APIConfigurationItem {
+export interface ServiceCardProps {
   type: APIType;
-  label: string;
+  title: string;
   description: string;
   docsUrl: string;
   docsText: string;
   placeholder: string;
-}
-
-export interface APIConfigurationProps {
-  configurations: APIConfiguration[];
-  onConfigurationChange: (checked: boolean, config: APIConfiguration | undefined, apiType: APIType) => void;
-  onSetDefault: (configId: string) => void;
-  onDelete: (configId: string) => void;
-}
-
-export interface APIConfigurationCardProps {
-  config: APIConfiguration;
-  api: APIConfigurationItem;
-  onConfigurationChange: (checked: boolean, config: APIConfiguration | undefined, apiType: APIType) => void;
-  onSetDefault: (configId: string) => void;
-  onDelete: (configId: string) => void;
-}
-
-export interface CreateConfigurationOptions {
-  is_default?: boolean;
-  assistant_name?: string;
-  assistant_id?: string;
-  provider_settings?: {
+  isConnecting: boolean;
+  selectedConfig: string | null;
+  newConfig: {
+    name: string;
+    key: string;
     endpoint_url?: string;
     grpc_endpoint?: string;
     read_only_key?: string;
     environment?: string;
     index_name?: string;
-    cluster_info?: Record<string, any>;
-    [key: string]: any;
   };
+  onConnect: () => void;
+  onConfigChange: (type: APIType, field: string, value: string) => void;
+  onSaveConfig: (type: APIType) => Promise<void>;
 }

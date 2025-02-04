@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { APISettingsState } from "@/types/admin/settings/types";
+import { APISettingsState } from "@/types/admin/settings/api";
 import { toast } from "sonner";
 import { logger } from "@/services/chat/LoggingService";
 
