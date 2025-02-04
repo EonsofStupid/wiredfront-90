@@ -12,6 +12,7 @@ import Documents from "./pages/Documents";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import { ChatProvider } from "@/features/chat/ChatProvider";
 import { useAuthStore } from "@/stores/auth";
+import { storeLastVisitedPath } from "@/utils/auth";
 import { EditorModeProvider } from "@/features/chat/core/providers/EditorModeProvider";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { APISettings } from "@/components/admin/settings/APISettings";
@@ -20,20 +21,63 @@ import { NotificationSettings } from "@/components/admin/settings/NotificationSe
 import { GeneralSettings } from "@/components/admin/settings/GeneralSettings";
 import { ChatSettings } from "@/components/admin/settings/ChatSettings";
 import { LivePreviewSettings } from "@/components/admin/settings/LivePreviewSettings";
+import { RoleGate } from "@/components/auth/RoleGate";
 import { GuestCTA } from "@/components/auth/GuestCTA";
+import { useRoleStore } from "@/stores/role";
 import { AdminLayout } from "@/components/admin/layout/AdminLayout";
+
+const PROTECTED_ROUTES = [
+  '/dashboard', 
+  '/editor', 
+  '/documents', 
+  '/ai', 
+  '/analytics'
+];
+
+const ADMIN_ROUTES = [
+  '/admin',
+  '/admin/settings',
+  '/admin/settings/api',
+  '/admin/settings/accessibility',
+  '/admin/settings/notifications',
+  '/admin/settings/general',
+  '/admin/settings/chat',
+  '/admin/settings/live-preview',
+  '/admin/users',
+  '/admin/models',
+  '/admin/queues',
+  '/admin/cache',
+  '/admin/activity',
+  '/admin/database'
+];
+
+const DEVELOPER_ROUTES = [
+  '/editor',
+  '/documents',
+  '/ai'
+];
 
 const App = () => {
   const isMobile = useIsMobile();
-  const { isAuthenticated, initializeAuth } = useAuthStore();
+  const { user, isAuthenticated, initializeAuth } = useAuthStore();
+  const { checkUserRole, refreshRoles, roles } = useRoleStore();
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Initialize auth state
   useEffect(() => {
     let cleanup: (() => void) | undefined;
     
     const init = async () => {
       cleanup = await initializeAuth();
+      if (user?.id) {
+        await checkUserRole(user.id);
+        // Add periodic refresh of roles
+        const refreshInterval = setInterval(() => {
+          refreshRoles();
+        }, 30000); // Refresh every 30 seconds
+        return () => clearInterval(refreshInterval);
+      }
     };
 
     init();
@@ -43,7 +87,27 @@ const App = () => {
         cleanup();
       }
     };
-  }, [initializeAuth]);
+  }, [initializeAuth, user?.id, checkUserRole, refreshRoles]);
+
+  useEffect(() => {
+    const handleAuth = async () => {
+      const isAdminRoute = ADMIN_ROUTES.some(route => location.pathname.startsWith(route));
+      const isProtectedRoute = PROTECTED_ROUTES.includes(location.pathname);
+      const isDeveloperRoute = DEVELOPER_ROUTES.includes(location.pathname);
+
+      if (!isAuthenticated) {
+        if (isProtectedRoute || isAdminRoute || isDeveloperRoute) {
+          storeLastVisitedPath(location.pathname);
+          navigate("/login");
+          return;
+        }
+      } else if (isAdminRoute && !roles.some(role => ['admin', 'super_admin'].includes(role))) {
+        navigate("/dashboard");
+        return;
+      }
+    };
+    handleAuth();
+  }, [isAuthenticated, location.pathname, navigate, roles]);
 
   // If we're on the login page or index page, don't show the main layout
   const isPublicRoute = location.pathname === '/login' || location.pathname === '/';
@@ -63,7 +127,9 @@ const App = () => {
   }
 
   const Layout = isMobile ? MobileLayout : MainLayout;
-  const isAdminRoute = location.pathname.startsWith('/admin');
+
+  // Use AdminLayout for admin routes
+  const isAdminRoute = ADMIN_ROUTES.some(route => location.pathname.startsWith('/admin'));
   const CurrentLayout = isAdminRoute ? AdminLayout : Layout;
 
   return (
@@ -71,31 +137,48 @@ const App = () => {
       <CurrentLayout>
         <Routes>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/editor" element={
-            <EditorModeProvider>
-              <Editor />
-            </EditorModeProvider>
-          } />
-          <Route path="/documents" element={<Documents />} />
+          <Route 
+            path="/editor" 
+            element={
+              <RoleGate allowedRoles={['developer', 'admin', 'super_admin']}>
+                <EditorModeProvider>
+                  <Editor />
+                </EditorModeProvider>
+              </RoleGate>
+            } 
+          />
+          <Route 
+            path="/documents" 
+            element={
+              <RoleGate allowedRoles={['developer', 'admin', 'super_admin']}>
+                <Documents />
+              </RoleGate>
+            } 
+          />
           
           {/* Admin Routes */}
-          <Route path="/admin/*" element={
-            <Routes>
-              <Route path="/" element={<AdminDashboard />} />
-              <Route path="settings/api" element={<APISettings />} />
-              <Route path="settings/accessibility" element={<AccessibilitySettings />} />
-              <Route path="settings/notifications" element={<NotificationSettings />} />
-              <Route path="settings/general" element={<GeneralSettings />} />
-              <Route path="settings/chat" element={<ChatSettings />} />
-              <Route path="settings/live-preview" element={<LivePreviewSettings />} />
-              <Route path="users" element={<div>Users Management</div>} />
-              <Route path="models" element={<div>Models Configuration</div>} />
-              <Route path="queues" element={<div>Queue Management</div>} />
-              <Route path="cache" element={<div>Cache Control</div>} />
-              <Route path="activity" element={<div>Activity Logs</div>} />
-              <Route path="database" element={<div>Database Management</div>} />
-            </Routes>
-          } />
+          <Route 
+            path="/admin/*" 
+            element={
+              <RoleGate allowedRoles={['admin', 'super_admin']}>
+                <Routes>
+                  <Route path="/" element={<AdminDashboard />} />
+                  <Route path="settings/api" element={<APISettings />} />
+                  <Route path="settings/accessibility" element={<AccessibilitySettings />} />
+                  <Route path="settings/notifications" element={<NotificationSettings />} />
+                  <Route path="settings/general" element={<GeneralSettings />} />
+                  <Route path="settings/chat" element={<ChatSettings />} />
+                  <Route path="settings/live-preview" element={<LivePreviewSettings />} />
+                  <Route path="users" element={<div>Users Management</div>} />
+                  <Route path="models" element={<div>Models Configuration</div>} />
+                  <Route path="queues" element={<div>Queue Management</div>} />
+                  <Route path="cache" element={<div>Cache Control</div>} />
+                  <Route path="activity" element={<div>Activity Logs</div>} />
+                  <Route path="database" element={<div>Database Management</div>} />
+                </Routes>
+              </RoleGate>
+            } 
+          />
         </Routes>
         <GuestCTA />
       </CurrentLayout>
