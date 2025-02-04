@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SettingsContainer } from "../layout/SettingsContainer";
+import { SettingsContainer } from "./layout/SettingsContainer";
 
 interface GeneralSettingsProps {
   preferences: {
@@ -11,7 +11,7 @@ interface GeneralSettingsProps {
   onPreferenceChange: (key: string, value: string) => void;
 }
 
-export function GeneralSettingsSection({ preferences, onPreferenceChange }: GeneralSettingsProps) {
+export function GeneralSettings({ preferences, onPreferenceChange }: GeneralSettingsProps) {
   return (
     <SettingsContainer
       title="General Settings"
