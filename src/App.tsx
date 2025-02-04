@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Editor from "./pages/Editor";
 import Documents from "./pages/Documents";
+import Settings from "./pages/Settings";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import { ChatProvider } from "@/features/chat/ChatProvider";
 import { useAuthStore } from "@/stores/auth";
@@ -28,8 +29,8 @@ const PROTECTED_ROUTES = [
   '/documents', 
   '/ai', 
   '/analytics',
+  '/settings',
   '/admin',
-  '/admin/settings',
   '/admin/settings/api',
   '/admin/settings/accessibility',
   '/admin/settings/notifications',
@@ -108,6 +109,7 @@ const App = () => {
             </EditorModeProvider>
           } />
           <Route path="/documents" element={<Documents />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/ai" element={<div>AI Assistant Page</div>} />
           <Route path="/analytics" element={<div>Analytics Page</div>} />
           
