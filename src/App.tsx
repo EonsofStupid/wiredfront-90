@@ -53,7 +53,6 @@ const ADMIN_ROUTES = [
 
 const DEVELOPER_ROUTES = [
   '/editor',
-  '/documents',
   '/ai'
 ];
 
@@ -147,14 +146,7 @@ const App = () => {
               </RoleGate>
             } 
           />
-          <Route 
-            path="/documents" 
-            element={
-              <RoleGate allowedRoles={['developer', 'admin', 'super_admin']}>
-                <Documents />
-              </RoleGate>
-            } 
-          />
+          <Route path="/documents" element={<Documents />} />
           
           {/* Admin Routes */}
           <Route 
