@@ -1,20 +1,14 @@
-import React, { useEffect } from "react";
-import { DocumentGrid } from "@/components/documents/DocumentGrid";
-import { DocumentHeader } from "@/components/documents/DocumentHeader";
-import { useDocumentStore } from "@/stores/documents/store";
+import React from "react";
+import { DocumentsLayout } from "@/components/documents/DocumentsLayout";
 
 const Documents = () => {
-  const { fetchDocuments } = useDocumentStore();
-
-  useEffect(() => {
-    fetchDocuments();
-  }, [fetchDocuments]);
-
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-dark-lighter/30 to-transparent">
-      <DocumentHeader />
-      <DocumentGrid />
-    </div>
+    <DocumentsLayout>
+      <div className="container mx-auto">
+        <h1 className="text-2xl font-bold mb-4 gradient-text">Documents</h1>
+        {/* Document content will go here */}
+      </div>
+    </DocumentsLayout>
   );
 };
 
