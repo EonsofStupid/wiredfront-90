@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { User } from '@supabase/supabase-js';
 
 interface RoleState {
   roles: string[];
@@ -38,9 +39,9 @@ export const useRoleStore = create<RoleState>((set, get) => ({
   },
 
   refreshRoles: async () => {
-    const { user } = await supabase.auth.getUser();
-    if (user?.id) {
-      await get().checkUserRole(user.id);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.id) {
+      await get().checkUserRole(session.user.id);
     }
   },
 
