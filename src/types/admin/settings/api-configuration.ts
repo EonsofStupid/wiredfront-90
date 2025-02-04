@@ -12,6 +12,16 @@ export interface APIConfigurationItem {
   placeholder: string;
 }
 
+export interface ServiceCardProps {
+  type: APIType;
+  title: string;
+  description: string;
+  docsUrl: string;
+  docsText: string;
+  placeholder: string;
+  onSaveConfig: (type: APIType) => Promise<void>;
+}
+
 export interface APIConfiguration {
   id: string;
   api_type: APIType;
