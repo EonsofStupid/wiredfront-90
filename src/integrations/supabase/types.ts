@@ -1621,6 +1621,13 @@ export type Database = {
             }
             Returns: unknown
           }
+      check_user_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       cleanup_stale_sessions: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1649,12 +1656,6 @@ export type Database = {
         }
         Returns: string
       }
-      get_user_roles: {
-        Args: {
-          _user_id?: string
-        }
-        Returns: Database["public"]["Enums"]["app_role"][]
-      }
       halfvec_avg: {
         Args: {
           "": number[]
@@ -1678,13 +1679,6 @@ export type Database = {
           "": unknown[]
         }
         Returns: number
-      }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id?: string
-        }
-        Returns: boolean
       }
       hnsw_bit_support: {
         Args: {
