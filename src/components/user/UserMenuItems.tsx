@@ -21,11 +21,11 @@ export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
     const fetchUserRole = async () => {
       if (user) {
         try {
-          const { data, error } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', user.id)
-            .maybeSingle();
+          const { data: roleData, error } = await supabase
+            .from('profiles')
+            .select('role_id')
+            .eq('id', user.id)
+            .single();
 
           if (error) {
             console.error('Error fetching user role:', error);
@@ -33,8 +33,21 @@ export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
             return;
           }
 
-          if (data) {
-            setUserRole(data.role);
+          if (roleData?.role_id) {
+            // Get role name from roles table
+            const { data: roleName, error: roleError } = await supabase
+              .from('roles')
+              .select('name')
+              .eq('id', roleData.role_id)
+              .single();
+
+            if (roleError) {
+              console.error('Error fetching role name:', roleError);
+              setUserRole('visitor');
+              return;
+            }
+
+            setUserRole(roleName?.name || 'visitor');
           } else {
             setUserRole('visitor');
           }

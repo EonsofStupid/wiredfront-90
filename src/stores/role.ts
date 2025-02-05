@@ -20,20 +20,34 @@ export const useRoleStore = create<RoleState>((set, get) => ({
   checkUserRole: async (userId: string) => {
     set({ isLoading: true, error: null });
     try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId);
+      // First get the role_id from profiles
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('role_id')
+        .eq('id', userId)
+        .single();
 
-      if (error) throw error;
+      if (profileError) throw profileError;
 
-      // Important: Update roles array with all roles
-      const roles = data.map(r => r.role);
-      console.log('Fetched roles:', roles); // Debug log
-      set({ roles, isLoading: false });
+      if (profileData?.role_id) {
+        // Then get the role name from roles table
+        const { data: roleData, error: roleError } = await supabase
+          .from('roles')
+          .select('name')
+          .eq('id', profileData.role_id)
+          .single();
+
+        if (roleError) throw roleError;
+
+        const roles = roleData ? [roleData.name] : ['visitor'];
+        console.log('Fetched roles:', roles); // Debug log
+        set({ roles, isLoading: false });
+      } else {
+        set({ roles: ['visitor'], isLoading: false });
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to fetch user roles';
-      set({ error: message, isLoading: false });
+      set({ error: message, isLoading: false, roles: ['visitor'] });
       toast.error('Failed to load user roles');
     }
   },
