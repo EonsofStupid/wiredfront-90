@@ -12,7 +12,9 @@ export function RoleGate({ children, allowedRoles }: RoleGateProps) {
   const { roles } = useRoleStore();
   const { isAuthenticated } = useAuthStore();
 
-  const hasPermission = roles.some(role => allowedRoles.includes(role));
+  const hasPermission = roles.some(role => 
+    allowedRoles.map(r => r.toLowerCase()).includes(role.toLowerCase())
+  );
 
   if (!isAuthenticated) {
     return <GuestCTA />;

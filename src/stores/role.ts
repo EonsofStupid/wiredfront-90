@@ -39,7 +39,7 @@ export const useRoleStore = create<RoleState>((set, get) => ({
         if (roleError) throw roleError;
 
         if (roleData) {
-          const roles = [roleData.name];
+          const roles = [roleData.name.toLowerCase()]; // Ensure lowercase
           console.log('Fetched roles:', roles);
           set({ roles, isLoading: false });
         } else {
@@ -65,7 +65,8 @@ export const useRoleStore = create<RoleState>((set, get) => ({
 
   hasRole: (role: string) => {
     const roles = get().roles;
-    console.log('Current roles:', roles, 'Checking for:', role);
-    return roles.includes(role);
+    const normalizedRole = role.toLowerCase(); // Normalize the role we're checking for
+    console.log('Current roles:', roles, 'Checking for:', normalizedRole);
+    return roles.includes(normalizedRole);
   },
 }));

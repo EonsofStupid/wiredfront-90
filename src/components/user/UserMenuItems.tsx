@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -50,7 +49,7 @@ export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
         <div className="flex flex-col space-y-1">
           <p className="text-sm font-medium leading-none">{user.email}</p>
           <p className="text-xs leading-none text-muted-foreground">
-            {isLoading ? 'Loading...' : roles[0] || 'Guest'}
+            {isLoading ? 'Loading...' : (roles[0] || 'guest')}
           </p>
         </div>
       </DropdownMenuLabel>
