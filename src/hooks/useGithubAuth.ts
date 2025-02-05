@@ -7,11 +7,6 @@ export const useGithubAuth = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/github/check-auth');
-        const { authenticated } = await response.json();
-        setIsAuthenticated(authenticated);
-      } catch (error) {
-        console.error('Error checking GitHub auth:', error);
         setIsAuthenticated(false);
       } finally {
         setLoading(false);
@@ -22,4 +17,4 @@ export const useGithubAuth = () => {
   }, []);
 
   return { isAuthenticated, loading };
-}; 
+};
