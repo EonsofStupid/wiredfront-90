@@ -24,7 +24,7 @@ export const useRoleStore = create<RoleState>((set, get) => ({
         .from('profiles')
         .select('role_id')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (profileError) throw profileError;
 
@@ -34,7 +34,7 @@ export const useRoleStore = create<RoleState>((set, get) => ({
           .from('roles')
           .select('name')
           .eq('id', profileData.role_id)
-          .single();
+          .maybeSingle();
 
         if (roleError) throw roleError;
 
