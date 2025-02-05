@@ -23,13 +23,15 @@ import { ChatSettings } from "@/components/admin/settings/ChatSettings";
 import { LivePreviewSettings } from "@/components/admin/settings/LivePreviewSettings";
 import { GuestCTA } from "@/components/auth/GuestCTA";
 import { AdminLayout } from "@/components/admin/layout/AdminLayout";
+import Settings from "./pages/Settings"; // Import the new Settings page
 
 const PROTECTED_ROUTES = [
   '/dashboard', 
   '/editor', 
   '/documents', 
   '/ai', 
-  '/analytics'
+  '/analytics',
+  '/settings'  // Add settings to protected routes
 ];
 
 const ADMIN_ROUTES = [
@@ -113,6 +115,7 @@ const App = () => {
             } 
           />
           <Route path="/documents" element={<Documents />} />
+          <Route path="/settings" element={<Settings />} /> {/* Add the settings route */}
           
           {/* Admin Routes */}
           <Route 
