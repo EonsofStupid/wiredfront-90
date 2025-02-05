@@ -11,11 +11,30 @@ interface ExtendableTopNavProps {
 export const ExtendableTopNav = ({ className }: ExtendableTopNavProps) => {
   const [isExtended, setIsExtended] = useState(true);
   const [iconOnly, setIconOnly] = useState(false);
+  const [isGithubAuthenticated, setIsGithubAuthenticated] = useState(false);
 
   // Auto-extend on page load
   useEffect(() => {
     setIsExtended(true);
   }, []);
+
+  const handleGithubAuth = async () => {
+    const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
+    if (!clientId) {
+      console.error('GitHub Client ID is not configured');
+      return;
+    }
+
+    const scope = 'repo'; // Permissions for repository access
+    const redirectUri = `${window.location.origin}/api/github/callback`;
+    
+    const authUrl = `https://github.com/login/oauth/authorize?` +
+      `client_id=${clientId}&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `scope=${scope}`;
+
+    window.location.href = authUrl;
+  };
 
   return (
     <div
@@ -32,11 +51,23 @@ export const ExtendableTopNav = ({ className }: ExtendableTopNavProps) => {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-neon-blue hover:text-neon-pink">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={cn(
+                      "transition-colors",
+                      isGithubAuthenticated 
+                        ? "text-neon-green hover:text-neon-pink" 
+                        : "text-neon-blue hover:text-neon-pink"
+                    )}
+                    onClick={handleGithubAuth}
+                  >
                     <Github className="h-5 w-5" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>GitHub</TooltipContent>
+                <TooltipContent>
+                  {isGithubAuthenticated ? 'Connected to GitHub' : 'Connect GitHub'}
+                </TooltipContent>
               </Tooltip>
             </TooltipProvider>
 
