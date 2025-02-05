@@ -23,16 +23,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const data = await tokenResponse.json();
     
-    // Store the token securely (you might want to use cookies or other secure storage)
+    // Store the token securely
     res.setHeader(
       'Set-Cookie',
       `github_token=${data.access_token}; Path=/; HttpOnly; Secure; SameSite=Strict`
     );
 
-    // Redirect back to the main application
-    res.redirect('/');
+    // Return a success page that closes itself
+    res.send(`
+      <html>
+        <body>
+          <script>
+            window.opener.postMessage({ type: 'github-auth-success' }, '*');
+            window.close();
+          </script>
+          Authentication successful! You can close this window.
+        </body>
+      </html>
+    `);
   } catch (error) {
     console.error('Error exchanging code for token:', error);
-    res.status(500).json({ error: 'Failed to exchange code for token' });
+    res.status(500).send(`
+      <html>
+        <body>
+          <script>
+            window.opener.postMessage({ type: 'github-auth-error' }, '*');
+            window.close();
+          </script>
+          Authentication failed. You can close this window.
+        </body>
+      </html>
+    `);
   }
 } 

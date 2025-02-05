@@ -25,7 +25,7 @@ export const ExtendableTopNav = ({ className }: ExtendableTopNavProps) => {
       return;
     }
 
-    const scope = 'repo'; // Permissions for repository access
+    const scope = 'repo';
     const redirectUri = `${window.location.origin}/api/github/callback`;
     
     const authUrl = `https://github.com/login/oauth/authorize?` +
@@ -33,7 +33,33 @@ export const ExtendableTopNav = ({ className }: ExtendableTopNavProps) => {
       `redirect_uri=${encodeURIComponent(redirectUri)}&` +
       `scope=${scope}`;
 
-    window.location.href = authUrl;
+    // Open GitHub auth in a popup window
+    const width = 600;
+    const height = 700;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+    
+    const popup = window.open(
+      authUrl,
+      'Github Authorization',
+      `width=${width},height=${height},left=${left},top=${top}`
+    );
+
+    // Listen for the popup window to close
+    const checkPopup = setInterval(() => {
+      if (!popup || popup.closed) {
+        clearInterval(checkPopup);
+        // Check if authentication was successful
+        fetch('/api/github/check-auth')
+          .then(res => res.json())
+          .then(data => {
+            setIsGithubAuthenticated(data.authenticated);
+          })
+          .catch(err => {
+            console.error('Error checking auth status:', err);
+          });
+      }
+    }, 1000);
   };
 
   return (
