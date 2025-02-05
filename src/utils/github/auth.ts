@@ -1,32 +1,46 @@
-import { supabase } from "@/integrations/supabase/client";
+import { SignJWT } from 'jose';
 
-export async function handleGitHubCallback(code: string) {
+export async function generateGitHubAppJWT(appId: string, privateKey: string): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  
   try {
-    const { data, error } = await supabase.functions.invoke('github-auth', {
-      body: { code }
-    });
+    // Convert PEM private key to Uint8Array
+    const encoder = new TextEncoder();
+    const privateKeyBytes = encoder.encode(privateKey);
 
-    if (error) throw error;
+    // Create and sign the JWT
+    const token = await new SignJWT({
+      iat: now - 60, // Issued 60 seconds ago to account for clock drift
+      exp: now + (10 * 60), // Expires in 10 minutes
+      iss: appId
+    })
+      .setProtectedHeader({ alg: 'RS256' })
+      .sign(privateKeyBytes);
 
-    return data;
+    return token;
   } catch (error) {
-    console.error('Error handling GitHub callback:', error);
-    throw error;
+    console.error('Error generating GitHub App JWT:', error);
+    throw new Error('Failed to generate GitHub App JWT');
   }
 }
 
-export async function checkGitHubAuth() {
+export async function getGitHubAppInstallations(jwt: string) {
   try {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    
-    if (error) throw error;
-    
-    return {
-      isAuthenticated: !!session,
-      user: session?.user
-    };
+    const response = await fetch('https://api.github.com/app/installations', {
+      headers: {
+        'Accept': 'application/vnd.github+json',
+        'Authorization': `Bearer ${jwt}`,
+        'X-GitHub-Api-Version': '2022-11-28'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`GitHub API error: ${response.statusText}`);
+    }
+
+    return await response.json();
   } catch (error) {
-    console.error('Error checking GitHub auth:', error);
+    console.error('Error fetching GitHub App installations:', error);
     throw error;
   }
 }
