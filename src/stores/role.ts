@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { User } from '@supabase/supabase-js';
 
 interface RoleState {
   roles: string[];
@@ -25,7 +24,7 @@ export const useRoleStore = create<RoleState>((set, get) => ({
         .from('profiles')
         .select('role_id')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (profileError) throw profileError;
 
@@ -35,19 +34,24 @@ export const useRoleStore = create<RoleState>((set, get) => ({
           .from('roles')
           .select('name')
           .eq('id', profileData.role_id)
-          .single();
+          .maybeSingle();
 
         if (roleError) throw roleError;
 
-        const roles = roleData ? [roleData.name] : ['visitor'];
-        console.log('Fetched roles:', roles); // Debug log
-        set({ roles, isLoading: false });
+        if (roleData) {
+          const roles = [roleData.name];
+          console.log('Fetched roles:', roles);
+          set({ roles, isLoading: false });
+        } else {
+          set({ roles: ['guest'], isLoading: false });
+        }
       } else {
-        set({ roles: ['visitor'], isLoading: false });
+        set({ roles: ['guest'], isLoading: false });
       }
     } catch (error) {
+      console.error('Error fetching user role:', error);
       const message = error instanceof Error ? error.message : 'Failed to fetch user roles';
-      set({ error: message, isLoading: false, roles: ['visitor'] });
+      set({ error: message, isLoading: false, roles: ['guest'] });
       toast.error('Failed to load user roles');
     }
   },
@@ -61,7 +65,7 @@ export const useRoleStore = create<RoleState>((set, get) => ({
 
   hasRole: (role: string) => {
     const roles = get().roles;
-    console.log('Current roles:', roles, 'Checking for:', role); // Debug log
+    console.log('Current roles:', roles, 'Checking for:', role);
     return roles.includes(role);
   },
 }));
