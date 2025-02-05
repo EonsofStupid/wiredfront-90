@@ -12,8 +12,9 @@ export function RoleGate({ children, allowedRoles }: RoleGateProps) {
   const { roles } = useRoleStore();
   const { isAuthenticated } = useAuthStore();
 
+  // Compare roles exactly as they are stored in the database
   const hasPermission = roles.some(role => 
-    allowedRoles.map(r => r.toLowerCase()).includes(role.toLowerCase())
+    allowedRoles.includes(role)
   );
 
   if (!isAuthenticated) {

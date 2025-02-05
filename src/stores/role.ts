@@ -24,7 +24,7 @@ export const useRoleStore = create<RoleState>((set, get) => ({
         .from('profiles')
         .select('role_id')
         .eq('id', userId)
-        .maybeSingle();
+        .single();
 
       if (profileError) throw profileError;
 
@@ -34,12 +34,13 @@ export const useRoleStore = create<RoleState>((set, get) => ({
           .from('roles')
           .select('name')
           .eq('id', profileData.role_id)
-          .maybeSingle();
+          .single();
 
         if (roleError) throw roleError;
 
         if (roleData) {
-          const roles = [roleData.name.toLowerCase()]; // Ensure lowercase
+          // Store the role exactly as it is in the database
+          const roles = [roleData.name];
           console.log('Fetched roles:', roles);
           set({ roles, isLoading: false });
         } else {
@@ -65,8 +66,8 @@ export const useRoleStore = create<RoleState>((set, get) => ({
 
   hasRole: (role: string) => {
     const roles = get().roles;
-    const normalizedRole = role.toLowerCase(); // Normalize the role we're checking for
-    console.log('Current roles:', roles, 'Checking for:', normalizedRole);
-    return roles.includes(normalizedRole);
+    // Compare roles exactly as they are stored
+    console.log('Current roles:', roles, 'Checking for:', role);
+    return roles.includes(role);
   },
 }));
