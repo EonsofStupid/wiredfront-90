@@ -1251,6 +1251,7 @@ export type Database = {
           last_api_verification: string | null
           onboarding_status: Json | null
           preferences: Json | null
+          role_id: string | null
           setup_completed_at: string | null
           updated_at: string | null
           username: string | null
@@ -1263,6 +1264,7 @@ export type Database = {
           last_api_verification?: string | null
           onboarding_status?: Json | null
           preferences?: Json | null
+          role_id?: string | null
           setup_completed_at?: string | null
           updated_at?: string | null
           username?: string | null
@@ -1275,11 +1277,20 @@ export type Database = {
           last_api_verification?: string | null
           onboarding_status?: Json | null
           preferences?: Json | null
+          role_id?: string | null
           setup_completed_at?: string | null
           updated_at?: string | null
           username?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       project_token_preferences: {
         Row: {
@@ -1373,6 +1384,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      roles: {
+        Row: {
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
       }
       simulated_responses: {
         Row: {
@@ -1484,6 +1513,7 @@ export type Database = {
       user_settings: {
         Row: {
           cache_ttl: unknown | null
+          chat_credits: number | null
           created_at: string | null
           encrypted_value: string | null
           id: string
@@ -1495,6 +1525,7 @@ export type Database = {
         }
         Insert: {
           cache_ttl?: unknown | null
+          chat_credits?: number | null
           created_at?: string | null
           encrypted_value?: string | null
           id?: string
@@ -1506,6 +1537,7 @@ export type Database = {
         }
         Update: {
           cache_ttl?: unknown | null
+          chat_credits?: number | null
           created_at?: string | null
           encrypted_value?: string | null
           id?: string
