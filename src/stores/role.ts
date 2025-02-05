@@ -19,7 +19,6 @@ export const useRoleStore = create<RoleState>((set, get) => ({
   checkUserRole: async (userId: string) => {
     set({ isLoading: true, error: null });
     try {
-      // First get the role_id from profiles
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('role_id')
@@ -29,7 +28,6 @@ export const useRoleStore = create<RoleState>((set, get) => ({
       if (profileError) throw profileError;
 
       if (profileData?.role_id) {
-        // Then get the role name from roles table
         const { data: roleData, error: roleError } = await supabase
           .from('roles')
           .select('name')
@@ -39,16 +37,13 @@ export const useRoleStore = create<RoleState>((set, get) => ({
         if (roleError) throw roleError;
 
         if (roleData) {
-          // Store the role exactly as it is in the database
-          const roles = [roleData.name];
-          console.log('Fetched roles:', roles);
-          set({ roles, isLoading: false });
-        } else {
-          set({ roles: ['guest'], isLoading: false });
+          set({ roles: [roleData.name], isLoading: false });
+          return;
         }
-      } else {
-        set({ roles: ['guest'], isLoading: false });
       }
+      
+      // If no role found, set as guest
+      set({ roles: ['guest'], isLoading: false });
     } catch (error) {
       console.error('Error fetching user role:', error);
       const message = error instanceof Error ? error.message : 'Failed to fetch user roles';
@@ -66,8 +61,6 @@ export const useRoleStore = create<RoleState>((set, get) => ({
 
   hasRole: (role: string) => {
     const roles = get().roles;
-    // Compare roles exactly as they are stored
-    console.log('Current roles:', roles, 'Checking for:', role);
     return roles.includes(role);
   },
 }));
