@@ -6,7 +6,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useEffect, useState } from "react";
-import { useRoleStore } from "@/stores/role";
+import { useRoleStore, getRoleDisplayName } from "@/stores/role";
 
 interface UserMenuItemsProps {
   user: any | null;
@@ -49,7 +49,7 @@ export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
         <div className="flex flex-col space-y-1">
           <p className="text-sm font-medium leading-none">{user.email}</p>
           <p className="text-xs leading-none text-muted-foreground">
-            {isLoading ? 'Loading...' : (roles[0] || 'guest')}
+            {isLoading ? 'Loading...' : getRoleDisplayName(roles[0] || 'guest')}
           </p>
         </div>
       </DropdownMenuLabel>
