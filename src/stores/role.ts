@@ -38,9 +38,8 @@ export const useRoleStore = create<RoleState>((set, get) => ({
 
         if (roleError) throw roleError;
 
-        if (roleData) {
-          // Store the internal role name (e.g. 'super_admin')
-          set({ roles: [roleData.name], isLoading: false });
+        if (roleData?.name) {
+          set({ roles: [roleData.name.toLowerCase()], isLoading: false });
           return;
         }
       }
@@ -64,7 +63,6 @@ export const useRoleStore = create<RoleState>((set, get) => ({
 
   hasRole: (role: string) => {
     const roles = get().roles;
-    // Convert both to lowercase for comparison to handle display names
     return roles.some(r => r.toLowerCase() === role.toLowerCase());
   },
 }));
@@ -77,5 +75,5 @@ export const getRoleDisplayName = (role: string): string => {
     'user': 'User',
     'guest': 'Guest'
   };
-  return displayNames[role] || role;
+  return displayNames[role.toLowerCase()] || role;
 };
