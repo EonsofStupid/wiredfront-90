@@ -1696,12 +1696,20 @@ export type Database = {
         }
         Returns: number
       }
-      has_feature_access: {
-        Args: {
-          feature_name: string
-        }
-        Returns: boolean
-      }
+      has_feature_access:
+        | {
+            Args: {
+              _feature: string
+              _user_id: string
+            }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              feature_name: string
+            }
+            Returns: boolean
+          }
       hnsw_bit_support: {
         Args: {
           "": unknown
