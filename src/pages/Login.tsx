@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { useAuthStore } from "@/stores/auth";
 import { getLoginRedirectUrl } from "@/utils/auth";
-import { toast } from "sonner";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -18,25 +17,6 @@ const Login = () => {
       navigate(redirectUrl, { replace: true });
     }
   }, [isAuthenticated, user, navigate]);
-
-  // Listen for auth state changes to show success/error messages
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN') {
-        toast.success('Successfully signed in!');
-      } else if (event === 'SIGNED_UP') {
-        toast.success('Account created successfully!');
-      } else if (event === 'USER_DELETED') {
-        toast.error('Account deleted');
-      } else if (event === 'PASSWORD_RECOVERY') {
-        toast.info('Password recovery email sent');
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-dark/80 backdrop-blur-sm">
@@ -77,26 +57,6 @@ const Login = () => {
             redirectTo={window.location.origin}
             onlyThirdPartyProviders={false}
             view="sign_in"
-            localization={{
-              variables: {
-                sign_up: {
-                  email_label: 'Email address',
-                  password_label: 'Create a Password',
-                  button_label: 'Sign Up',
-                  loading_button_label: 'Creating Account...',
-                  social_provider_text: 'Sign in with {{provider}}',
-                  link_text: "Don't have an account? Sign up",
-                },
-                sign_in: {
-                  email_label: 'Email address',
-                  password_label: 'Your Password',
-                  button_label: 'Sign In',
-                  loading_button_label: 'Signing in...',
-                  social_provider_text: 'Sign in with {{provider}}',
-                  link_text: 'Already have an account? Sign in',
-                },
-              },
-            }}
           />
         </div>
       </div>
