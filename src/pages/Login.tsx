@@ -1,3 +1,4 @@
+
 import { Auth } from "@supabase/auth-ui-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
@@ -5,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { useAuthStore } from "@/stores/auth";
 import { getLoginRedirectUrl } from "@/utils/auth";
+import { toast } from "sonner";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -56,6 +58,26 @@ const Login = () => {
             providers={[]}
             redirectTo={window.location.origin}
             onlyThirdPartyProviders={false}
+            localization={{
+              variables: {
+                sign_in: {
+                  email_label: 'Email',
+                  password_label: 'Password',
+                  button_label: 'Sign In',
+                  loading_button_label: 'Signing in...',
+                  social_provider_text: 'Sign in with {{provider}}',
+                  link_text: "Already have an account? Sign in",
+                },
+                sign_up: {
+                  email_label: 'Email',
+                  password_label: 'Password',
+                  button_label: 'Sign Up',
+                  loading_button_label: 'Signing up...',
+                  social_provider_text: 'Sign up with {{provider}}',
+                  link_text: "Don't have an account? Sign up",
+                },
+              },
+            }}
             view="sign_in"
           />
         </div>
