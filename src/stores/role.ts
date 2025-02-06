@@ -19,7 +19,6 @@ export const useRoleStore = create<RoleState>((set, get) => ({
   checkUserRole: async (userId: string) => {
     set({ isLoading: true, error: null });
     try {
-      // First get the role_id from profiles
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('role_id')
@@ -29,7 +28,6 @@ export const useRoleStore = create<RoleState>((set, get) => ({
       if (profileError) throw profileError;
 
       if (profileData?.role_id) {
-        // Then get the role name from roles table
         const { data: roleData, error: roleError } = await supabase
           .from('roles')
           .select('name')
@@ -70,10 +68,10 @@ export const useRoleStore = create<RoleState>((set, get) => ({
 // Helper function to convert internal role names to display names
 export const getRoleDisplayName = (role: string): string => {
   const displayNames: Record<string, string> = {
-    'super_admin': 'Super Admin',
-    'admin': 'Admin',
+    'admin': 'Administrator',
     'user': 'User',
-    'guest': 'Guest'
+    'guest': 'Guest',
+    'developer': 'Developer'
   };
   return displayNames[role.toLowerCase()] || role;
 };
