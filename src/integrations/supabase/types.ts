@@ -311,6 +311,33 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_log: {
+        Row: {
+          action: string
+          admin_id: string | null
+          created_at: string | null
+          details: Json | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          admin_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       available_providers: {
         Row: {
           capabilities: Json | null
@@ -998,6 +1025,36 @@ export type Database = {
         }
         Relationships: []
       }
+      popup_tracking: {
+        Row: {
+          clicked: boolean | null
+          conversion_date: string | null
+          converted: boolean | null
+          created_at: string | null
+          id: string
+          popup_type: string
+          visitor_id: string
+        }
+        Insert: {
+          clicked?: boolean | null
+          conversion_date?: string | null
+          converted?: boolean | null
+          created_at?: string | null
+          id?: string
+          popup_type: string
+          visitor_id: string
+        }
+        Update: {
+          clicked?: boolean | null
+          conversion_date?: string | null
+          converted?: boolean | null
+          created_at?: string | null
+          id?: string
+          popup_type?: string
+          visitor_id?: string
+        }
+        Relationships: []
+      }
       printer_images: {
         Row: {
           created_at: string | null
@@ -1087,6 +1144,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      question_usage: {
+        Row: {
+          created_at: string | null
+          id: string
+          questions_limit: number
+          questions_used: number | null
+          reset_date: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          questions_limit: number
+          questions_used?: number | null
+          reset_date?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          questions_limit?: number
+          questions_used?: number | null
+          reset_date?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       retry_configurations: {
         Row: {
@@ -1217,6 +1304,30 @@ export type Database = {
           training_params?: Json | null
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -1405,6 +1516,12 @@ export type Database = {
             }
             Returns: boolean
           }
+      has_role: {
+        Args: {
+          required_role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
       hnsw_bit_support: {
         Args: {
           "": unknown
@@ -1562,7 +1679,7 @@ export type Database = {
         | "huggingface"
         | "pinecone"
         | "weaviate"
-      app_role: "super_admin" | "admin" | "developer" | "user" | "guest"
+      app_role: "super_admin" | "admin" | "developer" | "user" | "visitor"
       chat_api_provider:
         | "openai"
         | "anthropic"
