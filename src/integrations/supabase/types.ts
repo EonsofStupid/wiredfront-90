@@ -146,6 +146,7 @@ export type Database = {
       }
       chat_settings: {
         Row: {
+          api_key: string | null
           api_provider: Database["public"]["Enums"]["chat_api_provider"] | null
           created_at: string | null
           enabled: boolean | null
@@ -163,6 +164,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          api_key?: string | null
           api_provider?: Database["public"]["Enums"]["chat_api_provider"] | null
           created_at?: string | null
           enabled?: boolean | null
@@ -180,6 +182,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          api_key?: string | null
           api_provider?: Database["public"]["Enums"]["chat_api_provider"] | null
           created_at?: string | null
           enabled?: boolean | null
@@ -282,6 +285,45 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           window_state?: Json | null
+        }
+        Relationships: []
+      }
+      metrics: {
+        Row: {
+          created_at: string | null
+          id: string
+          label: string
+          percentage: number
+          status: Database["public"]["Enums"]["metric_status"] | null
+          timeframe: Database["public"]["Enums"]["metric_timeframe"]
+          trend: Database["public"]["Enums"]["metric_trend"]
+          updated_at: string | null
+          user_id: string | null
+          value: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          label: string
+          percentage: number
+          status?: Database["public"]["Enums"]["metric_status"] | null
+          timeframe?: Database["public"]["Enums"]["metric_timeframe"]
+          trend?: Database["public"]["Enums"]["metric_trend"]
+          updated_at?: string | null
+          user_id?: string | null
+          value: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          label?: string
+          percentage?: number
+          status?: Database["public"]["Enums"]["metric_status"] | null
+          timeframe?: Database["public"]["Enums"]["metric_timeframe"]
+          trend?: Database["public"]["Enums"]["metric_trend"]
+          updated_at?: string | null
+          user_id?: string | null
+          value?: number
         }
         Relationships: []
       }
@@ -486,6 +528,9 @@ export type Database = {
         | "pending"
       message_behavior_type: "enter_send" | "ctrl_enter"
       message_type: "text" | "command" | "system"
+      metric_status: "success" | "warning" | "error"
+      metric_timeframe: "daily" | "weekly" | "monthly" | "yearly"
+      metric_trend: "up" | "down" | "neutral"
       token_validation_status:
         | "valid"
         | "invalid"

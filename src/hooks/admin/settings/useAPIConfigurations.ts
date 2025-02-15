@@ -25,14 +25,15 @@ export function useAPIConfigurations() {
     }
   }, []);
 
-  const createConfiguration = useCallback(async (apiType: APIType) => {
+  const createConfiguration = useCallback(async (apiType: APIType, apiKey?: string) => {
     try {
       const { data, error } = await supabase
         .from('api_configurations')
         .insert({
           api_type: apiType,
           is_enabled: true,
-          validation_status: 'pending'
+          validation_status: 'pending',
+          provider_settings: apiKey ? { api_key: apiKey } : undefined
         })
         .select()
         .single();
