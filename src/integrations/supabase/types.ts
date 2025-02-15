@@ -89,6 +89,90 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_settings: {
+        Row: {
+          api_provider: Database["public"]["Enums"]["chat_api_provider"] | null
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          max_offline_messages: number | null
+          max_tokens: number | null
+          message_behavior:
+            | Database["public"]["Enums"]["message_behavior_type"]
+            | null
+          offline_mode_enabled: boolean | null
+          rate_limit_per_minute: number | null
+          temperature: number | null
+          ui_customizations: Json | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          api_provider?: Database["public"]["Enums"]["chat_api_provider"] | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          max_offline_messages?: number | null
+          max_tokens?: number | null
+          message_behavior?:
+            | Database["public"]["Enums"]["message_behavior_type"]
+            | null
+          offline_mode_enabled?: boolean | null
+          rate_limit_per_minute?: number | null
+          temperature?: number | null
+          ui_customizations?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          api_provider?: Database["public"]["Enums"]["chat_api_provider"] | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          max_offline_messages?: number | null
+          max_tokens?: number | null
+          message_behavior?:
+            | Database["public"]["Enums"]["message_behavior_type"]
+            | null
+          offline_mode_enabled?: boolean | null
+          rate_limit_per_minute?: number | null
+          temperature?: number | null
+          ui_customizations?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      live_preview_status: {
+        Row: {
+          created_at: string | null
+          current_step: string | null
+          id: string
+          logs: Json | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_step?: string | null
+          id?: string
+          logs?: Json | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_step?: string | null
+          id?: string
+          logs?: Json | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           chat_session_id: string | null
@@ -146,12 +230,80 @@ export type Database = {
         }
         Relationships: []
       }
+      oauth_connections: {
+        Row: {
+          access_token: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          provider: string
+          provider_user_id: string | null
+          refresh_token: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          provider: string
+          provider_user_id?: string | null
+          refresh_token?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          provider?: string
+          provider_user_id?: string | null
+          refresh_token?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      onboarding_steps: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          step_name: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          step_name: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          step_name?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string | null
           full_name: string | null
           id: string
+          onboarding_status: Json | null
+          setup_completed_at: string | null
           updated_at: string | null
           username: string | null
         }
@@ -160,6 +312,8 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id: string
+          onboarding_status?: Json | null
+          setup_completed_at?: string | null
           updated_at?: string | null
           username?: string | null
         }
@@ -168,6 +322,8 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id?: string
+          onboarding_status?: Json | null
+          setup_completed_at?: string | null
           updated_at?: string | null
           username?: string | null
         }
@@ -197,6 +353,54 @@ export type Database = {
         }
         Relationships: []
       }
+      vector_store_configs: {
+        Row: {
+          cluster_info: Json | null
+          config: Json | null
+          created_at: string | null
+          endpoint_url: string | null
+          environment: string | null
+          grpc_endpoint: string | null
+          id: string
+          index_name: string | null
+          is_active: boolean | null
+          read_only_key: string | null
+          store_type: Database["public"]["Enums"]["vector_store_type"]
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          cluster_info?: Json | null
+          config?: Json | null
+          created_at?: string | null
+          endpoint_url?: string | null
+          environment?: string | null
+          grpc_endpoint?: string | null
+          id?: string
+          index_name?: string | null
+          is_active?: boolean | null
+          read_only_key?: string | null
+          store_type: Database["public"]["Enums"]["vector_store_type"]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          cluster_info?: Json | null
+          config?: Json | null
+          created_at?: string | null
+          endpoint_url?: string | null
+          environment?: string | null
+          grpc_endpoint?: string | null
+          id?: string
+          index_name?: string | null
+          is_active?: boolean | null
+          read_only_key?: string | null
+          store_type?: Database["public"]["Enums"]["vector_store_type"]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -207,10 +411,24 @@ export type Database = {
     Enums: {
       ai_provider_type: "chat" | "embeddings" | "both"
       api_key_status: "pending" | "valid" | "invalid" | "expired" | "revoked"
+      api_type:
+        | "openai"
+        | "anthropic"
+        | "gemini"
+        | "huggingface"
+        | "pinecone"
+        | "weaviate"
       app_role: "super_admin" | "admin" | "developer" | "user" | "visitor"
       chat_api_provider: "openai" | "anthropic" | "gemini" | "huggingface"
       document_import_status: "pending" | "processing" | "completed" | "error"
       document_status: "pending" | "processing" | "completed" | "error"
+      extended_validation_status:
+        | "valid"
+        | "invalid"
+        | "expired"
+        | "rate_limited"
+        | "error"
+        | "pending"
       message_behavior_type: "enter_send" | "ctrl_enter"
       message_type: "text" | "command" | "system"
       token_validation_status:
@@ -219,6 +437,7 @@ export type Database = {
         | "expired"
         | "revoked"
         | "pending"
+      vector_store_type: "pinecone" | "weaviate" | "qdrant" | "milvus"
     }
     CompositeTypes: {
       [_ in never]: never
