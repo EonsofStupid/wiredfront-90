@@ -618,7 +618,7 @@ export type Database = {
         | "huggingface"
         | "pinecone"
         | "weaviate"
-      app_role: "super_admin" | "admin" | "developer" | "user" | "visitor"
+      app_role: "super_admin" | "admin" | "developer" | "subscriber" | "guest"
       chat_api_provider: "openai" | "anthropic" | "gemini" | "huggingface"
       document_import_status: "pending" | "processing" | "completed" | "error"
       document_status: "pending" | "processing" | "completed" | "error"
