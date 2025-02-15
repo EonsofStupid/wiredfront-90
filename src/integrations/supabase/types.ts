@@ -11,50 +11,105 @@ export type Database = {
     Tables: {
       api_configurations: {
         Row: {
-          api_type: string
+          api_type: Database["public"]["Enums"]["api_type"]
+          assistant_id: string | null
+          assistant_name: string | null
+          cluster_info: Json | null
+          cost_tracking: Json | null
           created_at: string | null
+          daily_request_limit: number | null
+          endpoint_url: string | null
+          environment: string | null
+          error_count: number | null
+          grpc_endpoint: string | null
           id: string
+          index_name: string | null
           is_default: boolean | null
           is_enabled: boolean | null
+          last_error_message: string | null
+          last_successful_use: string | null
+          last_validated: string | null
+          model_preferences: Json | null
+          monthly_token_limit: number | null
+          priority: number | null
+          provider_settings: Json | null
+          read_only_key: string | null
+          rotation_priority: number | null
+          training_enabled: boolean | null
           updated_at: string | null
+          usage_count: number | null
           user_id: string | null
           validation_status:
-            | Database["public"]["Enums"]["token_validation_status"]
+            | Database["public"]["Enums"]["extended_validation_status"]
             | null
         }
         Insert: {
-          api_type: string
+          api_type: Database["public"]["Enums"]["api_type"]
+          assistant_id?: string | null
+          assistant_name?: string | null
+          cluster_info?: Json | null
+          cost_tracking?: Json | null
           created_at?: string | null
+          daily_request_limit?: number | null
+          endpoint_url?: string | null
+          environment?: string | null
+          error_count?: number | null
+          grpc_endpoint?: string | null
           id?: string
+          index_name?: string | null
           is_default?: boolean | null
           is_enabled?: boolean | null
+          last_error_message?: string | null
+          last_successful_use?: string | null
+          last_validated?: string | null
+          model_preferences?: Json | null
+          monthly_token_limit?: number | null
+          priority?: number | null
+          provider_settings?: Json | null
+          read_only_key?: string | null
+          rotation_priority?: number | null
+          training_enabled?: boolean | null
           updated_at?: string | null
+          usage_count?: number | null
           user_id?: string | null
           validation_status?:
-            | Database["public"]["Enums"]["token_validation_status"]
+            | Database["public"]["Enums"]["extended_validation_status"]
             | null
         }
         Update: {
-          api_type?: string
+          api_type?: Database["public"]["Enums"]["api_type"]
+          assistant_id?: string | null
+          assistant_name?: string | null
+          cluster_info?: Json | null
+          cost_tracking?: Json | null
           created_at?: string | null
+          daily_request_limit?: number | null
+          endpoint_url?: string | null
+          environment?: string | null
+          error_count?: number | null
+          grpc_endpoint?: string | null
           id?: string
+          index_name?: string | null
           is_default?: boolean | null
           is_enabled?: boolean | null
+          last_error_message?: string | null
+          last_successful_use?: string | null
+          last_validated?: string | null
+          model_preferences?: Json | null
+          monthly_token_limit?: number | null
+          priority?: number | null
+          provider_settings?: Json | null
+          read_only_key?: string | null
+          rotation_priority?: number | null
+          training_enabled?: boolean | null
           updated_at?: string | null
+          usage_count?: number | null
           user_id?: string | null
           validation_status?:
-            | Database["public"]["Enums"]["token_validation_status"]
+            | Database["public"]["Enums"]["extended_validation_status"]
             | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "api_configurations_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       available_providers: {
         Row: {
@@ -356,7 +411,7 @@ export type Database = {
       vector_store_configs: {
         Row: {
           cluster_info: Json | null
-          config: Json | null
+          config: Json
           created_at: string | null
           endpoint_url: string | null
           environment: string | null
@@ -371,7 +426,7 @@ export type Database = {
         }
         Insert: {
           cluster_info?: Json | null
-          config?: Json | null
+          config?: Json
           created_at?: string | null
           endpoint_url?: string | null
           environment?: string | null
@@ -386,7 +441,7 @@ export type Database = {
         }
         Update: {
           cluster_info?: Json | null
-          config?: Json | null
+          config?: Json
           created_at?: string | null
           endpoint_url?: string | null
           environment?: string | null
