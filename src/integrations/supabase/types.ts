@@ -201,6 +201,77 @@ export type Database = {
         }
         Relationships: []
       }
+      document_categories: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      documents: {
+        Row: {
+          author: string | null
+          category_id: string | null
+          content: string
+          created_at: string | null
+          id: string
+          metadata: Json
+          source_metadata: Json | null
+          status: Database["public"]["Enums"]["document_status"]
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          author?: string | null
+          category_id?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json
+          source_metadata?: Json | null
+          status?: Database["public"]["Enums"]["document_status"]
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          author?: string | null
+          category_id?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json
+          source_metadata?: Json | null
+          status?: Database["public"]["Enums"]["document_status"]
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "document_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       live_preview_status: {
         Row: {
           created_at: string | null
@@ -400,6 +471,7 @@ export type Database = {
           full_name: string | null
           id: string
           onboarding_status: Json | null
+          role_id: string | null
           setup_completed_at: string | null
           updated_at: string | null
           username: string | null
@@ -410,6 +482,7 @@ export type Database = {
           full_name?: string | null
           id: string
           onboarding_status?: Json | null
+          role_id?: string | null
           setup_completed_at?: string | null
           updated_at?: string | null
           username?: string | null
@@ -420,9 +493,39 @@ export type Database = {
           full_name?: string | null
           id?: string
           onboarding_status?: Json | null
+          role_id?: string | null
           setup_completed_at?: string | null
           updated_at?: string | null
           username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
