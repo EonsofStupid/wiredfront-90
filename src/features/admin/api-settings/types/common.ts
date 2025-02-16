@@ -1,5 +1,5 @@
 
-import { APIType, ValidationStatusType } from "@/integrations/supabase/types";
+import { APIType, ValidationStatusType } from '@/integrations/supabase/types';
 
 export interface BaseConfiguration {
   id: string;
