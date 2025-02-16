@@ -606,12 +606,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      is_super_admin: {
-        Args: {
-          user_id: string
-        }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       ai_provider_type: "chat" | "embeddings" | "both"

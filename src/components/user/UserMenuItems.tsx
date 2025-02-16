@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -36,10 +35,6 @@ export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
     loadUserRole();
   }, [user, checkUserRole]);
 
-  const isAdminUser = roles.some(role => 
-    ['admin', 'super_admin'].includes(role.toLowerCase())
-  );
-
   if (!user) {
     return (
       <DropdownMenuItem onClick={() => navigate('/login')}>
@@ -71,17 +66,6 @@ export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
       >
         Settings
       </DropdownMenuItem>
-      {isAdminUser && (
-        <>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem 
-            className="cursor-pointer"
-            onClick={() => navigate('/admin')}
-          >
-            Admin Dashboard
-          </DropdownMenuItem>
-        </>
-      )}
       <DropdownMenuSeparator />
       <DropdownMenuItem 
         className="cursor-pointer text-red-500 focus:text-red-500"

@@ -181,7 +181,6 @@ export interface Database {
       extended_validation_status: 'valid' | 'invalid' | 'expired' | 'rate_limited' | 'error' | 'pending';
       vector_store_type: 'pinecone' | 'weaviate' | 'qdrant' | 'milvus';
       message_type: 'text' | 'command' | 'system';
-      app_role: 'super_admin' | 'admin' | 'developer' | 'subscriber' | 'guest';
       setting_type: 'string' | 'number' | 'boolean' | 'json' | 'array';
     };
     CompositeTypes: {

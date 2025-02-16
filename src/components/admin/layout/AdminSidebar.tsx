@@ -1,4 +1,3 @@
-
 import { NavLink } from "react-router-dom";
 import { 
   Settings, 
@@ -17,7 +16,6 @@ const AdminSidebar = () => {
           <li>
             <NavLink
               to="/admin"
-              end
               className={({ isActive }) =>
                 `flex items-center space-x-2 p-2 rounded-lg transition-colors ${
                   isActive ? 'bg-primary/10 text-primary' : 'hover:bg-primary/5'
@@ -82,7 +80,7 @@ const AdminSidebar = () => {
           </li>
           <li>
             <NavLink
-              to="/admin/settings/api"
+              to="/admin/settings"
               className={({ isActive }) =>
                 `flex items-center space-x-2 p-2 rounded-lg transition-colors ${
                   isActive ? 'bg-primary/10 text-primary' : 'hover:bg-primary/5'
