@@ -1,4 +1,3 @@
-
 import React from "react";
 import { DocumentsLayout } from "@/components/documents/DocumentsLayout";
 

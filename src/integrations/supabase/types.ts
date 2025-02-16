@@ -146,7 +146,6 @@ export type Database = {
       }
       chat_settings: {
         Row: {
-          api_key: string | null
           api_provider: Database["public"]["Enums"]["chat_api_provider"] | null
           created_at: string | null
           enabled: boolean | null
@@ -164,7 +163,6 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
-          api_key?: string | null
           api_provider?: Database["public"]["Enums"]["chat_api_provider"] | null
           created_at?: string | null
           enabled?: boolean | null
@@ -182,7 +180,6 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
-          api_key?: string | null
           api_provider?: Database["public"]["Enums"]["chat_api_provider"] | null
           created_at?: string | null
           enabled?: boolean | null
@@ -200,77 +197,6 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
-      }
-      document_categories: {
-        Row: {
-          created_at: string | null
-          id: string
-          name: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          name: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          name?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      documents: {
-        Row: {
-          author: string | null
-          category_id: string | null
-          content: string
-          created_at: string | null
-          id: string
-          metadata: Json
-          source_metadata: Json | null
-          status: Database["public"]["Enums"]["document_status"]
-          tags: string[] | null
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          author?: string | null
-          category_id?: string | null
-          content: string
-          created_at?: string | null
-          id?: string
-          metadata?: Json
-          source_metadata?: Json | null
-          status?: Database["public"]["Enums"]["document_status"]
-          tags?: string[] | null
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          author?: string | null
-          category_id?: string | null
-          content?: string
-          created_at?: string | null
-          id?: string
-          metadata?: Json
-          source_metadata?: Json | null
-          status?: Database["public"]["Enums"]["document_status"]
-          tags?: string[] | null
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "documents_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "document_categories"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       live_preview_status: {
         Row: {
@@ -359,45 +285,6 @@ export type Database = {
         }
         Relationships: []
       }
-      metrics: {
-        Row: {
-          created_at: string | null
-          id: string
-          label: string
-          percentage: number
-          status: Database["public"]["Enums"]["metric_status"] | null
-          timeframe: Database["public"]["Enums"]["metric_timeframe"]
-          trend: Database["public"]["Enums"]["metric_trend"]
-          updated_at: string | null
-          user_id: string | null
-          value: number
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          label: string
-          percentage: number
-          status?: Database["public"]["Enums"]["metric_status"] | null
-          timeframe?: Database["public"]["Enums"]["metric_timeframe"]
-          trend?: Database["public"]["Enums"]["metric_trend"]
-          updated_at?: string | null
-          user_id?: string | null
-          value: number
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          label?: string
-          percentage?: number
-          status?: Database["public"]["Enums"]["metric_status"] | null
-          timeframe?: Database["public"]["Enums"]["metric_timeframe"]
-          trend?: Database["public"]["Enums"]["metric_trend"]
-          updated_at?: string | null
-          user_id?: string | null
-          value?: number
-        }
-        Relationships: []
-      }
       oauth_connections: {
         Row: {
           access_token: string | null
@@ -471,7 +358,6 @@ export type Database = {
           full_name: string | null
           id: string
           onboarding_status: Json | null
-          role_id: string | null
           setup_completed_at: string | null
           updated_at: string | null
           username: string | null
@@ -482,7 +368,6 @@ export type Database = {
           full_name?: string | null
           id: string
           onboarding_status?: Json | null
-          role_id?: string | null
           setup_completed_at?: string | null
           updated_at?: string | null
           username?: string | null
@@ -493,39 +378,9 @@ export type Database = {
           full_name?: string | null
           id?: string
           onboarding_status?: Json | null
-          role_id?: string | null
           setup_completed_at?: string | null
           updated_at?: string | null
           username?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "roles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      roles: {
-        Row: {
-          created_at: string | null
-          id: string
-          name: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          name: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          name?: string
-          updated_at?: string | null
         }
         Relationships: []
       }
@@ -618,7 +473,7 @@ export type Database = {
         | "huggingface"
         | "pinecone"
         | "weaviate"
-      app_role: "super_admin" | "admin" | "developer" | "subscriber" | "guest"
+      app_role: "super_admin" | "admin" | "developer" | "user" | "visitor"
       chat_api_provider: "openai" | "anthropic" | "gemini" | "huggingface"
       document_import_status: "pending" | "processing" | "completed" | "error"
       document_status: "pending" | "processing" | "completed" | "error"
@@ -631,9 +486,6 @@ export type Database = {
         | "pending"
       message_behavior_type: "enter_send" | "ctrl_enter"
       message_type: "text" | "command" | "system"
-      metric_status: "success" | "warning" | "error"
-      metric_timeframe: "daily" | "weekly" | "monthly" | "yearly"
-      metric_trend: "up" | "down" | "neutral"
       token_validation_status:
         | "valid"
         | "invalid"

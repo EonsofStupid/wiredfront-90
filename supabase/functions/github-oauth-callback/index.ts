@@ -1,10 +1,9 @@
-
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, prefer',
 }
 
 serve(async (req) => {
@@ -101,7 +100,7 @@ serve(async (req) => {
     }
 
     console.log('Saving OAuth connection for user:', user.id)
-    // Save the OAuth connection in your DB
+    // Save the OAuth connection in your DB (adjust table/columns as needed)
     const { error: insertError } = await supabaseAdmin
       .from('oauth_connections')
       .insert({
@@ -128,12 +127,19 @@ serve(async (req) => {
           type: userData.type
         }
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      }
     )
   } catch (error) {
     console.error('Error in GitHub OAuth callback:', error)
     return new Response(
-      JSON.stringify({ error: error.message }), 
+      JSON.stringify({ 
+        error: error.message 
+      }),
       { 
         status: 400,
         headers: {

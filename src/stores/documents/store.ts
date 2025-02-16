@@ -1,8 +1,6 @@
-
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import type { DocumentStore } from './types';
-import type { Document, DocumentStatus } from '@/types/documents';
 import { toast } from 'sonner';
 
 export const useDocumentStore = create<DocumentStore>((set, get) => ({
@@ -31,7 +29,6 @@ export const useDocumentStore = create<DocumentStore>((set, get) => ({
       // Transform the data to ensure type safety
       const transformedDocuments = (data || []).map(doc => ({
         ...doc,
-        status: doc.status as DocumentStatus, // Ensure status is properly typed
         metadata: {
           ...((doc.metadata as Record<string, unknown>) || {}),
           author: ((doc.metadata as Record<string, unknown>) || {}).author as string,
@@ -42,7 +39,8 @@ export const useDocumentStore = create<DocumentStore>((set, get) => ({
         },
         source_metadata: doc.source_metadata as Record<string, unknown> | null,
         tags: doc.tags || [],
-      })) as Document[]; // Explicitly type as Document array
+        retry_count: doc.retry_count || 0,
+      }));
 
       set({ documents: transformedDocuments });
     } catch (error) {
