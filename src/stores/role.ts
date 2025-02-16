@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -68,10 +69,11 @@ export const useRoleStore = create<RoleState>((set, get) => ({
 // Helper function to convert internal role names to display names
 export const getRoleDisplayName = (role: string): string => {
   const displayNames: Record<string, string> = {
+    'super_admin': 'Super Administrator',
     'admin': 'Administrator',
-    'user': 'User',
-    'guest': 'Guest',
-    'developer': 'Developer'
+    'developer': 'Developer',
+    'subscriber': 'Subscriber',
+    'guest': 'Guest'
   };
   return displayNames[role.toLowerCase()] || role;
 };
