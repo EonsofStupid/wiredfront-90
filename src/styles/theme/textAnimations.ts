@@ -1,3 +1,4 @@
+
 export const textAnimations = {
   keyframes: {
     "text-highlight-in": {
