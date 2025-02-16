@@ -14,6 +14,7 @@ export type Database = {
           api_type: Database["public"]["Enums"]["api_type"]
           assistant_id: string | null
           assistant_name: string | null
+          category: Database["public"]["Enums"]["provider_category"] | null
           cluster_info: Json | null
           cost_tracking: Json | null
           created_at: string | null
@@ -29,12 +30,14 @@ export type Database = {
           last_error_message: string | null
           last_successful_use: string | null
           last_validated: string | null
+          memorable_name: string
           model_preferences: Json | null
           monthly_token_limit: number | null
           priority: number | null
           provider_settings: Json | null
           read_only_key: string | null
           rotation_priority: number | null
+          secret_key_name: string | null
           training_enabled: boolean | null
           updated_at: string | null
           usage_count: number | null
@@ -47,6 +50,7 @@ export type Database = {
           api_type: Database["public"]["Enums"]["api_type"]
           assistant_id?: string | null
           assistant_name?: string | null
+          category?: Database["public"]["Enums"]["provider_category"] | null
           cluster_info?: Json | null
           cost_tracking?: Json | null
           created_at?: string | null
@@ -62,12 +66,14 @@ export type Database = {
           last_error_message?: string | null
           last_successful_use?: string | null
           last_validated?: string | null
+          memorable_name: string
           model_preferences?: Json | null
           monthly_token_limit?: number | null
           priority?: number | null
           provider_settings?: Json | null
           read_only_key?: string | null
           rotation_priority?: number | null
+          secret_key_name?: string | null
           training_enabled?: boolean | null
           updated_at?: string | null
           usage_count?: number | null
@@ -80,6 +86,7 @@ export type Database = {
           api_type?: Database["public"]["Enums"]["api_type"]
           assistant_id?: string | null
           assistant_name?: string | null
+          category?: Database["public"]["Enums"]["provider_category"] | null
           cluster_info?: Json | null
           cost_tracking?: Json | null
           created_at?: string | null
@@ -95,12 +102,14 @@ export type Database = {
           last_error_message?: string | null
           last_successful_use?: string | null
           last_validated?: string | null
+          memorable_name?: string
           model_preferences?: Json | null
           monthly_token_limit?: number | null
           priority?: number | null
           provider_settings?: Json | null
           read_only_key?: string | null
           rotation_priority?: number | null
+          secret_key_name?: string | null
           training_enabled?: boolean | null
           updated_at?: string | null
           usage_count?: number | null
@@ -623,6 +632,9 @@ export type Database = {
         | "huggingface"
         | "pinecone"
         | "weaviate"
+        | "openrouter"
+        | "replicate"
+        | "sonnet"
       app_role: "super_admin" | "admin" | "developer" | "subscriber" | "guest"
       chat_api_provider: "openai" | "anthropic" | "gemini" | "huggingface"
       document_import_status: "pending" | "processing" | "completed" | "error"
@@ -639,6 +651,7 @@ export type Database = {
       metric_status: "success" | "warning" | "error"
       metric_timeframe: "daily" | "weekly" | "monthly" | "yearly"
       metric_trend: "up" | "down" | "neutral"
+      provider_category: "ai" | "vector" | "voice" | "storage" | "development"
       token_validation_status:
         | "valid"
         | "invalid"
