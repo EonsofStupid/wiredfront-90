@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -19,27 +20,21 @@ export const useRoleStore = create<RoleState>((set, get) => ({
   checkUserRole: async (userId: string) => {
     set({ isLoading: true, error: null });
     try {
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('role_id')
-        .eq('id', userId)
-        .maybeSingle();
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
 
-      if (profileError) throw profileError;
+      if (roleError) {
+        console.error('Error fetching user role:', roleError);
+        set({ roles: ['guest'], isLoading: false });
+        return;
+      }
 
-      if (profileData?.role_id) {
-        const { data: roleData, error: roleError } = await supabase
-          .from('roles')
-          .select('name')
-          .eq('id', profileData.role_id)
-          .maybeSingle();
-
-        if (roleError) throw roleError;
-
-        if (roleData?.name) {
-          set({ roles: [roleData.name.toLowerCase()], isLoading: false });
-          return;
-        }
+      if (roleData?.role) {
+        set({ roles: [roleData.role.toLowerCase()], isLoading: false });
+        return;
       }
       
       // If no role found, set as guest
@@ -68,10 +63,11 @@ export const useRoleStore = create<RoleState>((set, get) => ({
 // Helper function to convert internal role names to display names
 export const getRoleDisplayName = (role: string): string => {
   const displayNames: Record<string, string> = {
+    'super_admin': 'Super Administrator',
     'admin': 'Administrator',
-    'user': 'User',
-    'guest': 'Guest',
-    'developer': 'Developer'
+    'developer': 'Developer',
+    'subscriber': 'Subscriber',
+    'guest': 'Guest'
   };
   return displayNames[role.toLowerCase()] || role;
 };

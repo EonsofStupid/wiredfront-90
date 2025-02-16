@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useDocumentStore } from '@/stores/documents/store';
 import { Card } from '@/components/ui/card';

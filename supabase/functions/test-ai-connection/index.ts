@@ -1,3 +1,4 @@
+
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
@@ -42,57 +43,109 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    // Get the API configuration using service role
+    // Get the configuration
     const { data: config, error: configError } = await supabaseAdmin
       .from('api_configurations')
       .select('*')
       .eq('id', configId)
-      .eq('user_id', user.id)
       .single()
 
-    if (configError || !config) {
+    if (configError) {
       throw new Error('Configuration not found')
     }
 
-    // Get the API key from secrets
-    const secretName = config.provider_settings?.api_key_secret
-    if (!secretName) {
-      throw new Error('API key not found in configuration')
+    // Test connection based on provider
+    const testMessage = "Testing connection..."
+    let testEndpoint = ''
+    let testHeaders = {}
+    let testBody = {}
+
+    switch (provider) {
+      case 'openai':
+        testEndpoint = 'https://api.openai.com/v1/chat/completions'
+        testHeaders = {
+          'Authorization': `Bearer ${config.api_key}`,
+          'Content-Type': 'application/json'
+        }
+        testBody = {
+          model: 'gpt-4o-mini',
+          messages: [{ role: 'user', content: testMessage }]
+        }
+        break
+      
+      case 'anthropic':
+        testEndpoint = 'https://api.anthropic.com/v1/messages'
+        testHeaders = {
+          'x-api-key': config.api_key,
+          'Content-Type': 'application/json',
+          'anthropic-version': '2023-06-01'
+        }
+        testBody = {
+          model: 'claude-3-opus-20240229',
+          messages: [{ role: 'user', content: testMessage }]
+        }
+        break
+      
+      case 'gemini':
+        testEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent`
+        testHeaders = {
+          'Authorization': `Bearer ${config.api_key}`,
+          'Content-Type': 'application/json'
+        }
+        testBody = {
+          contents: [{ parts: [{ text: testMessage }] }]
+        }
+        break
+
+      default:
+        throw new Error(`Unsupported provider: ${provider}`)
     }
 
-    console.log(`Testing connection for provider ${provider} with config ${configId}`);
+    // Make test request
+    const response = await fetch(testEndpoint, {
+      method: 'POST',
+      headers: testHeaders,
+      body: JSON.stringify(testBody)
+    })
 
-    // Test the connection (implement provider-specific logic here)
-    const isValid = true // Replace with actual validation logic
+    if (!response.ok) {
+      const errorData = await response.text()
+      console.error(`Provider ${provider} test failed:`, errorData)
+      throw new Error(`Connection test failed: ${response.status} ${response.statusText}`)
+    }
 
-    // Update the validation status using service role
+    // Update configuration status
     const { error: updateError } = await supabaseAdmin
       .from('api_configurations')
       .update({
-        validation_status: isValid ? 'valid' : 'invalid',
+        validation_status: 'valid',
         last_validated: new Date().toISOString()
       })
       .eq('id', configId)
 
     if (updateError) {
-      throw new Error('Failed to update validation status')
+      console.error('Error updating configuration status:', updateError)
     }
 
     return new Response(
-      JSON.stringify({ success: true, isValid }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      },
+      JSON.stringify({ 
+        success: true,
+        message: `Successfully connected to ${provider}`
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
+
   } catch (error) {
-    console.error('Error:', error.message)
+    console.error('Error in test-ai-connection:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      },
+      JSON.stringify({ 
+        success: false,
+        error: error.message 
+      }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
     )
   }
 })
