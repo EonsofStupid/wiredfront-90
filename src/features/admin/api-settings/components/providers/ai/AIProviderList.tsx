@@ -2,7 +2,7 @@
 import React from 'react';
 import { useAPIConfigurations } from '../../../hooks/core/useAPIConfigurations';
 import { AIConfiguration } from '../../../types/providers/ai';
-import { ServiceCard } from '@/components/ui/card';
+import { ServiceCard } from '@/components/ui/service-card';
 
 export function AIProviderList() {
   const { configurations, isLoading, createConfiguration, updateConfiguration, deleteConfiguration } = useAPIConfigurations('ai');

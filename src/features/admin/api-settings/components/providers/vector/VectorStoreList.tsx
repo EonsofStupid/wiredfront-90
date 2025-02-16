@@ -2,7 +2,7 @@
 import React from 'react';
 import { useAPIConfigurations } from '../../../hooks/core/useAPIConfigurations';
 import { VectorConfiguration } from '../../../types/providers/vector';
-import { ServiceCard } from '@/components/ui/card';
+import { ServiceCard } from '@/components/ui/service-card';
 
 export function VectorStoreList() {
   const { configurations, isLoading, createConfiguration, updateConfiguration, deleteConfiguration } = useAPIConfigurations('vector');
