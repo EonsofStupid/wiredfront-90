@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Editor from "./pages/Editor";
 import Documents from "./pages/Documents";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminSettings from "./pages/admin/settings/AdminSettings";
 import { ChatProvider } from "@/features/chat/ChatProvider";
 import { useAuthStore } from "@/stores/auth";
 import { storeLastVisitedPath } from "@/utils/auth";
@@ -23,7 +24,7 @@ import { ChatSettings } from "@/components/admin/settings/ChatSettings";
 import { LivePreviewSettings } from "@/components/admin/settings/LivePreviewSettings";
 import { GuestCTA } from "@/components/auth/GuestCTA";
 import { AdminLayout } from "@/components/admin/layout/AdminLayout";
-import Settings from "./pages/Settings"; // Import the new Settings page
+import Settings from "./pages/Settings";
 
 const PROTECTED_ROUTES = [
   '/dashboard', 
@@ -31,7 +32,7 @@ const PROTECTED_ROUTES = [
   '/documents', 
   '/ai', 
   '/analytics',
-  '/settings'  // Add settings to protected routes
+  '/settings'
 ];
 
 const ADMIN_ROUTES = [
@@ -115,7 +116,7 @@ const App = () => {
             } 
           />
           <Route path="/documents" element={<Documents />} />
-          <Route path="/settings" element={<Settings />} /> {/* Add the settings route */}
+          <Route path="/settings" element={<Settings />} />
           
           {/* Admin Routes */}
           <Route 
@@ -123,12 +124,7 @@ const App = () => {
             element={
               <Routes>
                 <Route path="/" element={<AdminDashboard />} />
-                <Route path="settings/api" element={<APISettings />} />
-                <Route path="settings/accessibility" element={<AccessibilitySettings />} />
-                <Route path="settings/notifications" element={<NotificationSettings />} />
-                <Route path="settings/general" element={<GeneralSettings />} />
-                <Route path="settings/chat" element={<ChatSettings />} />
-                <Route path="settings/live-preview" element={<LivePreviewSettings />} />
+                <Route path="settings/*" element={<AdminSettings />} />
                 <Route path="users" element={<div>Users Management</div>} />
                 <Route path="models" element={<div>Models Configuration</div>} />
                 <Route path="queues" element={<div>Queue Management</div>} />
