@@ -19,32 +19,7 @@ export function useAPIConfiguration() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      // Transform the data to match our APIConfiguration type
-      const transformedData: APIConfiguration[] = data.map(item => ({
-        id: item.id,
-        user_id: item.user_id,
-        api_type: item.api_type,
-        memorable_name: item.memorable_name || '',
-        secret_key_name: item.secret_key_name || '',
-        is_enabled: item.is_enabled ?? true,
-        is_default: item.is_default ?? false,
-        validation_status: item.validation_status || 'pending',
-        provider_settings: {
-          endpoint_url: item.endpoint_url,
-          grpc_endpoint: item.grpc_endpoint,
-          cluster_info: item.cluster_info,
-          usage_metrics: item.cost_tracking ? {
-            total_requests: item.usage_count || 0,
-            total_cost: item.cost_tracking?.total_cost || 0,
-            last_used: item.last_successful_use || new Date().toISOString(),
-          } : undefined,
-        },
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-      }));
-
-      setConfigurations(transformedData);
+      setConfigurations(data);
     } catch (error) {
       toast.error('Failed to load API configurations');
       console.error('Error fetching configurations:', error);
@@ -52,36 +27,6 @@ export function useAPIConfiguration() {
       setLoading(false);
     }
   }, []);
-
-  const createConfiguration = useCallback(async (apiType: APIConfiguration['api_type']) => {
-    if (!isSuperAdmin) {
-      toast.error('Only super admins can create configurations');
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('api_configurations')
-        .insert({
-          api_type: apiType,
-          memorable_name: `New ${apiType} Configuration`,
-          secret_key_name: `${apiType}_key_${Date.now()}`,
-          is_enabled: true,
-          validation_status: 'pending',
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      setConfigurations(prev => [...prev, data as APIConfiguration]);
-      toast.success('Configuration created successfully');
-      return data;
-    } catch (error) {
-      toast.error('Failed to create configuration');
-      console.error('Error creating configuration:', error);
-    }
-  }, [isSuperAdmin]);
 
   const updateConfiguration = useCallback(async (id: string, updates: Partial<APIConfiguration>) => {
     if (!isSuperAdmin) {
@@ -98,9 +43,8 @@ export function useAPIConfiguration() {
         .single();
 
       if (error) throw error;
-      
       setConfigurations(prev => prev.map(config => 
-        config.id === id ? { ...config, ...data } as APIConfiguration : config
+        config.id === id ? { ...config, ...data } : config
       ));
       toast.success('Configuration updated successfully');
     } catch (error) {
@@ -134,7 +78,6 @@ export function useAPIConfiguration() {
     configurations,
     loading,
     fetchConfigurations,
-    createConfiguration,
     updateConfiguration,
     deleteConfiguration,
     isSuperAdmin,
