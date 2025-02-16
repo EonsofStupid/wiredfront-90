@@ -10,10 +10,10 @@ import Login from "./pages/Login";
 import Editor from "./pages/Editor";
 import Documents from "./pages/Documents";
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import { ChatProvider } from "@/features/chat/ChatProvider";
+import { ChatProvider } from "@/components/chat/ChatProvider";
 import { useAuthStore } from "@/stores/auth";
 import { storeLastVisitedPath } from "@/utils/auth";
-import { EditorModeProvider } from "@/features/chat/core/providers/EditorModeProvider";
+import { EditorModeProvider } from "@/components/editor/providers/EditorModeProvider";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { APISettings } from "@/components/admin/settings/APISettings";
 import { AccessibilitySettings } from "@/components/admin/settings/AccessibilitySettings";
@@ -23,7 +23,7 @@ import { ChatSettings } from "@/components/admin/settings/ChatSettings";
 import { LivePreviewSettings } from "@/components/admin/settings/LivePreviewSettings";
 import { GuestCTA } from "@/components/auth/GuestCTA";
 import { AdminLayout } from "@/components/admin/layout/AdminLayout";
-import Settings from "./pages/Settings"; // Import the new Settings page
+import Settings from "./pages/Settings";
 
 const PROTECTED_ROUTES = [
   '/dashboard', 
@@ -31,7 +31,7 @@ const PROTECTED_ROUTES = [
   '/documents', 
   '/ai', 
   '/analytics',
-  '/settings'  // Add settings to protected routes
+  '/settings'
 ];
 
 const ADMIN_ROUTES = [
@@ -57,7 +57,6 @@ const App = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Initialize auth state
   useEffect(() => {
     const init = async () => {
       await initializeAuth();
@@ -78,7 +77,6 @@ const App = () => {
     handleAuth();
   }, [isAuthenticated, location.pathname, navigate]);
 
-  // If we're on the login page or index page, don't show the main layout
   const isPublicRoute = location.pathname === '/login' || location.pathname === '/';
   
   if (isPublicRoute) {
@@ -97,7 +95,6 @@ const App = () => {
 
   const Layout = isMobile ? MobileLayout : MainLayout;
 
-  // Use AdminLayout for admin routes
   const isAdminRoute = ADMIN_ROUTES.some(route => location.pathname.startsWith('/admin'));
   const CurrentLayout = isAdminRoute ? AdminLayout : Layout;
 
@@ -115,9 +112,8 @@ const App = () => {
             } 
           />
           <Route path="/documents" element={<Documents />} />
-          <Route path="/settings" element={<Settings />} /> {/* Add the settings route */}
+          <Route path="/settings" element={<Settings />} />
           
-          {/* Admin Routes */}
           <Route 
             path="/admin/*" 
             element={
