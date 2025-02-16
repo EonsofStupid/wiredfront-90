@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { ProviderCategory } from "../../types/common";
 import { APIType } from "@/integrations/supabase/types";
 
-const AI_PROVIDERS: APIType[] = ['openai', 'anthropic', 'gemini', 'huggingface'];
+const AI_PROVIDERS: APIType[] = ['openai', 'anthropic', 'gemini', 'huggingface', 'openrouter', 'replicate', 'sonnet'];
 const VECTOR_PROVIDERS: APIType[] = ['pinecone', 'weaviate'];
 
 export function useAPIConfigurations(category?: ProviderCategory) {

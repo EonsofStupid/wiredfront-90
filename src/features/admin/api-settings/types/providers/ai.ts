@@ -14,6 +14,6 @@ export interface AIProviderSettings extends ProviderSettings {
 }
 
 export interface AIConfiguration extends BaseConfiguration {
-  api_type: Extract<APIType, 'openai' | 'anthropic' | 'gemini' | 'huggingface'>;
+  api_type: Extract<APIType, 'openai' | 'anthropic' | 'gemini' | 'huggingface' | 'openrouter' | 'replicate' | 'sonnet'>;
   provider_settings: AIProviderSettings;
 }

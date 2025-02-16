@@ -1,6 +1,7 @@
 
+import React from 'react';
 import { Badge } from "@/components/ui/badge";
-import { ValidationStatusType } from "../../types/api-config.types";
+import { ValidationStatusType } from '@/integrations/supabase/types';
 
 interface ConfigurationStatusProps {
   status: ValidationStatusType;
@@ -9,26 +10,25 @@ interface ConfigurationStatusProps {
 export function ConfigurationStatus({ status }: ConfigurationStatusProps) {
   const getStatusConfig = (status: ValidationStatusType) => {
     switch (status) {
-      case "valid":
-        return { variant: "success", label: "Valid" };
-      case "invalid":
-        return { variant: "destructive", label: "Invalid" };
-      case "expired":
-        return { variant: "warning", label: "Expired" };
-      case "rate_limited":
-        return { variant: "warning", label: "Rate Limited" };
-      case "error":
-        return { variant: "destructive", label: "Error" };
+      case 'valid':
+        return { variant: 'success' as const, label: 'Valid' };
+      case 'invalid':
+        return { variant: 'destructive' as const, label: 'Invalid' };
+      case 'expired':
+        return { variant: 'secondary' as const, label: 'Expired' };
+      case 'rate_limited':
+        return { variant: 'outline' as const, label: 'Rate Limited' };
+      case 'error':
+        return { variant: 'destructive' as const, label: 'Error' };
+      case 'pending':
       default:
-        return { variant: "secondary", label: "Pending" };
+        return { variant: 'secondary' as const, label: 'Pending' };
     }
   };
 
-  const config = getStatusConfig(status);
+  const { variant, label } = getStatusConfig(status);
 
   return (
-    <Badge variant={config.variant as "success" | "destructive" | "warning" | "secondary"}>
-      {config.label}
-    </Badge>
+    <Badge variant={variant}>{label}</Badge>
   );
 }
