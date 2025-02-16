@@ -24,7 +24,6 @@ import { LivePreviewSettings } from "@/components/admin/settings/LivePreviewSett
 import { GuestCTA } from "@/components/auth/GuestCTA";
 import { AdminLayout } from "@/components/admin/layout/AdminLayout";
 import Settings from "./pages/Settings"; // Import the new Settings page
-import { APISettingsRoot } from "@/features/admin/api-settings/components/container/APISettingsRoot";
 
 const PROTECTED_ROUTES = [
   '/dashboard', 
@@ -124,7 +123,7 @@ const App = () => {
             element={
               <Routes>
                 <Route path="/" element={<AdminDashboard />} />
-                <Route path="settings/api" element={<APISettingsRoot />} />
+                <Route path="settings/api" element={<APISettings />} />
                 <Route path="settings/accessibility" element={<AccessibilitySettings />} />
                 <Route path="settings/notifications" element={<NotificationSettings />} />
                 <Route path="settings/general" element={<GeneralSettings />} />

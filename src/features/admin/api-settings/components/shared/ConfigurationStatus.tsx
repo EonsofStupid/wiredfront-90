@@ -1,34 +1,34 @@
 
-import React from 'react';
 import { Badge } from "@/components/ui/badge";
-import { type ValidationStatusType } from "@/integrations/supabase/types";
+import { ValidationStatusType } from "../../types/api-config.types";
 
 interface ConfigurationStatusProps {
-  status: ValidationStatusType | null;
+  status: ValidationStatusType;
 }
 
 export function ConfigurationStatus({ status }: ConfigurationStatusProps) {
-  const getStatusColor = (status: ValidationStatusType | null) => {
+  const getStatusConfig = (status: ValidationStatusType) => {
     switch (status) {
-      case 'valid':
-        return 'bg-green-500';
-      case 'invalid':
-        return 'bg-red-500';
-      case 'expired':
-        return 'bg-yellow-500';
-      case 'rate_limited':
-        return 'bg-orange-500';
-      case 'error':
-        return 'bg-red-500';
-      case 'pending':
+      case "valid":
+        return { variant: "success", label: "Valid" };
+      case "invalid":
+        return { variant: "destructive", label: "Invalid" };
+      case "expired":
+        return { variant: "warning", label: "Expired" };
+      case "rate_limited":
+        return { variant: "warning", label: "Rate Limited" };
+      case "error":
+        return { variant: "destructive", label: "Error" };
       default:
-        return 'bg-gray-500';
+        return { variant: "secondary", label: "Pending" };
     }
   };
 
+  const config = getStatusConfig(status);
+
   return (
-    <Badge className={`${getStatusColor(status)}`}>
-      {status || 'pending'}
+    <Badge variant={config.variant as "success" | "destructive" | "warning" | "secondary"}>
+      {config.label}
     </Badge>
   );
 }

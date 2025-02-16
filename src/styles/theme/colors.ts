@@ -1,4 +1,3 @@
-
 export const colors = {
   neon: {
     pink: "#FF007F",

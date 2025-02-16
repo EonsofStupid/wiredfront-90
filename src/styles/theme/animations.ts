@@ -1,4 +1,3 @@
-
 export const animations = {
   keyframes: {
     "gradient-y": {
