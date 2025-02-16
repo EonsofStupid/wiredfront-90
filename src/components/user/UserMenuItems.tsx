@@ -44,6 +44,8 @@ export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
     );
   }
 
+  const isAdmin = roles.some(role => ['admin', 'super_admin'].includes(role.toLowerCase()));
+
   return (
     <>
       <DropdownMenuLabel className="font-normal">
@@ -67,6 +69,14 @@ export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
       >
         Settings
       </DropdownMenuItem>
+      {isAdmin && (
+        <DropdownMenuItem 
+          className="cursor-pointer"
+          onClick={() => navigate('/admin/settings/api')}
+        >
+          Admin Dashboard
+        </DropdownMenuItem>
+      )}
       <DropdownMenuSeparator />
       <DropdownMenuItem 
         className="cursor-pointer text-red-500 focus:text-red-500"
