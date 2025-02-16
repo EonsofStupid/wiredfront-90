@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useAPIConfigurations } from '../../../hooks/core/useAPIConfigurations';
-import { VectorConfiguration } from '../../../types/providers/vector';
+import type { VectorConfiguration } from '../../../types/providers/vector';
 import { ServiceCard } from '@/components/ui/service-card';
 
 export function VectorStoreList() {
@@ -14,7 +14,7 @@ export function VectorStoreList() {
   const vectorConfigurations = configurations.map(config => ({
     ...config,
     memorable_name: config.memorable_name || `${config.api_type}_${new Date(config.created_at || '').getTime()}`
-  })) as VectorConfiguration[];
+  }));
 
   return (
     <div className="grid gap-4">

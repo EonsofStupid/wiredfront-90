@@ -3,13 +3,13 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { ValidationStatusType } from "@/integrations/supabase/types";
+import { type ValidationStatusType } from "@/integrations/supabase/types";
 import { ConfigurationStatus } from "@/features/admin/api-settings/components/shared/ConfigurationStatus";
 
 interface ServiceCardProps {
   title: string;
   description: string;
-  status: ValidationStatusType;
+  status: ValidationStatusType | null;
   onDelete?: () => void;
   onUpdate?: (updates: any) => void;
 }
@@ -17,7 +17,7 @@ interface ServiceCardProps {
 export function ServiceCard({
   title,
   description,
-  status,
+  status = 'pending',
   onDelete,
   onUpdate
 }: ServiceCardProps) {
@@ -26,7 +26,7 @@ export function ServiceCard({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>{title}</CardTitle>
-          <ConfigurationStatus status={status} />
+          <ConfigurationStatus status={status || 'pending'} />
         </div>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
