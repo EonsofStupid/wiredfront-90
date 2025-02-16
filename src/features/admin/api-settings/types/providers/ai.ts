@@ -2,18 +2,20 @@
 import { BaseConfiguration, ProviderSettings } from '../common';
 import { APIType } from "@/integrations/supabase/types";
 
+export interface AIModelPreferences {
+  default_model: string;
+  allowed_models: string[];
+  temperature: number;
+  max_tokens: number;
+}
+
 export interface AIProviderSettings extends ProviderSettings {
-  model_preferences?: {
-    default_model: string;
-    temperature: number;
-    max_tokens: number;
-  };
-  training_enabled?: boolean;
-  assistant_id?: string;
+  model_preferences?: AIModelPreferences;
   assistant_name?: string;
+  training_enabled?: boolean;
 }
 
 export interface AIConfiguration extends BaseConfiguration {
-  api_type: Extract<APIType, 'openai' | 'anthropic' | 'gemini' | 'huggingface' | 'openrouter' | 'replicate' | 'sonnet'>;
+  api_type: Extract<APIType, 'openai' | 'anthropic' | 'gemini' | 'huggingface'>;
   provider_settings: AIProviderSettings;
 }
