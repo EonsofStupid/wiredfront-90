@@ -29,6 +29,36 @@ export function useAPIConfigurations() {
     }
   }, []);
 
+  const createConfiguration = useCallback(async (type: APIType, memorable_name: string) => {
+    if (!isSuperAdmin) {
+      toast.error('Only super admins can create configurations');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('api_configurations')
+        .insert({
+          api_type: type,
+          memorable_name,
+          is_enabled: true,
+          validation_status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setConfigurations(prev => [...prev, data as APIConfiguration]);
+      toast.success('API configuration created successfully');
+      return data as APIConfiguration;
+    } catch (error) {
+      console.error('Error creating configuration:', error);
+      toast.error('Failed to create API configuration');
+      throw error;
+    }
+  }, [isSuperAdmin]);
+
   const updateConfiguration = useCallback(async (id: string, updates: Partial<APIConfiguration>) => {
     if (!isSuperAdmin) {
       toast.error('Only super admins can update configurations');
@@ -63,16 +93,10 @@ export function useAPIConfigurations() {
     }
 
     try {
-      const config = configurations.find(c => c.id === id);
-      if (!config) throw new Error('Configuration not found');
-
-      const { error } = await supabase.functions.invoke('manage-api-secret', {
-        body: {
-          action: 'delete',
-          memorableName: config.memorable_name,
-          provider: config.api_type
-        }
-      });
+      const { error } = await supabase
+        .from('api_configurations')
+        .delete()
+        .eq('id', id);
 
       if (error) throw error;
       setConfigurations(prev => prev.filter(config => config.id !== id));
@@ -82,12 +106,13 @@ export function useAPIConfigurations() {
       toast.error('Failed to delete API configuration');
       throw error;
     }
-  }, [isSuperAdmin, configurations]);
+  }, [isSuperAdmin]);
 
   return {
     configurations,
     loading,
     fetchConfigurations,
+    createConfiguration,
     updateConfiguration,
     deleteConfiguration,
     isSuperAdmin

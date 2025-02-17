@@ -33,6 +33,7 @@ export interface APIConfiguration {
   last_error_message: string | null;
   last_successful_use: string | null;
   rotation_priority: number | null;
+  memorable_name: string;
   created_at: string | null;
   updated_at: string | null;
 }
