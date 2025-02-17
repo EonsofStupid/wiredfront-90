@@ -1,7 +1,8 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import { useMessageStore } from "@/components/chat/core/messaging/MessageManager";
+import { useMessageStore } from "@/components/chat/messaging/MessageManager";
 import { useSessionManager } from "@/hooks/useSessionManager";
 import { toast } from "sonner";
 

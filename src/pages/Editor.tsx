@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { LivePreview } from '@/components/editor/LivePreview';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { useEditorMode } from '@/components/chat/core/providers/EditorModeProvider';
+import { useEditorMode } from '@/components/editor/providers/EditorModeProvider';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
