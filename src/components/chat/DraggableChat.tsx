@@ -14,7 +14,7 @@ export function DraggableChat() {
   const [isMinimized, setIsMinimized] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [message, setMessage] = useState("");
-  const { messages, addMessage } = useMessageStore();
+  const { messages, addMessage, currentSessionId } = useMessageStore();
   const { isOpen, toggleChat } = useChat();
   const chatRef = useRef<HTMLDivElement>(null);
 
@@ -31,13 +31,13 @@ export function DraggableChat() {
     transform: `translate3d(${adjustedTransform.x}px, ${adjustedTransform.y}px, 0)`,
   } : undefined;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (message.trim()) {
-      addMessage({
+    if (message.trim() && currentSessionId) {
+      await addMessage({
         content: message,
         role: 'user',
-        timestamp: new Date().toISOString()
+        sessionId: currentSessionId
       });
       setMessage("");
     }
