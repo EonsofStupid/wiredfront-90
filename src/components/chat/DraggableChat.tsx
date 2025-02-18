@@ -9,12 +9,13 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatSidebar } from "./ChatSidebar";
+import { toast } from "sonner";
 
 export function DraggableChat() {
   const [isMinimized, setIsMinimized] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [message, setMessage] = useState("");
-  const { messages, addMessage, currentSessionId } = useMessageStore();
+  const { messages, addMessage, currentSessionId, isProcessing } = useMessageStore();
   const { isOpen, toggleChat } = useChat();
   const chatRef = useRef<HTMLDivElement>(null);
 
@@ -33,13 +34,23 @@ export function DraggableChat() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (message.trim() && currentSessionId) {
-      await addMessage({
-        content: message,
-        role: 'user',
-        sessionId: currentSessionId
-      });
-      setMessage("");
+    if (!currentSessionId) {
+      toast.error('No active chat session');
+      return;
+    }
+    
+    if (message.trim()) {
+      try {
+        await addMessage({
+          content: message.trim(),
+          role: 'user',
+          sessionId: currentSessionId
+        });
+        setMessage("");
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        toast.error('Failed to send message');
+      }
     }
   };
 
@@ -132,7 +143,7 @@ export function DraggableChat() {
                   <div className="flex flex-col gap-4">
                     {messages.map((msg, index) => (
                       <div
-                        key={index}
+                        key={msg.id || index}
                         className={`flex ${
                           msg.role === "user" ? "justify-end" : "justify-start"
                         }`}
@@ -159,8 +170,11 @@ export function DraggableChat() {
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Type a message..."
                     className="flex-1"
+                    disabled={isProcessing}
                   />
-                  <Button type="submit">Send</Button>
+                  <Button type="submit" disabled={isProcessing}>
+                    {isProcessing ? 'Sending...' : 'Send'}
+                  </Button>
                 </form>
               </CardFooter>
             </>
