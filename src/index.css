@@ -21,7 +21,8 @@
     --ring: 240 4.9% 83.9%;
     --radius: 0.5rem;
 
-    /* Z-index hierarchy */
+    /* Updated Z-index hierarchy */
+    --z-chat: 9999;
     --z-modal: 1000;
     --z-dropdown: 900;
     --z-tooltip: 800;
