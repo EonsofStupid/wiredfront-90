@@ -62,14 +62,17 @@ const Editor = () => {
       <ResizablePanelGroup direction="horizontal">
         <ResizablePanel defaultSize={50} minSize={30}>
           <div className="h-full p-4">
-            {/* Your existing editor content */}
+            {/* Editor content will go here */}
             <h1 className="text-2xl font-bold mb-4">Editor</h1>
           </div>
         </ResizablePanel>
         <ResizableHandle />
         <ResizablePanel defaultSize={50} minSize={30}>
           {livePreviewEnabled ? (
-            <LivePreview files={currentFiles} activeFile={activeFile} />
+            <LivePreview 
+              files={currentFiles} 
+              activeFile={activeFile || 'src/App.tsx'} 
+            />
           ) : (
             <div className="h-full flex items-center justify-center text-muted-foreground">
               Live Preview is disabled

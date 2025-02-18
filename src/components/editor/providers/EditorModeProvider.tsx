@@ -2,16 +2,16 @@
 import React, { createContext, useContext, useState } from 'react';
 
 interface EditorModeContextType {
-  currentFiles: any[];
+  currentFiles: Record<string, string>;
   activeFile: string | null;
-  setCurrentFiles: (files: any[]) => void;
+  setCurrentFiles: (files: Record<string, string>) => void;
   setActiveFile: (file: string | null) => void;
 }
 
 const EditorModeContext = createContext<EditorModeContextType | undefined>(undefined);
 
 export function EditorModeProvider({ children }: { children: React.ReactNode }) {
-  const [currentFiles, setCurrentFiles] = useState<any[]>([]);
+  const [currentFiles, setCurrentFiles] = useState<Record<string, string>>({});
   const [activeFile, setActiveFile] = useState<string | null>(null);
 
   return (
