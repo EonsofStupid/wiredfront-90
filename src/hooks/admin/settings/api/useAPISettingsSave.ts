@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { APISettingsState } from "@/types/admin/settings/types";
 import { toast } from "sonner";
@@ -34,25 +33,17 @@ export function useAPISettingsSave() {
           const { data: existingConfig, error: queryError } = await supabase
             .from('api_configurations')
             .select('id')
+            .eq('user_id', user.id)
             .eq('api_type', config.type)
             .maybeSingle();
 
           if (queryError) throw queryError;
 
-          const configData = {
-            api_type: config.type,
-            memorable_name: `${config.type}_default`,
-            is_enabled: true,
-            is_default: config.type === 'openai',
-            category: 'ai',
-            validation_status: 'pending'
-          };
-
           if (existingConfig) {
             const { error: updateError } = await supabase
               .from('api_configurations')
               .update({
-                ...configData,
+                is_enabled: true,
                 updated_at: new Date().toISOString()
               })
               .eq('id', existingConfig.id);
@@ -61,12 +52,43 @@ export function useAPISettingsSave() {
           } else {
             const { error: insertError } = await supabase
               .from('api_configurations')
-              .insert(configData);
+              .insert({
+                user_id: user.id,
+                api_type: config.type,
+                is_enabled: true,
+                is_default: config.type === 'openai'
+              });
 
             if (insertError) throw insertError;
           }
         }
       }
+
+      const activeProvider = settings.openaiKey ? 'openai' : 
+                           settings.geminiKey ? 'gemini' : 
+                           settings.anthropicKey ? 'anthropic' : 
+                           settings.huggingfaceKey ? 'huggingface' : 'openai';
+
+      const { error: chatSettingsError } = await supabase
+        .from('chat_settings')
+        .upsert({
+          user_id: user.id,
+          api_provider: activeProvider,
+          enabled: true,
+          message_behavior: 'enter_send',
+          ui_customizations: {
+            theme: 'default',
+            chatbot_name: 'AI Assistant',
+            placeholder_text: 'Type a message...'
+          },
+          max_tokens: 1000,
+          temperature: 0.7,
+          offline_mode_enabled: true,
+          max_offline_messages: 100,
+          rate_limit_per_minute: 60
+        });
+
+      if (chatSettingsError) throw chatSettingsError;
 
       logger.info('API settings saved successfully');
       toast.success("API settings have been saved");

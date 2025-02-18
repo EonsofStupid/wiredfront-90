@@ -1,20 +1,15 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAPIConfigurations } from "@/hooks/admin/settings/useAPIConfigurations";
 import { toast } from "sonner";
-import { APIType } from "@/types/admin/settings/api-configuration";
 
 export function AIServicesSettings() {
   const { configurations, createConfiguration } = useAPIConfigurations();
 
-  const handleSaveConfig = async (type: APIType) => {
+  const handleSaveConfig = async (type: string) => {
     try {
-      await createConfiguration(type, {
-        memorable_name: `${type}_default`,
-        category: 'ai'
-      });
+      await createConfiguration(type as any);
       toast.success(`${type} configuration saved successfully`);
     } catch (error) {
       console.error(`Error saving ${type} configuration:`, error);
