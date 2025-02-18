@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAPIConfigurations } from "@/hooks/admin/settings/useAPIConfigurations";
 import { APIType } from "@/types/admin/settings/api-configuration";
@@ -10,7 +11,10 @@ export function RAGKeysSettings() {
 
   const handleSaveConfig = async (type: APIType) => {
     try {
-      await createConfiguration(type);
+      await createConfiguration(type, {
+        memorable_name: `${type}_vector_db`,
+        category: 'vector_db'
+      });
       toast.success(`${type} configuration saved successfully`);
     } catch (error) {
       console.error(`Error saving ${type} configuration:`, error);
