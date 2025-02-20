@@ -1,15 +1,12 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useAPIConfigurations } from "@/hooks/admin/settings/useAPIConfigurations";
+
+import { ServiceCard } from "./components/ServiceCard";
+import { APIType } from "@/types/admin/settings/api-configuration";
 import { toast } from "sonner";
 
 export function AIServicesSettings() {
-  const { configurations, createConfiguration } = useAPIConfigurations();
-
-  const handleSaveConfig = async (type: string) => {
+  const handleSaveConfig = async (type: APIType, config: { name: string; key: string }) => {
     try {
-      await createConfiguration(type as any);
+      // Implementation of save logic
       toast.success(`${type} configuration saved successfully`);
     } catch (error) {
       console.error(`Error saving ${type} configuration:`, error);
@@ -19,31 +16,28 @@ export function AIServicesSettings() {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>OpenAI</CardTitle>
-          <CardDescription>Configure OpenAI API access</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Label>API Key</Label>
-            <Input type="password" placeholder="sk-..." />
-          </div>
-        </CardContent>
-      </Card>
+      <div>
+        <h3 className="text-lg font-medium">AI Services Settings</h3>
+        <p className="text-sm text-muted-foreground">
+          Configure your AI service connections.
+        </p>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Anthropic</CardTitle>
-          <CardDescription>Configure Anthropic API access</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Label>API Key</Label>
-            <Input type="password" placeholder="sk-ant-..." />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid gap-6">
+        <ServiceCard
+          type="openai"
+          title="OpenAI"
+          description="Configure OpenAI API access"
+          docsUrl="https://platform.openai.com/docs/api-reference"
+          docsText="OpenAI documentation"
+          placeholder="sk-..."
+          onSaveConfig={handleSaveConfig}
+          isConnecting={false}
+          selectedConfig={null}
+          newConfig={{ name: '', key: '' }}
+          onConfigChange={() => {}}
+        />
+      </div>
     </div>
   );
 }

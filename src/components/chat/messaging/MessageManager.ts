@@ -3,31 +3,40 @@ import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
+import { Json } from '@/integrations/supabase/types';
 
 interface Message {
-  id?: string;
+  id: string;
   content: string;
   user_id: string;
   chat_session_id: string | null;
-  message_status: string;
+  message_status: 'pending' | 'sent' | 'failed';
   type: 'text' | 'system' | 'command';
-  metadata: Record<string, any>;
-  timestamp: string;
+  metadata: Json;
   role: 'user' | 'assistant' | 'system';
+  timestamp: string;
+  is_minimized?: boolean;
+  window_state?: Json;
+  last_accessed?: string;
+  last_retry?: string;
+  retry_count?: number;
 }
 
-interface MessageStore {
+interface MessageState {
   messages: Message[];
   currentSessionId: string | null;
   isProcessing: boolean;
   error: string | null;
+}
+
+interface MessageStore extends MessageState {
   clearMessages: () => void;
   addMessage: (message: { content: string; role: 'user' | 'assistant' | 'system'; sessionId: string }) => Promise<void>;
   setCurrentSessionId: (sessionId: string) => void;
   fetchSessionMessages: (sessionId: string) => Promise<void>;
 }
 
-export const useMessageStore = create<MessageStore>((set, get) => ({
+export const useMessageStore = create<MessageStore>((set) => ({
   messages: [],
   currentSessionId: null,
   isProcessing: false,
@@ -51,10 +60,21 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
 
       if (error) throw error;
 
-      const formattedMessages = data.map(msg => ({
-        ...msg,
+      const formattedMessages: Message[] = data.map(msg => ({
+        id: msg.id,
+        content: msg.content,
+        user_id: msg.user_id,
+        chat_session_id: msg.chat_session_id,
+        message_status: msg.message_status as Message['message_status'],
+        type: msg.type as Message['type'],
+        metadata: msg.metadata,
         role: msg.type === 'system' ? 'system' : 'user',
-        timestamp: msg.created_at
+        timestamp: msg.created_at,
+        is_minimized: msg.is_minimized,
+        window_state: msg.window_state,
+        last_accessed: msg.last_accessed,
+        last_retry: msg.last_retry,
+        retry_count: msg.retry_count
       }));
 
       set({ messages: formattedMessages });
@@ -71,10 +91,10 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
         throw new Error('No authenticated user');
       }
 
-      const timestamp = new Date().toISOString();
       const messageId = uuidv4();
-
-      const newMessage = {
+      const timestamp = new Date().toISOString();
+      
+      const newMessage: Message = {
         id: messageId,
         content: message.content,
         user_id: user.data.user.id,
@@ -82,11 +102,11 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
         message_status: 'pending',
         type: message.role === 'system' ? 'system' : 'text',
         metadata: {},
-        timestamp,
-        role: message.role
+        role: message.role,
+        timestamp
       };
 
-      set(state => ({
+      set((state: MessageState) => ({
         messages: [...state.messages, newMessage],
         isProcessing: true,
         error: null
@@ -106,7 +126,7 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
 
       if (error) throw error;
 
-      set(state => ({
+      set((state: MessageState) => ({
         messages: state.messages.map(msg => 
           msg.id === messageId 
             ? { ...msg, message_status: 'sent' }
@@ -118,7 +138,7 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
     } catch (error) {
       console.error('Error adding message:', error);
       toast.error('Failed to send message');
-      set(state => ({
+      set((state: MessageState) => ({
         messages: state.messages.map(msg => 
           msg.id === msg.id 
             ? { ...msg, message_status: 'failed' }

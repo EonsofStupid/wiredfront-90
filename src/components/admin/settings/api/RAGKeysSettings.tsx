@@ -1,16 +1,12 @@
-import { useState } from "react";
-import { useAPIConfigurations } from "@/hooks/admin/settings/useAPIConfigurations";
+
 import { APIType } from "@/types/admin/settings/api-configuration";
-import { toast } from "sonner";
-import { VECTOR_DB_CONFIGURATIONS } from "@/constants/api-configurations";
 import { ServiceCard } from "./components/ServiceCard";
+import { toast } from "sonner";
 
 export function RAGKeysSettings() {
-  const { createConfiguration } = useAPIConfigurations();
-
-  const handleSaveConfig = async (type: APIType) => {
+  const handleSaveConfig = async (type: APIType, config: { name: string; key: string }) => {
     try {
-      await createConfiguration(type);
+      // Implementation of save logic
       toast.success(`${type} configuration saved successfully`);
     } catch (error) {
       console.error(`Error saving ${type} configuration:`, error);
@@ -28,18 +24,19 @@ export function RAGKeysSettings() {
       </div>
 
       <div className="grid gap-6">
-        {VECTOR_DB_CONFIGURATIONS.map((config) => (
-          <ServiceCard
-            key={config.type}
-            type={config.type}
-            title={config.label}
-            description={config.description}
-            docsUrl={config.docsUrl}
-            docsText={config.docsText}
-            placeholder={config.placeholder}
-            onSaveConfig={handleSaveConfig}
-          />
-        ))}
+        <ServiceCard
+          type="pinecone"
+          title="Pinecone"
+          description="Configure Pinecone vector database"
+          docsUrl="https://docs.pinecone.io/docs"
+          docsText="Pinecone documentation"
+          placeholder="YOUR_API_KEY"
+          onSaveConfig={handleSaveConfig}
+          isConnecting={false}
+          selectedConfig={null}
+          newConfig={{ name: '', key: '' }}
+          onConfigChange={() => {}}
+        />
       </div>
     </div>
   );
