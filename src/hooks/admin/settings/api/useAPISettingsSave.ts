@@ -41,11 +41,14 @@ export function useAPISettingsSave() {
           if (queryError) throw queryError;
 
           const configData = {
+            user_id: user.id,
             api_type: config.type,
             is_enabled: true,
             is_default: config.type === 'openai',
             memorable_name: config.name,
-            validation_status: 'pending' as const
+            validation_status: 'pending' as const,
+            secret_key_name: config.key,
+            updated_at: new Date().toISOString()
           };
 
           if (existingConfig) {
@@ -58,7 +61,10 @@ export function useAPISettingsSave() {
           } else {
             const { error: insertError } = await supabase
               .from('api_configurations')
-              .insert([configData]);
+              .insert([{
+                ...configData,
+                created_at: new Date().toISOString()
+              }]);
 
             if (insertError) throw insertError;
           }
