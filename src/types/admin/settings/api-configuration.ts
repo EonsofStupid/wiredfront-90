@@ -19,7 +19,16 @@ export interface ServiceCardProps {
   docsUrl: string;
   docsText: string;
   placeholder: string;
-  onSaveConfig: (type: APIType) => Promise<void>;
+  onSaveConfig: (type: APIType, config: { name: string; key: string; environment?: string; index_name?: string; }) => Promise<void>;
+  isConnecting: boolean;
+  selectedConfig: string | null;
+  newConfig: {
+    name: string;
+    key: string;
+    environment?: string;
+    index_name?: string;
+  };
+  onConfigChange: (type: APIType, field: string, value: string) => void;
 }
 
 export interface APIConfiguration {
