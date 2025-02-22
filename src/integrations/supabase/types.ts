@@ -392,14 +392,17 @@ export type Database = {
           last_accessed: string | null
           last_retry: string | null
           message_status: string | null
+          message_type: string | null
           metadata: Json | null
           position: Json | null
           rate_limit_window: string | null
           retry_count: number | null
           role: string | null
+          schema_version: string | null
           type: Database["public"]["Enums"]["message_type"] | null
           updated_at: string | null
           user_id: string
+          validation_status: string | null
           window_state: Json | null
         }
         Insert: {
@@ -411,14 +414,17 @@ export type Database = {
           last_accessed?: string | null
           last_retry?: string | null
           message_status?: string | null
+          message_type?: string | null
           metadata?: Json | null
           position?: Json | null
           rate_limit_window?: string | null
           retry_count?: number | null
           role?: string | null
+          schema_version?: string | null
           type?: Database["public"]["Enums"]["message_type"] | null
           updated_at?: string | null
           user_id: string
+          validation_status?: string | null
           window_state?: Json | null
         }
         Update: {
@@ -430,14 +436,17 @@ export type Database = {
           last_accessed?: string | null
           last_retry?: string | null
           message_status?: string | null
+          message_type?: string | null
           metadata?: Json | null
           position?: Json | null
           rate_limit_window?: string | null
           retry_count?: number | null
           role?: string | null
+          schema_version?: string | null
           type?: Database["public"]["Enums"]["message_type"] | null
           updated_at?: string | null
           user_id?: string
+          validation_status?: string | null
           window_state?: Json | null
         }
         Relationships: []
@@ -722,6 +731,7 @@ export type Database = {
         | "pending"
       message_behavior_type: "enter_send" | "ctrl_enter"
       message_type: "text" | "command" | "system"
+      message_validation_status: "pending" | "valid" | "invalid"
       metric_status: "success" | "warning" | "error"
       metric_timeframe: "daily" | "weekly" | "monthly" | "yearly"
       metric_trend: "up" | "down" | "neutral"
