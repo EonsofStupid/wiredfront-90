@@ -6,6 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Database } from "@/integrations/supabase/types";
+
+type APIType = Database["public"]["Enums"]["api_type"];
 
 interface VoiceSettingsProps {
   elevenLabsKey: string;
@@ -39,10 +42,13 @@ export function VoiceSettings({
     }
 
     try {
+      // First save the API configuration
+      const apiType: APIType = provider.toLowerCase() as APIType;
+      
       const { data, error } = await supabase
         .from('api_configurations')
         .insert([{
-          api_type: provider.toLowerCase(),
+          api_type: apiType,
           secret_key_name: `${provider.toUpperCase()}_API_KEY`,
           memorable_name: name,
           is_enabled: true,
@@ -61,7 +67,7 @@ export function VoiceSettings({
         body: { 
           secretName: `${provider.toUpperCase()}_API_KEY`,
           secretValue: value,
-          provider: provider.toLowerCase(),
+          provider: apiType,
           memorableName: name
         }
       });
