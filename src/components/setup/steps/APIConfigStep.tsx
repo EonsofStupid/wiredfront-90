@@ -1,9 +1,9 @@
+
 import { Card, CardContent } from "@/components/ui/card";
+import { APIConfigurationList } from "@/components/admin/settings/api/APIConfigurationList";
 import { useAPIConfigurations } from "@/hooks/admin/settings/useAPIConfigurations";
 import { APIType } from "@/types/admin/settings/api-configuration";
 import { useCallback } from "react";
-import { APIConfigurationList } from "@/components/admin/settings/api/APIConfigurationList";
-import { useAPISettings } from "@/hooks/admin/settings/useAPISettings";
 
 interface APIConfigStepProps {
   isFirstTimeUser?: boolean;
@@ -11,13 +11,14 @@ interface APIConfigStepProps {
 
 export function APIConfigStep({ isFirstTimeUser = false }: APIConfigStepProps) {
   const { configurations, loading, updateConfiguration, createConfiguration, deleteConfiguration } = useAPIConfigurations();
-  const { settings } = useAPISettings();
 
   const handleConfigurationChange = useCallback(async (checked: boolean, config: typeof configurations[0] | undefined, apiType: APIType) => {
     if (config) {
       await updateConfiguration(config.id, { is_enabled: checked });
     } else {
-      await createConfiguration(apiType);
+      // Generate a memorable name for new configurations
+      const name = `${apiType}_config_${Date.now()}`;
+      await createConfiguration(apiType, name);
     }
   }, [updateConfiguration, createConfiguration]);
 
