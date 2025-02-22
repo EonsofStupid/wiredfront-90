@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatSidebar } from "./ChatSidebar";
 import { Message } from "./Message";
+import { VoiceRecorder } from "./VoiceRecorder";
 import { toast } from "sonner";
 
 export function DraggableChat() {
@@ -53,6 +54,24 @@ export function DraggableChat() {
         console.error('Failed to send message:', error);
         toast.error('Failed to send message');
       }
+    }
+  };
+
+  const handleTranscription = async (text: string) => {
+    if (!currentSessionId) {
+      toast.error('No active chat session');
+      return;
+    }
+
+    try {
+      await addMessage({
+        content: text,
+        role: 'user',
+        sessionId: currentSessionId
+      });
+    } catch (error) {
+      console.error('Failed to send transcribed message:', error);
+      toast.error('Failed to send message');
     }
   };
 
@@ -172,6 +191,10 @@ export function DraggableChat() {
                     placeholder="Type a message..."
                     className="flex-1"
                     disabled={isProcessing}
+                  />
+                  <VoiceRecorder 
+                    onTranscription={handleTranscription}
+                    isProcessing={isProcessing}
                   />
                   <Button 
                     type="submit" 
