@@ -68,7 +68,7 @@ export const useMessageStore = create<MessageStore>((set) => ({
         message_status: msg.message_status as Message['message_status'],
         type: msg.type as Message['type'],
         metadata: msg.metadata,
-        role: msg.type === 'system' ? 'system' : 'user',
+        role: msg.role,
         timestamp: msg.created_at,
         is_minimized: msg.is_minimized,
         window_state: msg.window_state,
@@ -77,7 +77,7 @@ export const useMessageStore = create<MessageStore>((set) => ({
         retry_count: msg.retry_count
       }));
 
-      set({ messages: formattedMessages });
+      set({ messages: formattedMessages, currentSessionId: sessionId });
     } catch (error) {
       console.error('Error fetching messages:', error);
       toast.error('Failed to load messages');
@@ -86,10 +86,8 @@ export const useMessageStore = create<MessageStore>((set) => ({
 
   addMessage: async (message) => {
     try {
-      const user = await supabase.auth.getUser();
-      if (!user.data?.user) {
-        throw new Error('No authenticated user');
-      }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No authenticated user');
 
       const messageId = uuidv4();
       const timestamp = new Date().toISOString();
@@ -97,7 +95,7 @@ export const useMessageStore = create<MessageStore>((set) => ({
       const newMessage: Message = {
         id: messageId,
         content: message.content,
-        user_id: user.data.user.id,
+        user_id: user.id,
         chat_session_id: message.sessionId,
         message_status: 'pending',
         type: message.role === 'system' ? 'system' : 'text',
@@ -114,15 +112,16 @@ export const useMessageStore = create<MessageStore>((set) => ({
 
       const { error } = await supabase
         .from('messages')
-        .insert([{
+        .insert({
           id: messageId,
           content: message.content,
-          user_id: user.data.user.id,
+          user_id: user.id,
           chat_session_id: message.sessionId,
           type: message.role === 'system' ? 'system' : 'text',
           metadata: {},
-          message_status: 'sent'
-        }]);
+          message_status: 'sent',
+          role: message.role
+        });
 
       if (error) throw error;
 

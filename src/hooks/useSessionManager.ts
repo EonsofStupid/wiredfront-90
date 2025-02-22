@@ -1,7 +1,8 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Database } from '@/integrations/supabase/types';
+import { useMessageStore } from '@/components/chat/messaging/MessageManager';
 
 interface SessionState {
   id: string;
@@ -11,75 +12,82 @@ interface SessionState {
 
 export const useSessionManager = () => {
   const [sessions, setSessions] = useState<SessionState[]>([]);
-  const [currentSessionId, setCurrentSessionId] = useState<string>(() => {
-    return localStorage.getItem('chat_session_id') || crypto.randomUUID();
-  });
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const { clearMessages } = useMessageStore();
 
   // Fetch active sessions
   const fetchSessions = useCallback(async () => {
     try {
       const { data, error } = await supabase
-        .from('messages')
-        .select('chat_session_id, last_accessed')
+        .from('chat_sessions')
+        .select('*')
         .order('last_accessed', { ascending: false })
         .limit(10);
 
       if (error) throw error;
 
-      // Process the data only if we have results
-      if (data) {
-        const uniqueSessions = Array.from(
-          new Map(
-            data.map(item => [
-              item.chat_session_id,
-              {
-                id: item.chat_session_id!,
-                lastAccessed: new Date(item.last_accessed!),
-                isActive: item.chat_session_id === currentSessionId
-              }
-            ])
-          ).values()
-        );
+      const formattedSessions = data.map(session => ({
+        id: session.id,
+        lastAccessed: new Date(session.last_accessed),
+        isActive: session.is_active
+      }));
 
-        setSessions(uniqueSessions);
-      }
+      setSessions(formattedSessions);
     } catch (error) {
       console.error('Error fetching sessions:', error);
-      toast.error('Failed to fetch sessions');
+      toast.error('Failed to fetch chat sessions');
     }
-  }, [currentSessionId]);
+  }, []);
+
+  // Create a new session
+  const createSession = useCallback(async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No authenticated user');
+
+      const { data, error } = await supabase
+        .from('chat_sessions')
+        .insert({
+          user_id: user.id,
+          is_active: true,
+          last_accessed: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setCurrentSessionId(data.id);
+      await fetchSessions();
+      clearMessages();
+      toast.success('New chat session created');
+      return data.id;
+    } catch (error) {
+      console.error('Error creating session:', error);
+      toast.error('Failed to create new chat session');
+      return null;
+    }
+  }, [fetchSessions, clearMessages]);
 
   // Switch to a different session
   const switchSession = useCallback(async (sessionId: string) => {
     try {
-      // Update last_accessed for the current session
       const { error } = await supabase
-        .from('messages')
+        .from('chat_sessions')
         .update({ last_accessed: new Date().toISOString() })
-        .eq('chat_session_id', sessionId);
+        .eq('id', sessionId);
 
       if (error) throw error;
 
       setCurrentSessionId(sessionId);
-      localStorage.setItem('chat_session_id', sessionId);
-      toast.success('Switched to different chat session');
-      
-      // Refresh sessions after switching
+      clearMessages();
       await fetchSessions();
+      toast.success('Switched chat session');
     } catch (error) {
       console.error('Error switching sessions:', error);
-      toast.error('Failed to switch sessions');
+      toast.error('Failed to switch chat session');
     }
-  }, [fetchSessions]);
-
-  // Create a new session
-  const createSession = useCallback(async () => {
-    const newSessionId = crypto.randomUUID();
-    setCurrentSessionId(newSessionId);
-    localStorage.setItem('chat_session_id', newSessionId);
-    toast.success('Created new chat session');
-    return newSessionId;
-  }, []);
+  }, [fetchSessions, clearMessages]);
 
   // Cleanup inactive sessions (older than 7 days)
   const cleanupInactiveSessions = useCallback(async () => {
@@ -88,30 +96,42 @@ export const useSessionManager = () => {
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
       const { error } = await supabase
-        .from('messages')
+        .from('chat_sessions')
         .delete()
         .lt('last_accessed', sevenDaysAgo.toISOString());
 
       if (error) throw error;
 
-      toast.success('Cleaned up inactive sessions');
       await fetchSessions();
+      toast.success('Cleaned up inactive sessions');
     } catch (error) {
       console.error('Error cleaning up sessions:', error);
       toast.error('Failed to cleanup sessions');
     }
   }, [fetchSessions]);
 
+  // Initialize session on component mount
+  useEffect(() => {
+    const initializeSession = async () => {
+      await fetchSessions();
+      if (!currentSessionId) {
+        await createSession();
+      }
+    };
+
+    initializeSession();
+  }, [fetchSessions, createSession, currentSessionId]);
+
   // Update last_accessed timestamp periodically
   useEffect(() => {
     const updateLastAccessed = async () => {
-      try {
-        const { error } = await supabase
-          .from('messages')
-          .update({ last_accessed: new Date().toISOString() })
-          .eq('chat_session_id', currentSessionId);
+      if (!currentSessionId) return;
 
-        if (error) throw error;
+      try {
+        await supabase
+          .from('chat_sessions')
+          .update({ last_accessed: new Date().toISOString() })
+          .eq('id', currentSessionId);
       } catch (error) {
         console.error('Error updating last_accessed:', error);
       }
@@ -120,11 +140,6 @@ export const useSessionManager = () => {
     const interval = setInterval(updateLastAccessed, 5 * 60 * 1000); // Every 5 minutes
     return () => clearInterval(interval);
   }, [currentSessionId]);
-
-  // Initial fetch of sessions
-  useEffect(() => {
-    fetchSessions();
-  }, [fetchSessions]);
 
   return {
     sessions,
