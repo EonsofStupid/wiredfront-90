@@ -36,6 +36,13 @@ interface MessageStore extends MessageState {
   fetchSessionMessages: (sessionId: string) => Promise<void>;
 }
 
+const validateRole = (role: string): 'user' | 'assistant' | 'system' => {
+  if (role === 'user' || role === 'assistant' || role === 'system') {
+    return role;
+  }
+  return 'user'; // Default fallback
+};
+
 export const useMessageStore = create<MessageStore>((set) => ({
   messages: [],
   currentSessionId: null,
@@ -68,7 +75,7 @@ export const useMessageStore = create<MessageStore>((set) => ({
         message_status: msg.message_status as Message['message_status'],
         type: msg.type as Message['type'],
         metadata: msg.metadata,
-        role: msg.role,
+        role: validateRole(msg.role),
         timestamp: msg.created_at,
         is_minimized: msg.is_minimized,
         window_state: msg.window_state,
