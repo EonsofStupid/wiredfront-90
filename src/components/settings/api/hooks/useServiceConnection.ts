@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useMessageStore } from '@/components/chat/messaging/MessageManager';
@@ -19,16 +20,12 @@ export const useServiceConnection = () => {
       setSelectedConfig(configId);
 
       currentSessionId = await createSession();
+      if (!currentSessionId) throw new Error('Failed to create chat session');
 
       await addMessage({
         content: `Establishing connection to ${configName}...`,
-        type: 'system',
-        chat_session_id: currentSessionId,
-        metadata: {
-          configId,
-          provider,
-          status: 'connecting'
-        } as MessageMetadata
+        role: 'system',
+        sessionId: currentSessionId
       });
 
       const { data, error } = await supabase.functions.invoke('test-ai-connection', {
@@ -43,13 +40,8 @@ export const useServiceConnection = () => {
       if (data.success) {
         await addMessage({
           content: `Successfully connected to ${configName}. You can now start chatting!`,
-          type: 'system',
-          chat_session_id: currentSessionId,
-          metadata: {
-            configId,
-            provider,
-            status: 'connected'
-          } as MessageMetadata
+          role: 'system',
+          sessionId: currentSessionId
         });
 
         toast.success(`Connected to ${configName} successfully`);
@@ -64,14 +56,8 @@ export const useServiceConnection = () => {
       if (currentSessionId) {
         await addMessage({
           content: `Failed to connect: ${error.message}`,
-          type: 'system',
-          chat_session_id: currentSessionId,
-          metadata: {
-            configId,
-            provider,
-            status: 'error',
-            error: error.message
-          } as MessageMetadata
+          role: 'system',
+          sessionId: currentSessionId
         });
       }
     } finally {
@@ -86,3 +72,4 @@ export const useServiceConnection = () => {
     handleConnect
   };
 };
+
