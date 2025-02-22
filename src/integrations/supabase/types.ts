@@ -718,6 +718,8 @@ export type Database = {
         | "openrouter"
         | "replicate"
         | "sonnet"
+        | "elevenlabs"
+        | "whisper"
       app_role: "super_admin" | "admin" | "developer" | "subscriber" | "guest"
       chat_api_provider: "openai" | "anthropic" | "gemini" | "huggingface"
       document_import_status: "pending" | "processing" | "completed" | "error"

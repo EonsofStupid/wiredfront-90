@@ -39,7 +39,25 @@ export function VoiceSettings({
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('manage-api-secret', {
+      const { data, error } = await supabase
+        .from('api_configurations')
+        .insert([{
+          api_type: provider.toLowerCase(),
+          secret_key_name: `${provider.toUpperCase()}_API_KEY`,
+          memorable_name: name,
+          is_enabled: true,
+          validation_status: 'pending'
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error(`Error saving ${provider} configuration:`, error);
+        throw new Error(error.message || `Failed to save ${provider} API key`);
+      }
+
+      // Now save the actual API key securely using the edge function
+      const { error: secretError } = await supabase.functions.invoke('manage-api-secret', {
         body: { 
           secretName: `${provider.toUpperCase()}_API_KEY`,
           secretValue: value,
@@ -48,13 +66,8 @@ export function VoiceSettings({
         }
       });
 
-      if (error) {
-        console.error(`Error saving ${provider} key:`, error);
-        throw new Error(error.message || `Failed to save ${provider} API key`);
-      }
-
-      if (!data?.success) {
-        throw new Error(`Failed to save ${provider} API key`);
+      if (secretError) {
+        throw new Error(secretError.message || `Failed to save ${provider} API key`);
       }
 
       if (provider === 'ElevenLabs') {
