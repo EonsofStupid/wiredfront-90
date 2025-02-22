@@ -9,6 +9,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatSidebar } from "./ChatSidebar";
+import { Message } from "./Message";
 import { toast } from "sonner";
 
 export function DraggableChat() {
@@ -18,6 +19,7 @@ export function DraggableChat() {
   const { messages, addMessage, currentSessionId, isProcessing } = useMessageStore();
   const { isOpen, toggleChat } = useChat();
   const chatRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: "chat-window",
@@ -55,6 +57,12 @@ export function DraggableChat() {
   };
 
   useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  useEffect(() => {
     if (!chatRef.current) return;
 
     const updatePosition = () => {
@@ -80,7 +88,7 @@ export function DraggableChat() {
     return (
       <Button
         onClick={toggleChat}
-        className="fixed bottom-4 right-4 p-4 rounded-full shadow-lg z-[var(--z-chat)] glass-card neon-glow"
+        className="fixed bottom-4 right-4 p-4 rounded-full shadow-lg z-[var(--z-chat)] glass-card neon-glow hover:scale-105 transition-transform duration-200"
       >
         <MessageSquare className="h-6 w-6" />
       </Button>
@@ -139,31 +147,24 @@ export function DraggableChat() {
           {!isMinimized && (
             <>
               <CardContent className="p-4">
-                <ScrollArea className="h-[300px] w-full pr-4">
+                <ScrollArea 
+                  ref={scrollRef}
+                  className="h-[300px] w-full pr-4"
+                >
                   <div className="flex flex-col gap-4">
-                    {messages.map((msg, index) => (
-                      <div
-                        key={msg.id || index}
-                        className={`flex ${
-                          msg.role === "user" ? "justify-end" : "justify-start"
-                        }`}
-                      >
-                        <div
-                          className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                            msg.role === "user"
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted"
-                          }`}
-                        >
-                          {msg.content}
-                        </div>
-                      </div>
+                    {messages.map((msg) => (
+                      <Message
+                        key={msg.id}
+                        content={msg.content}
+                        role={msg.role}
+                        status={msg.message_status}
+                      />
                     ))}
                   </div>
                 </ScrollArea>
               </CardContent>
 
-              <CardFooter className="p-4">
+              <CardFooter className="p-4 border-t">
                 <form onSubmit={handleSubmit} className="flex gap-2 w-full">
                   <Input
                     value={message}
@@ -172,7 +173,11 @@ export function DraggableChat() {
                     className="flex-1"
                     disabled={isProcessing}
                   />
-                  <Button type="submit" disabled={isProcessing}>
+                  <Button 
+                    type="submit" 
+                    disabled={isProcessing}
+                    className="min-w-[80px]"
+                  >
                     {isProcessing ? 'Sending...' : 'Send'}
                   </Button>
                 </form>
