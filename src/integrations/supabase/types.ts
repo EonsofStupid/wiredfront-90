@@ -153,6 +153,39 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_commands: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          enabled: boolean | null
+          id: string
+          metadata: Json | null
+          name: string
+          required_role: Database["public"]["Enums"]["app_role"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          enabled?: boolean | null
+          id?: string
+          metadata?: Json | null
+          name: string
+          required_role?: Database["public"]["Enums"]["app_role"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          enabled?: boolean | null
+          id?: string
+          metadata?: Json | null
+          name?: string
+          required_role?: Database["public"]["Enums"]["app_role"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       chat_sessions: {
         Row: {
           created_at: string | null
@@ -363,6 +396,7 @@ export type Database = {
           position: Json | null
           rate_limit_window: string | null
           retry_count: number | null
+          role: string | null
           type: Database["public"]["Enums"]["message_type"] | null
           updated_at: string | null
           user_id: string
@@ -381,6 +415,7 @@ export type Database = {
           position?: Json | null
           rate_limit_window?: string | null
           retry_count?: number | null
+          role?: string | null
           type?: Database["public"]["Enums"]["message_type"] | null
           updated_at?: string | null
           user_id: string
@@ -399,6 +434,7 @@ export type Database = {
           position?: Json | null
           rate_limit_window?: string | null
           retry_count?: number | null
+          role?: string | null
           type?: Database["public"]["Enums"]["message_type"] | null
           updated_at?: string | null
           user_id?: string
