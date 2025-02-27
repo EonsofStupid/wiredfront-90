@@ -1,12 +1,13 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
-// Simplified mode types - just 'standard' and 'editor'
-export type ChatMode = 'standard' | 'editor';
+// Extended mode types to include 'chat-only'
+export type ChatMode = 'standard' | 'editor' | 'chat-only';
 
 interface ChatModeContextType {
   mode: ChatMode;
   isEditorPage: boolean;
+  setMode?: (mode: ChatMode) => void;
 }
 
 const ChatModeContext = createContext<ChatModeContextType | undefined>(undefined);
@@ -17,11 +18,17 @@ interface ChatModeProviderProps {
 }
 
 export function ChatModeProvider({ children, isEditorPage }: ChatModeProviderProps) {
-  // Set mode based on page context
-  const mode: ChatMode = isEditorPage ? 'editor' : 'standard';
+  // Default mode based on page context
+  const defaultMode: ChatMode = isEditorPage ? 'editor' : 'standard';
+  const [mode, setMode] = useState<ChatMode>(defaultMode);
+
+  // Reset mode when switching pages
+  useEffect(() => {
+    setMode(isEditorPage ? 'editor' : 'standard');
+  }, [isEditorPage]);
 
   return (
-    <ChatModeContext.Provider value={{ mode, isEditorPage }}>
+    <ChatModeContext.Provider value={{ mode, isEditorPage, setMode }}>
       {children}
     </ChatModeContext.Provider>
   );

@@ -34,6 +34,12 @@ export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatConten
           </div>
         )}
         
+        {mode === 'chat-only' && (
+          <div className="mt-4 space-y-2">
+            <RAGModule />
+          </div>
+        )}
+        
         {mode === 'editor' && (
           <div className="mt-4 space-y-2">
             <GitHubSyncModule />
