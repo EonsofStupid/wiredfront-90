@@ -1,12 +1,11 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
-export type ChatMode = 'default' | 'chat-only';
+// Simplified mode types - just 'standard' and 'editor'
+export type ChatMode = 'standard' | 'editor';
 
 interface ChatModeContextType {
   mode: ChatMode;
-  toggleMode: () => void;
-  setMode: (mode: ChatMode) => void;
   isEditorPage: boolean;
 }
 
@@ -18,21 +17,11 @@ interface ChatModeProviderProps {
 }
 
 export function ChatModeProvider({ children, isEditorPage }: ChatModeProviderProps) {
-  const [mode, setMode] = useState<ChatMode>('default');
-
-  // Set appropriate mode based on page context when component mounts or route changes
-  useEffect(() => {
-    if (isEditorPage) {
-      setMode('default'); // Code generation mode is default in editor
-    }
-  }, [isEditorPage]);
-
-  const toggleMode = () => {
-    setMode(prev => prev === 'default' ? 'chat-only' : 'default');
-  };
+  // Set mode based on page context
+  const mode: ChatMode = isEditorPage ? 'editor' : 'standard';
 
   return (
-    <ChatModeContext.Provider value={{ mode, toggleMode, setMode, isEditorPage }}>
+    <ChatModeContext.Provider value={{ mode, isEditorPage }}>
       {children}
     </ChatModeContext.Provider>
   );

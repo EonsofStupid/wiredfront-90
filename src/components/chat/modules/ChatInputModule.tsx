@@ -61,16 +61,10 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
     }
   };
 
-  // Determine placeholder text based on context
-  let placeholder = "Type a message...";
-  
-  if (isEditorPage) {
-    placeholder = "Ask for code assistance...";
-  } else if (mode === 'chat-only') {
-    placeholder = "Ask a question for planning or research...";
-  } else if (mode === 'default') {
-    placeholder = "Type a message for code generation...";
-  }
+  // Determine placeholder text based on mode
+  let placeholder = mode === 'editor' 
+    ? "Ask for code assistance..." 
+    : "Type a message...";
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2 w-full">

@@ -1,7 +1,6 @@
 
 import React from "react";
 import { CardContent, CardFooter } from "@/components/ui/card";
-import { ModeSwitchModule } from "../modules/ModeSwitchModule";
 import { MessageModule } from "../modules/MessageModule";
 import { RAGModule } from "../modules/RAGModule";
 import { GitHubSyncModule } from "../modules/GitHubSyncModule";
@@ -25,24 +24,17 @@ export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatConten
   return (
     <>
       <CardContent className="p-4">
-        {/* Only show mode switch if not in editor page */}
-        {!isEditorPage && (
-          <div className="mb-4">
-            <ModeSwitchModule />
-          </div>
-        )}
-        
         {/* Message display area */}
         <MessageModule scrollRef={scrollRef} />
         
         {/* Mode-specific modules */}
-        {mode === 'chat-only' && !isEditorPage && (
+        {mode === 'standard' && (
           <div className="mt-4 space-y-2">
             <RAGModule />
           </div>
         )}
         
-        {(mode === 'default' || isEditorPage) && (
+        {mode === 'editor' && (
           <div className="mt-4 space-y-2">
             <GitHubSyncModule />
             <NotificationsModule />

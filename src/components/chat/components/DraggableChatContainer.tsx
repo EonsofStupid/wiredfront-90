@@ -63,11 +63,8 @@ export function DraggableChatContainer({
     return () => window.removeEventListener('resize', updatePosition);
   }, []);
 
-  // Determine the title based on the current mode and page
-  let title = mode === 'default' ? 'Code Generation' : 'Planning & Research';
-  if (isEditorPage) {
-    title = 'Code Assistant';
-  }
+  // Determine the title based on the current mode
+  const title = mode === 'editor' ? 'Code Assistant' : 'Chat';
 
   return (
     <div 
