@@ -23,7 +23,6 @@ import { GeneralSettings } from "@/components/admin/settings/GeneralSettings";
 import { ChatSettings } from "@/components/admin/settings/ChatSettings";
 import { LivePreviewSettings } from "@/components/admin/settings/LivePreviewSettings";
 import { GuestCTA } from "@/components/auth/GuestCTA";
-import { AdminLayout } from "@/components/admin/layout/AdminLayout";
 import Settings from "./pages/Settings";
 import { DraggableChat } from "@/components/chat/DraggableChat";
 import { DndContext } from "@dnd-kit/core";
@@ -34,7 +33,8 @@ const PROTECTED_ROUTES = [
   '/documents', 
   '/ai', 
   '/analytics',
-  '/settings'
+  '/settings',
+  '/admin'
 ];
 
 const ADMIN_ROUTES = [
@@ -107,26 +107,20 @@ const App = () => {
               <Route path="/documents" element={<Documents />} />
               <Route path="/settings" element={<Settings />} />
               
-              <Route 
-                path="/admin/*" 
-                element={
-                  <Routes>
-                    <Route path="/" element={<AdminDashboard />} />
-                    <Route path="settings/api" element={<APISettings />} />
-                    <Route path="settings/accessibility" element={<AccessibilitySettings />} />
-                    <Route path="settings/notifications" element={<NotificationSettings />} />
-                    <Route path="settings/general" element={<GeneralSettings />} />
-                    <Route path="settings/chat" element={<ChatSettings />} />
-                    <Route path="settings/live-preview" element={<LivePreviewSettings />} />
-                    <Route path="users" element={<div>Users Management</div>} />
-                    <Route path="models" element={<div>Models Configuration</div>} />
-                    <Route path="queues" element={<div>Queue Management</div>} />
-                    <Route path="cache" element={<div>Cache Control</div>} />
-                    <Route path="activity" element={<div>Activity Logs</div>} />
-                    <Route path="database" element={<div>Database Management</div>} />
-                  </Routes>
-                } 
-              />
+              {/* Admin routes - now using the main layout rather than a custom admin layout */}
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/settings/api" element={<APISettings />} />
+              <Route path="/admin/settings/accessibility" element={<AccessibilitySettings />} />
+              <Route path="/admin/settings/notifications" element={<NotificationSettings />} />
+              <Route path="/admin/settings/general" element={<GeneralSettings />} />
+              <Route path="/admin/settings/chat" element={<ChatSettings />} />
+              <Route path="/admin/settings/live-preview" element={<LivePreviewSettings />} />
+              <Route path="/admin/users" element={<div>Users Management</div>} />
+              <Route path="/admin/models" element={<div>Models Configuration</div>} />
+              <Route path="/admin/queues" element={<div>Queue Management</div>} />
+              <Route path="/admin/cache" element={<div>Cache Control</div>} />
+              <Route path="/admin/activity" element={<div>Activity Logs</div>} />
+              <Route path="/admin/database" element={<div>Database Management</div>} />
             </Routes>
             <GuestCTA />
           </CurrentLayout>
@@ -140,10 +134,7 @@ const App = () => {
 
 const CurrentLayout = ({ children }: { children: React.ReactNode }) => {
   const isMobile = useIsMobile();
-  const location = useLocation();
-  const isAdminRoute = ADMIN_ROUTES.some(route => location.pathname.startsWith('/admin'));
   
-  if (isAdminRoute) return <AdminLayout>{children}</AdminLayout>;
   if (isMobile) return <MobileLayout>{children}</MobileLayout>;
   return <MainLayout>{children}</MainLayout>;
 };
