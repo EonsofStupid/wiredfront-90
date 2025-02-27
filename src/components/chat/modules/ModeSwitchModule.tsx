@@ -6,7 +6,12 @@ import { MessageSquareIcon, CodeIcon } from "lucide-react";
 import { toast } from "sonner";
 
 export function ModeSwitchModule() {
-  const { mode, toggleMode } = useChatMode();
+  const { mode, toggleMode, isEditorPage } = useChatMode();
+
+  // Don't show the mode switch on editor page
+  if (isEditorPage) {
+    return null;
+  }
 
   const handleToggleMode = () => {
     toggleMode();

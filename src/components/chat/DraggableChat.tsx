@@ -9,7 +9,7 @@ import { DraggableChatContainer } from "./components/DraggableChatContainer";
 export function DraggableChat() {
   const [isMinimized, setIsMinimized] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
-  const { isOpen, toggleChat } = useChat();
+  const { isOpen, toggleChat, isEditorPage } = useChat();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   if (!isOpen) {
@@ -27,6 +27,7 @@ export function DraggableChat() {
         onMinimize={() => setIsMinimized(!isMinimized)}
         onClose={toggleChat}
         scrollRef={scrollRef}
+        isEditorPage={isEditorPage}
       />
     </div>
   );

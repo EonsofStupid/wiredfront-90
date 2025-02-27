@@ -12,9 +12,10 @@ import { useChatMode } from "../providers/ChatModeProvider";
 interface ChatContentProps {
   scrollRef: React.RefObject<HTMLDivElement>;
   isMinimized: boolean;
+  isEditorPage: boolean;
 }
 
-export function ChatContent({ scrollRef, isMinimized }: ChatContentProps) {
+export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatContentProps) {
   const { mode } = useChatMode();
 
   if (isMinimized) {
@@ -24,21 +25,24 @@ export function ChatContent({ scrollRef, isMinimized }: ChatContentProps) {
   return (
     <>
       <CardContent className="p-4">
-        <div className="mb-4">
-          <ModeSwitchModule />
-        </div>
+        {/* Only show mode switch if not in editor page */}
+        {!isEditorPage && (
+          <div className="mb-4">
+            <ModeSwitchModule />
+          </div>
+        )}
         
         {/* Message display area */}
         <MessageModule scrollRef={scrollRef} />
         
         {/* Mode-specific modules */}
-        {mode === 'chat-only' && (
+        {mode === 'chat-only' && !isEditorPage && (
           <div className="mt-4 space-y-2">
             <RAGModule />
           </div>
         )}
         
-        {mode === 'default' && (
+        {(mode === 'default' || isEditorPage) && (
           <div className="mt-4 space-y-2">
             <GitHubSyncModule />
             <NotificationsModule />
@@ -47,7 +51,7 @@ export function ChatContent({ scrollRef, isMinimized }: ChatContentProps) {
       </CardContent>
 
       <CardFooter className="p-4 border-t">
-        <ChatInputModule />
+        <ChatInputModule isEditorPage={isEditorPage} />
       </CardFooter>
     </>
   );

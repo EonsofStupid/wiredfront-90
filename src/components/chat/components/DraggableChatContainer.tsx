@@ -13,6 +13,7 @@ interface DraggableChatContainerProps {
   onMinimize: () => void;
   onClose: () => void;
   scrollRef: React.RefObject<HTMLDivElement>;
+  isEditorPage: boolean;
 }
 
 export function DraggableChatContainer({
@@ -22,6 +23,7 @@ export function DraggableChatContainer({
   onMinimize,
   onClose,
   scrollRef,
+  isEditorPage,
 }: DraggableChatContainerProps) {
   const { mode } = useChatMode();
   const chatRef = useRef<HTMLDivElement>(null);
@@ -61,7 +63,11 @@ export function DraggableChatContainer({
     return () => window.removeEventListener('resize', updatePosition);
   }, []);
 
-  const title = mode === 'default' ? 'Code Generation' : 'Planning & Research';
+  // Determine the title based on the current mode and page
+  let title = mode === 'default' ? 'Code Generation' : 'Planning & Research';
+  if (isEditorPage) {
+    title = 'Code Assistant';
+  }
 
   return (
     <div 
@@ -91,6 +97,7 @@ export function DraggableChatContainer({
         <ChatContent 
           scrollRef={scrollRef} 
           isMinimized={isMinimized} 
+          isEditorPage={isEditorPage}
         />
       </Card>
     </div>

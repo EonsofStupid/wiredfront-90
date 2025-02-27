@@ -9,9 +9,10 @@ import { useChatMode } from "../providers/ChatModeProvider";
 
 interface ChatInputModuleProps {
   onMessageSubmit?: (content: string) => void;
+  isEditorPage?: boolean;
 }
 
-export function ChatInputModule({ onMessageSubmit }: ChatInputModuleProps) {
+export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatInputModuleProps) {
   const [message, setMessage] = useState("");
   const { addMessage, currentSessionId, isProcessing } = useMessageStore();
   const { mode } = useChatMode();
@@ -60,9 +61,16 @@ export function ChatInputModule({ onMessageSubmit }: ChatInputModuleProps) {
     }
   };
 
-  const placeholder = mode === 'chat-only' 
-    ? "Ask a question for planning or research..." 
-    : "Type a message for code generation...";
+  // Determine placeholder text based on context
+  let placeholder = "Type a message...";
+  
+  if (isEditorPage) {
+    placeholder = "Ask for code assistance...";
+  } else if (mode === 'chat-only') {
+    placeholder = "Ask a question for planning or research...";
+  } else if (mode === 'default') {
+    placeholder = "Type a message for code generation...";
+  }
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2 w-full">
