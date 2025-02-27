@@ -26,6 +26,7 @@ import { GuestCTA } from "@/components/auth/GuestCTA";
 import Settings from "./pages/Settings";
 import { DraggableChat } from "@/components/chat/DraggableChat";
 import { DndContext } from "@dnd-kit/core";
+import { AdminTopNavOverlay } from "@/components/admin/navigation/AdminTopNavOverlay";
 
 const PROTECTED_ROUTES = [
   '/dashboard', 
@@ -81,6 +82,7 @@ const App = () => {
   }, [isAuthenticated, location.pathname, navigate]);
 
   const isPublicRoute = location.pathname === '/login' || location.pathname === '/';
+  const isAdminRoute = ADMIN_ROUTES.some(route => location.pathname.startsWith(route));
   
   return (
     <ChatProvider>
@@ -94,6 +96,7 @@ const App = () => {
           </AppLayout>
         ) : (
           <CurrentLayout>
+            {isAdminRoute && <AdminTopNavOverlay />}
             <Routes>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route 
