@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
 import { Toaster } from "sonner";
+import { ChatModeProvider } from './providers/ChatModeProvider';
 
 interface ChatContextType {
   isOpen: boolean;
@@ -18,8 +19,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   return (
     <ChatContext.Provider value={{ isOpen, toggleChat }}>
-      {children}
-      <Toaster />
+      <ChatModeProvider>
+        {children}
+        <Toaster />
+      </ChatModeProvider>
     </ChatContext.Provider>
   );
 }

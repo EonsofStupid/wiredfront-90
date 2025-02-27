@@ -1,24 +1,27 @@
 
 import React, { useState, useRef, useEffect } from "react";
-import { X, Minus, MessageSquare, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, Minus, MessageSquare, CodeIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { useDraggable } from "@dnd-kit/core";
 import { useMessageStore } from "./messaging/MessageManager";
 import { useChat } from "./ChatProvider";
+import { useChatMode } from "./providers/ChatModeProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { MessageModule } from "./modules/MessageModule";
+import { RAGModule } from "./modules/RAGModule";
+import { GitHubSyncModule } from "./modules/GitHubSyncModule";
+import { NotificationsModule } from "./modules/NotificationsModule";
+import { ChatInputModule } from "./modules/ChatInputModule";
+import { ModeSwitchModule } from "./modules/ModeSwitchModule";
 import { ChatSidebar } from "./ChatSidebar";
-import { Message } from "./Message";
-import { VoiceRecorder } from "./VoiceRecorder";
 import { toast } from "sonner";
 
 export function DraggableChat() {
   const [isMinimized, setIsMinimized] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [message, setMessage] = useState("");
-  const { messages, addMessage, currentSessionId, isProcessing } = useMessageStore();
+  const { currentSessionId } = useMessageStore();
   const { isOpen, toggleChat } = useChat();
+  const { mode } = useChatMode();
   const chatRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -35,51 +38,11 @@ export function DraggableChat() {
     transform: `translate3d(${adjustedTransform.x}px, ${adjustedTransform.y}px, 0)`,
   } : undefined;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentSessionId) {
-      toast.error('No active chat session');
-      return;
-    }
-    
-    if (message.trim()) {
-      try {
-        await addMessage({
-          content: message.trim(),
-          role: 'user',
-          sessionId: currentSessionId
-        });
-        setMessage("");
-      } catch (error) {
-        console.error('Failed to send message:', error);
-        toast.error('Failed to send message');
-      }
-    }
-  };
-
-  const handleTranscription = async (text: string) => {
-    if (!currentSessionId) {
-      toast.error('No active chat session');
-      return;
-    }
-
-    try {
-      await addMessage({
-        content: text,
-        role: 'user',
-        sessionId: currentSessionId
-      });
-    } catch (error) {
-      console.error('Failed to send transcribed message:', error);
-      toast.error('Failed to send message');
-    }
-  };
-
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [useMessageStore().messages]);
 
   useEffect(() => {
     if (!chatRef.current) return;
@@ -109,7 +72,11 @@ export function DraggableChat() {
         onClick={toggleChat}
         className="fixed bottom-4 right-4 p-4 rounded-full shadow-lg z-[var(--z-chat)] glass-card neon-glow hover:scale-105 transition-transform duration-200"
       >
-        <MessageSquare className="h-6 w-6" />
+        {mode === 'default' ? (
+          <CodeIcon className="h-6 w-6" />
+        ) : (
+          <MessageSquare className="h-6 w-6" />
+        )}
       </Button>
     );
   }
@@ -141,7 +108,9 @@ export function DraggableChat() {
               >
                 {showSidebar ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
               </Button>
-              <span className="font-semibold">Chat</span>
+              <span className="font-semibold">
+                {mode === 'default' ? 'Code Generation' : 'Planning & Research'}
+              </span>
             </div>
             <div className="flex gap-2">
               <Button
@@ -166,44 +135,30 @@ export function DraggableChat() {
           {!isMinimized && (
             <>
               <CardContent className="p-4">
-                <ScrollArea 
-                  ref={scrollRef}
-                  className="h-[300px] w-full pr-4"
-                >
-                  <div className="flex flex-col gap-4">
-                    {messages.map((msg) => (
-                      <Message
-                        key={msg.id}
-                        content={msg.content}
-                        role={msg.role}
-                        status={msg.message_status}
-                      />
-                    ))}
+                <div className="mb-4">
+                  <ModeSwitchModule />
+                </div>
+                
+                {/* Message display area */}
+                <MessageModule scrollRef={scrollRef} />
+                
+                {/* Mode-specific modules */}
+                {mode === 'chat-only' && (
+                  <div className="mt-4 space-y-2">
+                    <RAGModule />
                   </div>
-                </ScrollArea>
+                )}
+                
+                {mode === 'default' && (
+                  <div className="mt-4 space-y-2">
+                    <GitHubSyncModule />
+                    <NotificationsModule />
+                  </div>
+                )}
               </CardContent>
 
               <CardFooter className="p-4 border-t">
-                <form onSubmit={handleSubmit} className="flex gap-2 w-full">
-                  <Input
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Type a message..."
-                    className="flex-1"
-                    disabled={isProcessing}
-                  />
-                  <VoiceRecorder 
-                    onTranscription={handleTranscription}
-                    isProcessing={isProcessing}
-                  />
-                  <Button 
-                    type="submit" 
-                    disabled={isProcessing}
-                    className="min-w-[80px]"
-                  >
-                    {isProcessing ? 'Sending...' : 'Send'}
-                  </Button>
-                </form>
+                <ChatInputModule />
               </CardFooter>
             </>
           )}
