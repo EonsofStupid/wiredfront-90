@@ -20,14 +20,20 @@ export function ChatHeader({
   onMinimize,
   onClose,
 }: ChatHeaderProps) {
+  // Prevent propagation to avoid triggering drag when clicking buttons
+  const handleButtonClick = (e: React.MouseEvent, callback: () => void) => {
+    e.stopPropagation();
+    callback();
+  };
+
   return (
-    <div className="p-4 cursor-move flex flex-row justify-between items-center">
+    <div className="p-4 flex flex-row justify-between items-center">
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8"
-          onClick={onToggleSidebar}
+          className="h-8 w-8 hover:bg-white/10"
+          onClick={(e) => handleButtonClick(e, onToggleSidebar)}
         >
           {showSidebar ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>
@@ -37,16 +43,16 @@ export function ChatHeader({
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8"
-          onClick={onMinimize}
+          className="h-8 w-8 hover:bg-white/10"
+          onClick={(e) => handleButtonClick(e, onMinimize)}
         >
           <Minus className="h-4 w-4" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8"
-          onClick={onClose}
+          className="h-8 w-8 hover:bg-white/10"
+          onClick={(e) => handleButtonClick(e, onClose)}
         >
           <X className="h-4 w-4" />
         </Button>

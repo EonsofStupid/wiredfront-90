@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { Toaster } from "sonner";
@@ -86,51 +85,48 @@ const App = () => {
   
   return (
     <ChatProvider>
-      <DndContext>
-        {isPublicRoute ? (
-          <AppLayout>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-            </Routes>
-          </AppLayout>
-        ) : (
-          <CurrentLayout>
-            {isAdminRoute && <AdminTopNavOverlay />}
-            <Routes>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route 
-                path="/editor" 
-                element={
-                  <EditorModeProvider>
-                    <Editor />
-                  </EditorModeProvider>
-                } 
-              />
-              <Route path="/documents" element={<Documents />} />
-              <Route path="/settings" element={<Settings />} />
-              
-              {/* Admin routes - now using the main layout rather than a custom admin layout */}
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/settings/api" element={<APISettings />} />
-              <Route path="/admin/settings/accessibility" element={<AccessibilitySettings />} />
-              <Route path="/admin/settings/notifications" element={<NotificationSettings />} />
-              <Route path="/admin/settings/general" element={<GeneralSettings />} />
-              <Route path="/admin/settings/chat" element={<ChatSettings />} />
-              <Route path="/admin/settings/live-preview" element={<LivePreviewSettings />} />
-              <Route path="/admin/users" element={<div>Users Management</div>} />
-              <Route path="/admin/models" element={<div>Models Configuration</div>} />
-              <Route path="/admin/queues" element={<div>Queue Management</div>} />
-              <Route path="/admin/cache" element={<div>Cache Control</div>} />
-              <Route path="/admin/activity" element={<div>Activity Logs</div>} />
-              <Route path="/admin/database" element={<div>Database Management</div>} />
-            </Routes>
-            <GuestCTA />
-          </CurrentLayout>
-        )}
-        <DraggableChat />
-        <Toaster />
-      </DndContext>
+      {isPublicRoute ? (
+        <AppLayout>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+          </Routes>
+        </AppLayout>
+      ) : (
+        <CurrentLayout>
+          {isAdminRoute && <AdminTopNavOverlay />}
+          <Routes>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route 
+              path="/editor" 
+              element={
+                <EditorModeProvider>
+                  <Editor />
+                </EditorModeProvider>
+              } 
+            />
+            <Route path="/documents" element={<Documents />} />
+            <Route path="/settings" element={<Settings />} />
+            
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/settings/api" element={<APISettings />} />
+            <Route path="/admin/settings/accessibility" element={<AccessibilitySettings />} />
+            <Route path="/admin/settings/notifications" element={<NotificationSettings />} />
+            <Route path="/admin/settings/general" element={<GeneralSettings />} />
+            <Route path="/admin/settings/chat" element={<ChatSettings />} />
+            <Route path="/admin/settings/live-preview" element={<LivePreviewSettings />} />
+            <Route path="/admin/users" element={<div>Users Management</div>} />
+            <Route path="/admin/models" element={<div>Models Configuration</div>} />
+            <Route path="/admin/queues" element={<div>Queue Management</div>} />
+            <Route path="/admin/cache" element={<div>Cache Control</div>} />
+            <Route path="/admin/activity" element={<div>Activity Logs</div>} />
+            <Route path="/admin/database" element={<div>Database Management</div>} />
+          </Routes>
+          <GuestCTA />
+        </CurrentLayout>
+      )}
+      <DraggableChat />
+      <Toaster />
     </ChatProvider>
   );
 };

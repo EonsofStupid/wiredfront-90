@@ -17,19 +17,21 @@ export function DraggableChat() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 flex gap-4 z-[var(--z-chat)]">
-      {showSidebar && <ChatSidebar />}
-      
-      <DraggableChatContainer
-        showSidebar={showSidebar}
-        isMinimized={isMinimized}
-        onToggleSidebar={() => setShowSidebar(!showSidebar)}
-        onMinimize={() => setIsMinimized(!isMinimized)}
-        onClose={toggleChat}
-        scrollRef={scrollRef}
-        isEditorPage={isEditorPage}
-      />
-    </div>
+    <DndContext>
+      <div className="fixed bottom-4 right-4 flex gap-4 z-[var(--z-chat)]">
+        {showSidebar && <ChatSidebar />}
+        
+        <DraggableChatContainer
+          showSidebar={showSidebar}
+          isMinimized={isMinimized}
+          onToggleSidebar={() => setShowSidebar(!showSidebar)}
+          onMinimize={() => setIsMinimized(!isMinimized)}
+          onClose={toggleChat}
+          scrollRef={scrollRef}
+          isEditorPage={isEditorPage}
+        />
+      </div>
+    </DndContext>
   );
 }
 

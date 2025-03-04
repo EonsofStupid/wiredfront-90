@@ -13,9 +13,14 @@ export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
   const { mode } = useChatMode();
   const { isEditorPage } = useChat();
 
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onClick();
+  };
+
   return (
     <Button
-      onClick={onClick}
+      onClick={handleClick}
       className="fixed bottom-4 right-4 p-4 rounded-full shadow-lg z-[var(--z-chat)] glass-card neon-glow hover:scale-105 transition-transform duration-200"
       title={
         mode === 'editor' 

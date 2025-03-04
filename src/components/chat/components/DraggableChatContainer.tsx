@@ -34,7 +34,7 @@ export function DraggableChatContainer({
 
   const adjustedTransform = transform ? {
     x: transform.x,
-    y: 0,
+    y: transform.y,
   } : undefined;
 
   const style = adjustedTransform ? {
@@ -64,7 +64,12 @@ export function DraggableChatContainer({
   }, []);
 
   // Determine the title based on the current mode
-  const title = mode === 'editor' ? 'Code Assistant' : 'Chat';
+  const title = mode === 'editor' ? 'Code Assistant' : mode === 'chat-only' ? 'Context Planning' : 'Chat';
+
+  // Stop propagation for clicks inside the chat window
+  const handleContainerClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
 
   return (
     <div 
@@ -78,9 +83,10 @@ export function DraggableChatContainer({
       {...attributes}
       {...listeners}
       className="w-[400px]"
+      onClick={handleContainerClick}
     >
-      <Card className="shadow-xl glass-card neon-border">
-        <CardHeader className="p-0">
+      <Card className="shadow-xl glass-card neon-border overflow-hidden">
+        <CardHeader className="p-0 cursor-move">
           <ChatHeader 
             title={title}
             showSidebar={showSidebar}

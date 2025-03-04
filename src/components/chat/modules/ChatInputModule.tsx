@@ -19,6 +19,8 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    
     if (!currentSessionId) {
       toast.error('No active chat session');
       return;
@@ -70,12 +72,21 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
     placeholder = "Discuss ideas and refine context...";
   }
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessage(e.target.value);
+  };
+
+  const handleInputClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 w-full">
+    <form onSubmit={handleSubmit} className="flex gap-2 w-full" onClick={(e) => e.stopPropagation()}>
       <div className="relative flex-1 group">
         <Input
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={handleInputChange}
+          onClick={handleInputClick}
           placeholder={placeholder}
           className="bg-[#1A1F2C]/80 border-white/10 text-white group-hover:border-[#8B5CF6]/50 transition-all duration-300"
           disabled={isProcessing}

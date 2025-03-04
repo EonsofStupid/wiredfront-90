@@ -21,9 +21,14 @@ export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatConten
     return null;
   }
 
+  // Prevent event propagation to avoid triggering drag
+  const handleContentClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   return (
     <>
-      <CardContent className="p-4">
+      <CardContent className="p-4" onClick={handleContentClick}>
         {/* Message display area */}
         <MessageModule scrollRef={scrollRef} />
         
@@ -48,7 +53,7 @@ export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatConten
         )}
       </CardContent>
 
-      <CardFooter className="p-4 border-t">
+      <CardFooter className="p-4 border-t" onClick={handleContentClick}>
         <ChatInputModule isEditorPage={isEditorPage} />
       </CardFooter>
     </>
