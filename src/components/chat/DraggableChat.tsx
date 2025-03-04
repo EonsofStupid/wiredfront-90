@@ -1,32 +1,47 @@
 
-import React, { useState, useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { DndContext } from "@dnd-kit/core";
-import { useChat } from "./ChatProvider";
 import { ChatSidebar } from "./ChatSidebar";
 import { ChatToggleButton } from "./components/ChatToggleButton";
 import { DraggableChatContainer } from "./components/DraggableChatContainer";
+import { useViewportAwareness } from "./hooks/useViewportAwareness";
+import { useChatStore } from "./store/chatStore";
+import { useLocation } from "react-router-dom";
 
 export function DraggableChat() {
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(false);
-  const { isOpen, toggleChat, isEditorPage } = useChat();
+  const { isOpen, toggleChat, position, isMinimized, showSidebar, toggleSidebar } = useChatStore();
+  const { containerRef, isOverflowing } = useViewportAwareness();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  const isEditorPage = location.pathname === '/editor';
+
+  // Scroll to bottom of messages when new message is added
+  useEffect(() => {
+    if (scrollRef.current && !isMinimized) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [isMinimized]);
 
   if (!isOpen) {
     return <ChatToggleButton onClick={toggleChat} />;
   }
 
+  const positionClass = position === 'bottom-right' ? 'right-4' : 'left-4';
+
   return (
     <DndContext>
-      <div className="fixed bottom-4 right-4 flex gap-4 z-[var(--z-chat)]">
+      <div 
+        className={`fixed bottom-4 ${positionClass} flex gap-4 z-[var(--z-chat)]`}
+        style={{ 
+          transition: 'all 0.3s ease',
+          transform: isOverflowing ? `scale(${useChatStore.getState().scale})` : 'scale(1)',
+          transformOrigin: position === 'bottom-right' ? 'bottom right' : 'bottom left'
+        }}
+        ref={containerRef}
+      >
         {showSidebar && <ChatSidebar />}
         
         <DraggableChatContainer
-          showSidebar={showSidebar}
-          isMinimized={isMinimized}
-          onToggleSidebar={() => setShowSidebar(!showSidebar)}
-          onMinimize={() => setIsMinimized(!isMinimized)}
-          onClose={toggleChat}
           scrollRef={scrollRef}
           isEditorPage={isEditorPage}
         />

@@ -5,34 +5,26 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { ChatHeader } from "./ChatHeader";
 import { ChatContent } from "./ChatContent";
 import { useChatMode } from "../providers/ChatModeProvider";
+import { useChatStore } from "../store/chatStore";
 
 interface DraggableChatContainerProps {
-  showSidebar: boolean;
-  isMinimized: boolean;
-  onToggleSidebar: () => void;
-  onMinimize: () => void;
-  onClose: () => void;
   scrollRef: React.RefObject<HTMLDivElement>;
   isEditorPage: boolean;
 }
 
 export function DraggableChatContainer({
-  showSidebar,
-  isMinimized,
-  onToggleSidebar,
-  onMinimize,
-  onClose,
   scrollRef,
   isEditorPage,
 }: DraggableChatContainerProps) {
   const { mode } = useChatMode();
   const chatRef = useRef<HTMLDivElement>(null);
+  const { isMinimized, showSidebar, toggleSidebar, toggleMinimize, toggleChat, docked } = useChatStore();
 
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: "chat-window",
   });
 
-  const adjustedTransform = transform ? {
+  const adjustedTransform = transform && !docked ? {
     x: transform.x,
     y: transform.y,
   } : undefined;
@@ -42,7 +34,7 @@ export function DraggableChatContainer({
   } : undefined;
 
   useEffect(() => {
-    if (!chatRef.current) return;
+    if (!chatRef.current || docked) return;
 
     const updatePosition = () => {
       if (!chatRef.current) return;
@@ -50,18 +42,19 @@ export function DraggableChatContainer({
       const viewportWidth = window.innerWidth;
       
       if (rect.right > viewportWidth) {
-        const overflow = rect.right - viewportWidth;
+        const overflow = rect.right - viewportWidth + 20; // 20px margin
         chatRef.current.style.transform = `translate3d(${-overflow}px, 0, 0)`;
       }
+      
       if (rect.left < 0) {
-        chatRef.current.style.transform = `translate3d(0, 0, 0)`;
+        chatRef.current.style.transform = `translate3d(${Math.abs(rect.left) + 20}px, 0, 0)`;
       }
     };
 
     updatePosition();
     window.addEventListener('resize', updatePosition);
     return () => window.removeEventListener('resize', updatePosition);
-  }, []);
+  }, [docked]);
 
   // Determine the title based on the current mode
   const title = mode === 'editor' ? 'Code Assistant' : mode === 'chat-only' ? 'Context Planning' : 'Chat';
@@ -80,20 +73,19 @@ export function DraggableChatContainer({
         }
       }}
       style={style}
-      {...attributes}
-      {...listeners}
-      className="w-[400px]"
+      {...(docked ? {} : { ...attributes, ...listeners })}
+      className="w-[400px] transition-all duration-300"
       onClick={handleContainerClick}
     >
       <Card className="shadow-xl glass-card neon-border overflow-hidden">
-        <CardHeader className="p-0 cursor-move">
+        <CardHeader className={`p-0 ${docked ? '' : 'cursor-move'}`}>
           <ChatHeader 
             title={title}
             showSidebar={showSidebar}
             isMinimized={isMinimized}
-            onToggleSidebar={onToggleSidebar}
-            onMinimize={onMinimize}
-            onClose={onClose}
+            onToggleSidebar={toggleSidebar}
+            onMinimize={toggleMinimize}
+            onClose={toggleChat}
           />
         </CardHeader>
 

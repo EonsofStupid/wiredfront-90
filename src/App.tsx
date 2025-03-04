@@ -21,10 +21,10 @@ import { NotificationSettings } from "@/components/admin/settings/NotificationSe
 import { GeneralSettings } from "@/components/admin/settings/GeneralSettings";
 import { ChatSettings } from "@/components/admin/settings/ChatSettings";
 import { LivePreviewSettings } from "@/components/admin/settings/LivePreviewSettings";
+import { ChatFeatureSettings } from "@/components/admin/settings/ChatFeatureSettings";
 import { GuestCTA } from "@/components/auth/GuestCTA";
 import Settings from "./pages/Settings";
 import { DraggableChat } from "@/components/chat/DraggableChat";
-import { DndContext } from "@dnd-kit/core";
 import { AdminTopNavOverlay } from "@/components/admin/navigation/AdminTopNavOverlay";
 
 const PROTECTED_ROUTES = [
@@ -114,6 +114,7 @@ const App = () => {
             <Route path="/admin/settings/notifications" element={<NotificationSettings />} />
             <Route path="/admin/settings/general" element={<GeneralSettings />} />
             <Route path="/admin/settings/chat" element={<ChatSettings />} />
+            <Route path="/admin/settings/chat-features" element={<ChatFeatureSettings />} />
             <Route path="/admin/settings/live-preview" element={<LivePreviewSettings />} />
             <Route path="/admin/users" element={<div>Users Management</div>} />
             <Route path="/admin/models" element={<div>Models Configuration</div>} />

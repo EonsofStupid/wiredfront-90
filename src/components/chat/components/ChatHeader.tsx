@@ -1,7 +1,9 @@
 
 import React from "react";
-import { ChevronLeft, ChevronRight, Minus, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Minus, X, Pin, PinOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ChatPositionToggle } from "./ChatPositionToggle";
+import { useChatStore } from "../store/chatStore";
 
 interface ChatHeaderProps {
   title: string;
@@ -20,6 +22,8 @@ export function ChatHeader({
   onMinimize,
   onClose,
 }: ChatHeaderProps) {
+  const { docked, toggleDocked } = useChatStore();
+
   // Prevent propagation to avoid triggering drag when clicking buttons
   const handleButtonClick = (e: React.MouseEvent, callback: () => void) => {
     e.stopPropagation();
@@ -40,6 +44,18 @@ export function ChatHeader({
         <span className="font-semibold">{title}</span>
       </div>
       <div className="flex gap-2">
+        <ChatPositionToggle />
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 hover:bg-white/10"
+          onClick={(e) => handleButtonClick(e, toggleDocked)}
+          title={docked ? "Undock chat" : "Dock chat"}
+        >
+          {docked ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
+        </Button>
+        
         <Button
           variant="ghost"
           size="icon"
@@ -48,6 +64,7 @@ export function ChatHeader({
         >
           <Minus className="h-4 w-4" />
         </Button>
+        
         <Button
           variant="ghost"
           size="icon"

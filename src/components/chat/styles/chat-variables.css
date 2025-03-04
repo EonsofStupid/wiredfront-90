@@ -1,0 +1,92 @@
+
+:root {
+  /* Chat specific variables */
+  --chat-width: 400px;
+  --chat-height: 500px;
+  --chat-border-radius: var(--radius);
+  --chat-bg: rgba(0, 0, 0, 0.3);
+  --chat-text: var(--foreground);
+  --chat-header-bg: rgba(0, 0, 0, 0.2);
+  --chat-message-user-bg: var(--primary);
+  --chat-message-user-text: var(--primary-foreground);
+  --chat-message-assistant-bg: var(--secondary);
+  --chat-message-assistant-text: var(--secondary-foreground);
+  --chat-message-system-bg: var(--muted);
+  --chat-message-system-text: var(--muted-foreground);
+  --chat-input-bg: rgba(0, 0, 0, 0.2);
+  --chat-scrollbar-width: 6px;
+  --chat-transition-speed: 0.3s;
+  --chat-box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  --chat-neon-glow: 0 0 15px rgba(0, 255, 255, 0.5), 0 0 30px rgba(255, 0, 127, 0.3);
+}
+
+/* Chat specific components */
+.chat-container {
+  width: var(--chat-width);
+  border-radius: var(--chat-border-radius);
+  box-shadow: var(--chat-box-shadow);
+  transition: all var(--chat-transition-speed) ease;
+}
+
+.chat-glass {
+  background: var(--chat-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chat-header {
+  background: var(--chat-header-bg);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chat-message-user {
+  background: var(--chat-message-user-bg);
+  color: var(--chat-message-user-text);
+}
+
+.chat-message-assistant {
+  background: var(--chat-message-assistant-bg);
+  color: var(--chat-message-assistant-text);
+}
+
+.chat-message-system {
+  background: var(--chat-message-system-bg);
+  color: var(--chat-message-system-text);
+  font-style: italic;
+}
+
+.chat-input {
+  background: var(--chat-input-bg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Transition classes */
+.chat-fade-in {
+  animation: chatFadeIn var(--chat-transition-speed) ease;
+}
+
+.chat-fade-out {
+  animation: chatFadeOut var(--chat-transition-speed) ease;
+}
+
+@keyframes chatFadeIn {
+  from { 
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes chatFadeOut {
+  from { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to { 
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}

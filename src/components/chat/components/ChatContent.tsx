@@ -7,6 +7,7 @@ import { GitHubSyncModule } from "../modules/GitHubSyncModule";
 import { NotificationsModule } from "../modules/NotificationsModule";
 import { ChatInputModule } from "../modules/ChatInputModule";
 import { useChatMode } from "../providers/ChatModeProvider";
+import { useChatStore } from "../store/chatStore";
 
 interface ChatContentProps {
   scrollRef: React.RefObject<HTMLDivElement>;
@@ -16,6 +17,7 @@ interface ChatContentProps {
 
 export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatContentProps) {
   const { mode } = useChatMode();
+  const { features } = useChatStore();
 
   if (isMinimized) {
     return null;
@@ -33,13 +35,13 @@ export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatConten
         <MessageModule scrollRef={scrollRef} />
         
         {/* Mode-specific modules */}
-        {mode === 'standard' && (
+        {mode === 'standard' && features.ragSupport && (
           <div className="mt-4 space-y-2">
             <RAGModule />
           </div>
         )}
         
-        {mode === 'chat-only' && (
+        {mode === 'chat-only' && features.ragSupport && (
           <div className="mt-4 space-y-2">
             <RAGModule />
           </div>
@@ -47,8 +49,8 @@ export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatConten
         
         {mode === 'editor' && (
           <div className="mt-4 space-y-2">
-            <GitHubSyncModule />
-            <NotificationsModule />
+            {features.githubSync && <GitHubSyncModule />}
+            {features.notifications && <NotificationsModule />}
           </div>
         )}
       </CardContent>
