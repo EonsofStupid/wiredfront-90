@@ -72,13 +72,16 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2 w-full">
-      <Input
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        placeholder={placeholder}
-        className="flex-1"
-        disabled={isProcessing}
-      />
+      <div className="relative flex-1 group">
+        <Input
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder={placeholder}
+          className="bg-[#1A1F2C]/80 border-white/10 text-white group-hover:border-[#8B5CF6]/50 transition-all duration-300"
+          disabled={isProcessing}
+        />
+        <div className="absolute inset-0 rounded-md bg-gradient-to-r from-[#8B5CF6]/5 to-[#D946EF]/5 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-300"></div>
+      </div>
       <VoiceRecorder 
         onTranscription={handleTranscription}
         isProcessing={isProcessing}
@@ -86,7 +89,7 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
       <Button 
         type="submit" 
         disabled={isProcessing}
-        className="min-w-[80px]"
+        className="min-w-[80px] bg-gradient-to-r from-[#8B5CF6] to-[#D946EF] hover:opacity-90 text-white border-none"
       >
         {isProcessing ? 'Sending...' : 'Send'}
       </Button>
