@@ -39,6 +39,8 @@ export const useUIStore = create<UIStore>()(
         isConnected: false,
         username: null,
         lastSynced: null,
+        repositories: [],
+        apiMetrics: undefined,
       },
       accessibility: {
         reducedMotion: false,
@@ -135,6 +137,39 @@ export const useUIStore = create<UIStore>()(
           github: {
             ...state.github,
             lastSynced: new Date(),
+          },
+        })),
+
+      updateGithubRepositories: (repositories) =>
+        set((state) => ({
+          github: {
+            ...state.github,
+            repositories,
+          },
+        })),
+
+      updateGithubApiMetrics: (metrics) =>
+        set((state) => ({
+          github: {
+            ...state.github,
+            apiMetrics: metrics,
+          },
+        })),
+
+      linkProjectToGithub: (projectId, repoInfo) =>
+        set((state) => ({
+          project: {
+            ...state.project,
+            projects: state.project.projects.map(project => 
+              project.id === projectId 
+                ? { 
+                    ...project, 
+                    githubRepoUrl: repoInfo.url,
+                    githubRepoOwner: repoInfo.owner,
+                    githubRepoName: repoInfo.name
+                  } 
+                : project
+            ),
           },
         })),
     }),

@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { formatDistanceToNow } from 'date-fns';
+import { GitHubOAuthConnection } from '@/types/admin/settings/github';
 
 interface GithubStatusProps {
   className?: string;
@@ -38,9 +39,10 @@ export const GithubStatus = ({ className, isCompact }: GithubStatusProps) => {
           return;
         }
         
+        const connection = data as GitHubOAuthConnection;
         setGithubStatus({ 
           isConnected: true, 
-          username: data.account_username || null 
+          username: connection.account_username || null 
         });
       } catch (error) {
         console.error('Error checking GitHub connection:', error);
@@ -96,10 +98,11 @@ export const GithubStatus = ({ className, isCompact }: GithubStatusProps) => {
             return;
           }
           
-          if (connectionData) {
+          const connection = connectionData as GitHubOAuthConnection;
+          if (connection) {
             setGithubStatus({ 
               isConnected: true, 
-              username: connectionData.account_username || null 
+              username: connection.account_username || null 
             });
             toast.success('Successfully connected to GitHub');
           } else {

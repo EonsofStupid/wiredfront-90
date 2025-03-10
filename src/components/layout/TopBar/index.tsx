@@ -36,16 +36,12 @@ export const TopBar = ({
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
-            size="icon"
+            size="sm"
             onClick={onToggleRightSidebar}
-            className="text-neon-pink hover:text-neon-blue"
+            className="text-neon-pink hover:text-neon-blue flex items-center"
           >
-            {isCompact ? <Info className="h-5 w-5" /> : 
-              <div className="flex items-center">
-                <span className="mr-2 text-sm">Projects</span>
-                <ChevronRight className="h-4 w-4" />
-              </div>
-            }
+            <span className="mr-1">Project</span>
+            <ChevronRight className="h-4 w-4" />
           </Button>
           
           <UserMenu />

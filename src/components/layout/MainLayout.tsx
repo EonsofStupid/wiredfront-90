@@ -16,9 +16,6 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
   const isCompact = layout.sidebarExpanded;
   const isRightSidebarVisible = layout.rightSidebarVisible;
   
-  // Calculate sidebar width based on compact mode
-  const sidebarWidth = isCompact ? 80 : 128; // 20rem (w-20 = 5rem = 80px) or 32rem (w-32 = 8rem = 128px)
-
   return (
     <div className="min-h-screen w-full bg-background">
       <TopBar 
@@ -45,7 +42,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
         
         <div 
           className={cn(
-            "fixed right-0 top-16 bottom-12 transition-all duration-300 z-[var(--z-navbar)]",
+            "fixed right-0 top-16 bottom-12 transition-transform duration-300 z-[var(--z-navbar)]",
             isCompact ? "w-20" : "w-32",
             isRightSidebarVisible 
               ? "translate-x-0 opacity-100" 
