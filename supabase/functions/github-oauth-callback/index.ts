@@ -104,13 +104,19 @@ serve(async (req) => {
     // Save the OAuth connection in your DB
     const { error: insertError } = await supabaseAdmin
       .from('oauth_connections')
-      .insert({
+      .upsert({
         user_id: user.id,
         provider: 'github',
+        provider_user_id: userData.id.toString(),
         account_username: userData.login,
         account_type: userData.type?.toLowerCase(),
         scopes: tokenData.scope?.split(',') || [],
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token || null,
+        expires_at: tokenData.expires_in ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString() : null,
         last_used: new Date().toISOString()
+      }, {
+        onConflict: 'user_id, provider'
       })
 
     if (insertError) {

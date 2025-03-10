@@ -25,8 +25,8 @@ serve(async (req) => {
   }
 
   try {
-    const { redirect_url, state } = await req.json()
-    logEvent('request_received', { redirect_url, statePrefix: state?.slice(0, 8) })
+    const { redirect_url } = await req.json()
+    logEvent('request_received', { redirect_url })
 
     if (!redirect_url) {
       const error = 'Missing redirect_url in request'
@@ -54,6 +54,9 @@ serve(async (req) => {
 
     logEvent('scopes_defined', { scopes })
 
+    // Generate a random state
+    const state = crypto.randomUUID()
+    
     const authUrl = new URL('https://github.com/login/oauth/authorize')
     authUrl.searchParams.append('client_id', clientId)
     authUrl.searchParams.append('redirect_uri', redirect_url)
@@ -62,13 +65,13 @@ serve(async (req) => {
 
     logEvent('auth_url_generated', { 
       url: authUrl.toString(),
-      statePrefix: state?.slice(0, 8),
+      statePrefix: state.slice(0, 8),
       scopes: scopes.join(' ')
     })
 
     return new Response(
       JSON.stringify({ 
-        authUrl: authUrl.toString(),
+        url: authUrl.toString(),
         state
       }),
       { 

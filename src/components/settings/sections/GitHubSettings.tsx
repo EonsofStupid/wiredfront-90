@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Github, FolderGit2, GitPullRequest, X, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { GitHubOAuthConnection } from "@/types/admin/settings/github";
 
 export function GitHubSettings() {
   const [isConnected, setIsConnected] = useState(false);
@@ -30,9 +31,10 @@ export function GitHubSettings() {
           return;
         }
         
-        setIsConnected(!!data);
-        if (data) {
-          setUsername(data.account_username);
+        const connection = data as GitHubOAuthConnection;
+        setIsConnected(!!connection);
+        if (connection && connection.account_username) {
+          setUsername(connection.account_username);
         }
       } catch (error) {
         console.error('Error checking GitHub connection:', error);
@@ -88,9 +90,10 @@ export function GitHubSettings() {
             return;
           }
           
-          if (connectionData) {
+          const connection = connectionData as GitHubOAuthConnection;
+          if (connection) {
             setIsConnected(true);
-            setUsername(connectionData.account_username);
+            setUsername(connection.account_username || null);
             setConnectionStatus('connected');
             toast.success('Successfully connected to GitHub');
           } else {

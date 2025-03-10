@@ -42,9 +42,19 @@ export interface ChatAppearanceConfig {
   defaultMinimized: boolean;
 }
 
+export interface GitHubIntegrationConfig {
+  enabled: boolean;
+  autoSync: boolean;
+  syncInterval: number;
+  repositories: string[];
+  preferredAccount?: string;
+  defaultBranch?: string;
+}
+
 export interface ChatAdminSettings {
   providers: ChatProviderConfig[];
   features: ChatFeatureConfig;
   appearance: ChatAppearanceConfig;
   sessions: ChatSessionConfig;
+  githubIntegration?: GitHubIntegrationConfig;
 }
