@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ServiceCard } from "./components/ServiceCard";
 import { APIType } from "@/types/admin/settings/api-configuration";
 import { toast } from "sonner";
+import { SettingsContainer } from "../layout/SettingsContainer";
 
 export function AIServicesSettings() {
   const [isConnecting, setIsConnecting] = useState(false);
@@ -29,14 +30,10 @@ export function AIServicesSettings() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium">AI Services Settings</h3>
-        <p className="text-sm text-muted-foreground">
-          Configure your AI service connections.
-        </p>
-      </div>
-
+    <SettingsContainer
+      title="AI Services Settings"
+      description="Configure your AI service connections."
+    >
       <div className="grid gap-6">
         <ServiceCard
           type="openai"
@@ -51,7 +48,35 @@ export function AIServicesSettings() {
           newConfig={newConfig}
           onConfigChange={handleConfigChange}
         />
+        
+        <ServiceCard
+          type="anthropic"
+          title="Anthropic"
+          description="Configure Anthropic Claude API access"
+          docsUrl="https://docs.anthropic.com/claude/reference/getting-started-with-the-api"
+          docsText="Anthropic documentation"
+          placeholder="sk-ant-..."
+          onSaveConfig={handleSaveConfig}
+          isConnecting={isConnecting}
+          selectedConfig={selectedConfig}
+          newConfig={newConfig}
+          onConfigChange={handleConfigChange}
+        />
+        
+        <ServiceCard
+          type="gemini"
+          title="Google Gemini"
+          description="Configure Google Gemini API access"
+          docsUrl="https://ai.google.dev/docs"
+          docsText="Gemini documentation"
+          placeholder="AIza..."
+          onSaveConfig={handleSaveConfig}
+          isConnecting={isConnecting}
+          selectedConfig={selectedConfig}
+          newConfig={newConfig}
+          onConfigChange={handleConfigChange}
+        />
       </div>
-    </div>
+    </SettingsContainer>
   );
 }

@@ -55,7 +55,7 @@ export function APISettings() {
           <Tabs defaultValue="ai-services" className="space-y-4">
             <TabsList className="admin-tabs-list">
               <TabsTrigger value="ai-services" className="admin-tab">AI Services</TabsTrigger>
-              <TabsTrigger value="oauth" className="admin-tab">OAuth Connections</TabsTrigger>
+              <TabsTrigger value="oauth" className="admin-tab">OAuth Providers</TabsTrigger>
               <TabsTrigger value="rag-keys" className="admin-tab">Vector DB Keys</TabsTrigger>
               <TabsTrigger value="voice" className="admin-tab">Voice</TabsTrigger>
               <TabsTrigger value="cloud-storage" className="admin-tab">Cloud Storage</TabsTrigger>

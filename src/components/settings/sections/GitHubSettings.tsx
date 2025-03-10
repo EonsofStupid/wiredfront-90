@@ -1,25 +1,39 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Github, FolderGit2 } from "lucide-react";
+import { Github, FolderGit2, GitPullRequest, X, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export function GitHubSettings() {
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [username, setUsername] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle');
 
   useEffect(() => {
     async function checkGitHubConnection() {
       try {
+        setLoading(true);
         const { data, error } = await supabase
           .from('oauth_connections')
           .select('*')
           .eq('provider', 'github')
           .single();
           
-        if (error) throw error;
+        if (error) {
+          if (error.code !== 'PGRST116') { // Not found error
+            console.error('Error checking GitHub connection:', error);
+          }
+          setIsConnected(false);
+          return;
+        }
+        
         setIsConnected(!!data);
+        if (data) {
+          setUsername(data.account_username);
+        }
       } catch (error) {
         console.error('Error checking GitHub connection:', error);
       } finally {
@@ -32,6 +46,8 @@ export function GitHubSettings() {
 
   const handleGitHubConnect = async () => {
     try {
+      setConnectionStatus('connecting');
+      
       const { data, error } = await supabase.functions.invoke('github-oauth-init', {
         body: { 
           redirect_url: `${window.location.origin}/settings`
@@ -46,14 +62,78 @@ export function GitHubSettings() {
       const left = window.screenX + (window.outerWidth - width) / 2;
       const top = window.screenY + (window.outerHeight - height) / 2;
       
-      window.open(
+      const popup = window.open(
         data.url,
         'Github Authorization',
         `width=${width},height=${height},left=${left},top=${top}`
       );
+      
+      // Poll for changes to detect when the user completes the GitHub auth flow
+      const checkConnection = setInterval(async () => {
+        if (popup && popup.closed) {
+          clearInterval(checkConnection);
+          
+          const { data: connectionData, error: connectionError } = await supabase
+            .from('oauth_connections')
+            .select('*')
+            .eq('provider', 'github')
+            .single();
+            
+          if (connectionError) {
+            if (connectionError.code !== 'PGRST116') {
+              console.error('Error checking connection:', connectionError);
+              toast.error('Failed to connect to GitHub');
+            }
+            setConnectionStatus('error');
+            return;
+          }
+          
+          if (connectionData) {
+            setIsConnected(true);
+            setUsername(connectionData.account_username);
+            setConnectionStatus('connected');
+            toast.success('Successfully connected to GitHub');
+          } else {
+            setConnectionStatus('error');
+            toast.error('GitHub connection failed');
+          }
+        }
+      }, 1000);
+      
+      // Timeout after 2 minutes
+      setTimeout(() => {
+        clearInterval(checkConnection);
+        if (connectionStatus === 'connecting') {
+          setConnectionStatus('idle');
+          toast.error('Connection timed out');
+        }
+      }, 120000);
+      
     } catch (error) {
       console.error('Error connecting to GitHub:', error);
       toast.error('Failed to connect to GitHub');
+      setConnectionStatus('error');
+    }
+  };
+
+  const handleDisconnect = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from('oauth_connections')
+        .delete()
+        .eq('provider', 'github');
+        
+      if (error) throw error;
+      
+      setIsConnected(false);
+      setUsername(null);
+      toast.success('Disconnected from GitHub');
+    } catch (error) {
+      console.error('Error disconnecting from GitHub:', error);
+      toast.error('Failed to disconnect from GitHub');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,27 +141,79 @@ export function GitHubSettings() {
     <Card>
       <CardHeader>
         <CardTitle>GitHub Integration</CardTitle>
-        <CardDescription>Connect and manage your GitHub account</CardDescription>
+        <CardDescription>Connect your GitHub account to access repositories and collaborate on code</CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col sm:flex-row gap-4">
-        <Button
-          variant="outline"
-          className="w-full sm:w-auto"
-          onClick={handleGitHubConnect}
-          disabled={loading || isConnected}
-        >
-          <Github className="mr-2 h-4 w-4" />
-          {isConnected ? 'Connected to GitHub' : 'Connect GitHub'}
-        </Button>
+      <CardContent className="space-y-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-muted/50 rounded-lg">
+          <div className="flex items-center gap-3">
+            <Github className="h-8 w-8" />
+            <div>
+              <h3 className="font-medium">GitHub</h3>
+              {isConnected && username ? (
+                <p className="text-sm text-muted-foreground">Connected as @{username}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">Not connected</p>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            {isConnected ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={handleDisconnect}
+                  disabled={loading}
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Disconnect
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={handleGitHubConnect}
+                disabled={loading || connectionStatus === 'connecting'}
+                className="border-primary/20 hover:border-primary"
+              >
+                {connectionStatus === 'connecting' ? (
+                  <>
+                    <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <Github className="mr-2 h-4 w-4" />
+                    Connect GitHub
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        </div>
         
-        <Button
-          variant="outline"
-          className="w-full sm:w-auto"
-          disabled={!isConnected}
-        >
-          <FolderGit2 className="mr-2 h-4 w-4" />
-          Select Repositories
-        </Button>
+        {isConnected && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <Button
+              variant="outline"
+              className="justify-start"
+              disabled={!isConnected}
+            >
+              <FolderGit2 className="mr-2 h-4 w-4" />
+              Browse Repositories
+            </Button>
+            
+            <Button
+              variant="outline"
+              className="justify-start"
+              disabled={!isConnected}
+            >
+              <GitPullRequest className="mr-2 h-4 w-4" />
+              View Pull Requests
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
