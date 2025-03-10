@@ -35,6 +35,11 @@ export const useUIStore = create<UIStore>()(
           }
         ],
       },
+      github: {
+        isConnected: false,
+        username: null,
+        lastSynced: null,
+      },
       accessibility: {
         reducedMotion: false,
         highContrast: false,
@@ -102,6 +107,36 @@ export const useUIStore = create<UIStore>()(
               : state.project.activeProjectId,
           },
         })),
+        
+      updateProject: (projectId, updates) =>
+        set((state) => ({
+          project: {
+            ...state.project,
+            projects: state.project.projects.map(project => 
+              project.id === projectId 
+                ? { ...project, ...updates } 
+                : project
+            ),
+          },
+        })),
+        
+      setGithubStatus: (status) =>
+        set((state) => ({
+          github: {
+            ...state.github,
+            isConnected: status.isConnected,
+            username: status.username,
+            lastSynced: status.isConnected ? new Date() : state.github.lastSynced,
+          },
+        })),
+        
+      updateGithubLastSynced: () =>
+        set((state) => ({
+          github: {
+            ...state.github,
+            lastSynced: new Date(),
+          },
+        })),
     }),
     {
       name: 'ui-storage',
@@ -109,6 +144,7 @@ export const useUIStore = create<UIStore>()(
         theme: state.theme,
         layout: state.layout,
         project: state.project,
+        github: state.github,
         accessibility: state.accessibility,
       }),
       version: 1,
