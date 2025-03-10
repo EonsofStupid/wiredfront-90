@@ -1,21 +1,160 @@
 
 import { useUIStore } from "@/stores";
 import { cn } from "@/lib/utils";
-import { Plus, Folder } from "lucide-react";
+import { Plus, Folder, Github, Import, ExternalLink, Info, Code, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { GitHubOAuthConnection } from "@/types/admin/settings/github";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface ProjectOverviewProps {
   className?: string;
   isCompact: boolean;
 }
 
-export const ProjectOverview = ({ className, isCompact }: ProjectOverviewProps) => {
+export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
   const { 
     project: { projects, activeProjectId },
     setActiveProject, 
     addProject 
   } = useUIStore();
+  
+  const [isGithubConnected, setIsGithubConnected] = useState<boolean>(false);
+  const [githubUsername, setGithubUsername] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle');
+  const [isConnectDialogOpen, setIsConnectDialogOpen] = useState(false);
+  
+  const activeProject = projects.find(p => p.id === activeProjectId);
+  
+  // Check GitHub connection status
+  useEffect(() => {
+    async function checkGitHubConnection() {
+      try {
+        const { data, error } = await supabase
+          .from('oauth_connections')
+          .select('*')
+          .eq('provider', 'github')
+          .single();
+          
+        if (error) {
+          if (error.code !== 'PGRST116') { // Not found error
+            console.error('Error checking GitHub connection:', error);
+          }
+          setIsGithubConnected(false);
+          return;
+        }
+        
+        const connection = data as GitHubOAuthConnection;
+        setIsGithubConnected(!!connection);
+        if (connection && connection.account_username) {
+          setGithubUsername(connection.account_username);
+        }
+      } catch (error) {
+        console.error('Error checking GitHub connection:', error);
+      }
+    }
+    
+    checkGitHubConnection();
+  }, []);
+
+  const handleGitHubConnect = async () => {
+    try {
+      setConnectionStatus('connecting');
+      
+      const { data, error } = await supabase.functions.invoke('github-oauth-init', {
+        body: { 
+          redirect_url: `${window.location.origin}/settings`
+        }
+      });
+
+      if (error) throw error;
+      
+      // Open GitHub auth in a popup
+      const width = 600;
+      const height = 700;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
+      
+      const popup = window.open(
+        data.url,
+        'Github Authorization',
+        `width=${width},height=${height},left=${left},top=${top}`
+      );
+      
+      // Poll for changes to detect when the user completes the GitHub auth flow
+      const checkConnection = setInterval(async () => {
+        if (popup && popup.closed) {
+          clearInterval(checkConnection);
+          
+          const { data: connectionData, error: connectionError } = await supabase
+            .from('oauth_connections')
+            .select('*')
+            .eq('provider', 'github')
+            .single();
+            
+          if (connectionError) {
+            if (connectionError.code !== 'PGRST116') {
+              console.error('Error checking connection:', connectionError);
+              toast.error('Failed to connect to GitHub');
+            }
+            setConnectionStatus('error');
+            setIsConnectDialogOpen(false);
+            return;
+          }
+          
+          const connection = connectionData as GitHubOAuthConnection;
+          if (connection) {
+            setIsGithubConnected(true);
+            setGithubUsername(connection.account_username || null);
+            setConnectionStatus('connected');
+            toast.success('Successfully connected to GitHub');
+            setIsConnectDialogOpen(false);
+          } else {
+            setConnectionStatus('error');
+            toast.error('GitHub connection failed');
+            setIsConnectDialogOpen(false);
+          }
+        }
+      }, 1000);
+      
+      // Timeout after 2 minutes
+      setTimeout(() => {
+        clearInterval(checkConnection);
+        if (connectionStatus === 'connecting') {
+          setConnectionStatus('idle');
+          toast.error('Connection timed out');
+          setIsConnectDialogOpen(false);
+        }
+      }, 120000);
+      
+    } catch (error) {
+      console.error('Error connecting to GitHub:', error);
+      toast.error('Failed to connect to GitHub');
+      setConnectionStatus('error');
+      setIsConnectDialogOpen(false);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    try {
+      const { error } = await supabase
+        .from('oauth_connections')
+        .delete()
+        .eq('provider', 'github');
+        
+      if (error) throw error;
+      
+      setIsGithubConnected(false);
+      setGithubUsername(null);
+      toast.success('Disconnected from GitHub');
+    } catch (error) {
+      console.error('Error disconnecting from GitHub:', error);
+      toast.error('Failed to disconnect from GitHub');
+    }
+  };
   
   const handleAddProject = () => {
     addProject({
@@ -28,50 +167,227 @@ export const ProjectOverview = ({ className, isCompact }: ProjectOverviewProps) 
   return (
     <div className={cn("flex flex-col h-full", className)}>
       <div className="p-4 border-b border-neon-blue/20">
-        <h2 className={cn(
-          "text-neon-blue font-medium",
-          isCompact ? "text-center" : "text-left"
-        )}>
-          {isCompact ? "Projects" : "My Projects"}
-        </h2>
+        <h2 className="text-neon-blue font-medium text-xl">Project Hub</h2>
       </div>
       
-      <div className="flex-1 overflow-auto p-3 space-y-2">
-        {projects.map((project) => (
-          <Button
-            key={project.id}
-            variant="ghost"
-            className={cn(
-              "w-full justify-start gap-2 h-auto py-3 px-3",
-              "text-left hover:bg-dark-lighter/30",
-              activeProjectId === project.id && "bg-dark-lighter/50 text-neon-blue"
+      {/* GitHub Connection Status */}
+      <div className="p-4 border-b border-neon-blue/20">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Github className="h-5 w-5 text-neon-pink" />
+            <h3 className="font-medium">GitHub</h3>
+          </div>
+          
+          {isGithubConnected ? (
+            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-500/20 text-green-400">
+              <Check className="h-3 w-3 mr-1" /> Connected
+            </span>
+          ) : (
+            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-500/20 text-red-400">
+              <X className="h-3 w-3 mr-1" /> Disconnected
+            </span>
+          )}
+        </div>
+        
+        {isGithubConnected && githubUsername ? (
+          <div className="mt-2 space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Connected as <span className="text-neon-blue">@{githubUsername}</span>
+            </p>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start gap-2 h-auto py-1.5 text-destructive hover:bg-destructive/10"
+              onClick={handleDisconnect}
+            >
+              <X className="h-4 w-4" />
+              Disconnect
+            </Button>
+          </div>
+        ) : (
+          <div className="mt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start gap-2 h-auto py-2 border-primary/20 hover:border-primary"
+              onClick={() => setIsConnectDialogOpen(true)}
+              disabled={connectionStatus === 'connecting'}
+            >
+              {connectionStatus === 'connecting' ? (
+                <>
+                  <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Connecting...
+                </>
+              ) : (
+                <>
+                  <Github className="h-4 w-4" />
+                  Connect GitHub
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+      </div>
+      
+      {/* Project Details */}
+      <div className="flex-1 overflow-auto">
+        {activeProject ? (
+          <div className="p-4 space-y-4">
+            <div>
+              <h3 className="text-lg font-medium">{activeProject.name}</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Last updated {formatDistanceToNow(new Date(activeProject.lastModified), { addSuffix: true })}
+              </p>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Description</p>
+              <p className="text-sm text-muted-foreground">{activeProject.description || "No description provided"}</p>
+            </div>
+            
+            {/* GitHub Project URL (simulation) */}
+            {isGithubConnected && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">GitHub Repository</p>
+                <a 
+                  href={`https://github.com/${githubUsername}/${activeProject.name}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm text-neon-blue hover:underline"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  {`${githubUsername}/${activeProject.name}`}
+                </a>
+              </div>
             )}
-            onClick={() => setActiveProject(project.id)}
-          >
-            <Folder className="w-5 h-5 shrink-0" />
-            {!isCompact && (
+            
+            <div className="pt-2 space-y-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start gap-2"
+              >
+                <Code className="h-4 w-4" />
+                View Code
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start gap-2"
+              >
+                <Info className="h-4 w-4" />
+                Project Settings
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full p-4 space-y-6">
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-medium">No Project Selected</h3>
+              <p className="text-sm text-muted-foreground">Create a new project or select one from the list below</p>
+            </div>
+            
+            <div className="w-full space-y-2">
+              <Button
+                variant="default"
+                className="w-full justify-start gap-2"
+                onClick={handleAddProject}
+              >
+                <Plus className="h-4 w-4" />
+                Create New Project
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2"
+              >
+                <Import className="h-4 w-4" />
+                Import Project
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Project List */}
+      <div className="p-4 border-t border-neon-blue/20 space-y-3">
+        <h3 className="text-sm font-medium">My Projects</h3>
+        
+        <div className="space-y-2 max-h-40 overflow-y-auto">
+          {projects.map((project) => (
+            <Button
+              key={project.id}
+              variant="ghost"
+              className={cn(
+                "w-full justify-start gap-2 h-auto py-2 px-3",
+                "text-left hover:bg-dark-lighter/30",
+                activeProjectId === project.id && "bg-dark-lighter/50 text-neon-blue"
+              )}
+              onClick={() => setActiveProject(project.id)}
+            >
+              <Folder className="w-4 h-4 shrink-0" />
               <div className="flex-1 overflow-hidden">
                 <p className="truncate text-sm font-medium">{project.name}</p>
                 <p className="truncate text-xs opacity-70">
                   {formatDistanceToNow(new Date(project.lastModified), { addSuffix: true })}
                 </p>
               </div>
-            )}
-          </Button>
-        ))}
-      </div>
-      
-      <div className="p-3 border-t border-neon-blue/20">
+            </Button>
+          ))}
+        </div>
+        
         <Button
           variant="outline"
-          size={isCompact ? "icon" : "default"}
+          size="sm"
           className="w-full"
           onClick={handleAddProject}
         >
-          <Plus className="w-5 h-5" />
-          {!isCompact && <span>New Project</span>}
+          <Plus className="w-4 h-4 mr-2" />
+          New Project
         </Button>
       </div>
+      
+      {/* GitHub Connect Dialog */}
+      <Dialog open={isConnectDialogOpen} onOpenChange={setIsConnectDialogOpen}>
+        <DialogContent className="glass-card">
+          <DialogHeader>
+            <DialogTitle>Connect to GitHub</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <p className="text-sm">
+              Connecting to GitHub allows you to sync your projects, access repositories, and collaborate on code.
+            </p>
+            
+            <div className="flex justify-end space-x-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsConnectDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleGitHubConnect}
+                disabled={connectionStatus === 'connecting'}
+              >
+                {connectionStatus === 'connecting' ? (
+                  <>
+                    <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <Github className="h-4 w-4 mr-2" />
+                    Connect
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

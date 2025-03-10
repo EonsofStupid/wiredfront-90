@@ -34,21 +34,20 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
         <main className={cn(
           "flex-1 transition-all duration-300 ease-in-out",
           isCompact ? "ml-20" : "ml-32",
-          isRightSidebarVisible ? (isCompact ? "mr-20" : "mr-32") : "mr-0"
+          isRightSidebarVisible ? (isCompact ? "mr-64" : "mr-64") : "mr-0"
         )}>
           {children}
         </main>
         
-        {isRightSidebarVisible && (
-          <div 
-            className={cn(
-              "fixed right-0 top-16 bottom-12 transition-all duration-300 z-[var(--z-navbar)]",
-              isCompact ? "w-20" : "w-32"
-            )}
-          >
-            <ProjectOverview isCompact={isCompact} className="h-full" />
-          </div>
-        )}
+        <div 
+          className={cn(
+            "fixed right-0 top-16 bottom-12 glass-card border-l border-neon-blue/20 transition-all duration-300 z-[var(--z-navbar)]",
+            isRightSidebarVisible ? "translate-x-0" : "translate-x-full",
+            "w-64"
+          )}
+        >
+          <ProjectOverview isCompact={isCompact} className="h-full" />
+        </div>
       </div>
       
       <BottomBar className="fixed bottom-0 left-0 right-0 z-[var(--z-navbar)]" />
