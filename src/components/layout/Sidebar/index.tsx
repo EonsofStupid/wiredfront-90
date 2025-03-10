@@ -1,3 +1,4 @@
+
 import { cn } from "@/lib/utils";
 import { Home, Settings, Activity, Code, Database, FileText, Bot, BarChart } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -12,19 +13,16 @@ interface SidebarProps {
 export const Sidebar = ({ className, side, isCompact }: SidebarProps) => {
   const location = useLocation();
   
-  const navItems = side === "left" 
-    ? [
-        { icon: Home, label: "Home", path: "/" },
-        { icon: Code, label: "Editor", path: "/editor" },
-        { icon: FileText, label: "Documents", path: "/documents" },
-        { icon: Bot, label: "AI Assistant", path: "/ai" },
-      ]
-    : [
-        { icon: Activity, label: "Analytics", path: "/analytics" },
-        { icon: BarChart, label: "Reports", path: "/reports" },
-        { icon: Database, label: "Data", path: "/data" },
-        { icon: Settings, label: "Settings", path: "/settings" },
-      ];
+  const navItems = [
+    { icon: Home, label: "Home", path: "/" },
+    { icon: Code, label: "Editor", path: "/editor" },
+    { icon: FileText, label: "Documents", path: "/documents" },
+    { icon: Bot, label: "AI Assistant", path: "/ai" },
+    { icon: Activity, label: "Analytics", path: "/analytics" },
+    { icon: BarChart, label: "Reports", path: "/reports" },
+    { icon: Database, label: "Data", path: "/data" },
+    { icon: Settings, label: "Settings", path: "/settings" },
+  ];
 
   return (
     <aside 

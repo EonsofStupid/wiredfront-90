@@ -1,9 +1,11 @@
+
 import { cn } from "@/lib/utils";
-import { Bell, Search, PanelLeftClose, PanelLeft } from "lucide-react";
+import { Bell, Search, PanelLeftClose, PanelLeft, PanelRightClose, PanelRight } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { UserMenu } from "@/components/user/UserMenu";
+import { useUIStore } from "@/stores";
 
 interface TopBarProps {
   className?: string;
@@ -13,6 +15,8 @@ interface TopBarProps {
 
 export const TopBar = ({ className, isCompact, onToggleCompact }: TopBarProps) => {
   const navigate = useNavigate();
+  const { layout, toggleRightSidebar } = useUIStore();
+  const isRightSidebarVisible = layout.rightSidebarVisible;
 
   return (
     <header className={cn("h-16 border-b border-neon-blue/20 glass-card px-6 relative z-40", className)}>
@@ -30,6 +34,21 @@ export const TopBar = ({ className, isCompact, onToggleCompact }: TopBarProps) =
         
         <TooltipProvider delayDuration={0}>
           <div className="flex items-center gap-4">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={toggleRightSidebar}
+                  className="animate-hover-button text-neon-pink hover:text-neon-blue"
+                  aria-label={isRightSidebarVisible ? "Hide project sidebar" : "Show project sidebar"}
+                >
+                  {isRightSidebarVisible ? <PanelRightClose className="w-5 h-5" /> : <PanelRight className="w-5 h-5" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{isRightSidebarVisible ? "Hide projects" : "Show projects"}</TooltipContent>
+            </Tooltip>
+            
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
