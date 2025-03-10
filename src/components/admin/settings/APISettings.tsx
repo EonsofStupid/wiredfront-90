@@ -7,6 +7,7 @@ import { DevelopmentSettings } from "./api/DevelopmentSettings";
 import { VoiceSettings } from "./api/VoiceSettings";
 import { RAGKeysSettings } from "./api/RAGKeysSettings";
 import { OAuthConnectionsSettings } from "./api/oauth/OAuthConnectionsSettings";
+import { ChatProviderSettings } from "./api/chat/ChatProviderSettings";
 import { useAPISettings } from "@/hooks/admin/settings/api";
 import { toast } from "sonner";
 import { AdminCard, AdminCardHeader, AdminCardTitle, AdminCardDescription, AdminCardContent } from "@/components/admin/ui/AdminCard";
@@ -55,6 +56,7 @@ export function APISettings() {
           <Tabs defaultValue="ai-services" className="space-y-4">
             <TabsList className="admin-tabs-list">
               <TabsTrigger value="ai-services" className="admin-tab">AI Services</TabsTrigger>
+              <TabsTrigger value="chat-providers" className="admin-tab">Chat Providers</TabsTrigger>
               <TabsTrigger value="oauth" className="admin-tab">OAuth Providers</TabsTrigger>
               <TabsTrigger value="rag-keys" className="admin-tab">Vector DB Keys</TabsTrigger>
               <TabsTrigger value="voice" className="admin-tab">Voice</TabsTrigger>
@@ -64,6 +66,10 @@ export function APISettings() {
 
             <TabsContent value="ai-services" className="pt-4">
               <AIServicesSettings />
+            </TabsContent>
+
+            <TabsContent value="chat-providers" className="pt-4">
+              <ChatProviderSettings />
             </TabsContent>
 
             <TabsContent value="oauth" className="pt-4">

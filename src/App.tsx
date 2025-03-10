@@ -45,6 +45,7 @@ const ADMIN_ROUTES = [
   '/admin/settings/notifications',
   '/admin/settings/general',
   '/admin/settings/chat',
+  '/admin/settings/chat-features',
   '/admin/settings/live-preview',
   '/admin/users',
   '/admin/models',

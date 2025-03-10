@@ -1,6 +1,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { ChatProviderType } from '@/types/admin/settings/chat-provider';
 
 export type ChatPosition = 'bottom-right' | 'bottom-left';
 
@@ -17,6 +18,15 @@ interface ChatState {
     githubSync: boolean;
     notifications: boolean;
   };
+  providers: {
+    currentProvider: ChatProviderType;
+    availableProviders: {
+      id: string;
+      type: ChatProviderType;
+      name: string;
+      isEnabled: boolean;
+    }[];
+  };
 }
 
 interface ChatActions {
@@ -27,6 +37,8 @@ interface ChatActions {
   setScale: (scale: number) => void;
   toggleDocked: () => void;
   toggleFeature: (feature: keyof ChatState['features']) => void;
+  setCurrentProvider: (providerId: string) => void;
+  toggleProviderEnabled: (providerId: string) => void;
 }
 
 const useChatStore = create<ChatState & ChatActions>()(
@@ -43,6 +55,14 @@ const useChatStore = create<ChatState & ChatActions>()(
         ragSupport: true,
         githubSync: true,
         notifications: true,
+      },
+      providers: {
+        currentProvider: 'openai',
+        availableProviders: [
+          { id: '1', type: 'openai', name: 'OpenAI', isEnabled: true },
+          { id: '2', type: 'anthropic', name: 'Claude', isEnabled: false },
+          { id: '3', type: 'gemini', name: 'Gemini', isEnabled: false }
+        ]
       },
       
       togglePosition: () => set((state) => ({ 
@@ -73,6 +93,30 @@ const useChatStore = create<ChatState & ChatActions>()(
           [feature]: !state.features[feature]
         }
       })),
+      
+      setCurrentProvider: (providerId) => set((state) => {
+        const provider = state.providers.availableProviders.find(p => p.id === providerId);
+        if (provider && provider.isEnabled) {
+          return {
+            providers: {
+              ...state.providers,
+              currentProvider: provider.type
+            }
+          };
+        }
+        return state;
+      }),
+      
+      toggleProviderEnabled: (providerId) => set((state) => ({
+        providers: {
+          ...state.providers,
+          availableProviders: state.providers.availableProviders.map(provider =>
+            provider.id === providerId 
+              ? { ...provider, isEnabled: !provider.isEnabled }
+              : provider
+          )
+        }
+      }))
     }),
     {
       name: 'chat-settings-storage',
@@ -84,6 +128,7 @@ const useChatStore = create<ChatState & ChatActions>()(
         scale: state.scale,
         docked: state.docked,
         features: state.features,
+        providers: state.providers,
       }),
       version: 1,
     }
