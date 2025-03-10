@@ -1,73 +1,77 @@
 
-import React from "react";
-import { cn } from "@/lib/utils";
 import { useUIStore } from "@/stores";
-import { GithubStatus } from "./GithubStatus";
-import { ExternalLink } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Plus, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatDistanceToNow } from "date-fns";
 
 interface ProjectOverviewProps {
   className?: string;
   isCompact: boolean;
 }
 
-export const ProjectOverview = ({
-  className,
-  isCompact
-}: ProjectOverviewProps) => {
-  const { project, github } = useUIStore();
-  const activeProject = project.projects.find(p => p.id === project.activeProjectId) || project.projects[0];
-
+export const ProjectOverview = ({ className, isCompact }: ProjectOverviewProps) => {
+  const { 
+    project: { projects, activeProjectId },
+    setActiveProject, 
+    addProject 
+  } = useUIStore();
+  
+  const handleAddProject = () => {
+    addProject({
+      name: `New Project ${projects.length + 1}`,
+      description: "Add a description",
+      lastModified: new Date(),
+    });
+  };
+  
   return (
-    <div className={cn("h-full flex flex-col bg-muted/30 border-l border-neon-blue/20", className)}>
-      {isCompact ? (
-        <div className="p-4 flex flex-col items-center space-y-4">
-          <div className="w-10 h-10 rounded-full bg-neon-blue/20 flex items-center justify-center">
-            <span className="text-xs font-bold">{activeProject?.name.substring(0, 2).toUpperCase()}</span>
-          </div>
-          <GithubStatus isCompact={isCompact} className="w-full" />
-        </div>
-      ) : (
-        <div className="flex flex-col h-full">
-          <div className="p-4 border-b border-neon-blue/20">
-            <h2 className="text-sm font-semibold mb-2">Project</h2>
-            <div className="space-y-2">
-              <div className="text-xs font-medium">{activeProject?.name}</div>
-              {activeProject?.description && (
-                <p className="text-xs text-muted-foreground">{activeProject.description}</p>
-              )}
-              <div className="text-xs text-muted-foreground">
-                Updated {formatDistanceToNow(activeProject?.lastModified || new Date(), { addSuffix: true })}
+    <div className={cn("flex flex-col h-full", className)}>
+      <div className="p-4 border-b border-neon-blue/20">
+        <h2 className={cn(
+          "text-neon-blue font-medium",
+          isCompact ? "text-center" : "text-left"
+        )}>
+          {isCompact ? "Projects" : "My Projects"}
+        </h2>
+      </div>
+      
+      <div className="flex-1 overflow-auto p-3 space-y-2">
+        {projects.map((project) => (
+          <Button
+            key={project.id}
+            variant="ghost"
+            className={cn(
+              "w-full justify-start gap-2 h-auto py-3 px-3",
+              "text-left hover:bg-dark-lighter/30",
+              activeProjectId === project.id && "bg-dark-lighter/50 text-neon-blue"
+            )}
+            onClick={() => setActiveProject(project.id)}
+          >
+            <Folder className="w-5 h-5 shrink-0" />
+            {!isCompact && (
+              <div className="flex-1 overflow-hidden">
+                <p className="truncate text-sm font-medium">{project.name}</p>
+                <p className="truncate text-xs opacity-70">
+                  {formatDistanceToNow(new Date(project.lastModified), { addSuffix: true })}
+                </p>
               </div>
-              {activeProject?.githubRepoUrl && (
-                <a 
-                  href={activeProject.githubRepoUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-xs text-blue-500 hover:text-blue-700 flex items-center mt-2"
-                >
-                  <ExternalLink className="h-3 w-3 mr-1" />
-                  View on GitHub
-                </a>
-              )}
-            </div>
-          </div>
-          
-          <GithubStatus isCompact={isCompact} className="w-full" />
-          
-          <div className="mt-auto p-4 border-t border-neon-blue/20">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full text-xs"
-              disabled={!github.isConnected}
-            >
-              Sync with GitHub
-            </Button>
-          </div>
-        </div>
-      )}
+            )}
+          </Button>
+        ))}
+      </div>
+      
+      <div className="p-3 border-t border-neon-blue/20">
+        <Button
+          variant="outline"
+          size={isCompact ? "icon" : "default"}
+          className="w-full"
+          onClick={handleAddProject}
+        >
+          <Plus className="w-5 h-5" />
+          {!isCompact && <span>New Project</span>}
+        </Button>
+      </div>
     </div>
   );
 };

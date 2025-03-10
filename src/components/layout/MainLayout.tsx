@@ -12,17 +12,16 @@ interface MainLayoutProps {
 }
 
 export const MainLayout = ({ children }: MainLayoutProps) => {
-  const { layout, toggleSidebar, toggleRightSidebar } = useUIStore();
+  const { layout, toggleSidebar } = useUIStore();
   const isCompact = layout.sidebarExpanded;
   const isRightSidebarVisible = layout.rightSidebarVisible;
-  
+
   return (
     <div className="min-h-screen w-full bg-background">
       <TopBar 
         className="fixed top-0 left-0 right-0 z-[var(--z-navbar)]" 
         isCompact={isCompact} 
         onToggleCompact={toggleSidebar} 
-        onToggleRightSidebar={toggleRightSidebar}
       />
       
       <div className="flex pt-16 pb-12">
@@ -40,17 +39,16 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
           {children}
         </main>
         
-        <div 
-          className={cn(
-            "fixed right-0 top-16 bottom-12 transition-transform duration-300 z-[var(--z-navbar)]",
-            isCompact ? "w-20" : "w-32",
-            isRightSidebarVisible 
-              ? "translate-x-0 opacity-100" 
-              : "translate-x-full opacity-0"
-          )}
-        >
-          <ProjectOverview isCompact={isCompact} className="h-full" />
-        </div>
+        {isRightSidebarVisible && (
+          <div 
+            className={cn(
+              "fixed right-0 top-16 bottom-12 transition-all duration-300 z-[var(--z-navbar)]",
+              isCompact ? "w-20" : "w-32"
+            )}
+          >
+            <ProjectOverview isCompact={isCompact} className="h-full" />
+          </div>
+        )}
       </div>
       
       <BottomBar className="fixed bottom-0 left-0 right-0 z-[var(--z-navbar)]" />
