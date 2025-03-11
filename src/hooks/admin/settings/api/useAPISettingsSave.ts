@@ -21,6 +21,7 @@ export function useAPISettingsSave() {
     try {
       logger.info('Starting API settings save...');
       
+      // Define the API configurations with proper type assertions
       const apiConfigs = [
         { key: 'openaiKey', type: 'openai' as APIType, name: 'OpenAI Configuration' },
         { key: 'anthropicKey', type: 'anthropic' as APIType, name: 'Anthropic Configuration' },
@@ -40,6 +41,7 @@ export function useAPISettingsSave() {
 
           if (queryError) throw queryError;
 
+          // Use type assertion for the api_type field
           const configData = {
             user_id: user.id,
             api_type: config.type,
@@ -59,12 +61,15 @@ export function useAPISettingsSave() {
 
             if (updateError) throw updateError;
           } else {
+            // Include created_at for new configurations and use type assertions
+            const insertData = {
+              ...configData,
+              created_at: new Date().toISOString()
+            };
+            
             const { error: insertError } = await supabase
               .from('api_configurations')
-              .insert([{
-                ...configData,
-                created_at: new Date().toISOString()
-              }]);
+              .insert([insertData]);
 
             if (insertError) throw insertError;
           }

@@ -1,52 +1,66 @@
-
-import { Card, CardContent } from "@/components/ui/card";
-import { APIConfigurationList } from "@/components/admin/settings/api/APIConfigurationList";
-import { useAPIConfigurations } from "@/hooks/admin/settings/useAPIConfigurations";
-import { APIType } from "@/types/admin/settings/api-configuration";
-import { useCallback } from "react";
+import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { APIType } from '@/types/admin/settings/api';
+import { useAPIKeyManagement } from '@/hooks/admin/settings/api/useAPIKeyManagement';
 
 interface APIConfigStepProps {
-  isFirstTimeUser?: boolean;
+  onNext: () => void;
+  onBack: () => void;
 }
 
-export function APIConfigStep({ isFirstTimeUser = false }: APIConfigStepProps) {
-  const { configurations, loading, updateConfiguration, createConfiguration, deleteConfiguration } = useAPIConfigurations();
+export const APIConfigStep: React.FC<APIConfigStepProps> = ({ onNext, onBack }) => {
+  const [openaiKey, setOpenaiKey] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { createApiKey } = useAPIKeyManagement();
 
-  const handleConfigurationChange = useCallback(async (checked: boolean, config: any, apiType: APIType) => {
-    if (config) {
-      await updateConfiguration(config.id, { is_enabled: checked });
-    } else {
-      // Generate a memorable name for new configurations
-      const name = `${apiType}_config_${Date.now()}`;
-      await createConfiguration(apiType, name);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!openaiKey) return;
+
+    setIsSubmitting(true);
+    try {
+      await createApiKey(
+        'openai' as APIType, // Fix: Add type assertion
+        'Primary OpenAI Key',
+        openaiKey,
+        {
+          feature_bindings: ['chat', 'embeddings'],
+          rag_preference: 'supabase',
+          planning_mode: 'basic'
+        },
+        ['user', 'developer', 'admin'],
+        []
+      );
+      onNext();
+    } catch (error) {
+      console.error('Error saving API key:', error);
+    } finally {
+      setIsSubmitting(false);
     }
-  }, [updateConfiguration, createConfiguration]);
-
-  const handleSetDefault = useCallback(async (configId: string) => {
-    await updateConfiguration(configId, { is_default: true });
-  }, [updateConfiguration]);
-
-  const handleDelete = useCallback(async (configId: string) => {
-    await deleteConfiguration(configId);
-  }, [deleteConfiguration]);
+  };
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground mb-4">
-            {isFirstTimeUser 
-              ? "To get started, you'll need to configure at least one AI provider. Don't worry, you can always update these later."
-              : "Configure your API keys to enable AI features. You can update these later in settings."}
-          </p>
-          <APIConfigurationList
-            configurations={configurations}
-            onConfigurationChange={handleConfigurationChange}
-            onSetDefault={handleSetDefault}
-            onDelete={handleDelete}
-          />
-        </div>
-      </CardContent>
-    </Card>
+    <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
+      <div>
+        <Label htmlFor="openaiKey">OpenAI API Key</Label>
+        <Input
+          id="openaiKey"
+          type="password"
+          placeholder="sk-..."
+          value={openaiKey}
+          onChange={(e) => setOpenaiKey(e.target.value)}
+        />
+      </div>
+      <div className="flex justify-between">
+        <Button variant="outline" onClick={onBack}>
+          Back
+        </Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Submitting...' : 'Next'}
+        </Button>
+      </div>
+    </form>
   );
-}
+};
