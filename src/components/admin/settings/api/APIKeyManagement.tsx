@@ -9,6 +9,7 @@ import { SettingsContainer } from "../layout/SettingsContainer";
 import { APIKeyWizard } from "./APIKeyWizard";
 import { APIKeyCard } from "./APIKeyCard";
 import { useAPIKeyManagement } from "@/hooks/admin/settings/api/useAPIKeyManagement";
+import { APIType } from "@/types/admin/settings/api";
 
 export function APIKeyManagement() {
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -25,7 +26,7 @@ export function APIKeyManagement() {
   const canManageKeys = hasRole('super_admin');
 
   const handleSaveKey = async (
-    provider: string,
+    provider: APIType,
     memorableName: string,
     secretValue: string,
     settings: any,

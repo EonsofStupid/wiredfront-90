@@ -14,18 +14,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { Info, Key, ArrowRight } from "lucide-react";
+import { APIType } from "@/types/admin/settings/api";
 
 interface APIKeyWizardProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (provider: string, name: string, key: string, settings: any, roles: string[], users: string[]) => Promise<boolean>;
+  onSave: (provider: APIType, name: string, key: string, settings: any, roles: string[], users: string[]) => Promise<boolean>;
   isSubmitting: boolean;
 }
 
 export function APIKeyWizard({ open, onOpenChange, onSave, isSubmitting }: APIKeyWizardProps) {
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedProvider, setSelectedProvider] = useState("openai");
-  const [newKey, setNewKey] = useState({ name: "", key: "", provider: "openai" });
+  const [selectedProvider, setSelectedProvider] = useState<APIType>("openai");
+  const [newKey, setNewKey] = useState({ name: "", key: "", provider: "openai" as APIType });
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [ragPreference, setRagPreference] = useState("supabase");
