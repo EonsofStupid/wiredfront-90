@@ -1,3 +1,4 @@
+
 import { useTheme } from "next-themes"
 import { Toaster as Sonner } from "sonner"
 
@@ -12,13 +13,13 @@ const Toaster = ({ ...props }: ToasterProps) => {
       className="toaster group"
       toastOptions={{
         classNames: {
-          toast:
-            "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
+          toast: "group glass-card relative overflow-hidden border-0 backdrop-blur-lg bg-gradient-to-r from-[#8B5CF6]/10 to-[#D946EF]/10 text-foreground",
           description: "group-[.toast]:text-muted-foreground",
-          actionButton:
-            "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
-          cancelButton:
-            "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+          actionButton: "group-[.toast]:bg-[#8B5CF6] group-[.toast]:text-white",
+          cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-white",
+          success: "group glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#0EA5E9]/20",
+          error: "group glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-red-500/20",
+          info: "group glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#D946EF]/20",
         },
       }}
       {...props}

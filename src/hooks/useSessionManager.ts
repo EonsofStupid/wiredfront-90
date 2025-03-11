@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -13,6 +12,7 @@ interface SessionState {
 export const useSessionManager = () => {
   const [sessions, setSessions] = useState<SessionState[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
   const { clearMessages } = useMessageStore();
 
   // Fetch active sessions
@@ -33,17 +33,34 @@ export const useSessionManager = () => {
       }));
 
       setSessions(formattedSessions);
+      return formattedSessions;
     } catch (error) {
       console.error('Error fetching sessions:', error);
       toast.error('Failed to fetch chat sessions');
+      return [];
     }
   }, []);
 
-  // Create a new session
+  // Create a new session only if no active session exists
   const createSession = useCallback(async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No authenticated user');
+
+      // Check for existing active session first
+      const { data: existingSession } = await supabase
+        .from('chat_sessions')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('last_accessed', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (existingSession) {
+        setCurrentSessionId(existingSession.id);
+        return existingSession.id;
+      }
 
       const { data, error } = await supabase
         .from('chat_sessions')
@@ -60,7 +77,9 @@ export const useSessionManager = () => {
       setCurrentSessionId(data.id);
       await fetchSessions();
       clearMessages();
-      toast.success('New chat session created');
+      toast.success('New chat session created', {
+        className: 'bg-gradient-to-r from-[#8B5CF6]/10 to-[#0EA5E9]/10'
+      });
       return data.id;
     } catch (error) {
       console.error('Error creating session:', error);
@@ -68,6 +87,23 @@ export const useSessionManager = () => {
       return null;
     }
   }, [fetchSessions, clearMessages]);
+
+  // Initialize session only once on component mount
+  useEffect(() => {
+    const initializeSession = async () => {
+      if (!isInitializing) return;
+
+      const existingSessions = await fetchSessions();
+      
+      if (existingSessions.length === 0 || !currentSessionId) {
+        await createSession();
+      }
+      
+      setIsInitializing(false);
+    };
+
+    initializeSession();
+  }, [isInitializing, fetchSessions, createSession, currentSessionId]);
 
   // Switch to a different session
   const switchSession = useCallback(async (sessionId: string) => {
@@ -110,19 +146,7 @@ export const useSessionManager = () => {
     }
   }, [fetchSessions]);
 
-  // Initialize session on component mount
-  useEffect(() => {
-    const initializeSession = async () => {
-      await fetchSessions();
-      if (!currentSessionId) {
-        await createSession();
-      }
-    };
-
-    initializeSession();
-  }, [fetchSessions, createSession, currentSessionId]);
-
-  // Update last_accessed timestamp periodically
+  // Update last_accessed timestamp less frequently
   useEffect(() => {
     const updateLastAccessed = async () => {
       if (!currentSessionId) return;
