@@ -11,7 +11,8 @@ import { ChatProviderSettings } from "./api/chat/ChatProviderSettings";
 import { useAPISettings } from "@/hooks/admin/settings/api";
 import { toast } from "sonner";
 import { AdminCard, AdminCardHeader, AdminCardTitle, AdminCardDescription, AdminCardContent } from "@/components/admin/ui/AdminCard";
-import { Save } from "lucide-react";
+import { Save, MessageSquare } from "lucide-react";
+import { ChatSettings } from "./ChatSettings";
 
 export function APISettings() {
   const {
@@ -57,6 +58,10 @@ export function APISettings() {
             <TabsList className="admin-tabs-list">
               <TabsTrigger value="ai-services" className="admin-tab">AI Services</TabsTrigger>
               <TabsTrigger value="chat-providers" className="admin-tab">Chat Providers</TabsTrigger>
+              <TabsTrigger value="chat-settings" className="admin-tab">
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Chat Settings
+              </TabsTrigger>
               <TabsTrigger value="oauth" className="admin-tab">OAuth Providers</TabsTrigger>
               <TabsTrigger value="rag-keys" className="admin-tab">Vector DB Keys</TabsTrigger>
               <TabsTrigger value="voice" className="admin-tab">Voice</TabsTrigger>
@@ -70,6 +75,10 @@ export function APISettings() {
 
             <TabsContent value="chat-providers" className="pt-4">
               <ChatProviderSettings />
+            </TabsContent>
+            
+            <TabsContent value="chat-settings" className="pt-4">
+              <ChatSettings />
             </TabsContent>
 
             <TabsContent value="oauth" className="pt-4">
