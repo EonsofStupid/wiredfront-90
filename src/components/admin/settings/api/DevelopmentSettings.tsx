@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { 
-  GitHub, 
+  Github, 
   Check, 
   AlertCircle, 
   RefreshCw, 
@@ -176,7 +176,7 @@ export function DevelopmentSettings({
       <Tabs defaultValue="github" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="github" className="flex items-center gap-2">
-            <GitHub className="h-4 w-4" />
+            <Github className="h-4 w-4" />
             GitHub
           </TabsTrigger>
           <TabsTrigger value="docker" className="flex items-center gap-2">
@@ -193,7 +193,7 @@ export function DevelopmentSettings({
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2">
-                <GitHub className="h-5 w-5" />
+                <Github className="h-5 w-5" />
                 GitHub Integration
               </CardTitle>
               <CardDescription>
@@ -330,7 +330,7 @@ export function DevelopmentSettings({
                     </>
                   ) : (
                     <>
-                      <GitHub className="h-4 w-4 mr-2" />
+                      <Github className="h-4 w-4 mr-2" />
                       Save GitHub Token
                     </>
                   )}
