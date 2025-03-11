@@ -1,8 +1,9 @@
 
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card } from "@/components/ui/card";
-import { Database, Cpu } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BrainCircuit, Database, Server } from "lucide-react";
 
 interface FeaturesStepProps {
   ragPreference: string;
@@ -19,59 +20,82 @@ export function FeaturesStep({
 }: FeaturesStepProps) {
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Database className="h-5 w-5 text-primary" />
-          <h3 className="font-medium">RAG Storage Configuration</h3>
-        </div>
+      <Tabs defaultValue="rag" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="rag" className="flex items-center gap-2">
+            <Database className="h-4 w-4" />
+            RAG Configuration
+          </TabsTrigger>
+          <TabsTrigger value="planning" className="flex items-center gap-2">
+            <BrainCircuit className="h-4 w-4" />
+            Planning Mode
+          </TabsTrigger>
+        </TabsList>
         
-        <Card className="p-4 bg-muted/30">
+        <TabsContent value="rag" className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="ragPreference">RAG Storage Preference</Label>
-            <Select value={ragPreference} onValueChange={onRagPreferenceChange}>
-              <SelectTrigger id="ragPreference">
-                <SelectValue placeholder="Select RAG storage" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="supabase">Supabase (Basic)</SelectItem>
-                <SelectItem value="pinecone">Pinecone (Advanced)</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground mt-1">
-              {ragPreference === 'supabase' 
-                ? 'Basic RAG uses Supabase for simple vector storage and retrieval.' 
-                : 'Advanced RAG uses Pinecone for high-performance vector search with better semantic matching.'}
-            </p>
+            <Label>RAG Storage Preference</Label>
+            <RadioGroup 
+              value={ragPreference} 
+              onValueChange={onRagPreferenceChange}
+              className="flex flex-col space-y-2"
+            >
+              <div className="flex items-center space-x-2 rounded-md border p-3 shadow-sm">
+                <RadioGroupItem value="supabase" id="rag-supabase" />
+                <Label htmlFor="rag-supabase" className="flex flex-1 items-center gap-2">
+                  <Database className="h-4 w-4 text-primary" />
+                  <div>
+                    <p className="font-medium">Supabase Vector Store</p>
+                    <p className="text-xs text-muted-foreground">
+                      Suitable for small projects and starter use cases
+                    </p>
+                  </div>
+                </Label>
+              </div>
+              
+              <div className="flex items-center space-x-2 rounded-md border p-3 shadow-sm">
+                <RadioGroupItem value="pinecone" id="rag-pinecone" />
+                <Label htmlFor="rag-pinecone" className="flex flex-1 items-center gap-2">
+                  <Server className="h-4 w-4 text-primary" />
+                  <div>
+                    <p className="font-medium">Pinecone Vector DB</p>
+                    <p className="text-xs text-muted-foreground">
+                      Advanced vector storage for large-scale applications
+                    </p>
+                  </div>
+                </Label>
+              </div>
+            </RadioGroup>
           </div>
-        </Card>
-      </div>
-
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Cpu className="h-5 w-5 text-primary" />
-          <h3 className="font-medium">Planning Configuration</h3>
-        </div>
+        </TabsContent>
         
-        <Card className="p-4 bg-muted/30">
+        <TabsContent value="planning" className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="planningMode">Planning Mode</Label>
+            <Label>Planning Mode</Label>
             <Select value={planningMode} onValueChange={onPlanningModeChange}>
-              <SelectTrigger id="planningMode">
+              <SelectTrigger>
                 <SelectValue placeholder="Select planning mode" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="basic">Basic</SelectItem>
-                <SelectItem value="advanced">Advanced (01 Reasoning)</SelectItem>
+                <SelectItem value="basic">
+                  Basic Planning
+                </SelectItem>
+                <SelectItem value="advanced">
+                  Advanced Planning
+                </SelectItem>
+                <SelectItem value="reasoning">
+                  01 Logic Reasoning
+                </SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground mt-1">
-              {planningMode === 'basic' 
-                ? 'Basic planning for simple projects and straightforward tasks.' 
-                : 'Advanced 01 reasoning for complex planning with multi-step decision making.'}
+            <p className="text-xs text-muted-foreground">
+              {planningMode === 'basic' && "Simple step-by-step planning suitable for most tasks"}
+              {planningMode === 'advanced' && "Detailed planning with file interdependency analysis"}
+              {planningMode === 'reasoning' && "Advanced reasoning with deep architecture analysis"}
             </p>
           </div>
-        </Card>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

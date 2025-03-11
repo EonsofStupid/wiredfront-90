@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
@@ -273,6 +272,49 @@ serve(async (req) => {
               }
             };
           }
+        } else if (provider === 'github') {
+          // Validate GitHub token
+          try {
+            const response = await fetch('https://api.github.com/user', {
+              method: 'GET',
+              headers: {
+                'Authorization': `token ${secretValue}`,
+                'Accept': 'application/vnd.github.v3+json'
+              }
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              validationResult = {
+                status: 'valid',
+                details: `Valid GitHub token for user: ${data.login}`,
+                metrics: {
+                  rate_limit: response.headers.get('X-RateLimit-Limit') || 'unknown',
+                  rate_limit_remaining: response.headers.get('X-RateLimit-Remaining') || 'unknown',
+                  rate_limit_reset: response.headers.get('X-RateLimit-Reset') || null
+                }
+              };
+            } else {
+              const errorData = await response.text();
+              validationResult = {
+                status: 'invalid',
+                details: `GitHub API validation failed: ${response.status} - ${errorData}`,
+                metrics: {
+                  remaining_quota: '0',
+                  reset_at: null
+                }
+              };
+            }
+          } catch (validationErr) {
+            validationResult = {
+              status: 'invalid',
+              details: `GitHub validation error: ${validationErr.message}`,
+              metrics: {
+                remaining_quota: '0',
+                reset_at: null
+              }
+            };
+          }
         }
         
         // Update the validation status
@@ -514,6 +556,96 @@ serve(async (req) => {
         JSON.stringify({ 
           success: true,
           configurations: configs
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        },
+      );
+    } else if (action === 'sync_github_metrics') {
+      // New action to sync GitHub API metrics
+      const { data: configs, error: configsError } = await supabaseAdmin
+        .from('api_configurations')
+        .select('*')
+        .eq('api_type', 'github')
+        .eq('is_enabled', true);
+        
+      if (configsError) {
+        throw new Error('Failed to retrieve GitHub configurations');
+      }
+      
+      const results = [];
+      
+      for (const config of configs) {
+        try {
+          // Get the token
+          const { data: secretValue, error: secretError } = await supabaseAdmin.rpc('get_secret', {
+            name: config.secret_key_name
+          });
+          
+          if (secretError) {
+            console.error(`Error retrieving secret for ${config.memorable_name}:`, secretError);
+            continue;
+          }
+          
+          // Check GitHub rate limits
+          const response = await fetch('https://api.github.com/rate_limit', {
+            method: 'GET',
+            headers: {
+              'Authorization': `token ${secretValue}`,
+              'Accept': 'application/vnd.github.v3+json'
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            const rateLimit = data.resources.core;
+            
+            // Update the metrics
+            await supabaseAdmin
+              .from('api_configurations')
+              .update({
+                usage_metrics: {
+                  ...config.usage_metrics,
+                  remaining_quota: rateLimit.remaining,
+                  total_quota: rateLimit.limit,
+                  reset_at: new Date(rateLimit.reset * 1000).toISOString(),
+                  last_synced: new Date().toISOString()
+                }
+              })
+              .eq('id', config.id);
+              
+            results.push({
+              name: config.memorable_name,
+              status: 'synced',
+              metrics: {
+                remaining: rateLimit.remaining,
+                limit: rateLimit.limit,
+                reset: new Date(rateLimit.reset * 1000).toISOString()
+              }
+            });
+          } else {
+            console.error(`Error syncing GitHub metrics for ${config.memorable_name}:`, await response.text());
+            results.push({
+              name: config.memorable_name,
+              status: 'error',
+              message: `API error: ${response.status}`
+            });
+          }
+        } catch (error) {
+          console.error(`Error processing GitHub config ${config.memorable_name}:`, error);
+          results.push({
+            name: config.memorable_name,
+            status: 'error',
+            message: error.message
+          });
+        }
+      }
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          results
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

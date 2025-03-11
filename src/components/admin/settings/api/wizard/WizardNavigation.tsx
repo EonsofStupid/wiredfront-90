@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Save } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
 
 interface WizardNavigationProps {
   currentStep: number;
@@ -22,36 +22,55 @@ export function WizardNavigation({
   isLastStep
 }: WizardNavigationProps) {
   return (
-    <div className="flex justify-between mt-6">
-      {currentStep > 1 ? (
-        <Button variant="outline" onClick={onPrevious} className="gap-2">
-          <ArrowLeft className="h-4 w-4" /> Back
-        </Button>
-      ) : (
-        <Button variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-      )}
-      <Button onClick={onNext} disabled={isSubmitting} className="gap-2">
-        {!isLastStep ? (
-          <>
-            Next <ArrowRight className="h-4 w-4" />
-          </>
-        ) : (
-          <>
-            {isSubmitting ? (
-              <>
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4" /> Save API Key
-              </>
-            )}
-          </>
-        )}
+    <div className="flex justify-between mt-6 pt-4 border-t">
+      <Button
+        variant="outline"
+        onClick={onCancel}
+        disabled={isSubmitting}
+      >
+        Cancel
       </Button>
+      
+      <div className="flex gap-2">
+        {currentStep > 1 && (
+          <Button
+            variant="outline"
+            onClick={onPrevious}
+            disabled={isSubmitting}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Previous
+          </Button>
+        )}
+        
+        <Button
+          onClick={onNext}
+          disabled={isSubmitting}
+          className={`flex items-center gap-2 ${isLastStep ? 'bg-green-600 hover:bg-green-700' : ''}`}
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              {isLastStep ? 'Saving...' : 'Processing...'}
+            </>
+          ) : (
+            <>
+              {isLastStep ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  Complete
+                </>
+              ) : (
+                <>
+                  Next
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </>
+          )}
+        </Button>
+      </div>
     </div>
   );
 }

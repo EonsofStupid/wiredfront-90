@@ -1,3 +1,15 @@
-project_id = "ewjisqyvspdvhyppkhnm"
-[chat-completion]
+
+project_id = "deksjwrdczcsnryjohzg"
+
+[manage-api-secret]
+verify_jwt = true
+max_timeout = 120
+
+[save-api-secret]
+verify_jwt = true
+
+[test-ai-connection]
+verify_jwt = true
+
+[track-api-usage]
 verify_jwt = true
