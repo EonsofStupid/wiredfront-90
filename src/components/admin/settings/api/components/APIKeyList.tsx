@@ -1,0 +1,31 @@
+
+import { APIConfiguration } from "@/types/admin/settings/api";
+import { APIKeyCard } from "../APIKeyCard";
+
+interface APIKeyListProps {
+  configurations: APIConfiguration[];
+  onValidate: (configId: string) => Promise<boolean>;
+  onDelete: (configId: string) => Promise<boolean>;
+  onRefresh: () => void;
+}
+
+export function APIKeyList({ 
+  configurations, 
+  onValidate, 
+  onDelete, 
+  onRefresh 
+}: APIKeyListProps) {
+  return (
+    <div className="space-y-4">
+      {configurations.map((config) => (
+        <APIKeyCard
+          key={config.id}
+          config={config}
+          onValidate={onValidate}
+          onDelete={onDelete}
+          onRefresh={onRefresh}
+        />
+      ))}
+    </div>
+  );
+}
