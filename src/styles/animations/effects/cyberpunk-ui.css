@@ -38,6 +38,15 @@
   60% { opacity: 0.15; }
 }
 
+@keyframes holographic {
+  0% {
+    transform: translateX(-100%) rotate(0deg);
+  }
+  100% {
+    transform: translateX(100%) rotate(45deg);
+  }
+}
+
 @media (prefers-reduced-motion) {
   .hero--cyberpunk-ui::before {
     animation: none;

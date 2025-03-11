@@ -15,7 +15,7 @@ export const AdminMainNavGroup = () => {
       <AdminNavIconButton 
         icon={LayoutDashboard} 
         tooltip="Metrics Overview" 
-        route="/admin" 
+        route="/admin/metrics-overview" 
       />
       <AdminNavIconButton 
         icon={Users} 
