@@ -9,6 +9,7 @@ import {
   DialogDescription
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 
 interface VoiceRecordingDialogProps {
   isOpen: boolean;
