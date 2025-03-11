@@ -7,8 +7,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNavigate, useLocation } from "react-router-dom";
+import { 
+  AdminTooltip, 
+  AdminTooltipContent, 
+  AdminTooltipProvider, 
+  AdminTooltipTrigger 
+} from "@/components/admin/ui/AdminTooltip";
 
 interface AdminTopNavOverlayProps {
   className?: string;
@@ -31,29 +36,29 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
         className
       )}
     >
-      <div className="admin-glass-panel border-neon-border relative h-32">
+      <div className="admin-glass-panel border-neon-border relative">
         <div className="flex flex-col h-full p-4">
-          <div className="flex justify-between items-start mb-4">
+          <div className="flex justify-between items-start">
             <div className="flex flex-wrap items-center gap-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
+              <AdminTooltipProvider>
+                <AdminTooltip>
+                  <AdminTooltipTrigger asChild>
                     <Button 
                       variant="ghost" 
                       size="icon" 
                       className="admin-nav-icon"
-                      onClick={() => navigate('/admin')}
+                      onClick={() => navigate('/admin/metrics-overview')}
                     >
                       <LayoutDashboard className="h-5 w-5" />
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Metrics Overview</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                  </AdminTooltipTrigger>
+                  <AdminTooltipContent side="bottom">Metrics Overview</AdminTooltipContent>
+                </AdminTooltip>
+              </AdminTooltipProvider>
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
+              <AdminTooltipProvider>
+                <AdminTooltip>
+                  <AdminTooltipTrigger asChild>
                     <Button 
                       variant="ghost" 
                       size="icon" 
@@ -62,14 +67,14 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                     >
                       <Users className="h-5 w-5" />
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">User Management</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                  </AdminTooltipTrigger>
+                  <AdminTooltipContent side="bottom">User Management</AdminTooltipContent>
+                </AdminTooltip>
+              </AdminTooltipProvider>
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
+              <AdminTooltipProvider>
+                <AdminTooltip>
+                  <AdminTooltipTrigger asChild>
                     <Button 
                       variant="ghost" 
                       size="icon" 
@@ -78,14 +83,14 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                     >
                       <Settings className="h-5 w-5" />
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">System Settings</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                  </AdminTooltipTrigger>
+                  <AdminTooltipContent side="bottom">System Settings</AdminTooltipContent>
+                </AdminTooltip>
+              </AdminTooltipProvider>
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
+              <AdminTooltipProvider>
+                <AdminTooltip>
+                  <AdminTooltipTrigger asChild>
                     <Button 
                       variant="ghost" 
                       size="icon" 
@@ -94,14 +99,14 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                     >
                       <Database className="h-5 w-5" />
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Database</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                  </AdminTooltipTrigger>
+                  <AdminTooltipContent side="bottom">Database</AdminTooltipContent>
+                </AdminTooltip>
+              </AdminTooltipProvider>
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
+              <AdminTooltipProvider>
+                <AdminTooltip>
+                  <AdminTooltipTrigger asChild>
                     <Button 
                       variant="ghost" 
                       size="icon" 
@@ -110,14 +115,14 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                     >
                       <Code className="h-5 w-5" />
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Models</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                  </AdminTooltipTrigger>
+                  <AdminTooltipContent side="bottom">Models</AdminTooltipContent>
+                </AdminTooltip>
+              </AdminTooltipProvider>
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
+              <AdminTooltipProvider>
+                <AdminTooltip>
+                  <AdminTooltipTrigger asChild>
                     <Button 
                       variant="ghost" 
                       size="icon" 
@@ -126,14 +131,14 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                     >
                       <Activity className="h-5 w-5" />
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Activity & Logs</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                  </AdminTooltipTrigger>
+                  <AdminTooltipContent side="bottom">Activity & Logs</AdminTooltipContent>
+                </AdminTooltip>
+              </AdminTooltipProvider>
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
+              <AdminTooltipProvider>
+                <AdminTooltip>
+                  <AdminTooltipTrigger asChild>
                     <Button 
                       variant="ghost" 
                       size="icon" 
@@ -142,14 +147,14 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                     >
                       <MessageSquare className="h-5 w-5" />
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Chat Settings</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                  </AdminTooltipTrigger>
+                  <AdminTooltipContent side="bottom">Chat Settings</AdminTooltipContent>
+                </AdminTooltip>
+              </AdminTooltipProvider>
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
+              <AdminTooltipProvider>
+                <AdminTooltip>
+                  <AdminTooltipTrigger asChild>
                     <Button 
                       variant="ghost" 
                       size="icon" 
@@ -158,14 +163,14 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                     >
                       <Flag className="h-5 w-5" />
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Feature Flags</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                  </AdminTooltipTrigger>
+                  <AdminTooltipContent side="bottom">Feature Flags</AdminTooltipContent>
+                </AdminTooltip>
+              </AdminTooltipProvider>
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
+              <AdminTooltipProvider>
+                <AdminTooltip>
+                  <AdminTooltipTrigger asChild>
                     <Button 
                       variant="ghost" 
                       size="icon" 
@@ -174,14 +179,14 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                     >
                       <ListChecks className="h-5 w-5" />
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Queues</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                  </AdminTooltipTrigger>
+                  <AdminTooltipContent side="bottom">Queues</AdminTooltipContent>
+                </AdminTooltip>
+              </AdminTooltipProvider>
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
+              <AdminTooltipProvider>
+                <AdminTooltip>
+                  <AdminTooltipTrigger asChild>
                     <Button 
                       variant="ghost" 
                       size="icon" 
@@ -190,17 +195,17 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                     >
                       <HardDrive className="h-5 w-5" />
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Cache</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                  </AdminTooltipTrigger>
+                  <AdminTooltipContent side="bottom">Cache</AdminTooltipContent>
+                </AdminTooltip>
+              </AdminTooltipProvider>
             </div>
 
             {/* Right side controls */}
             <div className="flex items-center gap-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
+              <AdminTooltipProvider>
+                <AdminTooltip>
+                  <AdminTooltipTrigger asChild>
                     <Button 
                       variant="ghost" 
                       size="icon" 
@@ -209,14 +214,14 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                     >
                       <Search className="h-5 w-5" />
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Search</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                  </AdminTooltipTrigger>
+                  <AdminTooltipContent side="bottom">Search</AdminTooltipContent>
+                </AdminTooltip>
+              </AdminTooltipProvider>
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
+              <AdminTooltipProvider>
+                <AdminTooltip>
+                  <AdminTooltipTrigger asChild>
                     <Button 
                       variant="ghost" 
                       size="icon" 
@@ -225,10 +230,10 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                     >
                       <Bell className="h-5 w-5" />
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Notifications</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                  </AdminTooltipTrigger>
+                  <AdminTooltipContent side="bottom">Notifications</AdminTooltipContent>
+                </AdminTooltip>
+              </AdminTooltipProvider>
             </div>
           </div>
         </div>

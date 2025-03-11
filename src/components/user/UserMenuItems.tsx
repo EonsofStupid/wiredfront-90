@@ -87,7 +87,7 @@ export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
             "cursor-pointer flex items-center gap-2",
             location.pathname.startsWith('/admin') && "bg-accent text-accent-foreground"
           )}
-          onClick={() => navigate('/admin')}
+          onClick={() => navigate('/admin/metrics-overview')}
         >
           <Shield className="h-4 w-4" />
           Admin Dashboard
