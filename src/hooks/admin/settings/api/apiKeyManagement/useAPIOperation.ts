@@ -2,43 +2,52 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/services/chat/LoggingService";
 
-type APIOperationProps = {
+interface UseAPIOperationOptions {
   onSuccess?: () => Promise<void>;
-  errorMessage: string;
-  successMessage: string;
-};
+  successMessage?: string;
+  errorMessage?: string;
+}
 
-export const useAPIOperation = ({ onSuccess, errorMessage, successMessage }: APIOperationProps) => {
+export const useAPIOperation = (options: UseAPIOperationOptions = {}) => {
   const [isProcessing, setIsProcessing] = useState(false);
-
-  const executeOperation = async <T extends Record<string, any>>(
-    action: string,
-    payload: T
-  ): Promise<boolean> => {
+  
+  const executeOperation = async (action: string, data: Record<string, any>) => {
     setIsProcessing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('manage-api-secret', {
-        body: {
+      logger.info(`Executing API operation: ${action}`, data);
+      
+      const { data: result, error } = await supabase.functions.invoke('manage-api-secret', {
+        body: { 
           action,
-          ...payload
+          ...data
         }
       });
       
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       
-      toast.success(successMessage);
-      if (onSuccess) await onSuccess();
+      if (options.successMessage) {
+        toast.success(options.successMessage);
+      }
+      
+      if (options.onSuccess) {
+        await options.onSuccess();
+      }
+      
+      logger.info(`API operation completed: ${action}`, result);
       return true;
     } catch (error) {
-      console.error(`Error during ${action} operation:`, error);
-      toast.error(errorMessage);
+      logger.error(`API operation failed: ${action}`, error);
+      toast.error(options.errorMessage || `Operation failed: ${error.message}`);
       return false;
     } finally {
       setIsProcessing(false);
     }
   };
-
+  
   return {
     isProcessing,
     executeOperation

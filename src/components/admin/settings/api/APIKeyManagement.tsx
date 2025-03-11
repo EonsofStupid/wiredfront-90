@@ -12,6 +12,7 @@ import { useAPIKeyList } from "@/hooks/admin/settings/api/useAPIKeyList";
 import { APIType } from "@/types/admin/settings/api";
 import { useAPIManagementPermissions } from "./hooks/useAPIManagementPermissions";
 import { KeyManagementContent } from "./components/KeyManagementContent";
+import { useEnsureUserProfile } from "@/hooks/useEnsureUserProfile";
 
 export function APIKeyManagement() {
   const { 
@@ -31,6 +32,7 @@ export function APIKeyManagement() {
   } = useAPIKeyList(configurations);
 
   const { canManageKeys } = useAPIManagementPermissions();
+  const { isChecking } = useEnsureUserProfile();
 
   const handleSaveKey = async (
     provider: APIType,
@@ -72,7 +74,7 @@ export function APIKeyManagement() {
       description="Securely manage API keys for AI services and integrations"
     >
       <KeyManagementContent 
-        isLoading={isLoading}
+        isLoading={isLoading || isChecking}
         configurations={configurations}
         hasConfigurations={hasConfigurations}
         onAddKey={handleOpenAddDialog}
