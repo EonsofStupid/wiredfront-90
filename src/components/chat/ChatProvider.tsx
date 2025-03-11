@@ -3,12 +3,10 @@ import React, { createContext, useContext, ReactNode, useEffect } from 'react';
 import { Toaster } from "sonner";
 import { ChatModeProvider } from './providers/ChatModeProvider';
 import { useLocation } from 'react-router-dom';
-import { useChatUIStore } from './store/useChatUIStore';
-import { useChatProvidersStore } from './store/useChatProvidersStore';
+import { useChatStore } from './store/chatStore';
 
 interface ChatContextType {
   isEditorPage: boolean;
-  isProviderConfigured: boolean;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -16,33 +14,18 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export function ChatProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const isEditorPage = location.pathname === '/editor';
-  const { toggleChat, isOpen, setKnowledgeSourceVisible } = useChatUIStore();
-  const { isProviderConfigured, checkProviderStatus } = useChatProvidersStore();
+  const { toggleChat, isOpen } = useChatStore();
 
-  // Close knowledge source panel when pressing Escape
+  // Close chat when navigating away from editor page if open
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setKnowledgeSourceVisible(false);
-      }
-      
-      // Toggle chat with Alt+C
-      if (e.altKey && e.key === 'c') {
-        toggleChat();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [setKnowledgeSourceVisible, toggleChat]);
-
-  // Check provider status on component mount
-  useEffect(() => {
-    checkProviderStatus();
-  }, [checkProviderStatus]);
+    if (!isEditorPage && isOpen) {
+      // Optional: Add this if you want chat to close when leaving editor page
+      // toggleChat();
+    }
+  }, [isEditorPage, isOpen, toggleChat]);
 
   return (
-    <ChatContext.Provider value={{ isEditorPage, isProviderConfigured }}>
+    <ChatContext.Provider value={{ isEditorPage }}>
       <ChatModeProvider isEditorPage={isEditorPage}>
         {children}
         <Toaster />

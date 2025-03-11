@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 import { Json } from '@/integrations/supabase/types';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface Message {
   id: string;
@@ -35,7 +34,6 @@ interface MessageStore extends MessageState {
   addMessage: (message: { content: string; role: 'user' | 'assistant' | 'system'; sessionId: string }) => Promise<void>;
   setCurrentSessionId: (sessionId: string) => void;
   fetchSessionMessages: (sessionId: string) => Promise<void>;
-  retryMessage: (messageId: string) => Promise<void>;
 }
 
 const validateRole = (role: string): 'user' | 'assistant' | 'system' => {
@@ -45,7 +43,7 @@ const validateRole = (role: string): 'user' | 'assistant' | 'system' => {
   return 'user'; // Default fallback
 };
 
-export const useMessageStore = create<MessageStore>((set, get) => ({
+export const useMessageStore = create<MessageStore>((set) => ({
   messages: [],
   currentSessionId: null,
   isProcessing: false,
@@ -154,54 +152,6 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
         ),
         isProcessing: false,
         error: 'Failed to send message'
-      }));
-    }
-  },
-  
-  retryMessage: async (messageId: string) => {
-    try {
-      const message = get().messages.find(msg => msg.id === messageId);
-      if (!message || !get().currentSessionId) return;
-      
-      set((state: MessageState) => ({
-        messages: state.messages.map(msg => 
-          msg.id === messageId 
-            ? { ...msg, message_status: 'pending', retry_count: (msg.retry_count || 0) + 1 }
-            : msg
-        )
-      }));
-      
-      // Update retry count in the database
-      const { error } = await supabase
-        .from('messages')
-        .update({ 
-          message_status: 'sent',
-          last_retry: new Date().toISOString(),
-          retry_count: (message.retry_count || 0) + 1
-        })
-        .eq('id', messageId);
-
-      if (error) throw error;
-
-      set((state: MessageState) => ({
-        messages: state.messages.map(msg => 
-          msg.id === messageId 
-            ? { ...msg, message_status: 'sent' }
-            : msg
-        )
-      }));
-      
-      toast.success('Message retry successful');
-    } catch (error) {
-      console.error('Error retrying message:', error);
-      toast.error('Failed to retry message');
-      
-      set((state: MessageState) => ({
-        messages: state.messages.map(msg => 
-          msg.id === messageId 
-            ? { ...msg, message_status: 'failed' }
-            : msg
-        )
       }));
     }
   }

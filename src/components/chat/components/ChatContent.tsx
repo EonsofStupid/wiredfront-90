@@ -7,10 +7,7 @@ import { GitHubSyncModule } from "../modules/GitHubSyncModule";
 import { NotificationsModule } from "../modules/NotificationsModule";
 import { ChatInputModule } from "../modules/ChatInputModule";
 import { useChatMode } from "../providers/ChatModeProvider";
-import { useChatFeaturesStore } from "../store/useChatFeaturesStore";
-import { useChat } from "../ChatProvider";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { useChatStore } from "../store/chatStore";
 
 interface ChatContentProps {
   scrollRef: React.RefObject<HTMLDivElement>;
@@ -20,8 +17,7 @@ interface ChatContentProps {
 
 export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatContentProps) {
   const { mode } = useChatMode();
-  const { features } = useChatFeaturesStore();
-  const { isProviderConfigured } = useChat();
+  const { features } = useChatStore();
 
   if (isMinimized) {
     return null;
@@ -35,15 +31,6 @@ export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatConten
   return (
     <>
       <CardContent className="p-4" onClick={handleContentClick}>
-        {!isProviderConfigured && (
-          <Alert className="mb-4 bg-neon-pink/10 border-neon-pink/30 text-white">
-            <AlertTriangle className="h-4 w-4 text-neon-pink" />
-            <AlertDescription className="text-sm">
-              No AI providers configured. Only local commands are available.
-            </AlertDescription>
-          </Alert>
-        )}
-        
         {/* Message display area */}
         <MessageModule scrollRef={scrollRef} />
         
