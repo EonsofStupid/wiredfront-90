@@ -1,6 +1,6 @@
 
 import { APIConfiguration } from "@/hooks/admin/settings/api/apiKeyManagement";
-import { APIKeyCard } from "../APIKeyCard";
+import { APIKeyCard } from "./api-key-card/APIKeyCard";
 
 interface APIKeyListProps {
   configurations: APIConfiguration[];
