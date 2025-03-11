@@ -1,15 +1,16 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Key, Lock, PlusCircle } from "lucide-react";
+import { Key, PlusCircle } from "lucide-react";
 import { useRoleStore } from "@/stores/role";
 import { SettingsContainer } from "../layout/SettingsContainer";
 import { APIKeyWizard } from "./APIKeyWizard";
 import { APIKeyCard } from "./APIKeyCard";
 import { useAPIKeyManagement } from "@/hooks/admin/settings/api/useAPIKeyManagement";
 import { APIType } from "@/types/admin/settings/api";
+import { AccessRestrictionCard } from "./components/AccessRestrictionCard";
+import { EmptyAPIKeysList } from "./components/EmptyAPIKeysList";
+import { APIKeysSkeletonLoader } from "./components/APIKeysSkeletonLoader";
 
 export function APIKeyManagement() {
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -49,17 +50,7 @@ export function APIKeyManagement() {
         title="API Key Management"
         description="Manage API keys for different services"
       >
-        <Card className="border-destructive/50">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Lock className="w-5 h-5 mr-2 text-destructive" />
-              Access Restricted
-            </CardTitle>
-            <CardDescription>
-              You don't have permission to manage API keys. This feature is restricted to Super Admin users.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        <AccessRestrictionCard />
       </SettingsContainer>
     );
   }
@@ -90,10 +81,7 @@ export function APIKeyManagement() {
         </div>
 
         {isLoading && configurations.length === 0 ? (
-          <div className="space-y-3">
-            <Skeleton className="h-[125px] w-full rounded-lg" />
-            <Skeleton className="h-[125px] w-full rounded-lg" />
-          </div>
+          <APIKeysSkeletonLoader />
         ) : configurations.length > 0 ? (
           <div className="space-y-4">
             {configurations.map((config) => (
@@ -107,28 +95,7 @@ export function APIKeyManagement() {
             ))}
           </div>
         ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>No API Keys</CardTitle>
-              <CardDescription>
-                You haven't configured any API keys yet
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Add your first API key to start using AI services and other integrations.
-              </p>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                onClick={() => setShowAddDialog(true)}
-                className="admin-primary-button w-full"
-              >
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Your First API Key
-              </Button>
-            </CardFooter>
-          </Card>
+          <EmptyAPIKeysList onAddKey={() => setShowAddDialog(true)} />
         )}
       </div>
 

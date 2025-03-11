@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save } from "lucide-react";
 
 interface WizardNavigationProps {
   currentStep: number;
@@ -24,22 +24,31 @@ export function WizardNavigation({
   return (
     <div className="flex justify-between mt-6">
       {currentStep > 1 ? (
-        <Button variant="outline" onClick={onPrevious}>
-          Back
+        <Button variant="outline" onClick={onPrevious} className="gap-2">
+          <ArrowLeft className="h-4 w-4" /> Back
         </Button>
       ) : (
         <Button variant="outline" onClick={onCancel}>
           Cancel
         </Button>
       )}
-      <Button onClick={onNext} disabled={isSubmitting}>
+      <Button onClick={onNext} disabled={isSubmitting} className="gap-2">
         {!isLastStep ? (
           <>
-            Next <ArrowRight className="ml-2 h-4 w-4" />
+            Next <ArrowRight className="h-4 w-4" />
           </>
         ) : (
           <>
-            {isSubmitting ? "Saving..." : "Save API Key"}
+            {isSubmitting ? (
+              <>
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" /> Save API Key
+              </>
+            )}
           </>
         )}
       </Button>

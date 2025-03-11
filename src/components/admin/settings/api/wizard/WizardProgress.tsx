@@ -15,7 +15,7 @@ export function WizardProgress({ currentStep, totalSteps, steps }: WizardProgres
         {steps.map((step, index) => (
           <span 
             key={index} 
-            className={currentStep >= index + 1 ? "text-primary" : ""}
+            className={`transition-colors duration-200 ${currentStep >= index + 1 ? "text-primary font-medium" : ""}`}
           >
             {step}
           </span>
