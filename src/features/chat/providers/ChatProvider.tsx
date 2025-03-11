@@ -1,12 +1,15 @@
 
-import React, { createContext, useContext, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import { Toaster } from "sonner";
-import { ChatModeProvider } from './providers/ChatModeProvider';
 import { useLocation } from 'react-router-dom';
-import { useChatStore } from './store/chatStore';
+import { useChatUIStore } from '../stores/uiStore';
+import { useMessageStore } from '../hooks/useMessageStore';
+import { ChatMode } from '../types';
 
 interface ChatContextType {
   isEditorPage: boolean;
+  mode: ChatMode;
+  setMode: (mode: ChatMode) => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -14,7 +17,14 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export function ChatProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const isEditorPage = location.pathname === '/editor';
-  const { toggleChat, isOpen } = useChatStore();
+  const { toggleChat, isOpen } = useChatUIStore();
+  const { clearMessages } = useMessageStore();
+  const [mode, setMode] = useState<ChatMode>(isEditorPage ? 'editor' : 'standard');
+
+  // Reset mode when switching pages
+  useEffect(() => {
+    setMode(isEditorPage ? 'editor' : 'standard');
+  }, [isEditorPage]);
 
   // Close chat when navigating away from editor page if open
   useEffect(() => {
@@ -25,11 +35,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, [isEditorPage, isOpen, toggleChat]);
 
   return (
-    <ChatContext.Provider value={{ isEditorPage }}>
-      <ChatModeProvider isEditorPage={isEditorPage}>
-        {children}
-        <Toaster />
-      </ChatModeProvider>
+    <ChatContext.Provider value={{ isEditorPage, mode, setMode }}>
+      {children}
+      <Toaster />
     </ChatContext.Provider>
   );
 }

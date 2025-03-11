@@ -4,12 +4,14 @@ import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useChatStore } from "@/components/chat/store/chatStore";
+import { useChatFeatureStore } from "@/features/chat/stores/featureStore";
+import { useChatUIStore } from "@/features/chat/stores/uiStore";
 import { ArrowLeftRight, Pin, PinOff } from "lucide-react";
 import { toast } from "sonner";
 
 export const ChatFeatureSettings = () => {
-  const { features, toggleFeature, position, togglePosition, docked, toggleDocked } = useChatStore();
+  const { features, toggleFeature } = useChatFeatureStore();
+  const { position, togglePosition, docked, toggleDocked } = useChatUIStore();
 
   const handleReset = () => {
     // Reset all features to default
@@ -17,6 +19,7 @@ export const ChatFeatureSettings = () => {
     if (!features.ragSupport) toggleFeature('ragSupport');
     if (!features.githubSync) toggleFeature('githubSync');
     if (!features.notifications) toggleFeature('notifications');
+    if (!features.voiceInput) toggleFeature('voiceInput');
     
     toast.success("Chat features reset to defaults");
   };
@@ -125,6 +128,20 @@ export const ChatFeatureSettings = () => {
               id="notifications" 
               checked={features.notifications} 
               onCheckedChange={() => toggleFeature('notifications')}
+            />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="voiceInput">Voice Input</Label>
+              <p className="text-sm text-muted-foreground">
+                Enable voice input for chat
+              </p>
+            </div>
+            <Switch 
+              id="voiceInput" 
+              checked={features.voiceInput} 
+              onCheckedChange={() => toggleFeature('voiceInput')}
             />
           </div>
         </div>

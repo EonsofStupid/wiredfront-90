@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { Toaster } from "sonner";
@@ -10,7 +11,7 @@ import Login from "./pages/Login";
 import Editor from "./pages/Editor";
 import Documents from "./pages/Documents";
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import { ChatProvider } from "@/components/chat/ChatProvider";
+import { ChatProvider } from "@/features/chat/providers/ChatProvider";
 import { useAuthStore } from "@/stores/auth";
 import { storeLastVisitedPath } from "@/utils/auth";
 import { EditorModeProvider } from "@/components/editor/providers/EditorModeProvider";
@@ -24,7 +25,6 @@ import { LivePreviewSettings } from "@/components/admin/settings/LivePreviewSett
 import { ChatFeatureSettings } from "@/components/admin/settings/ChatFeatureSettings";
 import { GuestCTA } from "@/components/auth/GuestCTA";
 import Settings from "./pages/Settings";
-import { DraggableChat } from "@/components/chat/DraggableChat";
 import { AdminTopNavOverlay } from "@/components/admin/navigation/AdminTopNavOverlay";
 import FeatureFlagsPage from "./pages/admin/FeatureFlagsPage";
 import MetricsOverview from "./pages/admin/MetricsOverview";
@@ -142,7 +142,6 @@ const App = () => {
           <GuestCTA />
         </CurrentLayout>
       )}
-      <DraggableChat />
       <Toaster />
     </ChatProvider>
   );
