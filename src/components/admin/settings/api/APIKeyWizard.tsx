@@ -1,20 +1,12 @@
 
 import { useState } from "react";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription 
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Progress } from "@/components/ui/progress";
-import { Info, Key, ArrowRight } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { APIType } from "@/types/admin/settings/api";
+import { WizardProgress } from "./wizard/WizardProgress";
+import { KeyDetailsStep } from "./wizard/KeyDetailsStep";
+import { PermissionsStep } from "./wizard/PermissionsStep";
+import { FeaturesStep } from "./wizard/FeaturesStep";
+import { WizardNavigation } from "./wizard/WizardNavigation";
 
 interface APIKeyWizardProps {
   open: boolean;
@@ -32,6 +24,9 @@ export function APIKeyWizard({ open, onOpenChange, onSave, isSubmitting }: APIKe
   const [ragPreference, setRagPreference] = useState("supabase");
   const [planningMode, setPlanningMode] = useState("basic");
 
+  const TOTAL_STEPS = 3;
+  const STEP_NAMES = ["Key Details", "Permissions", "Features"];
+
   const resetForm = () => {
     setCurrentStep(1);
     setSelectedProvider("openai");
@@ -48,7 +43,7 @@ export function APIKeyWizard({ open, onOpenChange, onSave, isSubmitting }: APIKe
   };
 
   const nextStep = () => {
-    if (currentStep < 3) {
+    if (currentStep < TOTAL_STEPS) {
       setCurrentStep(currentStep + 1);
     } else {
       handleSave();
@@ -85,21 +80,34 @@ export function APIKeyWizard({ open, onOpenChange, onSave, isSubmitting }: APIKe
     }
   };
 
-  // Fix provider type handling
   const handleProviderChange = (value: string) => {
-    // Convert the string value to APIType since selectTrigger onValueChange passes a string
     const providerValue = value as APIType;
     setSelectedProvider(providerValue);
   };
 
-  // Fix rag preference type handling
-  const handleRagPreferenceChange = (value: string) => {
-    setRagPreference(value);
+  const handleRoleChange = (role: string, checked: boolean) => {
+    if (checked) {
+      setSelectedRoles([...selectedRoles, role]);
+    } else {
+      setSelectedRoles(selectedRoles.filter(r => r !== role));
+    }
   };
 
-  // Fix planning mode type handling
-  const handlePlanningModeChange = (value: string) => {
-    setPlanningMode(value);
+  const handleFeatureChange = (feature: string, checked: boolean) => {
+    if (checked) {
+      setSelectedFeatures([...selectedFeatures, feature]);
+    } else {
+      setSelectedFeatures(selectedFeatures.filter(f => f !== feature));
+    }
+  };
+
+  const getStepDescription = () => {
+    switch(currentStep) {
+      case 1: return "Enter your API key information";
+      case 2: return "Configure key permissions and assignments";
+      case 3: return "Set up RAG and planning preferences";
+      default: return "";
+    }
   };
 
   return (
@@ -108,195 +116,55 @@ export function APIKeyWizard({ open, onOpenChange, onSave, isSubmitting }: APIKe
         <DialogHeader>
           <DialogTitle>Add New API Key</DialogTitle>
           <DialogDescription>
-            {currentStep === 1 && "Enter your API key information"}
-            {currentStep === 2 && "Configure key permissions and assignments"}
-            {currentStep === 3 && "Set up RAG and planning preferences"}
+            {getStepDescription()}
           </DialogDescription>
         </DialogHeader>
 
         <div className="mt-4">
-          <div className="mb-5">
-            <Progress className="h-2" value={(currentStep / 3) * 100} />
-            <div className="flex justify-between text-xs text-muted-foreground mt-1">
-              <span className={currentStep >= 1 ? "text-primary" : ""}>Key Details</span>
-              <span className={currentStep >= 2 ? "text-primary" : ""}>Permissions</span>
-              <span className={currentStep >= 3 ? "text-primary" : ""}>Features</span>
-            </div>
-          </div>
+          <WizardProgress 
+            currentStep={currentStep} 
+            totalSteps={TOTAL_STEPS} 
+            steps={STEP_NAMES} 
+          />
 
           {currentStep === 1 && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="apiProvider">API Provider</Label>
-                <Select value={selectedProvider} onValueChange={handleProviderChange}>
-                  <SelectTrigger id="apiProvider">
-                    <SelectValue placeholder="Select provider" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="openai">OpenAI</SelectItem>
-                    <SelectItem value="anthropic">Anthropic</SelectItem>
-                    <SelectItem value="gemini">Google Gemini</SelectItem>
-                    <SelectItem value="pinecone">Pinecone</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="memorableName">Memorable Name</Label>
-                <Input
-                  id="memorableName"
-                  value={newKey.name}
-                  onChange={(e) => setNewKey({...newKey, name: e.target.value})}
-                  placeholder="e.g., production_main_key"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Give this key a memorable name for easy reference
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="apiKey">API Key</Label>
-                <Input
-                  id="apiKey"
-                  type="password"
-                  value={newKey.key}
-                  onChange={(e) => setNewKey({...newKey, key: e.target.value})}
-                  placeholder={
-                    selectedProvider === 'openai' ? 'sk-...' :
-                    selectedProvider === 'anthropic' ? 'sk-ant-...' :
-                    selectedProvider === 'gemini' ? 'AIza...' :
-                    selectedProvider === 'pinecone' ? 'PINE-...' :
-                    'Enter your API key'
-                  }
-                />
-                <p className="text-xs text-muted-foreground flex items-center">
-                  <Info className="h-3 w-3 mr-1" /> 
-                  This key will be encrypted and stored securely
-                </p>
-              </div>
-            </div>
+            <KeyDetailsStep 
+              selectedProvider={selectedProvider}
+              onProviderChange={handleProviderChange}
+              keyName={newKey.name}
+              onKeyNameChange={(value) => setNewKey({...newKey, name: value})}
+              keyValue={newKey.key}
+              onKeyValueChange={(value) => setNewKey({...newKey, key: value})}
+            />
           )}
 
           {currentStep === 2 && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Role Assignments</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  {['super_admin', 'admin', 'developer', 'user'].map(role => (
-                    <div className="flex items-center space-x-2" key={role}>
-                      <Switch
-                        id={`role-${role}`}
-                        checked={selectedRoles.includes(role)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setSelectedRoles([...selectedRoles, role]);
-                          } else {
-                            setSelectedRoles(selectedRoles.filter(r => r !== role));
-                          }
-                        }}
-                      />
-                      <Label htmlFor={`role-${role}`} className="capitalize">
-                        {role.replace('_', ' ')}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Select which roles will have access to this API key
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Feature Bindings</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  {['chat', 'document_generation', 'code_analysis', 'rag'].map(feature => (
-                    <div className="flex items-center space-x-2" key={feature}>
-                      <Switch
-                        id={`feature-${feature}`}
-                        checked={selectedFeatures.includes(feature)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setSelectedFeatures([...selectedFeatures, feature]);
-                          } else {
-                            setSelectedFeatures(selectedFeatures.filter(f => f !== feature));
-                          }
-                        }}
-                      />
-                      <Label htmlFor={`feature-${feature}`} className="capitalize">
-                        {feature.replace('_', ' ')}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Select which features will use this API key
-                </p>
-              </div>
-            </div>
+            <PermissionsStep 
+              selectedRoles={selectedRoles}
+              onRoleChange={handleRoleChange}
+              selectedFeatures={selectedFeatures}
+              onFeatureChange={handleFeatureChange}
+            />
           )}
 
           {currentStep === 3 && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="ragPreference">RAG Storage Preference</Label>
-                <Select value={ragPreference} onValueChange={handleRagPreferenceChange}>
-                  <SelectTrigger id="ragPreference">
-                    <SelectValue placeholder="Select RAG storage" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="supabase">Supabase (Basic)</SelectItem>
-                    <SelectItem value="pinecone">Pinecone (Advanced)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  {ragPreference === 'supabase' 
-                    ? 'Basic RAG uses Supabase for simple vector storage' 
-                    : 'Advanced RAG uses Pinecone for high-performance vector search'}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="planningMode">Planning Mode</Label>
-                <Select value={planningMode} onValueChange={handlePlanningModeChange}>
-                  <SelectTrigger id="planningMode">
-                    <SelectValue placeholder="Select planning mode" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="basic">Basic</SelectItem>
-                    <SelectItem value="advanced">Advanced (01 Reasoning)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  {planningMode === 'basic' 
-                    ? 'Basic planning for simple projects' 
-                    : 'Advanced 01 reasoning for complex planning and decision making'}
-                </p>
-              </div>
-            </div>
+            <FeaturesStep 
+              ragPreference={ragPreference}
+              onRagPreferenceChange={setRagPreference}
+              planningMode={planningMode}
+              onPlanningModeChange={setPlanningMode}
+            />
           )}
 
-          <div className="flex justify-between mt-6">
-            {currentStep > 1 ? (
-              <Button variant="outline" onClick={prevStep}>
-                Back
-              </Button>
-            ) : (
-              <Button variant="outline" onClick={handleClose}>
-                Cancel
-              </Button>
-            )}
-            <Button onClick={nextStep} disabled={isSubmitting}>
-              {currentStep < 3 ? (
-                <>
-                  Next <ArrowRight className="ml-2 h-4 w-4" />
-                </>
-              ) : (
-                <>
-                  {isSubmitting ? "Saving..." : "Save API Key"}
-                </>
-              )}
-            </Button>
-          </div>
+          <WizardNavigation 
+            currentStep={currentStep}
+            totalSteps={TOTAL_STEPS}
+            onNext={nextStep}
+            onPrevious={prevStep}
+            onCancel={handleClose}
+            isSubmitting={isSubmitting}
+            isLastStep={currentStep === TOTAL_STEPS}
+          />
         </div>
       </DialogContent>
     </Dialog>
