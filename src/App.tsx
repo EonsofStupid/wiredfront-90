@@ -52,7 +52,9 @@ const ADMIN_ROUTES = [
   '/admin/queues',
   '/admin/cache',
   '/admin/activity',
-  '/admin/database'
+  '/admin/database',
+  '/admin/search',
+  '/admin/notifications'
 ];
 
 const App = () => {
@@ -123,6 +125,8 @@ const App = () => {
             <Route path="/admin/cache" element={<div>Cache Control</div>} />
             <Route path="/admin/activity" element={<div>Activity Logs</div>} />
             <Route path="/admin/database" element={<div>Database Management</div>} />
+            <Route path="/admin/search" element={<div>Admin Search</div>} />
+            <Route path="/admin/notifications" element={<div>Admin Notifications</div>} />
           </Routes>
           <GuestCTA />
         </CurrentLayout>
