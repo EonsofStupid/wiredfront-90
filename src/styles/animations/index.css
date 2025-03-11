@@ -1,0 +1,22 @@
+
+@import './core/variables.css';
+@import './effects/neon-lines.css';
+@import './effects/glitch.css';
+@import './effects/wireframe-city.css';
+@import './effects/cyberpunk-ui.css';
+
+/* Animation Utility Classes */
+.animation-paused {
+  animation-play-state: paused !important;
+}
+
+.animation-running {
+  animation-play-state: running !important;
+}
+
+@media (prefers-reduced-motion) {
+  .animation-reduced-motion {
+    animation: none !important;
+    transition: none !important;
+  }
+}

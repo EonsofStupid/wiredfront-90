@@ -1,0 +1,17 @@
+
+:root {
+  /* Animation Timings */
+  --anim-duration-slow: 10s;
+  --anim-duration-medium: 5s;
+  --anim-duration-fast: 2s;
+  
+  /* Neon Colors */
+  --neon-cyan: rgba(0, 255, 255, 1);
+  --neon-cyan-glow: rgba(0, 255, 255, 0.5);
+  --neon-pink: rgba(255, 0, 255, 1);
+  --neon-pink-glow: rgba(255, 0, 255, 0.5);
+  
+  /* Grid Properties */
+  --grid-size: 20px;
+  --grid-line-width: 1px;
+}

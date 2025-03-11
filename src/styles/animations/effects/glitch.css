@@ -1,0 +1,46 @@
+
+.hero--glitch {
+  position: relative;
+  background-color: #000;
+  overflow: hidden;
+}
+
+.hero--glitch::before,
+.hero--glitch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  mix-blend-mode: screen;
+}
+
+.hero--glitch::before {
+  transform: translateX(-2px);
+  filter: hue-rotate(20deg);
+  animation: glitchAnim var(--anim-duration-fast) infinite steps(20, end);
+}
+
+.hero--glitch::after {
+  transform: translateX(2px);
+  filter: hue-rotate(-20deg);
+  animation: glitchAnim calc(var(--anim-duration-fast) * 1.5) infinite steps(25, end);
+}
+
+@keyframes glitchAnim {
+  0% { clip-path: inset(0 0 0 0); transform: translate(0); }
+  5% { clip-path: inset(10% 0 0 0); transform: translate(-5px, -2px); }
+  6% { clip-path: inset(80% 0 0 0); transform: translate(-5px, -2px); }
+  7% { clip-path: inset(0 0 0 0); transform: translate(0); }
+  50% { clip-path: inset(0 0 0 0); transform: translate(0); }
+  55% { clip-path: inset(30% 0 40% 0); transform: translate(5px, 2px); }
+  56% { clip-path: inset(30% 0 40% 0); transform: translate(5px, 2px); }
+  57% { clip-path: inset(0 0 0 0); transform: translate(0); }
+  100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+}
+
+@media (prefers-reduced-motion) {
+  .hero--glitch::before,
+  .hero--glitch::after {
+    animation: none;
+  }
+}
