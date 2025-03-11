@@ -1,6 +1,7 @@
 
 import { DynamicKPICard } from "@/components/admin/metrics/DynamicKPICard";
 import { AdminCard } from "@/components/admin/ui/AdminCard";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ReactNode } from "react";
 
 interface Metric {
@@ -19,14 +20,26 @@ interface KPICardsGridProps {
   revenueMetric: Metric;
   onMetricClick: (metric: Metric) => void;
   getMetricIcon: (metricName: string) => ReactNode;
+  isLoading?: boolean;
 }
 
 export function KPICardsGrid({ 
   metrics, 
   revenueMetric, 
   onMetricClick, 
-  getMetricIcon 
+  getMetricIcon,
+  isLoading = false
 }: KPICardsGridProps) {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[...Array(6)].map((_, index) => (
+          <Skeleton key={`skeleton-${index}`} className="h-40 w-full rounded-xl" />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {/* Include the revenue metric */}

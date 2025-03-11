@@ -1,4 +1,3 @@
-
 import { useMetrics } from "@/hooks/admin/metrics/useMetrics";
 import { SettingsContainer } from "@/components/admin/settings/layout/SettingsContainer";
 import { SystemStatusPanel } from "@/components/admin/metrics/SystemStatusPanel";
@@ -15,7 +14,6 @@ import { KPICardsGrid } from "@/components/admin/metrics/KPICardsGrid";
 import { FinancialMetricsPanel } from "@/components/admin/metrics/FinancialMetricsPanel";
 import { getMetricIcon } from "@/utils/admin/metrics/iconUtils";
 
-// Generate sample data with revenue metrics
 const generateSampleRevenue = () => {
   const revenueTrend = Math.random() > 0.7 ? 'down' : 'up';
   const revenueChange = revenueTrend === 'up' 
@@ -35,24 +33,25 @@ const generateSampleRevenue = () => {
 };
 
 export default function MetricsOverview() {
-  const { data: metrics, isLoading, refetch } = useMetrics();
+  const { data: metrics, isLoading, refetch, isFetching } = useMetrics();
   const [activeTab, setActiveTab] = useState("overview");
   const [timeRange, setTimeRange] = useState<TimeRangeOption>('7d');
   const [selectedMetric, setSelectedMetric] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [revenueMetric, setRevenueMetric] = useState(generateSampleRevenue());
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // All available tabs
   const availableTabs = ["overview", "performance", "users", "api", "system", "financials"];
 
-  // Function to refresh all data
   const refreshData = () => {
-    refetch();
-    setRevenueMetric(generateSampleRevenue());
-    toast.success("Dashboard refreshed");
+    setIsRefreshing(true);
+    refetch().finally(() => {
+      setIsRefreshing(false);
+      setRevenueMetric(generateSampleRevenue());
+      toast.success("Dashboard refreshed");
+    });
   };
 
-  // Subscribe to real-time updates for metrics_logs
   useEffect(() => {
     const channel = supabase
       .channel('schema-db-changes')
@@ -74,7 +73,6 @@ export default function MetricsOverview() {
     };
   }, [refetch]);
 
-  // Call the sample data function on first load if we have no metrics
   useEffect(() => {
     const initializeSampleData = async () => {
       if (!isLoading && (!metrics || metrics.length === 0)) {
@@ -93,12 +91,10 @@ export default function MetricsOverview() {
     initializeSampleData();
   }, [isLoading, metrics, refetch]);
 
-  // Handle metric card click
   const handleMetricClick = (metric: any) => {
     setSelectedMetric(metric);
     setIsDetailsOpen(true);
     
-    // Set active tab based on category
     const tabMap: Record<string, string> = {
       users: "users",
       api: "api",
@@ -110,11 +106,9 @@ export default function MetricsOverview() {
     setActiveTab(newTab);
   };
 
-  // Handle time range change
   const handleTimeRangeChange = (newRange: TimeRangeOption) => {
     setTimeRange(newRange);
     toast.info(`Viewing data for ${newRange}`);
-    // In a real app, this would trigger a new data fetch with the selected time range
   };
 
   if (isLoading) {
@@ -137,14 +131,12 @@ export default function MetricsOverview() {
         title="System Metrics"
         description="Real-time system metrics and performance indicators"
       >
-        {/* Dashboard Header */}
         <DashboardHeader 
           timeRange={timeRange}
           onTimeRangeChange={handleTimeRangeChange}
           onRefresh={refreshData}
         />
 
-        {/* Navigation Tabs */}
         <MetricsTabs 
           activeTab={activeTab}
           onTabChange={setActiveTab}
@@ -152,32 +144,28 @@ export default function MetricsOverview() {
         />
 
         <div className="space-y-8">
-          {/* Hero Section with KPI Cards */}
           <KPICardsGrid 
             metrics={metrics}
             revenueMetric={revenueMetric}
             onMetricClick={handleMetricClick}
             getMetricIcon={getMetricIcon}
+            isLoading={isRefreshing || isFetching}
           />
 
-          {/* Charts Section - conditionally show based on active tab */}
           {(activeTab === "overview" || activeTab === "performance") && (
             <PerformanceChart />
           )}
 
-          {/* System Status Section - conditionally show based on active tab */}
           {(activeTab === "overview" || activeTab === "system") && (
             <SystemStatusPanel />
           )}
           
-          {/* Financial Metrics - shown only on financials tab */}
           {activeTab === "financials" && (
             <FinancialMetricsPanel revenueMetric={revenueMetric} />
           )}
         </div>
       </SettingsContainer>
 
-      {/* Metric Details Dialog */}
       <MetricDetailsDialog 
         open={isDetailsOpen} 
         onOpenChange={setIsDetailsOpen} 
