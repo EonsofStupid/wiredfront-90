@@ -1,4 +1,3 @@
-
 import { useMetrics } from "@/hooks/admin/metrics/useMetrics";
 import { SettingsContainer } from "@/components/admin/settings/layout/SettingsContainer";
 import { DynamicKPICard } from "@/components/admin/metrics/DynamicKPICard";
@@ -13,7 +12,7 @@ import { toast } from "sonner";
 import { AreaChart, ArrowUpDown, Calendar, Cpu, Database, DollarSign, RefreshCcw, Server, Users, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TimeRangeSelector, TimeRangeOption } from "@/components/admin/metrics/TimeRangeSelector";
-import { MetricDetailsDialog } from "@/components/admin/metrics/MetricDetailsDialog";
+import { MetricDetailsDialog } from "@/components/admin/metrics/details/MetricDetailsDialog";
 
 // Generate sample data with revenue metrics
 const generateSampleRevenue = () => {
