@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { X, MessageSquare, Settings, Brain, UserCog, Share2, Zap, BarChart3, AlertTriangle, Save } from "lucide-react";
+import { X, MessageSquare, Settings, Brain, UserCog, Share2, Zap, BarChart3, AlertTriangle, Save, Shield, Bell } from "lucide-react";
 import { useMessageStore } from "@/components/chat/messaging/MessageManager";
 import { useSessionManager } from "@/hooks/useSessionManager";
 import { SettingsContainer } from "./layout/SettingsContainer";

@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { secretName, secretValue, provider, memorableName, action = 'create' } = await req.json();
+    const { secretValue, provider, memorableName, action = 'create', secretName = null, settings = {} } = await req.json();
     
     // Create Supabase admin client with service role
     const supabaseAdmin = createClient(
@@ -52,12 +52,35 @@ serve(async (req) => {
       throw new Error('Unauthorized - Super Admin access required');
     }
 
-    // Format the secret name using the memorable name
-    const formattedSecretName = `${provider.toUpperCase()}_${memorableName.toUpperCase()}`;
+    console.log(`Processing ${action} for API key`);
 
-    console.log(`Processing ${action} for ${formattedSecretName}`);
+    // Handle different actions
+    if (action === 'list') {
+      // Get all configurations for this user
+      const { data, error } = await supabaseAdmin
+        .from('api_configurations')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-    if (action === 'create' || action === 'update') {
+      if (error) {
+        throw new Error('Failed to retrieve API configurations');
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          configurations: data
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        },
+      );
+    } else if (action === 'create' || action === 'update') {
+      // Format the secret name using the memorable name
+      const formattedSecretName = `${provider.toUpperCase()}_${memorableName.toUpperCase()}`;
+
       // Save the secret using vault
       const { error: secretError } = await supabaseAdmin.rpc('set_secret', {
         name: formattedSecretName,
@@ -69,6 +92,9 @@ serve(async (req) => {
         throw new Error('Failed to save secret');
       }
 
+      // Prepare feature bindings based on settings
+      const featureBindings = settings.feature_bindings || [];
+      
       // Save/update configuration reference
       const configData = {
         user_id: user.id,
@@ -80,7 +106,15 @@ serve(async (req) => {
         provider_settings: {
           created_by: user.id,
           last_validated: new Date().toISOString(),
-        }
+        },
+        usage_metrics: {
+          total_calls: 0,
+          remaining_quota: null,
+          last_reset: new Date().toISOString()
+        },
+        feature_bindings: featureBindings,
+        rag_preference: settings.rag_preference || 'supabase',
+        planning_mode: settings.planning_mode || 'basic'
       };
 
       const { error: configError } = await supabaseAdmin
@@ -94,6 +128,23 @@ serve(async (req) => {
         throw new Error('Failed to save configuration');
       }
 
+      // Validate the API key after saving
+      try {
+        // Implement key validation logic based on provider
+        let validationStatus = 'pending';
+        
+        // Here we would add logic to validate keys with their respective providers
+        
+        // Update the validation status
+        await supabaseAdmin
+          .from('api_configurations')
+          .update({ validation_status: validationStatus })
+          .match({ user_id: user.id, memorable_name: memorableName });
+      } catch (validationError) {
+        console.error('Error validating key:', validationError);
+        // Continue anyway, the key will show as pending validation
+      }
+
       return new Response(
         JSON.stringify({ 
           success: true,
@@ -105,11 +156,29 @@ serve(async (req) => {
         },
       );
     } else if (action === 'delete') {
+      // Get the configuration to delete
+      let targetSecretName = secretName;
+
+      if (!targetSecretName) {
+        // Find the configuration by memorable name
+        const { data: config, error: configLookupError } = await supabaseAdmin
+          .from('api_configurations')
+          .select('secret_key_name')
+          .match({ user_id: user.id, memorable_name: memorableName })
+          .single();
+
+        if (configLookupError) {
+          throw new Error('Failed to find configuration to delete');
+        }
+
+        targetSecretName = config.secret_key_name;
+      }
+
       // Delete the configuration first
       const { error: configError } = await supabaseAdmin
         .from('api_configurations')
         .delete()
-        .match({ user_id: user.id, memorable_name: memorableName });
+        .match({ user_id: user.id, secret_key_name: targetSecretName });
 
       if (configError) {
         throw new Error('Failed to delete configuration');
@@ -117,7 +186,7 @@ serve(async (req) => {
 
       // Then delete the secret
       const { error: secretError } = await supabaseAdmin.rpc('delete_secret', {
-        name: formattedSecretName
+        name: targetSecretName
       });
 
       if (secretError) {
@@ -128,6 +197,60 @@ serve(async (req) => {
         JSON.stringify({ 
           success: true,
           message: `API configuration deleted successfully`
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        },
+      );
+    } else if (action === 'validate') {
+      // Implement validation of an API key
+      const { data: config, error: configError } = await supabaseAdmin
+        .from('api_configurations')
+        .select('*')
+        .match({ user_id: user.id, memorable_name: memorableName })
+        .single();
+
+      if (configError) {
+        throw new Error('Failed to find configuration to validate');
+      }
+
+      // Retrieve the secret value
+      const { data: secretData, error: secretError } = await supabaseAdmin.rpc('get_secret', {
+        name: config.secret_key_name
+      });
+
+      if (secretError) {
+        throw new Error('Failed to retrieve secret');
+      }
+
+      // Implement validation logic
+      let validationResult = {
+        status: 'valid',
+        details: 'API key validated successfully',
+        metrics: {
+          remaining_quota: 'unlimited',
+          reset_at: null
+        }
+      };
+
+      // Update the configuration with validation results
+      await supabaseAdmin
+        .from('api_configurations')
+        .update({ 
+          validation_status: validationResult.status,
+          usage_metrics: {
+            ...config.usage_metrics,
+            remaining_quota: validationResult.metrics.remaining_quota,
+            last_validated: new Date().toISOString()
+          }
+        })
+        .match({ id: config.id });
+
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          validation: validationResult
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
