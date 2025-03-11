@@ -27,6 +27,7 @@ import Settings from "./pages/Settings";
 import { DraggableChat } from "@/components/chat/DraggableChat";
 import { AdminTopNavOverlay } from "@/components/admin/navigation/AdminTopNavOverlay";
 import FeatureFlagsPage from "./pages/admin/FeatureFlagsPage";
+import MetricsOverview from "./pages/admin/MetricsOverview";
 
 const PROTECTED_ROUTES = [
   '/dashboard', 
@@ -117,7 +118,8 @@ const App = () => {
             <Route path="/gallery" element={<div>Gallery</div>} />
             <Route path="/training" element={<div>Training</div>} />
             
-            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin" element={<MetricsOverview />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/settings/api" element={<APISettings />} />
             <Route path="/admin/settings/accessibility" element={<AccessibilitySettings />} />
             <Route path="/admin/settings/notifications" element={<NotificationSettings />} />

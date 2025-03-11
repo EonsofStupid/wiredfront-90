@@ -256,6 +256,12 @@
   
   .admin-tooltip {
     @apply bg-[#1A1F2C] border border-[#8B5CF6]/30 text-white shadow-lg;
+    animation: fadeIn 0.2s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   
   .admin-card {
