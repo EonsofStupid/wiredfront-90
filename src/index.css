@@ -132,6 +132,66 @@
     z-index: -1;
   }
   
+  .enhanced-glass-card {
+    @apply bg-dark-lighter/30 backdrop-blur-md border border-white/10 rounded-xl;
+    position: relative;
+    isolation: isolate;
+    box-shadow: 
+      0 10px 30px -10px rgba(0, 0, 0, 0.5),
+      0 5px 10px -5px rgba(0, 255, 255, 0.2),
+      inset 0 1px 2px rgba(255, 255, 255, 0.2);
+  }
+  
+  .enhanced-glass-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      theme('colors.neon.blue'),
+      transparent 60%,
+      theme('colors.neon.pink')
+    );
+    opacity: 0.15;
+    border-radius: inherit;
+    z-index: -1;
+  }
+  
+  .enhanced-glass-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.15),
+      transparent 40%
+    );
+    border-radius: inherit;
+    z-index: -1;
+  }
+  
+  .enhanced-title {
+    text-shadow: 
+      0 0 10px rgba(0, 255, 255, 0.8),
+      0 0 20px rgba(0, 255, 255, 0.4),
+      0 10px 30px rgba(0, 0, 0, 0.5);
+    position: relative;
+  }
+  
+  .enhanced-title::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.1),
+      transparent 80%
+    );
+    border-radius: 4px;
+    z-index: -1;
+    filter: blur(2px);
+  }
+  
   .neon-glow {
     @apply relative;
   }
