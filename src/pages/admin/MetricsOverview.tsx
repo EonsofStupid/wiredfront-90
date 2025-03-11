@@ -1,4 +1,3 @@
-
 import { useMetrics } from "@/hooks/admin/metrics/useMetrics";
 import { SettingsContainer } from "@/components/admin/settings/layout/SettingsContainer";
 import { DynamicKPICard } from "@/components/admin/metrics/DynamicKPICard";
@@ -88,16 +87,16 @@ export default function MetricsOverview() {
   return (
     <div className="admin-container">
       <SettingsContainer 
-        title={
-          <div className="flex items-center space-x-2">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#8B5CF6] via-[#D946EF] to-[#0EA5E9] animate-gradient-x">
-              System Metrics
-            </span>
-            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-          </div>
-        } 
+        title="System Metrics"
         description="Real-time system metrics and performance indicators"
       >
+        <div className="flex items-center space-x-2 mb-4">
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#8B5CF6] via-[#D946EF] to-[#0EA5E9] animate-gradient-x">
+            Live Monitoring
+          </span>
+          <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
+        </div>
+
         {/* Navigation Tabs */}
         <div className="flex space-x-2 mb-6 overflow-x-auto scrollbar-none p-1">
           {["overview", "performance", "users", "api", "system"].map((tab) => (
