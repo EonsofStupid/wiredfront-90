@@ -1,12 +1,14 @@
 
 import React from 'react';
 import FeatureFlags from '@/components/admin/settings/feature-flags/FeatureFlags';
-import { SettingsContainer } from '@/components/admin/settings/layout/SettingsContainer';
+import { AdminLayout } from '@/components/admin/layout/AdminLayout';
 
 export default function FeatureFlagsPage() {
   return (
-    <SettingsContainer title="Feature Flags" description="Manage feature availability across the application">
-      <FeatureFlags />
-    </SettingsContainer>
+    <AdminLayout>
+      <div className="space-y-6">
+        <FeatureFlags />
+      </div>
+    </AdminLayout>
   );
 }

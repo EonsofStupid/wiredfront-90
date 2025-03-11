@@ -1,0 +1,92 @@
+
+/* Admin UI Styling */
+.admin-heading {
+  background: linear-gradient(to right, #9b87f5, #7E69AB);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.admin-icon {
+  color: #9b87f5;
+}
+
+.admin-dashboard-card {
+  transition: all 0.2s ease-in-out;
+  border-color: rgba(155, 135, 245, 0.2);
+}
+
+.admin-dashboard-card:hover {
+  border-color: rgba(155, 135, 245, 0.5);
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.2);
+}
+
+.admin-card-accent {
+  background: linear-gradient(135deg, rgba(155, 135, 245, 0.05) 0%, transparent 100%);
+}
+
+.admin-card-highlight {
+  background: linear-gradient(135deg, rgba(30, 174, 219, 0.05) 0%, transparent 100%);
+  border-color: rgba(30, 174, 219, 0.3);
+}
+
+.admin-text-gradient {
+  background: linear-gradient(to right, #9b87f5, #6E59A5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.admin-secondary-button {
+  border-color: rgba(155, 135, 245, 0.3);
+}
+
+.admin-glass-panel {
+  background: rgba(26, 31, 44, 0.75);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(155, 135, 245, 0.2);
+}
+
+.admin-nav-icon {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.admin-nav-icon:hover {
+  color: #9b87f5;
+}
+
+.admin-nav-tab {
+  color: rgba(255, 255, 255, 0.7);
+  border-bottom: 2px solid transparent;
+}
+
+.admin-nav-tab:hover {
+  color: white;
+}
+
+.admin-nav-tab-active {
+  color: white;
+  border-bottom: 2px solid #9b87f5;
+}
+
+.admin-nav-handle {
+  background: rgba(26, 31, 44, 0.8);
+  border-color: rgba(155, 135, 245, 0.2);
+}
+
+.admin-tooltip {
+  background: rgba(26, 31, 44, 0.9);
+  border: 1px solid rgba(155, 135, 245, 0.3);
+}
+
+.border-neon-border {
+  border-color: rgba(155, 135, 245, 0.3);
+}
+
+.hover-scale {
+  transition: transform 0.2s ease-in-out;
+}
+
+.hover-scale:hover {
+  transform: scale(1.03);
+}
