@@ -1,45 +1,33 @@
-
 import { motion, useReducedMotion, AnimatePresence, useAnimation } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
-import { CodeRainBackground } from "@/components/effects/CodeRainBackground";
 
 export const HeroSection = () => {
   console.log("HeroSection rendering");
   const prefersReducedMotion = useReducedMotion();
 
   return (
-    <section className="relative flex items-center justify-center py-20 overflow-hidden">
-      <CodeRainBackground 
-        color="rgba(0, 255, 255, 0.5)"
-        fontSize={16}
-        density={0.06}
-        speed={1.5}
-        zIndex={-1}
-        glitchEffect={true}
-        depthEffect={true}
-      />
-      
+    <section className="relative flex items-center justify-center py-20">
       <motion.div
         initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="text-center z-10 px-4"
       >
-        <div className="enhanced-neon-border enhanced-glass-card p-8 mb-8 relative">
-          <h1 className="text-6xl md:text-8xl font-bold gradient-text mb-6 enhanced-title relative z-[var(--z-content)]">
+        <div className="neon-border p-8 glass-card mb-8">
+          <h1 className="text-6xl md:text-8xl font-bold gradient-text mb-6">
             wiredFRONT
           </h1>
-          <p className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto relative z-[var(--z-content)]">
+          <p className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto">
             The future of interface design, today.
           </p>
         </div>
 
         <Link to="/login">
           <Button 
-            className="neon-glow bg-dark-lighter hover:bg-dark-lighter/80 text-neon-blue border border-neon-blue/50 text-lg px-8 py-6 transform hover:scale-115 transition-all duration-300 animate-button-float relative z-[var(--z-content)]"
+            className="neon-glow bg-dark-lighter hover:bg-dark-lighter/80 text-neon-blue border border-neon-blue/50 text-lg px-8 py-6 transform hover:scale-115 transition-all duration-300 animate-button-float"
           >
             Get Started
           </Button>

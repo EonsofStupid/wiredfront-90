@@ -1,4 +1,3 @@
-
 import React from "react";
 import { HeroSection } from "@/components/home/HeroSection";
 import { FeaturesSection } from "@/components/home/FeaturesSection";
@@ -9,7 +8,7 @@ export default function Index() {
   
   return (
     <MainLayout>
-      <div className="container mx-auto relative z-[var(--z-content)]">
+      <div className="container mx-auto">
         <HeroSection />
         <FeaturesSection />
       </div>
