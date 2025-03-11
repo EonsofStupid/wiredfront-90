@@ -9,6 +9,8 @@ interface CodeRainProps {
   density?: number;
   speed?: number;
   zIndex?: number;
+  glitchEffect?: boolean;
+  depthEffect?: boolean;
 }
 
 export const CodeRainBackground: React.FC<CodeRainProps> = ({
@@ -17,7 +19,9 @@ export const CodeRainBackground: React.FC<CodeRainProps> = ({
   fontSize = 14,
   density = 0.08,
   speed = 1.5,
-  zIndex = -1
+  zIndex = -1,
+  glitchEffect = true,
+  depthEffect = true
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const prefersReducedMotion = useReducedMotion();
@@ -25,6 +29,9 @@ export const CodeRainBackground: React.FC<CodeRainProps> = ({
   const animationRef = useRef<number>(0);
   const columnsRef = useRef<number[]>([]);
   const dropsRef = useRef<number[]>([]);
+  const depthRef = useRef<number[]>([]);
+  const glitchTimerRef = useRef<number>(0);
+  const glitchActiveRef = useRef<boolean>(false);
 
   // Set up the canvas dimensions and initialize the drops
   useEffect(() => {
@@ -45,6 +52,11 @@ export const CodeRainBackground: React.FC<CodeRainProps> = ({
       const columns = Math.floor(width * density);
       columnsRef.current = Array.from({ length: columns }, () => 0);
       dropsRef.current = Array.from({ length: columns }, () => 1);
+      
+      // Initialize depth values for 3D effect
+      if (depthEffect) {
+        depthRef.current = Array.from({ length: columns }, () => Math.random() * 0.6 + 0.4);
+      }
     };
     
     window.addEventListener('resize', updateDimensions);
@@ -53,8 +65,33 @@ export const CodeRainBackground: React.FC<CodeRainProps> = ({
     return () => {
       window.removeEventListener('resize', updateDimensions);
       cancelAnimationFrame(animationRef.current);
+      if (glitchTimerRef.current) clearTimeout(glitchTimerRef.current);
     };
-  }, [prefersReducedMotion, density]);
+  }, [prefersReducedMotion, density, depthEffect]);
+
+  // Glitch effect timer
+  useEffect(() => {
+    if (prefersReducedMotion || !glitchEffect) return;
+    
+    const triggerGlitch = () => {
+      // Random glitch timing
+      const nextGlitchTime = Math.random() * 5000 + 2000; // 2-7 seconds
+      glitchActiveRef.current = true;
+      
+      // Set duration of the glitch effect
+      setTimeout(() => {
+        glitchActiveRef.current = false;
+      }, Math.random() * 200 + 100); // 100-300ms glitch duration
+      
+      glitchTimerRef.current = window.setTimeout(triggerGlitch, nextGlitchTime);
+    };
+    
+    glitchTimerRef.current = window.setTimeout(triggerGlitch, Math.random() * 3000 + 1000);
+    
+    return () => {
+      if (glitchTimerRef.current) clearTimeout(glitchTimerRef.current);
+    };
+  }, [prefersReducedMotion, glitchEffect]);
 
   // Animation loop
   useEffect(() => {
@@ -83,20 +120,53 @@ export const CodeRainBackground: React.FC<CodeRainProps> = ({
         const x = i * (fontSize * 1.5);
         const y = dropsRef.current[i] * fontSize;
         
-        // Random opacity for more dynamic effect
-        const opacity = Math.random() * 0.5 + 0.5;
-        ctx.fillStyle = color.replace(')', `, ${opacity})`).replace('rgba', 'rgba');
+        // Apply depth effect if enabled
+        let currentFontSize = fontSize;
+        let currentOpacity = 0.5 + Math.random() * 0.5;
         
-        // Draw the character
-        ctx.fillText(char, x, y);
+        if (depthEffect) {
+          const depth = depthRef.current[i];
+          currentFontSize = fontSize * depth;
+          currentOpacity *= depth;
+        }
+        
+        // Apply glitch effect if active
+        if (glitchEffect && glitchActiveRef.current && Math.random() > 0.7) {
+          // Randomly shift position for some characters
+          const glitchX = x + (Math.random() * 10 - 5);
+          const glitchY = y + (Math.random() * 10 - 5);
+          
+          // Random color shift for glitch effect
+          const glitchColor = `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, ${currentOpacity})`;
+          ctx.fillStyle = glitchColor;
+          
+          // Draw glitched character
+          ctx.font = `${currentFontSize}px monospace`;
+          ctx.fillText(char, glitchX, glitchY);
+          
+          // Reset style
+          ctx.fillStyle = color.replace(')', `, ${currentOpacity})`).replace('rgba', 'rgba');
+        } else {
+          // Normal character drawing
+          ctx.fillStyle = color.replace(')', `, ${currentOpacity})`).replace('rgba', 'rgba');
+          ctx.font = `${currentFontSize}px monospace`;
+          ctx.fillText(char, x, y);
+        }
+        
+        // Add some variability to the drops' speed
+        const currentSpeed = speed * (Math.random() * 0.5 + 0.75);
         
         // Reset drop if it reaches the bottom
         if (y > dimensions.height && Math.random() > 0.975) {
           dropsRef.current[i] = 0;
+          // Occasionally change the depth of a column
+          if (depthEffect && Math.random() > 0.8) {
+            depthRef.current[i] = Math.random() * 0.6 + 0.4;
+          }
         }
         
         // Increment drop position
-        dropsRef.current[i] += Math.random() * speed;
+        dropsRef.current[i] += currentSpeed * 0.1;
       }
       
       animationRef.current = requestAnimationFrame(draw);
@@ -107,7 +177,7 @@ export const CodeRainBackground: React.FC<CodeRainProps> = ({
     return () => {
       cancelAnimationFrame(animationRef.current);
     };
-  }, [dimensions, prefersReducedMotion, characters, color, fontSize, speed]);
+  }, [dimensions, prefersReducedMotion, characters, color, fontSize, speed, depthEffect, glitchEffect]);
 
   // If user prefers reduced motion, don't render the canvas
   if (prefersReducedMotion) return null;

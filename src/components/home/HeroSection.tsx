@@ -1,3 +1,4 @@
+
 import { motion, useReducedMotion, AnimatePresence, useAnimation } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,9 +15,11 @@ export const HeroSection = () => {
       <CodeRainBackground 
         color="rgba(0, 255, 255, 0.5)"
         fontSize={16}
-        density={0.05}
-        speed={1.2}
+        density={0.06}
+        speed={1.5}
         zIndex={-1}
+        glitchEffect={true}
+        depthEffect={true}
       />
       
       <motion.div
@@ -25,7 +28,7 @@ export const HeroSection = () => {
         transition={{ duration: 0.5 }}
         className="text-center z-10 px-4"
       >
-        <div className="neon-border enhanced-glass-card p-8 mb-8 relative">
+        <div className="enhanced-neon-border enhanced-glass-card p-8 mb-8 relative">
           <h1 className="text-6xl md:text-8xl font-bold gradient-text mb-6 enhanced-title relative z-[var(--z-content)]">
             wiredFRONT
           </h1>
