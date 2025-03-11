@@ -24,15 +24,22 @@ export function useMetrics() {
 
       if (error) throw error;
 
-      return data.map(metric => ({
-        id: metric.id,
-        label: metric.metric_name,
-        value: Number(metric.metric_value),
-        unit: metric.metric_unit,
-        trend: metric.tags?.trend || 'neutral',
-        change: metric.tags?.change || 0,
-        category: metric.category
-      }));
+      return data.map(metric => {
+        // Safely extract tags as an object
+        const tags = typeof metric.tags === 'string' 
+          ? JSON.parse(metric.tags) 
+          : metric.tags || {};
+
+        return {
+          id: metric.id,
+          label: metric.metric_name,
+          value: Number(metric.metric_value),
+          unit: metric.metric_unit,
+          trend: (tags.trend as 'up' | 'down' | 'neutral') || 'neutral',
+          change: Number(tags.change || 0),
+          category: metric.category
+        };
+      });
     },
     refetchInterval: 30000 // Refresh every 30 seconds
   });

@@ -43,7 +43,8 @@ const PROTECTED_ROUTES = [
 
 const ADMIN_ROUTES = [
   '/admin',
-  '/admin/settings',
+  '/admin/dashboard',
+  '/admin/metrics-overview',
   '/admin/settings/api',
   '/admin/settings/accessibility',
   '/admin/settings/notifications',
@@ -120,6 +121,7 @@ const App = () => {
             
             <Route path="/admin" element={<MetricsOverview />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/metrics-overview" element={<MetricsOverview />} />
             <Route path="/admin/settings/api" element={<APISettings />} />
             <Route path="/admin/settings/accessibility" element={<AccessibilitySettings />} />
             <Route path="/admin/settings/notifications" element={<NotificationSettings />} />
