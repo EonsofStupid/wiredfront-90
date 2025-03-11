@@ -2,10 +2,11 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { APIType } from "@/types/admin/settings/api";
 
 export type APIConfiguration = {
   id: string;
-  api_type: string;
+  api_type: APIType;
   memorable_name: string;
   is_enabled: boolean;
   is_default: boolean;
@@ -46,7 +47,7 @@ export const useAPIKeyManagement = () => {
   };
 
   const createApiKey = async (
-    provider: string,
+    provider: APIType,
     memorableName: string,
     secretValue: string,
     settings: {

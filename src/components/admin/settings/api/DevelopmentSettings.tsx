@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ExternalLink, GitHub } from "lucide-react";
+import { ExternalLink, Github } from "lucide-react";
 import { APIKeyManagement } from "./APIKeyManagement";
 import { useRoleStore } from "@/stores/role";
 import { Badge } from "@/components/ui/badge";
@@ -52,7 +52,7 @@ export function DevelopmentSettings({
           <Card className="p-5 border-[#8B5CF6]/20">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <GitHub className="h-5 w-5" />
+                <Github className="h-5 w-5" />
                 <h3 className="font-medium">GitHub Integration</h3>
               </div>
               {githubToken && (

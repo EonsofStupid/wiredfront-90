@@ -8,6 +8,7 @@ import { CheckCircle, AlertCircle, RefreshCw, Trash2, Star, Clock, ArrowUpRight 
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { APIConfiguration } from "@/hooks/admin/settings/api/useAPIKeyManagement";
+import { APIType } from "@/types/admin/settings/api";
 
 interface APIKeyCardProps {
   config: APIConfiguration;
@@ -48,7 +49,7 @@ export function APIKeyCard({ config, onValidate, onDelete, onRefresh }: APIKeyCa
       const { error: updateError1 } = await supabase
         .from('api_configurations')
         .update({ is_default: false })
-        .eq('api_type', config.api_type)
+        .eq('api_type', config.api_type as APIType)
         .eq('is_default', true);
       
       if (updateError1) throw updateError1;

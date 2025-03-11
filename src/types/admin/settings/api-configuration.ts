@@ -1,3 +1,4 @@
+
 import { Database } from "@/integrations/supabase/types";
 
 export type APIType = Database["public"]["Enums"]["api_type"];
@@ -41,7 +42,7 @@ export interface APIConfiguration {
   training_enabled?: boolean;
 }
 
-export interface APIConfigurationProps {
+export interface APIConfigurationListProps {
   configurations: APIConfiguration[];
   onConfigurationChange: (checked: boolean, config: APIConfiguration | undefined, apiType: APIType) => void;
   onSetDefault: (configId: string) => void;
