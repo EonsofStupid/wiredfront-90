@@ -85,6 +85,23 @@ export function APIKeyWizard({ open, onOpenChange, onSave, isSubmitting }: APIKe
     }
   };
 
+  // Fix provider type handling
+  const handleProviderChange = (value: string) => {
+    // Convert the string value to APIType since selectTrigger onValueChange passes a string
+    const providerValue = value as APIType;
+    setSelectedProvider(providerValue);
+  };
+
+  // Fix rag preference type handling
+  const handleRagPreferenceChange = (value: string) => {
+    setRagPreference(value);
+  };
+
+  // Fix planning mode type handling
+  const handlePlanningModeChange = (value: string) => {
+    setPlanningMode(value);
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px]">
@@ -111,7 +128,7 @@ export function APIKeyWizard({ open, onOpenChange, onSave, isSubmitting }: APIKe
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="apiProvider">API Provider</Label>
-                <Select value={selectedProvider} onValueChange={setSelectedProvider}>
+                <Select value={selectedProvider} onValueChange={handleProviderChange}>
                   <SelectTrigger id="apiProvider">
                     <SelectValue placeholder="Select provider" />
                   </SelectTrigger>
@@ -222,7 +239,7 @@ export function APIKeyWizard({ open, onOpenChange, onSave, isSubmitting }: APIKe
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="ragPreference">RAG Storage Preference</Label>
-                <Select value={ragPreference} onValueChange={setRagPreference}>
+                <Select value={ragPreference} onValueChange={handleRagPreferenceChange}>
                   <SelectTrigger id="ragPreference">
                     <SelectValue placeholder="Select RAG storage" />
                   </SelectTrigger>
@@ -240,7 +257,7 @@ export function APIKeyWizard({ open, onOpenChange, onSave, isSubmitting }: APIKe
 
               <div className="space-y-2">
                 <Label htmlFor="planningMode">Planning Mode</Label>
-                <Select value={planningMode} onValueChange={setPlanningMode}>
+                <Select value={planningMode} onValueChange={handlePlanningModeChange}>
                   <SelectTrigger id="planningMode">
                     <SelectValue placeholder="Select planning mode" />
                   </SelectTrigger>

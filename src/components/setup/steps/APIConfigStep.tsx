@@ -2,7 +2,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { APIConfigurationList } from "@/components/admin/settings/api/APIConfigurationList";
 import { useAPIConfigurations } from "@/hooks/admin/settings/useAPIConfigurations";
-import { APIType, APIConfiguration } from "@/types/admin/settings/api-configuration";
+import { APIType } from "@/types/admin/settings/api-configuration";
 import { useCallback } from "react";
 
 interface APIConfigStepProps {
@@ -12,7 +12,7 @@ interface APIConfigStepProps {
 export function APIConfigStep({ isFirstTimeUser = false }: APIConfigStepProps) {
   const { configurations, loading, updateConfiguration, createConfiguration, deleteConfiguration } = useAPIConfigurations();
 
-  const handleConfigurationChange = useCallback(async (checked: boolean, config: APIConfiguration | undefined, apiType: APIType) => {
+  const handleConfigurationChange = useCallback(async (checked: boolean, config: any, apiType: APIType) => {
     if (config) {
       await updateConfiguration(config.id, { is_enabled: checked });
     } else {

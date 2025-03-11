@@ -1,11 +1,12 @@
+
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { APIConfiguration, APIConfigurationItem, APIConfigurationListProps, APIType } from "@/types/admin/settings/api-configuration";
-import { RobotIcon, Trash2, Star, Zap, CheckCircle, AlertTriangle, AlertCircle } from "lucide-react";
-import { apiConfigItems } from "@/constants/api-configurations";
+import { BotIcon, Trash2, Star, Zap, CheckCircle, AlertTriangle, AlertCircle } from "lucide-react";
+import { API_CONFIGURATIONS } from "@/constants/api-configurations";
 
 export function APIConfigurationList({
   configurations,
@@ -21,13 +22,13 @@ export function APIConfigurationList({
   return (
     <Tabs defaultValue="openai" className="space-y-4">
       <TabsList>
-        {apiConfigItems.map((api) => (
+        {API_CONFIGURATIONS.map((api) => (
           <TabsTrigger value={api.type} key={api.type}>
             {api.label}
           </TabsTrigger>
         ))}
       </TabsList>
-      {apiConfigItems.map((api) => {
+      {API_CONFIGURATIONS.map((api) => {
         const config = getConfigForType(api.type);
         const isConfigured = !!config;
 
@@ -37,7 +38,7 @@ export function APIConfigurationList({
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center">
-                    <RobotIcon className="mr-2 h-4 w-4" />
+                    <BotIcon className="mr-2 h-4 w-4" />
                     {api.label}
                   </CardTitle>
                   {config?.validation_status === 'valid' && (
