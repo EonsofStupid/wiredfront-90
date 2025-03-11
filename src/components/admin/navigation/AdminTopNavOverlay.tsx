@@ -16,31 +16,12 @@ interface AdminTopNavOverlayProps {
 
 export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
   const [isExtended, setIsExtended] = useState(true);
-  const [activeTab, setActiveTab] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Force icon-only mode and auto-extend on page load
   useEffect(() => {
     setIsExtended(true);
-    
-    // Set active tab based on current path
-    const path = location.pathname;
-    if (path.includes('/admin/settings/api')) setActiveTab('api');
-    else if (path.includes('/admin/settings/general')) setActiveTab('general');
-    else if (path.includes('/admin/settings/accessibility')) setActiveTab('accessibility');
-    else if (path.includes('/admin/settings/notifications')) setActiveTab('notifications');
-    else if (path.includes('/admin/settings/chat')) setActiveTab('chat');
-    else if (path.includes('/admin/settings/chat-features')) setActiveTab('chat-features');
-    else if (path.includes('/admin/settings/live-preview')) setActiveTab('live-preview');
-    else if (path.includes('/admin/settings/feature-flags')) setActiveTab('feature-flags');
-    else setActiveTab(null);
   }, [location.pathname]);
-
-  const handleNavigation = (path: string, tab: string | null = null) => {
-    navigate(path);
-    if (tab) setActiveTab(tab);
-  };
 
   return (
     <div
@@ -50,11 +31,10 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
         className
       )}
     >
-      <div className="admin-glass-panel border-neon-border relative h-32"> {/* Doubled height from 16 to 32 */}
+      <div className="admin-glass-panel border-neon-border relative h-32">
         <div className="flex flex-col h-full p-4">
-          {/* Top row - Admin quick controls */}
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center space-x-2">
+          <div className="flex justify-between items-start mb-4">
+            <div className="flex flex-wrap items-center gap-2">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -62,12 +42,12 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                       variant="ghost" 
                       size="icon" 
                       className="admin-nav-icon"
-                      onClick={() => handleNavigation('/admin')}
+                      onClick={() => navigate('/admin')}
                     >
                       <LayoutDashboard className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="admin-tooltip z-[var(--z-tooltip)]">Metrics Overview</TooltipContent>
+                  <TooltipContent side="bottom">Metrics Overview</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
 
@@ -78,12 +58,12 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                       variant="ghost" 
                       size="icon" 
                       className="admin-nav-icon"
-                      onClick={() => handleNavigation('/admin/users')}
+                      onClick={() => navigate('/admin/users')}
                     >
                       <Users className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="admin-tooltip z-[var(--z-tooltip)]">User Management</TooltipContent>
+                  <TooltipContent side="bottom">User Management</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
 
@@ -94,12 +74,12 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                       variant="ghost" 
                       size="icon" 
                       className="admin-nav-icon"
-                      onClick={() => handleNavigation('/admin/settings/general')}
+                      onClick={() => navigate('/admin/settings/general')}
                     >
                       <Settings className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="admin-tooltip z-[var(--z-tooltip)]">System Settings</TooltipContent>
+                  <TooltipContent side="bottom">System Settings</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
 
@@ -110,15 +90,15 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                       variant="ghost" 
                       size="icon" 
                       className="admin-nav-icon"
-                      onClick={() => handleNavigation('/admin/database')}
+                      onClick={() => navigate('/admin/database')}
                     >
                       <Database className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="admin-tooltip z-[var(--z-tooltip)]">Database Management</TooltipContent>
+                  <TooltipContent side="bottom">Database</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              
+
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -126,15 +106,15 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                       variant="ghost" 
                       size="icon" 
                       className="admin-nav-icon"
-                      onClick={() => handleNavigation('/admin/models')}
+                      onClick={() => navigate('/admin/models')}
                     >
                       <Code className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="admin-tooltip z-[var(--z-tooltip)]">Models Configuration</TooltipContent>
+                  <TooltipContent side="bottom">Models</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              
+
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -142,12 +122,12 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                       variant="ghost" 
                       size="icon" 
                       className="admin-nav-icon"
-                      onClick={() => handleNavigation('/admin/activity')}
+                      onClick={() => navigate('/admin/activity')}
                     >
                       <Activity className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="admin-tooltip z-[var(--z-tooltip)]">Activity & Logs</TooltipContent>
+                  <TooltipContent side="bottom">Activity & Logs</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
 
@@ -158,15 +138,15 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                       variant="ghost" 
                       size="icon" 
                       className="admin-nav-icon"
-                      onClick={() => handleNavigation('/admin/settings/chat')}
+                      onClick={() => navigate('/admin/settings/chat')}
                     >
                       <MessageSquare className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="admin-tooltip z-[var(--z-tooltip)]">Chat Settings</TooltipContent>
+                  <TooltipContent side="bottom">Chat Settings</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              
+
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -174,66 +154,15 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                       variant="ghost" 
                       size="icon" 
                       className="admin-nav-icon"
-                      onClick={() => handleNavigation('/admin/settings/live-preview')}
-                    >
-                      <Eye className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent className="admin-tooltip z-[var(--z-tooltip)]">Live Preview</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="admin-nav-icon"
-                      onClick={() => handleNavigation('/admin/queues')}
-                    >
-                      <ListChecks className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent className="admin-tooltip z-[var(--z-tooltip)]">Queue Management</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="admin-nav-icon"
-                      onClick={() => handleNavigation('/admin/cache')}
-                    >
-                      <HardDrive className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent className="admin-tooltip z-[var(--z-tooltip)]">Cache Control</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="admin-nav-icon"
-                      onClick={() => handleNavigation('/admin/settings/feature-flags')}
+                      onClick={() => navigate('/admin/settings/feature-flags')}
                     >
                       <Flag className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="admin-tooltip z-[var(--z-tooltip)]">Feature Flags</TooltipContent>
+                  <TooltipContent side="bottom">Feature Flags</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-            </div>
 
-            {/* Right side - Controls */}
-            <div className="flex items-center space-x-2">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -241,15 +170,50 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                       variant="ghost" 
                       size="icon" 
                       className="admin-nav-icon"
-                      onClick={() => handleNavigation('/admin/search')}
+                      onClick={() => navigate('/admin/queues')}
+                    >
+                      <ListChecks className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">Queues</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="admin-nav-icon"
+                      onClick={() => navigate('/admin/cache')}
+                    >
+                      <HardDrive className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">Cache</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+
+            {/* Right side controls */}
+            <div className="flex items-center gap-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="admin-nav-icon"
+                      onClick={() => navigate('/admin/search')}
                     >
                       <Search className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="admin-tooltip z-[var(--z-tooltip)]">Search</TooltipContent>
+                  <TooltipContent side="bottom">Search</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              
+
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -257,115 +221,18 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                       variant="ghost" 
                       size="icon" 
                       className="admin-nav-icon"
-                      onClick={() => handleNavigation('/admin/notifications')}
+                      onClick={() => navigate('/admin/notifications')}
                     >
                       <Bell className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="admin-tooltip z-[var(--z-tooltip)]">Notifications</TooltipContent>
+                  <TooltipContent side="bottom">Notifications</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
           </div>
-          
-          {/* Bottom row - Settings tabs (visible when in settings section) */}
-          <div className="flex items-center space-x-3 px-2">
-            {location.pathname.includes('/admin/settings') && (
-              <>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className={cn(
-                    "admin-nav-tab", 
-                    activeTab === 'general' && "admin-nav-tab-active"
-                  )}
-                  onClick={() => handleNavigation('/admin/settings/general', 'general')}
-                >
-                  General
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className={cn(
-                    "admin-nav-tab", 
-                    activeTab === 'api' && "admin-nav-tab-active"
-                  )}
-                  onClick={() => handleNavigation('/admin/settings/api', 'api')}
-                >
-                  API
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className={cn(
-                    "admin-nav-tab", 
-                    activeTab === 'accessibility' && "admin-nav-tab-active"
-                  )}
-                  onClick={() => handleNavigation('/admin/settings/accessibility', 'accessibility')}
-                >
-                  Accessibility
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className={cn(
-                    "admin-nav-tab", 
-                    activeTab === 'notifications' && "admin-nav-tab-active"
-                  )}
-                  onClick={() => handleNavigation('/admin/settings/notifications', 'notifications')}
-                >
-                  Notifications
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className={cn(
-                    "admin-nav-tab", 
-                    activeTab === 'chat' && "admin-nav-tab-active"
-                  )}
-                  onClick={() => handleNavigation('/admin/settings/chat', 'chat')}
-                >
-                  Chat
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className={cn(
-                    "admin-nav-tab", 
-                    activeTab === 'chat-features' && "admin-nav-tab-active"
-                  )}
-                  onClick={() => handleNavigation('/admin/settings/chat-features', 'chat-features')}
-                >
-                  Chat Features
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className={cn(
-                    "admin-nav-tab", 
-                    activeTab === 'live-preview' && "admin-nav-tab-active"
-                  )}
-                  onClick={() => handleNavigation('/admin/settings/live-preview', 'live-preview')}
-                >
-                  Live Preview
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className={cn(
-                    "admin-nav-tab", 
-                    activeTab === 'feature-flags' && "admin-nav-tab-active"
-                  )}
-                  onClick={() => handleNavigation('/admin/settings/feature-flags', 'feature-flags')}
-                >
-                  Feature Flags
-                </Button>
-              </>
-            )}
-          </div>
         </div>
 
-        {/* Slide control handle */}
         <Button
           variant="ghost"
           size="sm"
