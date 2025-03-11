@@ -1,3 +1,4 @@
+
 import React from "react";
 import { HeroSection } from "@/components/home/HeroSection";
 import { FeaturesSection } from "@/components/home/FeaturesSection";
@@ -8,7 +9,7 @@ export default function Index() {
   
   return (
     <MainLayout>
-      <div className="container mx-auto">
+      <div className="container mx-auto px-0">
         <HeroSection />
         <FeaturesSection />
       </div>

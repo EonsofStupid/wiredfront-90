@@ -1,3 +1,4 @@
+
 import { motion, useReducedMotion, AnimatePresence, useAnimation } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ export const HeroSection = () => {
   const prefersReducedMotion = useReducedMotion();
 
   return (
-    <section className="relative flex items-center justify-center py-20 hero--neon-lines">
+    <section className="relative flex items-center justify-center py-20 w-full hero--neon-lines">
       <motion.div
         initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
