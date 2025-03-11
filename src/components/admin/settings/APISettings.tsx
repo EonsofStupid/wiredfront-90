@@ -11,8 +11,10 @@ import { ChatProviderSettings } from "./api/chat/ChatProviderSettings";
 import { useAPISettings } from "@/hooks/admin/settings/api";
 import { toast } from "sonner";
 import { AdminCard, AdminCardHeader, AdminCardTitle, AdminCardDescription, AdminCardContent } from "@/components/admin/ui/AdminCard";
-import { Save, MessageSquare } from "lucide-react";
+import { Save, MessageSquare, KeyRound, Shield } from "lucide-react";
 import { ChatSettings } from "./ChatSettings";
+import { APIKeyManagement } from "./api/APIKeyManagement";
+import { useRoleStore } from "@/stores/role";
 
 export function APISettings() {
   const {
@@ -22,6 +24,9 @@ export function APISettings() {
     handleSave,
     user
   } = useAPISettings();
+  
+  const { hasRole } = useRoleStore();
+  const isAdmin = hasRole('super_admin') || hasRole('admin');
 
   const onSave = async () => {
     try {
@@ -62,6 +67,12 @@ export function APISettings() {
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Chat Settings
               </TabsTrigger>
+              {hasRole('super_admin') && (
+                <TabsTrigger value="api-keys" className="admin-tab">
+                  <KeyRound className="h-4 w-4 mr-2" />
+                  API Key Management
+                </TabsTrigger>
+              )}
               <TabsTrigger value="oauth" className="admin-tab">OAuth Providers</TabsTrigger>
               <TabsTrigger value="rag-keys" className="admin-tab">Vector DB Keys</TabsTrigger>
               <TabsTrigger value="voice" className="admin-tab">Voice</TabsTrigger>
@@ -80,6 +91,12 @@ export function APISettings() {
             <TabsContent value="chat-settings" className="pt-4">
               <ChatSettings />
             </TabsContent>
+            
+            {hasRole('super_admin') && (
+              <TabsContent value="api-keys" className="pt-4">
+                <APIKeyManagement />
+              </TabsContent>
+            )}
 
             <TabsContent value="oauth" className="pt-4">
               <OAuthConnectionsSettings />

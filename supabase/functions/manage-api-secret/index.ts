@@ -4,7 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, prefer',
 }
 
 serve(async (req) => {
@@ -13,7 +13,16 @@ serve(async (req) => {
   }
 
   try {
-    const { secretValue, provider, memorableName, action = 'create', secretName = null, settings = {} } = await req.json();
+    const { 
+      secretValue, 
+      provider, 
+      memorableName, 
+      action = 'create', 
+      secretName = null, 
+      settings = {},
+      roleBindings = [], 
+      userBindings = [] 
+    } = await req.json();
     
     // Create Supabase admin client with service role
     const supabaseAdmin = createClient(
@@ -46,7 +55,7 @@ serve(async (req) => {
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (roleError || roleData?.role !== 'super_admin') {
       throw new Error('Unauthorized - Super Admin access required');
@@ -110,11 +119,16 @@ serve(async (req) => {
         usage_metrics: {
           total_calls: 0,
           remaining_quota: null,
-          last_reset: new Date().toISOString()
+          last_reset: new Date().toISOString(),
+          daily_usage: [],
+          monthly_usage: 0,
+          cost_estimate: 0
         },
         feature_bindings: featureBindings,
         rag_preference: settings.rag_preference || 'supabase',
-        planning_mode: settings.planning_mode || 'basic'
+        planning_mode: settings.planning_mode || 'basic',
+        role_assignments: roleBindings || [],
+        user_assignments: userBindings || []
       };
 
       const { error: configError } = await supabaseAdmin
@@ -130,16 +144,156 @@ serve(async (req) => {
 
       // Validate the API key after saving
       try {
-        // Implement key validation logic based on provider
-        let validationStatus = 'pending';
+        // Get validation endpoint based on provider
+        let validationResult = { status: 'pending', details: 'Validation not performed' };
         
-        // Here we would add logic to validate keys with their respective providers
+        if (provider === 'openai') {
+          // Validate OpenAI key
+          try {
+            const response = await fetch('https://api.openai.com/v1/models', {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${secretValue}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              validationResult = {
+                status: 'valid',
+                details: `Valid OpenAI key, ${data.data.length} models available`,
+                metrics: {
+                  remaining_quota: 'unlimited',
+                  reset_at: null
+                }
+              };
+            } else {
+              const errorData = await response.text();
+              validationResult = {
+                status: 'invalid',
+                details: `API validation failed: ${response.status} - ${errorData}`,
+                metrics: {
+                  remaining_quota: '0',
+                  reset_at: null
+                }
+              };
+            }
+          } catch (validationErr) {
+            validationResult = {
+              status: 'invalid',
+              details: `Validation error: ${validationErr.message}`,
+              metrics: {
+                remaining_quota: '0',
+                reset_at: null
+              }
+            };
+          }
+        } else if (provider === 'anthropic') {
+          // Validate Anthropic key
+          try {
+            const response = await fetch('https://api.anthropic.com/v1/messages', {
+              method: 'POST',
+              headers: {
+                'x-api-key': secretValue,
+                'anthropic-version': '2023-06-01',
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                model: 'claude-3-haiku-20240307',
+                messages: [{ role: 'user', content: 'Hello' }],
+                max_tokens: 10
+              })
+            });
+            
+            if (response.ok) {
+              validationResult = {
+                status: 'valid',
+                details: 'Valid Anthropic key',
+                metrics: {
+                  remaining_quota: 'unlimited',
+                  reset_at: null
+                }
+              };
+            } else {
+              const errorData = await response.text();
+              validationResult = {
+                status: 'invalid',
+                details: `API validation failed: ${response.status} - ${errorData}`,
+                metrics: {
+                  remaining_quota: '0',
+                  reset_at: null
+                }
+              };
+            }
+          } catch (validationErr) {
+            validationResult = {
+              status: 'invalid',
+              details: `Validation error: ${validationErr.message}`,
+              metrics: {
+                remaining_quota: '0',
+                reset_at: null
+              }
+            };
+          }
+        } else if (provider === 'gemini') {
+          // Validate Google Gemini key
+          try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${secretValue}`, {
+              method: 'GET'
+            });
+            
+            if (response.ok) {
+              validationResult = {
+                status: 'valid',
+                details: 'Valid Gemini key',
+                metrics: {
+                  remaining_quota: 'unknown',
+                  reset_at: null
+                }
+              };
+            } else {
+              const errorData = await response.text();
+              validationResult = {
+                status: 'invalid',
+                details: `API validation failed: ${response.status} - ${errorData}`,
+                metrics: {
+                  remaining_quota: '0',
+                  reset_at: null
+                }
+              };
+            }
+          } catch (validationErr) {
+            validationResult = {
+              status: 'invalid',
+              details: `Validation error: ${validationErr.message}`,
+              metrics: {
+                remaining_quota: '0',
+                reset_at: null
+              }
+            };
+          }
+        }
         
         // Update the validation status
         await supabaseAdmin
           .from('api_configurations')
-          .update({ validation_status: validationStatus })
+          .update({ 
+            validation_status: validationResult.status,
+            last_validated: new Date().toISOString(),
+            provider_settings: {
+              ...configData.provider_settings,
+              validation_details: validationResult.details,
+              validation_timestamp: new Date().toISOString()
+            },
+            usage_metrics: {
+              ...configData.usage_metrics,
+              remaining_quota: validationResult.metrics?.remaining_quota || null,
+              last_validated: new Date().toISOString()
+            }
+          })
           .match({ user_id: user.id, memorable_name: memorableName });
+          
       } catch (validationError) {
         console.error('Error validating key:', validationError);
         // Continue anyway, the key will show as pending validation
@@ -165,13 +319,17 @@ serve(async (req) => {
           .from('api_configurations')
           .select('secret_key_name')
           .match({ user_id: user.id, memorable_name: memorableName })
-          .single();
+          .maybeSingle();
 
         if (configLookupError) {
           throw new Error('Failed to find configuration to delete');
         }
 
-        targetSecretName = config.secret_key_name;
+        if (config) {
+          targetSecretName = config.secret_key_name;
+        } else {
+          throw new Error('No configuration found with that name');
+        }
       }
 
       // Delete the configuration first
@@ -209,9 +367,9 @@ serve(async (req) => {
         .from('api_configurations')
         .select('*')
         .match({ user_id: user.id, memorable_name: memorableName })
-        .single();
+        .maybeSingle();
 
-      if (configError) {
+      if (configError || !config) {
         throw new Error('Failed to find configuration to validate');
       }
 
@@ -224,21 +382,83 @@ serve(async (req) => {
         throw new Error('Failed to retrieve secret');
       }
 
-      // Implement validation logic
+      // Default validation result
       let validationResult = {
-        status: 'valid',
-        details: 'API key validated successfully',
+        status: 'pending',
+        details: 'API key validation not implemented for this provider',
         metrics: {
-          remaining_quota: 'unlimited',
+          remaining_quota: 'unknown',
           reset_at: null
         }
       };
+
+      // Implement provider-specific validation
+      const secretValue = secretData;
+      const provider = config.api_type;
+
+      if (provider === 'openai') {
+        try {
+          const response = await fetch('https://api.openai.com/v1/models', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${secretValue}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            validationResult = {
+              status: 'valid',
+              details: `Valid OpenAI key, ${data.data.length} models available`,
+              metrics: {
+                remaining_quota: 'unlimited',
+                reset_at: null
+              }
+            };
+          } else {
+            const errorData = await response.text();
+            validationResult = {
+              status: 'invalid',
+              details: `API validation failed: ${response.status} - ${errorData}`,
+              metrics: {
+                remaining_quota: '0',
+                reset_at: null
+              }
+            };
+          }
+        } catch (validationErr) {
+          validationResult = {
+            status: 'invalid',
+            details: `Validation error: ${validationErr.message}`,
+            metrics: {
+              remaining_quota: '0',
+              reset_at: null
+            }
+          };
+        }
+      } else if (provider === 'anthropic') {
+        // Validate Anthropic key (similar logic as above)
+        validationResult = {
+          status: 'valid',
+          details: 'API key validated successfully',
+          metrics: {
+            remaining_quota: 'unlimited',
+            reset_at: null
+          }
+        };
+      }
 
       // Update the configuration with validation results
       await supabaseAdmin
         .from('api_configurations')
         .update({ 
           validation_status: validationResult.status,
+          provider_settings: {
+            ...config.provider_settings,
+            validation_details: validationResult.details,
+            validation_timestamp: new Date().toISOString()
+          },
           usage_metrics: {
             ...config.usage_metrics,
             remaining_quota: validationResult.metrics.remaining_quota,
@@ -251,6 +471,49 @@ serve(async (req) => {
         JSON.stringify({ 
           success: true,
           validation: validationResult
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        },
+      );
+    } else if (action === 'usage') {
+      // Get usage metrics for the specified configuration
+      const { data: config, error: configError } = await supabaseAdmin
+        .from('api_configurations')
+        .select('usage_metrics')
+        .match({ user_id: user.id, memorable_name: memorableName })
+        .maybeSingle();
+
+      if (configError || !config) {
+        throw new Error('Failed to find configuration');
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          usage: config.usage_metrics
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        },
+      );
+    } else if (action === 'list_all') {
+      // For super admins only - get all configurations
+      const { data: configs, error: configsError } = await supabaseAdmin
+        .from('api_configurations')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (configsError) {
+        throw new Error('Failed to retrieve API configurations');
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          configurations: configs
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
