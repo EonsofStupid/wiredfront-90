@@ -1,7 +1,9 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useMessageStore } from '@/components/chat/messaging/MessageManager';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface SessionState {
   id: string;
@@ -10,124 +12,115 @@ interface SessionState {
 }
 
 export const useSessionManager = () => {
-  const [sessions, setSessions] = useState<SessionState[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
   const { clearMessages } = useMessageStore();
+  const queryClient = useQueryClient();
 
-  // Fetch active sessions
-  const fetchSessions = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from('chat_sessions')
-        .select('*')
-        .order('last_accessed', { ascending: false })
-        .limit(10);
+  // Fetch active sessions with useQuery
+  const { data: sessions = [], isLoading } = useQuery({
+    queryKey: ['chat_sessions'],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .from('chat_sessions')
+          .select('*')
+          .order('last_accessed', { ascending: false })
+          .limit(10);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      const formattedSessions = data.map(session => ({
-        id: session.id,
-        lastAccessed: new Date(session.last_accessed),
-        isActive: session.is_active
-      }));
-
-      setSessions(formattedSessions);
-      return formattedSessions;
-    } catch (error) {
-      console.error('Error fetching sessions:', error);
-      toast.error('Failed to fetch chat sessions');
-      return [];
-    }
-  }, []);
-
-  // Create a new session only if no active session exists
-  const createSession = useCallback(async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No authenticated user');
-
-      // Check for existing active session first
-      const { data: existingSession } = await supabase
-        .from('chat_sessions')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .order('last_accessed', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (existingSession) {
-        setCurrentSessionId(existingSession.id);
-        return existingSession.id;
+        return data.map(session => ({
+          id: session.id,
+          lastAccessed: new Date(session.last_accessed),
+          isActive: session.is_active
+        }));
+      } catch (error) {
+        console.error('Error fetching sessions:', error);
+        toast.error('Failed to fetch chat sessions');
+        return [];
       }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-      const { data, error } = await supabase
-        .from('chat_sessions')
-        .insert({
-          user_id: user.id,
-          is_active: true,
-          last_accessed: new Date().toISOString()
-        })
-        .select()
-        .single();
+  // Create session mutation
+  const createSessionMutation = useMutation({
+    mutationFn: async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('No authenticated user');
 
-      if (error) throw error;
+        // Check for existing active session first
+        const { data: existingSession } = await supabase
+          .from('chat_sessions')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .order('last_accessed', { ascending: false })
+          .limit(1)
+          .single();
 
-      setCurrentSessionId(data.id);
-      await fetchSessions();
+        if (existingSession) {
+          return existingSession.id;
+        }
+
+        const { data, error } = await supabase
+          .from('chat_sessions')
+          .insert({
+            user_id: user.id,
+            is_active: true,
+            last_accessed: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        
+        return data.id;
+      } catch (error) {
+        console.error('Error creating session:', error);
+        throw error;
+      }
+    },
+    onSuccess: (sessionId) => {
+      setCurrentSessionId(sessionId);
       clearMessages();
-      toast.success('New chat session created', {
+      queryClient.invalidateQueries({ queryKey: ['chat_sessions'] });
+      toast.success('Chat session ready', {
         className: 'bg-gradient-to-r from-[#8B5CF6]/10 to-[#0EA5E9]/10'
       });
-      return data.id;
-    } catch (error) {
-      console.error('Error creating session:', error);
+    },
+    onError: () => {
       toast.error('Failed to create new chat session');
-      return null;
     }
-  }, [fetchSessions, clearMessages]);
+  });
 
-  // Initialize session only once on component mount
-  useEffect(() => {
-    const initializeSession = async () => {
-      if (!isInitializing) return;
-
-      const existingSessions = await fetchSessions();
-      
-      if (existingSessions.length === 0 || !currentSessionId) {
-        await createSession();
-      }
-      
-      setIsInitializing(false);
-    };
-
-    initializeSession();
-  }, [isInitializing, fetchSessions, createSession, currentSessionId]);
-
-  // Switch to a different session
-  const switchSession = useCallback(async (sessionId: string) => {
-    try {
+  // Switch session mutation
+  const switchSessionMutation = useMutation({
+    mutationFn: async (sessionId: string) => {
       const { error } = await supabase
         .from('chat_sessions')
         .update({ last_accessed: new Date().toISOString() })
         .eq('id', sessionId);
 
       if (error) throw error;
-
+      return sessionId;
+    },
+    onSuccess: (sessionId) => {
       setCurrentSessionId(sessionId);
       clearMessages();
-      await fetchSessions();
+      queryClient.invalidateQueries({ queryKey: ['chat_sessions'] });
       toast.success('Switched chat session');
-    } catch (error) {
-      console.error('Error switching sessions:', error);
+    },
+    onError: () => {
       toast.error('Failed to switch chat session');
     }
-  }, [fetchSessions, clearMessages]);
+  });
 
-  // Cleanup inactive sessions (older than 7 days)
-  const cleanupInactiveSessions = useCallback(async () => {
-    try {
+  // Cleanup inactive sessions mutation
+  const cleanupSessionsMutation = useMutation({
+    mutationFn: async () => {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -137,16 +130,35 @@ export const useSessionManager = () => {
         .lt('last_accessed', sevenDaysAgo.toISOString());
 
       if (error) throw error;
-
-      await fetchSessions();
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chat_sessions'] });
       toast.success('Cleaned up inactive sessions');
-    } catch (error) {
-      console.error('Error cleaning up sessions:', error);
+    },
+    onError: () => {
       toast.error('Failed to cleanup sessions');
     }
-  }, [fetchSessions]);
+  });
 
-  // Update last_accessed timestamp less frequently
+  // Initialize session only once on component mount
+  useEffect(() => {
+    const initializeSession = async () => {
+      if (!isInitializing) return;
+
+      if (sessions.length === 0 || !currentSessionId) {
+        await createSessionMutation.mutateAsync();
+      }
+      
+      setIsInitializing(false);
+    };
+
+    if (!isLoading) {
+      initializeSession();
+    }
+  }, [isInitializing, isLoading, sessions, currentSessionId, createSessionMutation]);
+
+  // Update last_accessed timestamp periodically
   useEffect(() => {
     const updateLastAccessed = async () => {
       if (!currentSessionId) return;
@@ -168,9 +180,9 @@ export const useSessionManager = () => {
   return {
     sessions,
     currentSessionId,
-    switchSession,
-    createSession,
-    cleanupInactiveSessions,
-    refreshSessions: fetchSessions
+    switchSession: switchSessionMutation.mutate,
+    createSession: () => createSessionMutation.mutate(),
+    cleanupInactiveSessions: () => cleanupSessionsMutation.mutate(),
+    isLoading: isLoading || createSessionMutation.isPending || isInitializing
   };
 };

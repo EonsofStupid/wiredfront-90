@@ -1,23 +1,34 @@
 
 :root {
+  /* WFPULSE Theme Colors */
+  --wfpulse-primary-purple: #9b87f5;
+  --wfpulse-secondary-purple: #7E69AB;
+  --wfpulse-tertiary-purple: #6E59A5;
+  --wfpulse-dark-purple: #1A1F2C;
+  --wfpulse-light-purple: #D6BCFA;
+  --wfpulse-neon-teal: #1EAEDB;
+  --wfpulse-bright-blue: #33C3F0;
+  --wfpulse-neon-pink: #D946EF;
+
   /* Chat specific variables */
   --chat-width: 400px;
   --chat-height: 500px;
   --chat-border-radius: var(--radius);
-  --chat-bg: rgba(0, 0, 0, 0.3);
+  --chat-bg: rgba(26, 31, 44, 0.8);
   --chat-text: var(--foreground);
-  --chat-header-bg: rgba(0, 0, 0, 0.2);
-  --chat-message-user-bg: var(--primary);
-  --chat-message-user-text: var(--primary-foreground);
-  --chat-message-assistant-bg: var(--secondary);
-  --chat-message-assistant-text: var(--secondary-foreground);
+  --chat-header-bg: rgba(26, 31, 44, 0.9);
+  --chat-message-user-bg: var(--wfpulse-primary-purple);
+  --chat-message-user-text: white;
+  --chat-message-assistant-bg: var(--wfpulse-dark-purple);
+  --chat-message-assistant-text: white;
   --chat-message-system-bg: var(--muted);
   --chat-message-system-text: var(--muted-foreground);
-  --chat-input-bg: rgba(0, 0, 0, 0.2);
+  --chat-input-bg: rgba(26, 31, 44, 0.5);
   --chat-scrollbar-width: 6px;
   --chat-transition-speed: 0.3s;
   --chat-box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  --chat-neon-glow: 0 0 15px rgba(0, 255, 255, 0.5), 0 0 30px rgba(255, 0, 127, 0.3);
+  --chat-neon-glow-teal: 0 0 15px rgba(30, 174, 219, 0.5), 0 0 30px rgba(30, 174, 219, 0.3);
+  --chat-neon-glow-pink: 0 0 15px rgba(217, 70, 239, 0.5), 0 0 30px rgba(217, 70, 239, 0.3);
 }
 
 /* Chat specific components */
@@ -60,6 +71,69 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* WFPULSE specific styles */
+.wfpulse-neon-border {
+  position: relative;
+}
+
+.wfpulse-neon-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(45deg, var(--wfpulse-neon-teal), var(--wfpulse-neon-pink));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.wfpulse-neon-glow {
+  position: relative;
+}
+
+.wfpulse-neon-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--chat-neon-glow-teal), var(--chat-neon-glow-pink);
+  opacity: 0.8;
+  z-index: -1;
+}
+
+.glass-input {
+  background-color: rgba(26, 31, 44, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.glass-input:focus {
+  background-color: rgba(26, 31, 44, 0.8);
+  border-color: var(--wfpulse-neon-teal);
+  box-shadow: 0 0 0 2px rgba(30, 174, 219, 0.25);
+}
+
+/* Define neon colors for use in components */
+.text-neon-teal {
+  color: var(--wfpulse-neon-teal);
+}
+
+.text-neon-pink {
+  color: var(--wfpulse-neon-pink);
+}
+
+.bg-neon-teal {
+  background-color: var(--wfpulse-neon-teal);
+}
+
+.bg-neon-pink {
+  background-color: var(--wfpulse-neon-pink);
+}
+
 /* Transition classes */
 .chat-fade-in {
   animation: chatFadeIn var(--chat-transition-speed) ease;
@@ -88,5 +162,17 @@
   to { 
     opacity: 0;
     transform: translateY(10px);
+  }
+}
+
+/* Add keyframe animation for pulsing effect */
+@keyframes neonPulse {
+  0%, 100% { 
+    opacity: 0.8;
+    box-shadow: var(--chat-neon-glow-teal);
+  }
+  50% { 
+    opacity: 1;
+    box-shadow: var(--chat-neon-glow-pink);
   }
 }

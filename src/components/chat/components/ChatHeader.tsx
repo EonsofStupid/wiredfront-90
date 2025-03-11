@@ -3,7 +3,8 @@ import React from "react";
 import { ChevronLeft, ChevronRight, Minus, X, Pin, PinOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChatPositionToggle } from "./ChatPositionToggle";
-import { useChatStore } from "../store/chatStore";
+import { useChatUIStore } from "../store/useChatUIStore";
+import { ConnectionStatusIndicator } from "./ConnectionStatusIndicator";
 
 interface ChatHeaderProps {
   title: string;
@@ -22,7 +23,7 @@ export function ChatHeader({
   onMinimize,
   onClose,
 }: ChatHeaderProps) {
-  const { docked, toggleDocked } = useChatStore();
+  const { docked, toggleDocked } = useChatUIStore();
 
   // Prevent propagation to avoid triggering drag when clicking buttons
   const handleButtonClick = (e: React.MouseEvent, callback: () => void) => {
@@ -42,6 +43,7 @@ export function ChatHeader({
           {showSidebar ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>
         <span className="font-semibold">{title}</span>
+        <ConnectionStatusIndicator />
       </div>
       <div className="flex gap-2">
         <ChatPositionToggle />

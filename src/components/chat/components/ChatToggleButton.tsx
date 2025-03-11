@@ -3,7 +3,7 @@ import React from "react";
 import { MessageSquare, Code, MessagesSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useChatMode } from "../providers/ChatModeProvider";
-import { useChatStore } from "../store/chatStore";
+import { useChatUIStore } from "../store/useChatUIStore";
 
 interface ChatToggleButtonProps {
   onClick: () => void;
@@ -11,7 +11,7 @@ interface ChatToggleButtonProps {
 
 export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
   const { mode } = useChatMode();
-  const { position } = useChatStore();
+  const { position } = useChatUIStore();
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -24,7 +24,7 @@ export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
   return (
     <Button
       onClick={handleClick}
-      className={`fixed bottom-4 ${positionClass} p-4 rounded-full shadow-lg z-[var(--z-chat)] glass-card neon-glow hover:scale-105 transition-transform duration-200`}
+      className={`fixed bottom-4 ${positionClass} p-4 rounded-full shadow-lg z-[var(--z-chat)] glass-card wfpulse-neon-glow hover:scale-105 transition-transform duration-200`}
       title={
         mode === 'editor' 
           ? "Code Assistant" 

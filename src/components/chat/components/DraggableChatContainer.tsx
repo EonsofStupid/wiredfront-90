@@ -5,7 +5,7 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { ChatHeader } from "./ChatHeader";
 import { ChatContent } from "./ChatContent";
 import { useChatMode } from "../providers/ChatModeProvider";
-import { useChatStore } from "../store/chatStore";
+import { useChatUIStore } from "../store/useChatUIStore";
 
 interface DraggableChatContainerProps {
   scrollRef: React.RefObject<HTMLDivElement>;
@@ -18,7 +18,7 @@ export function DraggableChatContainer({
 }: DraggableChatContainerProps) {
   const { mode } = useChatMode();
   const chatRef = useRef<HTMLDivElement>(null);
-  const { isMinimized, showSidebar, toggleSidebar, toggleMinimize, toggleChat, docked } = useChatStore();
+  const { isMinimized, showSidebar, toggleSidebar, toggleMinimize, toggleChat, docked } = useChatUIStore();
 
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: "chat-window",
@@ -77,7 +77,7 @@ export function DraggableChatContainer({
       className="w-[400px] transition-all duration-300"
       onClick={handleContainerClick}
     >
-      <Card className="shadow-xl glass-card neon-border overflow-hidden">
+      <Card className="shadow-xl glass-card wfpulse-neon-border overflow-hidden">
         <CardHeader className={`p-0 ${docked ? '' : 'cursor-move'}`}>
           <ChatHeader 
             title={title}
