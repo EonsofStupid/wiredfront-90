@@ -791,6 +791,7 @@ export type Database = {
         | "sonnet"
         | "elevenlabs"
         | "whisper"
+        | "github"
       app_role: "super_admin" | "admin" | "developer" | "subscriber" | "guest"
       chat_api_provider: "openai" | "anthropic" | "gemini" | "huggingface"
       document_import_status: "pending" | "processing" | "completed" | "error"

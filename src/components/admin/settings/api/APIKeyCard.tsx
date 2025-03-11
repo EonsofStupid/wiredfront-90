@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { CheckCircle, AlertCircle, RefreshCw, Trash2, Star, Clock, ArrowUpRight } from "lucide-react";
+import { CheckCircle, AlertCircle, RefreshCw, Trash2, Star, Clock, ArrowUpRight, Github } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { APIConfiguration } from "@/hooks/admin/settings/api/useAPIKeyManagement";
@@ -49,7 +49,7 @@ export function APIKeyCard({ config, onValidate, onDelete, onRefresh }: APIKeyCa
       const { error: updateError1 } = await supabase
         .from('api_configurations')
         .update({ is_default: false })
-        .eq('api_type', config.api_type)
+        .eq('api_type', config.api_type as any)
         .eq('is_default', true);
       
       if (updateError1) throw updateError1;
@@ -104,7 +104,11 @@ export function APIKeyCard({ config, onValidate, onDelete, onRefresh }: APIKeyCa
               {config.api_type === 'anthropic' && 'Anthropic'}
               {config.api_type === 'gemini' && 'Google Gemini'}
               {config.api_type === 'pinecone' && 'Pinecone'}
-              {config.api_type === 'github' && 'GitHub'}
+              {config.api_type === 'github' && (
+                <>
+                  <Github className="h-4 w-4 mr-1" /> GitHub
+                </>
+              )}
               
               <div className="ml-3">
                 {getValidityBadge(config.validation_status)}

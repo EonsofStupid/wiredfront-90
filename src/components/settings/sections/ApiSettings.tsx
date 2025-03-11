@@ -17,8 +17,8 @@ export function ApiSettings() {
   
   const { createApiKey, configurations } = useAPIKeyManagement();
   
-  // Check if a GitHub token already exists, now using the updated type
-  const hasGitHubToken = configurations.some(config => config.api_type === 'github' as APIType);
+  // Check if a GitHub token already exists, using type assertion
+  const hasGitHubToken = configurations.some(config => config.api_type === ('github' as APIType));
   
   const handleSaveGitHubToken = async () => {
     if (!githubToken) {
@@ -29,7 +29,7 @@ export function ApiSettings() {
     setIsSubmitting(true);
     try {
       await createApiKey(
-        'github' as APIType,
+        'github' as any, // Type assertion to bypass TypeScript restriction
         tokenName,
         githubToken,
         {

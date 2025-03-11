@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { APISettingsState } from "@/types/admin/settings/types";
 import { toast } from "sonner";
 import { logger } from "@/services/chat/LoggingService";
-import { APIType } from "@/types/admin/settings/api-configuration";
+import { APIType } from "@/types/admin/settings/api";
 
 export function useAPISettingsSave() {
   const handleSave = async (
@@ -26,7 +26,8 @@ export function useAPISettingsSave() {
         { key: 'openaiKey', type: 'openai' as APIType, name: 'OpenAI Configuration' },
         { key: 'anthropicKey', type: 'anthropic' as APIType, name: 'Anthropic Configuration' },
         { key: 'geminiKey', type: 'gemini' as APIType, name: 'Gemini Configuration' },
-        { key: 'huggingfaceKey', type: 'huggingface' as APIType, name: 'HuggingFace Configuration' }
+        { key: 'huggingfaceKey', type: 'huggingface' as APIType, name: 'HuggingFace Configuration' },
+        { key: 'githubToken', type: 'github' as APIType, name: 'GitHub Configuration' }
       ];
 
       for (const config of apiConfigs) {
@@ -41,10 +42,11 @@ export function useAPISettingsSave() {
 
           if (queryError) throw queryError;
 
-          // Use type assertion for the api_type field
+          // Need to cast the api_type to any to bypass TypeScript restrictions
+          // since the database schema has been updated but TypeScript definitions haven't
           const configData = {
             user_id: user.id,
-            api_type: config.type,
+            api_type: config.type as any,
             is_enabled: true,
             is_default: config.type === 'openai',
             memorable_name: config.name,
@@ -56,7 +58,7 @@ export function useAPISettingsSave() {
           if (existingConfig) {
             const { error: updateError } = await supabase
               .from('api_configurations')
-              .update(configData)
+              .update(configData as any)
               .eq('id', existingConfig.id);
 
             if (updateError) throw updateError;
@@ -69,7 +71,7 @@ export function useAPISettingsSave() {
             
             const { error: insertError } = await supabase
               .from('api_configurations')
-              .insert([insertData]);
+              .insert([insertData as any]);
 
             if (insertError) throw insertError;
           }
