@@ -10,7 +10,7 @@ export const HeroSection = () => {
   const prefersReducedMotion = useReducedMotion();
 
   return (
-    <section className="relative flex items-center justify-center py-20 w-full hero--neon-lines">
+    <section className="relative flex items-center justify-center py-28 w-full hero--neon-lines">
       <motion.div
         initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

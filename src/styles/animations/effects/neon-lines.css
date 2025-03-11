@@ -3,23 +3,38 @@
   position: relative;
   background: #080810;
   overflow: hidden;
-  min-height: 40vh; /* Add minimum height to ensure visibility */
+  min-height: 40vh; /* Ensures visibility */
 }
 
-.hero--neon-lines::before {
+.hero--neon-lines::before,
+.hero--neon-lines::after {
   content: "";
   position: absolute;
   inset: 0;
+  width: 200%;
+  height: 200%;
+  z-index: 0; /* Behind content */
+}
+
+.hero--neon-lines::before {
   background: repeating-linear-gradient(
     45deg,
     var(--neon-cyan-glow) 0 var(--grid-line-width),
     transparent var(--grid-line-width) var(--grid-size)
   );
-  box-shadow: 0 0 8px 2px var(--neon-cyan-glow);
-  width: 200%;
-  height: 200%;
+  box-shadow: var(--neon-cyan-shadow);
   animation: moveLines var(--anim-duration-slow) linear infinite;
-  z-index: 0; /* Ensure the lines appear behind content */
+}
+
+.hero--neon-lines::after {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--neon-pink-glow) 0 var(--grid-line-width),
+    transparent var(--grid-line-width) calc(var(--grid-size) * 1.5)
+  );
+  box-shadow: var(--neon-pink-shadow);
+  opacity: 0.7;
+  animation: moveLines calc(var(--anim-duration-slow) * 1.5) linear infinite reverse;
 }
 
 @keyframes moveLines {
@@ -28,8 +43,26 @@
   }
 }
 
+/* Glow effect to enhance visibility */
+.hero--neon-lines .neon-border {
+  position: relative;
+  z-index: 10;
+}
+
+.hero--neon-lines .neon-border::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: inherit;
+  background: transparent;
+  box-shadow: var(--neon-cyan-shadow), var(--neon-pink-shadow);
+  opacity: 0.4;
+  z-index: -1;
+}
+
 @media (prefers-reduced-motion) {
-  .hero--neon-lines::before {
+  .hero--neon-lines::before,
+  .hero--neon-lines::after {
     animation: none;
   }
 }

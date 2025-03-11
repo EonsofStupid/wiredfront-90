@@ -7,11 +7,13 @@
   
   /* Neon Colors */
   --neon-cyan: rgba(0, 255, 255, 1);
-  --neon-cyan-glow: rgba(0, 255, 255, 0.5);
+  --neon-cyan-glow: rgba(0, 255, 255, 0.8);
+  --neon-cyan-shadow: 0 0 15px rgba(0, 255, 255, 0.8), 0 0 30px rgba(0, 255, 255, 0.4);
   --neon-pink: rgba(255, 0, 255, 1);
-  --neon-pink-glow: rgba(255, 0, 255, 0.5);
+  --neon-pink-glow: rgba(255, 0, 255, 0.8);
+  --neon-pink-shadow: 0 0 15px rgba(255, 0, 255, 0.8), 0 0 30px rgba(255, 0, 255, 0.4);
   
   /* Grid Properties */
-  --grid-size: 20px;
-  --grid-line-width: 1px;
+  --grid-size: 40px;
+  --grid-line-width: 2px;
 }
