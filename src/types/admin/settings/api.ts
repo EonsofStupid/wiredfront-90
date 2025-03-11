@@ -1,3 +1,4 @@
+
 import { Database } from "@/integrations/supabase/types";
 
 export type APIType = Database["public"]["Enums"]["api_type"];

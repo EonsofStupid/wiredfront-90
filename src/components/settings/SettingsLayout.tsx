@@ -1,9 +1,11 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { Settings, User, Github } from "lucide-react";
+import { Settings, User, Github, Lock } from "lucide-react";
 import { ProfileSettings } from "./sections/ProfileSettings";
 import { GitHubSettings } from "./sections/GitHubSettings";
 import { GeneralSettings } from "./sections/GeneralSettings";
+import { ApiSettings } from "./sections/ApiSettings";
 
 export function SettingsLayout() {
   return (
@@ -24,6 +26,10 @@ export function SettingsLayout() {
               <Github className="w-4 h-4" />
               GitHub
             </TabsTrigger>
+            <TabsTrigger value="api" className="flex items-center gap-2">
+              <Lock className="w-4 h-4" />
+              API Keys
+            </TabsTrigger>
             <TabsTrigger value="general" className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
               General
@@ -36,6 +42,10 @@ export function SettingsLayout() {
 
           <TabsContent value="github">
             <GitHubSettings />
+          </TabsContent>
+          
+          <TabsContent value="api">
+            <ApiSettings />
           </TabsContent>
 
           <TabsContent value="general">

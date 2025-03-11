@@ -104,6 +104,7 @@ export function APIKeyCard({ config, onValidate, onDelete, onRefresh }: APIKeyCa
               {config.api_type === 'anthropic' && 'Anthropic'}
               {config.api_type === 'gemini' && 'Google Gemini'}
               {config.api_type === 'pinecone' && 'Pinecone'}
+              {config.api_type === 'github' && 'GitHub'}
               
               <div className="ml-3">
                 {getValidityBadge(config.validation_status)}

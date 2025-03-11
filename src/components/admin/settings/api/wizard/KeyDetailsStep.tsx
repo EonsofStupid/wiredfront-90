@@ -35,6 +35,7 @@ export function KeyDetailsStep({
             <SelectItem value="anthropic">Anthropic</SelectItem>
             <SelectItem value="gemini">Google Gemini</SelectItem>
             <SelectItem value="pinecone">Pinecone</SelectItem>
+            <SelectItem value="github">GitHub</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -64,6 +65,7 @@ export function KeyDetailsStep({
             selectedProvider === 'anthropic' ? 'sk-ant-...' :
             selectedProvider === 'gemini' ? 'AIza...' :
             selectedProvider === 'pinecone' ? 'PINE-...' :
+            selectedProvider === 'github' ? 'ghp_...' :
             'Enter your API key'
           }
         />
