@@ -26,6 +26,7 @@ import { GuestCTA } from "@/components/auth/GuestCTA";
 import Settings from "./pages/Settings";
 import { DraggableChat } from "@/components/chat/DraggableChat";
 import { AdminTopNavOverlay } from "@/components/admin/navigation/AdminTopNavOverlay";
+import FeatureFlagsPage from "./pages/admin/FeatureFlagsPage";
 
 const PROTECTED_ROUTES = [
   '/dashboard', 
@@ -33,6 +34,8 @@ const PROTECTED_ROUTES = [
   '/documents', 
   '/ai', 
   '/analytics',
+  '/gallery',
+  '/training',
   '/settings',
   '/admin'
 ];
@@ -47,6 +50,7 @@ const ADMIN_ROUTES = [
   '/admin/settings/chat',
   '/admin/settings/chat-features',
   '/admin/settings/live-preview',
+  '/admin/settings/feature-flags',
   '/admin/users',
   '/admin/models',
   '/admin/queues',
@@ -110,6 +114,8 @@ const App = () => {
             />
             <Route path="/documents" element={<Documents />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/gallery" element={<div>Gallery</div>} />
+            <Route path="/training" element={<div>Training</div>} />
             
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/settings/api" element={<APISettings />} />
@@ -119,6 +125,7 @@ const App = () => {
             <Route path="/admin/settings/chat" element={<ChatSettings />} />
             <Route path="/admin/settings/chat-features" element={<ChatFeatureSettings />} />
             <Route path="/admin/settings/live-preview" element={<LivePreviewSettings />} />
+            <Route path="/admin/settings/feature-flags" element={<FeatureFlagsPage />} />
             <Route path="/admin/users" element={<div>Users Management</div>} />
             <Route path="/admin/models" element={<div>Models Configuration</div>} />
             <Route path="/admin/queues" element={<div>Queue Management</div>} />

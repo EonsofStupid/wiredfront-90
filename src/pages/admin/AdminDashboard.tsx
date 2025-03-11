@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Users, Database, Settings, Activity, Shield, Code } from "lucide-react";
+import { Users, Database, Settings, Activity, Shield, Code, Flag, Cog } from "lucide-react";
 import { AdminCard, AdminCardHeader, AdminCardTitle, AdminCardDescription, AdminCardContent } from "@/components/admin/ui/AdminCard";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -103,6 +103,23 @@ export default function AdminDashboard() {
         <AdminCard 
           className="admin-dashboard-card hover-scale" 
           variant="accent"
+          onClick={() => navigate('/admin/settings/feature-flags')}
+        >
+          <AdminCardHeader>
+            <div className="flex items-center justify-between">
+              <AdminCardTitle>Feature Flags</AdminCardTitle>
+              <Flag className="h-5 w-5 admin-icon" />
+            </div>
+            <AdminCardDescription>Manage feature availability</AdminCardDescription>
+          </AdminCardHeader>
+          <AdminCardContent>
+            <p className="text-sm mt-4">Toggle features, set up targeting, and control rollouts.</p>
+          </AdminCardContent>
+        </AdminCard>
+
+        <AdminCard 
+          className="admin-dashboard-card hover-scale" 
+          variant="accent"
           onClick={() => navigate('/admin/queues')}
         >
           <AdminCardHeader>
@@ -114,6 +131,22 @@ export default function AdminDashboard() {
           </AdminCardHeader>
           <AdminCardContent>
             <p className="text-sm mt-4">Configure authentication, permissions, and security policies.</p>
+          </AdminCardContent>
+        </AdminCard>
+
+        <AdminCard 
+          className="admin-dashboard-card hover-scale" 
+          onClick={() => navigate('/admin/settings/general')}
+        >
+          <AdminCardHeader>
+            <div className="flex items-center justify-between">
+              <AdminCardTitle>System Settings</AdminCardTitle>
+              <Cog className="h-5 w-5 admin-icon" />
+            </div>
+            <AdminCardDescription>Global system configuration</AdminCardDescription>
+          </AdminCardHeader>
+          <AdminCardContent>
+            <p className="text-sm mt-4">Manage system-wide settings, defaults, and configurations.</p>
           </AdminCardContent>
         </AdminCard>
       </div>
