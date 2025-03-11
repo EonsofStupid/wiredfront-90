@@ -9,10 +9,18 @@ import { PreferencesStep } from "./steps/PreferencesStep";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth";
+import { BaseStepProps } from "./steps/BaseStepProps";
 
 interface SetupWizardProps {
   onComplete: () => void;
   isFirstTimeUser?: boolean;
+}
+
+type StepComponent = React.ComponentType<BaseStepProps> | React.ComponentType<any>;
+
+interface Step {
+  title: string;
+  component: StepComponent;
 }
 
 export function SetupWizard({ onComplete, isFirstTimeUser = false }: SetupWizardProps) {
@@ -20,13 +28,11 @@ export function SetupWizard({ onComplete, isFirstTimeUser = false }: SetupWizard
   const [currentStep, setCurrentStep] = useState(0);
   const { user } = useAuthStore();
 
-  const steps = [
+  const steps: Step[] = [
     { title: "Welcome", component: WelcomeStep },
     { title: "API Configuration", component: APIConfigStep },
     { title: "Preferences", component: PreferencesStep },
   ];
-
-  const CurrentStepComponent = steps[currentStep].component;
 
   const handleNext = async () => {
     if (currentStep < steps.length - 1) {
@@ -66,9 +72,11 @@ export function SetupWizard({ onComplete, isFirstTimeUser = false }: SetupWizard
     }
   };
 
-  // This is where we need to properly pass all required props to the component
+  // Render the current step with appropriate props
   const renderCurrentStep = () => {
-    if (CurrentStepComponent === APIConfigStep) {
+    const StepComponent = steps[currentStep].component;
+    
+    if (StepComponent === APIConfigStep) {
       return (
         <APIConfigStep 
           onNext={handleNext} 
@@ -77,7 +85,8 @@ export function SetupWizard({ onComplete, isFirstTimeUser = false }: SetupWizard
         />
       );
     } else {
-      return <CurrentStepComponent isFirstTimeUser={isFirstTimeUser} />;
+      // For other components that only need isFirstTimeUser
+      return <StepComponent isFirstTimeUser={isFirstTimeUser} />;
     }
   };
 
