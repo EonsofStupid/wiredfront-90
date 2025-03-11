@@ -2,13 +2,17 @@
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/services/chat/LoggingService';
+
+// Valid app roles based on the database enum type
+type AppRole = "super_admin" | "admin" | "developer" | "subscriber" | "guest";
 
 interface RoleState {
-  roles: string[];
+  roles: AppRole[];
   isLoading: boolean;
   error: string | null;
   checkUserRole: (userId: string) => Promise<void>;
-  hasRole: (role: string) => boolean;
+  hasRole: (role: AppRole | string) => boolean;
   refreshRoles: () => Promise<void>;
 }
 
@@ -28,12 +32,26 @@ export const useRoleStore = create<RoleState>((set, get) => ({
 
       if (roleError) {
         console.error('Error fetching user role:', roleError);
+        logger.error('Error fetching user role:', roleError);
+        
+        // Set as guest for failed queries
         set({ roles: ['guest'], isLoading: false });
         return;
       }
 
       if (roleData?.role) {
-        set({ roles: [roleData.role.toLowerCase()], isLoading: false });
+        // Validate that the role is a valid AppRole
+        const role = roleData.role.toLowerCase() as AppRole;
+        
+        // Check if the role is valid against our AppRole type
+        const validRoles: AppRole[] = ['super_admin', 'admin', 'developer', 'subscriber', 'guest'];
+        
+        if (validRoles.includes(role)) {
+          set({ roles: [role], isLoading: false });
+        } else {
+          logger.warn(`Invalid role found: ${role}, defaulting to guest`);
+          set({ roles: ['guest'], isLoading: false });
+        }
         return;
       }
       
@@ -41,6 +59,7 @@ export const useRoleStore = create<RoleState>((set, get) => ({
       set({ roles: ['guest'], isLoading: false });
     } catch (error) {
       console.error('Error fetching user role:', error);
+      logger.error('Error fetching user role:', error);
       const message = error instanceof Error ? error.message : 'Failed to fetch user roles';
       set({ error: message, isLoading: false, roles: ['guest'] });
       toast.error('Failed to load user roles');
@@ -51,10 +70,12 @@ export const useRoleStore = create<RoleState>((set, get) => ({
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user?.id) {
       await get().checkUserRole(session.user.id);
+    } else {
+      set({ roles: ['guest'] });
     }
   },
 
-  hasRole: (role: string) => {
+  hasRole: (role: AppRole | string) => {
     const roles = get().roles;
     return roles.some(r => r.toLowerCase() === role.toLowerCase());
   },
