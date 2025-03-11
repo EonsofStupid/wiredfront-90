@@ -91,7 +91,7 @@ serve(async (req) => {
         break;
         
       case 'save':
-        // Save GitHub token securely
+        // Save GitHub token securely using vault
         const { error: vaultError } = await supabaseAdmin.rpc('set_secret', {
           name: `GITHUB_${tokenData.name.toUpperCase()}`,
           value: tokenData.token
@@ -101,29 +101,50 @@ serve(async (req) => {
           throw new Error('Failed to save token securely');
         }
         
-        // Create token configuration record
+        // Create or update token configuration record
+        const now = new Date().toISOString();
+        const configData = {
+          user_id: user.id,
+          api_type: 'github',
+          memorable_name: tokenData.name,
+          secret_key_name: `GITHUB_${tokenData.name.toUpperCase()}`,
+          is_enabled: true,
+          validation_status: 'valid',
+          last_validated: now,
+          provider_settings: {
+            scopes: tokenData.scopes || ['repo'],
+            created_by: user.id,
+            github_username: tokenData.github_username,
+            created_at: now,
+            rate_limit: tokenData.rate_limit || {}
+          },
+          usage_metrics: {
+            calls_made: 0,
+            last_used: null,
+            calls_by_date: {}
+          },
+          role_assignments: tokenData.role_assignments || ['super_admin']
+        };
+
         const { error: configError } = await supabaseAdmin
           .from('api_configurations')
-          .upsert({
-            user_id: user.id,
-            api_type: 'github',
-            memorable_name: tokenData.name,
-            secret_key_name: `GITHUB_${tokenData.name.toUpperCase()}`,
-            is_enabled: true,
-            validation_status: 'valid',
-            last_validated: new Date().toISOString(),
-            provider_settings: {
-              scopes: tokenData.scopes || ['repo'],
-              created_by: user.id,
-              github_username: tokenData.github_username
-            }
+          .upsert(configData, {
+            onConflict: 'user_id,memorable_name,api_type'
           });
 
         if (configError) {
           throw new Error('Failed to save token configuration');
         }
         
-        response = { success: true, message: 'GitHub token saved successfully' };
+        response = { 
+          success: true, 
+          message: 'GitHub token saved successfully',
+          token_info: {
+            name: tokenData.name,
+            username: tokenData.github_username,
+            scopes: tokenData.scopes || ['repo']
+          }
+        };
         break;
         
       case 'get':
@@ -162,6 +183,58 @@ serve(async (req) => {
         }
         
         response = { success: true, message: 'GitHub token deleted successfully' };
+        break;
+
+      case 'rotate':
+        // Validate the new token first
+        const rotateValidateResponse = await fetch('https://api.github.com/user', {
+          headers: {
+            'Authorization': `token ${tokenData.newToken}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+        
+        if (!rotateValidateResponse.ok) {
+          throw new Error('Invalid new GitHub token');
+        }
+        
+        const newUserData = await rotateValidateResponse.json();
+        
+        // Save the new token securely
+        const { error: rotateVaultError } = await supabaseAdmin.rpc('set_secret', {
+          name: tokenData.secret_key_name, // Use the same secret name
+          value: tokenData.newToken
+        });
+
+        if (rotateVaultError) {
+          throw new Error('Failed to save new token securely');
+        }
+        
+        // Update the token configuration
+        const { error: rotateConfigError } = await supabaseAdmin
+          .from('api_configurations')
+          .update({
+            validation_status: 'valid',
+            last_validated: new Date().toISOString(),
+            provider_settings: {
+              ...tokenData.provider_settings,
+              github_username: newUserData.login,
+              rotated_at: new Date().toISOString()
+            }
+          })
+          .eq('id', tokenData.id);
+          
+        if (rotateConfigError) {
+          throw new Error('Failed to update token configuration');
+        }
+        
+        response = { 
+          success: true, 
+          message: 'GitHub token rotated successfully',
+          user: {
+            login: newUserData.login
+          }
+        };
         break;
         
       default:

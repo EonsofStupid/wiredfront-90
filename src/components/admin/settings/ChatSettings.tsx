@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,619 +14,478 @@ import { useSessionManager } from "@/hooks/useSessionManager";
 import { SettingsContainer } from "./layout/SettingsContainer";
 import { toast } from "sonner";
 
-export const ChatSettings = () => {
+export function ChatSettings() {
   const { clearMessages } = useMessageStore();
   const { currentSessionId, refreshSessions } = useSessionManager();
   const [activeTab, setActiveTab] = useState("general");
-
-  const [featuresEnabled, setFeaturesEnabled] = useState({
-    codeAssistant: true,
-    ragSupport: true,
-    planningMode: false,
-    messageHistory: true,
-    voiceInput: true,
-    voiceOutput: false,
-    githubSync: true,
-  });
-
-  const [limitSettings, setLimitSettings] = useState({
-    maxMessagesPerDay: 100,
-    maxTokensPerMessage: 4000,
-    maxHistoryLength: 50,
-  });
-
-  const [modelSettings, setModelSettings] = useState({
-    defaultModel: "gpt-4o",
+  
+  const [settings, setSettings] = useState({
+    // General settings
+    defaultModel: "gpt-4",
+    systemPrompt: "You are a helpful AI assistant.",
     temperature: 0.7,
-    maxContextWindow: 16000,
+    maxTokens: 2048,
+    streamingEnabled: true,
+    
+    // Privacy settings
+    saveHistory: true,
+    anonymizeData: false,
+    dataRetentionDays: 30,
+    allowAnalytics: true,
+    
+    // UI settings
+    darkMode: true,
+    fontSize: "medium",
+    messageAlignment: "left",
+    showTimestamps: true,
+    
+    // Advanced settings
+    debugMode: false,
+    experimentalFeatures: false,
+    apiTimeout: 60,
+    retryAttempts: 3,
+    
+    // Notification settings
+    soundEnabled: true,
+    desktopNotifications: false,
+    mentionAlerts: true,
+    emailDigest: false
   });
-
-  const toggleFeature = (feature: keyof typeof featuresEnabled) => {
-    setFeaturesEnabled(prev => ({
+  
+  const handleSettingChange = (section: string, setting: string, value: any) => {
+    setSettings(prev => ({
       ...prev,
-      [feature]: !prev[feature]
+      [setting]: value
     }));
   };
-
-  const handleTerminateSessions = async () => {
-    try {
+  
+  const handleSave = () => {
+    // Save settings logic would go here
+    toast.success("Chat settings saved successfully");
+  };
+  
+  const handleClearHistory = () => {
+    if (window.confirm("Are you sure you want to clear all chat history? This cannot be undone.")) {
       clearMessages();
-      await refreshSessions();
-      toast.success("Successfully terminated all active sessions");
-    } catch (error) {
-      console.error('Error terminating sessions:', error);
-      toast.error("Failed to terminate sessions");
+      refreshSessions();
+      toast.success("Chat history cleared successfully");
     }
   };
 
   return (
     <SettingsContainer
       title="Chat System Settings"
-      description="Configure settings for the AI chat system"
+      description="Configure the behavior and features of the chat system."
     >
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="admin-tabs-list">
-          <TabsTrigger value="general" className="admin-tab">
-            <Settings className="h-4 w-4 mr-2" />
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-2 md:grid-cols-5 gap-1">
+          <TabsTrigger value="general" className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" />
             General
           </TabsTrigger>
-          <TabsTrigger value="features" className="admin-tab">
-            <Zap className="h-4 w-4 mr-2" />
-            Features
+          <TabsTrigger value="privacy" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Privacy
           </TabsTrigger>
-          <TabsTrigger value="models" className="admin-tab">
-            <Brain className="h-4 w-4 mr-2" />
-            Models
+          <TabsTrigger value="ui" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            UI
           </TabsTrigger>
-          <TabsTrigger value="sessions" className="admin-tab">
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Sessions
+          <TabsTrigger value="advanced" className="flex items-center gap-2">
+            <Zap className="h-4 w-4" />
+            Advanced
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="admin-tab">
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Analytics
+          <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            Notifications
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="general" className="space-y-4">
+        <TabsContent value="general" className="space-y-4 pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Global Chat Settings</CardTitle>
-              <CardDescription>Configure system-wide chat settings</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Default Chat Visibility</Label>
-                    <p className="text-sm text-muted-foreground">Control whether chat is visible by default</p>
-                  </div>
-                  <Select defaultValue="visible">
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select visibility" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="visible">Visible</SelectItem>
-                      <SelectItem value="collapsed">Collapsed</SelectItem>
-                      <SelectItem value="hidden">Hidden</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Rate Limiting</Label>
-                    <p className="text-sm text-muted-foreground">Limit messages per user per day</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Input 
-                      type="number" 
-                      className="w-20" 
-                      value={limitSettings.maxMessagesPerDay}
-                      onChange={(e) => setLimitSettings({
-                        ...limitSettings,
-                        maxMessagesPerDay: parseInt(e.target.value)
-                      })}
-                    />
-                    <span className="text-sm text-muted-foreground">msgs/day</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Position on Screen</Label>
-                    <p className="text-sm text-muted-foreground">Default chat window position</p>
-                  </div>
-                  <Select defaultValue="bottom-right">
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select position" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="bottom-right">Bottom Right</SelectItem>
-                      <SelectItem value="bottom-left">Bottom Left</SelectItem>
-                      <SelectItem value="center">Center</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>User Interface Settings</CardTitle>
-              <CardDescription>Control the appearance and behavior of the chat UI</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Dark Theme</Label>
-                  <p className="text-sm text-muted-foreground">Use dark theme for chat interface</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Animations</Label>
-                  <p className="text-sm text-muted-foreground">Enable UI animations</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Draggable Window</Label>
-                  <p className="text-sm text-muted-foreground">Allow users to move chat window</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Show Timestamps</Label>
-                  <p className="text-sm text-muted-foreground">Display time for each message</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="features" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Feature Toggles</CardTitle>
-              <CardDescription>Enable or disable specific chat features</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="toggle-code-assistant">Code Assistant</Label>
-                  <p className="text-sm text-muted-foreground">AI-assisted code generation and editing</p>
-                </div>
-                <Switch 
-                  id="toggle-code-assistant" 
-                  checked={featuresEnabled.codeAssistant}
-                  onCheckedChange={() => toggleFeature('codeAssistant')}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="toggle-rag">RAG Support</Label>
-                  <p className="text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      Retrieval Augmented Generation
-                      <Badge variant="outline" className="text-xs h-5">Premium</Badge>
-                    </span>
-                  </p>
-                </div>
-                <Switch 
-                  id="toggle-rag" 
-                  checked={featuresEnabled.ragSupport}
-                  onCheckedChange={() => toggleFeature('ragSupport')}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="toggle-planning-mode">Planning Mode</Label>
-                  <p className="text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      Step-by-step reasoning for complex tasks
-                      <Badge variant="outline" className="text-xs h-5">Beta</Badge>
-                    </span>
-                  </p>
-                </div>
-                <Switch 
-                  id="toggle-planning-mode" 
-                  checked={featuresEnabled.planningMode}
-                  onCheckedChange={() => toggleFeature('planningMode')}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="toggle-history">Message History</Label>
-                  <p className="text-sm text-muted-foreground">Store and display conversation history</p>
-                </div>
-                <Switch 
-                  id="toggle-history" 
-                  checked={featuresEnabled.messageHistory}
-                  onCheckedChange={() => toggleFeature('messageHistory')}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="toggle-voice-input">Voice Input</Label>
-                  <p className="text-sm text-muted-foreground">Allow voice input for messages</p>
-                </div>
-                <Switch 
-                  id="toggle-voice-input" 
-                  checked={featuresEnabled.voiceInput}
-                  onCheckedChange={() => toggleFeature('voiceInput')}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="toggle-voice-output">Voice Output</Label>
-                  <p className="text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      Text-to-speech for AI responses
-                      <Badge variant="outline" className="text-xs h-5">Beta</Badge>
-                    </span>
-                  </p>
-                </div>
-                <Switch 
-                  id="toggle-voice-output" 
-                  checked={featuresEnabled.voiceOutput}
-                  onCheckedChange={() => toggleFeature('voiceOutput')}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="toggle-github-sync">GitHub Sync</Label>
-                  <p className="text-sm text-muted-foreground">Integrate with GitHub repositories</p>
-                </div>
-                <Switch 
-                  id="toggle-github-sync" 
-                  checked={featuresEnabled.githubSync}
-                  onCheckedChange={() => toggleFeature('githubSync')}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Feature Settings</CardTitle>
-              <CardDescription>Configure detailed settings for enabled features</CardDescription>
+              <CardTitle>Model Settings</CardTitle>
+              <CardDescription>Configure the AI model behavior</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Default RAG Vector Store</Label>
-                <Select defaultValue="pinecone">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select vector store" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="supabase">Supabase Vector Store</SelectItem>
-                    <SelectItem value="pinecone">Pinecone</SelectItem>
-                    <SelectItem value="qdrant">Qdrant</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Used for storing and retrieving embeddings in RAG features
-                </p>
-              </div>
-
-              <div className="space-y-2 pt-2">
-                <Label>Planning Mode Verbosity</Label>
-                <Select defaultValue="auto">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select verbosity" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="minimal">Minimal</SelectItem>
-                    <SelectItem value="moderate">Moderate</SelectItem>
-                    <SelectItem value="detailed">Detailed</SelectItem>
-                    <SelectItem value="auto">Auto (content-aware)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Controls how detailed the planning steps are
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="models" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>AI Model Configuration</CardTitle>
-              <CardDescription>Configure the AI models and their parameters</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label>Default Chat Model</Label>
+                <Label htmlFor="defaultModel">Default Model</Label>
                 <Select 
-                  value={modelSettings.defaultModel}
-                  onValueChange={(value) => setModelSettings({
-                    ...modelSettings,
-                    defaultModel: value
-                  })}
+                  value={settings.defaultModel} 
+                  onValueChange={(value) => handleSettingChange('general', 'defaultModel', value)}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select model" />
+                  <SelectTrigger id="defaultModel">
+                    <SelectValue placeholder="Select a model" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                    <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
-                    <SelectItem value="claude-3-opus">Claude 3 Opus</SelectItem>
-                    <SelectItem value="claude-3-sonnet">Claude 3 Sonnet</SelectItem>
+                    <SelectItem value="gpt-4">GPT-4</SelectItem>
+                    <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
+                    <SelectItem value="claude-3">Claude 3</SelectItem>
                     <SelectItem value="gemini-pro">Gemini Pro</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="systemPrompt">System Prompt</Label>
+                <Input
+                  id="systemPrompt"
+                  value={settings.systemPrompt}
+                  onChange={(e) => handleSettingChange('general', 'systemPrompt', e.target.value)}
+                />
                 <p className="text-xs text-muted-foreground">
-                  The default model used for chat interactions
+                  This prompt sets the behavior of the AI assistant
                 </p>
               </div>
-
+              
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <Label>Temperature</Label>
-                  <span className="text-sm">{modelSettings.temperature.toFixed(1)}</span>
+                  <Label htmlFor="temperature">Temperature: {settings.temperature}</Label>
                 </div>
                 <Slider
-                  value={[modelSettings.temperature]}
+                  id="temperature"
                   min={0}
                   max={2}
                   step={0.1}
-                  onValueChange={(value) => setModelSettings({
-                    ...modelSettings,
-                    temperature: value[0]
-                  })}
+                  value={[settings.temperature]}
+                  onValueChange={([value]) => handleSettingChange('general', 'temperature', value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Controls randomness: lower values are more deterministic, higher values more creative
+                  Lower values make responses more deterministic, higher values more creative
                 </p>
               </div>
-
+              
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <Label>Max Tokens Per Message</Label>
-                  <Input 
-                    type="number" 
-                    className="w-20" 
-                    value={limitSettings.maxTokensPerMessage}
-                    onChange={(e) => setLimitSettings({
-                      ...limitSettings,
-                      maxTokensPerMessage: parseInt(e.target.value)
-                    })}
-                  />
+                  <Label htmlFor="maxTokens">Max Tokens: {settings.maxTokens}</Label>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Maximum tokens allowed in a single response
-                </p>
+                <Slider
+                  id="maxTokens"
+                  min={256}
+                  max={4096}
+                  step={256}
+                  value={[settings.maxTokens]}
+                  onValueChange={([value]) => handleSettingChange('general', 'maxTokens', value)}
+                />
               </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="streamingEnabled">Streaming Responses</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Show responses as they are generated
+                  </p>
+                </div>
+                <Switch
+                  id="streamingEnabled"
+                  checked={settings.streamingEnabled}
+                  onCheckedChange={(checked) => handleSettingChange('general', 'streamingEnabled', checked)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
+        <TabsContent value="privacy" className="space-y-4 pt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Privacy Settings</CardTitle>
+              <CardDescription>Manage your data and privacy preferences</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="saveHistory">Save Chat History</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Store your conversations for future reference
+                  </p>
+                </div>
+                <Switch
+                  id="saveHistory"
+                  checked={settings.saveHistory}
+                  onCheckedChange={(checked) => handleSettingChange('privacy', 'saveHistory', checked)}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="anonymizeData">Anonymize Data</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Remove personal identifiers from stored conversations
+                  </p>
+                </div>
+                <Switch
+                  id="anonymizeData"
+                  checked={settings.anonymizeData}
+                  onCheckedChange={(checked) => handleSettingChange('privacy', 'anonymizeData', checked)}
+                />
+              </div>
+              
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <Label>Max Context Window</Label>
-                  <Select 
-                    value={modelSettings.maxContextWindow.toString()}
-                    onValueChange={(value) => setModelSettings({
-                      ...modelSettings,
-                      maxContextWindow: parseInt(value)
-                    })}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select window size" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="8000">8K tokens</SelectItem>
-                      <SelectItem value="16000">16K tokens</SelectItem>
-                      <SelectItem value="32000">32K tokens</SelectItem>
-                      <SelectItem value="128000">128K tokens</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="dataRetentionDays">Data Retention (days): {settings.dataRetentionDays}</Label>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Maximum tokens in the conversation history
+                <Slider
+                  id="dataRetentionDays"
+                  min={7}
+                  max={365}
+                  step={1}
+                  value={[settings.dataRetentionDays]}
+                  onValueChange={([value]) => handleSettingChange('privacy', 'dataRetentionDays', value)}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="allowAnalytics">Allow Analytics</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Help us improve by sharing anonymous usage data
+                  </p>
+                </div>
+                <Switch
+                  id="allowAnalytics"
+                  checked={settings.allowAnalytics}
+                  onCheckedChange={(checked) => handleSettingChange('privacy', 'allowAnalytics', checked)}
+                />
+              </div>
+              
+              <div className="pt-4">
+                <Button 
+                  variant="destructive" 
+                  onClick={handleClearHistory}
+                  className="w-full"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Clear All Chat History
+                </Button>
+                <p className="text-xs text-muted-foreground mt-2 text-center">
+                  This action cannot be undone
                 </p>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
+        <TabsContent value="ui" className="space-y-4 pt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>User Interface Settings</CardTitle>
+              <CardDescription>Customize the chat appearance</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="darkMode">Dark Mode</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Use dark theme for the chat interface
+                  </p>
+                </div>
+                <Switch
+                  id="darkMode"
+                  checked={settings.darkMode}
+                  onCheckedChange={(checked) => handleSettingChange('ui', 'darkMode', checked)}
+                />
+              </div>
+              
               <div className="space-y-2">
-                <Label>Model Fallback Order</Label>
-                <div className="border rounded-md p-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between p-2 bg-muted rounded-md">
-                      <span className="text-sm font-medium">1. GPT-4o</span>
-                      <span className="text-xs text-muted-foreground">Primary</span>
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
-                      <span className="text-sm font-medium">2. Claude 3 Opus</span>
-                      <span className="text-xs text-muted-foreground">Fallback</span>
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-muted/30 rounded-md">
-                      <span className="text-sm font-medium">3. GPT-4o Mini</span>
-                      <span className="text-xs text-muted-foreground">Emergency</span>
-                    </div>
-                  </div>
+                <Label htmlFor="fontSize">Font Size</Label>
+                <Select 
+                  value={settings.fontSize} 
+                  onValueChange={(value) => handleSettingChange('ui', 'fontSize', value)}
+                >
+                  <SelectTrigger id="fontSize">
+                    <SelectValue placeholder="Select font size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="small">Small</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="large">Large</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="messageAlignment">Message Alignment</Label>
+                <Select 
+                  value={settings.messageAlignment} 
+                  onValueChange={(value) => handleSettingChange('ui', 'messageAlignment', value)}
+                >
+                  <SelectTrigger id="messageAlignment">
+                    <SelectValue placeholder="Select alignment" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="left">Left</SelectItem>
+                    <SelectItem value="right">Right</SelectItem>
+                    <SelectItem value="alternate">Alternate</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="showTimestamps">Show Timestamps</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Display time for each message
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Order in which models are used if primary is unavailable
-                </p>
+                <Switch
+                  id="showTimestamps"
+                  checked={settings.showTimestamps}
+                  onCheckedChange={(checked) => handleSettingChange('ui', 'showTimestamps', checked)}
+                />
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="sessions" className="space-y-4">
+        <TabsContent value="advanced" className="space-y-4 pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Session Management</CardTitle>
-              <CardDescription>Manage active and inactive chat sessions</CardDescription>
+              <CardTitle>Advanced Settings</CardTitle>
+              <CardDescription>Configure technical aspects of the chat system</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Session Timeout</Label>
-                    <p className="text-sm text-muted-foreground">How long until inactive sessions are closed</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Input 
-                      type="number" 
-                      className="w-20" 
-                      defaultValue="30"
-                    />
-                    <span className="text-sm text-muted-foreground">minutes</span>
-                  </div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="debugMode">Debug Mode</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Show technical information for troubleshooting
+                  </p>
                 </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Max History Length</Label>
-                    <p className="text-sm text-muted-foreground">Maximum number of messages to keep in history</p>
-                  </div>
-                  <Input 
-                    type="number" 
-                    className="w-20" 
-                    value={limitSettings.maxHistoryLength}
-                    onChange={(e) => setLimitSettings({
-                      ...limitSettings,
-                      maxHistoryLength: parseInt(e.target.value)
-                    })}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Auto-Clean Sessions</Label>
-                    <p className="text-sm text-muted-foreground">Automatically clean up old sessions</p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
+                <Switch
+                  id="debugMode"
+                  checked={settings.debugMode}
+                  onCheckedChange={(checked) => handleSettingChange('advanced', 'debugMode', checked)}
+                />
               </div>
-
-              <div className="pt-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-medium flex items-center gap-1">
-                    <AlertTriangle className="h-4 w-4 text-amber-500" />
-                    Emergency Controls
-                  </h4>
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="experimentalFeatures">
+                    Experimental Features
+                    <Badge className="ml-2 bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30 border-yellow-500/30">
+                      <AlertTriangle className="h-3 w-3 mr-1" />
+                      Beta
+                    </Badge>
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Enable features still in development
+                  </p>
                 </div>
-
-                <div className="rounded-md border border-destructive/20 bg-destructive/10 p-4">
-                  <div className="flex flex-col gap-3">
-                    <p className="text-sm text-destructive-foreground">
-                      These actions will forcefully terminate all chat sessions.
-                      Use only when necessary to reset the system.
-                    </p>
-                    <Button 
-                      variant="destructive" 
-                      onClick={handleTerminateSessions}
-                      className="w-full sm:w-auto"
-                    >
-                      <X className="h-4 w-4 mr-2" />
-                      Terminate All Sessions
-                    </Button>
-                  </div>
+                <Switch
+                  id="experimentalFeatures"
+                  checked={settings.experimentalFeatures}
+                  onCheckedChange={(checked) => handleSettingChange('advanced', 'experimentalFeatures', checked)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Label htmlFor="apiTimeout">API Timeout (seconds): {settings.apiTimeout}</Label>
                 </div>
+                <Slider
+                  id="apiTimeout"
+                  min={10}
+                  max={300}
+                  step={5}
+                  value={[settings.apiTimeout]}
+                  onValueChange={([value]) => handleSettingChange('advanced', 'apiTimeout', value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Label htmlFor="retryAttempts">Retry Attempts: {settings.retryAttempts}</Label>
+                </div>
+                <Slider
+                  id="retryAttempts"
+                  min={0}
+                  max={5}
+                  step={1}
+                  value={[settings.retryAttempts]}
+                  onValueChange={([value]) => handleSettingChange('advanced', 'retryAttempts', value)}
+                />
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="analytics" className="space-y-4">
+        <TabsContent value="notifications" className="space-y-4 pt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Usage Analytics</CardTitle>
-              <CardDescription>Track and monitor chat system usage</CardDescription>
+              <CardTitle>Notification Settings</CardTitle>
+              <CardDescription>Configure how you receive alerts and notifications</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Track Usage</Label>
-                    <p className="text-sm text-muted-foreground">Monitor API usage and costs</p>
-                  </div>
-                  <Switch defaultChecked />
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="soundEnabled">Sound Effects</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Play sounds for new messages and events
+                  </p>
                 </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Monthly Budget Alert</Label>
-                    <p className="text-sm text-muted-foreground">Send alert when budget threshold is reached</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">$</span>
-                    <Input 
-                      type="number" 
-                      className="w-20" 
-                      defaultValue="50"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Usage Reports</Label>
-                    <p className="text-sm text-muted-foreground">Send periodic usage reports</p>
-                  </div>
-                  <Select defaultValue="weekly">
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select frequency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="daily">Daily</SelectItem>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                      <SelectItem value="never">Never</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Switch
+                  id="soundEnabled"
+                  checked={settings.soundEnabled}
+                  onCheckedChange={(checked) => handleSettingChange('notifications', 'soundEnabled', checked)}
+                />
               </div>
-
-              <div className="border rounded-lg p-4 mt-4">
-                <h4 className="text-sm font-medium mb-2">Current Month Usage</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Total Requests:</span>
-                    <span className="text-sm font-medium">1,245</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Total Tokens:</span>
-                    <span className="text-sm font-medium">543,210</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Estimated Cost:</span>
-                    <span className="text-sm font-medium">$12.34</span>
-                  </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="desktopNotifications">Desktop Notifications</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Show browser notifications when you receive messages
+                  </p>
                 </div>
+                <Switch
+                  id="desktopNotifications"
+                  checked={settings.desktopNotifications}
+                  onCheckedChange={(checked) => handleSettingChange('notifications', 'desktopNotifications', checked)}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="mentionAlerts">Mention Alerts</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Get notified when you are mentioned in a message
+                  </p>
+                </div>
+                <Switch
+                  id="mentionAlerts"
+                  checked={settings.mentionAlerts}
+                  onCheckedChange={(checked) => handleSettingChange('notifications', 'mentionAlerts', checked)}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="emailDigest">Email Digest</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Receive a summary of activity by email
+                  </p>
+                </div>
+                <Switch
+                  id="emailDigest"
+                  checked={settings.emailDigest}
+                  onCheckedChange={(checked) => handleSettingChange('notifications', 'emailDigest', checked)}
+                />
               </div>
             </CardContent>
           </Card>
         </TabsContent>
+        
+        <div className="flex justify-end mt-6">
+          <Button 
+            onClick={handleSave}
+            className="admin-primary-button group"
+          >
+            <Save className="h-4 w-4 mr-2 transition-transform group-hover:scale-110" />
+            Save Settings
+          </Button>
+        </div>
       </Tabs>
-
-      <div className="flex justify-end mt-6">
-        <Button 
-          onClick={() => {
-            toast.success("Chat settings saved successfully");
-          }}
-          className="admin-primary-button group"
-        >
-          <Save className="h-4 w-4 mr-2 transition-transform group-hover:scale-110" />
-          Save Chat Settings
-        </Button>
-      </div>
     </SettingsContainer>
   );
-};
+}

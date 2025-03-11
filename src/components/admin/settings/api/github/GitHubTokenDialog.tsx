@@ -4,116 +4,201 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { HelpCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Github, RefreshCw, AlertCircle, ShieldCheck, User, Key } from "lucide-react";
 
 interface GitHubTokenDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSave: (tokenData: { name: string; token: string }) => void;
+  isOpen: boolean;
+  onClose: () => void;
+  onTokenAdded: () => void;
 }
 
-export function GitHubTokenDialog({ open, onOpenChange, onSave }: GitHubTokenDialogProps) {
-  const [name, setName] = useState('');
-  const [token, setToken] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
+export function GitHubTokenDialog({ isOpen, onClose, onTokenAdded }: GitHubTokenDialogProps) {
+  const [tokenName, setTokenName] = useState("");
+  const [token, setToken] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [validationState, setValidationState] = useState<"idle" | "validating" | "valid" | "invalid">("idle");
+  const [validationResult, setValidationResult] = useState<any>(null);
+  const [error, setError] = useState("");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name || !token) {
+    if (!tokenName.trim()) {
+      setError("Please enter a token name");
       return;
     }
     
-    setIsSubmitting(true);
+    if (!token.trim()) {
+      setError("Please enter a valid GitHub token");
+      return;
+    }
     
     try {
-      await onSave({
-        name,
-        token,
+      setIsLoading(true);
+      setError("");
+      
+      // Validate token
+      setValidationState("validating");
+      const validateResult = await supabase.functions.invoke('github-token-management', {
+        body: { 
+          action: 'validate', 
+          tokenData: { token }
+        },
       });
       
-      // Reset form
-      setName('');
-      setToken('');
+      if (validateResult.error) {
+        setValidationState("invalid");
+        setError(validateResult.error.message || "Invalid GitHub token");
+        return;
+      }
+      
+      setValidationState("valid");
+      setValidationResult(validateResult.data);
+      
+      // Save token
+      const saveResult = await supabase.functions.invoke('github-token-management', {
+        body: { 
+          action: 'save', 
+          tokenData: { 
+            name: tokenName,
+            token,
+            github_username: validateResult.data.user.login,
+            scopes: ["repo", "read:user"],
+            rate_limit: validateResult.data.rate_limit
+          }
+        },
+      });
+      
+      if (saveResult.error) {
+        throw new Error(saveResult.error.message || "Failed to save GitHub token");
+      }
+      
+      toast.success("GitHub token added successfully");
+      setTokenName("");
+      setToken("");
+      setValidationState("idle");
+      setValidationResult(null);
+      onTokenAdded();
+    } catch (error: any) {
+      console.error("Error adding GitHub token:", error);
+      toast.error(error.message || "Failed to add GitHub token");
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
-  
+
+  const handleClose = () => {
+    setTokenName("");
+    setToken("");
+    setValidationState("idle");
+    setValidationResult(null);
+    setError("");
+    onClose();
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add GitHub Token</DialogTitle>
+          <DialogTitle className="flex items-center">
+            <Github className="h-5 w-5 mr-2 text-[#8B5CF6]" />
+            Add GitHub Token
+          </DialogTitle>
           <DialogDescription>
-            Enter a GitHub personal access token to enable repository access and integration features.
-            This token will be stored securely and can only be managed by Super Admins.
+            Enter a Personal Access Token (PAT) from GitHub to enable repository operations
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+        <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="token-name">Token Name</Label>
-            <Input
-              id="token-name"
-              placeholder="e.g., Main GitHub Account"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={isSubmitting}
-              required
-            />
+            <div className="relative">
+              <Input
+                id="token-name"
+                placeholder="e.g., GitHub Work Account"
+                value={tokenName}
+                onChange={(e) => setTokenName(e.target.value)}
+                className="pr-10"
+                disabled={isLoading}
+              />
+              <User className="h-4 w-4 absolute right-3 top-3 text-muted-foreground" />
+            </div>
             <p className="text-xs text-muted-foreground">
               A memorable name to identify this token
             </p>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="token-value">Personal Access Token</Label>
-            <Input
-              id="token-value"
-              type="password"
-              placeholder="ghp_***********************************"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              disabled={isSubmitting}
-              required
-            />
-            <p className="text-xs text-muted-foreground flex items-center">
-              <HelpCircle className="h-3 w-3 mr-1 inline" />
-              <span>
-                Create a new token with <strong>repo</strong> scope in your{" "}
-                <a 
-                  href="https://github.com/settings/tokens" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  GitHub settings
-                </a>
-              </span>
+            <Label htmlFor="github-token">GitHub Personal Access Token</Label>
+            <div className="relative">
+              <Input
+                id="github-token"
+                type="password"
+                placeholder="ghp_..."
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                className="pr-10"
+                disabled={isLoading || validationState === "valid"}
+              />
+              <Key className="h-4 w-4 absolute right-3 top-3 text-muted-foreground" />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Create a token with 'repo' scope from{" "}
+              <a
+                href="https://github.com/settings/tokens"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#8B5CF6] hover:underline"
+              >
+                GitHub Settings
+              </a>
             </p>
           </div>
           
+          {error && (
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start">
+              <AlertCircle className="h-5 w-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-red-100">{error}</p>
+            </div>
+          )}
+          
+          {validationState === "valid" && validationResult && (
+            <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg flex items-start">
+              <ShieldCheck className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+              <div className="text-sm">
+                <p className="font-medium text-green-100">Token is valid!</p>
+                <p>Connected to GitHub account: <span className="font-medium">@{validationResult.user.login}</span></p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Rate limit: {validationResult.rate_limit.remaining}/{validationResult.rate_limit.limit} requests remaining
+                </p>
+              </div>
+            </div>
+          )}
+        
           <DialogFooter className="pt-4">
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
+              onClick={handleClose}
+              disabled={isLoading}
             >
               Cancel
             </Button>
-            <Button
+            <Button 
               type="submit"
-              disabled={isSubmitting || !name || !token}
+              disabled={isLoading || !token || !tokenName}
               className="admin-primary-button"
             >
-              {isSubmitting ? (
-                <span className="flex items-center gap-2">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  Saving...
-                </span>
-              ) : 'Save Token'}
+              {isLoading ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  {validationState === "validating" ? "Validating..." : "Saving..."}
+                </>
+              ) : (
+                "Add Token"
+              )}
             </Button>
           </DialogFooter>
         </form>

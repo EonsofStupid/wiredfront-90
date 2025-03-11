@@ -22,6 +22,7 @@ export type Database = {
           endpoint_url: string | null
           environment: string | null
           error_count: number | null
+          feature_bindings: Json | null
           grpc_endpoint: string | null
           id: string
           index_name: string | null
@@ -36,11 +37,14 @@ export type Database = {
           priority: number | null
           provider_settings: Json | null
           read_only_key: string | null
+          role_assignments: Json | null
           rotation_priority: number | null
+          rotation_schedule: Json | null
           secret_key_name: string | null
           training_enabled: boolean | null
           updated_at: string | null
           usage_count: number | null
+          usage_metrics: Json | null
           user_id: string | null
           validation_status:
             | Database["public"]["Enums"]["extended_validation_status"]
@@ -58,6 +62,7 @@ export type Database = {
           endpoint_url?: string | null
           environment?: string | null
           error_count?: number | null
+          feature_bindings?: Json | null
           grpc_endpoint?: string | null
           id?: string
           index_name?: string | null
@@ -72,11 +77,14 @@ export type Database = {
           priority?: number | null
           provider_settings?: Json | null
           read_only_key?: string | null
+          role_assignments?: Json | null
           rotation_priority?: number | null
+          rotation_schedule?: Json | null
           secret_key_name?: string | null
           training_enabled?: boolean | null
           updated_at?: string | null
           usage_count?: number | null
+          usage_metrics?: Json | null
           user_id?: string | null
           validation_status?:
             | Database["public"]["Enums"]["extended_validation_status"]
@@ -94,6 +102,7 @@ export type Database = {
           endpoint_url?: string | null
           environment?: string | null
           error_count?: number | null
+          feature_bindings?: Json | null
           grpc_endpoint?: string | null
           id?: string
           index_name?: string | null
@@ -108,11 +117,14 @@ export type Database = {
           priority?: number | null
           provider_settings?: Json | null
           read_only_key?: string | null
+          role_assignments?: Json | null
           rotation_priority?: number | null
+          rotation_schedule?: Json | null
           secret_key_name?: string | null
           training_enabled?: boolean | null
           updated_at?: string | null
           usage_count?: number | null
+          usage_metrics?: Json | null
           user_id?: string | null
           validation_status?:
             | Database["public"]["Enums"]["extended_validation_status"]
@@ -237,6 +249,8 @@ export type Database = {
             | Database["public"]["Enums"]["message_behavior_type"]
             | null
           offline_mode_enabled: boolean | null
+          planning_mode: Database["public"]["Enums"]["plan_mode_type"] | null
+          planning_preferences: Json | null
           rate_limit_per_minute: number | null
           temperature: number | null
           ui_customizations: Json | null
@@ -255,6 +269,8 @@ export type Database = {
             | Database["public"]["Enums"]["message_behavior_type"]
             | null
           offline_mode_enabled?: boolean | null
+          planning_mode?: Database["public"]["Enums"]["plan_mode_type"] | null
+          planning_preferences?: Json | null
           rate_limit_per_minute?: number | null
           temperature?: number | null
           ui_customizations?: Json | null
@@ -273,6 +289,8 @@ export type Database = {
             | Database["public"]["Enums"]["message_behavior_type"]
             | null
           offline_mode_enabled?: boolean | null
+          planning_mode?: Database["public"]["Enums"]["plan_mode_type"] | null
+          planning_preferences?: Json | null
           rate_limit_per_minute?: number | null
           temperature?: number | null
           ui_customizations?: Json | null
@@ -612,6 +630,47 @@ export type Database = {
           },
         ]
       }
+      rag_metrics: {
+        Row: {
+          average_latency: number | null
+          created_at: string | null
+          id: string
+          query_count: number | null
+          token_usage: number | null
+          updated_at: string | null
+          user_id: string | null
+          vector_store_id: string | null
+        }
+        Insert: {
+          average_latency?: number | null
+          created_at?: string | null
+          id?: string
+          query_count?: number | null
+          token_usage?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          vector_store_id?: string | null
+        }
+        Update: {
+          average_latency?: number | null
+          created_at?: string | null
+          id?: string
+          query_count?: number | null
+          token_usage?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          vector_store_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rag_metrics_vector_store_id_fkey"
+            columns: ["vector_store_id"]
+            isOneToOne: false
+            referencedRelation: "vector_store_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       roles: {
         Row: {
           created_at: string | null
@@ -749,6 +808,7 @@ export type Database = {
       metric_status: "success" | "warning" | "error"
       metric_timeframe: "daily" | "weekly" | "monthly" | "yearly"
       metric_trend: "up" | "down" | "neutral"
+      plan_mode_type: "basic" | "detailed" | "architectural"
       provider_category: "ai" | "vector" | "voice" | "storage" | "development"
       token_validation_status:
         | "valid"
