@@ -1,150 +1,239 @@
 
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Clock, CheckCircle, AlertCircle, RefreshCw, BarChart3, Zap } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { Switch } from "@/components/ui/switch";
+import { CheckCircle, AlertCircle, RefreshCw, Trash2, Star, Clock, ArrowUpRight } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { APIConfiguration } from "@/hooks/admin/settings/api/useAPIKeyManagement";
 
 interface APIKeyCardProps {
-  apiKey: {
-    id: string;
-    api_type: string;
-    memorable_name: string;
-    created_at: string;
-    last_used?: string;
-    validation_status: string;
-    usage_metrics?: {
-      total_calls?: number;
-      remaining_quota?: number;
-      last_reset?: string;
-    };
-  };
-  onDelete: () => void;
+  config: APIConfiguration;
+  onValidate: (configId: string) => Promise<boolean>;
+  onDelete: (configId: string) => Promise<boolean>;
+  onRefresh: () => void;
 }
 
-export function APIKeyCard({ apiKey, onDelete }: APIKeyCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'valid':
-        return 'bg-green-500/10 text-green-500 border-green-500/30';
-      case 'invalid':
-        return 'bg-red-500/10 text-red-500 border-red-500/30';
-      case 'expired':
-        return 'bg-orange-500/10 text-orange-500 border-orange-500/30';
-      case 'pending':
-      default:
-        return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30';
+export function APIKeyCard({ config, onValidate, onDelete, onRefresh }: APIKeyCardProps) {
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  const handleToggleEnabled = async () => {
+    setUpdatingStatus(true);
+    try {
+      const { error } = await supabase
+        .from('api_configurations')
+        .update({ is_enabled: !config.is_enabled })
+        .eq('id', config.id);
+      
+      if (error) throw error;
+      
+      toast.success(`API key ${!config.is_enabled ? 'enabled' : 'disabled'}`);
+      onRefresh();
+    } catch (error) {
+      console.error('Error updating API configuration:', error);
+      toast.error("Failed to update API configuration");
+    } finally {
+      setUpdatingStatus(false);
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'valid':
-        return <CheckCircle className="h-4 w-4" />;
-      case 'invalid':
-        return <AlertCircle className="h-4 w-4" />;
-      case 'expired':
-        return <Clock className="h-4 w-4" />;
-      case 'pending':
-      default:
-        return <RefreshCw className="h-4 w-4" />;
+  const handleSetDefault = async () => {
+    if (config.is_default) return; // Already default
+    
+    setUpdatingStatus(true);
+    try {
+      // First, unset any existing defaults for this API type
+      const { error: updateError1 } = await supabase
+        .from('api_configurations')
+        .update({ is_default: false })
+        .eq('api_type', config.api_type)
+        .eq('is_default', true);
+      
+      if (updateError1) throw updateError1;
+      
+      // Then set this one as default
+      const { error: updateError2 } = await supabase
+        .from('api_configurations')
+        .update({ is_default: true })
+        .eq('id', config.id);
+      
+      if (updateError2) throw updateError2;
+      
+      toast.success(`Set as default ${config.api_type} configuration`);
+      onRefresh();
+    } catch (error) {
+      console.error('Error setting default API configuration:', error);
+      toast.error("Failed to set default configuration");
+    } finally {
+      setUpdatingStatus(false);
     }
   };
 
-  const getApiTypeLabel = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'openai':
-        return 'OpenAI';
-      case 'anthropic':
-        return 'Anthropic';
-      case 'gemini':
-        return 'Google Gemini';
-      case 'pinecone':
-        return 'Pinecone';
-      case 'huggingface':
-        return 'HuggingFace';
-      default:
-        return type;
+  const getValidityBadge = (status: string) => {
+    if (status === 'valid') {
+      return (
+        <Badge className="bg-green-500/20 text-green-500 hover:bg-green-500/30 border-green-500/30">
+          <CheckCircle className="h-3 w-3 mr-1" /> Valid
+        </Badge>
+      );
+    } else if (status === 'invalid') {
+      return (
+        <Badge className="bg-red-500/20 text-red-500 hover:bg-red-500/30 border-red-500/30">
+          <AlertCircle className="h-3 w-3 mr-1" /> Invalid
+        </Badge>
+      );
+    } else {
+      return (
+        <Badge className="bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30 border-yellow-500/30">
+          <RefreshCw className="h-3 w-3 mr-1 animate-spin" /> Pending
+        </Badge>
+      );
     }
   };
 
   return (
-    <Card className="overflow-hidden border transition-all hover:shadow-md">
-      <CardContent className="p-0">
-        <div className="p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-medium line-clamp-1">{apiKey.memorable_name}</h3>
-                <Badge variant="outline" className="text-xs">
-                  {getApiTypeLabel(apiKey.api_type)}
-                </Badge>
+    <Card className={`overflow-hidden transition-all duration-200 ${!config.is_enabled ? 'opacity-70' : ''}`}>
+      <CardHeader className="pb-3">
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle className="flex items-center">
+              {config.api_type === 'openai' && 'OpenAI'}
+              {config.api_type === 'anthropic' && 'Anthropic'}
+              {config.api_type === 'gemini' && 'Google Gemini'}
+              {config.api_type === 'pinecone' && 'Pinecone'}
+              
+              <div className="ml-3">
+                {getValidityBadge(config.validation_status)}
               </div>
               
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span>Created {formatDistanceToNow(new Date(apiKey.created_at), { addSuffix: true })}</span>
-                
-                {apiKey.last_used && (
-                  <>
-                    <span className="px-1">•</span>
-                    <span>Last used {formatDistanceToNow(new Date(apiKey.last_used), { addSuffix: true })}</span>
-                  </>
-                )}
-              </div>
-            </div>
+              {config.is_default && (
+                <Badge className="ml-2 bg-blue-500/20 text-blue-500 hover:bg-blue-500/30 border-blue-500/30">
+                  <Star className="h-3 w-3 mr-1" /> Default
+                </Badge>
+              )}
+            </CardTitle>
+            <CardDescription>
+              {config.memorable_name}
+            </CardDescription>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <Badge className={`${getStatusColor(apiKey.validation_status)} flex items-center gap-1`}>
-              {getStatusIcon(apiKey.validation_status)}
-              <span className="capitalize">{apiKey.validation_status}</span>
-            </Badge>
+          <div className="flex gap-2">
+            <div className="flex items-center mr-2">
+              <Switch
+                id={`enable-${config.id}`}
+                checked={config.is_enabled}
+                onCheckedChange={handleToggleEnabled}
+                disabled={updatingStatus}
+                className="mr-2"
+              />
+              <span className="text-sm">{config.is_enabled ? 'Enabled' : 'Disabled'}</span>
+            </div>
             
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="rounded-full text-red-500 hover:text-red-600 hover:bg-red-100"
-              onClick={onDelete}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onValidate(config.id)}
+              className="h-8"
+              disabled={updatingStatus}
             >
-              <Trash2 className="h-4 w-4" />
-              <span className="sr-only">Delete</span>
+              <RefreshCw className="h-3.5 w-3.5 mr-1" />
+              Validate
+            </Button>
+            
+            {!config.is_default && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSetDefault}
+                className="h-8"
+                disabled={updatingStatus}
+              >
+                <Star className="h-3.5 w-3.5 mr-1" />
+                Set Default
+              </Button>
+            )}
+            
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => onDelete(config.id)}
+              className="h-8"
+              disabled={updatingStatus}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
-        
-        {apiKey.usage_metrics && isExpanded && (
-          <div className="p-4 pt-0">
-            <div className="mt-3 border-t pt-3">
-              <div className="text-sm font-medium mb-2 flex items-center gap-1">
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                Usage Metrics
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <div className="font-medium mb-1">Features</div>
+            <div className="flex flex-wrap gap-1">
+              {config.feature_bindings && config.feature_bindings.length > 0 ? (
+                config.feature_bindings.map((feature, idx) => (
+                  <Badge key={idx} variant="outline" className="capitalize">
+                    {feature.replace('_', ' ')}
+                  </Badge>
+                ))
+              ) : (
+                <span className="text-muted-foreground">No features assigned</span>
+              )}
+            </div>
+          </div>
+          <div>
+            <div className="font-medium mb-1">Settings</div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">RAG:</span>
+                <Badge variant="secondary" className="capitalize">
+                  {config.rag_preference || 'supabase'}
+                </Badge>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-2 bg-muted/30 rounded-md">
-                  <div className="text-xs text-muted-foreground">API Calls</div>
-                  <div className="font-medium">{apiKey.usage_metrics.total_calls || 0}</div>
-                </div>
-                <div className="p-2 bg-muted/30 rounded-md">
-                  <div className="text-xs text-muted-foreground">Remaining Quota</div>
-                  <div className="font-medium">{apiKey.usage_metrics.remaining_quota || 'Unlimited'}</div>
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">Planning:</span>
+                <Badge variant="secondary" className="capitalize">
+                  {config.planning_mode || 'basic'}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {config.usage_metrics && (
+          <div className="mt-4 pt-4 border-t">
+            <div className="font-medium mb-2">Usage Metrics</div>
+            <div className="grid grid-cols-3 gap-3 text-xs">
+              <div className="flex flex-col p-2 bg-muted/30 rounded-md">
+                <span className="text-muted-foreground">Total Calls</span>
+                <span className="font-medium text-sm">{config.usage_metrics.total_calls || 0}</span>
+              </div>
+              <div className="flex flex-col p-2 bg-muted/30 rounded-md">
+                <span className="text-muted-foreground">Monthly Usage</span>
+                <span className="font-medium text-sm">{config.usage_metrics.monthly_usage || 0}</span>
+              </div>
+              <div className="flex flex-col p-2 bg-muted/30 rounded-md">
+                <span className="text-muted-foreground">Remaining</span>
+                <span className="font-medium text-sm">{config.usage_metrics.remaining_quota || 'Unlimited'}</span>
               </div>
             </div>
           </div>
         )}
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full flex items-center justify-center py-1 text-xs text-muted-foreground hover:text-foreground bg-muted/20"
-          onClick={() => setIsExpanded(!isExpanded)}
-        >
-          {isExpanded ? 'Show Less' : 'Show Details'}
-        </Button>
       </CardContent>
+      <CardFooter className="bg-muted/40 border-t">
+        <div className="w-full text-xs text-muted-foreground flex justify-between items-center">
+          <div className="flex items-center">
+            <Clock className="h-3 w-3 mr-1" /> 
+            Last validated: {config.last_validated 
+              ? new Date(config.last_validated).toLocaleString() 
+              : 'Never'}
+          </div>
+          <Button variant="link" size="sm" className="h-auto p-0 text-xs">
+            View Details <ArrowUpRight className="h-3 w-3 ml-0.5" />
+          </Button>
+        </div>
+      </CardFooter>
     </Card>
   );
 }
