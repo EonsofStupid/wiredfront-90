@@ -1,115 +1,58 @@
 
-import React from "react";
-import { Card } from "@/components/ui/card";
+import { useMetrics } from "@/hooks/admin/metrics/useMetrics";
 import { SettingsContainer } from "@/components/admin/settings/layout/SettingsContainer";
-import { Activity, Users, Code, Database, Clock } from "lucide-react";
+import { DynamicKPICard } from "@/components/admin/metrics/DynamicKPICard";
+import { StatusIndicator } from "@/components/admin/metrics/StatusIndicator";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function MetricsOverview() {
-  return (
-    <SettingsContainer title="Admin Metrics" description="Overview of system performance and usage metrics">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        <MetricCard 
-          title="API Usage" 
-          value="2,453" 
-          change="+15%" 
-          icon={<Activity className="h-6 w-6 text-neon-blue" />} 
-          trend="up"
-        />
-        <MetricCard 
-          title="Active Users" 
-          value="342" 
-          change="+8%" 
-          icon={<Users className="h-6 w-6 text-neon-pink" />}
-          trend="up" 
-        />
-        <MetricCard 
-          title="Model Requests" 
-          value="12,876" 
-          change="+32%" 
-          icon={<Code className="h-6 w-6 text-neon-green" />}
-          trend="up" 
-        />
-        <MetricCard 
-          title="Database Usage" 
-          value="45%" 
-          change="-3%" 
-          icon={<Database className="h-6 w-6 text-neon-purple" />}
-          trend="down" 
-        />
-        <MetricCard 
-          title="Response Time" 
-          value="240ms" 
-          change="-12%" 
-          icon={<Clock className="h-6 w-6 text-neon-yellow" />}
-          trend="down" 
-        />
-      </div>
+  const { data: metrics, isLoading } = useMetrics();
 
-      <div className="mt-8">
-        <h3 className="text-lg font-semibold mb-4">System Status</h3>
+  if (isLoading) {
+    return (
+      <SettingsContainer title="Admin Metrics" description="Loading metrics...">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+      </SettingsContainer>
+    );
+  }
+
+  return (
+    <SettingsContainer 
+      title="Admin Metrics" 
+      description="Real-time system metrics and performance indicators"
+    >
+      <div className="space-y-8">
+        {/* Hero Section with KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {metrics?.map((metric) => (
+            <DynamicKPICard
+              key={metric.id}
+              title={metric.label}
+              value={metric.value}
+              unit={metric.unit}
+              trend={metric.trend}
+              change={10}
+              onClick={() => console.log(`Clicked ${metric.label}`)}
+            />
+          ))}
+        </div>
+
+        {/* System Status Section */}
         <Card className="p-6">
-          <div className="space-y-4">
-            <StatusItem label="API Services" status="operational" />
-            <StatusItem label="Database" status="operational" />
-            <StatusItem label="Authentication" status="operational" />
-            <StatusItem label="Storage" status="degraded" />
-            <StatusItem label="AI Models" status="operational" />
+          <h3 className="text-lg font-semibold mb-4">System Status</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <StatusIndicator status="healthy" label="API Services" />
+            <StatusIndicator status="warning" label="Database" />
+            <StatusIndicator status="healthy" label="Authentication" />
+            <StatusIndicator status="critical" label="Storage" />
           </div>
         </Card>
       </div>
     </SettingsContainer>
   );
 }
-
-interface MetricCardProps {
-  title: string;
-  value: string;
-  change: string;
-  icon: React.ReactNode;
-  trend: 'up' | 'down';
-}
-
-const MetricCard = ({ title, value, change, icon, trend }: MetricCardProps) => {
-  return (
-    <Card className="p-6 hover-scale">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold">{title}</h3>
-          <p className="text-3xl font-bold mt-2">{value}</p>
-          <p className={`mt-1 text-sm ${trend === 'up' ? 'text-green-500' : 'text-red-500'}`}>
-            {change} from last month
-          </p>
-        </div>
-        <div className="bg-dark-lighter/40 p-3 rounded-full">
-          {icon}
-        </div>
-      </div>
-    </Card>
-  );
-};
-
-interface StatusItemProps {
-  label: string;
-  status: 'operational' | 'degraded' | 'down';
-}
-
-const StatusItem = ({ label, status }: StatusItemProps) => {
-  const getStatusColor = () => {
-    switch (status) {
-      case 'operational': return 'bg-green-500';
-      case 'degraded': return 'bg-yellow-500';
-      case 'down': return 'bg-red-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
-  return (
-    <div className="flex items-center justify-between">
-      <span className="font-medium">{label}</span>
-      <div className="flex items-center gap-2">
-        <div className={`h-2 w-2 rounded-full ${getStatusColor()}`} />
-        <span className="text-sm capitalize">{status}</span>
-      </div>
-    </div>
-  );
-};

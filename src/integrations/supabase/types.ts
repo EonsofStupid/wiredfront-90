@@ -174,6 +174,57 @@ export type Database = {
         }
         Relationships: []
       }
+      api_usage_stats: {
+        Row: {
+          api_key_id: string | null
+          endpoint: string
+          error_message: string | null
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          method: string
+          request_size_bytes: number | null
+          response_size_bytes: number | null
+          response_time_ms: number
+          status_code: number
+          timestamp: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          api_key_id?: string | null
+          endpoint: string
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          method: string
+          request_size_bytes?: number | null
+          response_size_bytes?: number | null
+          response_time_ms: number
+          status_code: number
+          timestamp?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          api_key_id?: string | null
+          endpoint?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          method?: string
+          request_size_bytes?: number | null
+          response_size_bytes?: number | null
+          response_time_ms?: number
+          status_code?: number
+          timestamp?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -634,6 +685,42 @@ export type Database = {
         }
         Relationships: []
       }
+      metrics_logs: {
+        Row: {
+          category: string
+          id: string
+          metadata: Json | null
+          metric_name: string
+          metric_unit: string | null
+          metric_value: number
+          tags: Json | null
+          timestamp: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          id?: string
+          metadata?: Json | null
+          metric_name: string
+          metric_unit?: string | null
+          metric_value: number
+          tags?: Json | null
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          id?: string
+          metadata?: Json | null
+          metric_name?: string
+          metric_unit?: string | null
+          metric_value?: number
+          tags?: Json | null
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       oauth_connections: {
         Row: {
           access_token: string | null
@@ -709,6 +796,48 @@ export type Database = {
           step_name?: string
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      performance_metrics: {
+        Row: {
+          current_value: number
+          id: string
+          metadata: Json | null
+          metric_type: string
+          service_name: string
+          status: string
+          threshold_critical: number | null
+          threshold_warning: number | null
+          timestamp: string | null
+          trend: string | null
+          unit: string | null
+        }
+        Insert: {
+          current_value: number
+          id?: string
+          metadata?: Json | null
+          metric_type: string
+          service_name: string
+          status: string
+          threshold_critical?: number | null
+          threshold_warning?: number | null
+          timestamp?: string | null
+          trend?: string | null
+          unit?: string | null
+        }
+        Update: {
+          current_value?: number
+          id?: string
+          metadata?: Json | null
+          metric_type?: string
+          service_name?: string
+          status?: string
+          threshold_critical?: number | null
+          threshold_warning?: number | null
+          timestamp?: string | null
+          trend?: string | null
+          unit?: string | null
         }
         Relationships: []
       }
@@ -880,6 +1009,87 @@ export type Database = {
         }
         Relationships: []
       }
+      system_events: {
+        Row: {
+          affected_services: string[] | null
+          event_type: string
+          id: string
+          message: string
+          metadata: Json | null
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          source: string
+          timestamp: string | null
+        }
+        Insert: {
+          affected_services?: string[] | null
+          event_type: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity: string
+          source: string
+          timestamp?: string | null
+        }
+        Update: {
+          affected_services?: string[] | null
+          event_type?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source?: string
+          timestamp?: string | null
+        }
+        Relationships: []
+      }
+      user_analytics: {
+        Row: {
+          device_info: Json | null
+          duration_seconds: number | null
+          event_type: string
+          id: string
+          location_info: Json | null
+          metadata: Json | null
+          page_path: string | null
+          session_id: string | null
+          timestamp: string | null
+          user_id: string | null
+        }
+        Insert: {
+          device_info?: Json | null
+          duration_seconds?: number | null
+          event_type: string
+          id?: string
+          location_info?: Json | null
+          metadata?: Json | null
+          page_path?: string | null
+          session_id?: string | null
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          device_info?: Json | null
+          duration_seconds?: number | null
+          event_type?: string
+          id?: string
+          location_info?: Json | null
+          metadata?: Json | null
+          page_path?: string | null
+          session_id?: string | null
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -973,6 +1183,10 @@ export type Database = {
           metadata?: Json
         }
         Returns: string
+      }
+      populate_sample_metrics_data: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       user_has_permission: {
         Args: {
