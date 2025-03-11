@@ -8,6 +8,7 @@ import { AlertCircle, Github, Key, Shield } from "lucide-react";
 import { useAPIKeyManagement } from "@/hooks/admin/settings/api/useAPIKeyManagement";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
+import { APIType } from "@/types/admin/settings/api";
 
 export function ApiSettings() {
   const [githubToken, setGithubToken] = useState("");
@@ -16,8 +17,8 @@ export function ApiSettings() {
   
   const { createApiKey, configurations } = useAPIKeyManagement();
   
-  // Check if a GitHub token already exists
-  const hasGitHubToken = configurations.some(config => config.api_type === 'github');
+  // Check if a GitHub token already exists, now using the updated type
+  const hasGitHubToken = configurations.some(config => config.api_type === 'github' as APIType);
   
   const handleSaveGitHubToken = async () => {
     if (!githubToken) {
@@ -28,7 +29,7 @@ export function ApiSettings() {
     setIsSubmitting(true);
     try {
       await createApiKey(
-        'github',
+        'github' as APIType,
         tokenName,
         githubToken,
         {

@@ -1,7 +1,11 @@
 
 import { Database } from "@/integrations/supabase/types";
 
-export type APIType = Database["public"]["Enums"]["api_type"];
+// Update the APIType to include 'github'
+export type APIType = 
+  | Database["public"]["Enums"]["api_type"] 
+  | "github"; // Add "github" explicitly as it's not in the DB enum yet
+
 export type ValidationStatusType = Database["public"]["Enums"]["extended_validation_status"];
 
 export interface APIConfigurationItem {

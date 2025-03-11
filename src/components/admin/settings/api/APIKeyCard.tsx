@@ -49,7 +49,7 @@ export function APIKeyCard({ config, onValidate, onDelete, onRefresh }: APIKeyCa
       const { error: updateError1 } = await supabase
         .from('api_configurations')
         .update({ is_default: false })
-        .eq('api_type', config.api_type as APIType)
+        .eq('api_type', config.api_type)
         .eq('is_default', true);
       
       if (updateError1) throw updateError1;
