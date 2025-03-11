@@ -1,6 +1,6 @@
 
 import { cn } from "@/lib/utils";
-import { Bell, Search, PanelLeftClose, PanelLeft, PanelRightClose, PanelRight } from "lucide-react";
+import { Bell, Search, PanelLeftClose, PanelLeft, PanelRightClose, PanelRight, Settings } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -75,6 +75,20 @@ export const TopBar = ({ className, isCompact, onToggleCompact }: TopBarProps) =
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Notifications</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => navigate('/settings')} 
+                  className="animate-hover-button text-neon-pink hover:text-neon-blue"
+                >
+                  <Settings className="w-5 h-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Settings</TooltipContent>
             </Tooltip>
 
             <UserMenu />
