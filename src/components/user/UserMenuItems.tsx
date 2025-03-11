@@ -1,5 +1,5 @@
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import {
   DropdownMenuItem,
@@ -8,6 +8,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useEffect, useState } from "react";
 import { useRoleStore, getRoleDisplayName } from "@/stores/role";
+import { LayoutDashboard, Settings, Shield } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface UserMenuItemsProps {
   user: any | null;
@@ -16,6 +18,7 @@ interface UserMenuItemsProps {
 
 export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { roles, checkUserRole } = useRoleStore();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -45,6 +48,7 @@ export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
   }
 
   const isAdmin = roles.some(role => ['admin', 'super_admin'].includes(role.toLowerCase()));
+  const isCurrentPath = (path: string) => location.pathname === path;
 
   return (
     <>
@@ -58,22 +62,34 @@ export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
       </DropdownMenuLabel>
       <DropdownMenuSeparator />
       <DropdownMenuItem 
-        className="cursor-pointer"
-        onClick={() => navigate('/profile')}
+        className={cn(
+          "cursor-pointer flex items-center gap-2",
+          isCurrentPath('/dashboard') && "bg-accent text-accent-foreground"
+        )}
+        onClick={() => navigate('/dashboard')}
       >
-        Profile
+        <LayoutDashboard className="h-4 w-4" />
+        Dashboard
       </DropdownMenuItem>
       <DropdownMenuItem 
-        className="cursor-pointer"
+        className={cn(
+          "cursor-pointer flex items-center gap-2",
+          isCurrentPath('/settings') && "bg-accent text-accent-foreground"
+        )}
         onClick={() => navigate('/settings')}
       >
+        <Settings className="h-4 w-4" />
         Settings
       </DropdownMenuItem>
       {isAdmin && (
         <DropdownMenuItem 
-          className="cursor-pointer"
+          className={cn(
+            "cursor-pointer flex items-center gap-2",
+            location.pathname.startsWith('/admin') && "bg-accent text-accent-foreground"
+          )}
           onClick={() => navigate('/admin/settings/api')}
         >
+          <Shield className="h-4 w-4" />
           Admin Dashboard
         </DropdownMenuItem>
       )}
