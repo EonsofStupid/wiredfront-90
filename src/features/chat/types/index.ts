@@ -6,6 +6,8 @@ export type MessageStatus = 'pending' | 'sent' | 'failed';
 export type MessageType = 'text' | 'system' | 'command';
 export type ChatPosition = 'bottom-right' | 'bottom-left';
 export type ChatMode = 'standard' | 'editor' | 'chat-only';
+export type FileStatus = 'uploading' | 'processing' | 'ready' | 'error';
+export type FileType = 'image' | 'document' | 'code' | 'other';
 
 export interface Message {
   id: string;
@@ -20,6 +22,28 @@ export interface Message {
   is_minimized?: boolean;
 }
 
+export interface ChatSessionFile {
+  id: string;
+  session_id: string;
+  name: string;
+  type: FileType;
+  url: string;
+  size: number;
+  status: FileStatus;
+  uploaded_at: string;
+  metadata?: Record<string, any>;
+}
+
+export interface ChatSessionMetadata {
+  context?: string;
+  summary?: string;
+  tags?: string[];
+  references?: string[];
+  codebase_context?: Record<string, any>;
+  github_context?: Record<string, any>;
+  custom_data?: Record<string, any>;
+}
+
 export interface ChatSession {
   id: string;
   user_id: string;
@@ -27,7 +51,8 @@ export interface ChatSession {
   created_at: string;
   last_accessed: string;
   title?: string;
-  metadata?: Record<string, any>;
+  files?: ChatSessionFile[];
+  metadata?: ChatSessionMetadata;
 }
 
 export interface ChatFeatures {
@@ -60,4 +85,11 @@ export interface ChatOptions {
   temperature?: number;
   maxTokens?: number;
   model?: string;
+}
+
+export interface SessionState {
+  sessions: ChatSession[];
+  currentSessionId: string | null;
+  isLoading: boolean;
+  error: string | null;
 }
