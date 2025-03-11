@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,21 @@ export function SetupWizard({ onComplete, isFirstTimeUser = false }: SetupWizard
     }
   };
 
+  // This is where we need to properly pass all required props to the component
+  const renderCurrentStep = () => {
+    if (CurrentStepComponent === APIConfigStep) {
+      return (
+        <APIConfigStep 
+          onNext={handleNext} 
+          onBack={handleBack}
+          isFirstTimeUser={isFirstTimeUser}
+        />
+      );
+    } else {
+      return <CurrentStepComponent isFirstTimeUser={isFirstTimeUser} />;
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-[600px]">
@@ -76,7 +92,7 @@ export function SetupWizard({ onComplete, isFirstTimeUser = false }: SetupWizard
             </div>
           </div>
 
-          <CurrentStepComponent isFirstTimeUser={isFirstTimeUser} />
+          {renderCurrentStep()}
 
           <div className="flex justify-between mt-6">
             <Button
