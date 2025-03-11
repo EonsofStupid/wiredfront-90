@@ -5,7 +5,7 @@ import { SettingsContainer } from '@/components/admin/settings/layout/SettingsCo
 
 export default function FeatureFlagsPage() {
   return (
-    <SettingsContainer>
+    <SettingsContainer title="Feature Flags" description="Manage feature availability across the application">
       <FeatureFlags />
     </SettingsContainer>
   );

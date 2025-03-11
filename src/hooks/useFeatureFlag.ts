@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import { useRoleStore } from "@/stores/role";
 import { Database } from "@/integrations/supabase/types";
+import { FeatureFlag } from "@/types/admin/settings/feature-flags";
 
 export function useFeatureFlag(flagKey: string) {
   const { user } = useAuthStore();
@@ -21,10 +22,23 @@ export function useFeatureFlag(flagKey: string) {
 
       if (error) {
         console.error(`Error fetching feature flag ${flagKey}:`, error);
-        return { enabled: false };
+        // Return a fallback object with the same shape as the expected feature flag
+        return {
+          id: '',
+          key: flagKey,
+          name: '',
+          description: null,
+          enabled: false,
+          target_roles: null,
+          rollout_percentage: 0,
+          created_at: null,
+          updated_at: null,
+          created_by: null,
+          updated_by: null
+        } as FeatureFlag;
       }
 
-      return data;
+      return data as FeatureFlag;
     },
   });
 
