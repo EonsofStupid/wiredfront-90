@@ -4,13 +4,24 @@ import { CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { CheckCircle, AlertCircle, RefreshCw, Trash2, Star, Github, Shield, Calendar, Calendar, Calendar } from "lucide-react";
+import { 
+  CheckCircle, 
+  AlertCircle, 
+  RefreshCw, 
+  Trash2, 
+  Star, 
+  Github, 
+  Shield,
+  CalendarDays 
+} from "lucide-react";
 import { APIConfiguration } from "@/hooks/admin/settings/api/apiKeyManagement";
 import { APIType } from "@/types/admin/settings/api";
 import { useAPIKeyCardActions } from "./hooks/useAPIKeyCardActions";
 import { useRoleStore } from "@/stores/role";
 import { format } from "date-fns";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { TooltipProvider, TooltipContent, TooltipTrigger, Tooltip } from "@/components/ui/tooltip";
+import { KeyBadge } from "./KeyBadge";
+import { KeyActions } from "./KeyActions";
 
 interface APIKeyCardHeaderProps {
   config: APIConfiguration;
@@ -40,15 +51,7 @@ export function APIKeyCardHeader({
         <div>
           <div className="flex items-center">
             <CardTitle className="flex items-center text-xl">
-              {config.api_type === 'openai' && 'OpenAI'}
-              {config.api_type === 'anthropic' && 'Anthropic'}
-              {config.api_type === 'gemini' && 'Google Gemini'}
-              {config.api_type === 'pinecone' && 'Pinecone'}
-              {config.api_type === 'github' && (
-                <>
-                  <Github className="h-5 w-5 mr-2 text-gray-300" /> GitHub
-                </>
-              )}
+              <KeyBadge type={config.api_type} />
               
               <div className="ml-3 flex space-x-2">
                 {getValidityBadge(config.validation_status)}
@@ -64,7 +67,7 @@ export function APIKeyCardHeader({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Badge variant="outline" className="cursor-help">
-                          <Calendar className="h-3 w-3 mr-1" />
+                          <CalendarDays className="h-3 w-3 mr-1" />
                           {format(new Date(config.created_at), 'MMM d, yyyy')}
                         </Badge>
                       </TooltipTrigger>
@@ -87,54 +90,16 @@ export function APIKeyCardHeader({
           </div>
         </div>
         
-        <div className="flex gap-2">
-          <div className="flex items-center mr-2">
-            <Switch
-              id={`enable-${config.id}`}
-              checked={config.is_enabled}
-              onCheckedChange={handleToggleEnabled}
-              disabled={updatingStatus || (!isSuperAdmin && !isAdmin)}
-              className="mr-2"
-            />
-            <span className="text-sm">{config.is_enabled ? 'Enabled' : 'Disabled'}</span>
-          </div>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onValidate(config.id)}
-            className="h-8 border-gray-700 hover:bg-slate-800"
-            disabled={updatingStatus || !isSuperAdmin}
-          >
-            <RefreshCw className="h-3.5 w-3.5 mr-1" />
-            Validate
-          </Button>
-          
-          {!config.is_default && isSuperAdmin && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSetDefault}
-              className="h-8 border-gray-700 hover:bg-slate-800"
-              disabled={updatingStatus}
-            >
-              <Star className="h-3.5 w-3.5 mr-1" />
-              Set Default
-            </Button>
-          )}
-          
-          {isSuperAdmin && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => onDelete(config.id)}
-              className="h-8"
-              disabled={updatingStatus}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
-          )}
-        </div>
+        <KeyActions 
+          config={config}
+          isSuperAdmin={isSuperAdmin}
+          isAdmin={isAdmin}
+          onValidate={onValidate}
+          onDelete={onDelete}
+          updatingStatus={updatingStatus}
+          handleToggleEnabled={handleToggleEnabled}
+          handleSetDefault={handleSetDefault}
+        />
       </div>
     </CardHeader>
   );

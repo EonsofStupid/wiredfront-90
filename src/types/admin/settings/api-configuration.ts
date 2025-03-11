@@ -1,10 +1,8 @@
-
 import { Database } from "@/integrations/supabase/types";
 
-// Update the APIType to include 'github'
 export type APIType = 
   | Database["public"]["Enums"]["api_type"] 
-  | "github"; // Add "github" explicitly as it's not in the DB enum yet
+  | "github";
 
 export type ValidationStatusType = Database["public"]["Enums"]["extended_validation_status"];
 
@@ -42,8 +40,21 @@ export interface APIConfiguration {
   is_enabled: boolean;
   is_default: boolean;
   validation_status?: ValidationStatusType;
-  assistant_name?: string;
-  training_enabled?: boolean;
+  memorable_name?: string;
+  last_validated?: string;
+  created_at?: string;
+  updated_at?: string;
+  feature_bindings?: string[];
+  provider_settings?: Record<string, any>;
+  usage_metrics?: {
+    total_calls?: number;
+    remaining_quota?: number;
+    last_reset?: string;
+  };
+  rag_preference?: string;
+  planning_mode?: string;
+  role_assignments?: string[];
+  user_assignments?: string[];
 }
 
 export interface APIConfigurationListProps {
