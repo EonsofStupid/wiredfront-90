@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,11 +8,25 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { X, MessageSquare, Settings, Brain, UserCog, Share2, Zap, BarChart3, AlertTriangle, Save, Shield, Bell } from "lucide-react";
+import { 
+  Key, 
+  MessageSquare, 
+  Settings, 
+  Brain, 
+  UserCog, 
+  Share2, 
+  Zap, 
+  BarChart3, 
+  AlertTriangle, 
+  Save, 
+  Shield, 
+  Bell 
+} from "lucide-react";
 import { useMessageStore } from "@/components/chat/messaging/MessageManager";
 import { useSessionManager } from "@/hooks/useSessionManager";
 import { SettingsContainer } from "./layout/SettingsContainer";
 import { toast } from "sonner";
+import { APIKeyManagement } from "./api/APIKeyManagement";
 
 export function ChatSettings() {
   const { clearMessages } = useMessageStore();
@@ -79,10 +92,14 @@ export function ChatSettings() {
       description="Configure the behavior and features of the chat system."
     >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-2 md:grid-cols-5 gap-1">
+        <TabsList className="grid grid-cols-2 md:grid-cols-6 gap-1">
           <TabsTrigger value="general" className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
             General
+          </TabsTrigger>
+          <TabsTrigger value="api_keys" className="flex items-center gap-2">
+            <Key className="h-4 w-4" />
+            API Keys
           </TabsTrigger>
           <TabsTrigger value="privacy" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
@@ -101,6 +118,10 @@ export function ChatSettings() {
             Notifications
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="api_keys" className="space-y-4 pt-4">
+          <APIKeyManagement />
+        </TabsContent>
 
         <TabsContent value="general" className="space-y-4 pt-4">
           <Card>
