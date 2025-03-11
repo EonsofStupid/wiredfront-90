@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { APIType } from "@/types/admin/settings/api";
 import { WizardProgress } from "./wizard/WizardProgress";
@@ -7,6 +6,8 @@ import { KeyDetailsStep } from "./wizard/KeyDetailsStep";
 import { PermissionsStep } from "./wizard/PermissionsStep";
 import { FeaturesStep } from "./wizard/FeaturesStep";
 import { WizardNavigation } from "./wizard/WizardNavigation";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 interface APIKeyWizardProps {
   open: boolean;
@@ -27,6 +28,13 @@ export function APIKeyWizard({ open, onOpenChange, onSave, isSubmitting }: APIKe
   const TOTAL_STEPS = 3;
   const STEP_NAMES = ["Key Details", "Permissions", "Features"];
 
+  useEffect(() => {
+    if (open) {
+    } else {
+      resetForm();
+    }
+  }, [open]);
+
   const resetForm = () => {
     setCurrentStep(1);
     setSelectedProvider("openai");
@@ -38,7 +46,6 @@ export function APIKeyWizard({ open, onOpenChange, onSave, isSubmitting }: APIKe
   };
 
   const handleClose = () => {
-    resetForm();
     onOpenChange(false);
   };
 
@@ -112,49 +119,61 @@ export function APIKeyWizard({ open, onOpenChange, onSave, isSubmitting }: APIKe
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Add New API Key</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-[540px] rounded-lg border border-[#2A3148] bg-[#1A1F2C] backdrop-blur-lg shadow-xl">
+        <DialogHeader className="space-y-3">
+          <div className="flex justify-between items-center">
+            <DialogTitle className="text-xl font-bold gradient-text">Add New API Key</DialogTitle>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handleClose}
+              className="h-8 w-8 rounded-full hover:bg-slate-800"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <DialogDescription className="text-muted-foreground">
             {getStepDescription()}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="mt-4">
+        <div className="mt-4 space-y-5">
           <WizardProgress 
             currentStep={currentStep} 
             totalSteps={TOTAL_STEPS} 
             steps={STEP_NAMES} 
           />
 
-          {currentStep === 1 && (
-            <KeyDetailsStep 
-              selectedProvider={selectedProvider}
-              onProviderChange={handleProviderChange}
-              keyName={newKey.name}
-              onKeyNameChange={(value) => setNewKey({...newKey, name: value})}
-              keyValue={newKey.key}
-              onKeyValueChange={(value) => setNewKey({...newKey, key: value})}
-            />
-          )}
+          <div className="py-3">
+            {currentStep === 1 && (
+              <KeyDetailsStep 
+                selectedProvider={selectedProvider}
+                onProviderChange={handleProviderChange}
+                keyName={newKey.name}
+                onKeyNameChange={(value) => setNewKey({...newKey, name: value})}
+                keyValue={newKey.key}
+                onKeyValueChange={(value) => setNewKey({...newKey, key: value})}
+              />
+            )}
 
-          {currentStep === 2 && (
-            <PermissionsStep 
-              selectedRoles={selectedRoles}
-              onRoleChange={handleRoleChange}
-              selectedFeatures={selectedFeatures}
-              onFeatureChange={handleFeatureChange}
-            />
-          )}
+            {currentStep === 2 && (
+              <PermissionsStep 
+                selectedRoles={selectedRoles}
+                onRoleChange={handleRoleChange}
+                selectedFeatures={selectedFeatures}
+                onFeatureChange={handleFeatureChange}
+              />
+            )}
 
-          {currentStep === 3 && (
-            <FeaturesStep 
-              ragPreference={ragPreference}
-              onRagPreferenceChange={setRagPreference}
-              planningMode={planningMode}
-              onPlanningModeChange={setPlanningMode}
-            />
-          )}
+            {currentStep === 3 && (
+              <FeaturesStep 
+                ragPreference={ragPreference}
+                onRagPreferenceChange={setRagPreference}
+                planningMode={planningMode}
+                onPlanningModeChange={setPlanningMode}
+              />
+            )}
+          </div>
 
           <WizardNavigation 
             currentStep={currentStep}

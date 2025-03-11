@@ -1,7 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Plus, ShieldAlert } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Key, Plus } from "lucide-react";
 
 interface EmptyAPIKeysListProps {
   onAddKey: () => void;
@@ -9,23 +8,24 @@ interface EmptyAPIKeysListProps {
 
 export function EmptyAPIKeysList({ onAddKey }: EmptyAPIKeysListProps) {
   return (
-    <Card className="border-dashed border-2 hover:border-primary/50 transition-colors">
-      <CardContent className="flex flex-col items-center justify-center p-6 text-center">
-        <div className="rounded-full bg-muted p-3 mb-4">
-          <ShieldAlert className="h-6 w-6 text-muted-foreground" />
-        </div>
-        <h3 className="font-medium text-lg mb-2">No API Keys Configured</h3>
-        <p className="text-muted-foreground mb-4 max-w-md">
-          Add API keys to enable AI services like OpenAI, Anthropic, and vector databases for RAG functionality.
-        </p>
-        <Button 
-          className="admin-primary-button"
-          onClick={onAddKey}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add First API Key
-        </Button>
-      </CardContent>
-    </Card>
+    <div className="flex flex-col items-center justify-center py-12 px-4 border border-dashed border-gray-700 rounded-lg bg-slate-900/30 text-center">
+      <div className="rounded-full bg-slate-800 p-4 mb-4">
+        <Key className="h-8 w-8 text-indigo-400" />
+      </div>
+      
+      <h3 className="text-lg font-medium text-gray-200 mb-2">No API Keys Configured</h3>
+      
+      <p className="text-gray-400 max-w-md mb-6">
+        Add API keys to connect external services like OpenAI, Anthropic, or GitHub to enhance your application's functionality.
+      </p>
+      
+      <Button
+        onClick={onAddKey}
+        className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+      >
+        <Plus className="h-4 w-4 mr-2" />
+        Add Your First API Key
+      </Button>
+    </div>
   );
 }

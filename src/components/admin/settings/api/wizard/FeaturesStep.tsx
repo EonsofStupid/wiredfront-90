@@ -1,9 +1,8 @@
 
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BrainCircuit, Database, Server } from "lucide-react";
+import { Database, FileText, Layers, Sparkles, BookOpenCheck, GitFork, Construction } from "lucide-react";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 interface FeaturesStepProps {
   ragPreference: string;
@@ -20,82 +19,122 @@ export function FeaturesStep({
 }: FeaturesStepProps) {
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="rag" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="rag" className="flex items-center gap-2">
-            <Database className="h-4 w-4" />
-            RAG Configuration
-          </TabsTrigger>
-          <TabsTrigger value="planning" className="flex items-center gap-2">
-            <BrainCircuit className="h-4 w-4" />
+      {/* RAG Preferences */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Label className="text-base font-medium flex items-center">
+            <Database className="h-4 w-4 mr-2 text-indigo-400" />
+            RAG Preference
+          </Label>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="rounded-full bg-slate-800 p-1 cursor-help">
+                  <FileText className="h-4 w-4 text-gray-400" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Select your preferred vectorstore for RAG operations</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        
+        <p className="text-xs text-muted-foreground mb-3">
+          Choose which vector store to use for retrieval-augmented generation
+        </p>
+        
+        <RadioGroup 
+          value={ragPreference} 
+          onValueChange={onRagPreferenceChange}
+          className="grid grid-cols-1 gap-3"
+        >
+          <div className="flex items-center space-x-2 border border-gray-800 p-3 rounded-md bg-slate-900/30 hover:bg-slate-800/30 cursor-pointer">
+            <RadioGroupItem value="supabase" id="r1" />
+            <Label htmlFor="r1" className="flex-1 flex items-center cursor-pointer">
+              <div className="ml-2">
+                <p className="font-medium">Supabase</p>
+                <p className="text-xs text-muted-foreground">Use Supabase pgvector for document retrieval</p>
+              </div>
+            </Label>
+          </div>
+          
+          <div className="flex items-center space-x-2 border border-gray-800 p-3 rounded-md bg-slate-900/30 hover:bg-slate-800/30 cursor-pointer">
+            <RadioGroupItem value="pinecone" id="r2" />
+            <Label htmlFor="r2" className="flex-1 flex items-center cursor-pointer">
+              <div className="ml-2">
+                <p className="font-medium">Pinecone</p>
+                <p className="text-xs text-muted-foreground">Use Pinecone vector database for document retrieval</p>
+              </div>
+            </Label>
+          </div>
+        </RadioGroup>
+      </div>
+      
+      {/* Planning Mode */}
+      <div className="space-y-3 pt-3 border-t border-gray-800">
+        <div className="flex items-center justify-between">
+          <Label className="text-base font-medium flex items-center">
+            <Layers className="h-4 w-4 mr-2 text-indigo-400" />
             Planning Mode
-          </TabsTrigger>
-        </TabsList>
+          </Label>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="rounded-full bg-slate-800 p-1 cursor-help">
+                  <FileText className="h-4 w-4 text-gray-400" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Select the planning complexity for AI operations</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         
-        <TabsContent value="rag" className="space-y-4 pt-4">
-          <div className="space-y-2">
-            <Label>RAG Storage Preference</Label>
-            <RadioGroup 
-              value={ragPreference} 
-              onValueChange={onRagPreferenceChange}
-              className="flex flex-col space-y-2"
-            >
-              <div className="flex items-center space-x-2 rounded-md border p-3 shadow-sm">
-                <RadioGroupItem value="supabase" id="rag-supabase" />
-                <Label htmlFor="rag-supabase" className="flex flex-1 items-center gap-2">
-                  <Database className="h-4 w-4 text-primary" />
-                  <div>
-                    <p className="font-medium">Supabase Vector Store</p>
-                    <p className="text-xs text-muted-foreground">
-                      Suitable for small projects and starter use cases
-                    </p>
-                  </div>
-                </Label>
-              </div>
-              
-              <div className="flex items-center space-x-2 rounded-md border p-3 shadow-sm">
-                <RadioGroupItem value="pinecone" id="rag-pinecone" />
-                <Label htmlFor="rag-pinecone" className="flex flex-1 items-center gap-2">
-                  <Server className="h-4 w-4 text-primary" />
-                  <div>
-                    <p className="font-medium">Pinecone Vector DB</p>
-                    <p className="text-xs text-muted-foreground">
-                      Advanced vector storage for large-scale applications
-                    </p>
-                  </div>
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-        </TabsContent>
+        <p className="text-xs text-muted-foreground mb-3">
+          Configure the reasoning approach for complex operations
+        </p>
         
-        <TabsContent value="planning" className="space-y-4 pt-4">
-          <div className="space-y-2">
-            <Label>Planning Mode</Label>
-            <Select value={planningMode} onValueChange={onPlanningModeChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select planning mode" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="basic">
-                  Basic Planning
-                </SelectItem>
-                <SelectItem value="advanced">
-                  Advanced Planning
-                </SelectItem>
-                <SelectItem value="reasoning">
-                  01 Logic Reasoning
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              {planningMode === 'basic' && "Simple step-by-step planning suitable for most tasks"}
-              {planningMode === 'advanced' && "Detailed planning with file interdependency analysis"}
-              {planningMode === 'reasoning' && "Advanced reasoning with deep architecture analysis"}
-            </p>
+        <RadioGroup 
+          value={planningMode} 
+          onValueChange={onPlanningModeChange}
+          className="grid grid-cols-1 gap-3"
+        >
+          <div className="flex items-center space-x-2 border border-gray-800 p-3 rounded-md bg-slate-900/30 hover:bg-slate-800/30 cursor-pointer">
+            <RadioGroupItem value="basic" id="p1" />
+            <Label htmlFor="p1" className="flex-1 flex items-center cursor-pointer">
+              <BookOpenCheck className="h-4 w-4 text-gray-400 mr-2" />
+              <div className="ml-2">
+                <p className="font-medium">Basic</p>
+                <p className="text-xs text-muted-foreground">Simple planning for straightforward tasks</p>
+              </div>
+            </Label>
           </div>
-        </TabsContent>
-      </Tabs>
+          
+          <div className="flex items-center space-x-2 border border-gray-800 p-3 rounded-md bg-slate-900/30 hover:bg-slate-800/30 cursor-pointer">
+            <RadioGroupItem value="advanced" id="p2" />
+            <Label htmlFor="p2" className="flex-1 flex items-center cursor-pointer">
+              <GitFork className="h-4 w-4 text-gray-400 mr-2" />
+              <div className="ml-2">
+                <p className="font-medium">Advanced</p>
+                <p className="text-xs text-muted-foreground">Multi-step reasoning for complex tasks</p>
+              </div>
+            </Label>
+          </div>
+          
+          <div className="flex items-center space-x-2 border border-gray-800 p-3 rounded-md bg-slate-900/30 hover:bg-slate-800/30 cursor-pointer">
+            <RadioGroupItem value="expert" id="p3" />
+            <Label htmlFor="p3" className="flex-1 flex items-center cursor-pointer">
+              <Sparkles className="h-4 w-4 text-amber-400 mr-2" />
+              <div className="ml-2">
+                <p className="font-medium">Expert</p>
+                <p className="text-xs text-muted-foreground">Complex chain-of-thought reasoning with verification</p>
+              </div>
+            </Label>
+          </div>
+        </RadioGroup>
+      </div>
     </div>
   );
 }

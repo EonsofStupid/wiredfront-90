@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
@@ -568,7 +567,7 @@ serve(async (req) => {
       const { data: configs, error: configsError } = await supabaseAdmin
         .from('api_configurations')
         .select('*')
-        .eq('api_type', 'github')
+        .eq('api_type', 'github' as any)
         .eq('is_enabled', true);
         
       if (configsError) {
@@ -670,4 +669,3 @@ serve(async (req) => {
     );
   }
 });
-

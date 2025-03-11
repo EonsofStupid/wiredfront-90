@@ -60,9 +60,14 @@ export const useAPIOperation = (options: UseAPIOperationOptions = {}) => {
     }
   };
   
+  const syncGitHubMetrics = async () => {
+    return executeOperation('sync_github_metrics', {});
+  };
+  
   return {
     isProcessing,
     lastError,
-    executeOperation
+    executeOperation,
+    syncGitHubMetrics
   };
 };

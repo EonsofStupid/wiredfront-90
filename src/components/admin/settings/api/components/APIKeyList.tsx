@@ -16,7 +16,7 @@ export function APIKeyList({
   onRefresh 
 }: APIKeyListProps) {
   return (
-    <div className="space-y-4">
+    <div className="grid gap-6">
       {configurations.map((config) => (
         <APIKeyCard
           key={config.id}
