@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { APIConfiguration } from "@/types/admin/settings/api";
+import { APIConfiguration } from "@/hooks/admin/settings/api/apiKeyManagement";
 
 export const useAPIKeyList = (configurations: APIConfiguration[]) => {
   const [showAddDialog, setShowAddDialog] = useState(false);

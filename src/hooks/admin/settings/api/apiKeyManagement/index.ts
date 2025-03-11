@@ -5,8 +5,10 @@ import { useAPIDelete } from "./useAPIDelete";
 import { useAPIValidate } from "./useAPIValidate";
 import { APIType } from "@/types/admin/settings/api";
 
+// Update the type definition to align with types/admin/settings/api.ts
 export type APIConfiguration = {
   id: string;
+  user_id?: string | null; // Added to match the type in types/admin/settings/api.ts
   api_type: APIType;
   memorable_name: string;
   is_enabled: boolean;

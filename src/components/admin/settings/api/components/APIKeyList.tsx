@@ -1,5 +1,5 @@
 
-import { APIConfiguration } from "@/types/admin/settings/api";
+import { APIConfiguration } from "@/hooks/admin/settings/api/apiKeyManagement";
 import { APIKeyCard } from "../APIKeyCard";
 
 interface APIKeyListProps {

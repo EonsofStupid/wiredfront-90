@@ -28,11 +28,18 @@ export interface APIConfiguration {
   id: string;
   user_id: string | null;
   api_type: APIType;
+  memorable_name?: string; // Added to match the type in apiKeyManagement/index.ts
   is_enabled: boolean;
   is_default: boolean;
   validation_status: ValidationStatusType;
   created_at?: string;
   updated_at?: string;
+  feature_bindings?: string[];
+  last_validated?: string;
+  provider_settings?: any;
+  usage_metrics?: any;
+  rag_preference?: string;
+  planning_mode?: string;
 }
 
 export interface ServiceCardProps {

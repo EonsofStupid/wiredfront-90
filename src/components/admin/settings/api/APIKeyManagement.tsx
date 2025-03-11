@@ -10,9 +10,10 @@ import { APIKeysSkeletonLoader } from "./components/APIKeysSkeletonLoader";
 import { AccessRestrictionCard } from "./components/AccessRestrictionCard";
 import { useAPIKeyList } from "@/hooks/admin/settings/api/useAPIKeyList";
 import { APIType } from "@/types/admin/settings/api";
+import { useAPIManagementPermissions } from "./hooks/useAPIManagementPermissions";
+import { KeyManagementContent } from "./components/KeyManagementContent";
 
 export function APIKeyManagement() {
-  const { hasRole } = useRoleStore();
   const { 
     isLoading,
     configurations,
@@ -29,7 +30,7 @@ export function APIKeyManagement() {
     hasConfigurations
   } = useAPIKeyList(configurations);
 
-  const canManageKeys = hasRole('super_admin');
+  const { canManageKeys } = useAPIManagementPermissions();
 
   const handleSaveKey = async (
     provider: APIType,
@@ -70,22 +71,15 @@ export function APIKeyManagement() {
       title="API Key Management" 
       description="Securely manage API keys for AI services and integrations"
     >
-      <div className="grid gap-6">
-        <APIKeyHeader onAddKey={handleOpenAddDialog} />
-
-        {isLoading && configurations.length === 0 ? (
-          <APIKeysSkeletonLoader />
-        ) : hasConfigurations ? (
-          <APIKeyList
-            configurations={configurations}
-            onValidate={validateConfig}
-            onDelete={deleteConfig}
-            onRefresh={fetchConfigurations}
-          />
-        ) : (
-          <EmptyAPIKeysList onAddKey={handleOpenAddDialog} />
-        )}
-      </div>
+      <KeyManagementContent 
+        isLoading={isLoading}
+        configurations={configurations}
+        hasConfigurations={hasConfigurations}
+        onAddKey={handleOpenAddDialog}
+        onValidate={validateConfig}
+        onDelete={deleteConfig}
+        onRefresh={fetchConfigurations}
+      />
 
       <APIKeyWizard
         open={showAddDialog}
