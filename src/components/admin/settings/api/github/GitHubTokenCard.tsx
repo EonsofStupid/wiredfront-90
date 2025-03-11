@@ -2,7 +2,7 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, RefreshCw, GitHub, CheckCircle, AlertCircle } from "lucide-react";
+import { Trash2, RefreshCw, Github, CheckCircle, AlertCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface GitHubTokenCardProps {
@@ -21,7 +21,7 @@ export function GitHubTokenCard({ token, onDelete }: GitHubTokenCardProps) {
         <div className="flex justify-between items-start">
           <div className="space-y-1">
             <CardTitle className="flex items-center">
-              <GitHub className="h-4 w-4 mr-2 text-[#8B5CF6]" />
+              <Github className="h-4 w-4 mr-2 text-[#8B5CF6]" />
               {token.memorable_name}
             </CardTitle>
             <CardDescription>

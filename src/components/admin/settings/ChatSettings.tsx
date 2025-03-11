@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { X, MessageSquare, Settings, Brain, UserCog, Share2, Zap, BarChart3, AlertTriangle } from "lucide-react";
+import { X, MessageSquare, Settings, Brain, UserCog, Share2, Zap, BarChart3, AlertTriangle, Save } from "lucide-react";
 import { useMessageStore } from "@/components/chat/messaging/MessageManager";
 import { useSessionManager } from "@/hooks/useSessionManager";
 import { SettingsContainer } from "./layout/SettingsContainer";
@@ -20,7 +19,6 @@ export const ChatSettings = () => {
   const { currentSessionId, refreshSessions } = useSessionManager();
   const [activeTab, setActiveTab] = useState("general");
 
-  // Sample state - in production, these would be connected to real data
   const [featuresEnabled, setFeaturesEnabled] = useState({
     codeAssistant: true,
     ragSupport: true,
@@ -52,12 +50,8 @@ export const ChatSettings = () => {
 
   const handleTerminateSessions = async () => {
     try {
-      // Clear all messages from the current session
       clearMessages();
-      
-      // Force refresh sessions to clean up any hanging states
       await refreshSessions();
-      
       toast.success("Successfully terminated all active sessions");
     } catch (error) {
       console.error('Error terminating sessions:', error);
@@ -94,7 +88,6 @@ export const ChatSettings = () => {
           </TabsTrigger>
         </TabsList>
 
-        {/* General Settings */}
         <TabsContent value="general" className="space-y-4">
           <Card>
             <CardHeader>
@@ -200,7 +193,6 @@ export const ChatSettings = () => {
           </Card>
         </TabsContent>
 
-        {/* Features Tab */}
         <TabsContent value="features" className="space-y-4">
           <Card>
             <CardHeader>
@@ -353,7 +345,6 @@ export const ChatSettings = () => {
           </Card>
         </TabsContent>
 
-        {/* Models Tab */}
         <TabsContent value="models" className="space-y-4">
           <Card>
             <CardHeader>
@@ -476,7 +467,6 @@ export const ChatSettings = () => {
           </Card>
         </TabsContent>
 
-        {/* Sessions Tab */}
         <TabsContent value="sessions" className="space-y-4">
           <Card>
             <CardHeader>
@@ -554,7 +544,6 @@ export const ChatSettings = () => {
           </Card>
         </TabsContent>
 
-        {/* Analytics Tab */}
         <TabsContent value="analytics" className="space-y-4">
           <Card>
             <CardHeader>
