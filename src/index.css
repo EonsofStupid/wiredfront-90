@@ -1,6 +1,432 @@
-
-@import './components/chat/styles/index.css';
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import './styles/animations/index.css';
+
+@layer base {
+  :root {
+    --background: 0 0% 10%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 15%;
+    --card-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --ring: 240 4.9% 83.9%;
+    --radius: 0.5rem;
+
+    /* Updated Z-index hierarchy */
+    --z-chat: 9999;
+    --z-modal: 1000;
+    --z-dropdown: 900;
+    --z-tooltip: 800;
+    --z-navbar: 700;
+    --z-floating: 600;
+    --z-content: 500;
+    --z-background: 400;
+    --z-base: 300;
+
+    /* Color variables for rgb values */
+    --color-neon-blue: 0 255 255;
+    --color-neon-pink: 255 0 127;
+    
+    /* Admin theme colors */
+    --admin-purple: 139 92 246;
+    --admin-magenta: 217 70 239;
+    --admin-blue: 14 165 233;
+    --admin-dark: 26 31 44;
+    
+    /* Scrollbar custom properties */
+    --scrollbar-size: 8px;
+    --scrollbar-track-bg: rgba(0, 0, 0, 0.2);
+    --scrollbar-thumb-gradient: linear-gradient(
+      45deg,
+      rgb(var(--color-neon-blue)),
+      rgb(var(--color-neon-pink))
+    );
+  }
+
+  * {
+    @apply border-border;
+  }
+  
+  /* Global scrollbar styling */
+  * {
+    scrollbar-width: thin !important;
+    scrollbar-color: rgb(var(--color-neon-blue)) var(--scrollbar-track-bg) !important;
+  }
+
+  /* Webkit scrollbar styling */
+  ::-webkit-scrollbar {
+    width: var(--scrollbar-size) !important;
+    height: var(--scrollbar-size) !important;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track-bg) !important;
+    backdrop-filter: blur(8px) !important;
+    border-radius: var(--radius) !important;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb-gradient) !important;
+    border-radius: var(--radius) !important;
+    border: 2px solid transparent !important;
+    background-clip: content-box !important;
+    box-shadow: 0 0 8px rgb(var(--color-neon-blue)),
+                0 0 12px rgb(var(--color-neon-pink)) !important;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+      45deg,
+      rgb(var(--color-neon-pink)),
+      rgb(var(--color-neon-blue))
+    ) !important;
+    box-shadow: 0 0 12px rgb(var(--color-neon-blue)),
+                0 0 16px rgb(var(--color-neon-pink)) !important;
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: transparent !important;
+  }
+  
+  body {
+    @apply bg-dark text-foreground antialiased;
+    background: radial-gradient(circle at top right, theme('colors.neon.blue'), transparent 50%),
+                radial-gradient(circle at bottom left, theme('colors.neon.pink'), transparent 50%),
+                theme('colors.dark.DEFAULT');
+  }
+
+  /* Ensure inputs are always clickable */
+  input, button, a {
+    @apply relative z-[var(--z-content)];
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-dark-lighter/30 backdrop-blur-md border border-white/10 rounded-xl shadow-xl;
+    position: relative;
+    isolation: isolate;
+  }
+  
+  .glass-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom right,
+      theme('colors.neon.blue'),
+      transparent,
+      theme('colors.neon.pink')
+    );
+    opacity: 0.1;
+    pointer-events: none;
+    z-index: -1;
+  }
+  
+  .neon-glow {
+    @apply relative;
+  }
+  
+  .neon-glow::after {
+    @apply content-[''] absolute inset-0 rounded-xl;
+    box-shadow: 0 0 20px theme('colors.neon.blue'), 
+                0 0 40px theme('colors.neon.pink');
+    opacity: 0.5;
+    z-index: -1;
+  }
+  
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-neon-blue via-neon-pink to-neon-violet animate-gradient-x;
+  }
+
+  .neon-border {
+    @apply relative;
+  }
+
+  .neon-border::before {
+    @apply content-[''] absolute inset-0 rounded-xl;
+    border: 2px solid transparent;
+    background: linear-gradient(45deg, theme('colors.neon.blue'), theme('colors.neon.pink')) border-box;
+    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+  }
+  
+  /* Admin specific components */
+  .admin-container {
+    @apply w-full max-w-6xl mx-auto px-4 py-6;
+  }
+  
+  .admin-heading {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#8B5CF6] via-[#D946EF] to-[#0EA5E9] animate-gradient-x;
+  }
+  
+  .admin-text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#8B5CF6] to-[#D946EF];
+  }
+  
+  .admin-glass-panel {
+    @apply bg-[#1A1F2C]/60 backdrop-blur-md border border-[#8B5CF6]/20 rounded-xl shadow-xl;
+    position: relative;
+    isolation: isolate;
+  }
+  
+  .admin-glass-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom right,
+      rgba(139, 92, 246, 0.2),
+      transparent,
+      rgba(217, 70, 239, 0.2)
+    );
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: -1;
+    border-radius: inherit;
+  }
+  
+  .admin-nav-icon {
+    @apply text-white/70 hover:text-white transition-colors duration-200 hover:bg-white/10;
+    position: relative;
+  }
+  
+  .admin-nav-icon::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    box-shadow: 0 0 8px theme('colors.neon.blue'), 
+                0 0 12px theme('colors.neon.pink');
+    z-index: -1;
+  }
+  
+  .admin-nav-icon:hover::after {
+    opacity: 1;
+  }
+  
+  .admin-nav-tab {
+    @apply text-white/70 hover:text-white transition-colors duration-200 hover:bg-white/10 relative overflow-hidden;
+  }
+  
+  .admin-nav-tab::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(to right, #8B5CF6, #D946EF);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    transform-origin: right;
+  }
+  
+  .admin-nav-tab:hover::before {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+  
+  .admin-nav-tab-active {
+    @apply text-white;
+  }
+  
+  .admin-nav-tab-active::before {
+    transform: scaleX(1);
+  }
+  
+  .admin-nav-handle {
+    @apply border-[#8B5CF6]/30 bg-[#1A1F2C]/60 text-white/70 hover:text-white;
+  }
+  
+  .admin-tooltip {
+    @apply bg-[#1A1F2C] border border-[#8B5CF6]/30 text-white shadow-lg;
+    animation: fadeIn 0.2s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .admin-tooltip-content {
+    --tooltip-glow: 0 0 15px rgba(139, 92, 246, 0.8), 0 0 30px rgba(217, 70, 239, 0.5);
+    position: relative;
+    animation: tooltipPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  @keyframes tooltipPop {
+    0% { opacity: 0; transform: scale(0.9) translateY(5px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  
+  .admin-card {
+    @apply bg-[#1A1F2C]/80 backdrop-blur-md border-[#8B5CF6]/20 shadow-lg transition-all duration-300;
+    position: relative;
+    isolation: isolate;
+  }
+  
+  .admin-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(139, 92, 246, 0.1),
+      transparent,
+      rgba(217, 70, 239, 0.1)
+    );
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: -1;
+    border-radius: inherit;
+  }
+  
+  .admin-card:hover {
+    @apply border-[#8B5CF6]/40;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  }
+  
+  .admin-card-accent {
+    @apply border-[#D946EF]/30;
+  }
+  
+  .admin-card-accent::before {
+    background: linear-gradient(
+      135deg,
+      rgba(217, 70, 239, 0.1),
+      transparent,
+      rgba(14, 165, 233, 0.1)
+    );
+  }
+  
+  .admin-card-highlight {
+    @apply border-[#0EA5E9]/30;
+  }
+  
+  .admin-card-highlight::before {
+    background: linear-gradient(
+      135deg,
+      rgba(14, 165, 233, 0.1),
+      transparent,
+      rgba(139, 92, 246, 0.1)
+    );
+  }
+  
+  .admin-card-glow {
+    position: relative;
+  }
+  
+  .admin-card-glow::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.5), 
+                0 0 30px rgba(217, 70, 239, 0.3);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+  }
+  
+  .admin-card-glow:hover::after {
+    opacity: 1;
+  }
+  
+  .admin-dashboard-card {
+    @apply cursor-pointer;
+  }
+  
+  .admin-icon {
+    @apply text-[#8B5CF6];
+  }
+  
+  .admin-secondary-button {
+    @apply border-[#8B5CF6]/30 text-white hover:bg-[#8B5CF6]/10 hover:border-[#8B5CF6]/50 transition-all duration-200;
+  }
+  
+  .admin-primary-button {
+    @apply bg-gradient-to-r from-[#8B5CF6] to-[#D946EF] text-white border-none hover:opacity-90 transition-all duration-200;
+  }
+  
+  .admin-tabs-list {
+    @apply bg-[#1A1F2C]/50 border border-[#8B5CF6]/20 p-1;
+  }
+  
+  .admin-tab {
+    @apply data-[state=active]:bg-[#8B5CF6]/20 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all duration-200;
+  }
+  
+  .admin-toast {
+    @apply bg-[#1A1F2C] border border-[#8B5CF6]/30 text-white;
+  }
+  
+  .admin-toast-error {
+    @apply border-red-500/50;
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-200 hover:scale-[1.03];
+  }
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 2em theme('colors.neon.blue'));
+}
+
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em theme('colors.neon.pink'));
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  @apply glass-card p-8;
+}
+
+.read-the-docs {
+  @apply text-foreground/60;
+}
