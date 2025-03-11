@@ -1,46 +1,30 @@
 
-import { useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { APIConfiguration } from "../useAPIKeyManagement";
+import { useAPIOperation } from "./useAPIOperation";
 
 export const useAPIDelete = (
   configurations: APIConfiguration[],
   fetchConfigurations: () => Promise<void>
 ) => {
-  const [isDeleting, setIsDeleting] = useState(false);
+  const { isProcessing: isDeleting, executeOperation } = useAPIOperation({
+    onSuccess: fetchConfigurations,
+    errorMessage: "Failed to delete API configuration",
+    successMessage: "API configuration deleted successfully"
+  });
 
   const deleteConfig = async (configId: string) => {
     if (!window.confirm('Are you sure you want to delete this API configuration?')) {
       return false;
     }
 
-    setIsDeleting(true);
-    try {
-      const config = configurations.find(c => c.id === configId);
-      if (!config) {
-        throw new Error('Configuration not found');
-      }
-
-      const { data, error } = await supabase.functions.invoke('manage-api-secret', {
-        body: {
-          action: 'delete',
-          memorableName: config.memorable_name
-        }
-      });
-      
-      if (error) throw error;
-      
-      toast.success("API configuration deleted successfully");
-      await fetchConfigurations();
-      return true;
-    } catch (error) {
-      console.error('Error deleting API configuration:', error);
-      toast.error("Failed to delete API configuration");
+    const config = configurations.find(c => c.id === configId);
+    if (!config) {
+      toast.error('Configuration not found');
       return false;
-    } finally {
-      setIsDeleting(false);
     }
+
+    return await executeOperation('delete', { memorableName: config.memorable_name });
   };
 
   return {

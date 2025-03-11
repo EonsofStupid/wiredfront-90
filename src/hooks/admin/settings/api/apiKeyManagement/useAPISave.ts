@@ -1,11 +1,13 @@
 
-import { useState } from "react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { APIType } from "@/types/admin/settings/api";
+import { useAPIOperation } from "./useAPIOperation";
 
 export const useAPISave = (fetchConfigurations: () => Promise<void>) => {
-  const [isSaving, setIsSaving] = useState(false);
+  const { isProcessing: isSaving, executeOperation } = useAPIOperation({
+    onSuccess: fetchConfigurations,
+    errorMessage: "Failed to save API key",
+    successMessage: "API key saved successfully"
+  });
 
   const createApiKey = async (
     provider: APIType,
@@ -19,32 +21,14 @@ export const useAPISave = (fetchConfigurations: () => Promise<void>) => {
     roleBindings: string[],
     userBindings: string[] = []
   ) => {
-    setIsSaving(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('manage-api-secret', {
-        body: {
-          action: 'create',
-          secretValue,
-          provider,
-          memorableName,
-          settings,
-          roleBindings,
-          userBindings
-        }
-      });
-      
-      if (error) throw error;
-      
-      toast.success("API key saved successfully");
-      await fetchConfigurations();
-      return true;
-    } catch (error) {
-      console.error('Error saving API key:', error);
-      toast.error("Failed to save API key");
-      return false;
-    } finally {
-      setIsSaving(false);
-    }
+    return await executeOperation('create', {
+      secretValue,
+      provider,
+      memorableName,
+      settings,
+      roleBindings,
+      userBindings
+    });
   };
 
   return {
