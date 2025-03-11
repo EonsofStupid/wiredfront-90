@@ -25,6 +25,7 @@ import { ChatFeatureSettings } from "@/components/admin/settings/ChatFeatureSett
 import { GuestCTA } from "@/components/auth/GuestCTA";
 import Settings from "./pages/Settings";
 import { DraggableChat } from "@/components/chat/DraggableChat";
+import { AdminTopNavOverlay } from "@/components/admin/navigation/AdminTopNavOverlay";
 import FeatureFlagsPage from "./pages/admin/FeatureFlagsPage";
 
 const PROTECTED_ROUTES = [
@@ -57,8 +58,7 @@ const ADMIN_ROUTES = [
   '/admin/activity',
   '/admin/database',
   '/admin/search',
-  '/admin/notifications',
-  '/admin/security'
+  '/admin/notifications'
 ];
 
 const App = () => {
@@ -101,6 +101,7 @@ const App = () => {
         </AppLayout>
       ) : (
         <CurrentLayout>
+          {isAdminRoute && <AdminTopNavOverlay />}
           <Routes>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route 
@@ -133,7 +134,6 @@ const App = () => {
             <Route path="/admin/database" element={<div>Database Management</div>} />
             <Route path="/admin/search" element={<div>Admin Search</div>} />
             <Route path="/admin/notifications" element={<div>Admin Notifications</div>} />
-            <Route path="/admin/security" element={<div>Security Settings</div>} />
           </Routes>
           <GuestCTA />
         </CurrentLayout>
