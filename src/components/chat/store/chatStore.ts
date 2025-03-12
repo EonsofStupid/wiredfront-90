@@ -34,6 +34,11 @@ const initialState: ChatState = {
       { id: '4', type: 'dalle', name: 'DALL·E', isEnabled: false, category: 'image' },
       { id: '5', type: 'stability', name: 'Stable Diffusion', isEnabled: false, category: 'image' }
     ]
+  },
+  ui: {
+    messageLoading: false,
+    sessionLoading: false,
+    providerSwitching: false,
   }
 };
 
@@ -44,7 +49,20 @@ const useChatStore = create<ChatState & ChatActions>()(
       ...initialState,
       ...createUIActions(set, get),
       ...createFeatureActions(set, get),
-      ...createInitializationActions(set, get)
+      ...createInitializationActions(set, get),
+      
+      // UI Loading State Actions
+      setMessageLoading: (isLoading: boolean) => set(state => ({
+        ui: { ...state.ui, messageLoading: isLoading }
+      })),
+      
+      setSessionLoading: (isLoading: boolean) => set(state => ({
+        ui: { ...state.ui, sessionLoading: isLoading }
+      })),
+      
+      setProviderSwitching: (isSwitching: boolean) => set(state => ({
+        ui: { ...state.ui, providerSwitching: isSwitching }
+      })),
     }),
     {
       name: 'chat-settings-storage',
@@ -57,7 +75,7 @@ const useChatStore = create<ChatState & ChatActions>()(
         docked: state.docked,
         features: state.features,
         providers: state.providers,
-        // Don't persist messages or startTime as they should be new for each session
+        // Don't persist messages, startTime, or UI loading states
       }),
       version: 1,
     }

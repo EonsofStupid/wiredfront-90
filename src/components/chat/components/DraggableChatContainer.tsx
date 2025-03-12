@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, memo } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { Card, CardHeader } from "@/components/ui/card";
 import { ChatHeader } from "./ChatHeader";
@@ -14,7 +14,7 @@ interface DraggableChatContainerProps {
   isEditorPage: boolean;
 }
 
-export function DraggableChatContainer({
+function DraggableChatContainerBase({
   scrollRef,
   isEditorPage,
 }: DraggableChatContainerProps) {
@@ -71,7 +71,9 @@ export function DraggableChatContainer({
     };
 
     updatePosition();
-    window.addEventListener('resize', updatePosition);
+    
+    // Performance optimization: Use passive listener
+    window.addEventListener('resize', updatePosition, { passive: true });
     return () => window.removeEventListener('resize', updatePosition);
   }, [docked]);
 
@@ -132,3 +134,6 @@ export function DraggableChatContainer({
     </motion.div>
   );
 }
+
+// Optimize with memo to prevent unnecessary re-renders
+export const DraggableChatContainer = memo(DraggableChatContainerBase);

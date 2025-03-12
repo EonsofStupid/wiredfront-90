@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { logger } from "@/services/chat/LoggingService";
 import { Spinner } from "./Spinner";
 import { useErrorBoundary } from "../hooks/useErrorBoundary";
+import { MessageSkeleton } from "./MessageSkeleton";
 
 // Lazy load modules for better performance
 const MessageModule = lazy(() => 
@@ -45,11 +46,11 @@ interface ChatContentProps {
 
 export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatContentProps) {
   const { mode } = useChatMode();
-  const { features } = useChatStore();
+  const { features, ui } = useChatStore();
   const showStatusButton = features.githubSync || features.notifications;
   const { ErrorBoundary, DefaultErrorFallback } = useErrorBoundary();
 
-  React.useEffect(() => {
+  useEffect(() => {
     logger.info('ChatContent rendered', { mode, isEditorPage, isMinimized });
   }, [mode, isEditorPage, isMinimized]);
 
@@ -63,19 +64,27 @@ export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatConten
   };
 
   const MessageFallback = () => (
-    <div className="space-y-4" aria-busy="true" aria-label="Loading messages">
-      <Skeleton className="h-16 w-3/4" />
-      <Skeleton className="h-16 w-1/2" />
-      <Skeleton className="h-16 w-2/3" />
+    <div className="space-y-4 p-4" aria-busy="true" aria-label="Loading messages">
+      <MessageSkeleton role="user" lines={1} />
+      <MessageSkeleton role="assistant" lines={2} />
+      <MessageSkeleton role="user" lines={1} />
     </div>
   );
 
   const InputFallback = () => (
-    <Skeleton className="h-10 w-full" aria-busy="true" aria-label="Loading input" />
+    <div className="w-full p-4" aria-busy="true" aria-label="Loading input">
+      <Skeleton className="h-10 w-full rounded-md" />
+      <div className="flex justify-between mt-2">
+        <Skeleton className="h-7 w-24 rounded-md" />
+        <Skeleton className="h-7 w-7 rounded-md" />
+      </div>
+    </div>
   );
 
   const StatusButtonFallback = () => (
-    <Skeleton className="h-8 w-20" aria-busy="true" aria-label="Loading status button" />
+    <div className="flex justify-end mt-4 px-4">
+      <Skeleton className="h-8 w-32 rounded-full" aria-busy="true" aria-label="Loading status button" />
+    </div>
   );
 
   return (

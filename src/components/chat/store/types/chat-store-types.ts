@@ -7,6 +7,31 @@ export interface Message {
   id: string;
   content: string;
   role: 'user' | 'assistant' | 'system';
+  timestamp?: string;
+  status?: 'pending' | 'sent' | 'failed' | 'loading';
+}
+
+export interface LoadingState {
+  isLoading: boolean;
+  isError: boolean;
+  errorMessage?: string;
+}
+
+export interface ChatFeatures {
+  codeAssistant: boolean;
+  ragSupport: boolean;
+  githubSync: boolean;
+  notifications: boolean;
+  imageGeneration: boolean;
+  integrations: boolean;
+}
+
+export interface ChatProvider {
+  id: string;
+  type: ChatProviderType;
+  name: string;
+  isEnabled: boolean;
+  category?: 'chat' | 'image' | 'integration';
 }
 
 export interface ChatState {
@@ -19,23 +44,15 @@ export interface ChatState {
   isInitialized: boolean;
   messages: Message[];
   startTime: number | null;
-  features: {
-    codeAssistant: boolean;
-    ragSupport: boolean;
-    githubSync: boolean;
-    notifications: boolean;
-    imageGeneration: boolean;
-    integrations: boolean;
-  };
+  features: ChatFeatures;
   providers: {
     currentProvider: ChatProviderType;
-    availableProviders: {
-      id: string;
-      type: ChatProviderType;
-      name: string;
-      isEnabled: boolean;
-      category?: 'chat' | 'image' | 'integration';
-    }[];
+    availableProviders: ChatProvider[];
+  };
+  ui: {
+    messageLoading: boolean;
+    sessionLoading: boolean;
+    providerSwitching: boolean;
   };
 }
 
@@ -46,8 +63,11 @@ export interface ChatActions {
   toggleChat: () => void;
   setScale: (scale: number) => void;
   toggleDocked: () => void;
-  toggleFeature: (feature: keyof ChatState['features']) => void;
+  toggleFeature: (feature: keyof ChatFeatures) => void;
   setCurrentProvider: (providerId: string) => void;
   toggleProviderEnabled: (providerId: string) => void;
   initializeChatSettings: () => void;
+  setMessageLoading: (isLoading: boolean) => void;
+  setSessionLoading: (isLoading: boolean) => void;
+  setProviderSwitching: (isSwitching: boolean) => void;
 }

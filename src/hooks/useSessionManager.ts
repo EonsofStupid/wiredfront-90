@@ -1,176 +1,212 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { useMessageStore } from '@/components/chat/messaging/MessageManager';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useMessageStore } from '@/components/chat/messaging/MessageManager';
+import { logger } from '@/services/chat/LoggingService';
+import { useChatStore } from '@/components/chat/store/chatStore';
 
-interface SessionState {
+interface Session {
   id: string;
-  lastAccessed: Date;
-  isActive: boolean;
+  name: string;
+  created_at: string;
+  updated_at: string;
+  message_count: number;
 }
 
-export const useSessionManager = () => {
-  const [sessions, setSessions] = useState<SessionState[]>([]);
+export function useSessionManager() {
+  const [sessions, setSessions] = useState<Session[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
-  const [isInitializing, setIsInitializing] = useState(true);
-  const { clearMessages } = useMessageStore();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { clearMessages, fetchSessionMessages } = useMessageStore();
+  const { setSessionLoading } = useChatStore();
 
-  // Fetch active sessions
   const fetchSessions = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('chat_sessions')
-        .select('*')
-        .order('last_accessed', { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-
-      const formattedSessions = data.map(session => ({
-        id: session.id,
-        lastAccessed: new Date(session.last_accessed),
-        isActive: session.is_active
-      }));
-
-      setSessions(formattedSessions);
-      return formattedSessions;
-    } catch (error) {
-      console.error('Error fetching sessions:', error);
-      toast.error('Failed to fetch chat sessions');
-      return [];
-    }
-  }, []);
-
-  // Create a new session only if no active session exists
-  const createSession = useCallback(async () => {
-    try {
+      setIsLoading(true);
+      setSessionLoading(true);
+      
+      // Get user from Supabase auth
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No authenticated user');
-
-      // Check for existing active session first
-      const { data: existingSession } = await supabase
-        .from('chat_sessions')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .order('last_accessed', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (existingSession) {
-        setCurrentSessionId(existingSession.id);
-        return existingSession.id;
+      if (!user) {
+        throw new Error('User not authenticated');
       }
 
+      // Fetch chat sessions for the current user
       const { data, error } = await supabase
         .from('chat_sessions')
-        .insert({
-          user_id: user.id,
-          is_active: true,
-          last_accessed: new Date().toISOString()
-        })
-        .select()
-        .single();
+        .select(`
+          id,
+          name,
+          created_at,
+          updated_at,
+          message_count
+        `)
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false });
 
       if (error) throw error;
 
-      setCurrentSessionId(data.id);
-      await fetchSessions();
+      setSessions(data || []);
+      
+      // If we have sessions but no current session, set the most recent
+      if (data && data.length > 0 && !currentSessionId) {
+        setCurrentSessionId(data[0].id);
+        await fetchSessionMessages(data[0].id);
+      }
+      
+      logger.info('Sessions fetched', { count: data?.length });
+    } catch (error) {
+      console.error('Error fetching sessions:', error);
+      toast.error('Failed to load chat sessions');
+      logger.error('Failed to fetch sessions', { error });
+    } finally {
+      setIsLoading(false);
+      setSessionLoading(false);
+    }
+  }, [currentSessionId, fetchSessionMessages, setSessionLoading]);
+
+  const createSession = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      
+      // Get user from Supabase auth
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const sessionId = uuidv4();
+      const now = new Date().toISOString();
+      
+      // Create a new session
+      const { error } = await supabase
+        .from('chat_sessions')
+        .insert({
+          id: sessionId,
+          user_id: user.id,
+          name: `Chat ${new Date().toLocaleString()}`,
+          created_at: now,
+          updated_at: now,
+          message_count: 0
+        });
+
+      if (error) throw error;
+
+      // Switch to the new session
+      setCurrentSessionId(sessionId);
       clearMessages();
-      toast.success('New chat session created', {
-        className: 'bg-gradient-to-r from-[#8B5CF6]/10 to-[#0EA5E9]/10'
-      });
-      return data.id;
+      
+      // Update sessions list
+      await fetchSessions();
+      
+      toast.success('New chat session created');
+      logger.info('New session created', { sessionId });
     } catch (error) {
       console.error('Error creating session:', error);
       toast.error('Failed to create new chat session');
-      return null;
+      logger.error('Failed to create session', { error });
+    } finally {
+      setIsLoading(false);
     }
-  }, [fetchSessions, clearMessages]);
+  }, [clearMessages, fetchSessions]);
 
-  // Initialize session only once on component mount
-  useEffect(() => {
-    const initializeSession = async () => {
-      if (!isInitializing) return;
-
-      const existingSessions = await fetchSessions();
-      
-      if (existingSessions.length === 0 || !currentSessionId) {
-        await createSession();
-      }
-      
-      setIsInitializing(false);
-    };
-
-    initializeSession();
-  }, [isInitializing, fetchSessions, createSession, currentSessionId]);
-
-  // Switch to a different session
   const switchSession = useCallback(async (sessionId: string) => {
     try {
-      const { error } = await supabase
-        .from('chat_sessions')
-        .update({ last_accessed: new Date().toISOString() })
-        .eq('id', sessionId);
-
-      if (error) throw error;
-
+      setIsLoading(true);
+      setSessionLoading(true);
+      
+      if (sessionId === currentSessionId) return;
+      
+      // Set current session and fetch messages
       setCurrentSessionId(sessionId);
-      clearMessages();
-      await fetchSessions();
-      toast.success('Switched chat session');
+      await fetchSessionMessages(sessionId);
+      
+      // Update the session's updated_at timestamp
+      await supabase
+        .from('chat_sessions')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', sessionId);
+      
+      logger.info('Switched to session', { sessionId });
     } catch (error) {
-      console.error('Error switching sessions:', error);
+      console.error('Error switching session:', error);
       toast.error('Failed to switch chat session');
+      logger.error('Failed to switch session', { error, sessionId });
+    } finally {
+      setIsLoading(false);
+      setSessionLoading(false);
     }
-  }, [fetchSessions, clearMessages]);
+  }, [currentSessionId, fetchSessionMessages, setSessionLoading]);
 
-  // Cleanup inactive sessions (older than 7 days)
   const cleanupInactiveSessions = useCallback(async () => {
     try {
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      setIsLoading(true);
+      
+      // Get user from Supabase auth
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
 
-      const { error } = await supabase
+      // Keep current session and the 5 most recently updated sessions
+      const { data, error } = await supabase
         .from('chat_sessions')
-        .delete()
-        .lt('last_accessed', sevenDaysAgo.toISOString());
+        .select('id, updated_at')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false });
 
       if (error) throw error;
 
+      // Keep the current session and the 5 most recent ones
+      const sessionsToKeep = new Set<string>([
+        currentSessionId!, 
+        ...data.slice(0, 5).map(s => s.id)
+      ]);
+      
+      const sessionsToDelete = data
+        .filter(s => !sessionsToKeep.has(s.id))
+        .map(s => s.id);
+
+      if (sessionsToDelete.length === 0) {
+        toast.info('No inactive sessions to clean up');
+        return;
+      }
+
+      // Delete inactive sessions
+      const { error: deleteError } = await supabase
+        .from('chat_sessions')
+        .delete()
+        .in('id', sessionsToDelete);
+
+      if (deleteError) throw deleteError;
+
+      // Refresh sessions list
       await fetchSessions();
-      toast.success('Cleaned up inactive sessions');
+      
+      toast.success(`Cleaned up ${sessionsToDelete.length} inactive sessions`);
+      logger.info('Cleaned up inactive sessions', { count: sessionsToDelete.length });
     } catch (error) {
       console.error('Error cleaning up sessions:', error);
-      toast.error('Failed to cleanup sessions');
+      toast.error('Failed to clean up inactive sessions');
+      logger.error('Failed to clean up sessions', { error });
+    } finally {
+      setIsLoading(false);
     }
-  }, [fetchSessions]);
+  }, [currentSessionId, fetchSessions]);
 
-  // Update last_accessed timestamp less frequently
+  // Initialize sessions on component mount
   useEffect(() => {
-    const updateLastAccessed = async () => {
-      if (!currentSessionId) return;
-
-      try {
-        await supabase
-          .from('chat_sessions')
-          .update({ last_accessed: new Date().toISOString() })
-          .eq('id', currentSessionId);
-      } catch (error) {
-        console.error('Error updating last_accessed:', error);
-      }
-    };
-
-    const interval = setInterval(updateLastAccessed, 5 * 60 * 1000); // Every 5 minutes
-    return () => clearInterval(interval);
-  }, [currentSessionId]);
+    fetchSessions();
+  }, [fetchSessions]);
 
   return {
     sessions,
     currentSessionId,
-    switchSession,
+    isLoading,
+    fetchSessions,
     createSession,
-    cleanupInactiveSessions,
-    refreshSessions: fetchSessions
+    switchSession,
+    cleanupInactiveSessions
   };
-};
+}

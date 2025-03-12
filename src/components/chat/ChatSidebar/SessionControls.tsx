@@ -1,49 +1,65 @@
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Plus, Trash2 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Spinner } from '../components/Spinner';
 
 interface SessionControlsProps {
   onNewSession: () => void;
   onCleanupSessions: () => void;
   sessionCount: number;
+  isLoading?: boolean;
 }
 
-export const SessionControls = ({ 
-  onNewSession, 
-  onCleanupSessions, 
-  sessionCount = 0 
-}: SessionControlsProps) => {
+export const SessionControls: React.FC<SessionControlsProps> = ({
+  onNewSession,
+  onCleanupSessions,
+  sessionCount,
+  isLoading = false
+}) => {
   return (
-    <div className="flex gap-2 p-4 border-t border-white/10 bg-chat-header-bg">
-      <Button
-        variant="outline"
-        className="flex-1 text-sm hover:bg-chat-message-assistant-bg/20 transition-all duration-200 text-chat-text border-chat-knowledge-border"
-        onClick={onNewSession}
-      >
-        <Plus className="h-4 w-4 mr-2 text-chat-knowledge-text" />
-        New Session
-      </Button>
-      
+    <div className="p-3 border-t border-white/10 flex justify-between items-center">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onCleanupSessions}
-              disabled={sessionCount === 0}
-              className="opacity-80 hover:opacity-100 transition-opacity text-chat-knowledge-text"
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 px-2" 
+              onClick={onNewSession}
+              disabled={isLoading}
             >
-              <Trash2 className="h-4 w-4" />
+              {isLoading ? <Spinner size="sm" /> : <Plus className="h-4 w-4 mr-1" />}
+              New Chat
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="top" className="chat-dialog-content">
-            <p>Clean up inactive sessions</p>
+          <TooltipContent>
+            <p>Start a new chat session</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
+
+      {sessionCount > 0 && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
+                onClick={onCleanupSessions}
+                disabled={isLoading}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Clean up inactive sessions</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
     </div>
   );
 };

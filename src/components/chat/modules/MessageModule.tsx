@@ -9,6 +9,8 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { useErrorBoundary } from '../hooks/useErrorBoundary';
 import { Spinner } from '../components/Spinner';
 import { logger } from '@/services/chat/LoggingService';
+import { MessageSkeleton } from '../components/MessageSkeleton';
+import { useChatStore } from '../store/chatStore';
 
 interface MessageModuleProps {
   scrollRef: React.RefObject<HTMLDivElement>;
@@ -16,6 +18,7 @@ interface MessageModuleProps {
 
 export function MessageModule({ scrollRef }: MessageModuleProps) {
   const { messages } = useMessageStore();
+  const { ui } = useChatStore();
   const { scrollToBottom } = useAutoScroll(scrollRef);
   const { ErrorBoundary, DefaultErrorFallback } = useErrorBoundary();
   
@@ -24,7 +27,6 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
     logger.info('Attempting to retry message', { messageId });
     // In a real implementation, we would call a function from useMessageStore 
     // to retry sending the message
-    // For now, we just log it
   }, []);
   
   // Virtual list implementation for performance optimization
@@ -43,6 +45,16 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
   }, [messages.length, scrollToBottom]);
   
   if (messages.length === 0) {
+    if (ui.sessionLoading) {
+      return (
+        <div className="flex flex-col gap-4 p-4">
+          <MessageSkeleton role="user" lines={1} />
+          <MessageSkeleton role="assistant" lines={2} />
+          <MessageSkeleton role="user" lines={1} />
+        </div>
+      );
+    }
+    
     return (
       <div className="flex flex-col items-center justify-center h-full p-4 text-center">
         <p className="text-muted-foreground mb-2">No messages yet</p>
@@ -99,6 +111,17 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
               </div>
             );
           })}
+          
+          {/* Render loading indicator for new message */}
+          {ui.messageLoading && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-4"
+            >
+              <MessageSkeleton role="assistant" lines={3} />
+            </motion.div>
+          )}
         </div>
       </ScrollArea>
     </ErrorBoundary>
