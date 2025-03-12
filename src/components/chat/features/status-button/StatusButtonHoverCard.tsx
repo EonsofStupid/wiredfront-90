@@ -3,12 +3,12 @@ import React from 'react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { StatusButtonPreview } from './StatusButtonPreview';
 import { Button } from '@/components/ui/button';
-import { IconProps } from 'lucide-react';
+import { LucideProps } from 'lucide-react';
 import { logger } from '@/services/chat/LoggingService';
 
 interface StatusButtonHoverCardProps {
   type: 'github' | 'notifications';
-  icon: React.ForwardRefExoticComponent<IconProps & React.RefAttributes<SVGSVGElement>>;
+  icon: React.ForwardRefExoticComponent<LucideProps & React.RefAttributes<SVGSVGElement>>;
   onClick: () => void;
   disabled?: boolean;
   showBadge?: boolean;
