@@ -6,6 +6,7 @@ import { useLocation } from 'react-router-dom';
 import { useChatStore } from './store/chatStore';
 import { useSessionManager } from '@/hooks/useSessionManager';
 import { logger } from '@/services/chat/LoggingService';
+import { useMessageStore } from './messaging/MessageManager';
 
 interface ChatContextType {
   isEditorPage: boolean;
@@ -19,6 +20,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const isEditorPage = location.pathname === '/editor';
   const { isOpen, initializeChatSettings } = useChatStore();
   const { currentSessionId } = useSessionManager();
+  const messageStore = useMessageStore();
   const [isInitialized, setIsInitialized] = React.useState(false);
 
   // Initialize chat settings when component mounts

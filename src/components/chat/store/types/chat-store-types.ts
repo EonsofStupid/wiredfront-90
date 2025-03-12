@@ -3,6 +3,12 @@ import { ChatProviderType } from '@/types/admin/settings/chat-provider';
 
 export type ChatPosition = 'bottom-right' | 'bottom-left';
 
+export interface Message {
+  id: string;
+  content: string;
+  role: 'user' | 'assistant' | 'system';
+}
+
 export interface ChatState {
   position: ChatPosition;
   isMinimized: boolean;
@@ -11,6 +17,8 @@ export interface ChatState {
   scale: number;
   docked: boolean;
   isInitialized: boolean;
+  messages: Message[];
+  startTime: number | null;
   features: {
     codeAssistant: boolean;
     ragSupport: boolean;

@@ -15,6 +15,8 @@ const initialState: ChatState = {
   scale: 1,
   docked: true,
   isInitialized: false,
+  messages: [],
+  startTime: Date.now(), // Initialize with current timestamp
   features: {
     codeAssistant: true,
     ragSupport: true,
@@ -51,6 +53,7 @@ const useChatStore = create<ChatState & ChatActions>()(
         docked: state.docked,
         features: state.features,
         providers: state.providers,
+        // Don't persist messages or startTime as they should be new for each session
       }),
       version: 1,
     }
