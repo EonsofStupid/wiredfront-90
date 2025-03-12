@@ -3,7 +3,7 @@ import React from "react";
 import { ChevronLeft, ChevronRight, Minus, X, Pin, PinOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChatPositionToggle } from "./ChatPositionToggle";
-import { useChatStore } from "../store";
+import { useChatStore } from "../store/chatStore";
 import { motion } from "framer-motion";
 
 interface ChatHeaderProps {

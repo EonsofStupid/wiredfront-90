@@ -3,7 +3,7 @@ import React, { Suspense, lazy, useEffect } from "react";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useChatMode } from "../providers/ChatModeProvider";
-import { useChatStore } from "../store";
+import { useChatStore } from "../store/chatStore";
 import { AnimatePresence, motion } from "framer-motion";
 import { logger } from "@/services/chat/LoggingService";
 import { Spinner } from "./Spinner";

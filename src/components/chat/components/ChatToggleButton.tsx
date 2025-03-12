@@ -2,7 +2,7 @@
 import React from "react";
 import { MessageSquare, Code, MessagesSquare } from "lucide-react";
 import { useChatMode } from "../providers/ChatModeProvider";
-import { useChatStore } from "../store";
+import { useChatStore } from "../store/chatStore";
 import { motion } from "framer-motion";
 import { logger } from "@/services/chat/LoggingService";
 

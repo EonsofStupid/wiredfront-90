@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ArrowLeftRight } from "lucide-react";
-import { useChatStore } from '../store';
+import { useChatStore } from '../store/chatStore';
 import { logger } from '@/services/chat/LoggingService';
 
 export function ChatPositionToggle() {

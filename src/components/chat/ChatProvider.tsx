@@ -3,7 +3,7 @@ import React, { createContext, useContext, ReactNode, useEffect } from 'react';
 import { Toaster } from "sonner";
 import { ChatModeProvider } from './providers/ChatModeProvider';
 import { useLocation } from 'react-router-dom';
-import { useChatStore } from './store';
+import { useChatStore } from './store/chatStore';
 import { useSessionManager } from '@/hooks/useSessionManager';
 import { logger } from '@/services/chat/LoggingService';
 
