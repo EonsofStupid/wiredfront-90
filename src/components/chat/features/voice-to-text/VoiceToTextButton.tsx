@@ -53,6 +53,7 @@ export function VoiceToTextButton({ onTranscription, isProcessing }: VoiceToText
       onClick={handleClick}
       disabled={isProcessing}
       data-testid="voice-to-text-button"
+      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
     >
       {isListening ? (
         <>

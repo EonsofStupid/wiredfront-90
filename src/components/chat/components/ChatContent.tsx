@@ -87,7 +87,7 @@ export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatConten
         data-testid="chat-content"
       >
         <CardContent 
-          className="flex-1 p-4 overflow-hidden pb-16" 
+          className="flex-1 p-4 overflow-hidden pb-20" 
           onClick={handleContentClick}
         >
           <ErrorBoundary
@@ -114,7 +114,7 @@ export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatConten
         </CardContent>
 
         <CardFooter 
-          className="p-4 border-t border-white/10 absolute bottom-0 left-0 right-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10 chat-input-container"
+          className="p-4 border-t border-white/10 fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50 chat-input-container"
           onClick={handleContentClick}
         >
           <ErrorBoundary

@@ -57,10 +57,10 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
     >
       <ScrollArea 
         ref={scrollRef}
-        className="h-full w-full pr-4 relative chat-messages-scroll"
+        className="h-full max-h-[calc(100vh-150px)] w-full pr-4 relative chat-messages-scroll"
       >
         <div 
-          className="relative w-full min-h-full"
+          className="relative w-full min-h-full pb-6"
           style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
         >
           {rowVirtualizer.getVirtualItems().map((virtualItem) => {
