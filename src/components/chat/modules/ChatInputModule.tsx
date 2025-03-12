@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -109,7 +110,7 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 w-full" onClick={(e) => e.stopPropagation()}>
+    <form onSubmit={handleSubmit} className="flex gap-2 w-full h-full items-center" onClick={(e) => e.stopPropagation()}>
       <div className="relative flex-1 group">
         <Input
           value={message}
@@ -117,7 +118,7 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
           onClick={handleInputClick}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="chat-input chat-cyber-border font-mono text-chat-input-text"
+          className="chat-input chat-cyber-border font-mono text-chat-input-text h-[var(--chat-input-height)]"
           disabled={isProcessing}
           data-testid="chat-input"
           aria-label="Message input"
@@ -135,7 +136,7 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
       <Button 
         type="submit" 
         disabled={isProcessing || !message.trim()}
-        className="min-w-[80px] bg-gradient-to-r from-[#1EAEDB] to-[#0080B3] hover:opacity-90 text-white border-none transition-all duration-200 font-mono"
+        className="min-w-[80px] bg-gradient-to-r from-[#1EAEDB] to-[#0080B3] hover:opacity-90 text-white border-none transition-all duration-200 font-mono h-[var(--chat-input-height)]"
         data-testid="send-button"
       >
         {isProcessing ? (
