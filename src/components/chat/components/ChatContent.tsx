@@ -2,9 +2,8 @@
 import React from "react";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { MessageModule } from "../modules/MessageModule";
-import { GitHubSyncModule } from "../modules/GitHubSyncModule";
-import { NotificationsModule } from "../modules/NotificationsModule";
 import { ChatInputModule } from "../modules/ChatInputModule";
+import { StatusButton } from "../features/status-button/StatusButton";
 import { useChatMode } from "../providers/ChatModeProvider";
 import { useChatStore } from "../store/chatStore";
 import { AnimatePresence, motion } from "framer-motion";
@@ -18,6 +17,7 @@ interface ChatContentProps {
 export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatContentProps) {
   const { mode } = useChatMode();
   const { features } = useChatStore();
+  const showStatusButton = features.githubSync || features.notifications;
 
   if (isMinimized) {
     return null;
@@ -40,18 +40,17 @@ export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatConten
           {/* Message display area */}
           <MessageModule scrollRef={scrollRef} />
           
+          {/* Status button (only in editor mode) */}
           <AnimatePresence>
-            {/* Mode-specific modules */}
-            {mode === 'editor' && (
+            {mode === 'editor' && showStatusButton && (
               <motion.div 
-                className="mt-4 space-y-2"
+                className="flex justify-end mt-4"
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                {features.githubSync && <GitHubSyncModule />}
-                {features.notifications && <NotificationsModule />}
+                <StatusButton />
               </motion.div>
             )}
           </AnimatePresence>
