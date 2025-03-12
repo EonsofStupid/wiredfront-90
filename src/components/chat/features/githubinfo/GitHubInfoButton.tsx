@@ -30,7 +30,7 @@ export function GitHubInfoButton() {
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Status</span>
             <div className="flex items-center gap-1">
-              <span className="h-3 w-3 rounded-full bg-green-500"></span>
+              <span className="h-3 w-3 rounded-full bg-green-500" />
               <span className="text-xs">Synced</span>
             </div>
           </div>
@@ -61,7 +61,7 @@ export function GitHubInfoButton() {
         >
           {getPreviewContent()}
         </HoverCardContent>
-      </Dialog>
+      </HoverCard>
       {isOpen && <GitHubInfoDialog />}
     </Dialog>
   );

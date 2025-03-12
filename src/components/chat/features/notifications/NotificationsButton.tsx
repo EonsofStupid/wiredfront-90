@@ -50,7 +50,7 @@ export function NotificationsButton() {
             >
               <BellIcon className="h-4 w-4" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+                <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full" />
               )}
             </Button>
           </DialogTrigger>
@@ -62,7 +62,7 @@ export function NotificationsButton() {
         >
           {getPreviewContent()}
         </HoverCardContent>
-      </Dialog>
+      </HoverCard>
       {isOpen && <NotificationsDialog />}
     </Dialog>
   );
