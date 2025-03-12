@@ -115,7 +115,7 @@ export const SessionControls: React.FC<SessionControlsProps> = ({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <AlertDialogContent className="glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#D946EF]/20">
+            <AlertDialogContent className="glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#D946EF]/20" style={{ zIndex: 9900 }}>
               <AlertDialogHeader>
                 <AlertDialogTitle>Clear All Sessions</AlertDialogTitle>
                 <AlertDialogDescription>

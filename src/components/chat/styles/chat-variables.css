@@ -1,8 +1,8 @@
-
 /* Chat-specific CSS variables with isolation from app variables */
 :root {
   /* Z-index for chat components - ensuring it's always on top */
   --z-chat: 9999;
+  --z-chat-dialogs: 9900;
   
   /* Chat dimensions */
   --chat-width: 400px;
@@ -169,7 +169,7 @@
   color: var(--chat-text);
   border-radius: var(--chat-border-radius);
   box-shadow: var(--chat-cyber-glow);
-  z-index: var(--z-chat);
+  z-index: var(--z-chat-dialogs);
 }
 
 /* Chat-specific glass card effect */
