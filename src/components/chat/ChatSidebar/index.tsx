@@ -1,4 +1,3 @@
-
 import React, { Suspense, lazy } from "react";
 import { SessionControls } from "./SessionControls";
 import { useSessionManager } from "@/hooks/useSessionManager";
@@ -38,7 +37,7 @@ export const ChatSidebar = () => {
     await createSession();
   };
 
-  // Updated handlers to explicitly pass the correct boolean values
+  // Type-safe handlers that explicitly pass the correct boolean values
   const handleClearSessions = async () => {
     await clearSessions(true); // Explicitly preserve current session
   };

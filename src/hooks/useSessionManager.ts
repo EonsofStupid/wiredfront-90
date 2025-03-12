@@ -62,11 +62,12 @@ export function useSessionManager() {
     }
   });
 
-  // Updated mutation to explicitly type the boolean parameter
+  // Properly typed mutation with explicit type parameters following TanStack Query v5 format
   const { mutateAsync: clearSessionsMutation } = useMutation<
-    { success: boolean }, // Return type
-    Error,               // Error type
-    boolean              // Variables type - explicitly typed as boolean
+    { success: boolean },  // TData - Return type from mutationFn
+    Error,                 // TError - Error type
+    boolean,               // TVariables - Type of variables passed to mutationFn
+    unknown                // TContext - Context type for optimistic updates (optional)
   >({
     mutationFn: (preserveCurrentSession: boolean) => {
       const sessionIdToPreserve = preserveCurrentSession ? currentSessionId : null;
@@ -196,10 +197,10 @@ export function useSessionManager() {
     },
     updateSession: updateSessionMutation,
     archiveSession: archiveSessionMutation,
-    // Updated clearSessions function to ensure it always passes a boolean value
+    // Explicitly typed parameter with default value to ensure type safety
     clearSessions: async (preserveCurrentSession: boolean = true) => {
       logger.info('Clearing sessions', { preserveCurrentSession, currentSessionId });
-      await clearSessionsMutation(preserveCurrentSession); // Explicitly pass the boolean parameter
+      await clearSessionsMutation(preserveCurrentSession);
     },
     cleanupInactiveSessions: async () => {
       if (currentSessionId) {

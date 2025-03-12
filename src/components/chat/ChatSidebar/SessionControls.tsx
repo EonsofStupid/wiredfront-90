@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, X, TrashIcon } from 'lucide-react';
@@ -19,8 +18,8 @@ import {
 interface SessionControlsProps {
   onNewSession: () => void;
   onCleanupSessions: () => void;
-  onClearSessions: () => void; // Keep this as-is for backward compatibility
-  onClearAllSessions: () => void; // Keep this as-is for backward compatibility
+  onClearSessions: () => void;  // Kept as no-arg for backward compatibility
+  onClearAllSessions: () => void;  // Kept as no-arg for backward compatibility
   sessionCount: number;
   isLoading?: boolean;
 }
