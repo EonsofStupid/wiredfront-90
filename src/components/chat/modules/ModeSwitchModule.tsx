@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { useChatMode } from "../providers/ChatModeProvider";
+import { useChat } from "@/features/chat/providers/ChatProvider";
 
 export function ModeSwitchModule() {
-  const { isEditorPage } = useChatMode();
+  const { isEditorPage } = useChat();
   
   // We no longer need the mode switch button as modes are determined by routes
   return null;
