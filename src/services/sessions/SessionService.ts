@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Session, SessionOperationResult, CreateSessionParams, UpdateSessionParams } from '@/types/sessions';
 import { v4 as uuidv4 } from 'uuid';
@@ -219,23 +220,28 @@ export async function cleanupSessions(currentSessionId: string): Promise<number>
 /**
  * Clears all sessions for the current user except the active one
  */
-export async function clearAllSessions(currentSessionId: string): Promise<SessionOperationResult> {
+export async function clearAllSessions(currentSessionId: string | null = null): Promise<SessionOperationResult> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       throw new Error('User not authenticated');
     }
 
-    // Delete all sessions except the current one
-    const { error } = await supabase
+    let query = supabase
       .from('chat_sessions')
       .delete()
-      .eq('user_id', user.id)
-      .neq('id', currentSessionId);
+      .eq('user_id', user.id);
+    
+    // If currentSessionId is provided, exclude it from deletion
+    if (currentSessionId) {
+      query = query.neq('id', currentSessionId);
+    }
+    
+    const { error } = await query;
 
     if (error) throw error;
     
-    logger.info('Cleared all sessions', { currentSessionId });
+    logger.info('Cleared all sessions', { preservedSessionId: currentSessionId || 'none' });
     return { success: true };
   } catch (error) {
     logger.error('Failed to clear sessions', { error });

@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useMessageStore } from '@/components/chat/messaging/MessageManager';
 import { toast } from 'sonner';
@@ -24,7 +23,6 @@ import {
   useQueryClient 
 } from '@tanstack/react-query';
 
-// Query keys for TanStack Query
 const QUERY_KEYS = {
   SESSIONS: ['sessions'],
   SESSION: (id: string) => ['session', id],
@@ -49,7 +47,6 @@ export function useSessionManager() {
   const { setSessionLoading } = useChatStore();
   const queryClient = useQueryClient();
 
-  // Fetch all sessions with TanStack Query
   const { 
     data: sessions = [], 
     isLoading,
@@ -64,9 +61,11 @@ export function useSessionManager() {
     }
   });
 
-  // Clear all sessions
   const { mutateAsync: clearSessions } = useMutation({
-    mutationFn: (currentId: string) => clearAllSessions(currentId),
+    mutationFn: (preserveCurrentSession: boolean = true) => {
+      const sessionIdToPreserve = preserveCurrentSession ? currentSessionId : null;
+      return clearAllSessions(sessionIdToPreserve);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS });
       toast.success('All sessions cleared', toastStyles.success);
@@ -77,7 +76,6 @@ export function useSessionManager() {
     },
   });
 
-  // Create a new session
   const { mutateAsync: createSession } = useMutation({
     mutationFn: (params?: CreateSessionParams) => createNewSession(params),
     onSuccess: (result) => {
@@ -94,7 +92,6 @@ export function useSessionManager() {
     },
   });
 
-  // Switch to an existing session
   const { mutateAsync: switchSession } = useMutation({
     mutationFn: (sessionId: string) => switchToSession(sessionId),
     onMutate: async (sessionId) => {
@@ -120,7 +117,6 @@ export function useSessionManager() {
     },
   });
 
-  // Update a session
   const { mutateAsync: updateSessionMutation } = useMutation({
     mutationFn: ({ sessionId, params }: { sessionId: string, params: UpdateSessionParams }) => 
       updateSession(sessionId, params),
@@ -133,7 +129,6 @@ export function useSessionManager() {
     },
   });
 
-  // Archive a session
   const { mutateAsync: archiveSessionMutation } = useMutation({
     mutationFn: (sessionId: string) => archiveSession(sessionId),
     onSuccess: () => {
@@ -146,7 +141,6 @@ export function useSessionManager() {
     },
   });
 
-  // Clean up inactive sessions
   const { mutateAsync: cleanupInactiveSessions } = useMutation({
     mutationFn: (currentId: string) => {
       if (!currentId) {
@@ -169,7 +163,6 @@ export function useSessionManager() {
     },
   });
 
-  // Get the current session
   const currentSession = useCallback(() => {
     if (!currentSessionId) return null;
     return sessions.find(session => session.id === currentSessionId) || null;
@@ -191,12 +184,8 @@ export function useSessionManager() {
     },
     updateSession: updateSessionMutation,
     archiveSession: archiveSessionMutation,
-    clearSessions: async () => {
-      if (currentSessionId) {
-        await clearSessions(currentSessionId);
-      } else {
-        toast.error('No active session found', toastStyles.error);
-      }
+    clearSessions: async (preserveCurrentSession: boolean = true) => {
+      await clearSessions(preserveCurrentSession);
     },
     cleanupInactiveSessions: async () => {
       if (currentSessionId) {
@@ -206,4 +195,3 @@ export function useSessionManager() {
     refreshSessions: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS })
   };
 }
-

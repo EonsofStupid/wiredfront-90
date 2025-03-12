@@ -1,3 +1,4 @@
+
 import React, { Suspense, lazy } from "react";
 import { SessionControls } from "./SessionControls";
 import { useSessionManager } from "@/hooks/useSessionManager";
@@ -38,7 +39,11 @@ export const ChatSidebar = () => {
   };
 
   const handleClearSessions = async () => {
-    await clearSessions();
+    await clearSessions(true); // Preserve current session
+  };
+
+  const handleClearAllSessions = async () => {
+    await clearSessions(false); // Clear ALL sessions including current
   };
 
   return (
@@ -85,6 +90,7 @@ export const ChatSidebar = () => {
         onNewSession={handleCreateSession}
         onClearSessions={handleClearSessions}
         onCleanupSessions={cleanupInactiveSessions}
+        onClearAllSessions={handleClearAllSessions}
         sessionCount={sessions.length}
         isLoading={isLoading || ui.sessionLoading}
       />

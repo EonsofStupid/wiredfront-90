@@ -1,14 +1,26 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, X } from 'lucide-react';
+import { Plus, Trash2, X, TrashIcon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Spinner } from '../components/Spinner';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface SessionControlsProps {
   onNewSession: () => void;
   onCleanupSessions: () => void;
   onClearSessions: () => void;
+  onClearAllSessions: () => void;
   sessionCount: number;
   isLoading?: boolean;
 }
@@ -17,6 +29,7 @@ export const SessionControls: React.FC<SessionControlsProps> = ({
   onNewSession,
   onCleanupSessions,
   onClearSessions,
+  onClearAllSessions,
   sessionCount,
   isLoading = false
 }) => {
@@ -77,13 +90,51 @@ export const SessionControls: React.FC<SessionControlsProps> = ({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Clear all sessions</p>
+                <p>Clear all sessions except current</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
+
+          <AlertDialog>
+            <TooltipProvider>
+              <Tooltip>
+                <AlertDialogTrigger asChild>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground hover:bg-red-500/20 hover:text-red-500 transition-colors"
+                      disabled={isLoading}
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                </AlertDialogTrigger>
+                <TooltipContent>
+                  <p>Clear ALL sessions including current</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <AlertDialogContent className="glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#D946EF]/20">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Clear All Sessions</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will delete ALL chat sessions, including the current one. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="border-white/10 hover:bg-white/10">Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={onClearAllSessions}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Delete All
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       )}
     </div>
   );
 };
-
