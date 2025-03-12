@@ -9,6 +9,7 @@ import { useLocation } from "react-router-dom";
 import { GitHubInfoButton } from "../features/githubinfo";
 import { NotificationsButton } from "../features/notifications";
 import { ChatHeaderTopNav } from "../features/ChatHeaderTopNav";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 interface ChatHeaderProps {
   title: string;
@@ -27,10 +28,14 @@ export function ChatHeader({
   onMinimize,
   onClose,
 }: ChatHeaderProps) {
-  const { docked, toggleDocked } = useChatStore();
+  const { docked, toggleDocked, messages, startTime } = useChatStore();
   const location = useLocation();
   const isEditorPage = location.pathname === '/editor';
-  const displayTitle = isEditorPage ? "Dev Mode" : title;
+  
+  // Calculate session stats
+  const messageCount = messages?.length || 0;
+  const sessionDuration = startTime ? Math.floor((Date.now() - startTime) / 1000 / 60) : 0; // in minutes
+  const aiResponses = messages?.filter(m => m.role === 'assistant').length || 0;
 
   // Prevent propagation to avoid triggering drag when clicking buttons
   const handleButtonClick = (e: React.MouseEvent, callback: () => void) => {
@@ -61,8 +66,30 @@ export function ChatHeader({
             <ChevronLeft className="h-4 w-4" />
           )}
         </Button>
-        <span className="font-semibold text-sm md:text-base neon-glow">{displayTitle}</span>
+        
+        <HoverCard>
+          <HoverCardTrigger>
+            <span className={`font-mono text-sm md:text-base bg-gradient-to-r from-[#1EAEDB] to-[#33C3F0] bg-clip-text text-transparent 
+              font-bold hover:scale-105 transition-transform duration-200 cursor-pointer
+              shadow-[0_0_10px_rgba(30,174,219,0.3)] px-2 py-1 rounded`}>
+              {isEditorPage ? "DEV" : title}
+            </span>
+          </HoverCardTrigger>
+          <HoverCardContent 
+            className="w-64 backdrop-blur-md bg-black/80 border border-[#1EAEDB]/20
+            text-[#1EAEDB] shadow-lg shadow-[#1EAEDB]/20">
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-[#33C3F0]">Session Stats</h4>
+              <div className="text-xs space-y-1.5">
+                <p>Messages: {messageCount}</p>
+                <p>AI Responses: {aiResponses}</p>
+                <p>Duration: {sessionDuration} min</p>
+              </div>
+            </div>
+          </HoverCardContent>
+        </HoverCard>
       </div>
+
       <div className="flex gap-1">
         <GitHubInfoButton />
         <NotificationsButton />
