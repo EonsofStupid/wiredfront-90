@@ -2,7 +2,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { CreateSessionParams } from '@/types/sessions';
-import { createNewSession } from '@/services/sessions/SessionService';
+import { createNewSession } from '@/services/sessions';
 import { logger } from '@/services/chat/LoggingService';
 import { SESSION_QUERY_KEYS } from './useSessionCore';
 

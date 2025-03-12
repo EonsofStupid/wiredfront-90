@@ -1,7 +1,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { cleanupSessions, clearAllSessions } from '@/services/sessions/SessionService';
+import { cleanupSessions, clearAllSessions } from '@/services/sessions';
 import { logger } from '@/services/chat/LoggingService';
 import { SESSION_QUERY_KEYS } from './useSessionCore';
 

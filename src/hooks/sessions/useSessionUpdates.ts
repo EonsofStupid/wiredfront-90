@@ -2,7 +2,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { UpdateSessionParams } from '@/types/sessions';
-import { updateSession, archiveSession } from '@/services/sessions/SessionService';
+import { updateSession, archiveSession } from '@/services/sessions';
 import { logger } from '@/services/chat/LoggingService';
 import { SESSION_QUERY_KEYS } from './useSessionCore';
 
