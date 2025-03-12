@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import { Toaster } from "sonner";
 import { ChatModeProvider } from './providers/ChatModeProvider';
@@ -21,25 +20,22 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const isEditorPage = location.pathname === '/editor';
   const { isOpen, initializeChatSettings, setSessionLoading } = useChatStore();
-  const { currentSessionId, fetchSessions } = useSessionManager();
+  const { currentSessionId, refreshSessions } = useSessionManager();
   const messageStore = useMessageStore();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
 
-  // Initialize chat settings and fetch initial data
   useEffect(() => {
     const initialize = async () => {
       try {
         setIsInitializing(true);
         
-        // Initialize chat settings
         initializeChatSettings();
         logger.info('Chat settings initialized');
         
-        // Fetch sessions if we're on a page that needs them
         if (isEditorPage || location.pathname === '/') {
           setSessionLoading(true);
-          await fetchSessions();
+          await refreshSessions();
           setSessionLoading(false);
         }
         
@@ -53,9 +49,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     };
     
     initialize();
-  }, [initializeChatSettings, isEditorPage, location.pathname, fetchSessions, setSessionLoading]);
+  }, [initializeChatSettings, isEditorPage, location.pathname, refreshSessions, setSessionLoading]);
 
-  // Log page navigation for chat context
   useEffect(() => {
     logger.info('Chat context updated', { 
       isEditorPage, 

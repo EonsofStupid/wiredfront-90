@@ -7,8 +7,7 @@ import { useChatStore } from '@/components/chat/store/chatStore';
 import { 
   Session,
   CreateSessionParams,
-  UpdateSessionParams, 
-  SessionOperationResult 
+  UpdateSessionParams
 } from '@/types/sessions';
 import { 
   fetchUserSessions, 
@@ -26,7 +25,7 @@ import {
 
 // Query keys for TanStack Query
 const QUERY_KEYS = {
-  SESSIONS: 'sessions',
+  SESSIONS: ['sessions'],
   SESSION: (id: string) => ['session', id],
   MESSAGES: (sessionId: string) => ['messages', sessionId],
 };
@@ -43,13 +42,13 @@ export function useSessionManager() {
     isLoading,
     isError,
     error,
+    refetch: refreshSessions
   } = useQuery({
-    queryKey: [QUERY_KEYS.SESSIONS],
+    queryKey: QUERY_KEYS.SESSIONS,
     queryFn: fetchUserSessions,
-    onError: (err) => {
-      toast.error('Failed to load chat sessions');
-      logger.error('Error fetching sessions:', err);
-    },
+    meta: {
+      errorMessage: 'Failed to load chat sessions'
+    }
   });
 
   // Create a new session
@@ -59,7 +58,7 @@ export function useSessionManager() {
       if (result.success && result.sessionId) {
         setCurrentSessionId(result.sessionId);
         clearMessages();
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SESSIONS] });
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS });
         toast.success('New chat session created');
       }
     },
@@ -84,7 +83,7 @@ export function useSessionManager() {
       await fetchSessionMessages(sessionId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SESSIONS] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS });
     },
     onError: (err) => {
       toast.error('Failed to switch chat session');
@@ -100,7 +99,7 @@ export function useSessionManager() {
     mutationFn: ({ sessionId, params }: { sessionId: string, params: UpdateSessionParams }) => 
       updateSession(sessionId, params),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SESSIONS] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS });
     },
     onError: (err) => {
       toast.error('Failed to update chat session');
@@ -112,7 +111,7 @@ export function useSessionManager() {
   const { mutateAsync: archiveSessionMutation } = useMutation({
     mutationFn: (sessionId: string) => archiveSession(sessionId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SESSIONS] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS });
       toast.success('Chat session archived');
     },
     onError: (err) => {
@@ -134,7 +133,7 @@ export function useSessionManager() {
       if (deletedCount === 0) {
         toast.info('No inactive sessions to clean up');
       } else {
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SESSIONS] });
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS });
         toast.success(`Cleaned up ${deletedCount} inactive sessions`);
       }
     },
@@ -150,24 +149,6 @@ export function useSessionManager() {
     return sessions.find(session => session.id === currentSessionId) || null;
   }, [currentSessionId, sessions]);
 
-  // Handle creating a new session
-  const handleCreateSession = useCallback(async (params?: CreateSessionParams) => {
-    const result = await createSession(params);
-    return result.success ? result.sessionId || '' : '';
-  }, [createSession]);
-
-  // Handle switching to a session
-  const handleSwitchSession = useCallback(async (sessionId: string) => {
-    await switchSession(sessionId);
-  }, [switchSession]);
-
-  // Handle cleaning up sessions
-  const handleCleanupSessions = useCallback(async () => {
-    if (currentSessionId) {
-      await cleanupInactiveSessions(currentSessionId);
-    }
-  }, [currentSessionId, cleanupInactiveSessions]);
-
   return {
     sessions,
     currentSessionId,
@@ -175,11 +156,20 @@ export function useSessionManager() {
     isLoading,
     isError,
     error,
-    createSession: handleCreateSession,
-    switchSession: handleSwitchSession,
+    createSession: async (params?: CreateSessionParams) => {
+      const result = await createSession(params);
+      return result.success ? result.sessionId || '' : '';
+    },
+    switchSession: async (sessionId: string) => {
+      await switchSession(sessionId);
+    },
     updateSession: updateSessionMutation,
     archiveSession: archiveSessionMutation,
-    cleanupInactiveSessions: handleCleanupSessions,
-    refreshSessions: () => queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SESSIONS] }),
+    cleanupInactiveSessions: async () => {
+      if (currentSessionId) {
+        await cleanupInactiveSessions(currentSessionId);
+      }
+    },
+    refreshSessions: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS })
   };
 }
