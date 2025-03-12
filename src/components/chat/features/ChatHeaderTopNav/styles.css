@@ -21,48 +21,20 @@
 .chat-header-top-nav-button {
   position: relative;
   overflow: hidden;
-  text-shadow: 0 0 5px rgba(30, 174, 219, 0.7);
-  box-shadow: 0 0 10px rgba(30, 174, 219, 0.3);
-  transition: all 0.2s ease;
 }
 
-.chat-header-top-nav-button::before {
+.chat-header-top-nav-button::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    45deg,
-    transparent 0%,
-    rgba(30, 174, 219, 0.1) 50%,
-    transparent 100%
+  background: linear-gradient(45deg, 
+    rgba(var(--color-neon-blue), 0.2),
+    rgba(var(--color-neon-pink), 0.2)
   );
   opacity: 0;
-  transition: opacity 0.3s ease, transform 0.6s ease;
-  transform: translateX(-100%);
-  pointer-events: none;
+  transition: opacity 0.2s ease;
 }
 
-.chat-header-top-nav-button:hover::before {
+.chat-header-top-nav-button:hover::after {
   opacity: 1;
-  transform: translateX(100%);
-}
-
-.chat-header-top-nav-button:hover {
-  text-shadow: 0 0 8px rgba(30, 174, 219, 0.9), 0 0 12px rgba(30, 174, 219, 0.5);
-  box-shadow: 0 0 15px rgba(30, 174, 219, 0.5), 0 0 20px rgba(30, 174, 219, 0.3);
-  border-color: rgba(30, 174, 219, 0.7);
-}
-
-/* Cyberpunk glitch effect on hover */
-@keyframes glitch {
-  0% { transform: translate(0); }
-  20% { transform: translate(-2px, 2px); }
-  40% { transform: translate(-2px, -2px); }
-  60% { transform: translate(2px, 2px); }
-  80% { transform: translate(2px, -2px); }
-  100% { transform: translate(0); }
-}
-
-.chat-header-top-nav-button:hover span {
-  animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both;
 }
