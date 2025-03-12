@@ -1,5 +1,4 @@
-
-import { useSessionManager } from '@/features/chat/hooks/useSessionManager';
+import { useSessionManager } from './useSessionManager';
 
 export const useSessionId = () => {
   const { currentSessionId } = useSessionManager();

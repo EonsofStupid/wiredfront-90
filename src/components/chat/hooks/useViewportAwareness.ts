@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { useChatUIStore } from '../stores/uiStore';
+import { useChatStore } from '../store/chatStore';
 
 export function useViewportAwareness() {
-  const { position, scale, setScale, docked } = useChatUIStore();
+  const { position, scale, setScale, docked } = useChatStore();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
 

@@ -1,9 +1,10 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @import './styles/animations/index.css';
-@import './features/chat/styles/chat-variables.css';
+@import './components/chat/styles/chat-variables.css';
 
 @layer base {
   :root {

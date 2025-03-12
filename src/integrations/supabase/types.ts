@@ -340,7 +340,7 @@ export type Database = {
           is_active: boolean | null
           last_accessed: string | null
           metadata: Json | null
-          title: string | null
+          name: string | null
           user_id: string
         }
         Insert: {
@@ -349,7 +349,7 @@ export type Database = {
           is_active?: boolean | null
           last_accessed?: string | null
           metadata?: Json | null
-          title?: string | null
+          name?: string | null
           user_id: string
         }
         Update: {
@@ -358,7 +358,7 @@ export type Database = {
           is_active?: boolean | null
           last_accessed?: string | null
           metadata?: Json | null
-          title?: string | null
+          name?: string | null
           user_id?: string
         }
         Relationships: [
