@@ -19,8 +19,8 @@ import {
 interface SessionControlsProps {
   onNewSession: () => void;
   onCleanupSessions: () => void;
-  onClearSessions: () => void;
-  onClearAllSessions: () => void;
+  onClearSessions: () => void; // Keep this as-is for backward compatibility
+  onClearAllSessions: () => void; // Keep this as-is for backward compatibility
   sessionCount: number;
   isLoading?: boolean;
 }

@@ -38,12 +38,13 @@ export const ChatSidebar = () => {
     await createSession();
   };
 
+  // Updated handlers to explicitly pass the correct boolean values
   const handleClearSessions = async () => {
-    await clearSessions(true); // Preserve current session
+    await clearSessions(true); // Explicitly preserve current session
   };
 
   const handleClearAllSessions = async () => {
-    await clearSessions(false); // Clear ALL sessions including current
+    await clearSessions(false); // Explicitly clear ALL sessions including current
   };
 
   return (

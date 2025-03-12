@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useMessageStore } from '@/components/chat/messaging/MessageManager';
 import { toast } from 'sonner';
@@ -61,7 +62,12 @@ export function useSessionManager() {
     }
   });
 
-  const { mutateAsync: clearSessionsMutation } = useMutation({
+  // Updated mutation to explicitly type the boolean parameter
+  const { mutateAsync: clearSessionsMutation } = useMutation<
+    { success: boolean }, // Return type
+    Error,               // Error type
+    boolean              // Variables type - explicitly typed as boolean
+  >({
     mutationFn: (preserveCurrentSession: boolean) => {
       const sessionIdToPreserve = preserveCurrentSession ? currentSessionId : null;
       return clearAllSessions(sessionIdToPreserve);
@@ -190,9 +196,10 @@ export function useSessionManager() {
     },
     updateSession: updateSessionMutation,
     archiveSession: archiveSessionMutation,
+    // Updated clearSessions function to ensure it always passes a boolean value
     clearSessions: async (preserveCurrentSession: boolean = true) => {
       logger.info('Clearing sessions', { preserveCurrentSession, currentSessionId });
-      await clearSessionsMutation(preserveCurrentSession); // Fixed: Using the mutation function instead of recursively calling itself
+      await clearSessionsMutation(preserveCurrentSession); // Explicitly pass the boolean parameter
     },
     cleanupInactiveSessions: async () => {
       if (currentSessionId) {
