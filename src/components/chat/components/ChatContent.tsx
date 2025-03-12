@@ -85,9 +85,10 @@ export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatConten
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
+        className="flex flex-col h-full" 
         data-testid="chat-content"
       >
-        <CardContent className="p-4" onClick={handleContentClick}>
+        <CardContent className="p-4 flex-1 overflow-hidden flex flex-col" onClick={handleContentClick}>
           {/* Message display area */}
           <ErrorBoundary
             fallback={
@@ -102,9 +103,11 @@ export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatConten
               </div>
             }
           >
-            <Suspense fallback={<MessageFallback />}>
-              <MessageModule scrollRef={scrollRef} />
-            </Suspense>
+            <div className="flex-1 overflow-hidden">
+              <Suspense fallback={<MessageFallback />}>
+                <MessageModule scrollRef={scrollRef} />
+              </Suspense>
+            </div>
           </ErrorBoundary>
           
           {/* Status button (only in editor mode) */}
@@ -125,7 +128,7 @@ export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatConten
           </AnimatePresence>
         </CardContent>
 
-        <CardFooter className="p-4 border-t border-white/10" onClick={handleContentClick}>
+        <CardFooter className="p-4 border-t border-white/10 mt-auto" onClick={handleContentClick}>
           <ErrorBoundary
             fallback={
               <div className="w-full p-3 border border-destructive/20 rounded-md bg-destructive/10 text-center">

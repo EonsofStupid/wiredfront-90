@@ -35,7 +35,7 @@ export function VoiceToTextButton({ onTranscription, isProcessing }: VoiceToText
       <Button
         variant="ghost"
         size="icon"
-        className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+        className="text-destructive hover:text-destructive/90 hover:bg-destructive/10 h-[var(--chat-input-height)]"
         onClick={() => toast.error(errorMessage || 'Voice recognition error')}
         title={errorMessage || 'Voice recognition error'}
       >
@@ -48,7 +48,7 @@ export function VoiceToTextButton({ onTranscription, isProcessing }: VoiceToText
     <Button
       variant="ghost"
       size="icon"
-      className="relative chat-cyber-border"
+      className="relative chat-cyber-border h-[var(--chat-input-height)]"
       onClick={handleClick}
       disabled={isProcessing}
       data-testid="voice-to-text-button"
