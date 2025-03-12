@@ -64,7 +64,7 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
     >
       <ScrollArea 
         ref={scrollRef}
-        className="w-full h-full chat-messages-container relative"
+        className="h-[300px] w-full pr-4 chat-messages-container relative"
       >
         <div 
           className="relative w-full"

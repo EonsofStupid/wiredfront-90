@@ -101,7 +101,7 @@ export function DraggableChatContainer({
       }}
       style={style}
       {...(docked ? {} : { ...attributes, ...listeners })}
-      className="w-[var(--chat-width)] transition-all duration-300 chat-container flex flex-col h-[var(--chat-height)]" 
+      className="w-[var(--chat-width)] transition-all duration-300 chat-container"
       onClick={handleContainerClick}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -109,8 +109,8 @@ export function DraggableChatContainer({
       transition={{ duration: 0.2 }}
       data-testid="chat-container"
     >
-      <Card className="shadow-xl glass-card neon-border overflow-hidden h-full flex flex-col">
-        <CardHeader className={`p-0 flex-shrink-0 ${docked ? '' : 'cursor-move'}`}>
+      <Card className="shadow-xl glass-card neon-border overflow-hidden h-full">
+        <CardHeader className={`p-0 ${docked ? '' : 'cursor-move'}`}>
           <ChatHeader 
             title={title}
             showSidebar={showSidebar}
@@ -121,13 +121,11 @@ export function DraggableChatContainer({
           />
         </CardHeader>
 
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          <ChatContent 
-            scrollRef={scrollRef} 
-            isMinimized={isMinimized} 
-            isEditorPage={isEditorPage}
-          />
-        </div>
+        <ChatContent 
+          scrollRef={scrollRef} 
+          isMinimized={isMinimized} 
+          isEditorPage={isEditorPage}
+        />
       </Card>
     </motion.div>
   );

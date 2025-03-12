@@ -21,7 +21,7 @@ export function KnowledgeSourceButton({ className }: KnowledgeSourceButtonProps)
     <Dialog onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <button 
-          className={`flex items-center justify-center h-[var(--chat-input-height)] w-10 rounded-md chat-knowledge-button chat-cyber-glow ${className || ''}`}
+          className={`flex items-center justify-center h-10 w-10 rounded-md chat-knowledge-button chat-cyber-glow ${className || ''}`}
           aria-label="Search knowledge sources"
           data-testid="knowledge-source-button"
         >
