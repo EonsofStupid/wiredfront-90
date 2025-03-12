@@ -30,14 +30,18 @@ export const SessionList = ({ sessions, onSelectSession }: SessionListProps) => 
   };
 
   return (
-    <ScrollArea className="h-[400px] w-full pr-4">
+    <ScrollArea className="h-full w-full pr-4 chat-messages-container">
       {sessions.length === 0 ? (
-        <div className="text-center p-4 text-muted-foreground">
-          No active sessions.
+        <div className="text-center p-6 text-muted-foreground flex flex-col items-center justify-center h-full">
+          <div className="opacity-60 mb-2">🔄</div>
+          <div className="text-chat-message-system-text">No active sessions</div>
+          <div className="text-xs mt-2 opacity-60 max-w-[200px]">
+            Create a new session to start chatting
+          </div>
         </div>
       ) : (
         <motion.div 
-          className="space-y-1"
+          className="space-y-1 p-2"
           variants={container}
           initial="hidden"
           animate="show"

@@ -29,21 +29,26 @@ export const SessionItem = ({ id, lastAccessed, isActive, onSelect }: SessionIte
           <Button
             variant={isActive ? "secondary" : "ghost"}
             className={`w-full justify-start gap-2 mb-1 transition-all duration-200 ${
-              isActive ? "bg-white/10 text-white" : "hover:bg-white/5"
+              isActive 
+                ? "bg-chat-message-assistant-bg/50 text-chat-knowledge-text chat-cyber-border" 
+                : "hover:bg-chat-message-assistant-bg/20"
             }`}
             onClick={() => onSelect(id)}
           >
             <MessageSquare className="h-4 w-4" />
             <span className="flex-1 text-left truncate">Session {displayId}</span>
             {isRecent && <span className="h-2 w-2 rounded-full bg-green-500" />}
-            {isActive && <Check className="h-4 w-4" />}
+            {isActive && <Check className="h-4 w-4 text-chat-knowledge-text" />}
             <Clock className="h-4 w-4 opacity-50" />
             <span className="text-xs opacity-70 truncate max-w-[80px]">
               {formattedDate}
             </span>
           </Button>
         </TooltipTrigger>
-        <TooltipContent side="right" className="text-xs">
+        <TooltipContent 
+          side="right" 
+          className="text-xs chat-dialog-content"
+        >
           <div className="space-y-1">
             <p className="font-medium">Session ID: {id}</p>
             <p>Last accessed: {lastAccessed.toLocaleString()}</p>
