@@ -42,6 +42,12 @@
   --chat-knowledge-border: rgba(30, 174, 219, 0.3);
   --chat-knowledge-text: #1EAEDB;
   
+  /* Notification styling */
+  --chat-notification-bg: rgba(26, 31, 44, 0.95);
+  --chat-notification-border: rgba(255, 59, 48, 0.3);
+  --chat-notification-text: #FF3B30;
+  --chat-notification-background: rgba(255, 59, 48, 0.1);
+  
   /* Effects */
   --chat-scrollbar-width: 6px;
   --chat-transition-speed: 0.3s;

@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { ChatPositionToggle } from "./ChatPositionToggle";
 import { useChatStore } from "../store/chatStore";
 import { motion } from "framer-motion";
+import { useLocation } from "react-router-dom";
+import { GitHubInfoButton } from "../features/githubinfo";
+import { NotificationsButton } from "../features/notifications";
 
 interface ChatHeaderProps {
   title: string;
@@ -24,6 +27,9 @@ export function ChatHeader({
   onClose,
 }: ChatHeaderProps) {
   const { docked, toggleDocked } = useChatStore();
+  const location = useLocation();
+  const isEditorPage = location.pathname === '/editor';
+  const displayTitle = isEditorPage ? "Dev Mode" : title;
 
   // Prevent propagation to avoid triggering drag when clicking buttons
   const handleButtonClick = (e: React.MouseEvent, callback: () => void) => {
@@ -53,9 +59,11 @@ export function ChatHeader({
             <ChevronLeft className="h-4 w-4" />
           )}
         </Button>
-        <span className="font-semibold text-sm md:text-base neon-glow">{title}</span>
+        <span className="font-semibold text-sm md:text-base neon-glow">{displayTitle}</span>
       </div>
       <div className="flex gap-1">
+        <GitHubInfoButton />
+        <NotificationsButton />
         <ChatPositionToggle />
         
         <Button
