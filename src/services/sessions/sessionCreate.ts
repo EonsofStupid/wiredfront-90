@@ -18,14 +18,32 @@ export async function createNewSession(params?: CreateSessionParams): Promise<Se
     const sessionId = uuidv4();
     const now = new Date().toISOString();
     
-    // Generate a better default title if none provided
-    const defaultTitle = params?.title || `Chat ${new Date().toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
-      hour12: true
-    })}`;
+    // Extract mode from metadata if available
+    const mode = params?.metadata?.mode || 'standard';
+    const providerId = params?.metadata?.providerId;
+    
+    // Generate a better default title based on mode
+    let defaultTitle = params?.title;
+    if (!defaultTitle) {
+      const dateStr = new Date().toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true
+      });
+      
+      switch (mode) {
+        case 'editor':
+          defaultTitle = `Code Session (${dateStr})`;
+          break;
+        case 'image':
+          defaultTitle = `Image Generation (${dateStr})`;
+          break;
+        default:
+          defaultTitle = `Chat ${dateStr}`;
+      }
+    }
     
     // Create a new session
     const { error } = await supabase
@@ -37,12 +55,22 @@ export async function createNewSession(params?: CreateSessionParams): Promise<Se
         created_at: now,
         last_accessed: now,
         is_active: true,
-        metadata: params?.metadata || {}
+        metadata: {
+          ...params?.metadata,
+          mode,
+          providerId
+        }
       });
 
     if (error) throw error;
     
-    logger.info('New session created', { sessionId, title: defaultTitle });
+    logger.info('New session created', { 
+      sessionId, 
+      title: defaultTitle,
+      mode,
+      providerId
+    });
+    
     return { success: true, sessionId };
   } catch (error) {
     logger.error('Failed to create session', { error });

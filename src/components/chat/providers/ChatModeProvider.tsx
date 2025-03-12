@@ -1,8 +1,8 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
-// Extended mode types to include 'chat-only'
-export type ChatMode = 'standard' | 'editor' | 'chat-only';
+// Extended mode types to include 'image'
+export type ChatMode = 'standard' | 'editor' | 'chat-only' | 'image';
 
 interface ChatModeContextType {
   mode: ChatMode;
