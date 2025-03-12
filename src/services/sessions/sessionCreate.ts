@@ -18,9 +18,12 @@ export async function createNewSession(params?: CreateSessionParams): Promise<Se
     const sessionId = uuidv4();
     const now = new Date().toISOString();
     
-    // Extract mode from metadata if available
-    const mode = params?.metadata?.mode || 'standard';
-    const providerId = params?.metadata?.providerId;
+    // Extract mode from metadata if available - with proper type checking
+    const metadata = params?.metadata || {};
+    const mode = typeof metadata === 'object' && 'mode' in metadata ? 
+      metadata.mode as string : 'standard';
+    const providerId = typeof metadata === 'object' && 'providerId' in metadata ? 
+      metadata.providerId as string : undefined;
     
     // Generate a better default title based on mode
     let defaultTitle = params?.title;
@@ -56,7 +59,7 @@ export async function createNewSession(params?: CreateSessionParams): Promise<Se
         last_accessed: now,
         is_active: true,
         metadata: {
-          ...params?.metadata,
+          ...(typeof metadata === 'object' ? metadata : {}),
           mode,
           providerId
         }

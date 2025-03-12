@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { ModeSelectionDialog } from './ModeSelectionDialog';
-import { useSessionManager } from '@/hooks/useSessionManager';
+import { ModeSelectionDialog, ChatMode } from './ModeSelectionDialog';
+import { useSessionManager } from '@/hooks/sessions';
 
 interface NewChatButtonProps {
   variant?: "default" | "outline" | "ghost";
@@ -12,14 +12,16 @@ interface NewChatButtonProps {
 
 export function NewChatButton({ variant = "default", fullWidth = false }: NewChatButtonProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { sessions } = useSessionManager();
+  const { createSession } = useSessionManager();
   
-  // Calculate active sessions count
-  const activeSessionsCount = sessions.filter(s => s.is_active).length;
-  
-  // For future implementation: max active sessions limit
-  // const maxActiveSessions = 5; // This would come from admin settings
-  // const isAtLimit = activeSessionsCount >= maxActiveSessions;
+  const handleCreateWithMode = async (mode: ChatMode, providerId: string) => {
+    await createSession({
+      metadata: {
+        mode,
+        providerId
+      }
+    });
+  };
   
   return (
     <>
@@ -27,25 +29,16 @@ export function NewChatButton({ variant = "default", fullWidth = false }: NewCha
         variant={variant}
         className={`flex items-center gap-2 ${fullWidth ? 'w-full justify-start' : ''}`}
         onClick={() => setIsDialogOpen(true)}
-        // For future: disabled={isAtLimit}
       >
         <PlusCircle className="h-4 w-4" />
         <span>New Chat</span>
       </Button>
       
       <ModeSelectionDialog 
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onCreateSession={handleCreateWithMode}
       />
-      
-      {/* For future implementation:
-      {isAtLimit && (
-        <p className="text-xs text-muted-foreground mt-1">
-          Maximum active sessions reached ({maxActiveSessions}).
-          Please archive or delete existing sessions.
-        </p>
-      )}
-      */}
     </>
   );
 }
