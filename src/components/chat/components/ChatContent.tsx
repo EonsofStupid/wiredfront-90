@@ -82,25 +82,15 @@ export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatConten
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="flex flex-col h-full"
+        className="flex flex-col h-full relative"
         data-testid="chat-content"
       >
         <CardContent 
-          className="flex-1 p-4 overflow-hidden" 
+          className="flex-1 p-4 overflow-hidden mb-[60px]" 
           onClick={handleContentClick}
         >
           <ErrorBoundary
-            fallback={
-              <div className="p-4 border border-destructive/20 rounded-md bg-destructive/10 text-center">
-                <DefaultErrorFallback />
-                <button 
-                  className="mt-2 px-3 py-1 text-xs bg-primary/80 text-primary-foreground rounded"
-                  onClick={() => window.location.reload()}
-                >
-                  Reload Application
-                </button>
-              </div>
-            }
+            fallback={<DefaultErrorFallback />}
           >
             <Suspense fallback={<MessageFallback />}>
               <MessageModule scrollRef={scrollRef} />
@@ -123,21 +113,11 @@ export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatConten
         </CardContent>
 
         <CardFooter 
-          className="p-4 border-t border-white/10 mt-auto" 
+          className="p-4 border-t border-white/10 absolute bottom-0 left-0 right-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
           onClick={handleContentClick}
         >
           <ErrorBoundary
-            fallback={
-              <div className="w-full p-3 border border-destructive/20 rounded-md bg-destructive/10 text-center">
-                <p className="text-sm">Failed to load chat input</p>
-                <button 
-                  className="mt-2 px-3 py-1 text-xs bg-primary/80 text-primary-foreground rounded"
-                  onClick={() => window.location.reload()}
-                >
-                  Retry
-                </button>
-              </div>
-            }
+            fallback={<DefaultErrorFallback />}
           >
             <Suspense fallback={<InputFallback />}>
               <ChatInputModule isEditorPage={isEditorPage} />
