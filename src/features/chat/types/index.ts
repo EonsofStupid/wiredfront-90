@@ -44,17 +44,6 @@ export const ChatSessionFileSchema = z.object({
   metadata: FileMetadataSchema.optional(),
 });
 
-// Chat session metadata validation
-export const ChatSessionMetadataSchema = z.object({
-  context: z.string().optional(),
-  summary: z.string().max(500).optional(),
-  tags: z.array(z.string().max(50)).max(20).optional(),
-  references: z.array(z.string()).max(100).optional(),
-  codebase_context: z.record(z.unknown()).optional(),
-  github_context: z.record(z.unknown()).optional(),
-  custom_data: z.record(z.unknown()).optional(),
-});
-
 // Create a Zod schema for Json type that matches Supabase's Json type
 export const JsonSchema = z.union([
   z.string(),
@@ -64,6 +53,17 @@ export const JsonSchema = z.union([
   z.lazy(() => z.record(JsonSchema)),
   z.lazy(() => z.array(JsonSchema))
 ]);
+
+// Chat session metadata validation - updated to ensure JSON compatibility
+export const ChatSessionMetadataSchema = z.object({
+  context: z.string().optional(),
+  summary: z.string().max(500).optional(),
+  tags: z.array(z.string().max(50)).max(20).optional(),
+  references: z.array(z.string()).max(100).optional(),
+  codebase_context: JsonSchema.optional(),
+  github_context: JsonSchema.optional(),
+  custom_data: JsonSchema.optional(),
+});
 
 // Message validation
 export const MessageSchema = z.object({
@@ -86,7 +86,7 @@ export const ChatSessionSchema = z.object({
   is_active: z.boolean(),
   created_at: z.string(),
   last_accessed: z.string(),
-  title: z.string().max(100).optional(),
+  title: z.string().max(100).optional(), // Changed from name to title to match database schema
   files: z.array(ChatSessionFileSchema).max(50).optional(), // Limit to 50 files per session
   metadata: ChatSessionMetadataSchema.optional(),
 });
@@ -155,4 +155,18 @@ export const validateChatSessionFile = (file: unknown): ChatSessionFile => {
 
 export const validateChatSessionMetadata = (metadata: unknown): ChatSessionMetadata => {
   return ChatSessionMetadataSchema.parse(metadata);
+};
+
+// Helper functions for safe type conversion
+export const serializeMetadata = (metadata: Partial<ChatSessionMetadata>): Json => {
+  return JSON.parse(JSON.stringify(metadata)) as Json;
+};
+
+export const isJsonCompatible = (value: unknown): value is Json => {
+  try {
+    JSON.parse(JSON.stringify(value));
+    return true;
+  } catch (e) {
+    return false;
+  }
 };

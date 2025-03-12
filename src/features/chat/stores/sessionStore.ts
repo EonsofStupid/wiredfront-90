@@ -1,8 +1,10 @@
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
-import { ChatSession, ChatSessionFile, ChatSessionMetadata, SessionState } from '../types';
+import { ChatSession, ChatSessionFile, ChatSessionMetadata, SessionState, serializeMetadata } from '../types';
+import { Json } from '@/integrations/supabase/types';
 
 interface SessionStore extends SessionState {
   // Session CRUD operations
@@ -46,6 +48,9 @@ export const useSessionStore = create<SessionStore>()(
           // Generate a new session ID
           const sessionId = uuidv4();
           
+          // Serialize metadata to ensure JSON compatibility
+          const serializedMetadata = metadata ? serializeMetadata(metadata) : {};
+          
           // Create a new session in Supabase
           const { error } = await supabase
             .from('chat_sessions')
@@ -53,8 +58,8 @@ export const useSessionStore = create<SessionStore>()(
               id: sessionId,
               user_id: user.id,
               is_active: true,
-              title,
-              metadata: metadata || {},
+              title, // Using title instead of name
+              metadata: serializedMetadata,
               last_accessed: new Date().toISOString()
             });
             
@@ -152,7 +157,7 @@ export const useSessionStore = create<SessionStore>()(
           // Update the session title in Supabase
           const { error } = await supabase
             .from('chat_sessions')
-            .update({ title })
+            .update({ title }) // Using title instead of name
             .eq('id', sessionId);
             
           if (error) {
@@ -191,10 +196,13 @@ export const useSessionStore = create<SessionStore>()(
             ...metadata
           };
           
+          // Serialize metadata to ensure JSON compatibility
+          const serializedMetadata = serializeMetadata(updatedMetadata);
+          
           // Update the session metadata in Supabase
           const { error } = await supabase
             .from('chat_sessions')
-            .update({ metadata: updatedMetadata })
+            .update({ metadata: serializedMetadata })
             .eq('id', sessionId);
             
           if (error) {

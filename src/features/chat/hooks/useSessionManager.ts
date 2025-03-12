@@ -3,7 +3,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
-import { ChatSession } from '../types';
+import { ChatSession, serializeMetadata } from '../types';
+import { Json } from '@/integrations/supabase/types';
 
 export const useSessionManager = () => {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -69,7 +70,7 @@ export const useSessionManager = () => {
           id: sessionId,
           user_id: user.id,
           is_active: true,
-          title: title || 'New Chat',
+          title: title || 'New Chat', // Updated to use title instead of name
           last_accessed: new Date().toISOString()
         });
 
@@ -159,7 +160,7 @@ export const useSessionManager = () => {
 
       const { error } = await supabase
         .from('chat_sessions')
-        .update({ title })
+        .update({ title }) // Updated to use title instead of name
         .eq('id', sessionId);
 
       if (error) throw error;
