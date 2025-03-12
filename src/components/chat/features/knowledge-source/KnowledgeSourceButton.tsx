@@ -8,7 +8,11 @@ import {
 import { KnowledgeSourceDialog } from './KnowledgeSourceDialog';
 import { logger } from '@/services/chat/LoggingService';
 
-export function KnowledgeSourceButton() {
+interface KnowledgeSourceButtonProps {
+  className?: string;
+}
+
+export function KnowledgeSourceButton({ className }: KnowledgeSourceButtonProps) {
   const handleOpenChange = (open: boolean) => {
     logger.info('Knowledge source dialog state changed', { open });
   };
@@ -17,7 +21,7 @@ export function KnowledgeSourceButton() {
     <Dialog onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <button 
-          className="chat-knowledge-button chat-cyber-glow"
+          className={`flex items-center justify-center h-10 w-10 rounded-md chat-knowledge-button chat-cyber-glow ${className || ''}`}
           aria-label="Search knowledge sources"
           data-testid="knowledge-source-button"
         >

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useChatMode } from "../providers/ChatModeProvider";
 import { Send, Loader2 } from "lucide-react";
 import { logger } from '@/services/chat/LoggingService';
+import { KnowledgeSourceButton } from '../features/knowledge-source/KnowledgeSourceButton';
 
 interface ChatInputModuleProps {
   onMessageSubmit?: (content: string) => void;
@@ -126,6 +127,8 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
         />
         <div className="absolute inset-0 rounded-md bg-gradient-to-r from-[#1EAEDB]/5 to-[#1EAEDB]/5 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-300"></div>
       </div>
+      
+      <KnowledgeSourceButton />
       
       <VoiceRecorder 
         onTranscription={handleTranscription}

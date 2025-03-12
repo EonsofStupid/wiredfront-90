@@ -2,7 +2,6 @@
 import React from "react";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { MessageModule } from "../modules/MessageModule";
-import { RAGModule } from "../modules/RAGModule";
 import { GitHubSyncModule } from "../modules/GitHubSyncModule";
 import { NotificationsModule } from "../modules/NotificationsModule";
 import { ChatInputModule } from "../modules/ChatInputModule";
@@ -43,30 +42,6 @@ export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatConten
           
           <AnimatePresence>
             {/* Mode-specific modules */}
-            {mode === 'standard' && features.ragSupport && (
-              <motion.div 
-                className="mt-4 space-y-2"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <RAGModule />
-              </motion.div>
-            )}
-            
-            {mode === 'chat-only' && features.ragSupport && (
-              <motion.div 
-                className="mt-4 space-y-2"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <RAGModule />
-              </motion.div>
-            )}
-            
             {mode === 'editor' && (
               <motion.div 
                 className="mt-4 space-y-2"
