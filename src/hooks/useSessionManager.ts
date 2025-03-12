@@ -13,6 +13,9 @@ export interface Session {
   created_at: string;
   last_accessed: string;
   message_count: number;
+  is_active?: boolean;
+  metadata?: Json;
+  user_id?: string;
 }
 
 export function useSessionManager() {
@@ -41,23 +44,31 @@ export function useSessionManager() {
           title,
           created_at,
           last_accessed,
-          message_count
+          is_active,
+          metadata,
+          user_id
         `)
         .eq('user_id', user.id)
         .order('last_accessed', { ascending: false });
 
       if (error) throw error;
 
+      // Transform data to include message_count
+      const sessionsWithCounts = (data || []).map(session => ({
+        ...session,
+        message_count: 0 // Default value until we implement message counting
+      }));
+      
       // Set sessions
-      setSessions(data || []);
+      setSessions(sessionsWithCounts);
       
       // If we have sessions but no current session, set the most recent
-      if (data && data.length > 0 && !currentSessionId) {
-        setCurrentSessionId(data[0].id);
-        await fetchSessionMessages(data[0].id);
+      if (sessionsWithCounts.length > 0 && !currentSessionId) {
+        setCurrentSessionId(sessionsWithCounts[0].id);
+        await fetchSessionMessages(sessionsWithCounts[0].id);
       }
       
-      logger.info('Sessions fetched', { count: data?.length });
+      logger.info('Sessions fetched', { count: sessionsWithCounts.length });
     } catch (error) {
       console.error('Error fetching sessions:', error);
       toast.error('Failed to load chat sessions');
@@ -90,7 +101,8 @@ export function useSessionManager() {
           title: `Chat ${new Date().toLocaleString()}`,
           created_at: now,
           last_accessed: now,
-          message_count: 0
+          is_active: true,
+          metadata: {}
         });
 
       if (error) throw error;
@@ -104,10 +116,13 @@ export function useSessionManager() {
       
       toast.success('New chat session created');
       logger.info('New session created', { sessionId });
+      
+      return sessionId; // Return the sessionId
     } catch (error) {
       console.error('Error creating session:', error);
       toast.error('Failed to create new chat session');
       logger.error('Failed to create session', { error });
+      return ''; // Return empty string on error
     } finally {
       setIsLoading(false);
     }
@@ -159,6 +174,10 @@ export function useSessionManager() {
         .order('last_accessed', { ascending: false });
 
       if (error) throw error;
+
+      if (!data || !Array.isArray(data)) {
+        throw new Error('Invalid data returned from database');
+      }
 
       // Keep the current session and the 5 most recent ones
       const sessionsToKeep = new Set<string>([
