@@ -1,7 +1,7 @@
 
 import React, { Suspense, lazy } from "react";
 import { SessionControls } from "./SessionControls";
-import { useSessionManager } from "@/hooks/useSessionManager";
+import { useSessionManager } from "@/hooks/sessions"; // Updated import
 import { SessionHeader } from "./SessionHeader";
 import { useChatStore } from "../store/chatStore";
 import { Skeleton } from "@/components/ui/skeleton";
