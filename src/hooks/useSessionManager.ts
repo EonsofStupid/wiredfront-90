@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useMessageStore } from '@/components/chat/messaging/MessageManager';
 import { toast } from 'sonner';
@@ -192,7 +193,7 @@ export function useSessionManager() {
     archiveSession: archiveSessionMutation,
     clearSessions: async (preserveCurrentSession: boolean = true) => {
       logger.info('Clearing sessions', { preserveCurrentSession, currentSessionId });
-      await clearSessions(preserveCurrentSession);
+      await clearSessions(preserveCurrentSession); // Fixed: Now we're passing the argument
     },
     cleanupInactiveSessions: async () => {
       if (currentSessionId) {

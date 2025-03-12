@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { logger } from '@/services/chat/LoggingService';
 import { KnowledgeSourceButton } from '../features/knowledge-source/KnowledgeSourceButton';
 import { VoiceToTextButton } from '../features/voice-to-text';
 import { toast } from "sonner";
+import { useSessionManager } from '@/hooks/useSessionManager';
 
 interface ChatInputModuleProps {
   onMessageSubmit?: (content: string) => void;
@@ -18,41 +18,47 @@ interface ChatInputModuleProps {
 export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatInputModuleProps) {
   const [message, setMessage] = useState("");
   const { addMessage, currentSessionId, isProcessing } = useMessageStore();
+  const { createSession } = useSessionManager();
   const { mode } = useChatMode();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    if (!currentSessionId) {
-      toast.error('No active chat session');
-      logger.error('Message submission failed - no active session');
-      return;
-    }
+    if (!message.trim()) return;
     
-    if (message.trim()) {
-      try {
-        logger.info('Submitting message', { 
-          mode, 
-          messageLength: message.length,
-          sessionId: currentSessionId
-        });
-        
-        if (onMessageSubmit) {
-          onMessageSubmit(message.trim());
+    try {
+      // Create a new session if we don't have one
+      let sessionId = currentSessionId;
+      if (!sessionId) {
+        logger.info('No active session, creating a new one...');
+        sessionId = await createSession();
+        if (!sessionId) {
+          toast.error('Failed to create a new session');
+          return;
         }
-        
-        await addMessage({
-          content: message.trim(),
-          role: 'user',
-          sessionId: currentSessionId
-        });
-        setMessage("");
-      } catch (error) {
-        console.error('Failed to send message:', error);
-        logger.error('Message submission failed', { error });
-        toast.error('Failed to send message');
       }
+      
+      logger.info('Submitting message', { 
+        mode, 
+        messageLength: message.length,
+        sessionId
+      });
+      
+      if (onMessageSubmit) {
+        onMessageSubmit(message.trim());
+      }
+      
+      await addMessage({
+        content: message.trim(),
+        role: 'user',
+        sessionId
+      });
+      setMessage("");
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      logger.error('Message submission failed', { error });
+      toast.error('Failed to send message');
     }
   };
 
