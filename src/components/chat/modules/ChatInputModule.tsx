@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -32,7 +33,11 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
       let sessionId = currentSessionId;
       if (!sessionId) {
         logger.info('No active session, creating a new one...');
-        sessionId = await createSession();
+        sessionId = await createSession({
+          title: `Chat ${new Date().toLocaleString()}`,
+          metadata: { mode: mode || 'chat' }
+        });
+        
         if (!sessionId) {
           toast.error('Failed to create a new session');
           return;

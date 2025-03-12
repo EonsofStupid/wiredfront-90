@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useMessageStore } from '@/components/chat/messaging/MessageManager';
 import { toast } from 'sonner';
@@ -63,7 +62,7 @@ export function useSessionManager() {
   });
 
   const { mutateAsync: clearSessionsMutation } = useMutation({
-    mutationFn: (preserveCurrentSession: boolean = true) => {
+    mutationFn: (preserveCurrentSession: boolean) => {
       const sessionIdToPreserve = preserveCurrentSession ? currentSessionId : null;
       return clearAllSessions(sessionIdToPreserve);
     },
