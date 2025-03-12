@@ -1,0 +1,46 @@
+
+/* Animations for chat components */
+
+/* Transitions */
+.chat-fade-in {
+  animation: chatFadeIn var(--chat-transition-speed) ease;
+}
+
+.chat-fade-out {
+  animation: chatFadeOut var(--chat-transition-speed) ease;
+}
+
+/* Keyframe definitions */
+@keyframes chatPulseGlow {
+  0% { box-shadow: 0 0 5px rgba(139, 92, 246, 0.3), 0 0 10px rgba(255, 0, 127, 0.2); }
+  50% { box-shadow: 0 0 15px rgba(139, 92, 246, 0.6), 0 0 20px rgba(255, 0, 127, 0.4); }
+  100% { box-shadow: 0 0 5px rgba(139, 92, 246, 0.3), 0 0 10px rgba(255, 0, 127, 0.2); }
+}
+
+@keyframes chatCyberGlow {
+  0% { box-shadow: 0 0 5px rgba(30, 174, 219, 0.3), 0 0 10px rgba(30, 174, 219, 0.2); }
+  50% { box-shadow: 0 0 10px rgba(30, 174, 219, 0.6), 0 0 20px rgba(30, 174, 219, 0.4); }
+  100% { box-shadow: 0 0 5px rgba(30, 174, 219, 0.3), 0 0 10px rgba(30, 174, 219, 0.2); }
+}
+
+@keyframes chatFadeIn {
+  from { 
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes chatFadeOut {
+  from { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to { 
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}

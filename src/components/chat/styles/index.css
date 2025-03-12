@@ -1,0 +1,8 @@
+
+/* Main import file for all chat styles */
+@import './variables.css';
+@import './container.css';
+@import './messages.css';
+@import './input.css';
+@import './effects.css';
+@import './animations.css';
