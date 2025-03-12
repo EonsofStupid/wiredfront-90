@@ -5,7 +5,8 @@ import { useLocation } from 'react-router-dom';
 import { useChatUIStore } from '../stores/uiStore';
 import { useMessageStore } from '../hooks/useMessageStore';
 import { useSessionStore } from '../stores/sessionStore';
-import { ChatMode, ChatSessionMetadata } from '../types';
+import { ChatMode, ChatSessionMetadata, validateChatSessionMetadata } from '../types';
+import { toast } from "sonner";
 
 interface ChatContextType {
   isEditorPage: boolean;
@@ -42,10 +43,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     initializeChat();
   }, [loadSessions, isInitialized]);
 
-  // Set session context data (for GitHub integration, code context, etc.)
+  // Set session context data with validation
   const setSessionContext = async (metadata: Partial<ChatSessionMetadata>) => {
     if (currentSessionId) {
-      await updateSessionMetadata(currentSessionId, metadata);
+      try {
+        // Validate the metadata before updating
+        const validMetadata = validateChatSessionMetadata(metadata);
+        await updateSessionMetadata(currentSessionId, validMetadata);
+      } catch (error) {
+        console.error("Invalid session metadata:", error);
+        toast.error("Failed to update session metadata: Invalid data format");
+      }
     }
   };
 
