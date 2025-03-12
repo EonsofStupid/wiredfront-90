@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { memo } from "react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Check, Clock, AlertCircle } from "lucide-react";
@@ -9,9 +9,18 @@ interface MessageProps {
   content: string;
   role: 'user' | 'assistant' | 'system';
   status?: 'pending' | 'sent' | 'failed';
+  id?: string;
+  timestamp?: string;
 }
 
-export function Message({ content, role, status = 'sent' }: MessageProps) {
+// Use memo to prevent unnecessary re-renders
+const Message = memo(function Message({ 
+  content, 
+  role, 
+  status = 'sent',
+  id,
+  timestamp 
+}: MessageProps) {
   // Map role to appropriate CSS classes
   const messageClass = role === 'user' 
     ? 'chat-message-user' 
@@ -28,12 +37,22 @@ export function Message({ content, role, status = 'sent' }: MessageProps) {
   
   const { icon, tooltip } = statusConfig[status];
 
+  // Add proper ARIA attributes for accessibility
+  const messageType = role === 'user' ? 'Sent' : 'Received';
+  const statusText = status === 'pending' ? 'Sending...' : 
+                   status === 'sent' ? 'Sent' : 'Failed to send';
+
   return (
     <div
       className={cn(
-        "flex w-full",
+        "flex w-full mb-4",
         role === "user" ? "justify-end" : "justify-start"
       )}
+      role="listitem"
+      aria-label={`${messageType} message: ${content}`}
+      data-message-id={id}
+      data-message-role={role}
+      data-message-status={status}
     >
       <Card
         className={cn(
@@ -47,12 +66,20 @@ export function Message({ content, role, status = 'sent' }: MessageProps) {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="ml-2 flex h-4 w-4 items-center justify-center self-end">
+                <span 
+                  className="ml-2 flex h-4 w-4 items-center justify-center self-end" 
+                  aria-label={statusText}
+                >
                   {icon}
                 </span>
               </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs">
+              <TooltipContent side="top" className="text-xs chat-dialog-content">
                 <p>{tooltip}</p>
+                {timestamp && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {new Date(timestamp).toLocaleTimeString()}
+                  </p>
+                )}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -60,4 +87,6 @@ export function Message({ content, role, status = 'sent' }: MessageProps) {
       </Card>
     </div>
   );
-}
+});
+
+export { Message };
