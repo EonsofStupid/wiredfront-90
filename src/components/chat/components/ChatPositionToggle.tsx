@@ -15,7 +15,7 @@ export function ChatPositionToggle() {
   
   return (
     <button
-      className="h-8 w-8 hover:bg-white/10 transition-colors duration-200"
+      className="h-8 w-8 hover:bg-white/10 text-chat-text transition-colors duration-200"
       onClick={handleClick}
       title={`Toggle chat position (currently ${position})`}
       data-testid="chat-position-toggle"

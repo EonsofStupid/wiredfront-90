@@ -27,16 +27,24 @@
   --chat-message-system-text: var(--muted-foreground, #9CA3AF);
   
   /* Input styling */
-  --chat-input-bg: rgba(0, 0, 0, 0.2);
-  --chat-input-text: var(--foreground, white);
-  --chat-input-placeholder: var(--muted-foreground, #9CA3AF);
-  --chat-input-border: rgba(255, 255, 255, 0.1);
+  --chat-input-bg: rgba(26, 31, 44, 0.9);
+  --chat-input-text: #1EAEDB;
+  --chat-input-placeholder: rgba(30, 174, 219, 0.5);
+  --chat-input-border: rgba(30, 174, 219, 0.2);
+  --chat-input-focus-border: rgba(30, 174, 219, 0.6);
+  --chat-input-focus-glow: 0 0 8px rgba(30, 174, 219, 0.4);
+  
+  /* Knowledge search styling */
+  --chat-knowledge-bg: rgba(26, 31, 44, 0.95);
+  --chat-knowledge-border: rgba(30, 174, 219, 0.3);
+  --chat-knowledge-text: #1EAEDB;
   
   /* Effects */
   --chat-scrollbar-width: 6px;
   --chat-transition-speed: 0.3s;
   --chat-box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   --chat-neon-glow: 0 0 15px rgba(139, 92, 246, 0.5), 0 0 30px rgba(255, 0, 127, 0.3);
+  --chat-cyber-glow: 0 0 10px rgba(30, 174, 219, 0.5), 0 0 20px rgba(30, 174, 219, 0.3);
 }
 
 /* Chat container styling */
@@ -101,6 +109,8 @@
   padding: 0.5rem 1rem;
   width: 100%;
   transition: all var(--chat-transition-speed) ease;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
 }
 
 .chat-input::placeholder {
@@ -108,8 +118,8 @@
 }
 
 .chat-input:focus {
-  border-color: var(--chat-message-user-bg);
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+  border-color: var(--chat-input-focus-border);
+  box-shadow: var(--chat-input-focus-glow);
   outline: none;
 }
 
@@ -128,6 +138,38 @@
   transform: scale(1.05);
   background: rgba(0, 0, 0, 0.6);
   border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Knowledge search button */
+.chat-knowledge-button {
+  background: transparent;
+  color: var(--chat-knowledge-text);
+  border: 1px solid var(--chat-knowledge-border);
+  border-radius: var(--chat-border-radius);
+  padding: 0.35rem;
+  transition: all var(--chat-transition-speed) ease;
+}
+
+.chat-knowledge-button:hover {
+  background: rgba(30, 174, 219, 0.1);
+  border-color: var(--chat-knowledge-text);
+  box-shadow: var(--chat-cyber-glow);
+}
+
+.chat-knowledge-button[data-state="open"] {
+  background: rgba(30, 174, 219, 0.15);
+  border-color: var(--chat-knowledge-text);
+  box-shadow: var(--chat-cyber-glow);
+}
+
+/* Chat-specific dialog styling */
+.chat-dialog-content {
+  background: var(--chat-knowledge-bg);
+  border: 1px solid var(--chat-knowledge-border);
+  color: var(--chat-text);
+  border-radius: var(--chat-border-radius);
+  box-shadow: var(--chat-cyber-glow);
+  z-index: var(--z-chat);
 }
 
 /* Chat-specific glass card effect */
@@ -168,6 +210,17 @@
   100% { box-shadow: 0 0 5px rgba(139, 92, 246, 0.3), 0 0 10px rgba(255, 0, 127, 0.2); }
 }
 
+/* Cyber glow */
+.chat-cyber-glow {
+  animation: chatCyberGlow 3s infinite ease-in-out;
+}
+
+@keyframes chatCyberGlow {
+  0% { box-shadow: 0 0 5px rgba(30, 174, 219, 0.3), 0 0 10px rgba(30, 174, 219, 0.2); }
+  50% { box-shadow: 0 0 10px rgba(30, 174, 219, 0.6), 0 0 20px rgba(30, 174, 219, 0.4); }
+  100% { box-shadow: 0 0 5px rgba(30, 174, 219, 0.3), 0 0 10px rgba(30, 174, 219, 0.2); }
+}
+
 /* Transitions */
 .chat-fade-in {
   animation: chatFadeIn var(--chat-transition-speed) ease;
@@ -202,6 +255,12 @@
 
 .chat-neon-glow {
   text-shadow: 0 0 10px rgba(139, 92, 246, 0.8);
+}
+
+/* Cyber border */
+.chat-cyber-border {
+  box-shadow: var(--chat-cyber-glow);
+  border: 1px solid var(--chat-knowledge-border);
 }
 
 /* Animations */

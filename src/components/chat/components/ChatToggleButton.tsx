@@ -44,6 +44,7 @@ export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
       exit={{ opacity: 0, scale: 0.8 }}
       transition={{ duration: 0.2 }}
       className={`fixed bottom-4 ${positionClass} z-[var(--z-chat)]`}
+      style={{ zIndex: 'var(--z-chat)' }}
     >
       <button
         onClick={handleClick}

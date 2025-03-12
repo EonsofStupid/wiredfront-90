@@ -119,12 +119,12 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
           onClick={handleInputClick}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="chat-input bg-[#1A1F2C]/80 border-white/10 text-white group-hover:border-[#8B5CF6]/50 transition-all duration-300"
+          className="chat-input chat-cyber-border font-mono text-chat-input-text"
           disabled={isProcessing}
           data-testid="chat-input"
           aria-label="Message input"
         />
-        <div className="absolute inset-0 rounded-md bg-gradient-to-r from-[#8B5CF6]/5 to-[#D946EF]/5 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-300"></div>
+        <div className="absolute inset-0 rounded-md bg-gradient-to-r from-[#1EAEDB]/5 to-[#1EAEDB]/5 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-300"></div>
       </div>
       
       <VoiceRecorder 
@@ -135,7 +135,7 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
       <Button 
         type="submit" 
         disabled={isProcessing || !message.trim()}
-        className="min-w-[80px] bg-gradient-to-r from-[#8B5CF6] to-[#D946EF] hover:opacity-90 text-white border-none transition-all duration-200"
+        className="min-w-[80px] bg-gradient-to-r from-[#1EAEDB] to-[#0080B3] hover:opacity-90 text-white border-none transition-all duration-200 font-mono"
         data-testid="send-button"
       >
         {isProcessing ? (
