@@ -1,5 +1,7 @@
+
 import { User } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { Json } from '@/integrations/supabase/types';
 
 // Basic enums
 export type MessageRole = 'user' | 'assistant' | 'system';
@@ -53,6 +55,16 @@ export const ChatSessionMetadataSchema = z.object({
   custom_data: z.record(z.unknown()).optional(),
 });
 
+// Create a Zod schema for Json type that matches Supabase's Json type
+export const JsonSchema = z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+  z.null(),
+  z.lazy(() => z.record(JsonSchema)),
+  z.lazy(() => z.array(JsonSchema))
+]);
+
 // Message validation
 export const MessageSchema = z.object({
   id: z.string(),
@@ -62,7 +74,7 @@ export const MessageSchema = z.object({
   chat_session_id: z.string().nullable(),
   message_status: MessageStatusSchema,
   type: MessageTypeSchema,
-  metadata: z.record(z.unknown()),
+  metadata: JsonSchema.default({}), // Using the JsonSchema to match Supabase's Json type
   timestamp: z.string(),
   is_minimized: z.boolean().optional(),
 });

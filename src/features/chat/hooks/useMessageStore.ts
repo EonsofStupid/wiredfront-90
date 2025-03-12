@@ -3,7 +3,8 @@ import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
-import { Message, MessageRole, MessageStatus } from '../types';
+import { Message, MessageRole, MessageStatus, MessageType } from '../types';
+import { Json } from '@/integrations/supabase/types';
 
 interface MessageState {
   messages: Message[];
@@ -19,7 +20,8 @@ interface MessageStore extends MessageState {
     role: MessageRole; 
     sessionId: string;
     status?: MessageStatus;
-    metadata?: Record<string, any>;
+    metadata?: Json;
+    type?: MessageType;
   }) => Promise<string | null>;
   updateMessage: (messageId: string, updates: Partial<Message>) => Promise<void>;
   deleteMessage: (messageId: string) => Promise<void>;
@@ -61,7 +63,7 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
         user_id: msg.user_id,
         chat_session_id: msg.chat_session_id,
         message_status: msg.message_status as MessageStatus,
-        type: msg.type,
+        type: (msg.type || msg.message_type) as MessageType,
         metadata: msg.metadata || {},
         timestamp: msg.created_at,
         is_minimized: msg.is_minimized
@@ -78,7 +80,7 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
     }
   },
 
-  addMessage: async ({ content, role, sessionId, status = 'pending', metadata = {} }) => {
+  addMessage: async ({ content, role, sessionId, status = 'pending', metadata = {}, type }) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No authenticated user');
@@ -86,13 +88,15 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
       const messageId = uuidv4();
       const timestamp = new Date().toISOString();
       
+      const messageType = type || (role === 'system' ? 'system' : 'text');
+      
       const newMessage: Message = {
         id: messageId,
         content,
         user_id: user.id,
         chat_session_id: sessionId,
         message_status: status,
-        type: role === 'system' ? 'system' : 'text',
+        type: messageType,
         metadata,
         role,
         timestamp
@@ -111,7 +115,8 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
           content,
           user_id: user.id,
           chat_session_id: sessionId,
-          type: role === 'system' ? 'system' : 'text',
+          type: messageType,
+          message_type: messageType,
           metadata,
           message_status: 'sent',
           role
@@ -148,9 +153,15 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
     try {
       set({ error: null });
 
+      // Convert the updates to match the database column names
+      const dbUpdates: any = { ...updates };
+      if (updates.type) {
+        dbUpdates.message_type = updates.type;
+      }
+
       const { error } = await supabase
         .from('messages')
-        .update(updates)
+        .update(dbUpdates)
         .eq('id', messageId);
 
       if (error) throw error;
