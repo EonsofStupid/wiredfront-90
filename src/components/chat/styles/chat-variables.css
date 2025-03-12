@@ -1,4 +1,3 @@
-
 /* Chat-specific CSS variables with isolation from app variables */
 :root {
   /* Z-index for chat components - ensuring it's always on top */
@@ -12,6 +11,7 @@
   --chat-height: 500px;
   --chat-min-height: 300px;
   --chat-max-height: 800px;
+  --chat-header-height: 64px; /* Added header height variable */
   --chat-input-height: 72px;
   
   /* Chat styling */
@@ -256,7 +256,7 @@
 }
 
 .chat-messages-scroll {
-  height: calc(100% - var(--chat-input-height) - 20px) !important;
+  height: calc(100% - var(--chat-header-height) - var(--chat-input-height)) !important;
   overflow-y: auto;
   overflow-x: hidden;
 }
