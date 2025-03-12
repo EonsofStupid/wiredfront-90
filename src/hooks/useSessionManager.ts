@@ -77,7 +77,8 @@ export function useSessionManager() {
       clearMessages();
       
       if (!currentSessionId) {
-        await createSession();
+        // Fixed: Explicitly pass undefined to createSession to match the function signature
+        await createSession(undefined);
       }
       
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS });

@@ -1,3 +1,4 @@
+
 import React, { Suspense, lazy } from "react";
 import { SessionControls } from "./SessionControls";
 import { useSessionManager } from "@/hooks/useSessionManager";
@@ -34,7 +35,8 @@ export const ChatSidebar = () => {
   };
 
   const handleCreateSession = async () => {
-    await createSession();
+    // Explicitly pass undefined to createSession to match the function signature
+    await createSession(undefined);
   };
 
   // Type-safe handlers that explicitly pass the correct boolean values
