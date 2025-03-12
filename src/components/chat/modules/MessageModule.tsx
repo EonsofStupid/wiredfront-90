@@ -1,4 +1,3 @@
-
 import React, { useEffect, useCallback } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Message } from "../Message";
@@ -64,7 +63,7 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
     >
       <ScrollArea 
         ref={scrollRef}
-        className="h-[300px] w-full pr-4 chat-messages-container relative"
+        className="h-[calc(100vh-200px)] w-full pr-4 chat-messages-container"
       >
         <div 
           className="relative w-full"
