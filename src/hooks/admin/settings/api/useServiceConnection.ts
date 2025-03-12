@@ -1,8 +1,8 @@
 
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { useMessageStore } from '@/components/chat/messaging/MessageManager';
-import { useSessionManager } from "@/hooks/useSessionManager";
+import { useMessageStore } from '@/features/chat/hooks/useMessageStore';
+import { useSessionManager } from "@/features/chat/hooks/useSessionManager";
 import { toast } from "sonner";
 
 export const useServiceConnection = () => {
