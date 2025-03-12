@@ -1,4 +1,3 @@
-
 import React, { Suspense, lazy } from "react";
 import { SessionControls } from "./SessionControls";
 import { useSessionManager } from "@/hooks/useSessionManager";
@@ -18,6 +17,7 @@ export const ChatSidebar = () => {
     switchSession,
     createSession,
     cleanupInactiveSessions,
+    clearSessions,
     isLoading,
   } = useSessionManager();
   const { ui } = useChatStore();
@@ -35,6 +35,10 @@ export const ChatSidebar = () => {
 
   const handleCreateSession = async () => {
     await createSession();
+  };
+
+  const handleClearSessions = async () => {
+    await clearSessions();
   };
 
   return (
@@ -79,6 +83,7 @@ export const ChatSidebar = () => {
       
       <SessionControls
         onNewSession={handleCreateSession}
+        onClearSessions={handleClearSessions}
         onCleanupSessions={cleanupInactiveSessions}
         sessionCount={sessions.length}
         isLoading={isLoading || ui.sessionLoading}

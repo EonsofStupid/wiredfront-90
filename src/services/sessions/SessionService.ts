@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Session, SessionOperationResult, CreateSessionParams, UpdateSessionParams } from '@/types/sessions';
 import { v4 as uuidv4 } from 'uuid';
@@ -214,5 +213,32 @@ export async function cleanupSessions(currentSessionId: string): Promise<number>
   } catch (error) {
     logger.error('Failed to clean up sessions', { error });
     throw error;
+  }
+}
+
+/**
+ * Clears all sessions for the current user except the active one
+ */
+export async function clearAllSessions(currentSessionId: string): Promise<SessionOperationResult> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    // Delete all sessions except the current one
+    const { error } = await supabase
+      .from('chat_sessions')
+      .delete()
+      .eq('user_id', user.id)
+      .neq('id', currentSessionId);
+
+    if (error) throw error;
+    
+    logger.info('Cleared all sessions', { currentSessionId });
+    return { success: true };
+  } catch (error) {
+    logger.error('Failed to clear sessions', { error });
+    return { success: false, error };
   }
 }

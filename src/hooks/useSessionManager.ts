@@ -15,7 +15,8 @@ import {
   updateSession,
   switchToSession, 
   archiveSession,
-  cleanupSessions 
+  cleanupSessions,
+  clearAllSessions 
 } from '@/services/sessions/SessionService';
 import { 
   useQuery, 
@@ -28,6 +29,18 @@ const QUERY_KEYS = {
   SESSIONS: ['sessions'],
   SESSION: (id: string) => ['session', id],
   MESSAGES: (sessionId: string) => ['messages', sessionId],
+};
+
+const toastStyles = {
+  success: {
+    className: "glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#0EA5E9]/20 text-white",
+  },
+  error: {
+    className: "glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-red-500/20 text-white",
+  },
+  info: {
+    className: "glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#D946EF]/20 text-white",
+  }
 };
 
 export function useSessionManager() {
@@ -51,6 +64,19 @@ export function useSessionManager() {
     }
   });
 
+  // Clear all sessions
+  const { mutateAsync: clearSessions } = useMutation({
+    mutationFn: (currentId: string) => clearAllSessions(currentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS });
+      toast.success('All sessions cleared', toastStyles.success);
+    },
+    onError: (err) => {
+      toast.error('Failed to clear sessions', toastStyles.error);
+      logger.error('Error clearing sessions:', err);
+    },
+  });
+
   // Create a new session
   const { mutateAsync: createSession } = useMutation({
     mutationFn: (params?: CreateSessionParams) => createNewSession(params),
@@ -59,11 +85,11 @@ export function useSessionManager() {
         setCurrentSessionId(result.sessionId);
         clearMessages();
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS });
-        toast.success('New chat session created');
+        toast.success('New chat session created', toastStyles.success);
       }
     },
     onError: (err) => {
-      toast.error('Failed to create new chat session');
+      toast.error('Failed to create new chat session', toastStyles.error);
       logger.error('Error creating session:', err);
     },
   });
@@ -165,6 +191,13 @@ export function useSessionManager() {
     },
     updateSession: updateSessionMutation,
     archiveSession: archiveSessionMutation,
+    clearSessions: async () => {
+      if (currentSessionId) {
+        await clearSessions(currentSessionId);
+      } else {
+        toast.error('No active session found', toastStyles.error);
+      }
+    },
     cleanupInactiveSessions: async () => {
       if (currentSessionId) {
         await cleanupInactiveSessions(currentSessionId);
@@ -173,3 +206,4 @@ export function useSessionManager() {
     refreshSessions: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS })
   };
 }
+
