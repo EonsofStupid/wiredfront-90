@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Session, SessionOperationResult, CreateSessionParams, UpdateSessionParams } from '@/types/sessions';
 import { v4 as uuidv4 } from 'uuid';
@@ -218,7 +217,7 @@ export async function cleanupSessions(currentSessionId: string): Promise<number>
 }
 
 /**
- * Clears all sessions for the current user except the active one
+ * Clears all sessions for the current user except the specified one
  */
 export async function clearAllSessions(currentSessionId: string | null = null): Promise<SessionOperationResult> {
   try {
@@ -237,11 +236,15 @@ export async function clearAllSessions(currentSessionId: string | null = null): 
       query = query.neq('id', currentSessionId);
     }
     
-    const { error } = await query;
+    const { error, count } = await query;
 
     if (error) throw error;
     
-    logger.info('Cleared all sessions', { preservedSessionId: currentSessionId || 'none' });
+    logger.info('Cleared sessions', { 
+      count: count, 
+      preservedSessionId: currentSessionId || 'none' 
+    });
+    
     return { success: true };
   } catch (error) {
     logger.error('Failed to clear sessions', { error });

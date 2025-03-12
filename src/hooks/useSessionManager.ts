@@ -66,9 +66,17 @@ export function useSessionManager() {
       const sessionIdToPreserve = preserveCurrentSession ? currentSessionId : null;
       return clearAllSessions(sessionIdToPreserve);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS });
-      toast.success('All sessions cleared', toastStyles.success);
+    onSuccess: async () => {
+      clearMessages();
+      
+      if (!currentSessionId) {
+        await createSession();
+      }
+      
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS });
+      await refreshSessions();
+      
+      toast.success('Sessions cleared successfully', toastStyles.success);
     },
     onError: (err) => {
       toast.error('Failed to clear sessions', toastStyles.error);
@@ -163,15 +171,13 @@ export function useSessionManager() {
     },
   });
 
-  const currentSession = useCallback(() => {
-    if (!currentSessionId) return null;
-    return sessions.find(session => session.id === currentSessionId) || null;
-  }, [currentSessionId, sessions]);
-
   return {
     sessions,
     currentSessionId,
-    currentSession: currentSession(),
+    currentSession: useCallback(() => {
+      if (!currentSessionId) return null;
+      return sessions.find(session => session.id === currentSessionId) || null;
+    }, [currentSessionId, sessions])(),
     isLoading,
     isError,
     error,
@@ -185,6 +191,7 @@ export function useSessionManager() {
     updateSession: updateSessionMutation,
     archiveSession: archiveSessionMutation,
     clearSessions: async (preserveCurrentSession: boolean = true) => {
+      logger.info('Clearing sessions', { preserveCurrentSession, currentSessionId });
       await clearSessions(preserveCurrentSession);
     },
     cleanupInactiveSessions: async () => {
@@ -192,6 +199,6 @@ export function useSessionManager() {
         await cleanupInactiveSessions(currentSessionId);
       }
     },
-    refreshSessions: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS })
+    refreshSessions
   };
 }

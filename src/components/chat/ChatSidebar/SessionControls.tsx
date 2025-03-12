@@ -76,24 +76,44 @@ export const SessionControls: React.FC<SessionControlsProps> = ({
             </Tooltip>
           </TooltipProvider>
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
+          <AlertDialog>
+            <TooltipProvider>
+              <Tooltip>
+                <AlertDialogTrigger asChild>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
+                      disabled={isLoading}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                </AlertDialogTrigger>
+                <TooltipContent>
+                  <p>Keep current, delete others</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <AlertDialogContent className="glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#D946EF]/20" style={{ zIndex: 9900 }}>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Clear Other Sessions</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will delete ALL other chat sessions except the current one. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="border-white/10 hover:bg-white/10">Cancel</AlertDialogCancel>
+                <AlertDialogAction 
                   onClick={onClearSessions}
-                  disabled={isLoading}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
-                  <X className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Clear all sessions except current</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+                  Delete Others
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
           <AlertDialog>
             <TooltipProvider>
@@ -111,15 +131,15 @@ export const SessionControls: React.FC<SessionControlsProps> = ({
                   </TooltipTrigger>
                 </AlertDialogTrigger>
                 <TooltipContent>
-                  <p>Clear ALL sessions including current</p>
+                  <p>Delete ALL sessions including current</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
             <AlertDialogContent className="glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#D946EF]/20" style={{ zIndex: 9900 }}>
               <AlertDialogHeader>
-                <AlertDialogTitle>Clear All Sessions</AlertDialogTitle>
+                <AlertDialogTitle>Delete All Sessions</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will delete ALL chat sessions, including the current one. This action cannot be undone.
+                  This will delete ALL chat sessions, including the current active one, and create a new empty session. This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
