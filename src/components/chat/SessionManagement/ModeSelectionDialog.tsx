@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -92,7 +91,7 @@ export function ModeSelectionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#0EA5E9]/20 max-w-md">
+      <DialogContent className="glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#0EA5E9]/20 max-w-md" style={{ zIndex: 'var(--z-chat-dialogs)' }}>
         <DialogHeader>
           <DialogTitle className="text-xl">New Chat Session</DialogTitle>
           <DialogDescription>
