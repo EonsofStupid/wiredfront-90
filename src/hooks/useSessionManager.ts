@@ -1,136 +1,185 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useMessageStore } from '@/components/chat/messaging/MessageManager';
 import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';
 import { useChatStore } from '@/components/chat/store/chatStore';
-import { Session } from '@/types/sessions';
+import { 
+  Session,
+  CreateSessionParams,
+  UpdateSessionParams, 
+  SessionOperationResult 
+} from '@/types/sessions';
 import { 
   fetchUserSessions, 
   createNewSession, 
+  updateSession,
   switchToSession, 
+  archiveSession,
   cleanupSessions 
 } from '@/services/sessions/SessionService';
+import { 
+  useQuery, 
+  useMutation, 
+  useQueryClient 
+} from '@tanstack/react-query';
 
-export type { Session } from '@/types/sessions';
+// Query keys for TanStack Query
+const QUERY_KEYS = {
+  SESSIONS: 'sessions',
+  SESSION: (id: string) => ['session', id],
+  MESSAGES: (sessionId: string) => ['messages', sessionId],
+};
 
 export function useSessionManager() {
-  const [sessions, setSessions] = useState<Session[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const { clearMessages, fetchSessionMessages } = useMessageStore();
   const { setSessionLoading } = useChatStore();
+  const queryClient = useQueryClient();
 
-  const fetchSessions = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setSessionLoading(true);
-      
-      const sessionsData = await fetchUserSessions();
-      setSessions(sessionsData);
-      
-      // If we have sessions but no current session, set the most recent
-      if (sessionsData.length > 0 && !currentSessionId) {
-        setCurrentSessionId(sessionsData[0].id);
-        await fetchSessionMessages(sessionsData[0].id);
-      }
-    } catch (error) {
-      console.error('Error fetching sessions:', error);
+  // Fetch all sessions with TanStack Query
+  const { 
+    data: sessions = [], 
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: [QUERY_KEYS.SESSIONS],
+    queryFn: fetchUserSessions,
+    onError: (err) => {
       toast.error('Failed to load chat sessions');
-    } finally {
-      setIsLoading(false);
-      setSessionLoading(false);
-    }
-  }, [currentSessionId, fetchSessionMessages, setSessionLoading]);
+      logger.error('Error fetching sessions:', err);
+    },
+  });
 
-  const createSession = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      
-      const sessionId = await createNewSession();
-      
-      // Switch to the new session
-      setCurrentSessionId(sessionId);
-      clearMessages();
-      
-      // Update sessions list
-      await fetchSessions();
-      
-      toast.success('New chat session created');
-      
-      return sessionId; // Return the sessionId
-    } catch (error) {
-      console.error('Error creating session:', error);
+  // Create a new session
+  const { mutateAsync: createSession } = useMutation({
+    mutationFn: (params?: CreateSessionParams) => createNewSession(params),
+    onSuccess: (result) => {
+      if (result.success && result.sessionId) {
+        setCurrentSessionId(result.sessionId);
+        clearMessages();
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SESSIONS] });
+        toast.success('New chat session created');
+      }
+    },
+    onError: (err) => {
       toast.error('Failed to create new chat session');
-      return ''; // Return empty string on error
-    } finally {
-      setIsLoading(false);
-    }
-  }, [clearMessages, fetchSessions]);
+      logger.error('Error creating session:', err);
+    },
+  });
 
-  const switchSession = useCallback(async (sessionId: string) => {
-    try {
-      setIsLoading(true);
+  // Switch to an existing session
+  const { mutateAsync: switchSession } = useMutation({
+    mutationFn: (sessionId: string) => switchToSession(sessionId),
+    onMutate: async (sessionId) => {
       setSessionLoading(true);
       
-      if (sessionId === currentSessionId) return;
+      if (sessionId === currentSessionId) {
+        setSessionLoading(false);
+        return;
+      }
       
-      // Set current session and fetch messages
       setCurrentSessionId(sessionId);
       await fetchSessionMessages(sessionId);
-      
-      // Update the session's last_accessed timestamp
-      await switchToSession(sessionId);
-    } catch (error) {
-      console.error('Error switching session:', error);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SESSIONS] });
+    },
+    onError: (err) => {
       toast.error('Failed to switch chat session');
-    } finally {
-      setIsLoading(false);
+      logger.error('Error switching session:', err);
+    },
+    onSettled: () => {
       setSessionLoading(false);
-    }
-  }, [currentSessionId, fetchSessionMessages, setSessionLoading]);
+    },
+  });
 
-  const cleanupInactiveSessions = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      
-      if (!currentSessionId) {
+  // Update a session
+  const { mutateAsync: updateSessionMutation } = useMutation({
+    mutationFn: ({ sessionId, params }: { sessionId: string, params: UpdateSessionParams }) => 
+      updateSession(sessionId, params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SESSIONS] });
+    },
+    onError: (err) => {
+      toast.error('Failed to update chat session');
+      logger.error('Error updating session:', err);
+    },
+  });
+
+  // Archive a session
+  const { mutateAsync: archiveSessionMutation } = useMutation({
+    mutationFn: (sessionId: string) => archiveSession(sessionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SESSIONS] });
+      toast.success('Chat session archived');
+    },
+    onError: (err) => {
+      toast.error('Failed to archive chat session');
+      logger.error('Error archiving session:', err);
+    },
+  });
+
+  // Clean up inactive sessions
+  const { mutateAsync: cleanupInactiveSessions } = useMutation({
+    mutationFn: (currentId: string) => {
+      if (!currentId) {
         toast.error('No active session found');
-        return;
+        return Promise.resolve(0);
       }
-      
-      const deletedCount = await cleanupSessions(currentSessionId);
-      
+      return cleanupSessions(currentId);
+    },
+    onSuccess: (deletedCount) => {
       if (deletedCount === 0) {
         toast.info('No inactive sessions to clean up');
-        return;
+      } else {
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SESSIONS] });
+        toast.success(`Cleaned up ${deletedCount} inactive sessions`);
       }
-
-      // Refresh sessions list
-      await fetchSessions();
-      
-      toast.success(`Cleaned up ${deletedCount} inactive sessions`);
-    } catch (error) {
-      console.error('Error cleaning up sessions:', error);
+    },
+    onError: (err) => {
       toast.error('Failed to clean up inactive sessions');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentSessionId, fetchSessions]);
+      logger.error('Error cleaning up sessions:', err);
+    },
+  });
 
-  // Initialize sessions on component mount
-  useEffect(() => {
-    fetchSessions();
-  }, [fetchSessions]);
+  // Get the current session
+  const currentSession = useCallback(() => {
+    if (!currentSessionId) return null;
+    return sessions.find(session => session.id === currentSessionId) || null;
+  }, [currentSessionId, sessions]);
+
+  // Handle creating a new session
+  const handleCreateSession = useCallback(async (params?: CreateSessionParams) => {
+    const result = await createSession(params);
+    return result.success ? result.sessionId || '' : '';
+  }, [createSession]);
+
+  // Handle switching to a session
+  const handleSwitchSession = useCallback(async (sessionId: string) => {
+    await switchSession(sessionId);
+  }, [switchSession]);
+
+  // Handle cleaning up sessions
+  const handleCleanupSessions = useCallback(async () => {
+    if (currentSessionId) {
+      await cleanupInactiveSessions(currentSessionId);
+    }
+  }, [currentSessionId, cleanupInactiveSessions]);
 
   return {
     sessions,
     currentSessionId,
+    currentSession: currentSession(),
     isLoading,
-    fetchSessions,
-    createSession,
-    switchSession,
-    cleanupInactiveSessions,
-    refreshSessions: fetchSessions, // Alias for backwards compatibility
+    isError,
+    error,
+    createSession: handleCreateSession,
+    switchSession: handleSwitchSession,
+    updateSession: updateSessionMutation,
+    archiveSession: archiveSessionMutation,
+    cleanupInactiveSessions: handleCleanupSessions,
+    refreshSessions: () => queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SESSIONS] }),
   };
 }

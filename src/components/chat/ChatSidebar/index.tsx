@@ -18,7 +18,7 @@ export const ChatSidebar = () => {
     switchSession,
     createSession,
     cleanupInactiveSessions,
-    isLoading
+    isLoading,
   } = useSessionManager();
   const { ui } = useChatStore();
   const { ErrorBoundary } = useErrorBoundary();
@@ -31,6 +31,10 @@ export const ChatSidebar = () => {
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+  };
+
+  const handleCreateSession = async () => {
+    await createSession();
   };
 
   return (
@@ -74,7 +78,7 @@ export const ChatSidebar = () => {
       </div>
       
       <SessionControls
-        onNewSession={createSession}
+        onNewSession={handleCreateSession}
         onCleanupSessions={cleanupInactiveSessions}
         sessionCount={sessions.length}
         isLoading={isLoading || ui.sessionLoading}
