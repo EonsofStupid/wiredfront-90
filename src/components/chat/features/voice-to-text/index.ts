@@ -1,0 +1,2 @@
+
+export { VoiceToTextButton } from './VoiceToTextButton';

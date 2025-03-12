@@ -1,14 +1,13 @@
-
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useMessageStore } from "../messaging/MessageManager";
-import { VoiceRecorder } from "../VoiceRecorder";
-import { toast } from "sonner";
 import { useChatMode } from "../providers/ChatModeProvider";
 import { Send, Loader2 } from "lucide-react";
 import { logger } from '@/services/chat/LoggingService';
 import { KnowledgeSourceButton } from '../features/knowledge-source/KnowledgeSourceButton';
+import { VoiceToTextButton } from '../features/voice-to-text';
+import { toast } from "sonner";
 
 interface ChatInputModuleProps {
   onMessageSubmit?: (content: string) => void;
@@ -87,7 +86,6 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
     }
   };
 
-  // Determine placeholder text based on mode
   let placeholder = 'Type a message...';
   
   if (mode === 'editor') {
@@ -105,7 +103,6 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Submit on Enter (not Shift+Enter)
     if (e.key === 'Enter' && !e.shiftKey) {
       handleSubmit(e);
     }
@@ -130,7 +127,7 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
       
       <KnowledgeSourceButton />
       
-      <VoiceRecorder 
+      <VoiceToTextButton 
         onTranscription={handleTranscription}
         isProcessing={isProcessing}
       />
