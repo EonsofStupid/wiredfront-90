@@ -6,7 +6,7 @@ import { GitBranchIcon, BellIcon, AlertCircle, CheckCircle } from 'lucide-react'
 import { GitHubStatusDialog } from './GitHubStatusDialog';
 import { NotificationsStatusDialog } from './NotificationsStatusDialog';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
-import { useChatStore } from '../../store/chatStore';
+import { useChatStore } from '../../store';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useErrorBoundary } from '../../hooks/useErrorBoundary';
 

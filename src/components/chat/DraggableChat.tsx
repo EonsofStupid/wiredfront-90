@@ -5,7 +5,7 @@ import { ChatSidebar } from "./ChatSidebar";
 import { ChatToggleButton } from "./components/ChatToggleButton";
 import { DraggableChatContainer } from "./components/DraggableChatContainer";
 import { useViewportAwareness } from "./hooks/useViewportAwareness";
-import { useChatStore } from "./store/chatStore";
+import { useChatStore } from "./store";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { logger } from "@/services/chat/LoggingService";

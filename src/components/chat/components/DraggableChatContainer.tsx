@@ -5,7 +5,7 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { ChatHeader } from "./ChatHeader";
 import { ChatContent } from "./ChatContent";
 import { useChatMode } from "../providers/ChatModeProvider";
-import { useChatStore } from "../store/chatStore";
+import { useChatStore } from "../store";
 import { motion } from "framer-motion";
 import { logger } from "@/services/chat/LoggingService";
 
