@@ -6,6 +6,8 @@ import { ChatHeader } from "./ChatHeader";
 import { ChatContent } from "./ChatContent";
 import { useChatMode } from "../providers/ChatModeProvider";
 import { useChatStore } from "../store/chatStore";
+import { motion } from "framer-motion";
+import { logger } from "@/services/chat/LoggingService";
 
 interface DraggableChatContainerProps {
   scrollRef: React.RefObject<HTMLDivElement>;
@@ -18,10 +20,12 @@ export function DraggableChatContainer({
 }: DraggableChatContainerProps) {
   const { mode } = useChatMode();
   const chatRef = useRef<HTMLDivElement>(null);
-  const { isMinimized, showSidebar, toggleSidebar, toggleMinimize, toggleChat, docked } = useChatStore();
+  const { isMinimized, showSidebar, toggleSidebar, toggleMinimize, toggleChat, docked, position } = useChatStore();
+  const prevPosition = useRef(position);
 
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: "chat-window",
+    disabled: docked
   });
 
   const adjustedTransform = transform && !docked ? {
@@ -33,6 +37,7 @@ export function DraggableChatContainer({
     transform: `translate3d(${adjustedTransform.x}px, ${adjustedTransform.y}px, 0)`,
   } : undefined;
 
+  // Handle position change and viewport boundaries
   useEffect(() => {
     if (!chatRef.current || docked) return;
 
@@ -40,14 +45,28 @@ export function DraggableChatContainer({
       if (!chatRef.current) return;
       const rect = chatRef.current.getBoundingClientRect();
       const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
       
+      let transformX = 0;
+      let transformY = 0;
+      
+      // Horizontal bounds
       if (rect.right > viewportWidth) {
-        const overflow = rect.right - viewportWidth + 20; // 20px margin
-        chatRef.current.style.transform = `translate3d(${-overflow}px, 0, 0)`;
+        transformX = viewportWidth - rect.right - 20;
+      } else if (rect.left < 0) {
+        transformX = Math.abs(rect.left) + 20;
       }
       
-      if (rect.left < 0) {
-        chatRef.current.style.transform = `translate3d(${Math.abs(rect.left) + 20}px, 0, 0)`;
+      // Vertical bounds
+      if (rect.bottom > viewportHeight) {
+        transformY = viewportHeight - rect.bottom - 20;
+      } else if (rect.top < 0) {
+        transformY = Math.abs(rect.top) + 20;
+      }
+      
+      if (transformX !== 0 || transformY !== 0) {
+        chatRef.current.style.transform = `translate3d(${transformX}px, ${transformY}px, 0)`;
+        logger.info('Chat position adjusted to fit viewport', { transformX, transformY });
       }
     };
 
@@ -55,6 +74,14 @@ export function DraggableChatContainer({
     window.addEventListener('resize', updatePosition);
     return () => window.removeEventListener('resize', updatePosition);
   }, [docked]);
+
+  // Log position changes
+  useEffect(() => {
+    if (prevPosition.current !== position) {
+      logger.info('Chat position changed', { from: prevPosition.current, to: position });
+      prevPosition.current = position;
+    }
+  }, [position]);
 
   // Determine the title based on the current mode
   const title = mode === 'editor' ? 'Code Assistant' : mode === 'chat-only' ? 'Context Planning' : 'Chat';
@@ -65,7 +92,7 @@ export function DraggableChatContainer({
   };
 
   return (
-    <div 
+    <motion.div 
       ref={(node) => {
         setNodeRef(node);
         if (chatRef) {
@@ -74,10 +101,15 @@ export function DraggableChatContainer({
       }}
       style={style}
       {...(docked ? {} : { ...attributes, ...listeners })}
-      className="w-[400px] transition-all duration-300"
+      className="w-[var(--chat-width)] transition-all duration-300 chat-container"
       onClick={handleContainerClick}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      transition={{ duration: 0.2 }}
+      data-testid="chat-container"
     >
-      <Card className="shadow-xl glass-card neon-border overflow-hidden">
+      <Card className="shadow-xl glass-card neon-border overflow-hidden h-full">
         <CardHeader className={`p-0 ${docked ? '' : 'cursor-move'}`}>
           <ChatHeader 
             title={title}
@@ -95,6 +127,6 @@ export function DraggableChatContainer({
           isEditorPage={isEditorPage}
         />
       </Card>
-    </div>
+    </motion.div>
   );
 }

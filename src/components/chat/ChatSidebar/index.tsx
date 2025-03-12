@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { SessionList } from "./SessionList";
 import { SessionControls } from "./SessionControls";
 import { useSessionManager } from "@/hooks/useSessionManager";
+import { Badge } from "@/components/ui/badge";
 
 export const ChatSidebar = () => {
   const {
@@ -25,8 +26,11 @@ export const ChatSidebar = () => {
 
   return (
     <Card className="w-[300px] glass-card neon-border h-[500px] flex flex-col" onClick={handleClick}>
-      <div className="p-4 border-b">
+      <div className="p-4 border-b border-white/10 flex justify-between items-center">
         <h2 className="font-semibold">Chat Sessions</h2>
+        <Badge variant="outline" className="text-xs">
+          {sessions.length} {sessions.length === 1 ? 'session' : 'sessions'}
+        </Badge>
       </div>
       <div className="flex-1 overflow-hidden">
         <SessionList
@@ -37,6 +41,7 @@ export const ChatSidebar = () => {
       <SessionControls
         onNewSession={createSession}
         onCleanupSessions={cleanupInactiveSessions}
+        sessionCount={sessions.length}
       />
     </Card>
   );

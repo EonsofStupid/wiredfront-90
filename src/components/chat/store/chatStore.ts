@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { ChatProviderType } from '@/types/admin/settings/chat-provider';
+import { logger } from '@/services/chat/LoggingService';
 
 export type ChatPosition = 'bottom-right' | 'bottom-left';
 
@@ -12,6 +13,7 @@ interface ChatState {
   isOpen: boolean;
   scale: number;
   docked: boolean;
+  isInitialized: boolean;
   features: {
     codeAssistant: boolean;
     ragSupport: boolean;
@@ -39,17 +41,19 @@ interface ChatActions {
   toggleFeature: (feature: keyof ChatState['features']) => void;
   setCurrentProvider: (providerId: string) => void;
   toggleProviderEnabled: (providerId: string) => void;
+  initializeChatSettings: () => void;
 }
 
 const useChatStore = create<ChatState & ChatActions>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       position: 'bottom-right',
       isMinimized: false,
       showSidebar: false,
       isOpen: false,
       scale: 1,
       docked: true,
+      isInitialized: false,
       features: {
         codeAssistant: true,
         ragSupport: true,
@@ -65,38 +69,110 @@ const useChatStore = create<ChatState & ChatActions>()(
         ]
       },
       
-      togglePosition: () => set((state) => ({ 
-        position: state.position === 'bottom-right' ? 'bottom-left' : 'bottom-right' 
-      })),
+      initializeChatSettings: () => {
+        const state = get();
+        if (state.isInitialized) return;
+        
+        // Set default position based on screen size
+        const isMobile = window.innerWidth < 768;
+        const defaultPosition = isMobile ? 'bottom-right' : 'bottom-right';
+        
+        // Set default scale based on screen size
+        const defaultScale = isMobile ? 0.85 : 1;
+        
+        // Set default docked state based on screen size
+        const defaultDocked = isMobile ? true : true;
+        
+        logger.info('Initializing chat settings', {
+          isMobile,
+          defaultPosition,
+          defaultScale,
+          defaultDocked
+        });
+        
+        set({
+          position: defaultPosition,
+          scale: defaultScale,
+          docked: defaultDocked,
+          isInitialized: true
+        });
+      },
       
-      toggleMinimize: () => set((state) => ({ 
-        isMinimized: !state.isMinimized 
-      })),
+      togglePosition: () => set((state) => {
+        const newPosition = state.position === 'bottom-right' ? 'bottom-left' : 'bottom-right';
+        logger.info('Chat position toggled', { 
+          from: state.position, 
+          to: newPosition 
+        });
+        return { position: newPosition };
+      }),
       
-      toggleSidebar: () => set((state) => ({ 
-        showSidebar: !state.showSidebar 
-      })),
+      toggleMinimize: () => set((state) => {
+        const newState = !state.isMinimized;
+        logger.info('Chat minimized state toggled', { 
+          wasMinimized: state.isMinimized,
+          isNowMinimized: newState
+        });
+        return { isMinimized: newState };
+      }),
       
-      toggleChat: () => set((state) => ({ 
-        isOpen: !state.isOpen 
-      })),
+      toggleSidebar: () => set((state) => {
+        const newState = !state.showSidebar;
+        logger.info('Chat sidebar toggled', { 
+          wasVisible: state.showSidebar,
+          isNowVisible: newState
+        });
+        return { showSidebar: newState };
+      }),
       
-      setScale: (scale) => set({ scale }),
+      toggleChat: () => set((state) => {
+        const newState = !state.isOpen;
+        logger.info('Chat visibility toggled', { 
+          wasOpen: state.isOpen,
+          isNowOpen: newState
+        });
+        return { isOpen: newState };
+      }),
       
-      toggleDocked: () => set((state) => ({ 
-        docked: !state.docked 
-      })),
+      setScale: (scale) => set((state) => {
+        logger.info('Chat scale updated', { 
+          oldScale: state.scale, 
+          newScale: scale 
+        });
+        return { scale };
+      }),
       
-      toggleFeature: (feature) => set((state) => ({
-        features: {
-          ...state.features,
-          [feature]: !state.features[feature]
-        }
-      })),
+      toggleDocked: () => set((state) => {
+        const newState = !state.docked;
+        logger.info('Chat docked state toggled', { 
+          wasDocked: state.docked,
+          isNowDocked: newState
+        });
+        return { docked: newState };
+      }),
+      
+      toggleFeature: (feature) => set((state) => {
+        const newValue = !state.features[feature];
+        logger.info('Chat feature toggled', { 
+          feature, 
+          wasEnabled: state.features[feature],
+          isNowEnabled: newValue
+        });
+        return {
+          features: {
+            ...state.features,
+            [feature]: newValue
+          }
+        };
+      }),
       
       setCurrentProvider: (providerId) => set((state) => {
         const provider = state.providers.availableProviders.find(p => p.id === providerId);
         if (provider && provider.isEnabled) {
+          logger.info('Chat provider changed', { 
+            fromProvider: state.providers.currentProvider,
+            toProvider: provider.type
+          });
           return {
             providers: {
               ...state.providers,
@@ -107,16 +183,28 @@ const useChatStore = create<ChatState & ChatActions>()(
         return state;
       }),
       
-      toggleProviderEnabled: (providerId) => set((state) => ({
-        providers: {
-          ...state.providers,
-          availableProviders: state.providers.availableProviders.map(provider =>
-            provider.id === providerId 
-              ? { ...provider, isEnabled: !provider.isEnabled }
-              : provider
-          )
-        }
-      }))
+      toggleProviderEnabled: (providerId) => set((state) => {
+        const provider = state.providers.availableProviders.find(p => p.id === providerId);
+        if (!provider) return state;
+        
+        const newState = !provider.isEnabled;
+        logger.info('Chat provider availability toggled', { 
+          provider: provider.type,
+          wasEnabled: provider.isEnabled,
+          isNowEnabled: newState
+        });
+        
+        return {
+          providers: {
+            ...state.providers,
+            availableProviders: state.providers.availableProviders.map(p =>
+              p.id === providerId 
+                ? { ...p, isEnabled: newState }
+                : p
+            )
+          }
+        };
+      })
     }),
     {
       name: 'chat-settings-storage',

@@ -6,6 +6,8 @@ import { useMessageStore } from "../messaging/MessageManager";
 import { VoiceRecorder } from "../VoiceRecorder";
 import { toast } from "sonner";
 import { useChatMode } from "../providers/ChatModeProvider";
+import { Send, Loader2 } from "lucide-react";
+import { logger } from '@/services/chat/LoggingService';
 
 interface ChatInputModuleProps {
   onMessageSubmit?: (content: string) => void;
@@ -23,11 +25,18 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
     
     if (!currentSessionId) {
       toast.error('No active chat session');
+      logger.error('Message submission failed - no active session');
       return;
     }
     
     if (message.trim()) {
       try {
+        logger.info('Submitting message', { 
+          mode, 
+          messageLength: message.length,
+          sessionId: currentSessionId
+        });
+        
         if (onMessageSubmit) {
           onMessageSubmit(message.trim());
         }
@@ -40,6 +49,7 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
         setMessage("");
       } catch (error) {
         console.error('Failed to send message:', error);
+        logger.error('Message submission failed', { error });
         toast.error('Failed to send message');
       }
     }
@@ -48,10 +58,22 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
   const handleTranscription = async (text: string) => {
     if (!currentSessionId) {
       toast.error('No active chat session');
+      logger.error('Transcription submission failed - no active session');
+      return;
+    }
+
+    if (!text.trim()) {
+      logger.warn('Empty transcription received');
       return;
     }
 
     try {
+      logger.info('Submitting transcription', { 
+        mode, 
+        transcriptionLength: text.length,
+        sessionId: currentSessionId
+      });
+      
       await addMessage({
         content: text,
         role: 'user',
@@ -59,6 +81,7 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
       });
     } catch (error) {
       console.error('Failed to send transcribed message:', error);
+      logger.error('Transcription submission failed', { error });
       toast.error('Failed to send message');
     }
   };
@@ -80,6 +103,13 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
     e.stopPropagation();
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Submit on Enter (not Shift+Enter)
+    if (e.key === 'Enter' && !e.shiftKey) {
+      handleSubmit(e);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="flex gap-2 w-full" onClick={(e) => e.stopPropagation()}>
       <div className="relative flex-1 group">
@@ -87,22 +117,35 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
           value={message}
           onChange={handleInputChange}
           onClick={handleInputClick}
+          onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="bg-[#1A1F2C]/80 border-white/10 text-white group-hover:border-[#8B5CF6]/50 transition-all duration-300"
+          className="chat-input bg-[#1A1F2C]/80 border-white/10 text-white group-hover:border-[#8B5CF6]/50 transition-all duration-300"
           disabled={isProcessing}
+          data-testid="chat-input"
+          aria-label="Message input"
         />
         <div className="absolute inset-0 rounded-md bg-gradient-to-r from-[#8B5CF6]/5 to-[#D946EF]/5 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-300"></div>
       </div>
+      
       <VoiceRecorder 
         onTranscription={handleTranscription}
         isProcessing={isProcessing}
       />
+      
       <Button 
         type="submit" 
-        disabled={isProcessing}
-        className="min-w-[80px] bg-gradient-to-r from-[#8B5CF6] to-[#D946EF] hover:opacity-90 text-white border-none"
+        disabled={isProcessing || !message.trim()}
+        className="min-w-[80px] bg-gradient-to-r from-[#8B5CF6] to-[#D946EF] hover:opacity-90 text-white border-none transition-all duration-200"
+        data-testid="send-button"
       >
-        {isProcessing ? 'Sending...' : 'Send'}
+        {isProcessing ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <>
+            <Send className="h-4 w-4 mr-2" />
+            Send
+          </>
+        )}
       </Button>
     </form>
   );
