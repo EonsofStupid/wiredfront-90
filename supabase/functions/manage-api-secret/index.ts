@@ -275,7 +275,8 @@ serve(async (req) => {
         } else if (provider === 'github') {
           // Validate GitHub token
           try {
-            const response = await fetch('https://api.github.com/user', {
+            // First check basic authentication
+            const authResponse = await fetch('https://api.github.com/user', {
               method: 'GET',
               headers: {
                 'Authorization': `token ${secretValue}`,
@@ -283,22 +284,40 @@ serve(async (req) => {
               }
             });
             
-            if (response.ok) {
-              const data = await response.json();
+            if (authResponse.ok) {
+              const userData = await authResponse.json();
+              
+              // Then check rate limits to gather metrics
+              const rateResponse = await fetch('https://api.github.com/rate_limit', {
+                method: 'GET',
+                headers: {
+                  'Authorization': `token ${secretValue}`,
+                  'Accept': 'application/vnd.github.v3+json'
+                }
+              });
+              
+              const rateData = rateResponse.ok ? await rateResponse.json() : null;
+              
               validationResult = {
                 status: 'valid',
-                details: `Valid GitHub token for user: ${data.login}`,
+                details: `Valid GitHub token for user: ${userData.login}`,
                 metrics: {
-                  rate_limit: response.headers.get('X-RateLimit-Limit') || 'unknown',
-                  rate_limit_remaining: response.headers.get('X-RateLimit-Remaining') || 'unknown',
-                  rate_limit_reset: response.headers.get('X-RateLimit-Reset') || null
+                  rate_limit: rateData ? rateData.resources.core.limit : 'unknown',
+                  rate_limit_remaining: rateData ? rateData.resources.core.remaining : 'unknown',
+                  rate_limit_reset: rateData ? new Date(rateData.resources.core.reset * 1000).toISOString() : null,
+                  user_info: {
+                    login: userData.login,
+                    name: userData.name,
+                    type: userData.type,
+                    avatar_url: userData.avatar_url
+                  }
                 }
               };
             } else {
-              const errorData = await response.text();
+              const errorData = await authResponse.text();
               validationResult = {
                 status: 'invalid',
-                details: `GitHub API validation failed: ${response.status} - ${errorData}`,
+                details: `GitHub API validation failed: ${authResponse.status} - ${errorData}`,
                 metrics: {
                   remaining_quota: '0',
                   reset_at: null

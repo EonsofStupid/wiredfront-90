@@ -24,6 +24,8 @@ export interface ChatState {
     ragSupport: boolean;
     githubSync: boolean;
     notifications: boolean;
+    imageGeneration: boolean;
+    integrations: boolean;
   };
   providers: {
     currentProvider: ChatProviderType;
@@ -32,6 +34,7 @@ export interface ChatState {
       type: ChatProviderType;
       name: string;
       isEnabled: boolean;
+      category?: 'chat' | 'image' | 'integration';
     }[];
   };
 }

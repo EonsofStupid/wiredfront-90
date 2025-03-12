@@ -14,9 +14,12 @@ export interface ChatProviderConfig {
   topP?: number;
   frequencyPenalty?: number;
   presencePenalty?: number;
+  category?: 'chat' | 'image' | 'integration';
 }
 
-export type ChatProviderType = 'openai' | 'anthropic' | 'gemini' | 'local' | 'perplexity' | 'llama';
+export type ChatProviderType = 'openai' | 'anthropic' | 'gemini' | 'local' | 'perplexity' | 'llama' | 
+  'dalle' | 'midjourney' | 'stability' | 'dreamstudio' | 'deepai' | 'artbreeder' | 
+  'zapier' | 'bubble' | 'openrouter' | 'replit';
 
 export interface ChatSessionConfig {
   timeout: number;
@@ -32,6 +35,8 @@ export interface ChatFeatureConfig {
   notifications: boolean;
   voiceInput: boolean;
   voiceOutput: boolean;
+  imageGeneration: boolean;
+  integrations: boolean;
 }
 
 export interface ChatAppearanceConfig {

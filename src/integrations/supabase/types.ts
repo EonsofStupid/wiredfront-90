@@ -1196,7 +1196,7 @@ export type Database = {
       }
     }
     Enums: {
-      ai_provider_type: "chat" | "embeddings" | "both"
+      ai_provider_type: "chat" | "embeddings" | "both" | "image" | "integration"
       api_key_status: "pending" | "valid" | "invalid" | "expired" | "revoked"
       api_type:
         | "openai"

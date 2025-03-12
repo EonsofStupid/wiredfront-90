@@ -22,13 +22,17 @@ const initialState: ChatState = {
     ragSupport: true,
     githubSync: true,
     notifications: true,
+    imageGeneration: false,
+    integrations: false,
   },
   providers: {
     currentProvider: 'openai',
     availableProviders: [
-      { id: '1', type: 'openai', name: 'OpenAI', isEnabled: true },
-      { id: '2', type: 'anthropic', name: 'Claude', isEnabled: false },
-      { id: '3', type: 'gemini', name: 'Gemini', isEnabled: false }
+      { id: '1', type: 'openai', name: 'OpenAI', isEnabled: true, category: 'chat' },
+      { id: '2', type: 'anthropic', name: 'Claude', isEnabled: false, category: 'chat' },
+      { id: '3', type: 'gemini', name: 'Gemini', isEnabled: false, category: 'chat' },
+      { id: '4', type: 'dalle', name: 'DALL·E', isEnabled: false, category: 'image' },
+      { id: '5', type: 'stability', name: 'Stable Diffusion', isEnabled: false, category: 'image' }
     ]
   }
 };
