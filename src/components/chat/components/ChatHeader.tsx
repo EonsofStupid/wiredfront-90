@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import { GitHubInfoButton } from "../features/githubinfo";
 import { NotificationsButton } from "../features/notifications";
+import { ChatHeaderTopNav } from "../features/ChatHeaderTopNav";
 
 interface ChatHeaderProps {
   title: string;
@@ -45,6 +46,7 @@ export function ChatHeader({
       transition={{ duration: 0.2 }}
     >
       <div className="flex items-center gap-2">
+        <ChatHeaderTopNav />
         <Button
           variant="ghost"
           size="icon"
