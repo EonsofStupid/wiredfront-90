@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
 import { ArrowLeftRight } from "lucide-react";
 import { useChatStore } from '../store/chatStore';
 import { logger } from '@/services/chat/LoggingService';
@@ -15,15 +14,13 @@ export function ChatPositionToggle() {
   };
   
   return (
-    <Button
-      variant="ghost"
-      size="icon"
+    <button
       className="h-8 w-8 hover:bg-white/10 transition-colors duration-200"
       onClick={handleClick}
       title={`Toggle chat position (currently ${position})`}
       data-testid="chat-position-toggle"
     >
       <ArrowLeftRight className="h-4 w-4" />
-    </Button>
+    </button>
   );
 }

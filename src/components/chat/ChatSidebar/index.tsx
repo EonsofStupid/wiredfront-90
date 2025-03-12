@@ -1,6 +1,5 @@
 
 import React from "react";
-import { Card } from "@/components/ui/card";
 import { SessionList } from "./SessionList";
 import { SessionControls } from "./SessionControls";
 import { useSessionManager } from "@/hooks/useSessionManager";
@@ -25,7 +24,7 @@ export const ChatSidebar = () => {
   };
 
   return (
-    <Card className="w-[300px] glass-card neon-border h-[500px] flex flex-col" onClick={handleClick}>
+    <div className="w-[300px] chat-glass-card chat-neon-border h-[500px] flex flex-col" onClick={handleClick}>
       <div className="p-4 border-b border-white/10 flex justify-between items-center">
         <h2 className="font-semibold">Chat Sessions</h2>
         <Badge variant="outline" className="text-xs">
@@ -43,6 +42,6 @@ export const ChatSidebar = () => {
         onCleanupSessions={cleanupInactiveSessions}
         sessionCount={sessions.length}
       />
-    </Card>
+    </div>
   );
-};
+}

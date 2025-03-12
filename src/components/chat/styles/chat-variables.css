@@ -1,8 +1,8 @@
 
 /* Chat-specific CSS variables with isolation from app variables */
 :root {
-  /* Z-index for chat components */
-  --z-chat: 50;
+  /* Z-index for chat components - ensuring it's always on top */
+  --z-chat: 9999;
   
   /* Chat dimensions */
   --chat-width: 400px;
@@ -113,6 +113,61 @@
   outline: none;
 }
 
+/* Chat-specific button styling */
+.chat-button {
+  padding: 1rem;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--chat-text);
+  transition: all var(--chat-transition-speed) ease;
+  backdrop-filter: blur(10px);
+}
+
+.chat-button:hover {
+  transform: scale(1.05);
+  background: rgba(0, 0, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Chat-specific glass card effect */
+.chat-glass-card {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--chat-border-radius);
+  box-shadow: var(--chat-box-shadow);
+  position: relative;
+  isolation: isolate;
+}
+
+.chat-glass-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom right,
+    rgba(0, 255, 255, 0.1),
+    transparent,
+    rgba(255, 0, 127, 0.1)
+  );
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: -1;
+  border-radius: inherit;
+}
+
+/* Chat-specific pulsing glow */
+.chat-pulsing-glow {
+  animation: chatPulseGlow 2s infinite ease-in-out;
+}
+
+@keyframes chatPulseGlow {
+  0% { box-shadow: 0 0 5px rgba(139, 92, 246, 0.3), 0 0 10px rgba(255, 0, 127, 0.2); }
+  50% { box-shadow: 0 0 15px rgba(139, 92, 246, 0.6), 0 0 20px rgba(255, 0, 127, 0.4); }
+  100% { box-shadow: 0 0 5px rgba(139, 92, 246, 0.3), 0 0 10px rgba(255, 0, 127, 0.2); }
+}
+
 /* Transitions */
 .chat-fade-in {
   animation: chatFadeIn var(--chat-transition-speed) ease;
@@ -141,11 +196,11 @@
 }
 
 /* Neon glow effect */
-.neon-border {
+.chat-neon-border {
   box-shadow: var(--chat-neon-glow);
 }
 
-.neon-glow {
+.chat-neon-glow {
   text-shadow: 0 0 10px rgba(139, 92, 246, 0.8);
 }
 
@@ -170,14 +225,4 @@
     opacity: 0;
     transform: translateY(10px);
   }
-}
-
-@keyframes pulseGlow {
-  0% { box-shadow: 0 0 5px rgba(139, 92, 246, 0.3), 0 0 10px rgba(255, 0, 127, 0.2); }
-  50% { box-shadow: 0 0 15px rgba(139, 92, 246, 0.6), 0 0 20px rgba(255, 0, 127, 0.4); }
-  100% { box-shadow: 0 0 5px rgba(139, 92, 246, 0.3), 0 0 10px rgba(255, 0, 127, 0.2); }
-}
-
-.pulsing-glow {
-  animation: pulseGlow 2s infinite ease-in-out;
 }

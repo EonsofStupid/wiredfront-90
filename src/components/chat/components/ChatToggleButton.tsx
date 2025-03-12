@@ -1,7 +1,6 @@
 
 import React from "react";
 import { MessageSquare, Code, MessagesSquare } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useChatMode } from "../providers/ChatModeProvider";
 import { useChatStore } from "../store/chatStore";
 import { motion } from "framer-motion";
@@ -46,14 +45,14 @@ export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
       transition={{ duration: 0.2 }}
       className={`fixed bottom-4 ${positionClass} z-[var(--z-chat)]`}
     >
-      <Button
+      <button
         onClick={handleClick}
-        className="p-4 rounded-full shadow-lg glass-card pulsing-glow hover:scale-105 transition-transform duration-200"
+        className="chat-button chat-glass-card chat-pulsing-glow hover:scale-105 transition-transform duration-200"
         title={tooltipText}
         data-testid="chat-toggle-button"
       >
         <Icon className="h-6 w-6" />
-      </Button>
+      </button>
     </motion.div>
   );
 }
