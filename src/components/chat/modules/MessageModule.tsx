@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useAutoScroll } from '../hooks/useAutoScroll';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useErrorBoundary } from '../hooks/useErrorBoundary';
+import { Spinner } from '../components/Spinner';
 import { logger } from '@/services/chat/LoggingService';
 
 interface MessageModuleProps {
@@ -18,17 +19,23 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
   const { scrollToBottom } = useAutoScroll(scrollRef);
   const { ErrorBoundary, DefaultErrorFallback } = useErrorBoundary();
   
+  // Handle retry logic for failed messages
   const handleRetry = useCallback((messageId: string) => {
     logger.info('Attempting to retry message', { messageId });
+    // In a real implementation, we would call a function from useMessageStore 
+    // to retry sending the message
+    // For now, we just log it
   }, []);
   
+  // Virtual list implementation for performance optimization
   const rowVirtualizer = useVirtualizer({
     count: messages.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => 80,
-    overscan: 5,
+    estimateSize: () => 80, // Estimated height of each message
+    overscan: 5, // Number of items to render outside of the visible area
   });
   
+  // Scroll to bottom when new messages arrive
   useEffect(() => {
     if (messages.length > 0) {
       scrollToBottom();
@@ -57,10 +64,10 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
     >
       <ScrollArea 
         ref={scrollRef}
-        className="h-[calc(100% - var(--chat-input-height))] w-full pr-4 relative chat-messages-scroll"
+        className="h-[300px] w-full pr-4 chat-messages-container relative"
       >
         <div 
-          className="relative w-full min-h-full pb-4"
+          className="relative w-full"
           style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
         >
           {rowVirtualizer.getVirtualItems().map((virtualItem) => {

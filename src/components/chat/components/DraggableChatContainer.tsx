@@ -57,7 +57,7 @@ export function DraggableChatContainer({
         transformX = Math.abs(rect.left) + 20;
       }
       
-      // Vertical bounds - ensure chat is fully in viewport
+      // Vertical bounds
       if (rect.bottom > viewportHeight) {
         transformY = viewportHeight - rect.bottom - 20;
       } else if (rect.top < 0) {

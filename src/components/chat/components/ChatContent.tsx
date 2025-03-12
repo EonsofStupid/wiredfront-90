@@ -1,5 +1,5 @@
 
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useEffect } from "react";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useChatMode } from "../providers/ChatModeProvider";
@@ -9,6 +9,7 @@ import { logger } from "@/services/chat/LoggingService";
 import { Spinner } from "./Spinner";
 import { useErrorBoundary } from "../hooks/useErrorBoundary";
 
+// Lazy load modules for better performance
 const MessageModule = lazy(() => 
   import("../modules/MessageModule")
     .then(mod => ({ default: mod.MessageModule }))
@@ -56,6 +57,7 @@ export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatConten
     return null;
   }
 
+  // Prevent event propagation to avoid triggering drag
   const handleContentClick = (e: React.MouseEvent) => {
     e.stopPropagation();
   };
@@ -83,42 +85,59 @@ export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatConten
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="flex flex-col h-full relative overflow-hidden"
         data-testid="chat-content"
       >
-        <CardContent 
-          className="flex-1 p-4 overflow-hidden pb-[var(--chat-input-height)]" 
-          onClick={handleContentClick}
-        >
+        <CardContent className="p-4" onClick={handleContentClick}>
+          {/* Message display area */}
           <ErrorBoundary
-            fallback={<DefaultErrorFallback />}
+            fallback={
+              <div className="p-4 border border-destructive/20 rounded-md bg-destructive/10 text-center">
+                <DefaultErrorFallback />
+                <button 
+                  className="mt-2 px-3 py-1 text-xs bg-primary/80 text-primary-foreground rounded"
+                  onClick={() => window.location.reload()}
+                >
+                  Reload Application
+                </button>
+              </div>
+            }
           >
             <Suspense fallback={<MessageFallback />}>
               <MessageModule scrollRef={scrollRef} />
             </Suspense>
           </ErrorBoundary>
           
-          {mode === 'editor' && showStatusButton && (
-            <motion.div 
-              className="flex justify-end mt-4"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Suspense fallback={<StatusButtonFallback />}>
-                <StatusButton />
-              </Suspense>
-            </motion.div>
-          )}
+          {/* Status button (only in editor mode) */}
+          <AnimatePresence>
+            {mode === 'editor' && showStatusButton && (
+              <motion.div 
+                className="flex justify-end mt-4"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Suspense fallback={<StatusButtonFallback />}>
+                  <StatusButton />
+                </Suspense>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </CardContent>
 
-        <CardFooter 
-          className="p-4 border-t border-white/10 absolute bottom-0 left-0 right-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-[var(--z-chat-input)] chat-input-container"
-          onClick={handleContentClick}
-        >
+        <CardFooter className="p-4 border-t border-white/10" onClick={handleContentClick}>
           <ErrorBoundary
-            fallback={<DefaultErrorFallback />}
+            fallback={
+              <div className="w-full p-3 border border-destructive/20 rounded-md bg-destructive/10 text-center">
+                <p className="text-sm">Failed to load chat input</p>
+                <button 
+                  className="mt-2 px-3 py-1 text-xs bg-primary/80 text-primary-foreground rounded"
+                  onClick={() => window.location.reload()}
+                >
+                  Retry
+                </button>
+              </div>
+            }
           >
             <Suspense fallback={<InputFallback />}>
               <ChatInputModule isEditorPage={isEditorPage} />

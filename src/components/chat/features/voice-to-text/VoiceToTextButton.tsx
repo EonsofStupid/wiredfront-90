@@ -35,10 +35,9 @@ export function VoiceToTextButton({ onTranscription, isProcessing }: VoiceToText
       <Button
         variant="ghost"
         size="icon"
-        className="text-destructive hover:text-destructive/90 hover:bg-destructive/10 chat-cyber-border z-20"
+        className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
         onClick={() => toast.error(errorMessage || 'Voice recognition error')}
         title={errorMessage || 'Voice recognition error'}
-        data-testid="voice-error-button"
       >
         <AlertCircle className="h-4 w-4" />
       </Button>
@@ -49,11 +48,10 @@ export function VoiceToTextButton({ onTranscription, isProcessing }: VoiceToText
     <Button
       variant="ghost"
       size="icon"
-      className="relative chat-cyber-border hover:bg-primary/10 z-20"
+      className="relative chat-cyber-border"
       onClick={handleClick}
       disabled={isProcessing}
       data-testid="voice-to-text-button"
-      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
     >
       {isListening ? (
         <>
@@ -61,7 +59,7 @@ export function VoiceToTextButton({ onTranscription, isProcessing }: VoiceToText
           <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500 animate-pulse" />
         </>
       ) : (
-        <Mic className="h-4 w-4 text-chat-input-text" />
+        <Mic className="h-4 w-4" />
       )}
     </Button>
   );

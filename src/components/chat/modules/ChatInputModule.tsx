@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -110,7 +109,7 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 w-full z-20" onClick={(e) => e.stopPropagation()}>
+    <form onSubmit={handleSubmit} className="flex gap-2 w-full" onClick={(e) => e.stopPropagation()}>
       <div className="relative flex-1 group">
         <Input
           value={message}
@@ -136,7 +135,7 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
       <Button 
         type="submit" 
         disabled={isProcessing || !message.trim()}
-        className="min-w-[80px] bg-gradient-to-r from-[#1EAEDB] to-[#0080B3] hover:opacity-90 text-white border-none transition-all duration-200 font-mono z-20"
+        className="min-w-[80px] bg-gradient-to-r from-[#1EAEDB] to-[#0080B3] hover:opacity-90 text-white border-none transition-all duration-200 font-mono"
         data-testid="send-button"
       >
         {isProcessing ? (
