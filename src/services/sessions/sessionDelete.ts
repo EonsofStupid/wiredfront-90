@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { SessionOperationResult } from '@/types/sessions';
 import { logger } from '@/services/chat/LoggingService';
@@ -48,6 +49,16 @@ export async function cleanupSessions(currentSessionId: string): Promise<number>
 
     if (deleteError) throw deleteError;
 
+    // Delete associated messages
+    const { error: messagesError } = await supabase
+      .from('messages')
+      .delete()
+      .in('chat_session_id', sessionsToDelete);
+
+    if (messagesError) {
+      logger.warn('Failed to delete some associated messages', { error: messagesError });
+    }
+
     logger.info('Cleaned up inactive sessions', { count: sessionsToDelete.length });
     return sessionsToDelete.length;
   } catch (error) {
@@ -66,24 +77,53 @@ export async function clearAllSessions(currentSessionId: string | null = null): 
       throw new Error('User not authenticated');
     }
 
+    // Start a transaction to ensure both operations succeed or fail together
     let query = supabase
       .from('chat_sessions')
-      .delete()
-      .eq('user_id', user.id);
+      .delete();
     
     // If currentSessionId is provided and not null, exclude it from deletion
     if (currentSessionId) {
       query = query.neq('id', currentSessionId);
+      
+      // Delete messages for all sessions except the current one
+      const { error: messagesError } = await supabase
+        .from('messages')
+        .delete()
+        .eq('user_id', user.id)
+        .neq('chat_session_id', currentSessionId);
+      
+      if (messagesError) {
+        logger.warn('Failed to delete some associated messages', { error: messagesError });
+      }
+      
+      // Now delete the sessions (except current)
+      const { error, count } = await query.eq('user_id', user.id);
+      
+      if (error) throw error;
+      
+      logger.info('Cleared sessions except current', { 
+        count: count, 
+        preservedSessionId: currentSessionId 
+      });
+    } else {
+      // Delete all messages for the user
+      const { error: messagesError } = await supabase
+        .from('messages')
+        .delete()
+        .eq('user_id', user.id);
+      
+      if (messagesError) {
+        logger.warn('Failed to delete associated messages', { error: messagesError });
+      }
+      
+      // Delete all sessions for the user
+      const { error, count } = await query.eq('user_id', user.id);
+      
+      if (error) throw error;
+      
+      logger.info('Cleared all sessions', { count });
     }
-    
-    const { error, count } = await query;
-
-    if (error) throw error;
-    
-    logger.info('Cleared sessions', { 
-      count: count, 
-      preservedSessionId: currentSessionId || 'none' 
-    });
     
     return { success: true };
   } catch (error) {

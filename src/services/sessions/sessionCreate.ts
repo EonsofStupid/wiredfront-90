@@ -18,13 +18,22 @@ export async function createNewSession(params?: CreateSessionParams): Promise<Se
     const sessionId = uuidv4();
     const now = new Date().toISOString();
     
+    // Generate a better default title if none provided
+    const defaultTitle = params?.title || `Chat ${new Date().toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true
+    })}`;
+    
     // Create a new session
     const { error } = await supabase
       .from('chat_sessions')
       .insert({
         id: sessionId,
         user_id: user.id,
-        title: params?.title || `Chat ${new Date().toLocaleString()}`,
+        title: defaultTitle,
         created_at: now,
         last_accessed: now,
         is_active: true,
@@ -33,7 +42,7 @@ export async function createNewSession(params?: CreateSessionParams): Promise<Se
 
     if (error) throw error;
     
-    logger.info('New session created', { sessionId });
+    logger.info('New session created', { sessionId, title: defaultTitle });
     return { success: true, sessionId };
   } catch (error) {
     logger.error('Failed to create session', { error });

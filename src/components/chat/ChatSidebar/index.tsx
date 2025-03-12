@@ -35,17 +35,16 @@ export const ChatSidebar = () => {
   };
 
   const handleCreateSession = async () => {
-    // Explicitly pass undefined to createSession to match the function signature
     await createSession(undefined);
   };
 
-  // Type-safe handlers that explicitly pass the correct boolean values
-  const handleClearSessions = async () => {
-    await clearSessions(true); // Explicitly preserve current session
+  // Explicit handlers for different deletion operations
+  const handleClearOtherSessions = async () => {
+    await clearSessions(true); // Preserve current session
   };
 
   const handleClearAllSessions = async () => {
-    await clearSessions(false); // Explicitly clear ALL sessions including current
+    await clearSessions(false); // Clear ALL sessions including current
   };
 
   return (
@@ -90,7 +89,7 @@ export const ChatSidebar = () => {
       
       <SessionControls
         onNewSession={handleCreateSession}
-        onClearSessions={handleClearSessions}
+        onClearSessions={handleClearOtherSessions}
         onCleanupSessions={cleanupInactiveSessions}
         onClearAllSessions={handleClearAllSessions}
         sessionCount={sessions.length}

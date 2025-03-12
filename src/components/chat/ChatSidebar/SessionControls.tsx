@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, X, TrashIcon } from 'lucide-react';
@@ -18,8 +19,8 @@ import {
 interface SessionControlsProps {
   onNewSession: () => void;
   onCleanupSessions: () => void;
-  onClearSessions: () => void;  // Kept as no-arg for backward compatibility
-  onClearAllSessions: () => void;  // Kept as no-arg for backward compatibility
+  onClearSessions: () => void;
+  onClearAllSessions: () => void;
   sessionCount: number;
   isLoading?: boolean;
 }
@@ -97,7 +98,7 @@ export const SessionControls: React.FC<SessionControlsProps> = ({
             </TooltipProvider>
             <AlertDialogContent className="glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#D946EF]/20" style={{ zIndex: 9900 }}>
               <AlertDialogHeader>
-                <AlertDialogTitle>Clear Other Sessions</AlertDialogTitle>
+                <AlertDialogTitle>Delete Other Sessions</AlertDialogTitle>
                 <AlertDialogDescription>
                   This will delete ALL other chat sessions except the current one. This action cannot be undone.
                 </AlertDialogDescription>

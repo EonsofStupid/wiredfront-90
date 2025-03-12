@@ -28,28 +28,31 @@ export function useSessionCleanup(
 ) {
   const queryClient = useQueryClient();
 
-  const { mutateAsync: clearSessionsMutation } = useMutation<
-    { success: boolean },  // TData - Return type from mutationFn
-    Error,                 // TError - Error type
-    boolean,               // TVariables - Type of variables passed to mutationFn
-    unknown                // TContext - Context type for optimistic updates (optional)
-  >({
-    mutationFn: (preserveCurrentSession: boolean) => {
+  const { mutateAsync: clearSessionsMutation } = useMutation({
+    mutationFn: async (preserveCurrentSession: boolean) => {
+      logger.info('Clearing sessions', { preserveCurrentSession, currentSessionId });
       const sessionIdToPreserve = preserveCurrentSession ? currentSessionId : null;
       return clearAllSessions(sessionIdToPreserve);
     },
-    onSuccess: async () => {
-      clearMessages();
+    onSuccess: async (_, preserveCurrentSession) => {
+      // Only clear messages if we're not preserving the current session
+      if (!preserveCurrentSession) {
+        clearMessages();
+      }
       
-      if (!currentSessionId) {
-        // Explicitly pass undefined to createSession to match the function signature
+      // Create a new session if we deleted all sessions including current
+      if (!preserveCurrentSession || !currentSessionId) {
         await createSession(undefined);
       }
       
       await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEYS.SESSIONS });
       await refreshSessions();
       
-      toast.success('Sessions cleared successfully', toastStyles.success);
+      const message = preserveCurrentSession 
+        ? 'Other sessions deleted successfully' 
+        : 'All sessions cleared successfully';
+      
+      toast.success(message, toastStyles.success);
     },
     onError: (err) => {
       toast.error('Failed to clear sessions', toastStyles.error);
@@ -81,12 +84,13 @@ export function useSessionCleanup(
 
   return {
     clearSessions: async (preserveCurrentSession: boolean = true) => {
-      logger.info('Clearing sessions', { preserveCurrentSession, currentSessionId });
       await clearSessionsMutation(preserveCurrentSession);
     },
     cleanupInactiveSessions: async () => {
       if (currentSessionId) {
         await cleanupInactiveSessions(currentSessionId);
+      } else {
+        toast.error('No active session to preserve');
       }
     },
   };
