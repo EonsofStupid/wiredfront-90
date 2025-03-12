@@ -231,7 +231,7 @@ export async function clearAllSessions(currentSessionId: string | null = null): 
       .delete()
       .eq('user_id', user.id);
     
-    // If currentSessionId is provided, exclude it from deletion
+    // If currentSessionId is provided and not null, exclude it from deletion
     if (currentSessionId) {
       query = query.neq('id', currentSessionId);
     }
