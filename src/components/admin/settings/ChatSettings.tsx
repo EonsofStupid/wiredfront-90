@@ -8,7 +8,7 @@ import { ChatSettingsTabs } from "./chat/ChatSettingsTabs";
 
 export function ChatSettings() {
   const { clearMessages } = useMessageStore();
-  const { currentSessionId, refreshSessions } = useSessionManager();
+  const { currentSessionId, fetchSessions } = useSessionManager();
   const [activeTab, setActiveTab] = useState("general");
   
   const [settings, setSettings] = useState({
@@ -59,7 +59,7 @@ export function ChatSettings() {
   const handleClearHistory = () => {
     if (window.confirm("Are you sure you want to clear all chat history? This cannot be undone.")) {
       clearMessages();
-      refreshSessions();
+      fetchSessions();
       toast.success("Chat history cleared successfully");
     }
   };

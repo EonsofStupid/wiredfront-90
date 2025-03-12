@@ -24,7 +24,8 @@ export const ChatSidebar = () => {
   const { ErrorBoundary } = useErrorBoundary();
 
   const formattedSessions = sessions.map(session => ({
-    ...session,
+    id: session.id,
+    lastAccessed: new Date(session.last_accessed),
     isActive: session.id === currentSessionId
   }));
 

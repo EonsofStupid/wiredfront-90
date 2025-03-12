@@ -17,10 +17,10 @@ export const SessionItem = ({ id, lastAccessed, isActive, onSelect }: SessionIte
   const displayId = id.slice(0, 8);
   
   // Format the date with date-fns
-  const formattedDate = formatDistanceToNow(new Date(lastAccessed), { addSuffix: true });
+  const formattedDate = formatDistanceToNow(lastAccessed, { addSuffix: true });
   
   // Determine if session is recent (less than 1 hour old)
-  const isRecent = new Date().getTime() - new Date(lastAccessed).getTime() < 60 * 60 * 1000;
+  const isRecent = new Date().getTime() - lastAccessed.getTime() < 60 * 60 * 1000;
 
   return (
     <TooltipProvider>

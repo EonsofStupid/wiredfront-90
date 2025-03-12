@@ -5,12 +5,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';
 import { useChatStore } from '@/components/chat/store/chatStore';
+import { Json } from '@/integrations/supabase/types';
 
-interface Session {
+export interface Session {
   id: string;
-  name: string;
+  title: string;
   created_at: string;
-  updated_at: string;
+  last_accessed: string;
   message_count: number;
 }
 
@@ -37,16 +38,17 @@ export function useSessionManager() {
         .from('chat_sessions')
         .select(`
           id,
-          name,
+          title,
           created_at,
-          updated_at,
+          last_accessed,
           message_count
         `)
         .eq('user_id', user.id)
-        .order('updated_at', { ascending: false });
+        .order('last_accessed', { ascending: false });
 
       if (error) throw error;
 
+      // Set sessions
       setSessions(data || []);
       
       // If we have sessions but no current session, set the most recent
@@ -85,9 +87,9 @@ export function useSessionManager() {
         .insert({
           id: sessionId,
           user_id: user.id,
-          name: `Chat ${new Date().toLocaleString()}`,
+          title: `Chat ${new Date().toLocaleString()}`,
           created_at: now,
-          updated_at: now,
+          last_accessed: now,
           message_count: 0
         });
 
@@ -122,10 +124,10 @@ export function useSessionManager() {
       setCurrentSessionId(sessionId);
       await fetchSessionMessages(sessionId);
       
-      // Update the session's updated_at timestamp
+      // Update the session's last_accessed timestamp
       await supabase
         .from('chat_sessions')
-        .update({ updated_at: new Date().toISOString() })
+        .update({ last_accessed: new Date().toISOString() })
         .eq('id', sessionId);
       
       logger.info('Switched to session', { sessionId });
@@ -152,9 +154,9 @@ export function useSessionManager() {
       // Keep current session and the 5 most recently updated sessions
       const { data, error } = await supabase
         .from('chat_sessions')
-        .select('id, updated_at')
+        .select('id, last_accessed')
         .eq('user_id', user.id)
-        .order('updated_at', { ascending: false });
+        .order('last_accessed', { ascending: false });
 
       if (error) throw error;
 
@@ -207,6 +209,7 @@ export function useSessionManager() {
     fetchSessions,
     createSession,
     switchSession,
-    cleanupInactiveSessions
+    cleanupInactiveSessions,
+    refreshSessions: fetchSessions, // Alias for backwards compatibility
   };
 }
