@@ -62,7 +62,7 @@ export function useSessionManager() {
     }
   });
 
-  const { mutateAsync: clearSessions } = useMutation({
+  const { mutateAsync: clearSessionsMutation } = useMutation({
     mutationFn: (preserveCurrentSession: boolean = true) => {
       const sessionIdToPreserve = preserveCurrentSession ? currentSessionId : null;
       return clearAllSessions(sessionIdToPreserve);
@@ -193,7 +193,7 @@ export function useSessionManager() {
     archiveSession: archiveSessionMutation,
     clearSessions: async (preserveCurrentSession: boolean = true) => {
       logger.info('Clearing sessions', { preserveCurrentSession, currentSessionId });
-      await clearSessions(preserveCurrentSession); // Fixed: Now we're passing the argument
+      await clearSessionsMutation(preserveCurrentSession); // Fixed: Using the mutation function instead of recursively calling itself
     },
     cleanupInactiveSessions: async () => {
       if (currentSessionId) {
