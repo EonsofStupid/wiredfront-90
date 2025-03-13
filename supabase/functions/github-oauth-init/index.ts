@@ -25,10 +25,12 @@ serve(async (req) => {
   }
 
   try {
-    const { redirect_url } = await req.json()
-    logEvent('request_received', { redirect_url })
+    const requestData = await req.json();
+    const { redirect_url, check_only = false } = requestData;
+    
+    logEvent('request_received', { redirect_url, check_only })
 
-    if (!redirect_url) {
+    if (!redirect_url && !check_only) {
       const error = 'Missing redirect_url in request'
       logEvent('validation_error', { error })
       return new Response(
@@ -45,13 +47,66 @@ serve(async (req) => {
 
     // Get GitHub OAuth credentials from environment variables
     const clientId = Deno.env.get('GITHUB_CLIENT_ID')
+    const clientSecret = Deno.env.get('GITHUB_CLIENT_SECRET')
+    
+    // Log all available environment variables (keys only) for debugging
+    const envKeys = Object.keys(Deno.env.toObject())
+    logEvent('available_env_vars', { 
+      keys: envKeys,
+      clientIdExists: !!clientId,
+      clientSecretExists: !!clientSecret
+    })
+
     if (!clientId) {
       const error = 'GitHub client ID not configured'
+      logEvent('configuration_error', { 
+        error,
+        availableEnvVars: envKeys
+      })
+      return new Response(
+        JSON.stringify({ 
+          error,
+          envVarsAvailable: envKeys.length,
+          debug: {
+            function: 'github-oauth-init',
+            timestamp: new Date().toISOString()
+          }
+        }),
+        { 
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+    }
+
+    if (!clientSecret) {
+      const error = 'GitHub client secret not configured'
       logEvent('configuration_error', { error })
       return new Response(
         JSON.stringify({ error }),
         { 
           status: 500,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+    }
+
+    // If this is just a configuration check, return success
+    if (check_only) {
+      logEvent('config_check_success', {})
+      return new Response(
+        JSON.stringify({ 
+          status: 'ok', 
+          clientIdConfigured: true,
+          clientSecretConfigured: true
+        }),
+        { 
           headers: {
             ...corsHeaders,
             'Content-Type': 'application/json'
@@ -108,7 +163,9 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ 
-        error: error.message 
+        error: error.message,
+        function: 'github-oauth-init',
+        timestamp: new Date().toISOString()
       }),
       { 
         status: 500,

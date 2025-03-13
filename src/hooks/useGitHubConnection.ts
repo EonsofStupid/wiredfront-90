@@ -10,6 +10,7 @@ export function useGitHubConnection() {
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isCheckingConnection, setIsCheckingConnection] = useState(true);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
 
   const checkConnection = useCallback(async () => {
     try {
@@ -76,6 +77,7 @@ export function useGitHubConnection() {
     try {
       setConnectionStatus('connecting');
       setErrorMessage(null);
+      setDebugInfo(null);
       
       // Prepare the callback URL (current origin)
       const callbackUrl = `${window.location.origin}/github-callback`;
@@ -89,16 +91,29 @@ export function useGitHubConnection() {
         }
       });
       
-      if (configError || (configCheck?.error && configCheck.error.includes('not configured'))) {
-        const errorMsg = configCheck?.error || configError?.message || 'GitHub client ID is not configured';
-        console.error('GitHub OAuth configuration error:', errorMsg);
-        setErrorMessage(errorMsg);
+      if (configError) {
+        console.error('GitHub OAuth configuration error:', configError);
+        setErrorMessage(`Configuration error: ${configError.message || configError}`);
         setConnectionStatus('error');
-        toast.error(`GitHub configuration error: ${errorMsg}`);
+        toast.error(`GitHub configuration error: ${configError.message || configError}`);
         return;
       }
       
-      // Call the GitHub OAuth initialization edge function
+      if (configCheck?.error) {
+        console.error('GitHub OAuth configuration error:', configCheck.error);
+        
+        // Save debug info for troubleshooting
+        if (configCheck.debug) {
+          setDebugInfo(configCheck.debug);
+        }
+        
+        setErrorMessage(configCheck.error);
+        setConnectionStatus('error');
+        toast.error(`GitHub configuration error: ${configCheck.error}`);
+        return;
+      }
+      
+      // If config check passed, call the GitHub OAuth initialization edge function
       const response = await supabase.functions.invoke('github-oauth-init', {
         body: { 
           redirect_url: callbackUrl
@@ -109,9 +124,9 @@ export function useGitHubConnection() {
       
       if (response.error) {
         console.error('Error starting GitHub OAuth flow:', response.error);
-        toast.error(`Failed to start GitHub OAuth flow: ${response.error.message}`);
+        toast.error(`Failed to start GitHub OAuth flow: ${response.error.message || response.error}`);
         setConnectionStatus('error');
-        setErrorMessage(response.error.message);
+        setErrorMessage(response.error.message || response.error);
         return;
       }
       
@@ -197,6 +212,7 @@ export function useGitHubConnection() {
     connectionStatus,
     errorMessage,
     isCheckingConnection,
+    debugInfo,
     connect,
     disconnect,
     checkConnection
