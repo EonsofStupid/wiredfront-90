@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { useRoleStore, getRoleDisplayName } from "@/stores/role";
 import { LayoutDashboard, Settings, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
+import styles from "./styles/UserMenu.module.css";
 
 interface UserMenuItemsProps {
   user: any | null;
@@ -41,7 +42,10 @@ export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
 
   if (!user) {
     return (
-      <DropdownMenuItem onClick={() => navigate('/login')}>
+      <DropdownMenuItem 
+        onClick={() => navigate('/login')}
+        className={styles.menuItem}
+      >
         Login
       </DropdownMenuItem>
     );
@@ -52,10 +56,15 @@ export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
 
   return (
     <>
-      <DropdownMenuLabel className="font-normal">
+      <DropdownMenuLabel className={`font-normal ${styles.userMenuLabel}`}>
         <div className="flex flex-col space-y-1">
-          <p className="text-sm font-medium leading-none">{user.email}</p>
-          <p className="text-xs leading-none text-muted-foreground">
+          <p 
+            className={`text-sm font-medium leading-none ${styles.cyberEmail}`} 
+            data-text={user.email}
+          >
+            {user.email}
+          </p>
+          <p className={`text-xs leading-none ${styles.cyberRole}`}>
             {isLoading ? 'Loading...' : getRoleDisplayName(roles[0] || 'guest')}
           </p>
         </div>
@@ -63,42 +72,46 @@ export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
       <DropdownMenuSeparator />
       <DropdownMenuItem 
         className={cn(
-          "cursor-pointer flex items-center gap-2",
-          isCurrentPath('/dashboard') && "bg-accent text-accent-foreground"
+          `cursor-pointer flex items-center gap-2 ${styles.menuItem}`,
+          isCurrentPath('/dashboard') && `${styles.menuItemActive}`
         )}
         onClick={() => navigate('/dashboard')}
+        data-text="Dashboard"
       >
         <LayoutDashboard className="h-4 w-4" />
-        Dashboard
+        <span className={styles.glitchText} data-text="Dashboard">Dashboard</span>
       </DropdownMenuItem>
       <DropdownMenuItem 
         className={cn(
-          "cursor-pointer flex items-center gap-2",
-          isCurrentPath('/settings') && "bg-accent text-accent-foreground"
+          `cursor-pointer flex items-center gap-2 ${styles.menuItem}`,
+          isCurrentPath('/settings') && `${styles.menuItemActive}`
         )}
         onClick={() => navigate('/settings')}
+        data-text="Settings"
       >
         <Settings className="h-4 w-4" />
-        Settings
+        <span className={styles.glitchText} data-text="Settings">Settings</span>
       </DropdownMenuItem>
       {isAdmin && (
         <DropdownMenuItem 
           className={cn(
-            "cursor-pointer flex items-center gap-2",
-            location.pathname.startsWith('/admin') && "bg-accent text-accent-foreground"
+            `cursor-pointer flex items-center gap-2 ${styles.menuItem} ${styles.adminMenuItem}`,
+            location.pathname.startsWith('/admin') && `${styles.menuItemActive}`
           )}
           onClick={() => navigate('/admin')}
+          data-text="Admin Dashboard"
         >
           <Shield className="h-4 w-4" />
-          Admin Dashboard
+          <span className={styles.glitchText} data-text="Admin Dashboard">Admin Dashboard</span>
         </DropdownMenuItem>
       )}
       <DropdownMenuSeparator />
       <DropdownMenuItem 
-        className="cursor-pointer text-red-500 focus:text-red-500"
+        className={`cursor-pointer ${styles.menuItem} ${styles.logoutMenuItem}`}
         onClick={onLogout}
+        data-text="Logout"
       >
-        Logout
+        <span className={styles.glitchText} data-text="Logout">Logout</span>
       </DropdownMenuItem>
     </>
   );

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -9,6 +10,7 @@ import {
 import { UserMenuItems } from "./UserMenuItems";
 import { UserMenuTrigger } from "./UserMenuTrigger";
 import { useAuthStore } from "@/stores/auth";
+import styles from "./styles/UserMenu.module.css";
 
 export const UserMenu = () => {
   const navigate = useNavigate();
@@ -25,22 +27,15 @@ export const UserMenu = () => {
 
   return (
     <div 
-      className="relative isolate"
-      style={{ 
-        zIndex: 'var(--z-dropdown)',
-      }}
+      className={styles.userMenuContainer}
     >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <UserMenuTrigger />
+          <UserMenuTrigger className={styles.userMenuTrigger} />
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end" 
-          className="glass-card w-56"
-          style={{ 
-            position: 'relative',
-            zIndex: 'var(--z-dropdown)',
-          }}
+          className={`glass-card w-56 ${styles.userMenuContent}`}
           sideOffset={8}
           alignOffset={0}
         >
