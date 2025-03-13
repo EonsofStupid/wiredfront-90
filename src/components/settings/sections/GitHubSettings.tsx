@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,19 +45,75 @@ export function GitHubSettings() {
     checkGitHubConnection();
   }, []);
 
+  useEffect(() => {
+    const handleOAuthMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'github-auth-success') {
+        console.log('GitHub auth success message received:', event.data);
+        setConnectionStatus('connected');
+        setUsername(event.data.username);
+        setIsConnected(true);
+        toast.success('Connected to GitHub successfully');
+        // Refresh connection data
+        checkGitHubConnection();
+      } else if (event.data && event.data.type === 'github-auth-error') {
+        console.error('GitHub auth error:', event.data.error);
+        setConnectionStatus('error');
+        toast.error(`GitHub connection failed: ${event.data.error}`);
+      }
+    };
+
+    window.addEventListener('message', handleOAuthMessage);
+    return () => window.removeEventListener('message', handleOAuthMessage);
+  }, []);
+
+  const checkGitHubConnection = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('oauth_connections')
+        .select('*')
+        .eq('provider', 'github')
+        .single();
+        
+      if (error) {
+        if (error.code !== 'PGRST116') {
+          console.error('Error checking GitHub connection:', error);
+        }
+        setIsConnected(false);
+        return;
+      }
+      
+      const connection = data as GitHubOAuthConnection;
+      setIsConnected(!!connection);
+      if (connection && connection.account_username) {
+        setUsername(connection.account_username);
+      }
+    } catch (error) {
+      console.error('Error checking GitHub connection:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGitHubConnect = async () => {
     try {
       setConnectionStatus('connecting');
       
+      const callbackUrl = `${window.location.origin}/github-callback`;
+      
       const { data, error } = await supabase.functions.invoke('github-oauth-init', {
         body: { 
-          redirect_url: `${window.location.origin}/settings`
+          redirect_url: callbackUrl
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error starting GitHub OAuth flow:', error);
+        toast.error('Failed to start GitHub OAuth flow');
+        setConnectionStatus('error');
+        return;
+      }
       
-      // Open GitHub auth in a popup
       const width = 600;
       const height = 700;
       const left = window.screenX + (window.outerWidth - width) / 2;
@@ -70,47 +125,12 @@ export function GitHubSettings() {
         `width=${width},height=${height},left=${left},top=${top}`
       );
       
-      // Poll for changes to detect when the user completes the GitHub auth flow
-      const checkConnection = setInterval(async () => {
-        if (popup && popup.closed) {
-          clearInterval(checkConnection);
-          
-          const { data: connectionData, error: connectionError } = await supabase
-            .from('oauth_connections')
-            .select('*')
-            .eq('provider', 'github')
-            .single();
-            
-          if (connectionError) {
-            if (connectionError.code !== 'PGRST116') {
-              console.error('Error checking connection:', connectionError);
-              toast.error('Failed to connect to GitHub');
-            }
-            setConnectionStatus('error');
-            return;
-          }
-          
-          const connection = connectionData as GitHubOAuthConnection;
-          if (connection) {
-            setIsConnected(true);
-            setUsername(connection.account_username || null);
-            setConnectionStatus('connected');
-            toast.success('Successfully connected to GitHub');
-          } else {
-            setConnectionStatus('error');
-            toast.error('GitHub connection failed');
-          }
-        }
-      }, 1000);
-      
-      // Timeout after 2 minutes
-      setTimeout(() => {
-        clearInterval(checkConnection);
-        if (connectionStatus === 'connecting') {
-          setConnectionStatus('idle');
-          toast.error('Connection timed out');
-        }
-      }, 120000);
+      if (!popup) {
+        console.error('Popup was blocked');
+        toast.error('Popup was blocked. Please allow popups for this site.');
+        setConnectionStatus('error');
+        return;
+      }
       
     } catch (error) {
       console.error('Error connecting to GitHub:', error);

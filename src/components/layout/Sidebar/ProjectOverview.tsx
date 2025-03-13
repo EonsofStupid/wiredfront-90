@@ -1,4 +1,3 @@
-
 import { useUIStore } from "@/stores";
 import { cn } from "@/lib/utils";
 import { Plus, Folder, Github, Import, ExternalLink, Info, Code, X, Check, RefreshCw } from "lucide-react";
@@ -64,13 +63,40 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
     checkGitHubConnection();
   }, [checkGitHubConnection]);
 
+  // Set up event listener for GitHub OAuth callback from popup
+  useEffect(() => {
+    const handleOAuthMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'github-auth-success') {
+        console.log('GitHub auth success message received:', event.data);
+        setConnectionStatus('connected');
+        setGithubUsername(event.data.username);
+        setIsGithubConnected(true);
+        setIsConnectDialogOpen(false);
+        toast.success('Connected to GitHub successfully');
+        checkGitHubConnection(); // Refresh connection data
+      } else if (event.data && event.data.type === 'github-auth-error') {
+        console.error('GitHub auth error:', event.data.error);
+        setConnectionStatus('error');
+        toast.error(`GitHub connection failed: ${event.data.error}`);
+        setIsConnectDialogOpen(false);
+      }
+    };
+
+    window.addEventListener('message', handleOAuthMessage);
+    return () => window.removeEventListener('message', handleOAuthMessage);
+  }, []);
+
   const handleGitHubConnect = async () => {
     try {
       setConnectionStatus('connecting');
       
+      // Prepare the callback URL (current origin)
+      const callbackUrl = `${window.location.origin}/github-callback`;
+      
+      // Call the GitHub OAuth initialization edge function
       const { data, error } = await supabase.functions.invoke('github-oauth-init', {
         body: { 
-          redirect_url: `${window.location.origin}/settings`
+          redirect_url: callbackUrl
         }
       });
 
@@ -109,55 +135,8 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
         return;
       }
       
-      // Poll for changes to detect when the user completes the GitHub auth flow
-      const checkConnection = setInterval(async () => {
-        if (popup && popup.closed) {
-          clearInterval(checkConnection);
-          console.log('GitHub OAuth popup closed, checking connection status');
-          
-          // Wait a moment for the database to be updated
-          setTimeout(async () => {
-            const { data: connectionData, error: connectionError } = await supabase
-              .from('oauth_connections')
-              .select('*')
-              .eq('provider', 'github')
-              .single();
-              
-            if (connectionError) {
-              if (connectionError.code !== 'PGRST116') {
-                console.error('Error checking connection:', connectionError);
-                toast.error('Failed to connect to GitHub');
-              }
-              setConnectionStatus('error');
-              setIsConnectDialogOpen(false);
-              return;
-            }
-            
-            const connection = connectionData as GitHubOAuthConnection;
-            if (connection) {
-              setIsGithubConnected(true);
-              setGithubUsername(connection.account_username || null);
-              setConnectionStatus('connected');
-              toast.success('Successfully connected to GitHub');
-              setIsConnectDialogOpen(false);
-            } else {
-              setConnectionStatus('error');
-              toast.error('GitHub connection failed');
-              setIsConnectDialogOpen(false);
-            }
-          }, 1500);
-        }
-      }, 1000);
-      
-      // Timeout after 2 minutes
-      setTimeout(() => {
-        clearInterval(checkConnection);
-        if (connectionStatus === 'connecting') {
-          setConnectionStatus('idle');
-          toast.error('Connection timed out');
-          setIsConnectDialogOpen(false);
-        }
-      }, 120000);
+      // The rest of the flow will be handled by the message event listener
+      // which will receive a message from the popup when auth is complete
       
     } catch (error) {
       console.error('Error connecting to GitHub:', error);
