@@ -21,7 +21,7 @@ export function GitHubStatusSection({
   onDisconnect,
   connectionStatus
 }: GitHubStatusSectionProps) {
-  // Only disable the button when actually connecting
+  // Only disable the button when actually connecting or checking
   const isButtonDisabled = connectionStatus === 'connecting';
 
   return (

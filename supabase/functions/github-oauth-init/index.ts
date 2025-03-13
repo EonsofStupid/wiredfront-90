@@ -63,15 +63,19 @@ serve(async (req) => {
     }
 
     // Get GitHub OAuth credentials from environment variables
-    const clientId = Deno.env.get('GITHUB_CLIENT_ID')
-    const clientSecret = Deno.env.get('GITHUB_CLIENT_SECRET')
+    const clientId = Deno.env.get('GITHUB_CLIENTID')
+    const clientSecret = Deno.env.get('GITHUB_CLIENTSECRET')
+    const appId = Deno.env.get('GITHUB_APPID')
+    const privateKey = Deno.env.get('GITHUB_PRIVATEKEY')
     
     // Log all available environment variables (keys only) for debugging
     const envKeys = Object.keys(Deno.env.toObject())
     logEvent('available_env_vars', { 
       keys: envKeys,
       clientIdExists: !!clientId,
-      clientSecretExists: !!clientSecret
+      clientSecretExists: !!clientSecret,
+      appIdExists: !!appId,
+      privateKeyExists: !!privateKey && privateKey.length > 0
     })
 
     if (!clientId) {
