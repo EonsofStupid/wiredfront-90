@@ -20,4 +20,10 @@
   --message-assistant-bg: rgba(17, 17, 27, 0.6);
   --message-user-border: rgba(59, 130, 246, 0.3);
   --message-assistant-border: rgba(255, 255, 255, 0.1);
+  
+  /* Position variables */
+  --chat-position-bottom-right: auto auto 20px 20px;
+  --chat-position-bottom-left: auto 20px 20px auto;
+  --chat-position-top-right: 20px auto auto 20px;
+  --chat-position-top-left: 20px 20px auto auto;
 }

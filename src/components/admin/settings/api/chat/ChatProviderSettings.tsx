@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -92,7 +91,6 @@ export function ChatProviderSettings() {
   
   // Function to save all provider settings
   const saveProviderSettings = () => {
-    // In a real app, this would save to the database
     toast.success("Chat provider settings saved successfully");
   };
   
@@ -122,6 +120,14 @@ export function ChatProviderSettings() {
     });
     
     toast.success("New provider added");
+  };
+  
+  // Determine position display text
+  const getPositionDisplayText = () => {
+    if (typeof position === 'string') {
+      return position === 'bottom-right' ? 'Bottom Right' : 'Bottom Left';
+    }
+    return `Custom (${position.x}, ${position.y})`;
   };
   
   return (
@@ -345,7 +351,7 @@ export function ChatProviderSettings() {
                   <div className="space-y-0.5">
                     <Label htmlFor="position">Default Position</Label>
                     <p className="text-sm text-muted-foreground">
-                      Current position: {position === 'bottom-right' ? 'Bottom Right' : 'Bottom Left'}
+                      Current position: {getPositionDisplayText()}
                     </p>
                   </div>
                   <Button 

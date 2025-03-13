@@ -38,7 +38,9 @@ export const ChatFeatureSettings = () => {
             <div className="space-y-0.5">
               <Label htmlFor="position">Position</Label>
               <p className="text-sm text-muted-foreground">
-                Current position: {position === 'bottom-right' ? 'Bottom Right' : 'Bottom Left'}
+                Current position: {typeof position === 'string' 
+                  ? (position === 'bottom-right' ? 'Bottom Right' : 'Bottom Left') 
+                  : `Custom (${position.x}, ${position.y})`}
               </p>
             </div>
             <Button 

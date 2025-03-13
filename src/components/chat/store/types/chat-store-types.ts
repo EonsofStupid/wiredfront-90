@@ -1,3 +1,4 @@
+
 import { ChatMessage } from "@/types/chat";
 
 export interface ChatProvider {
@@ -6,6 +7,8 @@ export interface ChatProvider {
   type: string;
   isDefault: boolean;
 }
+
+export type ChatPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
 
 export interface ChatState {
   initialized: boolean;
@@ -20,7 +23,7 @@ export interface ChatState {
   docked: boolean;
   isOpen: boolean;
   isHidden: boolean;
-  position: { x: number; y: number };
+  position: ChatPosition | { x: number; y: number };
   startTime: number;
   features: {
     voice: boolean;
@@ -28,6 +31,10 @@ export interface ChatState {
     modeSwitch: boolean;
     notifications: boolean;
     github: boolean;
+    // Add the missing feature flags that components expect
+    codeAssistant: boolean;
+    ragSupport: boolean;
+    githubSync: boolean;
   };
   currentMode: 'chat' | 'dev' | 'image';
   availableProviders: ChatProvider[];

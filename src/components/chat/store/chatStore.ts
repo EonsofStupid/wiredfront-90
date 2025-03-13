@@ -20,7 +20,7 @@ const initialState: ChatState = {
   docked: true,
   isOpen: false,
   isHidden: false,
-  position: { x: 0, y: 0 },
+  position: 'bottom-right', // Changed to string position
   startTime: Date.now(),
   features: {
     voice: true,
@@ -28,6 +28,10 @@ const initialState: ChatState = {
     modeSwitch: true,
     notifications: true,
     github: true,
+    // Add new feature flags matching what UI components expect
+    codeAssistant: true,
+    ragSupport: true,
+    githubSync: true,
   },
   currentMode: 'chat',
   availableProviders: [],

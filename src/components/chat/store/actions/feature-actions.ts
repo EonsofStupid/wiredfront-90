@@ -1,10 +1,15 @@
 
+import { ChatProvider } from "../types/chat-store-types";
+
+export type FeatureKey = 'voice' | 'rag' | 'modeSwitch' | 'notifications' | 'github' | 
+                         'codeAssistant' | 'ragSupport' | 'githubSync';
+
 export type FeatureActions = {
-  toggleFeature: (feature: string) => void;
-  enableFeature: (feature: string) => void;
-  disableFeature: (feature: string) => void;
-  setFeatureState: (feature: string, isEnabled: boolean) => void;
-  updateChatProvider: (providers: any[]) => void; // Add this action
+  toggleFeature: (feature: FeatureKey) => void;
+  enableFeature: (feature: FeatureKey) => void;
+  disableFeature: (feature: FeatureKey) => void;
+  setFeatureState: (feature: FeatureKey, isEnabled: boolean) => void;
+  updateChatProvider: (providers: ChatProvider[]) => void;
 };
 
 export const createFeatureActions = (set: any): FeatureActions => ({
@@ -56,12 +61,12 @@ export const createFeatureActions = (set: any): FeatureActions => ({
       { type: 'features/setState', feature, isEnabled }
     ),
     
-  // New action to update available chat providers
+  // Update available chat providers
   updateChatProvider: (providers) =>
     set(
       (state: any) => ({
         availableProviders: providers,
-        currentProvider: providers.find((p: any) => p.isDefault) || providers[0] || state.currentProvider,
+        currentProvider: providers.find((p: ChatProvider) => p.isDefault) || providers[0] || state.currentProvider,
       }),
       false,
       { type: 'providers/update', providers }

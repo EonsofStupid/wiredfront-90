@@ -1,58 +1,97 @@
 
-import { logger } from '@/services/chat/LoggingService';
-import { ChatState } from '../types/chat-store-types';
+import { ChatPosition } from '../types/chat-store-types';
 
-export const createUIActions = (set: Function, get: Function) => ({
-  togglePosition: () => set((state: ChatState) => {
-    const newPosition = state.position === 'bottom-right' ? 'bottom-left' : 'bottom-right';
-    logger.info('Chat position toggled', { 
-      from: state.position, 
-      to: newPosition 
-    });
-    return { position: newPosition };
-  }),
-  
-  toggleMinimize: () => set((state: ChatState) => {
-    const newState = !state.isMinimized;
-    logger.info('Chat minimized state toggled', { 
-      wasMinimized: state.isMinimized,
-      isNowMinimized: newState
-    });
-    return { isMinimized: newState };
-  }),
-  
-  toggleSidebar: () => set((state: ChatState) => {
-    const newState = !state.showSidebar;
-    logger.info('Chat sidebar toggled', { 
-      wasVisible: state.showSidebar,
-      isNowVisible: newState
-    });
-    return { showSidebar: newState };
-  }),
-  
-  toggleChat: () => set((state: ChatState) => {
-    const newState = !state.isOpen;
-    logger.info('Chat visibility toggled', { 
-      wasOpen: state.isOpen,
-      isNowOpen: newState
-    });
-    return { isOpen: newState };
-  }),
-  
-  setScale: (scale: number) => set((state: ChatState) => {
-    logger.info('Chat scale updated', { 
-      oldScale: state.scale, 
-      newScale: scale 
-    });
-    return { scale };
-  }),
-  
-  toggleDocked: () => set((state: ChatState) => {
-    const newState = !state.docked;
-    logger.info('Chat docked state toggled', { 
-      wasDocked: state.docked,
-      isNowDocked: newState
-    });
-    return { docked: newState };
-  })
+export type UIActions = {
+  toggleChatVisibility: () => void;
+  setUserInput: (input: string) => void;
+  toggleDocked: () => void;
+  setPosition: (position: ChatPosition | { x: number; y: number }) => void;
+  togglePosition: () => void;
+  toggleChatWindow: () => void;
+  minimizeChat: () => void;
+  restoreChat: () => void;
+};
+
+export const createUIActions = (set: any): UIActions => ({
+  toggleChatVisibility: () =>
+    set(
+      (state: any) => ({
+        isOpen: !state.isOpen,
+      }),
+      false,
+      { type: 'ui/toggleVisibility' }
+    ),
+
+  setUserInput: (input: string) =>
+    set(
+      () => ({
+        userInput: input,
+      }),
+      false,
+      { type: 'ui/setUserInput', input }
+    ),
+
+  toggleDocked: () =>
+    set(
+      (state: any) => ({
+        docked: !state.docked,
+      }),
+      false,
+      { type: 'ui/toggleDocked' }
+    ),
+
+  setPosition: (position) =>
+    set(
+      () => ({
+        position,
+      }),
+      false,
+      { type: 'ui/setPosition', position }
+    ),
+
+  togglePosition: () =>
+    set(
+      (state: any) => {
+        // Handle different position types
+        if (typeof state.position === 'string') {
+          return {
+            position: state.position === 'bottom-right' ? 'bottom-left' : 'bottom-right'
+          };
+        } else {
+          // If it's an object, default to bottom-right
+          return {
+            position: 'bottom-right'
+          };
+        }
+      },
+      false,
+      { type: 'ui/togglePosition' }
+    ),
+
+  toggleChatWindow: () =>
+    set(
+      (state: any) => ({
+        isHidden: !state.isHidden,
+      }),
+      false,
+      { type: 'ui/toggleChatWindow' }
+    ),
+
+  minimizeChat: () =>
+    set(
+      () => ({
+        isHidden: true,
+      }),
+      false,
+      { type: 'ui/minimizeChat' }
+    ),
+
+  restoreChat: () =>
+    set(
+      () => ({
+        isHidden: false,
+      }),
+      false,
+      { type: 'ui/restoreChat' }
+    ),
 });
