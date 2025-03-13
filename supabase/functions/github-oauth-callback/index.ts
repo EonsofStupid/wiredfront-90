@@ -27,16 +27,27 @@ serve(async (req) => {
   }
 
   try {
+    // Parse the request body for POST requests
+    let requestData = {}
+    if (req.method === 'POST') {
+      try {
+        requestData = await req.json();
+      } catch (error) {
+        logEvent('json_parse_error', { error: error.message })
+      }
+    }
+
     // Parse the request URL to get the query parameters
     const url = new URL(req.url);
-    const code = url.searchParams.get('code');
-    const state = url.searchParams.get('state');
+    const code = url.searchParams.get('code') || (requestData as any).code;
+    const state = url.searchParams.get('state') || (requestData as any).state;
     
     logEvent('received_params', { 
       code: code ? `${code.substring(0, 5)}...` : null,
       state: state ? `${state.substring(0, 5)}...` : null,
       hasCode: !!code,
-      hasState: !!state
+      hasState: !!state,
+      method: req.method
     })
 
     if (!code) {
@@ -45,21 +56,40 @@ serve(async (req) => {
       throw new Error(error)
     }
 
+    // Log all env vars for debugging (not the values, just the keys)
+    const envKeys = Object.keys(Deno.env.toObject())
+    logEvent('env_vars_available', { keys: envKeys })
+
     // Fetch secrets
-    const clientId = Deno.env.get('GITHUB_CLIENT_ID')
-    const clientSecret = Deno.env.get('GITHUB_CLIENT_SECRET')
+    let clientId = Deno.env.get('GITHUB_CLIENTID')
+    if (!clientId) {
+      clientId = Deno.env.get('GITHUB_CLIENT_ID')
+    }
+    
+    let clientSecret = Deno.env.get('GITHUB_CLIENTSECRET')
+    if (!clientSecret) {
+      clientSecret = Deno.env.get('GITHUB_CLIENT_SECRET')
+    }
+    
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
+    logEvent('credentials_check', { 
+      clientIdExists: !!clientId,
+      clientSecretExists: !!clientSecret,
+      supabaseUrlExists: !!supabaseUrl,
+      supabaseServiceKeyExists: !!supabaseServiceKey
+    })
+
     if (!clientId || !clientSecret) {
       const error = 'Missing GitHub OAuth credentials'
-      logEvent('configuration_error', { error })
+      logEvent('configuration_error', { error, envKeys })
       throw new Error(error)
     }
 
     if (!supabaseUrl || !supabaseServiceKey) {
       const error = 'Missing Supabase credentials'
-      logEvent('configuration_error', { error })
+      logEvent('configuration_error', { error, envKeys })
       throw new Error(error)
     }
 
@@ -81,7 +111,8 @@ serve(async (req) => {
     logEvent('token_response', { 
       success: !!tokenData.access_token,
       hasError: !!tokenData.error,
-      errorDescription: tokenData.error_description || null
+      errorDescription: tokenData.error_description || null,
+      status: tokenResponse.status
     })
 
     if (tokenData.error) {
@@ -102,7 +133,8 @@ serve(async (req) => {
     logEvent('user_data_fetched', { 
       success: !!userData.id, 
       username: userData.login || null,
-      hasError: !!userData.message
+      hasError: !!userData.message,
+      status: userResponse.status
     })
 
     if (userData.message) {

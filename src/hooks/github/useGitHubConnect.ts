@@ -118,11 +118,7 @@ export function useGitHubConnect({
           // If connection wasn't established when popup closed and we're still in connecting state
           if (setConnectionStatus) {
             // Only revert to idle if we're still connecting (not if we succeeded or failed already)
-            // Fix the TypeScript error by using a direct string value instead of a function
-            const currentStatus = 'connecting'; // This is a simplification since we can't check the actual status
-            if (currentStatus === 'connecting') {
-              setConnectionStatus('idle');
-            }
+            setConnectionStatus('idle');
           }
         }
       }, 1000);

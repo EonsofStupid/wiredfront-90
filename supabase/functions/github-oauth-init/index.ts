@@ -63,19 +63,31 @@ serve(async (req) => {
     }
 
     // Get GitHub OAuth credentials from environment variables
-    const clientId = Deno.env.get('GITHUB_CLIENTID')
-    const clientSecret = Deno.env.get('GITHUB_CLIENTSECRET')
+    // Log all env vars for debugging (not the values, just the keys)
+    const envKeys = Object.keys(Deno.env.toObject())
+    logEvent('env_vars_available', { keys: envKeys })
+    
+    // Try different variations of GitHub client ID env var names
+    let clientId = Deno.env.get('GITHUB_CLIENTID')
+    if (!clientId) {
+      clientId = Deno.env.get('GITHUB_CLIENT_ID')
+    }
+    
+    // Try different variations of GitHub client secret env var names
+    let clientSecret = Deno.env.get('GITHUB_CLIENTSECRET')
+    if (!clientSecret) {
+      clientSecret = Deno.env.get('GITHUB_CLIENT_SECRET')
+    }
+    
     const appId = Deno.env.get('GITHUB_APPID')
     const privateKey = Deno.env.get('GITHUB_PRIVATEKEY')
     
-    // Log all available environment variables (keys only) for debugging
-    const envKeys = Object.keys(Deno.env.toObject())
-    logEvent('available_env_vars', { 
-      keys: envKeys,
+    logEvent('credentials_check', { 
       clientIdExists: !!clientId,
       clientSecretExists: !!clientSecret,
       appIdExists: !!appId,
-      privateKeyExists: !!privateKey && privateKey.length > 0
+      privateKeyExists: !!privateKey && privateKey.length > 0,
+      clientIdPrefix: clientId ? clientId.substring(0, 5) : null
     })
 
     if (!clientId) {
@@ -144,7 +156,7 @@ serve(async (req) => {
     }
 
     logEvent('config_loaded', { 
-      clientIdExists: !!clientId,
+      clientIdPrefix: clientId.substring(0, 5),
       clientIdLength: clientId.length
     })
 
@@ -168,7 +180,8 @@ serve(async (req) => {
     logEvent('auth_url_generated', { 
       url: authUrl.toString(),
       statePrefix: state.slice(0, 8),
-      scopes: scopes.join(' ')
+      scopes: scopes.join(' '),
+      clientIdPrefix: clientId.substring(0, 5)
     })
 
     return new Response(

@@ -21,8 +21,12 @@ export function useGitHubOAuthCallback({
   useEffect(() => {
     // Handle messages from the OAuth popup window
     const handleOAuthMessage = async (event: MessageEvent) => {
-      // Make sure the message is from our own domain
-      if (event.origin !== window.location.origin) {
+      console.log('Received message from popup:', event.origin, event.data);
+      
+      // Make sure the message is from our own domain or GitHub
+      if (event.origin !== window.location.origin && 
+          !event.origin.includes('github.com')) {
+        console.log('Ignoring message from unknown origin:', event.origin);
         return;
       }
       
@@ -32,38 +36,31 @@ export function useGitHubOAuthCallback({
       if (data?.type === 'github-auth-success') {
         console.log('Received GitHub auth success message:', data);
         
-        try {
-          setIsCheckingConnection(true);
+        if (data.username) {
+          console.log('Setting username from popup message:', data.username);
+          setUsername(data.username);
+          setConnectionStatus('connected');
+          setErrorMessage(null);
+          toast.success('GitHub connected successfully');
           
-          // Exchange the code for a token on the server
-          const { error } = await supabase.functions.invoke('github-oauth-callback', {
-            body: {
-              code: data.code,
-              state: data.state
-            }
-          });
-          
-          if (error) {
-            console.error('Error completing GitHub OAuth:', error);
-            setConnectionStatus('error');
-            setErrorMessage(`OAuth callback error: ${error.message || error}`);
-            toast.error('GitHub connection failed');
-          } else {
-            console.log('GitHub OAuth completed successfully');
-            setConnectionStatus('connected');
-            setErrorMessage(null);
-            toast.success('GitHub connected successfully');
-            
-            // Refresh the connection state
+          // Refresh the connection state
+          await checkConnection();
+        }
+        else {
+          // If we don't have code/state in the message but got a success message,
+          // we need to call the callback endpoint directly
+          try {
+            setIsCheckingConnection(true);
             await checkConnection();
+            toast.success('GitHub connected successfully');
+          } catch (error) {
+            console.error('Error checking GitHub connection after success message:', error);
+            setConnectionStatus('error');
+            setErrorMessage(`Connection check error: ${error instanceof Error ? error.message : String(error)}`);
+            toast.error('GitHub connection verification failed');
+          } finally {
+            setIsCheckingConnection(false);
           }
-        } catch (error) {
-          console.error('Error in GitHub OAuth callback processing:', error);
-          setConnectionStatus('error');
-          setErrorMessage(`Callback processing error: ${error instanceof Error ? error.message : String(error)}`);
-          toast.error('GitHub connection failed');
-        } finally {
-          setIsCheckingConnection(false);
         }
       } 
       else if (data?.type === 'github-auth-error') {
