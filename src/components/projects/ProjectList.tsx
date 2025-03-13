@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 interface Project {
   id: string;
   name: string;
-  description: string;
+  description?: string; // Made optional to match the store type
   lastModified: Date;
 }
 
