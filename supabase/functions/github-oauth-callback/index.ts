@@ -206,6 +206,7 @@ serve(async (req) => {
     
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Parse the request body carefully
     let requestData;
     try {
       requestData = await req.json();

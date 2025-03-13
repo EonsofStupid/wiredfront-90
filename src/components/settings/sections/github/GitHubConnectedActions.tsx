@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { GitBranch, GitPullRequest, RefreshCw, Share2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 interface GitHubConnectedActionsProps {
   isConnected: boolean;
@@ -24,10 +25,17 @@ export function GitHubConnectedActions({
   
   const syncRepositories = async () => {
     setIsSyncing(true);
-    // Simulate repository syncing
-    setTimeout(() => {
+    try {
+      // In a real implementation, this would call an API to sync repositories
+      // For now we'll simulate it with a toast notification
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      toast.success("GitHub repositories synchronized successfully");
+    } catch (error) {
+      toast.error("Failed to sync repositories");
+      console.error("Repository sync error:", error);
+    } finally {
       setIsSyncing(false);
-    }, 2000);
+    }
   };
   
   return (
