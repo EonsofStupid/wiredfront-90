@@ -4,8 +4,10 @@ import { toast } from "sonner";
 import { logger } from "@/services/chat/LoggingService";
 import { apiSettingsStateSchema } from "@/schemas/api";
 import { safeValidate } from "@/utils/validation";
+import { APISettingsState } from "@/types/admin/settings/api";
 
-const defaultSettings = apiSettingsStateSchema.parse({
+// Define default settings using the schema to ensure type consistency
+const defaultSettings: APISettingsState = {
   openaiKey: "",
   huggingfaceKey: "",
   geminiKey: "",
@@ -19,15 +21,15 @@ const defaultSettings = apiSettingsStateSchema.parse({
   awsSecretKey: "",
   githubToken: "",
   dockerToken: "",
-});
+};
 
 export function useAPISettingsState() {
-  const [settings, setSettings] = useState(defaultSettings);
+  const [settings, setSettings] = useState<APISettingsState>(defaultSettings);
   const [isSaving, setIsSaving] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [offlineMode, setOfflineMode] = useState(false);
 
-  const updateSetting = (key: keyof typeof defaultSettings, value: string) => {
+  const updateSetting = (key: keyof APISettingsState, value: string) => {
     setSettings(prev => {
       const updated = { ...prev, [key]: value };
       return safeValidate(

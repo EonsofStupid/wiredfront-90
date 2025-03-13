@@ -8,20 +8,21 @@ export type APIType =
 
 export type ValidationStatusType = Database["public"]["Enums"]["extended_validation_status"];
 
+// Update to match the Zod schema - all properties are optional
 export interface APISettingsState {
-  openaiKey: string;
-  huggingfaceKey: string;
-  geminiKey: string;
-  anthropicKey: string;
-  perplexityKey: string;
-  elevenLabsKey: string;
-  selectedVoice: string;
-  googleDriveKey: string;
-  dropboxKey: string;
-  awsAccessKey: string;
-  awsSecretKey: string;
-  githubToken: string;
-  dockerToken: string;
+  openaiKey?: string;
+  huggingfaceKey?: string;
+  geminiKey?: string;
+  anthropicKey?: string;
+  perplexityKey?: string;
+  elevenLabsKey?: string;
+  selectedVoice?: string;
+  googleDriveKey?: string;
+  dropboxKey?: string;
+  awsAccessKey?: string;
+  awsSecretKey?: string;
+  githubToken?: string;
+  dockerToken?: string;
 }
 
 export interface APIConfiguration {

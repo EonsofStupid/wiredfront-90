@@ -1,6 +1,7 @@
+
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { APISettingsState } from "@/types/admin/settings/types";
+import { APISettingsState } from "@/types/admin/settings/api";
 import { toast } from "sonner";
 import { logger } from "@/services/chat/LoggingService";
 
@@ -29,6 +30,7 @@ export function useAPISettingsLoad(
           throw configError;
         }
 
+        // Initialize with empty strings, matching our type definition
         const newSettings: APISettingsState = {
           openaiKey: '',
           huggingfaceKey: '',
@@ -48,7 +50,10 @@ export function useAPISettingsLoad(
         apiConfigs?.forEach(config => {
           if (config.is_enabled) {
             const key = `${config.api_type}Key` as keyof APISettingsState;
-            newSettings[key] = 'configured';
+            // Use type assertion since we know this is safe
+            if (key in newSettings) {
+              (newSettings[key] as string) = 'configured';
+            }
           }
         });
 

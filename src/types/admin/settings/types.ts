@@ -1,3 +1,4 @@
+
 export interface UserPreferences {
   defaultView: string;
   refreshInterval: number;
@@ -32,18 +33,19 @@ export interface CacheSettings {
   redis: RedisConfig;
 }
 
+// Update to match the Zod schema - all properties are optional
 export interface APISettingsState {
-  openaiKey: string;
-  huggingfaceKey: string;
-  geminiKey: string;
-  anthropicKey: string;
-  perplexityKey: string;
-  elevenLabsKey: string;
-  selectedVoice: string;
-  googleDriveKey: string;
-  dropboxKey: string;
-  awsAccessKey: string;
-  awsSecretKey: string;
-  githubToken: string;
-  dockerToken: string;
+  openaiKey?: string;
+  huggingfaceKey?: string;
+  geminiKey?: string;
+  anthropicKey?: string;
+  perplexityKey?: string;
+  elevenLabsKey?: string;
+  selectedVoice?: string;
+  googleDriveKey?: string;
+  dropboxKey?: string;
+  awsAccessKey?: string;
+  awsSecretKey?: string;
+  githubToken?: string;
+  dockerToken?: string;
 }
