@@ -50,10 +50,12 @@ export function ChatModeDialog({ open, onOpenChange }: ChatModeDialogProps) {
       setCurrentMode('dev');
     } else if (isGalleryPage) {
       setCurrentMode('image');
+    } else if (location.pathname === '/') {
+      setCurrentMode('chat');
     }
-  }, [isEditorPage, isGalleryPage, setCurrentMode]);
+  }, [isEditorPage, isGalleryPage, setCurrentMode, location.pathname]);
 
-  const handleModeChange = (mode: string) => {
+  const handleModeChange = (mode: 'chat' | 'dev' | 'image') => {
     setCurrentMode(mode);
     
     // Navigate to the appropriate page based on mode

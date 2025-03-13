@@ -37,7 +37,12 @@ const initialState: ChatState = {
   availableProviders: [],
   currentProvider: null,
   
-  // Add the missing UI state properties
+  // Add providers mapping for session management
+  providers: {
+    availableProviders: [],
+  },
+  
+  // UI state properties
   isMinimized: false,
   showSidebar: false,
   scale: 1,

@@ -5,10 +5,14 @@ import { useAPIOperation } from "./apiKeyManagement/useAPIOperation";
 export function useGitHubMetricsSync() {
   const [lastSynced, setLastSynced] = useState<Date | null>(null);
   const [isAutoSyncEnabled, setIsAutoSyncEnabled] = useState(false);
-  const { isProcessing, syncGitHubMetrics } = useAPIOperation({
+  const { isProcessing, executeOperation } = useAPIOperation({
     successMessage: "GitHub metrics synced successfully",
     errorMessage: "Failed to sync GitHub metrics"
   });
+
+  const syncGitHubMetrics = async () => {
+    return await executeOperation('syncGitHubMetrics', {});
+  };
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -27,7 +31,7 @@ export function useGitHubMetricsSync() {
         clearInterval(interval);
       }
     };
-  }, [isAutoSyncEnabled, syncGitHubMetrics]);
+  }, [isAutoSyncEnabled]);
 
   const manualSync = async () => {
     const success = await syncGitHubMetrics();

@@ -1,18 +1,20 @@
 
-import { ChatMessage } from "@/types/chat";
+import { Message } from "@/types/chat";
 
 export interface ChatProvider {
   id: string;
   name: string;
   type: string;
   isDefault: boolean;
+  isEnabled?: boolean;
+  category?: 'chat' | 'image' | 'integration';
 }
 
 export type ChatPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
 
 export interface ChatState {
   initialized: boolean;
-  messages: ChatMessage[];
+  messages: Message[];
   userInput: string;
   isWaitingForResponse: boolean;
   selectedModel: string;
@@ -31,7 +33,7 @@ export interface ChatState {
     modeSwitch: boolean;
     notifications: boolean;
     github: boolean;
-    // Add the missing feature flags that components expect
+    // Feature flags that components expect
     codeAssistant: boolean;
     ragSupport: boolean;
     githubSync: boolean;
@@ -40,7 +42,12 @@ export interface ChatState {
   availableProviders: ChatProvider[];
   currentProvider: ChatProvider | null;
   
-  // Add missing UI state properties
+  // Add providers mapping for session management
+  providers?: {
+    availableProviders: ChatProvider[];
+  };
+  
+  // UI state properties
   isMinimized: boolean;
   showSidebar: boolean;
   scale: number;
