@@ -1,13 +1,14 @@
+
 import { useUIStore } from "@/stores";
 import { cn } from "@/lib/utils";
-import { Plus, Folder, Github, Import, ExternalLink, Info, Code, X, Check, RefreshCw } from "lucide-react";
+import { Plus, Folder, Github, Import, ExternalLink, Info, Code, X, Check, RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { GitHubOAuthConnection } from "@/types/admin/settings/github";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 interface ProjectOverviewProps {
   className?: string;
@@ -24,6 +25,7 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
   const [isGithubConnected, setIsGithubConnected] = useState<boolean>(false);
   const [githubUsername, setGithubUsername] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isConnectDialogOpen, setIsConnectDialogOpen] = useState(false);
   const [isCheckingConnection, setIsCheckingConnection] = useState(true);
   
@@ -69,31 +71,51 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
       if (event.data && event.data.type === 'github-auth-success') {
         console.log('GitHub auth success message received:', event.data);
         setConnectionStatus('connected');
+        setErrorMessage(null);
         
         // Update GitHub connection status in the database and local state
         // This will be handled by the github-oauth-callback edge function
         // which saves the token to the database
         toast.success('Connected to GitHub successfully');
         checkGitHubConnection(); // Refresh connection data
+        setIsConnectDialogOpen(false);
       } else if (event.data && event.data.type === 'github-auth-error') {
         console.error('GitHub auth error:', event.data.error);
         setConnectionStatus('error');
+        setErrorMessage(event.data.error);
         toast.error(`GitHub connection failed: ${event.data.error}`);
-        setIsConnectDialogOpen(false);
       }
     };
 
     window.addEventListener('message', handleOAuthMessage);
     return () => window.removeEventListener('message', handleOAuthMessage);
-  }, []);
+  }, [checkGitHubConnection]);
 
   const handleGitHubConnect = async () => {
     try {
       setConnectionStatus('connecting');
+      setErrorMessage(null);
       
       // Prepare the callback URL (current origin)
       const callbackUrl = `${window.location.origin}/github-callback`;
       console.log("Using callback URL:", callbackUrl);
+      
+      // First check if the GitHub client ID is configured
+      const { data: configCheck, error: configError } = await supabase.functions.invoke('github-oauth-init', {
+        body: { 
+          redirect_url: callbackUrl,
+          check_only: true
+        }
+      });
+      
+      if (configError || (configCheck?.error && configCheck.error.includes('not configured'))) {
+        const errorMsg = configCheck?.error || configError?.message || 'GitHub client ID is not configured';
+        console.error('GitHub OAuth configuration error:', errorMsg);
+        setErrorMessage(errorMsg);
+        setConnectionStatus('error');
+        toast.error(`GitHub configuration error: ${errorMsg}`);
+        return;
+      }
       
       // Call the GitHub OAuth initialization edge function
       const response = await supabase.functions.invoke('github-oauth-init', {
@@ -108,6 +130,7 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
         console.error('Error starting GitHub OAuth flow:', response.error);
         toast.error(`Failed to start GitHub OAuth flow: ${response.error.message}`);
         setConnectionStatus('error');
+        setErrorMessage(response.error.message);
         return;
       }
       
@@ -117,9 +140,11 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
       console.log('GitHub OAuth URL generated:', data?.url);
       
       if (!data || !data.url) {
-        console.error('No OAuth URL returned from the server');
+        const errorMsg = data?.error || 'No OAuth URL returned from the server';
+        console.error(errorMsg);
         toast.error('Failed to generate GitHub OAuth URL');
         setConnectionStatus('error');
+        setErrorMessage(errorMsg);
         return;
       }
 
@@ -141,6 +166,7 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
         console.error('Popup was blocked or could not be opened');
         toast.error('Popup was blocked. Please allow popups for this site.');
         setConnectionStatus('error');
+        setErrorMessage('Popup was blocked. Please allow popups for this site.');
         return;
       }
       
@@ -159,6 +185,7 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
       console.error('Error connecting to GitHub:', error);
       toast.error('Failed to connect to GitHub');
       setConnectionStatus('error');
+      setErrorMessage(error instanceof Error ? error.message : 'Unknown error');
       setIsConnectDialogOpen(false);
     }
   };
@@ -387,39 +414,55 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
         <DialogContent className="glass-card">
           <DialogHeader>
             <DialogTitle>Connect to GitHub</DialogTitle>
+            <DialogDescription>
+              Connecting to GitHub allows you to sync your projects, access repositories, and collaborate on code.
+            </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
-            <p className="text-sm">
-              Connecting to GitHub allows you to sync your projects, access repositories, and collaborate on code.
-            </p>
-            
-            <div className="flex justify-end space-x-2">
-              <Button 
-                variant="outline" 
-                onClick={() => setIsConnectDialogOpen(false)}
-                disabled={connectionStatus === 'connecting'}
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleGitHubConnect}
-                disabled={connectionStatus === 'connecting'}
-              >
-                {connectionStatus === 'connecting' ? (
-                  <>
-                    <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Connecting...
-                  </>
-                ) : (
-                  <>
-                    <Github className="h-4 w-4 mr-2" />
-                    Connect
-                  </>
+          {errorMessage && connectionStatus === 'error' && (
+            <div className="p-4 border border-red-300 bg-red-50/10 rounded-md flex items-start gap-3 text-red-500">
+              <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium mb-1">GitHub Connection Error</p>
+                <p className="text-sm">{errorMessage}</p>
+                {errorMessage.includes('not configured') && (
+                  <p className="text-sm mt-2">
+                    Make sure the GitHub client ID and secret are configured in your Supabase Edge Function secrets.
+                  </p>
                 )}
-              </Button>
+              </div>
             </div>
-          </div>
+          )}
+          
+          <DialogFooter className="flex justify-end space-x-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsConnectDialogOpen(false);
+                setConnectionStatus('idle');
+                setErrorMessage(null);
+              }}
+              disabled={connectionStatus === 'connecting'}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleGitHubConnect}
+              disabled={connectionStatus === 'connecting'}
+            >
+              {connectionStatus === 'connecting' ? (
+                <>
+                  <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Connecting...
+                </>
+              ) : (
+                <>
+                  <Github className="h-4 w-4 mr-2" />
+                  Connect
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

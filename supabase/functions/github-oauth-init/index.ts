@@ -31,7 +31,16 @@ serve(async (req) => {
     if (!redirect_url) {
       const error = 'Missing redirect_url in request'
       logEvent('validation_error', { error })
-      throw new Error(error)
+      return new Response(
+        JSON.stringify({ error }),
+        { 
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
     }
 
     // Get GitHub OAuth credentials from environment variables
@@ -39,7 +48,16 @@ serve(async (req) => {
     if (!clientId) {
       const error = 'GitHub client ID not configured'
       logEvent('configuration_error', { error })
-      throw new Error(error)
+      return new Response(
+        JSON.stringify({ error }),
+        { 
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
     }
 
     logEvent('config_loaded', { 
@@ -93,7 +111,7 @@ serve(async (req) => {
         error: error.message 
       }),
       { 
-        status: 400,
+        status: 500,
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/json'

@@ -1,6 +1,6 @@
-
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const GitHubCallback = () => {
   const navigate = useNavigate();
@@ -10,15 +10,29 @@ const GitHubCallback = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
     const state = urlParams.get('state');
+    const error = urlParams.get('error');
+    const errorDescription = urlParams.get('error_description');
     
     console.log('GitHub callback loaded:', { 
       hasCode: !!code, 
       hasState: !!state,
-      error: urlParams.get('error')
+      error,
+      errorDescription
     });
     
-    // Send a message to the parent window with the auth status
-    if (code && state) {
+    // If there's an error, show it and inform the parent window
+    if (error) {
+      console.error('GitHub OAuth error:', errorDescription);
+      if (window.opener) {
+        window.opener.postMessage({ 
+          type: 'github-auth-error', 
+          error: errorDescription || 'Authentication failed'
+        }, '*');
+      }
+      toast.error(`GitHub Authentication Error: ${errorDescription || 'Unknown error'}`);
+    }
+    // If we have a code and state, it's a successful authentication
+    else if (code && state) {
       console.log('Successfully received GitHub code, sending to parent window');
       if (window.opener) {
         window.opener.postMessage({ 
@@ -27,14 +41,18 @@ const GitHubCallback = () => {
           state
         }, '*');
       }
-    } else if (urlParams.get('error')) {
-      console.error('GitHub OAuth error:', urlParams.get('error_description'));
+      toast.success('GitHub authentication successful!');
+    } 
+    // Otherwise, something else went wrong
+    else {
+      console.error('Invalid GitHub callback parameters');
       if (window.opener) {
         window.opener.postMessage({ 
           type: 'github-auth-error', 
-          error: urlParams.get('error_description') || 'Authentication failed'
+          error: 'Invalid response from GitHub'
         }, '*');
       }
+      toast.error('GitHub Authentication Failed: Invalid response');
     }
 
     // Close this window automatically after a short delay
