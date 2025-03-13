@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { ChevronLeft, ChevronRight, Minus, X, Pin, PinOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChatPositionToggle } from "./ChatPositionToggle";
@@ -10,6 +10,7 @@ import { GitHubInfoButton } from "../features/githubinfo";
 import { NotificationsButton } from "../features/notifications";
 import { ChatHeaderTopNav } from "../features/ChatHeaderTopNav";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { ChatModeDialog } from "../features/ModeSwitch";
 
 interface ChatHeaderProps {
   title: string;
@@ -31,11 +32,20 @@ export function ChatHeader({
   const { docked, toggleDocked, messages, startTime } = useChatStore();
   const location = useLocation();
   const isEditorPage = location.pathname === '/editor';
+  const isGalleryPage = location.pathname === '/gallery';
+  const [modeDialogOpen, setModeDialogOpen] = useState(false);
   
   // Calculate session stats
   const messageCount = messages?.length || 0;
   const sessionDuration = startTime ? Math.floor((Date.now() - startTime) / 1000 / 60) : 0; // in minutes
   const aiResponses = messages?.filter(m => m.role === 'assistant').length || 0;
+
+  // Get display mode label
+  const getModeLabel = () => {
+    if (isEditorPage) return "DEV";
+    if (isGalleryPage) return "IMAGE";
+    return title;
+  };
 
   // Prevent propagation to avoid triggering drag when clicking buttons
   const handleButtonClick = (e: React.MouseEvent, callback: () => void) => {
@@ -68,12 +78,15 @@ export function ChatHeader({
         </Button>
         
         <HoverCard>
-          <HoverCardTrigger>
-            <span className={`font-mono text-sm md:text-base bg-gradient-to-r from-[#1EAEDB] to-[#33C3F0] bg-clip-text text-transparent 
-              font-bold hover:scale-105 transition-transform duration-200 cursor-pointer
-              shadow-[0_0_10px_rgba(30,174,219,0.3)] px-2 py-1 rounded`}>
-              {isEditorPage ? "DEV" : title}
-            </span>
+          <HoverCardTrigger asChild>
+            <button 
+              onClick={() => setModeDialogOpen(true)}
+              className={`font-mono text-sm md:text-base bg-gradient-to-r from-[#1EAEDB] to-[#33C3F0] bg-clip-text text-transparent 
+                font-bold hover:scale-105 transition-transform duration-200 cursor-pointer
+                shadow-[0_0_10px_rgba(30,174,219,0.3)] px-2 py-1 rounded`}
+            >
+              {getModeLabel()}
+            </button>
           </HoverCardTrigger>
           <HoverCardContent 
             className="w-64 backdrop-blur-md bg-black/80 border border-[#1EAEDB]/20
@@ -84,10 +97,16 @@ export function ChatHeader({
                 <p>Messages: {messageCount}</p>
                 <p>AI Responses: {aiResponses}</p>
                 <p>Duration: {sessionDuration} min</p>
+                <p className="italic text-xs text-[#1EAEDB]/70 mt-1">Click for more options</p>
               </div>
             </div>
           </HoverCardContent>
         </HoverCard>
+        
+        <ChatModeDialog 
+          open={modeDialogOpen} 
+          onOpenChange={setModeDialogOpen} 
+        />
       </div>
 
       <div className="flex gap-1">
