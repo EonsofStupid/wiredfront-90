@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { Toaster } from "sonner";
@@ -28,6 +29,7 @@ import { DraggableChat } from "@/components/chat/DraggableChat";
 import { AdminTopNavOverlay } from "@/components/admin/navigation/AdminTopNavOverlay";
 import FeatureFlagsPage from "./pages/admin/FeatureFlagsPage";
 import MetricsOverview from "./pages/admin/MetricsOverview";
+import GitHubCallback from "./pages/github-callback";
 
 const PROTECTED_ROUTES = [
   '/dashboard', 
@@ -79,7 +81,9 @@ const App = () => {
   useEffect(() => {
     const handleAuth = async () => {
       const isAdminRoute = ADMIN_ROUTES.some(route => location.pathname.startsWith(route));
-      const isProtectedRoute = PROTECTED_ROUTES.includes(location.pathname);
+      const isProtectedRoute = PROTECTED_ROUTES.some(route => 
+        location.pathname === route || location.pathname.startsWith(`${route}/`)
+      );
 
       if (!isAuthenticated && (isProtectedRoute || isAdminRoute)) {
         storeLastVisitedPath(location.pathname);
@@ -89,7 +93,7 @@ const App = () => {
     handleAuth();
   }, [isAuthenticated, location.pathname, navigate]);
 
-  const isPublicRoute = location.pathname === '/login' || location.pathname === '/';
+  const isPublicRoute = location.pathname === '/login' || location.pathname === '/' || location.pathname === '/github-callback';
   const isAdminRoute = ADMIN_ROUTES.some(route => location.pathname.startsWith(route));
   
   return (
@@ -99,6 +103,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/github-callback" element={<GitHubCallback />} />
           </Routes>
         </AppLayout>
       ) : (

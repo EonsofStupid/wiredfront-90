@@ -32,8 +32,10 @@ serve(async (req) => {
     if (req.method === 'POST') {
       try {
         requestData = await req.json();
+        logEvent('json_parsed', { success: true });
       } catch (error) {
         logEvent('json_parse_error', { error: error.message })
+        throw new Error('Invalid JSON in request body');
       }
     }
 
@@ -190,6 +192,24 @@ serve(async (req) => {
       throw insertError
     }
 
+    // For API calls from our frontend
+    if (req.method === 'POST') {
+      logEvent('success', { userId })
+      return new Response(
+        JSON.stringify({
+          success: true,
+          username: userData.login
+        }),
+        { 
+          status: 200,
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
+    }
+
     // Return HTML that will close the popup and notify the parent window
     const htmlResponse = `
       <!DOCTYPE html>
@@ -264,6 +284,23 @@ serve(async (req) => {
       stack: error.stack
     })
 
+    // For API calls
+    if (req.method === 'POST') {
+      return new Response(
+        JSON.stringify({ 
+          error: error.message || 'Failed to complete GitHub authentication'
+        }),
+        { 
+          status: 400,
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
+    }
+
+    // For browser redirects
     const htmlErrorResponse = `
       <!DOCTYPE html>
       <html>

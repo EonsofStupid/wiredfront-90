@@ -23,17 +23,26 @@ export function useGitHubOAuthCallback({
     const handleOAuthMessage = async (event: MessageEvent) => {
       console.log('Received message from popup:', event.origin, event.data);
       
-      // Make sure the message is from our own domain or GitHub
-      if (event.origin !== window.location.origin && 
-          !event.origin.includes('github.com')) {
+      // Validate the origin to improve security
+      const isValidOrigin = event.origin === window.location.origin || 
+                            event.origin.includes('github.com') ||
+                            event.origin.includes('lovable.app');
+
+      if (!isValidOrigin) {
         console.log('Ignoring message from unknown origin:', event.origin);
+        return;
+      }
+      
+      // Type guard to ensure data is an object with a type property
+      if (!event.data || typeof event.data !== 'object' || !('type' in event.data)) {
+        console.log('Ignoring message with invalid format:', event.data);
         return;
       }
       
       const data = event.data;
       
       // Check if this is a GitHub auth message
-      if (data?.type === 'github-auth-success') {
+      if (data.type === 'github-auth-success') {
         console.log('Received GitHub auth success message:', data);
         
         if (data.username) {
@@ -47,8 +56,8 @@ export function useGitHubOAuthCallback({
           await checkConnection();
         }
         else {
-          // If we don't have code/state in the message but got a success message,
-          // we need to call the callback endpoint directly
+          // If we don't have username in the message but got a success message,
+          // we need to call the connection check directly
           try {
             setIsCheckingConnection(true);
             await checkConnection();
@@ -63,7 +72,7 @@ export function useGitHubOAuthCallback({
           }
         }
       } 
-      else if (data?.type === 'github-auth-error') {
+      else if (data.type === 'github-auth-error') {
         console.error('Received GitHub auth error message:', data);
         setConnectionStatus('error');
         setErrorMessage(data.error || 'Authentication failed');

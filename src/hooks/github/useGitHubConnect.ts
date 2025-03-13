@@ -111,15 +111,24 @@ export function useGitHubConnect({
         return;
       }
       
-      // Start an interval to check if popup is closed
+      // Start an interval to check if popup is closed without completing auth
       const checkPopupClosed = setInterval(() => {
         if (popup.closed) {
           clearInterval(checkPopupClosed);
           // If connection wasn't established when popup closed and we're still in connecting state
-          if (setConnectionStatus) {
-            // Only revert to idle if we're still connecting (not if we succeeded or failed already)
-            setConnectionStatus('idle');
-          }
+          setTimeout(() => {
+            if (setConnectionStatus) {
+              // Check if we're still connecting (not if we succeeded or failed already)
+              if (document.hidden) {
+                // If the tab is not visible, we might have missed a message
+                // Will reset to idle on next checkConnection
+                return;
+              }
+              setConnectionStatus(prevStatus => 
+                prevStatus === 'connecting' ? 'idle' : prevStatus
+              );
+            }
+          }, 1000);
         }
       }, 1000);
     } catch (error) {
