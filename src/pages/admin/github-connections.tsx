@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,7 +25,6 @@ export default function GitHubConnectionsAdmin() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
 
-  // Check if user has admin permissions
   useEffect(() => {
     const checkAdminStatus = async () => {
       try {
@@ -51,7 +49,6 @@ export default function GitHubConnectionsAdmin() {
     }
   }, [user, navigate]);
 
-  // Load data based on active tab
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -98,7 +95,6 @@ export default function GitHubConnectionsAdmin() {
     loadData();
   }, [activeTab]);
 
-  // Refresh connection data
   const refreshData = async () => {
     setIsRefreshing(true);
     
@@ -143,7 +139,6 @@ export default function GitHubConnectionsAdmin() {
     }
   };
 
-  // Check connection status
   const checkConnectionStatus = async (userId: string) => {
     setActionInProgress(userId);
     
@@ -167,7 +162,6 @@ export default function GitHubConnectionsAdmin() {
     }
   };
 
-  // Revoke connection
   const revokeConnection = async (userId: string) => {
     if (!confirm("Are you sure you want to revoke this connection?")) return;
     
@@ -193,7 +187,6 @@ export default function GitHubConnectionsAdmin() {
     }
   };
 
-  // Filter data based on search term
   const filteredConnections = connections.filter(conn => 
     conn.account_username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     conn.user_id.toLowerCase().includes(searchTerm.toLowerCase())
@@ -210,12 +203,10 @@ export default function GitHubConnectionsAdmin() {
     metric.metric_type?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Format timestamp
   const formatDate = (timestamp: string) => {
     return new Date(timestamp).toLocaleString();
   };
 
-  // Status badge
   const getStatusBadge = (status: string) => {
     switch(status) {
       case 'connected':
@@ -336,7 +327,7 @@ export default function GitHubConnectionsAdmin() {
                                   disabled={actionInProgress === connection.user_id}
                                 >
                                   {actionInProgress === connection.user_id ? (
-                                    <Spinner size="xs" className="mr-1" />
+                                    <Spinner size="sm" className="mr-1" />
                                   ) : (
                                     <RefreshCw className="h-3 w-3 mr-1" />
                                   )}
@@ -351,7 +342,7 @@ export default function GitHubConnectionsAdmin() {
                                   disabled={actionInProgress === connection.user_id}
                                 >
                                   {actionInProgress === connection.user_id ? (
-                                    <Spinner size="xs" className="mr-1" />
+                                    <Spinner size="sm" className="mr-1" />
                                   ) : (
                                     <Trash className="h-3 w-3 mr-1" />
                                   )}

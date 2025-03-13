@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useLocation } from "react-router-dom";
 import { AdminMainNavGroup } from "./AdminMainNavGroup";
-import { AdminFeaturesNavGroup } from "./AdminFeaturesNavGroup";
+import AdminFeaturesNavGroup from "./AdminFeaturesNavGroup";
 import { AdminUtilityNavGroup } from "./AdminUtilityNavGroup";
 import { AdminNavToggle } from "./AdminNavToggle";
 
