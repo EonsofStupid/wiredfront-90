@@ -6,17 +6,12 @@ const GitHubCallback = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // This page will never be seen by the user
-    // It's just a placeholder to catch the GitHub callback
-    // The actual callback handling is done in the GitHub OAuth callback edge function
-    // which returns HTML that will close this page automatically
-    
-    // Just in case something goes wrong with the callback, 
-    // automatically navigate back to home after a short delay
+    // This page will automatically close as the callback HTML sets window.close()
+    // This is just a fallback in case something goes wrong with the callback
     const timeout = setTimeout(() => {
       window.close();
       navigate('/');
-    }, 5000);
+    }, 3000);
     
     return () => clearTimeout(timeout);
   }, [navigate]);

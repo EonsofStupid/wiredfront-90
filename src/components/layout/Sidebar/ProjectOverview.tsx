@@ -1,3 +1,4 @@
+
 import { useUIStore } from "@/stores";
 import { cn } from "@/lib/utils";
 import { Plus, Folder, Github, Import, ExternalLink, Info, Code, X, Check, RefreshCw } from "lucide-react";
@@ -107,16 +108,17 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
         return;
       }
       
+      // Log the URL to help with debugging
+      console.log('GitHub OAuth URL generated:', data?.url);
+      
       if (!data || !data.url) {
         console.error('No OAuth URL returned from the server');
         toast.error('Failed to generate GitHub OAuth URL');
         setConnectionStatus('error');
         return;
       }
-      
-      console.log('Opening GitHub OAuth URL:', data.url);
-      
-      // Open GitHub auth in a popup
+
+      // Open GitHub auth in a popup with precise dimensions
       const width = 600;
       const height = 700;
       const left = window.screenX + (window.outerWidth - width) / 2;
@@ -125,19 +127,27 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
       const popup = window.open(
         data.url,
         'Github Authorization',
-        `width=${width},height=${height},left=${left},top=${top}`
+        `width=${width},height=${height},left=${left},top=${top},status=yes,menubar=no,toolbar=no`
       );
       
-      if (!popup) {
-        console.error('Popup was blocked');
+      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+        console.error('Popup was blocked or could not be opened');
         toast.error('Popup was blocked. Please allow popups for this site.');
         setConnectionStatus('error');
         return;
       }
       
-      // The rest of the flow will be handled by the message event listener
-      // which will receive a message from the popup when auth is complete
-      
+      // Start an interval to check if popup is closed
+      const checkPopupClosed = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkPopupClosed);
+          // If connection wasn't established when popup closed
+          if (connectionStatus === 'connecting') {
+            setConnectionStatus('idle');
+            toast.error('GitHub connection was cancelled');
+          }
+        }
+      }, 1000);
     } catch (error) {
       console.error('Error connecting to GitHub:', error);
       toast.error('Failed to connect to GitHub');

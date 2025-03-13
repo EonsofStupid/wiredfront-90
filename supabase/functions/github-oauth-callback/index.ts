@@ -252,7 +252,10 @@ serve(async (req) => {
         </div>
         <script>
           // Notify the parent window that authentication is complete
-          window.opener.postMessage({ type: 'github-auth-success', username: '${userData.login}' }, '*');
+          window.opener.postMessage({ 
+            type: 'github-auth-success', 
+            username: '${userData.login}'
+          }, '*');
           
           // Close this popup window after a short delay
           setTimeout(() => window.close(), 1500);
@@ -323,7 +326,10 @@ serve(async (req) => {
         </div>
         <script>
           // Notify the parent window that authentication failed
-          window.opener.postMessage({ type: 'github-auth-error', error: '${error.message}' }, '*');
+          window.opener.postMessage({ 
+            type: 'github-auth-error', 
+            error: '${error.message}' 
+          }, '*');
           
           // Close this popup window after a short delay
           setTimeout(() => window.close(), 3000);
