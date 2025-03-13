@@ -2,6 +2,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { logger } from "@/services/chat/LoggingService";
+import { validateWithZod } from "@/utils/validation";
+import { githubAuthErrorSchema } from "@/schemas/github";
 
 export function useGitHubDisconnect(
   setIsCheckingConnection: (isChecking: boolean) => void,
@@ -17,7 +19,17 @@ export function useGitHubDisconnect(
       });
       
       if (error) {
-        throw error;
+        // Validate error structure against schema
+        const validatedError = validateWithZod(
+          githubAuthErrorSchema,
+          error,
+          { 
+            context: 'GitHub Disconnect Error',
+            showToast: false 
+          }
+        );
+        
+        throw validatedError || error;
       }
       
       updateConnectionFromData(null);

@@ -1,6 +1,8 @@
 
 import { useState } from "react";
 import { GitHubConnectionState, GitHubAuthError } from "@/types/admin/settings/github";
+import { githubConnectionStateSchema } from "@/schemas/github";
+import { safeValidate } from "@/utils/validation";
 
 export function useGitHubConnectionState() {
   // Connection state
@@ -16,13 +18,23 @@ export function useGitHubConnectionState() {
     if (!connection) {
       setIsConnected(false);
       setUsername(null);
-      setConnectionStatus('idle');
+      setConnectionStatus(safeValidate(
+        githubConnectionStateSchema,
+        'idle',
+        'idle',
+        { showToast: false }
+      ));
       return;
     }
     
     setIsConnected(true);
     setUsername(connection.account_username || null);
-    setConnectionStatus('connected');
+    setConnectionStatus(safeValidate(
+      githubConnectionStateSchema,
+      'connected',
+      'connected',
+      { showToast: false }
+    ));
     setErrorMessage(null);
     
     console.log('Updated GitHub connection state:', {

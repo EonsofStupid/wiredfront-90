@@ -1,9 +1,11 @@
+
 import { useState } from "react";
-import { APISettingsState } from "@/types/admin/settings/api";
 import { toast } from "sonner";
 import { logger } from "@/services/chat/LoggingService";
+import { apiSettingsStateSchema } from "@/schemas/api";
+import { safeValidate } from "@/utils/validation";
 
-const defaultSettings: APISettingsState = {
+const defaultSettings = apiSettingsStateSchema.parse({
   openaiKey: "",
   huggingfaceKey: "",
   geminiKey: "",
@@ -17,23 +19,43 @@ const defaultSettings: APISettingsState = {
   awsSecretKey: "",
   githubToken: "",
   dockerToken: "",
-};
+});
 
 export function useAPISettingsState() {
-  const [settings, setSettings] = useState<APISettingsState>(defaultSettings);
+  const [settings, setSettings] = useState(defaultSettings);
   const [isSaving, setIsSaving] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [offlineMode, setOfflineMode] = useState(false);
 
-  const updateSetting = (key: keyof APISettingsState, value: string) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+  const updateSetting = (key: keyof typeof defaultSettings, value: string) => {
+    setSettings(prev => {
+      const updated = { ...prev, [key]: value };
+      return safeValidate(
+        apiSettingsStateSchema,
+        updated,
+        prev,
+        { 
+          context: 'API Settings',
+          showToast: false,
+          logErrors: true
+        }
+      );
+    });
   };
 
   const loadOfflineSettings = () => {
     try {
       const cached = localStorage.getItem('api_settings');
       if (cached) {
-        setSettings(JSON.parse(cached));
+        const parsedSettings = JSON.parse(cached);
+        const validatedSettings = safeValidate(
+          apiSettingsStateSchema,
+          parsedSettings,
+          defaultSettings,
+          { context: 'Cached API Settings' }
+        );
+        
+        setSettings(validatedSettings);
         setOfflineMode(true);
         toast.info('Loaded settings from offline cache');
       }
