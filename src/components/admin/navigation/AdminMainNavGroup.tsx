@@ -8,10 +8,19 @@ import {
   Code 
 } from "lucide-react";
 import { AdminNavIconButton } from "./AdminNavIconButton";
+import { useUIStore } from "@/stores/ui";
 
 export const AdminMainNavGroup = () => {
+  const { layout } = useUIStore();
+  const { adminIconOnly } = layout;
+
   return (
-    <div className="flex items-center space-x-1">
+    <div className={cn(
+      "flex",
+      adminIconOnly 
+        ? "items-center space-x-1"
+        : "flex-wrap items-center gap-2"
+    )}>
       <AdminNavIconButton 
         icon={LayoutDashboard} 
         tooltip="Metrics Overview" 
@@ -45,3 +54,6 @@ export const AdminMainNavGroup = () => {
     </div>
   );
 };
+
+// Import cn utility at the top
+import { cn } from "@/lib/utils";

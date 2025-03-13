@@ -1,9 +1,10 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { LucideIcon } from "lucide-react";
 import { useUIStore } from "@/stores/ui";
+import { cn } from "@/lib/utils";
 import {
   AdminTooltip,
   AdminTooltipContent,
@@ -27,8 +28,13 @@ export const AdminNavIconButton = ({
   text
 }: AdminNavIconButtonProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { layout } = useUIStore();
   const { adminIconOnly } = layout;
+  
+  // Check if this button's route is active
+  const isActive = location.pathname === route || 
+                   (route !== '/admin' && location.pathname.startsWith(route));
 
   // If in icon-only mode or no text is provided, show tooltip on hover
   const showTooltip = adminIconOnly || !text;
@@ -40,11 +46,16 @@ export const AdminNavIconButton = ({
     <Button 
       variant="ghost" 
       size={adminIconOnly || !text ? "icon" : "sm"}
-      className={`admin-nav-icon ${className || ""}`}
+      className={cn(
+        "admin-nav-icon transition-all",
+        isActive && "admin-nav-icon-active",
+        adminIconOnly ? "w-9 h-9 p-0" : "h-9 px-3",
+        className
+      )}
       onClick={() => navigate(route)}
     >
-      <Icon className="h-5 w-5" />
-      {!adminIconOnly && text && <span className="ml-2">{text}</span>}
+      <Icon className={cn("h-5 w-5", !adminIconOnly && text && "mr-2")} />
+      {!adminIconOnly && text && <span>{text}</span>}
     </Button>
   );
 

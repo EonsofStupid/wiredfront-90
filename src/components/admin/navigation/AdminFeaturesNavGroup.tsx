@@ -11,13 +11,19 @@ import {
 } from "lucide-react";
 import { AdminNavIconButton } from "./AdminNavIconButton";
 import { useUIStore } from "@/stores/ui";
+import { cn } from "@/lib/utils";
 
 export default function AdminFeaturesNavGroup() {
   const { layout } = useUIStore();
   const { adminIconOnly } = layout;
 
   return (
-    <div className={`flex ${adminIconOnly ? "items-center space-x-1" : "items-center space-x-2"}`}>
+    <div className={cn(
+      "flex",
+      adminIconOnly 
+        ? "items-center space-x-1" 
+        : "flex-wrap items-center gap-2"
+    )}>
       <AdminNavIconButton 
         icon={LayoutDashboard} 
         tooltip="Dashboard"
