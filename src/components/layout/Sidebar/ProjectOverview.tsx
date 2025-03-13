@@ -1,7 +1,7 @@
 
 import { useUIStore } from "@/stores";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGitHubConnection } from "@/hooks/useGitHubConnection";
 import { GitHubStatusSection } from "@/components/github/GitHubStatusSection";
 import { GitHubConnectDialog } from "@/components/github/GitHubConnectDialog";
@@ -98,4 +98,4 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
       />
     </div>
   );
-};
+}

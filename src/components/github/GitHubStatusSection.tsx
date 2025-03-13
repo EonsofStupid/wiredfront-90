@@ -21,6 +21,10 @@ export function GitHubStatusSection({
   onDisconnect,
   connectionStatus
 }: GitHubStatusSectionProps) {
+  // Determine if the button should be disabled
+  const isButtonDisabled = connectionStatus === 'connecting' || 
+    (isCheckingConnection && connectionStatus !== 'idle');
+
   return (
     <div className="p-4 border-b border-neon-blue/20">
       <div className="flex items-center justify-between mb-2">
@@ -29,7 +33,7 @@ export function GitHubStatusSection({
           <h3 className="font-medium">GitHub</h3>
         </div>
         
-        {isCheckingConnection ? (
+        {isCheckingConnection && connectionStatus === 'idle' ? (
           <div className="animate-pulse flex items-center">
             <RefreshCw className="h-4 w-4 mr-1.5 animate-spin text-gray-400" />
             <span className="text-xs text-gray-400">Checking...</span>
@@ -73,12 +77,17 @@ export function GitHubStatusSection({
             size="sm"
             className="w-full justify-start gap-2 h-auto py-2 border-primary/20 hover:border-primary"
             onClick={onConnect}
-            disabled={connectionStatus === 'connecting' || isCheckingConnection}
+            disabled={isButtonDisabled}
           >
-            {connectionStatus === 'connecting' || isCheckingConnection ? (
+            {connectionStatus === 'connecting' ? (
               <>
-                <Spinner size="sm" className="mr-2" label={isCheckingConnection ? "Checking..." : "Connecting..."} />
-                {isCheckingConnection ? 'Checking...' : 'Connecting...'}
+                <Spinner size="sm" className="mr-2" label="Connecting..." />
+                Connecting...
+              </>
+            ) : isCheckingConnection && connectionStatus === 'idle' ? (
+              <>
+                <Spinner size="sm" className="mr-2" label="Checking..." />
+                Checking...
               </>
             ) : (
               <>

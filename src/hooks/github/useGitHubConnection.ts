@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useGitHubConnectionState } from "./useGitHubConnectionState";
 import { useGitHubConnectionCheck } from "./useGitHubConnectionCheck";
 import { useGitHubConnect } from "./useGitHubConnect";
@@ -8,6 +8,8 @@ import { useGitHubOAuthCallback } from "./useGitHubOAuthCallback";
 import { toast } from "sonner";
 
 export function useGitHubConnection() {
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
+
   const {
     isConnected,
     username,
@@ -49,14 +51,17 @@ export function useGitHubConnection() {
     setIsCheckingConnection
   });
 
-  // Check connection on initial load
+  // Check connection on initial load only once
   useEffect(() => {
     const initialCheck = async () => {
-      await checkConnection();
+      if (!initialCheckDone) {
+        await checkConnection();
+        setInitialCheckDone(true);
+      }
     };
     
     initialCheck();
-  }, [checkConnection]);
+  }, [checkConnection, initialCheckDone]);
 
   return {
     isConnected,
