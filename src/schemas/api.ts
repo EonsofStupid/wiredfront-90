@@ -23,20 +23,20 @@ export const validationStatusSchema = z.enum([
 
 // API Settings State Schema
 export const apiSettingsStateSchema = z.object({
-  openaiKey: z.string().default(""),
-  huggingfaceKey: z.string().default(""),
-  geminiKey: z.string().default(""),
-  anthropicKey: z.string().default(""),
-  perplexityKey: z.string().default(""),
-  elevenLabsKey: z.string().default(""),
-  selectedVoice: z.string().default(""),
-  googleDriveKey: z.string().default(""),
-  dropboxKey: z.string().default(""),
-  awsAccessKey: z.string().default(""),
-  awsSecretKey: z.string().default(""),
-  githubToken: z.string().default(""),
-  dockerToken: z.string().default("")
-});
+  openaiKey: z.string(),
+  huggingfaceKey: z.string(),
+  geminiKey: z.string(),
+  anthropicKey: z.string(),
+  perplexityKey: z.string(),
+  elevenLabsKey: z.string(),
+  selectedVoice: z.string(),
+  googleDriveKey: z.string(),
+  dropboxKey: z.string(),
+  awsAccessKey: z.string(),
+  awsSecretKey: z.string(),
+  githubToken: z.string(),
+  dockerToken: z.string()
+}).partial().required({});
 
 // API Configuration Schema
 export const apiConfigurationSchema = z.object({
