@@ -23,6 +23,7 @@ export const useUIStore = create<UIStore>()(
         sidebarExpanded: true,
         contentWidth: 'contained',
         rightSidebarVisible: true,
+        adminIconOnly: false, // Default to showing text with icons
       },
       project: {
         activeProjectId: null,
@@ -57,6 +58,14 @@ export const useUIStore = create<UIStore>()(
           layout: {
             ...state.layout,
             rightSidebarVisible: !state.layout.rightSidebarVisible,
+          },
+        })),
+
+      toggleAdminIconOnly: () =>
+        set((state) => ({
+          layout: {
+            ...state.layout,
+            adminIconOnly: !state.layout.adminIconOnly,
           },
         })),
 

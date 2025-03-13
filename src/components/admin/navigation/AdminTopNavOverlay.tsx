@@ -6,6 +6,7 @@ import { AdminMainNavGroup } from "./AdminMainNavGroup";
 import AdminFeaturesNavGroup from "./AdminFeaturesNavGroup";
 import { AdminUtilityNavGroup } from "./AdminUtilityNavGroup";
 import { AdminNavToggle } from "./AdminNavToggle";
+import { useUIStore } from "@/stores/ui";
 
 interface AdminTopNavOverlayProps {
   className?: string;
@@ -14,6 +15,8 @@ interface AdminTopNavOverlayProps {
 export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
   const [isExtended, setIsExtended] = useState(true);
   const location = useLocation();
+  const { layout } = useUIStore();
+  const { adminIconOnly } = layout;
 
   useEffect(() => {
     setIsExtended(true);
@@ -30,8 +33,11 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
       <div className="admin-glass-panel border-neon-border relative">
         <div className="flex flex-col h-full p-4">
           <div className="flex justify-between items-start">
-            <div className="flex flex-wrap items-center gap-2">
+            {/* Left side - Main navigation */}
+            <div className={`flex ${adminIconOnly ? "space-x-2" : "space-x-4"} items-center`}>
+              {/* Show either MainNavGroup or FeaturesNavGroup based on your preference */}
               <AdminMainNavGroup />
+              {!adminIconOnly && <div className="h-6 w-px bg-white/20" />}
               <AdminFeaturesNavGroup />
             </div>
 

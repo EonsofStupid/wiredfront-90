@@ -5,6 +5,7 @@ export interface UIState {
     sidebarExpanded: boolean;
     contentWidth: 'full' | 'contained';
     rightSidebarVisible: boolean;
+    adminIconOnly: boolean; // New property for admin nav display mode
   };
   project: {
     activeProjectId: string | null;
@@ -36,6 +37,7 @@ export interface UIActions {
   setTheme: (theme: UIState['theme']) => void;
   toggleSidebar: () => void;
   toggleRightSidebar: () => void;
+  toggleAdminIconOnly: () => void; // New action to toggle admin icon display
   updateLayout: (updates: Partial<UIState['layout']>) => void;
   updateAccessibility: (updates: Partial<UIState['accessibility']>) => void;
   setActiveProject: (projectId: string) => void;
