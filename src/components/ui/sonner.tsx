@@ -17,10 +17,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
           description: "group-[.toast]:text-muted-foreground",
           actionButton: "group-[.toast]:bg-[#8B5CF6] group-[.toast]:text-white",
           cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-white",
-          success: "group glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#0EA5E9]/20",
-          error: "group glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-red-500/20",
-          info: "group glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#D946EF]/20",
+          success: "group glass-card border-0 bg-gradient-to-r from-neon-blue/20 to-neon-violet/20 text-white",
+          error: "group glass-card border-0 bg-gradient-to-r from-neon-pink/20 to-red-500/20 text-white",
+          info: "group glass-card border-0 bg-gradient-to-r from-neon-blue/20 to-neon-pink/20 text-white",
+          closeButton: "group-[.toast]:text-white/70 group-[.toast]:hover:text-white group-[.toast]:focus:ring-0",
         },
+        duration: 5000,
       }}
       {...props}
     />

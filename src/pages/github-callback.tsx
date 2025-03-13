@@ -6,10 +6,35 @@ const GitHubCallback = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // This page will automatically close as the callback HTML sets window.close()
-    // This is just a fallback in case something goes wrong with the callback
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    
+    // Send a message to the parent window with the auth status
+    if (code && state) {
+      console.log('Successfully received GitHub code, sending to parent window');
+      if (window.opener) {
+        window.opener.postMessage({ 
+          type: 'github-auth-success',
+          code,
+          state
+        }, '*');
+      }
+    } else if (urlParams.get('error')) {
+      console.error('GitHub OAuth error:', urlParams.get('error_description'));
+      if (window.opener) {
+        window.opener.postMessage({ 
+          type: 'github-auth-error', 
+          error: urlParams.get('error_description') || 'Authentication failed'
+        }, '*');
+      }
+    }
+
+    // Close this window automatically after a short delay
     const timeout = setTimeout(() => {
       window.close();
+      // If window doesn't close (some browsers prevent this), navigate back to home
       navigate('/');
     }, 3000);
     

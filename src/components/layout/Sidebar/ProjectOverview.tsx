@@ -93,6 +93,7 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
       
       // Prepare the callback URL (current origin)
       const callbackUrl = `${window.location.origin}/github-callback`;
+      console.log("Using callback URL:", callbackUrl);
       
       // Call the GitHub OAuth initialization edge function
       const { data, error } = await supabase.functions.invoke('github-oauth-init', {
