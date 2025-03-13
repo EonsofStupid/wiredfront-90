@@ -6,6 +6,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSessionStore } from '@/stores/session/store';
 import { logger } from '@/services/chat/LoggingService';
 
+// Get the Supabase URL from the client configuration
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://deksjwrdczcsnryjohzg.supabase.co";
+
 const GitHubCallback = () => {
   const navigate = useNavigate();
   const { user } = useSessionStore();
@@ -123,7 +126,7 @@ const GitHubCallback = () => {
         
         // Get the current URL to use as the redirect URI
         const currentUrl = window.location.href.split('?')[0];
-        const supabaseCallbackUrl = `${supabase.supabaseUrl}/auth/v1/callback`;
+        const supabaseCallbackUrl = `${SUPABASE_URL}/auth/v1/callback`;
         
         logCallbackEvent('callback_urls', {
           currentUrl,
