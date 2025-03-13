@@ -1,45 +1,84 @@
 
 import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-type CallbackState = {
+interface OAuthCallbackProps {
   setConnectionStatus: (status: 'idle' | 'connecting' | 'connected' | 'error') => void;
   setErrorMessage: (message: string | null) => void;
   setUsername: (username: string | null) => void;
   checkConnection: () => Promise<void>;
-};
+  setIsCheckingConnection: (isChecking: boolean) => void;
+}
 
 export function useGitHubOAuthCallback({
   setConnectionStatus,
   setErrorMessage,
   setUsername,
-  checkConnection
-}: CallbackState) {
+  checkConnection,
+  setIsCheckingConnection
+}: OAuthCallbackProps) {
   useEffect(() => {
-    const handleOAuthMessage = (event: MessageEvent) => {
-      console.log('Message received from popup:', event.data);
+    // Handle messages from the OAuth popup window
+    const handleOAuthMessage = async (event: MessageEvent) => {
+      // Make sure the message is from our own domain
+      if (event.origin !== window.location.origin) {
+        return;
+      }
       
-      if (event.data && event.data.type === 'github-auth-success') {
-        console.log('GitHub auth success message received:', event.data);
-        setConnectionStatus('connected');
-        setErrorMessage(null);
+      const data = event.data;
+      
+      // Check if this is a GitHub auth message
+      if (data?.type === 'github-auth-success') {
+        console.log('Received GitHub auth success message:', data);
         
-        // Update username if provided in the message
-        if (event.data.username) {
-          setUsername(event.data.username);
+        try {
+          setIsCheckingConnection(true);
+          
+          // Exchange the code for a token on the server
+          const { error } = await supabase.functions.invoke('github-oauth-callback', {
+            body: {
+              code: data.code,
+              state: data.state
+            }
+          });
+          
+          if (error) {
+            console.error('Error completing GitHub OAuth:', error);
+            setConnectionStatus('error');
+            setErrorMessage(`OAuth callback error: ${error.message || error}`);
+            toast.error('GitHub connection failed');
+          } else {
+            console.log('GitHub OAuth completed successfully');
+            setConnectionStatus('connected');
+            setErrorMessage(null);
+            toast.success('GitHub connected successfully');
+            
+            // Refresh the connection state
+            await checkConnection();
+          }
+        } catch (error) {
+          console.error('Error in GitHub OAuth callback processing:', error);
+          setConnectionStatus('error');
+          setErrorMessage(`Callback processing error: ${error instanceof Error ? error.message : String(error)}`);
+          toast.error('GitHub connection failed');
+        } finally {
+          setIsCheckingConnection(false);
         }
-        
-        toast.success('Connected to GitHub successfully');
-        checkConnection(); // Refresh connection data
-      } else if (event.data && event.data.type === 'github-auth-error') {
-        console.error('GitHub auth error:', event.data.error);
+      } 
+      else if (data?.type === 'github-auth-error') {
+        console.error('Received GitHub auth error message:', data);
         setConnectionStatus('error');
-        setErrorMessage(event.data.error);
-        toast.error(`GitHub connection failed: ${event.data.error}`);
+        setErrorMessage(data.error || 'Authentication failed');
+        setIsCheckingConnection(false);
+        toast.error(`GitHub authentication failed: ${data.error || 'Unknown error'}`);
       }
     };
-
+    
     window.addEventListener('message', handleOAuthMessage);
-    return () => window.removeEventListener('message', handleOAuthMessage);
-  }, [checkConnection, setConnectionStatus, setErrorMessage, setUsername]);
+    
+    return () => {
+      window.removeEventListener('message', handleOAuthMessage);
+    };
+  }, [setConnectionStatus, setErrorMessage, setUsername, checkConnection, setIsCheckingConnection]);
 }

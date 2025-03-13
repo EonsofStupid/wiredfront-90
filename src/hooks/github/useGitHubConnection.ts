@@ -45,12 +45,17 @@ export function useGitHubConnection() {
     setConnectionStatus,
     setErrorMessage,
     setUsername,
-    checkConnection
+    checkConnection,
+    setIsCheckingConnection
   });
 
   // Check connection on initial load
   useEffect(() => {
-    checkConnection();
+    const initialCheck = async () => {
+      await checkConnection();
+    };
+    
+    initialCheck();
   }, [checkConnection]);
 
   return {

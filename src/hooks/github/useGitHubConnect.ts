@@ -33,9 +33,9 @@ export function useGitHubConnect({
       
       if (configError) {
         console.error('GitHub OAuth configuration error:', configError);
-        setErrorMessage(`Configuration error: ${configError.message || configError}`);
+        setErrorMessage(`Configuration error: ${configError.message || String(configError)}`);
         setConnectionStatus('error');
-        toast.error(`GitHub configuration error: ${configError.message || configError}`);
+        toast.error(`GitHub configuration error: ${configError.message || String(configError)}`);
         return;
       }
       
@@ -64,9 +64,9 @@ export function useGitHubConnect({
       
       if (response.error) {
         console.error('Error starting GitHub OAuth flow:', response.error);
-        toast.error(`Failed to start GitHub OAuth flow: ${response.error.message || response.error}`);
+        toast.error(`Failed to start GitHub OAuth flow: ${response.error.message || String(response.error)}`);
         setConnectionStatus('error');
-        setErrorMessage(response.error.message || response.error);
+        setErrorMessage(response.error.message || String(response.error));
         return;
       }
       
@@ -113,7 +113,6 @@ export function useGitHubConnect({
           // If connection wasn't established when popup closed
           if (setConnectionStatus) {
             setConnectionStatus('idle');
-            toast.error('GitHub connection was cancelled');
           }
         }
       }, 1000);
@@ -121,7 +120,7 @@ export function useGitHubConnect({
       console.error('Error connecting to GitHub:', error);
       toast.error('Failed to connect to GitHub');
       setConnectionStatus('error');
-      setErrorMessage(error instanceof Error ? error.message : 'Unknown error');
+      setErrorMessage(error instanceof Error ? error.message : String(error));
     }
   };
 

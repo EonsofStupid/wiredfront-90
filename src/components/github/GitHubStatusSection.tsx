@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Github, X, Check, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Spinner } from "@/components/chat/components/Spinner";
 
 interface GitHubStatusSectionProps {
   isConnected: boolean;
@@ -58,7 +59,7 @@ export function GitHubStatusSection({
             disabled={isCheckingConnection}
           >
             {isCheckingConnection ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
+              <Spinner size="sm" label="Disconnecting..." />
             ) : (
               <X className="h-4 w-4" />
             )}
@@ -76,7 +77,7 @@ export function GitHubStatusSection({
           >
             {connectionStatus === 'connecting' || isCheckingConnection ? (
               <>
-                <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                <Spinner size="sm" className="mr-2" label={isCheckingConnection ? "Checking..." : "Connecting..."} />
                 {isCheckingConnection ? 'Checking...' : 'Connecting...'}
               </>
             ) : (

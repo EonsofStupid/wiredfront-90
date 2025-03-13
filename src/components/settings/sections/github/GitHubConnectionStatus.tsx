@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { X, Github, AlertCircle } from "lucide-react";
+import { Spinner } from "@/components/chat/components/Spinner";
 
 interface GitHubConnectionStatusProps {
   isConnected: boolean;
@@ -42,7 +43,11 @@ export function GitHubConnectionStatus({
               disabled={loading}
               className="text-destructive hover:text-destructive hover:bg-destructive/10"
             >
-              <X className="mr-2 h-4 w-4" />
+              {loading ? (
+                <Spinner size="sm" className="mr-2" label="Disconnecting..." />
+              ) : (
+                <X className="mr-2 h-4 w-4" />
+              )}
               Disconnect
             </Button>
           </>
@@ -53,10 +58,10 @@ export function GitHubConnectionStatus({
             disabled={loading || connectionStatus === 'connecting'}
             className="border-primary/20 hover:border-primary"
           >
-            {connectionStatus === 'connecting' ? (
+            {loading || connectionStatus === 'connecting' ? (
               <>
-                <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                Connecting...
+                <Spinner size="sm" className="mr-2" label={loading ? "Checking..." : "Connecting..."} />
+                {loading ? "Checking..." : "Connecting..."}
               </>
             ) : (
               <>

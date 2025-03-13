@@ -58,7 +58,7 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
         isConnected={isGithubConnected}
         username={githubUsername}
         isCheckingConnection={isCheckingConnection}
-        onConnect={() => setIsConnectDialogOpen(true)}
+        onConnect={handleGitHubConnect}
         onDisconnect={disconnectGitHub}
         connectionStatus={connectionStatus}
       />
