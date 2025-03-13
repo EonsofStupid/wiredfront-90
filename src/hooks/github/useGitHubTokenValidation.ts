@@ -14,7 +14,7 @@ export function useGitHubTokenValidation(onTokenAdded: () => void, onClose: () =
   const validateToken = async (token: string) => {
     if (!token.trim()) {
       setError("Please enter a valid GitHub token");
-      return;
+      return false;
     }
 
     try {
@@ -32,14 +32,16 @@ export function useGitHubTokenValidation(onTokenAdded: () => void, onClose: () =
       if (validateResult.error) {
         setValidationState("invalid");
         setError(validateResult.error.message || "Invalid GitHub token");
-        return;
+        return false;
       }
       
       setValidationState("valid");
       setValidationResult(validateResult.data);
+      return true;
     } catch (error: any) {
       setValidationState("invalid");
       setError(error.message || "Error validating token");
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -63,12 +65,14 @@ export function useGitHubTokenValidation(onTokenAdded: () => void, onClose: () =
       setError("");
       
       // If token hasn't been validated yet, validate it first
-      if (validationState !== "valid") {
-        await validateToken(token);
-        // If validation failed during the previous step, stop submission
-        if (validationState !== "valid") return;
+      let isValid = validationState === "valid";
+      
+      if (!isValid) {
+        isValid = await validateToken(token);
+        if (!isValid) return; // Stop if validation failed
       }
       
+      // At this point we know the token is valid and we have validation results
       // Save token
       const saveResult = await supabase.functions.invoke('github-token-management', {
         body: { 

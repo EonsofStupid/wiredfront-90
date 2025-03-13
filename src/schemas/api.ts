@@ -36,7 +36,7 @@ export const apiSettingsStateSchema = z.object({
   awsSecretKey: z.string(),
   githubToken: z.string(),
   dockerToken: z.string()
-}).partial().required({});
+}).partial();
 
 // API Configuration Schema
 export const apiConfigurationSchema = z.object({
