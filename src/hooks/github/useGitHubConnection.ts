@@ -8,6 +8,14 @@ import { logger } from "@/services/chat/LoggingService";
 import { GitHubConnectionState } from "@/types/admin/settings/github";
 import { useSessionStore } from "@/stores/session/store";
 
+interface GitHubConnectionMetadata {
+  username?: string;
+  scopes?: string[];
+  connected_at?: string;
+  disconnected_at?: string;
+  [key: string]: any;
+}
+
 export function useGitHubConnection() {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [username, setUsername] = useState<string | null>(null);
@@ -76,15 +84,20 @@ export function useGitHubConnection() {
         throw statusError;
       }
       
-      if (statusData && statusData.status === 'connected' && statusData.metadata?.username) {
-        setIsConnected(true);
-        setUsername(statusData.metadata.username);
-        setConnectionStatus('connected');
-        logger.info('GitHub connection status found', { 
-          username: statusData.metadata.username,
-          status: statusData.status
-        });
-        return;
+      if (statusData && statusData.status === 'connected' && statusData.metadata) {
+        // Type guard to ensure metadata is an object with a username property
+        const metadata = statusData.metadata as GitHubConnectionMetadata;
+        
+        if (metadata && typeof metadata === 'object' && metadata.username) {
+          setIsConnected(true);
+          setUsername(metadata.username);
+          setConnectionStatus('connected');
+          logger.info('GitHub connection status found', { 
+            username: metadata.username,
+            status: statusData.status
+          });
+          return;
+        }
       }
       
       // If we get here, no connection exists
