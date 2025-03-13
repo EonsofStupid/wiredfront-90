@@ -74,7 +74,6 @@ serve(async (req) => {
         client_id: clientId,
         client_secret: clientSecret,
         code,
-        state,
       }),
     })
 
@@ -94,7 +93,7 @@ serve(async (req) => {
     logEvent('fetching_user_data', {})
     const userResponse = await fetch('https://api.github.com/user', {
       headers: {
-        'Authorization': `Bearer ${tokenData.access_token}`,
+        'Authorization': `token ${tokenData.access_token}`,
         'Accept': 'application/vnd.github.v3+json',
       },
     })
@@ -113,20 +112,15 @@ serve(async (req) => {
     // Create Supabase admin client to save the connection
     const supabaseAdmin = createClient(
       supabaseUrl,
-      supabaseServiceKey,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
+      supabaseServiceKey
     )
 
-    // Get the authenticated user from the cookie (if available)
+    // Get the current user from the auth header (if authenticated)
     const authHeader = req.headers.get('Authorization')
     logEvent('auth_header', { exists: !!authHeader })
     
-    let userId;
+    // Use anonymous user ID as a fallback
+    let userId = 'anonymous';
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split('Bearer ')[1]
@@ -139,49 +133,9 @@ serve(async (req) => {
         logEvent('auth_user_found', { userId })
       }
     }
-    
-    // If no authenticated user, use anonymous account for demo
-    if (!userId) {
-      logEvent('using_anonymous_user', {})
-      // For demo purposes, can use a hardcoded user ID or create a guest record
-      // In production, you'd want to redirect to login or handle this differently
-      const { data: anonUser, error: anonError } = await supabaseAdmin
-        .from('profiles')
-        .select('id')
-        .eq('username', 'anonymous@example.com')
-        .single()
-        
-      if (anonError) {
-        if (anonError.code === 'PGRST116') {
-          // Create anonymous user if doesn't exist
-          const { data: newUser, error: createError } = await supabaseAdmin
-            .from('profiles')
-            .insert({ 
-              username: 'anonymous@example.com', 
-              avatar_url: 'https://github.com/identicons/app/icon_data/guest'
-            })
-            .select()
-            .single()
-            
-          if (createError) {
-            logEvent('anon_user_create_error', { message: createError.message })
-            throw new Error('Could not create anonymous user')
-          }
-          
-          userId = newUser.id
-        } else {
-          logEvent('anon_user_fetch_error', { message: anonError.message })
-          throw new Error('Could not get anonymous user')
-        }
-      } else {
-        userId = anonUser.id
-      }
-      
-      logEvent('using_user_id', { userId })
-    }
 
     logEvent('saving_connection', { userId })
-    // Save the OAuth connection in your DB
+    // Save the OAuth connection in the database
     const { error: insertError } = await supabaseAdmin
       .from('oauth_connections')
       .upsert({

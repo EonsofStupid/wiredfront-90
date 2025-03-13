@@ -34,6 +34,7 @@ serve(async (req) => {
       throw new Error(error)
     }
 
+    // Get GitHub OAuth credentials from environment variables
     const clientId = Deno.env.get('GITHUB_CLIENT_ID')
     if (!clientId) {
       const error = 'GitHub client ID not configured'

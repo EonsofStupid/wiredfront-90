@@ -11,6 +11,12 @@ const GitHubCallback = () => {
     const code = urlParams.get('code');
     const state = urlParams.get('state');
     
+    console.log('GitHub callback loaded:', { 
+      hasCode: !!code, 
+      hasState: !!state,
+      error: urlParams.get('error')
+    });
+    
     // Send a message to the parent window with the auth status
     if (code && state) {
       console.log('Successfully received GitHub code, sending to parent window');

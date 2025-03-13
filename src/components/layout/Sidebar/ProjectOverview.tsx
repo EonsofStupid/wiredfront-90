@@ -1,4 +1,3 @@
-
 import { useUIStore } from "@/stores";
 import { cn } from "@/lib/utils";
 import { Plus, Folder, Github, Import, ExternalLink, Info, Code, X, Check, RefreshCw } from "lucide-react";
@@ -30,7 +29,6 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
   
   const activeProject = projects.find(p => p.id === activeProjectId);
   
-  // Check GitHub connection status
   const checkGitHubConnection = useCallback(async () => {
     try {
       setIsCheckingConnection(true);
@@ -64,15 +62,17 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
     checkGitHubConnection();
   }, [checkGitHubConnection]);
 
-  // Set up event listener for GitHub OAuth callback from popup
   useEffect(() => {
     const handleOAuthMessage = (event: MessageEvent) => {
+      console.log('Message received from popup:', event.data);
+      
       if (event.data && event.data.type === 'github-auth-success') {
         console.log('GitHub auth success message received:', event.data);
         setConnectionStatus('connected');
-        setGithubUsername(event.data.username);
-        setIsGithubConnected(true);
-        setIsConnectDialogOpen(false);
+        
+        // Update GitHub connection status in the database and local state
+        // This will be handled by the github-oauth-callback edge function
+        // which saves the token to the database
         toast.success('Connected to GitHub successfully');
         checkGitHubConnection(); // Refresh connection data
       } else if (event.data && event.data.type === 'github-auth-error') {
@@ -96,18 +96,22 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
       console.log("Using callback URL:", callbackUrl);
       
       // Call the GitHub OAuth initialization edge function
-      const { data, error } = await supabase.functions.invoke('github-oauth-init', {
+      const response = await supabase.functions.invoke('github-oauth-init', {
         body: { 
           redirect_url: callbackUrl
         }
       });
 
-      if (error) {
-        console.error('Error starting GitHub OAuth flow:', error);
-        toast.error('Failed to start GitHub OAuth flow');
+      console.log('GitHub OAuth init response:', response);
+      
+      if (response.error) {
+        console.error('Error starting GitHub OAuth flow:', response.error);
+        toast.error(`Failed to start GitHub OAuth flow: ${response.error.message}`);
         setConnectionStatus('error');
         return;
       }
+      
+      const { data } = response;
       
       // Log the URL to help with debugging
       console.log('GitHub OAuth URL generated:', data?.url);
@@ -124,6 +128,8 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
       const height = 700;
       const left = window.screenX + (window.outerWidth - width) / 2;
       const top = window.screenY + (window.outerHeight - height) / 2;
+      
+      console.log('Opening popup with URL:', data.url);
       
       const popup = window.open(
         data.url,
@@ -192,7 +198,6 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
         <h2 className="text-neon-blue font-medium text-xl">Project Hub</h2>
       </div>
       
-      {/* GitHub Connection Status */}
       <div className="p-4 border-b border-neon-blue/20">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
@@ -262,7 +267,6 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
         )}
       </div>
       
-      {/* Project Details */}
       <div className="flex-1 overflow-auto">
         {activeProject ? (
           <div className="p-4 space-y-4">
@@ -278,7 +282,6 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
               <p className="text-sm text-muted-foreground">{activeProject.description || "No description provided"}</p>
             </div>
             
-            {/* GitHub Project URL (simulation) */}
             {isGithubConnected && (
               <div className="space-y-2">
                 <p className="text-sm font-medium">GitHub Repository</p>
@@ -343,7 +346,6 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
         )}
       </div>
       
-      {/* Project List */}
       <div className="p-4 border-t border-neon-blue/20 space-y-3">
         <h3 className="text-sm font-medium">My Projects</h3>
         
@@ -381,7 +383,6 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
         </Button>
       </div>
       
-      {/* GitHub Connect Dialog */}
       <Dialog open={isConnectDialogOpen} onOpenChange={setIsConnectDialogOpen}>
         <DialogContent className="glass-card">
           <DialogHeader>
