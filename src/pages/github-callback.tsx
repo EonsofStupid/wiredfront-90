@@ -3,14 +3,24 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useSessionStore } from '@/stores/session/store';
+import { logger } from '@/services/chat/LoggingService';
 
 const GitHubCallback = () => {
   const navigate = useNavigate();
+  const { user } = useSessionStore();
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [traceId, setTraceId] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
 
   useEffect(() => {
+    const logCallbackEvent = (eventType: string, data: any) => {
+      logger.info(`GitHub Callback: ${eventType}`, { ...data, traceId });
+      console.log(`GitHub Callback: ${eventType}`, { ...data, traceId });
+    };
+
     const handleCallback = async () => {
       try {
         // Get URL parameters
@@ -20,67 +30,108 @@ const GitHubCallback = () => {
         const error = urlParams.get('error');
         const errorDescription = urlParams.get('error_description');
         
-        console.log('GitHub callback loaded with params:', { 
+        logCallbackEvent('callback_loaded', { 
           hasCode: !!code, 
           hasState: !!state,
           error,
-          errorDescription
+          errorDescription,
+          userId: user?.id
         });
         
         // If there's an error from GitHub, handle it
         if (error) {
-          console.error('GitHub OAuth error:', error, errorDescription);
+          logCallbackEvent('oauth_error', { error, errorDescription });
           setStatus('error');
           setErrorMessage(errorDescription || 'Authentication failed');
           
           if (window.opener) {
             window.opener.postMessage({ 
               type: 'github-auth-error', 
-              error: errorDescription || 'Authentication failed'
+              error: errorDescription || 'Authentication failed',
+              trace_id: traceId
             }, window.location.origin);
             
             // Also try with * as a fallback
             window.opener.postMessage({ 
               type: 'github-auth-error', 
-              error: errorDescription || 'Authentication failed'
+              error: errorDescription || 'Authentication failed',
+              trace_id: traceId
             }, '*');
           }
+          
+          // Record the error in Supabase
+          try {
+            await supabase.from('github_oauth_logs').insert({
+              event_type: 'github_redirect_error',
+              user_id: user?.id,
+              success: false,
+              error_code: error,
+              error_message: errorDescription,
+              metadata: { 
+                state,
+                from: 'callback_page'
+              }
+            });
+          } catch (logError) {
+            console.error('Failed to log OAuth error:', logError);
+          }
+          
           toast.error(`GitHub Authentication Error: ${errorDescription || 'Unknown error'}`);
           return;
         }
         
         // If we don't have a code and state, something went wrong
         if (!code || !state) {
-          console.error('Invalid GitHub callback parameters');
+          logCallbackEvent('invalid_parameters', { code, state });
           setStatus('error');
           setErrorMessage('Invalid response from GitHub - missing code or state parameter');
           
           if (window.opener) {
             window.opener.postMessage({ 
               type: 'github-auth-error', 
-              error: 'Invalid response from GitHub - missing code or state parameter'
+              error: 'Invalid response from GitHub - missing code or state parameter',
+              trace_id: traceId
             }, window.location.origin);
             
             // Also try with * as a fallback
             window.opener.postMessage({ 
               type: 'github-auth-error', 
-              error: 'Invalid response from GitHub - missing code or state parameter'
+              error: 'Invalid response from GitHub - missing code or state parameter',
+              trace_id: traceId
             }, '*');
           }
+          
+          // Record the error in Supabase
+          try {
+            await supabase.from('github_oauth_logs').insert({
+              event_type: 'missing_parameters',
+              user_id: user?.id,
+              success: false,
+              error_code: 'MISSING_PARAMS',
+              error_message: 'Missing code or state parameter',
+              metadata: { 
+                from: 'callback_page'
+              }
+            });
+          } catch (logError) {
+            console.error('Failed to log OAuth error:', logError);
+          }
+          
           toast.error('GitHub Authentication Failed: Invalid response');
           return;
         }
         
         // Exchange the code for a token
-        console.log('Exchanging code for token...');
+        logCallbackEvent('exchanging_code', { code: code.substring(0, 5) + '...' });
         const { data, error: exchangeError } = await supabase.functions.invoke('github-oauth-callback', {
           body: { code, state }
         });
         
-        console.log('Token exchange response:', { 
+        logCallbackEvent('token_exchange_response', { 
           success: !!data?.success, 
           error: exchangeError,
-          trace_id: data?.trace_id
+          trace_id: data?.trace_id,
+          username: data?.username
         });
         
         // Set the trace ID from the response
@@ -96,7 +147,7 @@ const GitHubCallback = () => {
           throw new Error(data?.error || 'Failed to exchange GitHub code');
         }
         
-        console.log('Successfully exchanged GitHub code for token');
+        logCallbackEvent('exchange_success', { username: data.username });
         setStatus('success');
         
         // Notify the parent window of success
@@ -113,14 +164,42 @@ const GitHubCallback = () => {
           // Also try with * as a fallback
           window.opener.postMessage(message, '*');
           
-          console.log('Sent success message to parent window');
+          logCallbackEvent('success_message_sent', { message });
         } else {
-          console.warn('No opener window found to notify of successful authentication');
+          logCallbackEvent('no_opener_window', {});
         }
         
         toast.success('GitHub authentication successful!');
+        
+        // Record successful authentication in Supabase
+        try {
+          await supabase.from('github_oauth_logs').insert({
+            event_type: 'authentication_success',
+            user_id: user?.id,
+            success: true,
+            metadata: { 
+              username: data?.username,
+              trace_id: data?.trace_id,
+              from: 'callback_page'
+            }
+          });
+        } catch (logError) {
+          console.error('Failed to log OAuth success:', logError);
+        }
       } catch (err) {
-        console.error('Error exchanging GitHub code:', err);
+        logCallbackEvent('exchange_error', { 
+          error: err instanceof Error ? err.message : String(err),
+          retryCount
+        });
+        
+        // Handle retry logic for temporary errors
+        if (retryCount < maxRetries) {
+          // Increment retry counter and attempt again after delay
+          setRetryCount(prev => prev + 1);
+          setTimeout(() => handleCallback(), 1000 * (retryCount + 1)); // Exponential backoff
+          return;
+        }
+        
         setStatus('error');
         const errorMsg = err instanceof Error ? err.message : 'Failed to complete GitHub authentication';
         setErrorMessage(errorMsg);
@@ -137,6 +216,23 @@ const GitHubCallback = () => {
           
           // Also try with * as a fallback
           window.opener.postMessage(errorMessage, '*');
+        }
+        
+        // Record the error in Supabase
+        try {
+          await supabase.from('github_oauth_logs').insert({
+            event_type: 'code_exchange_error',
+            user_id: user?.id,
+            success: false,
+            error_message: errorMsg,
+            metadata: { 
+              trace_id: traceId,
+              from: 'callback_page',
+              retry_count: retryCount
+            }
+          });
+        } catch (logError) {
+          console.error('Failed to log OAuth error:', logError);
         }
         
         toast.error('GitHub Authentication Failed: Unable to exchange code for token');
@@ -157,7 +253,7 @@ const GitHubCallback = () => {
     }, status === 'error' ? 5000 : 3000); // Longer delay for errors so users can read the message
     
     return () => clearTimeout(timeout);
-  }, [navigate, status, traceId]);
+  }, [navigate, status, traceId, retryCount, user?.id]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
@@ -171,6 +267,11 @@ const GitHubCallback = () => {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
               <p>Processing your GitHub authentication...</p>
+              {retryCount > 0 && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  Retry attempt {retryCount} of {maxRetries}...
+                </p>
+              )}
             </>
           )}
           
@@ -202,6 +303,9 @@ const GitHubCallback = () => {
               {traceId && (
                 <div className="mt-4 p-2 bg-muted rounded-md">
                   <p className="text-xs text-muted-foreground">Trace ID: {traceId}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Please provide this ID to an administrator for troubleshooting.
+                  </p>
                 </div>
               )}
             </>

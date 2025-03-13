@@ -3,53 +3,36 @@ export interface GitHubOAuthConnection {
   id: string;
   user_id: string;
   provider: string;
-  provider_user_id?: string;
-  account_username?: string;
-  account_type?: string;
-  scopes?: string[];
   access_token?: string;
   refresh_token?: string;
   expires_at?: string;
-  last_used?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface GitHubUserData {
-  id: number;
-  login: string;
-  name?: string;
-  email?: string;
-  avatar_url?: string;
-  type?: string;
-}
-
-export interface GitHubAPIMetrics {
-  rateLimit: {
-    limit: number;
-    remaining: number;
-    reset: number;
-    used: number;
-  };
-  lastUpdated: string;
-}
-
-export interface GitHubRepository {
-  id: number;
-  name: string;
-  full_name: string;
-  description?: string;
-  private: boolean;
-  html_url: string;
+  account_username?: string;
+  account_type?: string;
+  scopes?: string[];
+  created_at: string;
   updated_at: string;
-  language?: string;
-  default_branch: string;
+  last_used?: string;
 }
 
-export interface GitHubSettings {
-  defaultToken?: string;
-  autoSync: boolean;
-  syncInterval: number;
-  preferredAccountId?: string;
-  lastSyncTimestamp?: string;
+export interface GitHubConnectionStatus {
+  user_id: string;
+  status: string;
+  last_check: string;
+  error_message?: string;
+  last_successful_operation?: string;
+  metadata?: {
+    username?: string;
+    scopes?: string[];
+    connected_at?: string;
+    [key: string]: any;
+  };
+}
+
+export type GitHubConnectionState = 'idle' | 'connecting' | 'connected' | 'error';
+
+export interface GitHubAuthError {
+  code: string;
+  message: string;
+  trace_id?: string;
+  details?: any;
 }

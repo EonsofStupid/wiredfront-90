@@ -1,25 +1,20 @@
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
-import { v4 as uuidv4 } from 'https://esm.sh/uuid@9.0.0'
-import { encode as encodeBase64 } from 'https://deno.land/std@0.170.0/encoding/base64.ts'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { v4 as uuidv4 } from "https://esm.sh/uuid@9.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
-// Configure rate limiting
+// Configure request rate limiting
 const RATE_LIMIT = {
   maxRequests: 10, // Max requests per window
   windowMs: 60000, // 1 minute window
   ipMap: new Map<string, { count: number, resetTime: number }>()
 };
 
-// For token encryption
-const ENCRYPTION_KEY = Deno.env.get('ENCRYPTION_KEY');
-
-// Generate unique trace ID for request tracking
 function generateTraceId(): string {
   return uuidv4();
 }
@@ -33,6 +28,33 @@ function logEvent(type: string, data: any, traceId?: string) {
     function: 'github-oauth-callback',
     trace_id: traceId || 'not_set'
   }));
+}
+
+async function recordOAuthLog(
+  supabaseAdmin: any, 
+  eventType: string, 
+  userId: string | null = null, 
+  success: boolean | null = null,
+  errorCode: string | null = null,
+  errorMessage: string | null = null,
+  metadata: any = {},
+  requestId: string | null = null
+) {
+  try {
+    await supabaseAdmin
+      .from('github_oauth_logs')
+      .insert({
+        event_type: eventType,
+        user_id: userId,
+        success,
+        error_code: errorCode,
+        error_message: errorMessage,
+        metadata,
+        request_id: requestId
+      });
+  } catch (error) {
+    console.error('Failed to record OAuth log:', error);
+  }
 }
 
 // Store metrics in the database
@@ -50,17 +72,28 @@ async function recordMetric(supabaseClient: any, metricType: string, value?: num
   }
 }
 
-// Update or create connection status record
-async function updateConnectionStatus(supabaseClient: any, userId: string, status: string, errorMsg?: string) {
+// Update connection status for a user
+async function updateConnectionStatus(
+  supabaseAdmin: any,
+  userId: string | null,
+  status: string,
+  errorMessage: string | null = null,
+  metadata: any = {}
+) {
+  if (!userId) return;
+  
   try {
-    await supabaseClient
+    const now = new Date().toISOString();
+    
+    await supabaseAdmin
       .from('github_connection_status')
       .upsert({
         user_id: userId,
-        status: status,
-        error_message: errorMsg,
-        last_check: new Date().toISOString(),
-        last_successful_operation: status === 'connected' ? new Date().toISOString() : null
+        status,
+        error_message: errorMessage,
+        last_check: now,
+        last_successful_operation: status === 'connected' ? now : null,
+        metadata
       }, {
         onConflict: 'user_id'
       });
@@ -110,115 +143,14 @@ function isRateLimited(ip: string): boolean {
   return false;
 }
 
-// Encrypt sensitive token data
-async function encryptToken(token: string): Promise<string> {
-  if (!ENCRYPTION_KEY) {
-    return token; // Fallback if no encryption key
-  }
-  
-  try {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(token);
-    const keyData = encoder.encode(ENCRYPTION_KEY);
-    
-    // Generate a random initialization vector
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    
-    // Import the key
-    const key = await crypto.subtle.importKey(
-      "raw",
-      keyData,
-      { name: "AES-GCM" },
-      false,
-      ["encrypt"]
-    );
-    
-    // Encrypt the data
-    const encryptedData = await crypto.subtle.encrypt(
-      {
-        name: "AES-GCM",
-        iv
-      },
-      key,
-      data
-    );
-    
-    // Combine the IV and encrypted data
-    const combined = new Uint8Array(iv.length + new Uint8Array(encryptedData).length);
-    combined.set(iv);
-    combined.set(new Uint8Array(encryptedData), iv.length);
-    
-    return encodeBase64(combined);
-  } catch (error) {
-    logEvent('encryption_error', { error: error.message });
-    return token; // Fallback to unencrypted if encryption fails
-  }
-}
-
-// Validate state parameter to prevent CSRF
-async function validateState(supabaseClient: any, state: string, traceId: string): Promise<{ valid: boolean, userId?: string }> {
-  try {
-    // Decode state
-    const decodedState = JSON.parse(atob(state));
-    const { id, t, u } = decodedState;
-    
-    // Check if state has expired (15 minutes timeout)
-    const timestamp = parseInt(t);
-    const now = Date.now();
-    if (now - timestamp > 15 * 60 * 1000) {
-      logEvent('state_expired', { stateId: id }, traceId);
-      return { valid: false };
-    }
-    
-    // If we have a user ID, verify against the database
-    if (u) {
-      // Look up the state in our logs
-      const { data, error } = await supabaseClient
-        .from('github_oauth_logs')
-        .select('*')
-        .eq('user_id', u)
-        .eq('event_type', 'state_generated')
-        .order('timestamp', { ascending: false })
-        .limit(1)
-        .single();
-      
-      if (error || !data) {
-        logEvent('state_validation_failed', { error: error?.message, userId: u }, traceId);
-        return { valid: false };
-      }
-      
-      // Check if the state matches
-      if (data.metadata?.state !== id) {
-        logEvent('state_mismatch', { 
-          expected: data.metadata?.state,
-          received: id,
-          userId: u
-        }, traceId);
-        return { valid: false };
-      }
-      
-      return { valid: true, userId: u };
-    }
-    
-    // If no user ID, we can't verify against the database
-    // but we can still check the timestamp
-    return { valid: true };
-    
-  } catch (error) {
-    logEvent('state_validation_error', { error: error.message }, traceId);
-    return { valid: false };
-  }
-}
-
 serve(async (req) => {
   // Generate trace ID for request tracking
   const traceId = generateTraceId();
-  logEvent('function_called', { method: req.method, url: req.url }, traceId);
+  logEvent('callback_function_called', { method: req.method, url: req.url }, traceId);
 
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     logEvent('cors_preflight', {}, traceId);
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders, status: 200 });
   }
 
   try {
@@ -245,10 +177,10 @@ serve(async (req) => {
       );
     }
 
-    // Create Supabase admin client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-
+    // Create Supabase client for database operations
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    
     if (!supabaseUrl || !supabaseServiceKey) {
       logEvent('missing_supabase_credentials', {}, traceId);
       return new Response(
@@ -265,1000 +197,392 @@ serve(async (req) => {
         }
       );
     }
-
-    const supabaseAdmin = createClient(
-      supabaseUrl,
-      supabaseServiceKey
-    );
-
-    // Parse the request body for POST requests
-    let requestData = {};
-    if (req.method === 'POST') {
-      try {
-        requestData = await req.json();
-        logEvent('json_parsed', { success: true }, traceId);
-      } catch (error) {
-        logEvent('json_parse_error', { error: error.message }, traceId);
-        throw new Error('Invalid JSON in request body');
-      }
-    }
-
-    // Parse the request URL to get the query parameters
-    const url = new URL(req.url);
-    const code = url.searchParams.get('code') || (requestData as any).code;
-    const state = url.searchParams.get('state') || (requestData as any).state;
-    const error = url.searchParams.get('error') || (requestData as any).error;
-    const errorDescription = url.searchParams.get('error_description') || (requestData as any).error_description;
     
-    logEvent('received_params', { 
-      code: code ? `${code.substring(0, 5)}...` : null,
-      state: state ? `${state.substring(0, 5)}...` : null,
-      hasCode: !!code,
-      hasState: !!state,
-      method: req.method,
-      error,
-      errorDescription
-    }, traceId);
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get the current user from the auth header (if authenticated)
-    const authHeader = req.headers.get('Authorization');
-    logEvent('auth_header', { exists: !!authHeader }, traceId);
-    
-    // Use anonymous user ID as a fallback
-    let userId = 'anonymous';
-    
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.split('Bearer ')[1];
-      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-      
-      if (authError) {
-        logEvent('auth_error', { message: authError.message }, traceId);
-      } else if (user) {
-        userId = user.id;
-        logEvent('auth_user_found', { userId }, traceId);
-      }
-    }
-
-    // If there's an error from GitHub, handle it
-    if (error) {
-      const errorMsg = `GitHub OAuth error: ${errorDescription || error}`;
-      logEvent('github_oauth_error', { error, errorDescription }, traceId);
-      
-      // Record error in the logs
-      await supabaseAdmin
-        .from('github_oauth_logs')
-        .insert({
-          event_type: 'authorization_error',
-          user_id: userId !== 'anonymous' ? userId : null,
-          success: false,
-          error_code: error,
-          error_message: errorDescription,
-          request_id: traceId
-        });
-      
-      // Record metric
-      await recordMetric(supabaseAdmin, 'oauth_error', 1, { 
-        error_code: error, 
-        trace_id: traceId 
-      });
-      
-      // Update connection status if we have a user ID
-      if (userId !== 'anonymous') {
-        await updateConnectionStatus(supabaseAdmin, userId, 'error', errorDescription || error);
-      }
-      
-      if (window.opener) {
-        window.opener.postMessage({ 
-          type: 'github-auth-error', 
-          error: errorDescription || 'Authentication failed',
-          trace_id: traceId
-        }, window.location.origin);
-        
-        // Also try with * as a fallback
-        window.opener.postMessage({ 
-          type: 'github-auth-error', 
-          error: errorDescription || 'Authentication failed',
-          trace_id: traceId
-        }, '*');
-      }
-      
-      if (req.method === 'POST') {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: errorMsg,
-            trace_id: traceId
-          }),
-          { 
-            status: 400,
-            headers: { 
-              ...corsHeaders, 
-              'Content-Type': 'application/json' 
-            } 
+    let requestData;
+    try {
+      requestData = await req.json();
+      logEvent('request_parsed', { success: true }, traceId);
+    } catch (error) {
+      logEvent('json_parse_error', { error: error.message }, traceId);
+      await recordOAuthLog(
+        supabaseAdmin,
+        'parse_error',
+        null,
+        false,
+        'PARSE_ERROR',
+        'Invalid JSON in request body',
+        { trace_id: traceId },
+        traceId
+      );
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid JSON in request body',
+          trace_id: traceId 
+        }),
+        { 
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
           }
-        );
-      }
-
-      const htmlErrorResponse = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>GitHub Authentication Failed</title>
-          <style>
-            body {
-              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-              background-color: #0f172a;
-              color: #e2e8f0;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              height: 100vh;
-              margin: 0;
-              padding: 20px;
-              text-align: center;
-            }
-            .card {
-              background-color: rgba(30, 41, 59, 0.7);
-              border-radius: 8px;
-              padding: 30px;
-              box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-              max-width: 500px;
-            }
-            h1 {
-              color: #f87171;
-              margin-top: 0;
-            }
-            p {
-              line-height: 1.6;
-            }
-            .error-icon {
-              color: #f87171;
-              font-size: 48px;
-              margin-bottom: 20px;
-            }
-            .trace-id {
-              font-family: monospace;
-              background: rgba(0, 0, 0, 0.2);
-              padding: 4px 8px;
-              border-radius: 4px;
-              font-size: 12px;
-              margin-top: 20px;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="card">
-            <div class="error-icon">✗</div>
-            <h1>GitHub Connection Failed</h1>
-            <p>There was a problem connecting your GitHub account: ${errorDescription || error}</p>
-            <p>This window will close automatically.</p>
-            <div class="trace-id">Trace ID: ${traceId}</div>
-          </div>
-          <script>
-            // Try both specific origin and wildcard for maximum compatibility
-            try {
-              window.opener.postMessage({ 
-                type: 'github-auth-error', 
-                error: '${errorDescription || error}',
-                trace_id: '${traceId}'
-              }, window.location.origin);
-              
-              window.opener.postMessage({ 
-                type: 'github-auth-error', 
-                error: '${errorDescription || error}',
-                trace_id: '${traceId}'
-              }, '*');
-            } catch (e) {
-              console.error('Error posting message to parent window:', e);
-            }
-            
-            // Close this popup window after a short delay
-            setTimeout(() => window.close(), 3000);
-          </script>
-        </body>
-        </html>
-      `;
-
-      return new Response(htmlErrorResponse, { 
-        status: 400,
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'text/html' 
-        } 
-      });
+        }
+      );
     }
+    
+    const { code, state } = requestData;
+    
+    logEvent('request_received', { code_exists: !!code, state_exists: !!state }, traceId);
 
-    // If we don't have a code and state, something went wrong
     if (!code || !state) {
-      const errorMsg = 'Invalid response from GitHub - missing code or state parameter';
-      logEvent('invalid_callback_params', {
-        hasCode: !!code,
-        hasState: !!state
-      }, traceId);
-      
-      // Record error in the logs
-      await supabaseAdmin
-        .from('github_oauth_logs')
-        .insert({
-          event_type: 'invalid_callback',
-          user_id: userId !== 'anonymous' ? userId : null,
-          success: false,
-          error_code: 'missing_parameters',
-          error_message: errorMsg,
-          request_id: traceId
-        });
-      
-      // Record metric
-      await recordMetric(supabaseAdmin, 'oauth_error', 1, { 
-        error_code: 'missing_parameters', 
-        trace_id: traceId 
-      });
-      
-      // Update connection status if we have a user ID
-      if (userId !== 'anonymous') {
-        await updateConnectionStatus(supabaseAdmin, userId, 'error', errorMsg);
-      }
-      
-      if (req.method === 'POST') {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: errorMsg,
-            trace_id: traceId
-          }),
-          { 
-            status: 400,
-            headers: { 
-              ...corsHeaders, 
-              'Content-Type': 'application/json' 
-            } 
+      const error = 'Missing code or state in request';
+      logEvent('validation_error', { error }, traceId);
+      await recordOAuthLog(
+        supabaseAdmin,
+        'validation_error',
+        null,
+        false,
+        'MISSING_PARAMS',
+        error,
+        { trace_id: traceId },
+        traceId
+      );
+      return new Response(
+        JSON.stringify({ 
+          error,
+          trace_id: traceId
+        }),
+        { 
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
           }
-        );
-      }
-
-      const htmlErrorResponse = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>GitHub Authentication Failed</title>
-          <style>
-            body {
-              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-              background-color: #0f172a;
-              color: #e2e8f0;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              height: 100vh;
-              margin: 0;
-              padding: 20px;
-              text-align: center;
-            }
-            .card {
-              background-color: rgba(30, 41, 59, 0.7);
-              border-radius: 8px;
-              padding: 30px;
-              box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-              max-width: 500px;
-            }
-            h1 {
-              color: #f87171;
-              margin-top: 0;
-            }
-            p {
-              line-height: 1.6;
-            }
-            .error-icon {
-              color: #f87171;
-              font-size: 48px;
-              margin-bottom: 20px;
-            }
-            .trace-id {
-              font-family: monospace;
-              background: rgba(0, 0, 0, 0.2);
-              padding: 4px 8px;
-              border-radius: 4px;
-              font-size: 12px;
-              margin-top: 20px;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="card">
-            <div class="error-icon">✗</div>
-            <h1>GitHub Connection Failed</h1>
-            <p>There was a problem connecting your GitHub account: Missing required parameters</p>
-            <p>This window will close automatically.</p>
-            <div class="trace-id">Trace ID: ${traceId}</div>
-          </div>
-          <script>
-            // Try both specific origin and wildcard for maximum compatibility
-            try {
-              window.opener.postMessage({ 
-                type: 'github-auth-error', 
-                error: 'Invalid response from GitHub - missing code or state parameter',
-                trace_id: '${traceId}'
-              }, window.location.origin);
-              
-              window.opener.postMessage({ 
-                type: 'github-auth-error', 
-                error: 'Invalid response from GitHub - missing code or state parameter',
-                trace_id: '${traceId}'
-              }, '*');
-            } catch (e) {
-              console.error('Error posting message to parent window:', e);
-            }
-            
-            // Close this popup window after a short delay
-            setTimeout(() => window.close(), 3000);
-          </script>
-        </body>
-        </html>
-      `;
-
-      return new Response(htmlErrorResponse, { 
-        status: 400,
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'text/html' 
-        } 
-      });
+        }
+      );
     }
 
-    // Validate the state parameter
-    const stateValidation = await validateState(supabaseAdmin, state, traceId);
-    if (!stateValidation.valid) {
-      const errorMsg = 'Invalid state parameter - possible CSRF attack';
-      logEvent('invalid_state', { state }, traceId);
-      
-      // Record error in the logs
-      await supabaseAdmin
-        .from('github_oauth_logs')
-        .insert({
-          event_type: 'invalid_state',
-          user_id: userId !== 'anonymous' ? userId : null,
-          success: false,
-          error_code: 'invalid_state',
-          error_message: errorMsg,
-          request_id: traceId
-        });
-      
-      // Record metric
-      await recordMetric(supabaseAdmin, 'oauth_error', 1, { 
-        error_code: 'invalid_state', 
-        trace_id: traceId 
-      });
-      
-      // Update connection status if we have a user ID
-      if (userId !== 'anonymous') {
-        await updateConnectionStatus(supabaseAdmin, userId, 'error', errorMsg);
-      }
-      
-      if (req.method === 'POST') {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: errorMsg,
-            trace_id: traceId
-          }),
-          { 
-            status: 400,
-            headers: { 
-              ...corsHeaders, 
-              'Content-Type': 'application/json' 
-            } 
-          }
-        );
-      }
-
-      const htmlErrorResponse = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>GitHub Authentication Failed</title>
-          <style>
-            body {
-              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-              background-color: #0f172a;
-              color: #e2e8f0;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              height: 100vh;
-              margin: 0;
-              padding: 20px;
-              text-align: center;
-            }
-            .card {
-              background-color: rgba(30, 41, 59, 0.7);
-              border-radius: 8px;
-              padding: 30px;
-              box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-              max-width: 500px;
-            }
-            h1 {
-              color: #f87171;
-              margin-top: 0;
-            }
-            p {
-              line-height: 1.6;
-            }
-            .error-icon {
-              color: #f87171;
-              font-size: 48px;
-              margin-bottom: 20px;
-            }
-            .trace-id {
-              font-family: monospace;
-              background: rgba(0, 0, 0, 0.2);
-              padding: 4px 8px;
-              border-radius: 4px;
-              font-size: 12px;
-              margin-top: 20px;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="card">
-            <div class="error-icon">✗</div>
-            <h1>Security Error</h1>
-            <p>Invalid authentication state. This could be due to an expired session or a security issue.</p>
-            <p>This window will close automatically.</p>
-            <div class="trace-id">Trace ID: ${traceId}</div>
-          </div>
-          <script>
-            try {
-              window.opener.postMessage({ 
-                type: 'github-auth-error', 
-                error: 'Invalid state parameter - possible security issue',
-                trace_id: '${traceId}'
-              }, window.location.origin);
-              
-              window.opener.postMessage({ 
-                type: 'github-auth-error', 
-                error: 'Invalid state parameter - possible security issue',
-                trace_id: '${traceId}'
-              }, '*');
-            } catch (e) {
-              console.error('Error posting message to parent window:', e);
-            }
-            
-            setTimeout(() => window.close(), 3000);
-          </script>
-        </body>
-        </html>
-      `;
-
-      return new Response(htmlErrorResponse, { 
-        status: 400,
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'text/html' 
-        } 
-      });
-    }
-
-    // If we have a valid user ID from state validation, use it
-    if (stateValidation.userId) {
-      userId = stateValidation.userId;
-      logEvent('user_id_from_state', { userId }, traceId);
-    }
-
-    // Log all env vars for debugging (not the values, just the keys)
-    const envKeys = Object.keys(Deno.env.toObject());
-    logEvent('env_vars_available', { keys: envKeys }, traceId);
-
-    // Fetch secrets
+    // Try different variations of GitHub client ID env var names
     let clientId = Deno.env.get('GITHUB_CLIENTID');
     if (!clientId) {
       clientId = Deno.env.get('GITHUB_CLIENT_ID');
     }
     
+    // Try different variations of GitHub client secret env var names
     let clientSecret = Deno.env.get('GITHUB_CLIENTSECRET');
     if (!clientSecret) {
       clientSecret = Deno.env.get('GITHUB_CLIENT_SECRET');
     }
-
+    
     logEvent('credentials_check', { 
       clientIdExists: !!clientId,
-      clientSecretExists: !!clientSecret
+      clientSecretExists: !!clientSecret,
+      clientIdPrefix: clientId ? clientId.substring(0, 5) : null
     }, traceId);
 
     if (!clientId || !clientSecret) {
-      const error = 'Missing GitHub OAuth credentials';
-      logEvent('configuration_error', { error, envKeys }, traceId);
+      const error = !clientId 
+        ? 'GitHub client ID not configured' 
+        : 'GitHub client secret not configured';
       
-      // Record error in the logs
-      await supabaseAdmin
-        .from('github_oauth_logs')
-        .insert({
-          event_type: 'configuration_error',
-          user_id: userId !== 'anonymous' ? userId : null,
-          success: false,
-          error_code: 'missing_credentials',
-          error_message: error,
-          request_id: traceId
-        });
+      logEvent('configuration_error', { error }, traceId);
+      await recordOAuthLog(
+        supabaseAdmin,
+        'configuration_error',
+        null,
+        false,
+        'CONFIG_ERROR',
+        error,
+        { trace_id: traceId },
+        traceId
+      );
+      await recordMetric(supabaseAdmin, 'oauth_error', 1, { error_type: 'configuration_error', trace_id: traceId });
       
-      // Record metric
-      await recordMetric(supabaseAdmin, 'oauth_error', 1, { 
-        error_code: 'missing_credentials', 
-        trace_id: traceId 
-      });
-      
-      // Update connection status if we have a user ID
-      if (userId !== 'anonymous') {
-        await updateConnectionStatus(supabaseAdmin, userId, 'error', error);
-      }
-      
-      throw new Error(error);
-    }
-
-    logEvent('exchanging_code', {}, traceId);
-    const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        client_id: clientId,
-        client_secret: clientSecret,
-        code,
-      }),
-    });
-
-    if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
-      logEvent('token_response_error', { 
-        status: tokenResponse.status,
-        statusText: tokenResponse.statusText,
-        responseText: errorText
-      }, traceId);
-      
-      // Record error in the logs
-      await supabaseAdmin
-        .from('github_oauth_logs')
-        .insert({
-          event_type: 'token_exchange_error',
-          user_id: userId !== 'anonymous' ? userId : null,
-          success: false,
-          error_code: `http_${tokenResponse.status}`,
-          error_message: `GitHub token exchange failed: ${tokenResponse.statusText}`,
-          request_id: traceId
-        });
-      
-      // Record metric
-      await recordMetric(supabaseAdmin, 'oauth_error', 1, { 
-        error_code: `http_${tokenResponse.status}`, 
-        trace_id: traceId 
-      });
-      
-      // Update connection status if we have a user ID
-      if (userId !== 'anonymous') {
-        await updateConnectionStatus(supabaseAdmin, userId, 'error', `Token exchange failed: ${tokenResponse.statusText}`);
-      }
-      
-      throw new Error(`GitHub token exchange failed: ${tokenResponse.statusText}`);
-    }
-
-    const tokenData = await tokenResponse.json();
-    logEvent('token_response', { 
-      success: !!tokenData.access_token,
-      hasError: !!tokenData.error,
-      errorDescription: tokenData.error_description || null,
-      status: tokenResponse.status
-    }, traceId);
-
-    if (tokenData.error) {
-      logEvent('github_oauth_error', tokenData, traceId);
-      
-      // Record error in the logs
-      await supabaseAdmin
-        .from('github_oauth_logs')
-        .insert({
-          event_type: 'token_error',
-          user_id: userId !== 'anonymous' ? userId : null,
-          success: false,
-          error_code: tokenData.error,
-          error_message: tokenData.error_description,
-          request_id: traceId
-        });
-      
-      // Record metric
-      await recordMetric(supabaseAdmin, 'oauth_error', 1, { 
-        error_code: tokenData.error, 
-        trace_id: traceId 
-      });
-      
-      // Update connection status if we have a user ID
-      if (userId !== 'anonymous') {
-        await updateConnectionStatus(supabaseAdmin, userId, 'error', tokenData.error_description);
-      }
-      
-      throw new Error(`GitHub OAuth error: ${tokenData.error_description}`);
-    }
-
-    // Use the token to get user info
-    logEvent('fetching_user_data', {}, traceId);
-    const userResponse = await fetch('https://api.github.com/user', {
-      headers: {
-        'Authorization': `token ${tokenData.access_token}`,
-        'Accept': 'application/vnd.github.v3+json',
-      },
-    });
-
-    if (!userResponse.ok) {
-      const errorText = await userResponse.text();
-      logEvent('user_data_error', { 
-        status: userResponse.status,
-        statusText: userResponse.statusText,
-        responseText: errorText
-      }, traceId);
-      
-      // Record error in the logs
-      await supabaseAdmin
-        .from('github_oauth_logs')
-        .insert({
-          event_type: 'user_data_error',
-          user_id: userId !== 'anonymous' ? userId : null,
-          success: false,
-          error_code: `http_${userResponse.status}`,
-          error_message: `GitHub API error: ${userResponse.statusText}`,
-          request_id: traceId
-        });
-      
-      // Record metric
-      await recordMetric(supabaseAdmin, 'oauth_error', 1, { 
-        error_code: `http_${userResponse.status}`, 
-        trace_id: traceId 
-      });
-      
-      // Update connection status if we have a user ID
-      if (userId !== 'anonymous') {
-        await updateConnectionStatus(supabaseAdmin, userId, 'error', `User data fetch failed: ${userResponse.statusText}`);
-      }
-      
-      throw new Error(`GitHub API error: ${userResponse.statusText}`);
-    }
-
-    const userData = await userResponse.json();
-    logEvent('user_data_fetched', { 
-      success: !!userData.id, 
-      username: userData.login || null,
-      hasError: !!userData.message,
-      status: userResponse.status
-    }, traceId);
-
-    if (userData.message) {
-      // Record error in the logs
-      await supabaseAdmin
-        .from('github_oauth_logs')
-        .insert({
-          event_type: 'user_data_message',
-          user_id: userId !== 'anonymous' ? userId : null,
-          success: false,
-          error_message: userData.message,
-          request_id: traceId
-        });
-      
-      // Update connection status if we have a user ID
-      if (userId !== 'anonymous') {
-        await updateConnectionStatus(supabaseAdmin, userId, 'error', userData.message);
-      }
-      
-      throw new Error(`GitHub API error: ${userData.message}`);
-    }
-
-    // Fetch rate limit info for metrics
-    const rateLimitResponse = await fetch('https://api.github.com/rate_limit', {
-      headers: {
-        'Authorization': `token ${tokenData.access_token}`,
-        'Accept': 'application/vnd.github.v3+json',
-      },
-    });
-
-    let rateLimitData = null;
-    if (rateLimitResponse.ok) {
-      rateLimitData = await rateLimitResponse.json();
-      logEvent('rate_limit_fetched', { 
-        core: rateLimitData.resources.core,
-        graphql: rateLimitData.resources.graphql,
-        search: rateLimitData.resources.search
-      }, traceId);
-      
-      // Record rate limit metrics
-      await recordMetric(supabaseAdmin, 'github_rate_limit', rateLimitData.resources.core.remaining, { 
-        total: rateLimitData.resources.core.limit 
-      });
-    }
-
-    // Encrypt the access token if encryption is available
-    const encryptedToken = await encryptToken(tokenData.access_token);
-    logEvent('token_encrypted', { 
-      wasEncrypted: encryptedToken !== tokenData.access_token 
-    }, traceId);
-
-    // Save the OAuth connection in the database
-    logEvent('saving_connection', { userId }, traceId);
-    const { error: insertError } = await supabaseAdmin
-      .from('oauth_connections')
-      .upsert({
-        user_id: userId !== 'anonymous' ? userId : null,
-        provider: 'github',
-        provider_user_id: userData.id.toString(),
-        account_username: userData.login,
-        account_type: userData.type?.toLowerCase(),
-        scopes: tokenData.scope?.split(',') || [],
-        access_token: encryptedToken,
-        refresh_token: tokenData.refresh_token || null,
-        expires_at: tokenData.expires_in ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString() : null,
-        last_used: new Date().toISOString()
-      }, {
-        onConflict: 'user_id, provider'
-      });
-
-    if (insertError) {
-      logEvent('insert_error', { message: insertError.message }, traceId);
-      
-      // Record error in the logs
-      await supabaseAdmin
-        .from('github_oauth_logs')
-        .insert({
-          event_type: 'database_error',
-          user_id: userId !== 'anonymous' ? userId : null,
-          success: false,
-          error_message: insertError.message,
-          request_id: traceId
-        });
-      
-      throw insertError;
-    }
-
-    // Record successful auth in logs
-    await supabaseAdmin
-      .from('github_oauth_logs')
-      .insert({
-        event_type: 'auth_success',
-        user_id: userId !== 'anonymous' ? userId : null,
-        success: true,
-        metadata: { 
-          username: userData.login,
-          scopes: tokenData.scope?.split(',') || [],
-          rate_limit: rateLimitData?.resources.core
-        },
-        request_id: traceId
-      });
-    
-    // Record success metric
-    await recordMetric(supabaseAdmin, 'oauth_success', 1, { 
-      username: userData.login,
-      trace_id: traceId 
-    });
-    
-    // Update connection status if we have a user ID
-    if (userId !== 'anonymous') {
-      await updateConnectionStatus(supabaseAdmin, userId, 'connected');
-    }
-
-    // For API calls from our frontend
-    if (req.method === 'POST') {
-      logEvent('success', { userId }, traceId);
       return new Response(
-        JSON.stringify({
-          success: true,
-          username: userData.login,
+        JSON.stringify({ 
+          error,
+          trace_id: traceId
+        }),
+        { 
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+    }
+
+    // Attempt to decode state to retrieve user ID
+    let userId = null;
+    try {
+      const stateData = JSON.parse(atob(state));
+      userId = stateData.u || null;
+      logEvent('state_decoded', { userId, stateId: stateData.id }, traceId);
+    } catch (error) {
+      logEvent('state_decode_error', { error: error.message, state }, traceId);
+    }
+
+    // Exchange the code for a token
+    logEvent('exchanging_code', { code_length: code.length }, traceId);
+    
+    try {
+      const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          client_id: clientId,
+          client_secret: clientSecret,
+          code: code
+        })
+      });
+
+      if (!tokenResponse.ok) {
+        throw new Error(`GitHub API responded with ${tokenResponse.status}`);
+      }
+
+      const tokenData = await tokenResponse.json();
+      logEvent('token_exchange_response', { 
+        success: !!tokenData.access_token, 
+        error: tokenData.error,
+        error_description: tokenData.error_description,
+        tokenType: tokenData.token_type,
+        scope: tokenData.scope
+      }, traceId);
+
+      if (tokenData.error) {
+        logEvent('token_exchange_error', { 
+          error: tokenData.error, 
+          description: tokenData.error_description 
+        }, traceId);
+        
+        await recordOAuthLog(
+          supabaseAdmin,
+          'token_exchange_error',
+          userId,
+          false,
+          tokenData.error,
+          tokenData.error_description,
+          { trace_id: traceId },
+          traceId
+        );
+        
+        if (userId) {
+          await updateConnectionStatus(
+            supabaseAdmin,
+            userId,
+            'error',
+            tokenData.error_description || 'Failed to exchange token',
+            { trace_id: traceId, error_code: tokenData.error }
+          );
+        }
+        
+        await recordMetric(supabaseAdmin, 'oauth_exchange_error', 1, { 
+          error_type: tokenData.error, 
+          trace_id: traceId 
+        });
+        
+        return new Response(
+          JSON.stringify({ 
+            error: tokenData.error_description || 'Failed to exchange GitHub code for token',
+            error_code: tokenData.error,
+            trace_id: traceId
+          }),
+          { 
+            status: 400,
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+      }
+
+      // Get user data to know the username
+      let username = null;
+      try {
+        const userResponse = await fetch('https://api.github.com/user', {
+          headers: {
+            'Authorization': `token ${tokenData.access_token}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          username = userData.login;
+          logEvent('github_user_fetched', { username, userId: userData.id }, traceId);
+        } else {
+          logEvent('github_user_fetch_error', { status: userResponse.status }, traceId);
+        }
+      } catch (error) {
+        logEvent('github_user_fetch_exception', { error: error.message }, traceId);
+      }
+
+      // Store the token in the database
+      if (userId) {
+        try {
+          // Check if an existing connection exists
+          const { data: existingConnection } = await supabaseAdmin
+            .from('oauth_connections')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('provider', 'github')
+            .maybeSingle();
+
+          const now = new Date().toISOString();
+          const expiresAt = tokenData.expires_in 
+            ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
+            : null;
+
+          // Store OAuth connection
+          await supabaseAdmin
+            .from('oauth_connections')
+            .upsert({
+              id: existingConnection?.id || undefined,
+              user_id: userId,
+              provider: 'github',
+              access_token: tokenData.access_token,
+              refresh_token: tokenData.refresh_token || null,
+              account_username: username,
+              scopes: tokenData.scope ? tokenData.scope.split(',') : [],
+              expires_at: expiresAt,
+              created_at: existingConnection ? undefined : now,
+              updated_at: now
+            }, {
+              onConflict: existingConnection ? 'id' : 'user_id,provider'
+            });
+
+          logEvent('token_stored', { 
+            userId, 
+            isUpdate: !!existingConnection,
+            username,
+            scopes: tokenData.scope,
+            hasRefreshToken: !!tokenData.refresh_token
+          }, traceId);
+          
+          // Update connection status
+          await updateConnectionStatus(
+            supabaseAdmin,
+            userId,
+            'connected',
+            null,
+            { 
+              username,
+              scopes: tokenData.scope ? tokenData.scope.split(',') : [],
+              connected_at: now
+            }
+          );
+        } catch (error) {
+          logEvent('token_storage_error', { error: error.message }, traceId);
+          await recordOAuthLog(
+            supabaseAdmin,
+            'token_storage_error',
+            userId,
+            false,
+            'STORAGE_ERROR',
+            error.message,
+            { trace_id: traceId },
+            traceId
+          );
+        }
+      } else {
+        logEvent('no_user_id_for_token_storage', { state }, traceId);
+      }
+
+      await recordOAuthLog(
+        supabaseAdmin,
+        'token_exchange_success',
+        userId,
+        true,
+        null,
+        null,
+        { 
+          username,
+          scopes: tokenData.scope,
+          trace_id: traceId
+        },
+        traceId
+      );
+      
+      await recordMetric(supabaseAdmin, 'oauth_success', 1, { trace_id: traceId });
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          username,
           trace_id: traceId
         }),
         { 
           status: 200,
-          headers: { 
-            ...corsHeaders, 
-            'Content-Type': 'application/json' 
-          } 
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
         }
       );
-    }
-
-    // Return HTML that will close the popup and notify the parent window
-    const htmlResponse = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>GitHub Authentication Successful</title>
-        <style>
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #0f172a;
-            color: #e2e8f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            padding: 20px;
-            text-align: center;
-          }
-          .card {
-            background-color: rgba(30, 41, 59, 0.7);
-            border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            max-width: 500px;
-          }
-          h1 {
-            color: #60a5fa;
-            margin-top: 0;
-          }
-          p {
-            line-height: 1.6;
-          }
-          .success-icon {
-            color: #34d399;
-            font-size: 48px;
-            margin-bottom: 20px;
-          }
-          .trace-id {
-            font-family: monospace;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            margin-top: 20px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="card">
-          <div class="success-icon">✓</div>
-          <h1>GitHub Connected Successfully!</h1>
-          <p>You have successfully connected your GitHub account. This window will close automatically.</p>
-          <div class="trace-id">Trace ID: ${traceId}</div>
-        </div>
-        <script>
-          // Try both specific origin and wildcard for maximum compatibility
-          try {
-            window.opener.postMessage({ 
-              type: 'github-auth-success', 
-              username: '${userData.login}',
-              trace_id: '${traceId}'
-            }, window.location.origin);
-            
-            window.opener.postMessage({ 
-              type: 'github-auth-success', 
-              username: '${userData.login}',
-              trace_id: '${traceId}'
-            }, '*');
-          } catch (e) {
-            console.error('Error posting message to parent window:', e);
-          }
-          
-          // Close this popup window after a short delay
-          setTimeout(() => window.close(), 1500);
-        </script>
-      </body>
-      </html>
-    `;
-
-    logEvent('success', { userId }, traceId);
-    
-    return new Response(htmlResponse, { 
-      headers: { 
-        ...corsHeaders, 
-        'Content-Type': 'text/html' 
-      } 
-    });
-  } catch (error) {
-    logEvent('error', {
-      message: error.message,
-      stack: error.stack
-    }, traceId);
-
-    // For API calls
-    if (req.method === 'POST') {
+    } catch (error) {
+      logEvent('token_exchange_exception', { error: error.message }, traceId);
+      
+      await recordOAuthLog(
+        supabaseAdmin,
+        'token_exchange_exception',
+        userId,
+        false,
+        'EXCHANGE_EXCEPTION',
+        error.message,
+        { trace_id: traceId },
+        traceId
+      );
+      
+      if (userId) {
+        await updateConnectionStatus(
+          supabaseAdmin,
+          userId,
+          'error',
+          error.message,
+          { trace_id: traceId }
+        );
+      }
+      
+      await recordMetric(supabaseAdmin, 'oauth_exception', 1, { 
+        error_message: error.message,
+        trace_id: traceId 
+      });
+      
       return new Response(
         JSON.stringify({ 
-          error: error.message || 'Failed to complete GitHub authentication',
-          success: false,
+          error: `Error exchanging GitHub code: ${error.message}`,
           trace_id: traceId
         }),
         { 
-          status: 400,
-          headers: { 
-            ...corsHeaders, 
-            'Content-Type': 'application/json' 
-          } 
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
         }
       );
     }
-
-    // For browser redirects
-    const htmlErrorResponse = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>GitHub Authentication Failed</title>
-        <style>
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #0f172a;
-            color: #e2e8f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            padding: 20px;
-            text-align: center;
-          }
-          .card {
-            background-color: rgba(30, 41, 59, 0.7);
-            border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            max-width: 500px;
-          }
-          h1 {
-            color: #f87171;
-            margin-top: 0;
-          }
-          p {
-            line-height: 1.6;
-          }
-          .error-icon {
-            color: #f87171;
-            font-size: 48px;
-            margin-bottom: 20px;
-          }
-          .trace-id {
-            font-family: monospace;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            margin-top: 20px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="card">
-          <div class="error-icon">✗</div>
-          <h1>GitHub Connection Failed</h1>
-          <p>There was a problem connecting your GitHub account: ${error.message}</p>
-          <p>This window will close automatically.</p>
-          <div class="trace-id">Trace ID: ${traceId}</div>
-        </div>
-        <script>
-          // Try both specific origin and wildcard for maximum compatibility
-          try {
-            window.opener.postMessage({ 
-              type: 'github-auth-error', 
-              error: '${error.message.replace(/'/g, "\\'")}',
-              trace_id: '${traceId}'
-            }, window.location.origin);
-            
-            window.opener.postMessage({ 
-              type: 'github-auth-error', 
-              error: '${error.message.replace(/'/g, "\\'")}',
-              trace_id: '${traceId}'
-            }, '*');
-          } catch (e) {
-            console.error('Error posting message to parent window:', e);
-          }
-          
-          // Close this popup window after a short delay
-          setTimeout(() => window.close(), 3000);
-        </script>
-      </body>
-      </html>
-    `;
-
-    return new Response(htmlErrorResponse, { 
-      status: 400,
-      headers: { 
-        ...corsHeaders, 
-        'Content-Type': 'text/html' 
-      } 
-    });
+  } catch (error) {
+    logEvent('unhandled_error', { error: error.message, stack: error.stack }, traceId);
+    
+    return new Response(
+      JSON.stringify({ 
+        error: `Unhandled error: ${error.message}`,
+        trace_id: traceId
+      }),
+      { 
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
   }
 });

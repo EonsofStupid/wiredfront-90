@@ -7,6 +7,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+/**
+ * This edge function handles GitHub token management operations:
+ * - Token validation
+ * - Token refresh
+ * - Token revocation
+ * - Token info retrieval
+ */
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -27,7 +34,7 @@ serve(async (req) => {
       }
     );
 
-    // Verify the user is authenticated and has super_admin role
+    // Extract auth header to verify user
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('No authorization header');
@@ -39,17 +46,6 @@ serve(async (req) => {
 
     if (authError || !user) {
       throw new Error('Unauthorized');
-    }
-
-    // Verify super_admin role
-    const { data: roleData, error: roleError } = await supabaseAdmin
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .single();
-
-    if (roleError || roleData?.role !== 'super_admin') {
-      throw new Error('Unauthorized - Super Admin access required');
     }
 
     let response;
@@ -70,6 +66,23 @@ serve(async (req) => {
         
         const userData = await validateResponse.json();
         
+        // Update connection status
+        await supabaseAdmin
+          .from('github_connection_status')
+          .upsert({
+            user_id: user.id,
+            status: 'connected',
+            error_message: null,
+            last_check: new Date().toISOString(),
+            last_successful_operation: new Date().toISOString(),
+            metadata: {
+              username: userData.login,
+              validated_at: new Date().toISOString()
+            }
+          }, {
+            onConflict: 'user_id'
+          });
+          
         // Get current rate limit info
         const rateResponse = await fetch('https://api.github.com/rate_limit', {
           headers: {
@@ -80,161 +93,255 @@ serve(async (req) => {
         
         const rateData = await rateResponse.json();
         
+        // Log validation
+        await supabaseAdmin
+          .from('github_oauth_logs')
+          .insert({
+            event_type: 'token_validated',
+            user_id: user.id,
+            success: true,
+            metadata: {
+              username: userData.login,
+              rate_limit: rateData.resources?.core
+            }
+          });
+        
         response = {
           valid: true,
           user: {
             login: userData.login,
             avatar_url: userData.avatar_url,
           },
-          rate_limit: rateData.resources.core
+          rate_limit: rateData.resources?.core
         };
         break;
         
-      case 'save':
-        // Save GitHub token securely using vault
-        const { error: vaultError } = await supabaseAdmin.rpc('set_secret', {
-          name: `GITHUB_${tokenData.name.toUpperCase()}`,
-          value: tokenData.token
-        });
-
-        if (vaultError) {
-          throw new Error('Failed to save token securely');
-        }
-        
-        // Create or update token configuration record
-        const now = new Date().toISOString();
-        const configData = {
-          user_id: user.id,
-          api_type: 'github',
-          memorable_name: tokenData.name,
-          secret_key_name: `GITHUB_${tokenData.name.toUpperCase()}`,
-          is_enabled: true,
-          validation_status: 'valid',
-          last_validated: now,
-          provider_settings: {
-            scopes: tokenData.scopes || ['repo'],
-            created_by: user.id,
-            github_username: tokenData.github_username,
-            created_at: now,
-            rate_limit: tokenData.rate_limit || {}
-          },
-          usage_metrics: {
-            calls_made: 0,
-            last_used: null,
-            calls_by_date: {}
-          },
-          role_assignments: tokenData.role_assignments || ['super_admin']
-        };
-
-        const { error: configError } = await supabaseAdmin
-          .from('api_configurations')
-          .upsert(configData, {
-            onConflict: 'user_id,memorable_name,api_type'
-          });
-
-        if (configError) {
-          throw new Error('Failed to save token configuration');
-        }
-        
-        response = { 
-          success: true, 
-          message: 'GitHub token saved successfully',
-          token_info: {
-            name: tokenData.name,
-            username: tokenData.github_username,
-            scopes: tokenData.scopes || ['repo']
-          }
-        };
-        break;
-        
-      case 'get':
-        // Get all GitHub tokens (without the actual token value)
-        const { data: tokens, error: tokensError } = await supabaseAdmin
-          .from('api_configurations')
+      case 'refresh':
+        // Get current connection
+        const { data: connection, error: connectionError } = await supabaseAdmin
+          .from('oauth_connections')
           .select('*')
-          .eq('api_type', 'github')
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .eq('provider', 'github')
+          .single();
           
-        if (tokensError) {
-          throw new Error('Failed to retrieve tokens');
+        if (connectionError || !connection) {
+          throw new Error('No GitHub connection found');
         }
         
-        response = { tokens };
-        break;
-        
-      case 'delete':
-        // Delete token from vault
-        const { error: deleteSecretError } = await supabaseAdmin.rpc('delete_secret', {
-          name: tokenData.secret_key_name
-        });
-        
-        if (deleteSecretError) {
-          console.warn('Warning: Could not delete secret from vault', deleteSecretError);
+        if (!connection.refresh_token) {
+          throw new Error('No refresh token available');
         }
         
-        // Delete token configuration
-        const { error: deleteConfigError } = await supabaseAdmin
-          .from('api_configurations')
-          .delete()
-          .eq('id', tokenData.id);
-          
-        if (deleteConfigError) {
-          throw new Error('Failed to delete token configuration');
-        }
-        
-        response = { success: true, message: 'GitHub token deleted successfully' };
-        break;
-
-      case 'rotate':
-        // Validate the new token first
-        const rotateValidateResponse = await fetch('https://api.github.com/user', {
+        // Attempt to refresh the token
+        const refreshResponse = await fetch('https://github.com/login/oauth/access_token', {
+          method: 'POST',
           headers: {
-            'Authorization': `token ${tokenData.newToken}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        });
-        
-        if (!rotateValidateResponse.ok) {
-          throw new Error('Invalid new GitHub token');
-        }
-        
-        const newUserData = await rotateValidateResponse.json();
-        
-        // Save the new token securely
-        const { error: rotateVaultError } = await supabaseAdmin.rpc('set_secret', {
-          name: tokenData.secret_key_name, // Use the same secret name
-          value: tokenData.newToken
-        });
-
-        if (rotateVaultError) {
-          throw new Error('Failed to save new token securely');
-        }
-        
-        // Update the token configuration
-        const { error: rotateConfigError } = await supabaseAdmin
-          .from('api_configurations')
-          .update({
-            validation_status: 'valid',
-            last_validated: new Date().toISOString(),
-            provider_settings: {
-              ...tokenData.provider_settings,
-              github_username: newUserData.login,
-              rotated_at: new Date().toISOString()
-            }
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            client_id: Deno.env.get('GITHUB_CLIENT_ID') || Deno.env.get('GITHUB_CLIENTID'),
+            client_secret: Deno.env.get('GITHUB_CLIENT_SECRET') || Deno.env.get('GITHUB_CLIENTSECRET'),
+            refresh_token: connection.refresh_token,
+            grant_type: 'refresh_token'
           })
-          .eq('id', tokenData.id);
-          
-        if (rotateConfigError) {
-          throw new Error('Failed to update token configuration');
+        });
+        
+        if (!refreshResponse.ok) {
+          throw new Error(`Failed to refresh token: ${refreshResponse.status}`);
         }
+        
+        const refreshData = await refreshResponse.json();
+        
+        if (refreshData.error) {
+          throw new Error(`Token refresh error: ${refreshData.error_description || refreshData.error}`);
+        }
+        
+        // Update the token in the database
+        await supabaseAdmin
+          .from('oauth_connections')
+          .update({
+            access_token: refreshData.access_token,
+            refresh_token: refreshData.refresh_token || connection.refresh_token,
+            expires_at: refreshData.expires_in 
+              ? new Date(Date.now() + refreshData.expires_in * 1000).toISOString() 
+              : null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', connection.id);
+          
+        // Log the refresh
+        await supabaseAdmin
+          .from('github_oauth_logs')
+          .insert({
+            event_type: 'token_refreshed',
+            user_id: user.id,
+            success: true,
+            metadata: {
+              scopes: refreshData.scope
+            }
+          });
+          
+        // Update connection status
+        await supabaseAdmin
+          .from('github_connection_status')
+          .upsert({
+            user_id: user.id,
+            status: 'connected',
+            error_message: null,
+            last_check: new Date().toISOString(),
+            last_successful_operation: new Date().toISOString(),
+            metadata: {
+              refreshed_at: new Date().toISOString()
+            }
+          }, {
+            onConflict: 'user_id'
+          });
+        
+        response = {
+          success: true,
+          message: 'GitHub token refreshed successfully',
+          new_token: refreshData.access_token
+        };
+        break;
+        
+      case 'revoke':
+        // Get current token
+        const { data: revokeConnection, error: revokeError } = await supabaseAdmin
+          .from('oauth_connections')
+          .select('access_token')
+          .eq('user_id', user.id)
+          .eq('provider', 'github')
+          .single();
+          
+        if (revokeError || !revokeConnection?.access_token) {
+          throw new Error('No GitHub token found to revoke');
+        }
+        
+        // Attempt to revoke the token via GitHub API
+        try {
+          const revokeResponse = await fetch('https://api.github.com/applications/' + 
+            (Deno.env.get('GITHUB_CLIENT_ID') || Deno.env.get('GITHUB_CLIENTID')) + 
+            '/token', {
+            method: 'DELETE',
+            headers: {
+              'Accept': 'application/vnd.github.v3+json',
+              'Authorization': 'Basic ' + btoa(
+                (Deno.env.get('GITHUB_CLIENT_ID') || Deno.env.get('GITHUB_CLIENTID')) + ':' + 
+                (Deno.env.get('GITHUB_CLIENT_SECRET') || Deno.env.get('GITHUB_CLIENTSECRET'))
+              )
+            },
+            body: JSON.stringify({
+              access_token: revokeConnection.access_token
+            })
+          });
+          
+          if (!revokeResponse.ok && revokeResponse.status !== 404) {
+            console.warn('GitHub token revocation returned:', revokeResponse.status);
+          }
+        } catch (revokeApiError) {
+          console.warn('Error calling GitHub revoke API:', revokeApiError);
+          // Continue with local deletion even if the remote revocation fails
+        }
+        
+        // Delete the connection from the database
+        await supabaseAdmin
+          .from('oauth_connections')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('provider', 'github');
+          
+        // Log the revocation
+        await supabaseAdmin
+          .from('github_oauth_logs')
+          .insert({
+            event_type: 'token_revoked',
+            user_id: user.id,
+            success: true
+          });
+          
+        // Update connection status
+        await supabaseAdmin
+          .from('github_connection_status')
+          .upsert({
+            user_id: user.id,
+            status: 'disconnected',
+            error_message: null,
+            last_check: new Date().toISOString(),
+            metadata: {
+              revoked_at: new Date().toISOString()
+            }
+          }, {
+            onConflict: 'user_id'
+          });
         
         response = { 
           success: true, 
-          message: 'GitHub token rotated successfully',
-          user: {
-            login: newUserData.login
-          }
+          message: 'GitHub token revoked successfully'
         };
+        break;
+        
+      case 'status':
+        // Get connection status
+        const { data: statusData, error: statusError } = await supabaseAdmin
+          .from('github_connection_status')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+          
+        if (statusError && statusError.code !== 'PGRST116') { // Not found error
+          throw new Error(`Failed to retrieve status: ${statusError.message}`);
+        }
+        
+        // Get current connection
+        const { data: statusConnection, error: connectionStatusError } = await supabaseAdmin
+          .from('oauth_connections')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('provider', 'github')
+          .single();
+          
+        if (connectionStatusError && connectionStatusError.code !== 'PGRST116') {
+          throw new Error(`Failed to retrieve connection: ${connectionStatusError.message}`);
+        }
+        
+        const now = new Date();
+        let tokenExpired = false;
+        
+        if (statusConnection?.expires_at) {
+          const expiresAt = new Date(statusConnection.expires_at);
+          tokenExpired = expiresAt < now;
+        }
+        
+        response = { 
+          status: statusData?.status || 'unknown',
+          username: statusData?.metadata?.username || statusConnection?.account_username,
+          isConnected: statusData?.status === 'connected' || !!statusConnection,
+          tokenExpired,
+          lastChecked: statusData?.last_check,
+          error: statusData?.error_message,
+          hasRefreshToken: !!statusConnection?.refresh_token,
+          scopes: statusConnection?.scopes || statusData?.metadata?.scopes,
+        };
+        
+        // Update the check timestamp
+        await supabaseAdmin
+          .from('github_connection_status')
+          .upsert({
+            user_id: user.id,
+            status: statusData?.status || (statusConnection ? 'connected' : 'disconnected'),
+            last_check: now.toISOString(),
+            error_message: statusData?.error_message,
+            last_successful_operation: statusData?.last_successful_operation,
+            metadata: statusData?.metadata || {
+              username: statusConnection?.account_username,
+              scopes: statusConnection?.scopes
+            }
+          }, {
+            onConflict: 'user_id'
+          });
+          
         break;
         
       default:
