@@ -24,12 +24,16 @@ export function useGitHubConnect({
       console.log("Using callback URL:", callbackUrl);
       
       // First check if the GitHub client ID is configured
+      console.log("Checking GitHub OAuth configuration...");
       const { data: configCheck, error: configError } = await supabase.functions.invoke('github-oauth-init', {
         body: { 
           redirect_url: callbackUrl,
           check_only: true
         }
       });
+      
+      // Log the full response for debugging
+      console.log("Config check response:", configCheck, configError);
       
       if (configError) {
         console.error('GitHub OAuth configuration error:', configError);
@@ -54,6 +58,7 @@ export function useGitHubConnect({
       }
       
       // If config check passed, call the GitHub OAuth initialization edge function
+      console.log("Generating GitHub OAuth URL...");
       const response = await supabase.functions.invoke('github-oauth-init', {
         body: { 
           redirect_url: callbackUrl
@@ -110,9 +115,10 @@ export function useGitHubConnect({
       const checkPopupClosed = setInterval(() => {
         if (popup.closed) {
           clearInterval(checkPopupClosed);
-          // If connection wasn't established when popup closed
+          // If connection wasn't established when popup closed and we're still in connecting state
           if (setConnectionStatus) {
-            setConnectionStatus('idle');
+            // Only revert to idle if we're still connecting (not if we succeeded or failed already)
+            setConnectionStatus((prevStatus) => prevStatus === 'connecting' ? 'idle' : prevStatus);
           }
         }
       }, 1000);

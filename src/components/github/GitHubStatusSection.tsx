@@ -21,9 +21,8 @@ export function GitHubStatusSection({
   onDisconnect,
   connectionStatus
 }: GitHubStatusSectionProps) {
-  // Determine if the button should be disabled
-  const isButtonDisabled = connectionStatus === 'connecting' || 
-    (isCheckingConnection && connectionStatus !== 'idle');
+  // Only disable the button when actually connecting
+  const isButtonDisabled = connectionStatus === 'connecting';
 
   return (
     <div className="p-4 border-b border-neon-blue/20">
@@ -60,9 +59,9 @@ export function GitHubStatusSection({
             size="sm"
             className="w-full justify-start gap-2 h-auto py-1.5 text-destructive hover:bg-destructive/10"
             onClick={onDisconnect}
-            disabled={isCheckingConnection}
+            disabled={isButtonDisabled}
           >
-            {isCheckingConnection ? (
+            {connectionStatus === 'connecting' ? (
               <Spinner size="sm" label="Disconnecting..." />
             ) : (
               <X className="h-4 w-4" />
@@ -83,11 +82,6 @@ export function GitHubStatusSection({
               <>
                 <Spinner size="sm" className="mr-2" label="Connecting..." />
                 Connecting...
-              </>
-            ) : isCheckingConnection && connectionStatus === 'idle' ? (
-              <>
-                <Spinner size="sm" className="mr-2" label="Checking..." />
-                Checking...
               </>
             ) : (
               <>

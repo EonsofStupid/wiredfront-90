@@ -20,9 +20,8 @@ export function GitHubConnectionStatus({
   onConnect,
   onDisconnect
 }: GitHubConnectionStatusProps) {
-  // Determine if the button should be disabled
-  const isButtonDisabled = connectionStatus === 'connecting' || 
-    (loading && connectionStatus === 'idle');
+  // Only disable the button when actually connecting
+  const isButtonDisabled = connectionStatus === 'connecting';
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-muted/50 rounded-lg">
@@ -44,10 +43,10 @@ export function GitHubConnectionStatus({
             <Button
               variant="outline"
               onClick={onDisconnect}
-              disabled={loading}
+              disabled={isButtonDisabled}
               className="text-destructive hover:text-destructive hover:bg-destructive/10"
             >
-              {loading ? (
+              {connectionStatus === 'connecting' ? (
                 <Spinner size="sm" className="mr-2" label="Disconnecting..." />
               ) : (
                 <X className="mr-2 h-4 w-4" />
@@ -66,11 +65,6 @@ export function GitHubConnectionStatus({
               <>
                 <Spinner size="sm" className="mr-2" label="Connecting..." />
                 Connecting...
-              </>
-            ) : loading && connectionStatus === 'idle' ? (
-              <>
-                <Spinner size="sm" className="mr-2" label="Checking..." />
-                Checking...
               </>
             ) : (
               <>

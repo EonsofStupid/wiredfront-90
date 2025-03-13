@@ -21,11 +21,28 @@ serve(async (req) => {
 
   if (req.method === 'OPTIONS') {
     logEvent('cors_preflight', {})
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders, status: 200 })
   }
 
   try {
-    const requestData = await req.json();
+    let requestData
+    try {
+      requestData = await req.json();
+      logEvent('request_parsed', { success: true })
+    } catch (error) {
+      logEvent('json_parse_error', { error: error.message })
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { 
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+    }
+    
     const { redirect_url, check_only = false } = requestData;
     
     logEvent('request_received', { redirect_url, check_only })
@@ -66,7 +83,6 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error,
-          envVarsAvailable: envKeys.length,
           debug: {
             function: 'github-oauth-init',
             timestamp: new Date().toISOString(),
@@ -114,6 +130,7 @@ serve(async (req) => {
           clientSecretConfigured: true
         }),
         { 
+          status: 200,
           headers: {
             ...corsHeaders,
             'Content-Type': 'application/json'
@@ -156,6 +173,7 @@ serve(async (req) => {
         state
       }),
       { 
+        status: 200,
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/json'

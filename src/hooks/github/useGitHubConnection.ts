@@ -55,13 +55,26 @@ export function useGitHubConnection() {
   useEffect(() => {
     const initialCheck = async () => {
       if (!initialCheckDone) {
-        await checkConnection();
-        setInitialCheckDone(true);
+        console.log("Performing initial GitHub connection check");
+        try {
+          setIsCheckingConnection(true);
+          await checkConnection();
+        } catch (error) {
+          console.error("Error during initial GitHub connection check:", error);
+          // If check fails, ensure we're in disconnected state
+          setIsConnected(false);
+          setUsername(null);
+          setConnectionStatus('idle');
+        } finally {
+          setIsCheckingConnection(false);
+          setInitialCheckDone(true);
+          console.log("Initial GitHub connection check completed");
+        }
       }
     };
     
     initialCheck();
-  }, [checkConnection, initialCheckDone]);
+  }, [checkConnection, initialCheckDone, setIsCheckingConnection, setIsConnected, setUsername, setConnectionStatus]);
 
   return {
     isConnected,
