@@ -117,17 +117,14 @@ export function useGitHubConnect({
           clearInterval(checkPopupClosed);
           // If connection wasn't established when popup closed and we're still in connecting state
           setTimeout(() => {
-            if (setConnectionStatus) {
-              // Check if we're still connecting (not if we succeeded or failed already)
-              if (document.hidden) {
-                // If the tab is not visible, we might have missed a message
-                // Will reset to idle on next checkConnection
-                return;
-              }
-              setConnectionStatus(prevStatus => 
-                prevStatus === 'connecting' ? 'idle' : prevStatus
-              );
+            // Check if we're still connecting (not if we succeeded or failed already)
+            if (document.hidden) {
+              // If the tab is not visible, we might have missed a message
+              // Will reset to idle on next checkConnection
+              return;
             }
+            // Fix here: Don't use a function with setConnectionStatus, use direct value
+            setConnectionStatus('idle');
           }, 1000);
         }
       }, 1000);

@@ -109,6 +109,16 @@ serve(async (req) => {
       }),
     })
 
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      logEvent('token_response_error', { 
+        status: tokenResponse.status,
+        statusText: tokenResponse.statusText,
+        responseText: errorText
+      });
+      throw new Error(`GitHub token exchange failed: ${tokenResponse.statusText}`);
+    }
+
     const tokenData = await tokenResponse.json()
     logEvent('token_response', { 
       success: !!tokenData.access_token,
@@ -130,6 +140,16 @@ serve(async (req) => {
         'Accept': 'application/vnd.github.v3+json',
       },
     })
+
+    if (!userResponse.ok) {
+      const errorText = await userResponse.text();
+      logEvent('user_data_error', { 
+        status: userResponse.status,
+        statusText: userResponse.statusText,
+        responseText: errorText
+      });
+      throw new Error(`GitHub API error: ${userResponse.statusText}`);
+    }
 
     const userData = await userResponse.json()
     logEvent('user_data_fetched', { 
@@ -257,11 +277,20 @@ serve(async (req) => {
           <p>You have successfully connected your GitHub account. This window will close automatically.</p>
         </div>
         <script>
-          // Notify the parent window that authentication is complete
-          window.opener.postMessage({ 
-            type: 'github-auth-success', 
-            username: '${userData.login}'
-          }, '*');
+          // Try both specific origin and wildcard for maximum compatibility
+          try {
+            window.opener.postMessage({ 
+              type: 'github-auth-success', 
+              username: '${userData.login}'
+            }, window.location.origin);
+            
+            window.opener.postMessage({ 
+              type: 'github-auth-success', 
+              username: '${userData.login}'
+            }, '*');
+          } catch (e) {
+            console.error('Error posting message to parent window:', e);
+          }
           
           // Close this popup window after a short delay
           setTimeout(() => window.close(), 1500);
@@ -288,7 +317,8 @@ serve(async (req) => {
     if (req.method === 'POST') {
       return new Response(
         JSON.stringify({ 
-          error: error.message || 'Failed to complete GitHub authentication'
+          error: error.message || 'Failed to complete GitHub authentication',
+          success: false
         }),
         { 
           status: 400,
@@ -348,11 +378,20 @@ serve(async (req) => {
           <p>This window will close automatically.</p>
         </div>
         <script>
-          // Notify the parent window that authentication failed
-          window.opener.postMessage({ 
-            type: 'github-auth-error', 
-            error: '${error.message}' 
-          }, '*');
+          // Try both specific origin and wildcard for maximum compatibility
+          try {
+            window.opener.postMessage({ 
+              type: 'github-auth-error', 
+              error: '${error.message}' 
+            }, window.location.origin);
+            
+            window.opener.postMessage({ 
+              type: 'github-auth-error', 
+              error: '${error.message}' 
+            }, '*');
+          } catch (e) {
+            console.error('Error posting message to parent window:', e);
+          }
           
           // Close this popup window after a short delay
           setTimeout(() => window.close(), 3000);

@@ -11,84 +11,120 @@ const GitHubCallback = () => {
 
   useEffect(() => {
     const handleCallback = async () => {
-      // Get URL parameters
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get('code');
-      const state = urlParams.get('state');
-      const error = urlParams.get('error');
-      const errorDescription = urlParams.get('error_description');
-      
-      console.log('GitHub callback loaded:', { 
-        hasCode: !!code, 
-        hasState: !!state,
-        error,
-        errorDescription
-      });
-      
-      // If there's an error, show it and inform the parent window
-      if (error) {
-        console.error('GitHub OAuth error:', errorDescription);
-        setStatus('error');
-        setErrorMessage(errorDescription || 'Authentication failed');
-        
-        if (window.opener) {
-          window.opener.postMessage({ 
-            type: 'github-auth-error', 
-            error: errorDescription || 'Authentication failed'
-          }, '*');
-        }
-        toast.error(`GitHub Authentication Error: ${errorDescription || 'Unknown error'}`);
-        return;
-      }
-      
-      // If we don't have a code and state, something went wrong
-      if (!code || !state) {
-        console.error('Invalid GitHub callback parameters');
-        setStatus('error');
-        setErrorMessage('Invalid response from GitHub');
-        
-        if (window.opener) {
-          window.opener.postMessage({ 
-            type: 'github-auth-error', 
-            error: 'Invalid response from GitHub'
-          }, '*');
-        }
-        toast.error('GitHub Authentication Failed: Invalid response');
-        return;
-      }
-      
       try {
-        // Call our edge function to exchange the code for a token and save in the database
-        const { data, error } = await supabase.functions.invoke('github-oauth-callback', {
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        const error = urlParams.get('error');
+        const errorDescription = urlParams.get('error_description');
+        
+        console.log('GitHub callback loaded with params:', { 
+          hasCode: !!code, 
+          hasState: !!state,
+          error,
+          errorDescription
+        });
+        
+        // If there's an error from GitHub, handle it
+        if (error) {
+          console.error('GitHub OAuth error:', error, errorDescription);
+          setStatus('error');
+          setErrorMessage(errorDescription || 'Authentication failed');
+          
+          if (window.opener) {
+            window.opener.postMessage({ 
+              type: 'github-auth-error', 
+              error: errorDescription || 'Authentication failed'
+            }, window.location.origin);
+            
+            // Also try with * as a fallback
+            window.opener.postMessage({ 
+              type: 'github-auth-error', 
+              error: errorDescription || 'Authentication failed'
+            }, '*');
+          }
+          toast.error(`GitHub Authentication Error: ${errorDescription || 'Unknown error'}`);
+          return;
+        }
+        
+        // If we don't have a code and state, something went wrong
+        if (!code || !state) {
+          console.error('Invalid GitHub callback parameters');
+          setStatus('error');
+          setErrorMessage('Invalid response from GitHub - missing code or state parameter');
+          
+          if (window.opener) {
+            window.opener.postMessage({ 
+              type: 'github-auth-error', 
+              error: 'Invalid response from GitHub - missing code or state parameter'
+            }, window.location.origin);
+            
+            // Also try with * as a fallback
+            window.opener.postMessage({ 
+              type: 'github-auth-error', 
+              error: 'Invalid response from GitHub - missing code or state parameter'
+            }, '*');
+          }
+          toast.error('GitHub Authentication Failed: Invalid response');
+          return;
+        }
+        
+        // Exchange the code for a token
+        console.log('Exchanging code for token...');
+        const { data, error: exchangeError } = await supabase.functions.invoke('github-oauth-callback', {
           body: { code, state }
         });
         
-        if (error) {
-          throw new Error(error.message || 'Failed to exchange GitHub code');
+        console.log('Token exchange response:', { success: !!data?.success, error: exchangeError });
+        
+        if (exchangeError) {
+          throw new Error(exchangeError.message || 'Failed to exchange GitHub code');
         }
         
-        console.log('Successfully exchanged GitHub code for token:', data);
+        if (!data?.success) {
+          throw new Error(data?.error || 'Failed to exchange GitHub code');
+        }
+        
+        console.log('Successfully exchanged GitHub code for token');
         setStatus('success');
         
         // Notify the parent window of success
         if (window.opener) {
-          window.opener.postMessage({ 
+          const message = { 
             type: 'github-auth-success',
             username: data?.username || null
-          }, '*');
+          };
+          
+          // Try to post message with specific origin first
+          window.opener.postMessage(message, window.location.origin);
+          
+          // Also try with * as a fallback
+          window.opener.postMessage(message, '*');
+          
+          console.log('Sent success message to parent window');
+        } else {
+          console.warn('No opener window found to notify of successful authentication');
         }
         
         toast.success('GitHub authentication successful!');
       } catch (err) {
         console.error('Error exchanging GitHub code:', err);
         setStatus('error');
-        setErrorMessage(err instanceof Error ? err.message : 'Failed to complete GitHub authentication');
+        const errorMsg = err instanceof Error ? err.message : 'Failed to complete GitHub authentication';
+        setErrorMessage(errorMsg);
         
         if (window.opener) {
-          window.opener.postMessage({ 
+          const errorMessage = { 
             type: 'github-auth-error', 
-            error: err instanceof Error ? err.message : 'Failed to complete GitHub authentication'
-          }, '*');
+            error: errorMsg
+          };
+          
+          // Try to post message with specific origin first
+          window.opener.postMessage(errorMessage, window.location.origin);
+          
+          // Also try with * as a fallback
+          window.opener.postMessage(errorMessage, '*');
         }
         
         toast.error('GitHub Authentication Failed: Unable to exchange code for token');
