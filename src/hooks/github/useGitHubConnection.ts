@@ -1,48 +1,30 @@
 
-import { useEffect, useState } from "react";
-import { useGitHubConnectionState } from "./useGitHubConnectionState";
-import { useGitHubConnectionCheck } from "./useGitHubConnectionCheck";
-import { useGitHubConnect } from "./useGitHubConnect";
-import { useGitHubDisconnect } from "./useGitHubDisconnect";
-import { useGitHubOAuthCallback } from "./useGitHubOAuthCallback";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useGitHubConnect } from "./useGitHubConnect";
+import { useGitHubOAuthCallback } from "./useGitHubOAuthCallback";
+import { logger } from "@/services/chat/LoggingService";
+import { GitHubConnectionState } from "@/types/admin/settings/github";
+import { useSessionStore } from "@/stores/session/store";
 
 export function useGitHubConnection() {
-  const [initialCheckDone, setInitialCheckDone] = useState(false);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [username, setUsername] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<GitHubConnectionState>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<Record<string, any> | null>(null);
+  const [isCheckingConnection, setIsCheckingConnection] = useState<boolean>(false);
+  const { user } = useSessionStore();
 
-  const {
-    isConnected,
-    username,
-    connectionStatus,
-    errorMessage,
-    isCheckingConnection,
-    debugInfo,
-    setIsConnected,
-    setUsername,
-    setConnectionStatus,
-    setErrorMessage,
-    setIsCheckingConnection,
-    setDebugInfo,
-    updateConnectionFromData
-  } = useGitHubConnectionState();
-
-  const { checkConnection } = useGitHubConnectionCheck(
-    setIsCheckingConnection,
-    updateConnectionFromData
-  );
-
-  const { connect } = useGitHubConnect({
+  // Setup GitHub Connect functionality
+  const { connect, isInitializing } = useGitHubConnect({
     setConnectionStatus,
     setErrorMessage,
     setDebugInfo
   });
 
-  const { disconnect } = useGitHubDisconnect(
-    setIsCheckingConnection,
-    updateConnectionFromData
-  );
-
-  // Set up the OAuth callback handler
+  // Setup callback handling
   useGitHubOAuthCallback({
     setConnectionStatus,
     setErrorMessage,
@@ -51,30 +33,131 @@ export function useGitHubConnection() {
     setIsCheckingConnection
   });
 
-  // Check connection on initial load only once
-  useEffect(() => {
-    const initialCheck = async () => {
-      if (!initialCheckDone) {
-        console.log("Performing initial GitHub connection check");
-        try {
-          setIsCheckingConnection(true);
-          await checkConnection();
-        } catch (error) {
-          console.error("Error during initial GitHub connection check:", error);
-          // If check fails, ensure we're in disconnected state
-          setIsConnected(false);
-          setUsername(null);
-          setConnectionStatus('idle');
-        } finally {
-          setIsCheckingConnection(false);
-          setInitialCheckDone(true);
-          console.log("Initial GitHub connection check completed");
-        }
+  // Function to check the current connection status
+  async function checkConnection() {
+    if (!user) {
+      setIsConnected(false);
+      setUsername(null);
+      return;
+    }
+
+    setIsCheckingConnection(true);
+    try {
+      logger.info('Checking GitHub connection status');
+      
+      // First check if we have an oauth_connection entry
+      const { data: connection, error } = await supabase
+        .from('oauth_connections')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('provider', 'github')
+        .maybeSingle();
+      
+      if (error) {
+        throw error;
       }
-    };
+      
+      if (connection) {
+        setIsConnected(true);
+        setUsername(connection.account_username || null);
+        setConnectionStatus('connected');
+        logger.info('GitHub connection found', { username: connection.account_username });
+        return;
+      }
+      
+      // If no connection found, check if there's a status entry
+      const { data: statusData, error: statusError } = await supabase
+        .from('github_connection_status')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (statusError) {
+        throw statusError;
+      }
+      
+      if (statusData && statusData.status === 'connected' && statusData.metadata?.username) {
+        setIsConnected(true);
+        setUsername(statusData.metadata.username);
+        setConnectionStatus('connected');
+        logger.info('GitHub connection status found', { 
+          username: statusData.metadata.username,
+          status: statusData.status
+        });
+        return;
+      }
+      
+      // If we get here, no connection exists
+      setIsConnected(false);
+      setUsername(null);
+      setConnectionStatus('idle');
+      logger.info('No GitHub connection found');
+    } catch (error) {
+      logger.error('Error checking GitHub connection:', error);
+      setConnectionStatus('error');
+      setErrorMessage(`Error checking connection: ${error instanceof Error ? error.message : String(error)}`);
+      setIsConnected(false);
+    } finally {
+      setIsCheckingConnection(false);
+    }
+  }
+
+  // Function to disconnect GitHub
+  async function disconnect() {
+    if (!user) return;
     
-    initialCheck();
-  }, [checkConnection, initialCheckDone, setIsCheckingConnection, setIsConnected, setUsername, setConnectionStatus]);
+    setConnectionStatus('connecting');
+    try {
+      logger.info('Disconnecting GitHub account');
+      
+      // Delete the OAuth connection
+      const { error: deleteError } = await supabase
+        .from('oauth_connections')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('provider', 'github');
+      
+      if (deleteError) {
+        throw deleteError;
+      }
+      
+      // Update connection status
+      const { error: statusError } = await supabase
+        .from('github_connection_status')
+        .upsert({
+          user_id: user.id,
+          status: 'disconnected',
+          last_check: new Date().toISOString(),
+          metadata: {
+            disconnected_at: new Date().toISOString()
+          }
+        }, {
+          onConflict: 'user_id'
+        });
+      
+      if (statusError) {
+        throw statusError;
+      }
+      
+      setIsConnected(false);
+      setUsername(null);
+      setConnectionStatus('idle');
+      toast.success('GitHub disconnected successfully');
+      
+      logger.info('GitHub disconnected successfully');
+    } catch (error) {
+      logger.error('Error disconnecting GitHub:', error);
+      setConnectionStatus('error');
+      setErrorMessage(`Error disconnecting: ${error instanceof Error ? error.message : String(error)}`);
+      toast.error('Failed to disconnect GitHub');
+    }
+  }
+
+  // Check connection when component mounts or user changes
+  useEffect(() => {
+    logger.info('Performing initial GitHub connection check');
+    checkConnection();
+  }, [user?.id]);
 
   return {
     isConnected,

@@ -52,8 +52,8 @@ async function recordOAuthLog(
         metadata,
         request_id: requestId
       });
-  } catch (error) {
-    console.error('Failed to record OAuth log:', error);
+  } catch (logError) {
+    console.error('Failed to record OAuth log:', logError);
   }
 }
 
@@ -178,14 +178,20 @@ serve(async (req) => {
     }
 
     // Create Supabase client for database operations
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    logEvent('environment_check', { 
+      hasSupabaseUrl: !!supabaseUrl,
+      hasSupabaseKey: !!supabaseServiceKey,
+      supabaseUrl: supabaseUrl ? (supabaseUrl.substring(0, 20) + '...') : null
+    }, traceId);
     
     if (!supabaseUrl || !supabaseServiceKey) {
       logEvent('missing_supabase_credentials', {}, traceId);
       return new Response(
         JSON.stringify({ 
-          error: 'Server configuration error',
+          error: 'Server configuration error: Missing Supabase credentials',
           trace_id: traceId 
         }),
         { 
@@ -233,7 +239,12 @@ serve(async (req) => {
     
     const { code, state } = requestData;
     
-    logEvent('request_received', { code_exists: !!code, state_exists: !!state }, traceId);
+    logEvent('request_received', { 
+      code_exists: !!code, 
+      state_exists: !!state,
+      code_preview: code ? `${code.substring(0, 5)}...` : null,
+      state_preview: state ? `${state.substring(0, 10)}...` : null
+    }, traceId);
 
     if (!code || !state) {
       const error = 'Missing code or state in request';
@@ -264,21 +275,21 @@ serve(async (req) => {
     }
 
     // Try different variations of GitHub client ID env var names
-    let clientId = Deno.env.get('GITHUB_CLIENTID');
+    let clientId = Deno.env.get('GITHUB_CLIENT_ID');
     if (!clientId) {
-      clientId = Deno.env.get('GITHUB_CLIENT_ID');
+      clientId = Deno.env.get('GITHUB_CLIENTID');
     }
     
     // Try different variations of GitHub client secret env var names
-    let clientSecret = Deno.env.get('GITHUB_CLIENTSECRET');
+    let clientSecret = Deno.env.get('GITHUB_CLIENT_SECRET');
     if (!clientSecret) {
-      clientSecret = Deno.env.get('GITHUB_CLIENT_SECRET');
+      clientSecret = Deno.env.get('GITHUB_CLIENTSECRET');
     }
     
     logEvent('credentials_check', { 
       clientIdExists: !!clientId,
       clientSecretExists: !!clientSecret,
-      clientIdPrefix: clientId ? clientId.substring(0, 5) : null
+      clientIdPrefix: clientId ? clientId.substring(0, 5) + '...' : null
     }, traceId);
 
     if (!clientId || !clientSecret) {
@@ -328,21 +339,48 @@ serve(async (req) => {
     logEvent('exchanging_code', { code_length: code.length }, traceId);
     
     try {
+      // Log the full request that will be sent to GitHub for debugging
+      const tokenRequestBody = JSON.stringify({
+        client_id: clientId,
+        client_secret: clientSecret,
+        code: code
+      });
+      
+      logEvent('token_exchange_request', { 
+        url: 'https://github.com/login/oauth/access_token',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body_length: tokenRequestBody.length
+      }, traceId);
+      
       const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({
-          client_id: clientId,
-          client_secret: clientSecret,
-          code: code
-        })
+        body: tokenRequestBody
       });
 
+      logEvent('token_response_received', { 
+        status: tokenResponse.status,
+        statusText: tokenResponse.statusText,
+        headers: Object.fromEntries([...tokenResponse.headers])
+      }, traceId);
+
       if (!tokenResponse.ok) {
-        throw new Error(`GitHub API responded with ${tokenResponse.status}`);
+        // Log raw response for debugging
+        let responseText;
+        try {
+          responseText = await tokenResponse.text();
+          logEvent('token_response_error_text', { responseText }, traceId);
+        } catch (textError) {
+          logEvent('token_response_text_error', { error: textError.message }, traceId);
+        }
+        
+        throw new Error(`GitHub API responded with ${tokenResponse.status}: ${tokenResponse.statusText}${responseText ? ` - ${responseText}` : ''}`);
       }
 
       const tokenData = await tokenResponse.json();
@@ -405,19 +443,41 @@ serve(async (req) => {
       // Get user data to know the username
       let username = null;
       try {
+        logEvent('fetching_user_data', { token_type: tokenData.token_type }, traceId);
+        
         const userResponse = await fetch('https://api.github.com/user', {
           headers: {
-            'Authorization': `token ${tokenData.access_token}`,
-            'Accept': 'application/vnd.github.v3+json'
+            'Authorization': `${tokenData.token_type || 'token'} ${tokenData.access_token}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'WiredFront-Supabase-Edge-Function'
           }
         });
+
+        logEvent('github_user_response', { 
+          status: userResponse.status,
+          statusText: userResponse.statusText
+        }, traceId);
 
         if (userResponse.ok) {
           const userData = await userResponse.json();
           username = userData.login;
-          logEvent('github_user_fetched', { username, userId: userData.id }, traceId);
+          logEvent('github_user_fetched', { 
+            username, 
+            userId: userData.id, 
+            avatar_url: userData.avatar_url
+          }, traceId);
         } else {
-          logEvent('github_user_fetch_error', { status: userResponse.status }, traceId);
+          let errorText;
+          try {
+            errorText = await userResponse.text();
+          } catch (e) {
+            errorText = 'Could not read error response';
+          }
+          
+          logEvent('github_user_fetch_error', { 
+            status: userResponse.status, 
+            errorText 
+          }, traceId);
         }
       } catch (error) {
         logEvent('github_user_fetch_exception', { error: error.message }, traceId);
@@ -526,7 +586,7 @@ serve(async (req) => {
         }
       );
     } catch (error) {
-      logEvent('token_exchange_exception', { error: error.message }, traceId);
+      logEvent('token_exchange_exception', { error: error.message, stack: error.stack }, traceId);
       
       await recordOAuthLog(
         supabaseAdmin,
@@ -535,7 +595,7 @@ serve(async (req) => {
         false,
         'EXCHANGE_EXCEPTION',
         error.message,
-        { trace_id: traceId },
+        { trace_id: traceId, stack: error.stack },
         traceId
       );
       
