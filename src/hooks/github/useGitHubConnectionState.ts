@@ -1,37 +1,55 @@
 
 import { useState } from "react";
-import { GitHubOAuthConnection } from "@/types/admin/settings/github";
+import { GitHubConnectionState, GitHubAuthError } from "@/types/admin/settings/github";
 
 export function useGitHubConnectionState() {
+  // Connection state
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [username, setUsername] = useState<string | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle');
+  const [connectionStatus, setConnectionStatus] = useState<GitHubConnectionState>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isCheckingConnection, setIsCheckingConnection] = useState(true);
-  const [debugInfo, setDebugInfo] = useState<any>(null);
-
-  const updateConnectionFromData = (connection: GitHubOAuthConnection | null) => {
-    setIsConnected(!!connection);
-    if (connection && connection.account_username) {
-      setUsername(connection.account_username);
-    } else {
+  const [isCheckingConnection, setIsCheckingConnection] = useState<boolean>(false);
+  const [debugInfo, setDebugInfo] = useState<Record<string, any> | null>(null);
+  
+  // Function to update connection state from API response
+  const updateConnectionFromData = (connection: any) => {
+    if (!connection) {
+      setIsConnected(false);
       setUsername(null);
+      setConnectionStatus('idle');
+      return;
     }
+    
+    setIsConnected(true);
+    setUsername(connection.account_username || null);
+    setConnectionStatus('connected');
+    setErrorMessage(null);
+    
+    console.log('Updated GitHub connection state:', {
+      isConnected: true,
+      username: connection.account_username,
+      scopes: connection.scopes
+    });
   };
-
+  
   return {
+    // State
     isConnected,
-    setIsConnected,
     username,
-    setUsername,
     connectionStatus,
-    setConnectionStatus,
     errorMessage,
-    setErrorMessage,
     isCheckingConnection,
-    setIsCheckingConnection,
     debugInfo,
+    
+    // State setters
+    setIsConnected,
+    setUsername,
+    setConnectionStatus,
+    setErrorMessage,
+    setIsCheckingConnection,
     setDebugInfo,
+    
+    // Helper functions
     updateConnectionFromData
   };
 }

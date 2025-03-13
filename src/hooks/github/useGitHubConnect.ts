@@ -1,140 +1,117 @@
 
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { GitHubConnectionState } from "@/types/admin/settings/github";
+import { logger } from "@/services/chat/LoggingService";
 
-type ConnectionState = {
-  setConnectionStatus: (status: 'idle' | 'connecting' | 'connected' | 'error') => void;
+interface UseGitHubConnectProps {
+  setConnectionStatus: (status: GitHubConnectionState) => void;
   setErrorMessage: (message: string | null) => void;
-  setDebugInfo: (info: any) => void;
-};
+  setDebugInfo: (info: Record<string, any> | null) => void;
+}
 
 export function useGitHubConnect({
   setConnectionStatus,
   setErrorMessage,
   setDebugInfo
-}: ConnectionState) {
+}: UseGitHubConnectProps) {
+  const [isInitializing, setIsInitializing] = useState<boolean>(false);
+  
   const connect = async () => {
     try {
       setConnectionStatus('connecting');
       setErrorMessage(null);
-      setDebugInfo(null);
+      setIsInitializing(true);
       
-      // Prepare the callback URL (current origin)
-      const callbackUrl = `${window.location.origin}/github-callback`;
-      console.log("Using callback URL:", callbackUrl);
-      
-      // First check if the GitHub client ID is configured
-      console.log("Checking GitHub OAuth configuration...");
-      const { data: configCheck, error: configError } = await supabase.functions.invoke('github-oauth-init', {
-        body: { 
-          redirect_url: callbackUrl,
-          check_only: true
-        }
+      // Check if the Supabase function is properly configured
+      const configCheck = await supabase.functions.invoke('github-oauth-init', {
+        body: { check_only: true }
       });
       
-      // Log the full response for debugging
-      console.log("Config check response:", configCheck, configError);
-      
-      if (configError) {
-        console.error('GitHub OAuth configuration error:', configError);
-        setErrorMessage(`Configuration error: ${configError.message || String(configError)}`);
-        setConnectionStatus('error');
-        toast.error(`GitHub configuration error: ${configError.message || String(configError)}`);
-        return;
+      if (configCheck.error || !configCheck.data?.status) {
+        throw new Error(configCheck.error?.message || 'GitHub OAuth is not properly configured');
       }
       
-      if (configCheck?.error) {
-        console.error('GitHub OAuth configuration error:', configCheck.error);
-        
-        // Save debug info for troubleshooting
-        if (configCheck.debug) {
-          setDebugInfo(configCheck.debug);
-        }
-        
-        setErrorMessage(configCheck.error);
-        setConnectionStatus('error');
-        toast.error(`GitHub configuration error: ${configCheck.error}`);
-        return;
-      }
-      
-      // If config check passed, call the GitHub OAuth initialization edge function
-      console.log("Generating GitHub OAuth URL...");
-      const response = await supabase.functions.invoke('github-oauth-init', {
-        body: { 
-          redirect_url: callbackUrl
-        }
+      logger.info('GitHub OAuth configuration check passed', {
+        success: true,
+        trace_id: configCheck.data?.trace_id
       });
-
-      console.log('GitHub OAuth init response:', response);
       
-      if (response.error) {
-        console.error('Error starting GitHub OAuth flow:', response.error);
-        toast.error(`Failed to start GitHub OAuth flow: ${response.error.message || String(response.error)}`);
-        setConnectionStatus('error');
-        setErrorMessage(response.error.message || String(response.error));
-        return;
+      // Get the current origin for the redirect URL
+      const redirectUrl = `${window.location.origin}/github-callback`;
+      
+      // Initialize the OAuth process
+      const { data, error } = await supabase.functions.invoke('github-oauth-init', {
+        body: { redirect_url: redirectUrl }
+      });
+      
+      if (error) {
+        throw new Error(error.message || 'Failed to initialize GitHub OAuth');
       }
       
-      const { data } = response;
-      
-      // Log the URL to help with debugging
-      console.log('GitHub OAuth URL generated:', data?.url);
-      
-      if (!data || !data.url) {
-        const errorMsg = data?.error || 'No OAuth URL returned from the server';
-        console.error(errorMsg);
-        toast.error('Failed to generate GitHub OAuth URL');
-        setConnectionStatus('error');
-        setErrorMessage(errorMsg);
-        return;
+      if (!data?.url) {
+        throw new Error('No GitHub authorization URL returned');
       }
-
-      // Open GitHub auth in a popup with precise dimensions
+      
+      // Log the successful initialization
+      logger.info('GitHub OAuth initialized', {
+        trace_id: data.trace_id
+      });
+      
+      // Store debug info
+      setDebugInfo({
+        trace_id: data.trace_id,
+        state: data.state?.substring(0, 10) + '...',
+        timestamp: new Date().toISOString()
+      });
+      
+      // Open GitHub login in a popup window
       const width = 600;
-      const height = 700;
+      const height = 800;
       const left = window.screenX + (window.outerWidth - width) / 2;
       const top = window.screenY + (window.outerHeight - height) / 2;
       
-      console.log('Opening popup with URL:', data.url);
-      
       const popup = window.open(
         data.url,
-        'Github Authorization',
-        `width=${width},height=${height},left=${left},top=${top},status=yes,menubar=no,toolbar=no`
+        'github-oauth',
+        `width=${width},height=${height},left=${left},top=${top}`
       );
       
+      // Check if popup was blocked
       if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-        console.error('Popup was blocked or could not be opened');
-        toast.error('Popup was blocked. Please allow popups for this site.');
         setConnectionStatus('error');
-        setErrorMessage('Popup was blocked. Please allow popups for this site.');
+        setErrorMessage('The popup window was blocked. Please allow popups for this site.');
         return;
       }
       
-      // Start an interval to check if popup is closed without completing auth
-      const checkPopupClosed = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(checkPopupClosed);
-          // If connection wasn't established when popup closed and we're still in connecting state
-          setTimeout(() => {
-            // Check if we're still connecting (not if we succeeded or failed already)
-            if (document.hidden) {
-              // If the tab is not visible, we might have missed a message
-              // Will reset to idle on next checkConnection
-              return;
-            }
-            // Fix here: Don't use a function with setConnectionStatus, use direct value
-            setConnectionStatus('idle');
-          }, 1000);
-        }
-      }, 1000);
+      // Log the popup opening
+      logger.info('GitHub OAuth popup opened', {
+        trace_id: data.trace_id
+      });
+      
+      // The popup will redirect to our callback page which will send a message back
+      // The message handling is done in useGitHubOAuthCallback hook
+      
     } catch (error) {
-      console.error('Error connecting to GitHub:', error);
-      toast.error('Failed to connect to GitHub');
+      console.error('Error initializing GitHub connection:', error);
       setConnectionStatus('error');
-      setErrorMessage(error instanceof Error ? error.message : String(error));
+      
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setErrorMessage(errorMessage);
+      
+      logger.error('GitHub OAuth initialization failed', {
+        error: errorMessage
+      });
+      
+      toast.error(`GitHub connection failed: ${errorMessage}`);
+    } finally {
+      setIsInitializing(false);
     }
   };
-
-  return { connect };
+  
+  return {
+    connect,
+    isInitializing
+  };
 }

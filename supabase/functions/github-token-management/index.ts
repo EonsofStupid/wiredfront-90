@@ -13,6 +13,7 @@ const corsHeaders = {
  * - Token refresh
  * - Token revocation
  * - Token info retrieval
+ * - Admin operations for managing user connections
  */
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -20,7 +21,7 @@ serve(async (req) => {
   }
 
   try {
-    const { action, tokenData } = await req.json();
+    const { action, tokenData, userId: targetUserId } = await req.json();
     
     // Create Supabase admin client with service role
     const supabaseAdmin = createClient(
@@ -47,15 +48,54 @@ serve(async (req) => {
     if (authError || !user) {
       throw new Error('Unauthorized');
     }
+    
+    // Determine the user ID to operate on (the target user for admin operations)
+    const effectiveUserId = targetUserId || user.id;
+    
+    // If target user is different than authenticated user, check admin permissions
+    if (targetUserId && targetUserId !== user.id) {
+      const { data: isAdmin, error: adminCheckError } = await supabaseAdmin.rpc(
+        'is_super_admin', 
+        { user_id: user.id }
+      );
+      
+      if (adminCheckError || !isAdmin) {
+        throw new Error('Unauthorized: Admin privileges required');
+      }
+      
+      // Log the admin action
+      await supabaseAdmin
+        .from('github_oauth_logs')
+        .insert({
+          event_type: `admin_${action}`,
+          user_id: targetUserId,
+          metadata: {
+            admin_id: user.id,
+            timestamp: new Date().toISOString()
+          }
+        });
+    }
 
     let response;
 
     switch (action) {
       case 'validate':
+        // Get current token from database
+        const { data: tokenConnection, error: tokenError } = await supabaseAdmin
+          .from('oauth_connections')
+          .select('access_token')
+          .eq('user_id', effectiveUserId)
+          .eq('provider', 'github')
+          .single();
+          
+        if (tokenError || !tokenConnection?.access_token) {
+          throw new Error('No GitHub token found to validate');
+        }
+        
         // Validate GitHub token
         const validateResponse = await fetch('https://api.github.com/user', {
           headers: {
-            'Authorization': `token ${tokenData.token}`,
+            'Authorization': `token ${tokenConnection.access_token}`,
             'Accept': 'application/vnd.github.v3+json'
           }
         });
@@ -70,7 +110,7 @@ serve(async (req) => {
         await supabaseAdmin
           .from('github_connection_status')
           .upsert({
-            user_id: user.id,
+            user_id: effectiveUserId,
             status: 'connected',
             error_message: null,
             last_check: new Date().toISOString(),
@@ -86,19 +126,32 @@ serve(async (req) => {
         // Get current rate limit info
         const rateResponse = await fetch('https://api.github.com/rate_limit', {
           headers: {
-            'Authorization': `token ${tokenData.token}`,
+            'Authorization': `token ${tokenConnection.access_token}`,
             'Accept': 'application/vnd.github.v3+json'
           }
         });
         
         const rateData = await rateResponse.json();
         
+        // Record metrics
+        await supabaseAdmin
+          .from('github_metrics')
+          .insert({
+            metric_type: 'rate_limit_remaining',
+            value: rateData.resources?.core?.remaining,
+            metadata: {
+              user_id: effectiveUserId,
+              limit: rateData.resources?.core?.limit,
+              reset: rateData.resources?.core?.reset
+            }
+          });
+        
         // Log validation
         await supabaseAdmin
           .from('github_oauth_logs')
           .insert({
             event_type: 'token_validated',
-            user_id: user.id,
+            user_id: effectiveUserId,
             success: true,
             metadata: {
               username: userData.login,
@@ -121,7 +174,7 @@ serve(async (req) => {
         const { data: connection, error: connectionError } = await supabaseAdmin
           .from('oauth_connections')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', effectiveUserId)
           .eq('provider', 'github')
           .single();
           
@@ -176,7 +229,7 @@ serve(async (req) => {
           .from('github_oauth_logs')
           .insert({
             event_type: 'token_refreshed',
-            user_id: user.id,
+            user_id: effectiveUserId,
             success: true,
             metadata: {
               scopes: refreshData.scope
@@ -187,7 +240,7 @@ serve(async (req) => {
         await supabaseAdmin
           .from('github_connection_status')
           .upsert({
-            user_id: user.id,
+            user_id: effectiveUserId,
             status: 'connected',
             error_message: null,
             last_check: new Date().toISOString(),
@@ -211,7 +264,7 @@ serve(async (req) => {
         const { data: revokeConnection, error: revokeError } = await supabaseAdmin
           .from('oauth_connections')
           .select('access_token')
-          .eq('user_id', user.id)
+          .eq('user_id', effectiveUserId)
           .eq('provider', 'github')
           .single();
           
@@ -249,7 +302,7 @@ serve(async (req) => {
         await supabaseAdmin
           .from('oauth_connections')
           .delete()
-          .eq('user_id', user.id)
+          .eq('user_id', effectiveUserId)
           .eq('provider', 'github');
           
         // Log the revocation
@@ -257,7 +310,7 @@ serve(async (req) => {
           .from('github_oauth_logs')
           .insert({
             event_type: 'token_revoked',
-            user_id: user.id,
+            user_id: effectiveUserId,
             success: true
           });
           
@@ -265,7 +318,7 @@ serve(async (req) => {
         await supabaseAdmin
           .from('github_connection_status')
           .upsert({
-            user_id: user.id,
+            user_id: effectiveUserId,
             status: 'disconnected',
             error_message: null,
             last_check: new Date().toISOString(),
@@ -287,7 +340,7 @@ serve(async (req) => {
         const { data: statusData, error: statusError } = await supabaseAdmin
           .from('github_connection_status')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', effectiveUserId)
           .single();
           
         if (statusError && statusError.code !== 'PGRST116') { // Not found error
@@ -298,7 +351,7 @@ serve(async (req) => {
         const { data: statusConnection, error: connectionStatusError } = await supabaseAdmin
           .from('oauth_connections')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', effectiveUserId)
           .eq('provider', 'github')
           .single();
           
@@ -329,7 +382,7 @@ serve(async (req) => {
         await supabaseAdmin
           .from('github_connection_status')
           .upsert({
-            user_id: user.id,
+            user_id: effectiveUserId,
             status: statusData?.status || (statusConnection ? 'connected' : 'disconnected'),
             last_check: now.toISOString(),
             error_message: statusData?.error_message,
