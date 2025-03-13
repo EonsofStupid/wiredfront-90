@@ -6,8 +6,6 @@ import { ChatPositionToggle } from "./ChatPositionToggle";
 import { useChatStore } from "../store/chatStore";
 import { motion } from "framer-motion";
 import { useLocation } from "react-router-dom";
-import { GitHubInfoButton } from "../features/githubinfo";
-import { NotificationsButton } from "../features/notifications";
 import { ChatHeaderTopNav } from "../features/ChatHeaderTopNav";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { ChatModeDialog } from "../features/ModeSwitch";
@@ -110,8 +108,6 @@ export function ChatHeader({
       </div>
 
       <div className="flex gap-1">
-        <GitHubInfoButton />
-        <NotificationsButton />
         <ChatPositionToggle />
         
         <Button

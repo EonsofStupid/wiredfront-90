@@ -119,9 +119,9 @@ export function ChatContent({ scrollRef, isMinimized, isEditorPage }: ChatConten
             </div>
           </ErrorBoundary>
           
-          {/* Status button (only in editor mode) */}
+          {/* Status button (show in all modes) */}
           <AnimatePresence>
-            {mode === 'editor' && showStatusButton && (
+            {showStatusButton && (
               <motion.div 
                 className="flex justify-end mt-4"
                 initial={{ opacity: 0, height: 0 }}
