@@ -4,39 +4,34 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/services/chat/LoggingService";
 
-interface UseAPIOperationOptions {
+interface APIOperationOptions {
   onSuccess?: () => Promise<void>;
-  successMessage?: string;
   errorMessage?: string;
-  retryCount?: number;
+  successMessage?: string;
 }
 
-export const useAPIOperation = (options: UseAPIOperationOptions = {}) => {
+export const useAPIOperation = (options: APIOperationOptions = {}) => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [lastError, setLastError] = useState<Error | null>(null);
-  
-  const executeOperation = async (action: string, data: Record<string, any>) => {
+
+  const executeOperation = async (action: string, data: any) => {
     setIsProcessing(true);
-    setLastError(null);
-    
     try {
-      logger.info(`Executing API operation: ${action}`, data);
+      logger.info(`Executing API operation: ${action}`, { action, data: { ...data, secretValue: '[REDACTED]' } });
       
-      const { data: result, error } = await supabase.functions.invoke('manage-api-secret', {
+      const { data: response, error } = await supabase.functions.invoke('manage-api-secret', {
         body: { 
           action,
-          ...data
+          ...data 
         }
       });
       
       if (error) {
+        logger.error(`API operation error: ${error.message}`, { action, error });
+        toast.error(options.errorMessage || `Operation failed: ${error.message}`);
         throw error;
       }
       
-      if (!result?.success) {
-        // Handle API-specific errors that come in the result
-        throw new Error(result?.message || 'Operation failed with no specific error message');
-      }
+      logger.info(`API operation successful: ${action}`, { action, response: { ...response, secretValue: undefined } });
       
       if (options.successMessage) {
         toast.success(options.successMessage);
@@ -46,28 +41,15 @@ export const useAPIOperation = (options: UseAPIOperationOptions = {}) => {
         await options.onSuccess();
       }
       
-      logger.info(`API operation completed: ${action}`, result);
       return true;
     } catch (error) {
-      const errorObj = error instanceof Error ? error : new Error(String(error));
-      setLastError(errorObj);
-      
-      logger.error(`API operation failed: ${action}`, error);
-      toast.error(options.errorMessage || `Operation failed: ${errorObj.message}`);
+      logger.error('API operation failed:', error);
+      toast.error(options.errorMessage || "Operation failed");
       return false;
     } finally {
       setIsProcessing(false);
     }
   };
-  
-  const syncGitHubMetrics = async () => {
-    return executeOperation('sync_github_metrics', {});
-  };
-  
-  return {
-    isProcessing,
-    lastError,
-    executeOperation,
-    syncGitHubMetrics
-  };
+
+  return { isProcessing, executeOperation };
 };

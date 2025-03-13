@@ -1,85 +1,52 @@
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { ChatState, ChatActions } from './types/chat-store-types';
-import { createUIActions } from './actions/ui-actions';
-import { createFeatureActions } from './actions/feature-actions';
+import { devtools } from 'zustand/middleware';
+import { v4 as uuidv4 } from 'uuid';
 import { createInitializationActions } from './actions/initialization-actions';
+import { createFeatureActions } from './actions/feature-actions';
+import { createUIActions } from './actions/ui-actions';
+import { ChatState } from './types/chat-store-types';
 
-// Initial state
 const initialState: ChatState = {
-  position: 'bottom-right',
-  isMinimized: false,
-  showSidebar: false,
-  isOpen: false,
-  scale: 1,
-  docked: true,
-  isInitialized: false,
+  initialized: false,
   messages: [],
-  startTime: Date.now(), // Initialize with current timestamp
+  userInput: '',
+  isWaitingForResponse: false,
+  selectedModel: 'gpt-4',
+  selectedMode: 'chat',
+  modelFetchStatus: 'idle',
+  error: null,
+  chatId: null,
+  docked: true,
+  isOpen: false,
+  isHidden: false,
+  position: { x: 0, y: 0 },
+  startTime: Date.now(),
   features: {
-    codeAssistant: true,
-    ragSupport: true,
-    githubSync: true,
+    voice: true,
+    rag: true,
+    modeSwitch: true,
     notifications: true,
-    imageGeneration: false,
-    integrations: false,
+    github: true,
   },
-  providers: {
-    currentProvider: 'openai',
-    availableProviders: [
-      { id: '1', type: 'openai', name: 'OpenAI', isEnabled: true, category: 'chat' },
-      { id: '2', type: 'anthropic', name: 'Claude', isEnabled: false, category: 'chat' },
-      { id: '3', type: 'gemini', name: 'Gemini', isEnabled: false, category: 'chat' },
-      { id: '4', type: 'dalle', name: 'DALL·E', isEnabled: false, category: 'image' },
-      { id: '5', type: 'stability', name: 'Stable Diffusion', isEnabled: false, category: 'image' }
-    ]
-  },
-  ui: {
-    messageLoading: false,
-    sessionLoading: false,
-    providerSwitching: false,
-  }
+  currentMode: 'chat',
+  availableProviders: [],
+  currentProvider: null,
 };
 
-// Create the store
-const useChatStore = create<ChatState & ChatActions>()(
-  persist(
+export const useChatStore = create<
+  ChatState & ReturnType<typeof createInitializationActions> & ReturnType<typeof createFeatureActions> & ReturnType<typeof createUIActions>
+>()(
+  devtools(
     (set, get) => ({
       ...initialState,
-      ...createUIActions(set, get),
-      ...createFeatureActions(set, get),
       ...createInitializationActions(set, get),
-      
-      // UI Loading State Actions
-      setMessageLoading: (isLoading: boolean) => set(state => ({
-        ui: { ...state.ui, messageLoading: isLoading }
-      })),
-      
-      setSessionLoading: (isLoading: boolean) => set(state => ({
-        ui: { ...state.ui, sessionLoading: isLoading }
-      })),
-      
-      setProviderSwitching: (isSwitching: boolean) => set(state => ({
-        ui: { ...state.ui, providerSwitching: isSwitching }
-      })),
+      ...createFeatureActions(set),
+      ...createUIActions(set),
     }),
     {
-      name: 'chat-settings-storage',
-      partialize: (state) => ({
-        position: state.position,
-        isMinimized: state.isMinimized,
-        showSidebar: state.showSidebar,
-        isOpen: state.isOpen,
-        scale: state.scale,
-        docked: state.docked,
-        features: state.features,
-        providers: state.providers,
-        // Don't persist messages, startTime, or UI loading states
-      }),
-      version: 1,
+      name: 'ChatStore',
+      enabled: process.env.NODE_ENV !== 'production',
     }
   )
 );
-
-export { useChatStore };

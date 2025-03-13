@@ -1,73 +1,35 @@
-
-import { ChatProviderType } from '@/types/admin/settings/chat-provider';
-
-export type ChatPosition = 'bottom-right' | 'bottom-left';
-
-export interface Message {
-  id: string;
-  content: string;
-  role: 'user' | 'assistant' | 'system';
-  timestamp?: string;
-  status?: 'pending' | 'sent' | 'failed' | 'loading';
-}
-
-export interface LoadingState {
-  isLoading: boolean;
-  isError: boolean;
-  errorMessage?: string;
-}
-
-export interface ChatFeatures {
-  codeAssistant: boolean;
-  ragSupport: boolean;
-  githubSync: boolean;
-  notifications: boolean;
-  imageGeneration: boolean;
-  integrations: boolean;
-}
+import { ChatMessage } from "@/types/chat";
 
 export interface ChatProvider {
   id: string;
-  type: ChatProviderType;
   name: string;
-  isEnabled: boolean;
-  category?: 'chat' | 'image' | 'integration';
+  type: string;
+  isDefault: boolean;
 }
 
 export interface ChatState {
-  position: ChatPosition;
-  isMinimized: boolean;
-  showSidebar: boolean;
-  isOpen: boolean;
-  scale: number;
+  initialized: boolean;
+  messages: ChatMessage[];
+  userInput: string;
+  isWaitingForResponse: boolean;
+  selectedModel: string;
+  selectedMode: string;
+  modelFetchStatus: 'idle' | 'loading' | 'success' | 'error';
+  error: string | null;
+  chatId: string | null;
   docked: boolean;
-  isInitialized: boolean;
-  messages: Message[];
-  startTime: number | null;
-  features: ChatFeatures;
-  providers: {
-    currentProvider: ChatProviderType;
-    availableProviders: ChatProvider[];
+  isOpen: boolean;
+  isHidden: boolean;
+  position: { x: number; y: number };
+  startTime: number;
+  features: {
+    voice: boolean;
+    rag: boolean;
+    modeSwitch: boolean;
+    notifications: boolean;
+    github: boolean;
   };
-  ui: {
-    messageLoading: boolean;
-    sessionLoading: boolean;
-    providerSwitching: boolean;
-  };
-}
-
-export interface ChatActions {
-  togglePosition: () => void;
-  toggleMinimize: () => void;
-  toggleSidebar: () => void;
-  toggleChat: () => void;
-  setScale: (scale: number) => void;
-  toggleDocked: () => void;
-  toggleFeature: (feature: keyof ChatFeatures) => void;
-  setCurrentProvider: (providerId: string) => void;
-  toggleProviderEnabled: (providerId: string) => void;
-  initializeChatSettings: () => void;
-  setMessageLoading: (isLoading: boolean) => void;
-  setSessionLoading: (isLoading: boolean) => void;
-  setProviderSwitching: (isSwitching: boolean) => void;
+  currentMode: 'chat' | 'dev' | 'image';
+  availableProviders: ChatProvider[];
+  currentProvider: ChatProvider | null;
 }

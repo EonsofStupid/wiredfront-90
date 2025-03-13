@@ -1,60 +1,69 @@
 
-import { logger } from '@/services/chat/LoggingService';
-import { ChatState } from '../types/chat-store-types';
+export type FeatureActions = {
+  toggleFeature: (feature: string) => void;
+  enableFeature: (feature: string) => void;
+  disableFeature: (feature: string) => void;
+  setFeatureState: (feature: string, isEnabled: boolean) => void;
+  updateChatProvider: (providers: any[]) => void; // Add this action
+};
 
-export const createFeatureActions = (set: Function, get: Function) => ({
-  toggleFeature: (feature: keyof ChatState['features']) => set((state: ChatState) => {
-    const newValue = !state.features[feature];
-    logger.info('Chat feature toggled', { 
-      feature, 
-      wasEnabled: state.features[feature],
-      isNowEnabled: newValue
-    });
-    return {
-      features: {
-        ...state.features,
-        [feature]: newValue
-      }
-    };
-  }),
-  
-  setCurrentProvider: (providerId: string) => set((state: ChatState) => {
-    const provider = state.providers.availableProviders.find(p => p.id === providerId);
-    if (provider && provider.isEnabled) {
-      logger.info('Chat provider changed', { 
-        fromProvider: state.providers.currentProvider,
-        toProvider: provider.type
-      });
-      return {
-        providers: {
-          ...state.providers,
-          currentProvider: provider.type
-        }
-      };
-    }
-    return state;
-  }),
-  
-  toggleProviderEnabled: (providerId: string) => set((state: ChatState) => {
-    const provider = state.providers.availableProviders.find(p => p.id === providerId);
-    if (!provider) return state;
+export const createFeatureActions = (set: any): FeatureActions => ({
+  toggleFeature: (feature) =>
+    set(
+      (state: any) => ({
+        features: {
+          ...state.features,
+          [feature]: !state.features[feature],
+        },
+      }),
+      false,
+      { type: 'features/toggle', feature }
+    ),
+
+  enableFeature: (feature) =>
+    set(
+      (state: any) => ({
+        features: {
+          ...state.features,
+          [feature]: true,
+        },
+      }),
+      false,
+      { type: 'features/enable', feature }
+    ),
+
+  disableFeature: (feature) =>
+    set(
+      (state: any) => ({
+        features: {
+          ...state.features,
+          [feature]: false,
+        },
+      }),
+      false,
+      { type: 'features/disable', feature }
+    ),
+
+  setFeatureState: (feature, isEnabled) =>
+    set(
+      (state: any) => ({
+        features: {
+          ...state.features,
+          [feature]: isEnabled,
+        },
+      }),
+      false,
+      { type: 'features/setState', feature, isEnabled }
+    ),
     
-    const newState = !provider.isEnabled;
-    logger.info('Chat provider availability toggled', { 
-      provider: provider.type,
-      wasEnabled: provider.isEnabled,
-      isNowEnabled: newState
-    });
-    
-    return {
-      providers: {
-        ...state.providers,
-        availableProviders: state.providers.availableProviders.map(p =>
-          p.id === providerId 
-            ? { ...p, isEnabled: newState }
-            : p
-        )
-      }
-    };
-  })
+  // New action to update available chat providers
+  updateChatProvider: (providers) =>
+    set(
+      (state: any) => ({
+        availableProviders: providers,
+        currentProvider: providers.find((p: any) => p.isDefault) || providers[0] || state.currentProvider,
+      }),
+      false,
+      { type: 'providers/update', providers }
+    ),
 });
