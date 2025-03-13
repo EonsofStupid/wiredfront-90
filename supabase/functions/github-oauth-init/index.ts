@@ -69,7 +69,8 @@ serve(async (req) => {
           envVarsAvailable: envKeys.length,
           debug: {
             function: 'github-oauth-init',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            availableEnvKeys: envKeys
           }
         }),
         { 
@@ -86,7 +87,13 @@ serve(async (req) => {
       const error = 'GitHub client secret not configured'
       logEvent('configuration_error', { error })
       return new Response(
-        JSON.stringify({ error }),
+        JSON.stringify({ 
+          error,
+          debug: {
+            function: 'github-oauth-init',
+            timestamp: new Date().toISOString()
+          }
+        }),
         { 
           status: 500,
           headers: {

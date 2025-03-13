@@ -59,7 +59,7 @@ export function GitHubConnectDialog({
                   </Button>
                   
                   {showDebug && (
-                    <pre className="mt-2 text-xs p-2 bg-slate-800 text-slate-200 rounded overflow-auto max-h-24">
+                    <pre className="mt-2 text-xs p-2 bg-slate-800 text-slate-200 rounded overflow-auto max-h-96">
                       {JSON.stringify(debugInfo, null, 2)}
                     </pre>
                   )}
