@@ -121,10 +121,27 @@ const GitHubCallback = () => {
           return;
         }
         
+        // Get the current URL to use as the redirect URI
+        const currentUrl = window.location.href.split('?')[0];
+        const supabaseCallbackUrl = `${supabase.supabaseUrl}/auth/v1/callback`;
+        
+        logCallbackEvent('callback_urls', {
+          currentUrl,
+          supabaseCallbackUrl
+        });
+        
         // Exchange the code for a token
-        logCallbackEvent('exchanging_code', { code: code.substring(0, 5) + '...' });
+        logCallbackEvent('exchanging_code', { 
+          code: code.substring(0, 5) + '...',
+          redirect_uri: currentUrl
+        });
+        
         const { data, error: exchangeError } = await supabase.functions.invoke('github-oauth-callback', {
-          body: { code, state }
+          body: { 
+            code, 
+            state,
+            redirect_uri: currentUrl // Pass the redirect URI to the function
+          }
         });
         
         logCallbackEvent('token_exchange_response', { 

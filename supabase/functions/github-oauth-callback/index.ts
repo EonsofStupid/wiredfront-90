@@ -238,13 +238,15 @@ serve(async (req) => {
       );
     }
     
-    const { code, state } = requestData;
+    const { code, state, redirect_uri } = requestData;
     
     logEvent('request_received', { 
       code_exists: !!code, 
       state_exists: !!state,
+      redirect_uri_exists: !!redirect_uri,
       code_preview: code ? `${code.substring(0, 5)}...` : null,
-      state_preview: state ? `${state.substring(0, 10)}...` : null
+      state_preview: state ? `${state.substring(0, 10)}...` : null,
+      redirect_uri: redirect_uri
     }, traceId);
 
     if (!code || !state) {
@@ -275,6 +277,10 @@ serve(async (req) => {
       );
     }
 
+    // Default redirect URI to Supabase callback if not provided
+    const finalRedirectUri = redirect_uri || 
+      `${supabaseUrl}/auth/v1/callback`;
+
     // Try different variations of GitHub client ID env var names
     let clientId = Deno.env.get('GITHUB_CLIENT_ID');
     if (!clientId) {
@@ -290,7 +296,8 @@ serve(async (req) => {
     logEvent('credentials_check', { 
       clientIdExists: !!clientId,
       clientSecretExists: !!clientSecret,
-      clientIdPrefix: clientId ? clientId.substring(0, 5) + '...' : null
+      clientIdPrefix: clientId ? clientId.substring(0, 5) + '...' : null,
+      redirect_uri: finalRedirectUri
     }, traceId);
 
     if (!clientId || !clientSecret) {
@@ -337,14 +344,18 @@ serve(async (req) => {
     }
 
     // Exchange the code for a token
-    logEvent('exchanging_code', { code_length: code.length }, traceId);
+    logEvent('exchanging_code', { 
+      code_length: code.length, 
+      redirect_uri: finalRedirectUri 
+    }, traceId);
     
     try {
       // Log the full request that will be sent to GitHub for debugging
       const tokenRequestBody = JSON.stringify({
         client_id: clientId,
         client_secret: clientSecret,
-        code: code
+        code: code,
+        redirect_uri: finalRedirectUri
       });
       
       logEvent('token_exchange_request', { 
@@ -353,7 +364,8 @@ serve(async (req) => {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body_length: tokenRequestBody.length
+        body_length: tokenRequestBody.length,
+        redirect_uri: finalRedirectUri
       }, traceId);
       
       const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {

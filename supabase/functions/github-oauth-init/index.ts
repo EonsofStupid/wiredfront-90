@@ -191,13 +191,15 @@ serve(async (req) => {
     const stateObj = {
       id: stateId,
       t: Date.now().toString(),
-      u: userId
+      u: userId,
+      r: redirectUrl // Save redirect URL in state for use in callback
     };
     
     const state = btoa(JSON.stringify(stateObj));
     logEvent('state_generated', { 
       stateId,
       userId,
+      redirectUrl,
       state: state.substring(0, 20) + '...' 
     }, traceId);
 
@@ -234,7 +236,7 @@ serve(async (req) => {
             request_id: traceId
           });
         
-        logEvent('initialization_logged', { userId, stateId }, traceId);
+        logEvent('initialization_logged', { userId, stateId, redirectUrl }, traceId);
       } catch (error) {
         logEvent('log_error', { error: error.message }, traceId);
       }
