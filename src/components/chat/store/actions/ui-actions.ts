@@ -10,6 +10,16 @@ export type UIActions = {
   toggleChatWindow: () => void;
   minimizeChat: () => void;
   restoreChat: () => void;
+  
+  // Add missing UI actions
+  toggleMinimize: () => void;
+  toggleSidebar: () => void;
+  toggleChat: () => void;
+  setSessionLoading: (isLoading: boolean) => void;
+  setMessageLoading: (isLoading: boolean) => void;
+  setProviderLoading: (isLoading: boolean) => void;
+  setScale: (scale: number) => void;
+  setCurrentMode: (mode: 'chat' | 'dev' | 'image') => void;
 };
 
 export const createUIActions = (set: any): UIActions => ({
@@ -93,5 +103,87 @@ export const createUIActions = (set: any): UIActions => ({
       }),
       false,
       { type: 'ui/restoreChat' }
+    ),
+    
+  // Implement the missing UI actions
+  toggleMinimize: () =>
+    set(
+      (state: any) => ({
+        isMinimized: !state.isMinimized,
+      }),
+      false,
+      { type: 'ui/toggleMinimize' }
+    ),
+    
+  toggleSidebar: () =>
+    set(
+      (state: any) => ({
+        showSidebar: !state.showSidebar,
+      }),
+      false,
+      { type: 'ui/toggleSidebar' }
+    ),
+    
+  toggleChat: () =>
+    set(
+      (state: any) => ({
+        isOpen: !state.isOpen,
+      }),
+      false,
+      { type: 'ui/toggleChat' }
+    ),
+    
+  setSessionLoading: (isLoading: boolean) =>
+    set(
+      (state: any) => ({
+        ui: {
+          ...state.ui,
+          sessionLoading: isLoading,
+        },
+      }),
+      false,
+      { type: 'ui/setSessionLoading', isLoading }
+    ),
+    
+  setMessageLoading: (isLoading: boolean) =>
+    set(
+      (state: any) => ({
+        ui: {
+          ...state.ui,
+          messageLoading: isLoading,
+        },
+      }),
+      false,
+      { type: 'ui/setMessageLoading', isLoading }
+    ),
+    
+  setProviderLoading: (isLoading: boolean) =>
+    set(
+      (state: any) => ({
+        ui: {
+          ...state.ui,
+          providerLoading: isLoading,
+        },
+      }),
+      false,
+      { type: 'ui/setProviderLoading', isLoading }
+    ),
+    
+  setScale: (scale: number) =>
+    set(
+      () => ({
+        scale,
+      }),
+      false,
+      { type: 'ui/setScale', scale }
+    ),
+    
+  setCurrentMode: (mode: 'chat' | 'dev' | 'image') =>
+    set(
+      () => ({
+        currentMode: mode,
+      }),
+      false,
+      { type: 'ui/setCurrentMode', mode }
     ),
 });

@@ -1,3 +1,3 @@
 
 export { useChatStore } from './chatStore';
-export type { ChatState, ChatActions, ChatPosition } from './types/chat-store-types';
+export type { ChatState, ChatPosition } from './types/chat-store-types';

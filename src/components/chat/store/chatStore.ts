@@ -20,7 +20,7 @@ const initialState: ChatState = {
   docked: true,
   isOpen: false,
   isHidden: false,
-  position: 'bottom-right', // Changed to string position
+  position: 'bottom-right',
   startTime: Date.now(),
   features: {
     voice: true,
@@ -36,6 +36,16 @@ const initialState: ChatState = {
   currentMode: 'chat',
   availableProviders: [],
   currentProvider: null,
+  
+  // Add the missing UI state properties
+  isMinimized: false,
+  showSidebar: false,
+  scale: 1,
+  ui: {
+    sessionLoading: false,
+    messageLoading: false,
+    providerLoading: false,
+  },
 };
 
 export const useChatStore = create<

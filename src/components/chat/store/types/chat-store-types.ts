@@ -39,4 +39,25 @@ export interface ChatState {
   currentMode: 'chat' | 'dev' | 'image';
   availableProviders: ChatProvider[];
   currentProvider: ChatProvider | null;
+  
+  // Add missing UI state properties
+  isMinimized: boolean;
+  showSidebar: boolean;
+  scale: number;
+  ui: {
+    sessionLoading: boolean;
+    messageLoading: boolean;
+    providerLoading: boolean;
+  };
+}
+
+export interface UIStateActions {
+  toggleMinimize: () => void;
+  toggleSidebar: () => void;
+  toggleChat: () => void;
+  setSessionLoading: (isLoading: boolean) => void;
+  setMessageLoading: (isLoading: boolean) => void;
+  setProviderLoading: (isLoading: boolean) => void;
+  setScale: (scale: number) => void;
+  setCurrentMode: (mode: 'chat' | 'dev' | 'image') => void;
 }
