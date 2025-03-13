@@ -1,10 +1,10 @@
 
 import { useUIStore } from "@/stores";
 import { cn } from "@/lib/utils";
-import { Plus, Folder, Github, Import, ExternalLink, Info, Code, X, Check } from "lucide-react";
+import { Plus, Folder, Github, Import, ExternalLink, Info, Code, X, Check, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { GitHubOAuthConnection } from "@/types/admin/settings/github";
 import { toast } from "sonner";
@@ -26,39 +26,43 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
   const [githubUsername, setGithubUsername] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle');
   const [isConnectDialogOpen, setIsConnectDialogOpen] = useState(false);
+  const [isCheckingConnection, setIsCheckingConnection] = useState(true);
   
   const activeProject = projects.find(p => p.id === activeProjectId);
   
   // Check GitHub connection status
-  useEffect(() => {
-    async function checkGitHubConnection() {
-      try {
-        const { data, error } = await supabase
-          .from('oauth_connections')
-          .select('*')
-          .eq('provider', 'github')
-          .single();
-          
-        if (error) {
-          if (error.code !== 'PGRST116') { // Not found error
-            console.error('Error checking GitHub connection:', error);
-          }
-          setIsGithubConnected(false);
-          return;
-        }
+  const checkGitHubConnection = useCallback(async () => {
+    try {
+      setIsCheckingConnection(true);
+      const { data, error } = await supabase
+        .from('oauth_connections')
+        .select('*')
+        .eq('provider', 'github')
+        .single();
         
-        const connection = data as GitHubOAuthConnection;
-        setIsGithubConnected(!!connection);
-        if (connection && connection.account_username) {
-          setGithubUsername(connection.account_username);
+      if (error) {
+        if (error.code !== 'PGRST116') { // Not found error
+          console.error('Error checking GitHub connection:', error);
         }
-      } catch (error) {
-        console.error('Error checking GitHub connection:', error);
+        setIsGithubConnected(false);
+        return;
       }
+      
+      const connection = data as GitHubOAuthConnection;
+      setIsGithubConnected(!!connection);
+      if (connection && connection.account_username) {
+        setGithubUsername(connection.account_username);
+      }
+    } catch (error) {
+      console.error('Error checking GitHub connection:', error);
+    } finally {
+      setIsCheckingConnection(false);
     }
-    
-    checkGitHubConnection();
   }, []);
+
+  useEffect(() => {
+    checkGitHubConnection();
+  }, [checkGitHubConnection]);
 
   const handleGitHubConnect = async () => {
     try {
@@ -70,7 +74,21 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error starting GitHub OAuth flow:', error);
+        toast.error('Failed to start GitHub OAuth flow');
+        setConnectionStatus('error');
+        return;
+      }
+      
+      if (!data || !data.url) {
+        console.error('No OAuth URL returned from the server');
+        toast.error('Failed to generate GitHub OAuth URL');
+        setConnectionStatus('error');
+        return;
+      }
+      
+      console.log('Opening GitHub OAuth URL:', data.url);
       
       // Open GitHub auth in a popup
       const width = 600;
@@ -84,39 +102,50 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
         `width=${width},height=${height},left=${left},top=${top}`
       );
       
+      if (!popup) {
+        console.error('Popup was blocked');
+        toast.error('Popup was blocked. Please allow popups for this site.');
+        setConnectionStatus('error');
+        return;
+      }
+      
       // Poll for changes to detect when the user completes the GitHub auth flow
       const checkConnection = setInterval(async () => {
         if (popup && popup.closed) {
           clearInterval(checkConnection);
+          console.log('GitHub OAuth popup closed, checking connection status');
           
-          const { data: connectionData, error: connectionError } = await supabase
-            .from('oauth_connections')
-            .select('*')
-            .eq('provider', 'github')
-            .single();
-            
-          if (connectionError) {
-            if (connectionError.code !== 'PGRST116') {
-              console.error('Error checking connection:', connectionError);
-              toast.error('Failed to connect to GitHub');
+          // Wait a moment for the database to be updated
+          setTimeout(async () => {
+            const { data: connectionData, error: connectionError } = await supabase
+              .from('oauth_connections')
+              .select('*')
+              .eq('provider', 'github')
+              .single();
+              
+            if (connectionError) {
+              if (connectionError.code !== 'PGRST116') {
+                console.error('Error checking connection:', connectionError);
+                toast.error('Failed to connect to GitHub');
+              }
+              setConnectionStatus('error');
+              setIsConnectDialogOpen(false);
+              return;
             }
-            setConnectionStatus('error');
-            setIsConnectDialogOpen(false);
-            return;
-          }
-          
-          const connection = connectionData as GitHubOAuthConnection;
-          if (connection) {
-            setIsGithubConnected(true);
-            setGithubUsername(connection.account_username || null);
-            setConnectionStatus('connected');
-            toast.success('Successfully connected to GitHub');
-            setIsConnectDialogOpen(false);
-          } else {
-            setConnectionStatus('error');
-            toast.error('GitHub connection failed');
-            setIsConnectDialogOpen(false);
-          }
+            
+            const connection = connectionData as GitHubOAuthConnection;
+            if (connection) {
+              setIsGithubConnected(true);
+              setGithubUsername(connection.account_username || null);
+              setConnectionStatus('connected');
+              toast.success('Successfully connected to GitHub');
+              setIsConnectDialogOpen(false);
+            } else {
+              setConnectionStatus('error');
+              toast.error('GitHub connection failed');
+              setIsConnectDialogOpen(false);
+            }
+          }, 1500);
         }
       }, 1000);
       
@@ -140,6 +169,7 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
 
   const handleDisconnect = async () => {
     try {
+      setIsCheckingConnection(true);
       const { error } = await supabase
         .from('oauth_connections')
         .delete()
@@ -153,6 +183,8 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
     } catch (error) {
       console.error('Error disconnecting from GitHub:', error);
       toast.error('Failed to disconnect from GitHub');
+    } finally {
+      setIsCheckingConnection(false);
     }
   };
   
@@ -178,7 +210,12 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
             <h3 className="font-medium">GitHub</h3>
           </div>
           
-          {isGithubConnected ? (
+          {isCheckingConnection ? (
+            <div className="animate-pulse flex items-center">
+              <RefreshCw className="h-4 w-4 mr-1.5 animate-spin text-gray-400" />
+              <span className="text-xs text-gray-400">Checking...</span>
+            </div>
+          ) : isGithubConnected ? (
             <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-500/20 text-green-400">
               <Check className="h-3 w-3 mr-1" /> Connected
             </span>
@@ -200,8 +237,13 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
               size="sm"
               className="w-full justify-start gap-2 h-auto py-1.5 text-destructive hover:bg-destructive/10"
               onClick={handleDisconnect}
+              disabled={isCheckingConnection}
             >
-              <X className="h-4 w-4" />
+              {isCheckingConnection ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <X className="h-4 w-4" />
+              )}
               Disconnect
             </Button>
           </div>
@@ -212,12 +254,12 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
               size="sm"
               className="w-full justify-start gap-2 h-auto py-2 border-primary/20 hover:border-primary"
               onClick={() => setIsConnectDialogOpen(true)}
-              disabled={connectionStatus === 'connecting'}
+              disabled={connectionStatus === 'connecting' || isCheckingConnection}
             >
-              {connectionStatus === 'connecting' ? (
+              {connectionStatus === 'connecting' || isCheckingConnection ? (
                 <>
                   <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  Connecting...
+                  {isCheckingConnection ? 'Checking...' : 'Connecting...'}
                 </>
               ) : (
                 <>
@@ -365,6 +407,7 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
               <Button 
                 variant="outline" 
                 onClick={() => setIsConnectDialogOpen(false)}
+                disabled={connectionStatus === 'connecting'}
               >
                 Cancel
               </Button>
