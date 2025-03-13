@@ -547,6 +547,93 @@ export type Database = {
         }
         Relationships: []
       }
+      github_connection_status: {
+        Row: {
+          error_message: string | null
+          last_check: string | null
+          last_successful_operation: string | null
+          metadata: Json | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          error_message?: string | null
+          last_check?: string | null
+          last_successful_operation?: string | null
+          metadata?: Json | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          error_message?: string | null
+          last_check?: string | null
+          last_successful_operation?: string | null
+          metadata?: Json | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      github_metrics: {
+        Row: {
+          id: string
+          metadata: Json | null
+          metric_type: string
+          timestamp: string | null
+          value: number | null
+        }
+        Insert: {
+          id?: string
+          metadata?: Json | null
+          metric_type: string
+          timestamp?: string | null
+          value?: number | null
+        }
+        Update: {
+          id?: string
+          metadata?: Json | null
+          metric_type?: string
+          timestamp?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
+      github_oauth_logs: {
+        Row: {
+          error_code: string | null
+          error_message: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          request_id: string | null
+          success: boolean | null
+          timestamp: string | null
+          user_id: string | null
+        }
+        Insert: {
+          error_code?: string | null
+          error_message?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          request_id?: string | null
+          success?: boolean | null
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          error_code?: string | null
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          request_id?: string | null
+          success?: boolean | null
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       live_preview_status: {
         Row: {
           created_at: string | null

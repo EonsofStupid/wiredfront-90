@@ -8,6 +8,7 @@ const GitHubCallback = () => {
   const navigate = useNavigate();
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [traceId, setTraceId] = useState<string | null>(null);
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -76,7 +77,16 @@ const GitHubCallback = () => {
           body: { code, state }
         });
         
-        console.log('Token exchange response:', { success: !!data?.success, error: exchangeError });
+        console.log('Token exchange response:', { 
+          success: !!data?.success, 
+          error: exchangeError,
+          trace_id: data?.trace_id
+        });
+        
+        // Set the trace ID from the response
+        if (data?.trace_id) {
+          setTraceId(data.trace_id);
+        }
         
         if (exchangeError) {
           throw new Error(exchangeError.message || 'Failed to exchange GitHub code');
@@ -93,7 +103,8 @@ const GitHubCallback = () => {
         if (window.opener) {
           const message = { 
             type: 'github-auth-success',
-            username: data?.username || null
+            username: data?.username || null,
+            trace_id: data?.trace_id
           };
           
           // Try to post message with specific origin first
@@ -117,7 +128,8 @@ const GitHubCallback = () => {
         if (window.opener) {
           const errorMessage = { 
             type: 'github-auth-error', 
-            error: errorMsg
+            error: errorMsg,
+            trace_id: traceId
           };
           
           // Try to post message with specific origin first
@@ -145,7 +157,7 @@ const GitHubCallback = () => {
     }, status === 'error' ? 5000 : 3000); // Longer delay for errors so users can read the message
     
     return () => clearTimeout(timeout);
-  }, [navigate, status]);
+  }, [navigate, status, traceId]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
@@ -170,6 +182,11 @@ const GitHubCallback = () => {
                 </svg>
               </div>
               <p className="text-green-500 font-medium mb-2">Successfully connected to GitHub!</p>
+              {traceId && (
+                <div className="mt-4 p-2 bg-muted rounded-md">
+                  <p className="text-xs text-muted-foreground">Trace ID: {traceId}</p>
+                </div>
+              )}
             </>
           )}
           
@@ -182,6 +199,11 @@ const GitHubCallback = () => {
               </div>
               <p className="text-red-500 font-medium mb-2">Authentication Error</p>
               {errorMessage && <p className="text-sm text-muted-foreground mb-4">{errorMessage}</p>}
+              {traceId && (
+                <div className="mt-4 p-2 bg-muted rounded-md">
+                  <p className="text-xs text-muted-foreground">Trace ID: {traceId}</p>
+                </div>
+              )}
             </>
           )}
           
