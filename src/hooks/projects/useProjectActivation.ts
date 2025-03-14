@@ -21,8 +21,32 @@ export const useProjectActivation = () => {
     }
   };
 
+  const notifyProjectCreated = async (userId: string, projectId: string) => {
+    try {
+      await ProjectEventService.notifyProjectCreated(userId, projectId);
+      // Refresh project data
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['active-project'] });
+    } catch (error) {
+      console.error("Error notifying project creation:", error);
+    }
+  };
+
+  const notifyProjectImported = async (userId: string, projectId: string) => {
+    try {
+      await ProjectEventService.notifyProjectImported(userId, projectId);
+      // Refresh project data
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['active-project'] });
+    } catch (error) {
+      console.error("Error notifying project import:", error);
+    }
+  };
+
   return {
     activateProject,
+    notifyProjectCreated,
+    notifyProjectImported,
     isActivating
   };
 };

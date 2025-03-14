@@ -1002,6 +1002,41 @@ export type Database = {
           },
         ]
       }
+      project_vectors: {
+        Row: {
+          created_at: string | null
+          embedding: number[]
+          id: string
+          project_id: string | null
+          updated_at: string | null
+          vector_data: Json
+        }
+        Insert: {
+          created_at?: string | null
+          embedding: number[]
+          id?: string
+          project_id?: string | null
+          updated_at?: string | null
+          vector_data: Json
+        }
+        Update: {
+          created_at?: string | null
+          embedding?: number[]
+          id?: string
+          project_id?: string | null
+          updated_at?: string | null
+          vector_data?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_vectors_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           created_at: string | null

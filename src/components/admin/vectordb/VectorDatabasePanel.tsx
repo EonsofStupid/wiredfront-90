@@ -2,98 +2,98 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash2, Database, RefreshCw, AlertCircle } from "lucide-react";
-import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { ProjectVector } from "@/types/admin/vector-database";
+import { AlertCircle, Database, Trash2 } from "lucide-react";
 
-interface ProjectVector {
-  id: string;
-  project_id: string;
-  vector_data: any;
-  embedding: number[];
-  created_at?: string;
-  project_name?: string;
-}
-
-export function VectorDatabasePanel() {
-  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+export const VectorDatabasePanel = () => {
   const queryClient = useQueryClient();
+  const [expandedVector, setExpandedVector] = useState<string | null>(null);
 
-  const { data: vectors, isLoading, error, refetch } = useQuery({
-    queryKey: ["projectVectors"],
+  // Fetch project vectors with project information
+  const { data: vectors, isLoading, error } = useQuery({
+    queryKey: ["project-vectors"],
     queryFn: async (): Promise<ProjectVector[]> => {
+      // We need to use a custom RPC function to fetch project vectors
+      // since the table isn't in the TypeScript types yet
       const { data, error } = await supabase
-        .from('project_vectors')
-        .select(`
-          *,
-          projects:project_id (name)
-        `)
-        .order('created_at', { ascending: false });
+        .rpc('get_project_vectors_with_details')
+        .select('*');
 
-      if (error) throw error;
-      
-      // Transform data to include project name
-      return data.map(vector => ({
-        ...vector,
-        project_name: vector.projects?.name || 'Unknown Project'
-      }));
+      if (error) {
+        console.error("Error fetching project vectors:", error);
+        throw error;
+      }
+
+      return data || [];
     }
   });
 
-  const deleteVectorMutation = useMutation({
+  // Delete a vector
+  const deleteMutation = useMutation({
     mutationFn: async (vectorId: string) => {
-      setIsDeleting(vectorId);
       const { error } = await supabase
-        .from('project_vectors')
-        .delete()
-        .eq('id', vectorId);
+        .rpc('delete_project_vector', { vector_id: vectorId });
       
       if (error) throw error;
       return vectorId;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["project-vectors"] });
       toast.success("Vector deleted successfully");
-      queryClient.invalidateQueries({ queryKey: ["projectVectors"] });
-      setIsDeleting(null);
     },
     onError: (error) => {
-      toast.error(`Failed to delete vector: ${error.message}`);
-      setIsDeleting(null);
+      console.error("Error deleting vector:", error);
+      toast.error("Failed to delete vector");
     }
   });
 
-  const handleDeleteVector = (vectorId: string) => {
-    if (confirm("Are you sure you want to delete this vector? This action cannot be undone.")) {
-      deleteVectorMutation.mutate(vectorId);
-    }
+  // Format bytes to a human-readable size
+  const formatSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  // Toggle vector details expansion
+  const toggleVectorDetails = (vectorId: string) => {
+    setExpandedVector(expandedVector === vectorId ? null : vectorId);
   };
 
   if (isLoading) {
     return (
-      <Card className="w-full h-64 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="mt-2 text-muted-foreground">Loading vector database...</p>
+      <Card>
+        <CardHeader>
+          <CardTitle>Vector Database</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </CardContent>
       </Card>
     );
   }
 
   if (error) {
     return (
-      <Card className="w-full">
-        <CardContent className="pt-6">
-          <div className="flex flex-col items-center justify-center text-center p-6 space-y-2">
-            <AlertCircle className="h-8 w-8 text-destructive" />
-            <h3 className="font-semibold text-lg">Error Loading Vectors</h3>
-            <p className="text-sm text-muted-foreground">
-              {error instanceof Error ? error.message : "An unknown error occurred"}
-            </p>
-            <Button variant="outline" onClick={() => refetch()} className="mt-4">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Try Again
-            </Button>
+      <Card>
+        <CardHeader>
+          <CardTitle>Vector Database</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center p-4 border rounded-md bg-red-50 text-red-700">
+            <AlertCircle className="h-5 w-5 mr-2" />
+            <div>
+              Error loading vector database: {(error as Error).message}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -101,12 +101,12 @@ export function VectorDatabasePanel() {
   }
 
   return (
-    <Card className="w-full">
+    <Card>
       <CardHeader>
-        <CardTitle>Vector Database Management</CardTitle>
-        <CardDescription>
-          Manage core RAG vectors for AI retrieval across projects.
-        </CardDescription>
+        <CardTitle className="flex items-center gap-2">
+          <Database className="h-5 w-5" />
+          Vector Database
+        </CardTitle>
       </CardHeader>
       <CardContent>
         {vectors && vectors.length > 0 ? (
@@ -114,58 +114,66 @@ export function VectorDatabasePanel() {
             <TableHeader>
               <TableRow>
                 <TableHead>Project</TableHead>
-                <TableHead>Vector Dimensions</TableHead>
+                <TableHead>Vector Size</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {vectors.map((vector) => (
-                <TableRow key={vector.id}>
-                  <TableCell className="font-medium">
-                    {vector.project_name}
-                    <Badge variant="outline" className="ml-2">
-                      {vector.project_id.substring(0, 8)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Database className="h-4 w-4" />
-                      <span>{vector.embedding.length} dimensions</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {vector.created_at ? new Date(vector.created_at).toLocaleDateString() : 'N/A'}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDeleteVector(vector.id)}
-                      disabled={isDeleting === vector.id}
-                    >
-                      {isDeleting === vector.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-4 w-4" />
-                      )}
-                      <span className="ml-2">Delete</span>
-                    </Button>
-                  </TableCell>
-                </TableRow>
+                <React.Fragment key={vector.id}>
+                  <TableRow>
+                    <TableCell className="font-medium">{vector.project?.name || 'Unknown Project'}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{vector.embedding.length} dimensions</Badge>
+                    </TableCell>
+                    <TableCell>{new Date(vector.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => toggleVectorDetails(vector.id)}
+                        >
+                          Details
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => deleteMutation.mutate(vector.id)}
+                          disabled={deleteMutation.isPending}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                  {expandedVector === vector.id && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="bg-muted/50 p-4">
+                        <div className="text-sm">
+                          <p className="font-semibold mb-2">Vector Data:</p>
+                          <pre className="bg-muted p-2 rounded overflow-auto max-h-40">
+                            {JSON.stringify(vector.vector_data, null, 2)}
+                          </pre>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </React.Fragment>
               ))}
             </TableBody>
           </Table>
         ) : (
-          <div className="flex flex-col items-center justify-center text-center p-6 space-y-2 border rounded-md">
-            <Database className="h-12 w-12 text-muted-foreground opacity-50" />
-            <h3 className="font-semibold text-lg">No Vectors Available</h3>
-            <p className="text-sm text-muted-foreground max-w-md">
-              There are no vectors in the database yet. Vectors will be created when users add content to their projects.
+          <div className="flex flex-col items-center justify-center p-8 text-center">
+            <Database className="h-10 w-10 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium">No vectors found</h3>
+            <p className="text-muted-foreground mt-2">
+              Vector embeddings will appear here once projects are indexed for RAG.
             </p>
           </div>
         )}
       </CardContent>
     </Card>
   );
-}
+};

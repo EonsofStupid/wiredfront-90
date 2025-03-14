@@ -25,7 +25,7 @@ serve(async (req) => {
 
     console.log(`Received event: ${event}`, payload);
 
-    if (event === 'project-updated') {
+    if (event === 'project-updated' || event === 'project-created' || event === 'project-imported') {
       const { userId, projectId } = payload;
       
       if (!userId || !projectId) {
@@ -33,14 +33,16 @@ serve(async (req) => {
       }
 
       // Set the project as active
-      const { data, error } = await supabaseClient
+      const { data: projectData, error: projectError } = await supabaseClient
         .from('projects')
         .update({ is_active: true, updated_at: new Date().toISOString() })
         .eq('id', projectId)
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .select('*')
+        .single();
 
-      if (error) {
-        throw error;
+      if (projectError) {
+        throw projectError;
       }
 
       // Deactivate other projects for this user
@@ -49,21 +51,61 @@ serve(async (req) => {
         .update({ is_active: false })
         .eq('user_id', userId)
         .neq('id', projectId);
-
-      // Update any related vector information if needed
-      // This would involve checking if vectors need to be created or updated
       
+      // If this is a new or imported project, and vector indexing is enabled,
+      // create initial vector embeddings for the project
+      if ((event === 'project-created' || event === 'project-imported') && projectData) {
+        try {
+          // Create a simple initial vector for project context
+          const vectorData = {
+            type: 'project_metadata',
+            content: {
+              name: projectData.name,
+              description: projectData.description || '',
+              structure: {}  // This would be populated with actual project structure
+            }
+          };
+          
+          // In a real implementation, you would use a proper embedding model
+          // For demonstration, we'll use a simplified random vector
+          const embedding = Array(1536).fill(0).map(() => Math.random());
+          
+          // Store the vector in the project_vectors table
+          await supabaseClient
+            .from('project_vectors')
+            .insert({
+              project_id: projectId,
+              vector_data: vectorData,
+              embedding: embedding
+            });
+            
+          console.log(`Created initial vector embedding for project ${projectId}`);
+        } catch (vectorError) {
+          console.error('Error creating vector embedding:', vectorError);
+          // Continue with the operation even if vector creation fails
+        }
+      }
+
       // Log the event for tracking
       await supabaseClient
         .from('user_analytics')
         .insert({
           user_id: userId,
           event_type: 'project_activation',
-          metadata: { project_id: projectId }
+          metadata: { 
+            project_id: projectId,
+            event_trigger: event
+          }
         });
 
       return new Response(
-        JSON.stringify({ success: true, message: 'Project updated successfully' }),
+        JSON.stringify({ 
+          success: true, 
+          message: 'Project updated successfully',
+          data: {
+            project: projectData
+          }
+        }),
         { 
           headers: { 
             ...corsHeaders,
