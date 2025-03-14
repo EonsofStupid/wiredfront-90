@@ -3,21 +3,13 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { GithubIcon } from "lucide-react";
 import { GitHubUserBadge } from "@/components/github/GitHubUserBadge";
-import { GitHubConnectionState } from "@/types/admin/settings/github";
+import { GitHubConnectionStatusProps } from "@/types/admin/settings/github";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface GitHubConnectionSectionProps {
   isConnected: boolean;
   isChecking: boolean;
-  connectionStatus: GitHubConnectionState | {
-    status: string;
-    lastCheck: string;
-    errorMessage?: string;
-    metadata?: {
-      username?: string;
-      [key: string]: any;
-    };
-  };
+  connectionStatus: GitHubConnectionStatusProps;
   username: string | null;
   onConnect: () => void;
   onDisconnect: () => void;
@@ -34,10 +26,7 @@ export function GitHubConnectionSection({
   className
 }: GitHubConnectionSectionProps) {
   // Determine if the connection is in the connecting state
-  const isConnecting = isChecking || 
-    (typeof connectionStatus === 'string' ? 
-      connectionStatus === 'connecting' : 
-      connectionStatus.status === 'connecting');
+  const isConnecting = isChecking || connectionStatus.status === 'connecting';
 
   return (
     <div className={cn(

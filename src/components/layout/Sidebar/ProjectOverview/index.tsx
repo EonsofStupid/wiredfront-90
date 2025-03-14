@@ -94,7 +94,7 @@ export function ProjectOverview({ className, isCompact = false }: ProjectOvervie
         onOpenChange={setIsConnectDialogOpen}
         onConnect={connectGitHub}
         errorMessage={errorMessage}
-        connectionStatus={connectionStatus}
+        connectionStatus={connectionStatus.status}
       />
       
       <GitHubDisconnectDialog

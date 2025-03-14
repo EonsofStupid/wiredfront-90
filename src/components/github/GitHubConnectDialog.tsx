@@ -6,13 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertCircle, Github, ExternalLink } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { GitHubConnectionStatusType } from "@/types/admin/settings/github";
 
 interface GitHubConnectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConnect: () => void;
-  connectionStatus: GitHubConnectionStatusType;
+  connectionStatus: string;
   errorMessage: string | null;
 }
 
@@ -23,15 +22,11 @@ export function GitHubConnectDialog({
   connectionStatus,
   errorMessage
 }: GitHubConnectDialogProps) {
-  // Determine if we're in connecting state from either form of connectionStatus
-  const isConnecting = typeof connectionStatus === 'string' 
-    ? connectionStatus === 'connecting'
-    : connectionStatus.status === 'connecting';
+  // Determine if we're in connecting state
+  const isConnecting = connectionStatus === 'connecting';
 
-  // Determine error state from either form
-  const isError = typeof connectionStatus === 'string'
-    ? connectionStatus === 'error'
-    : connectionStatus.status === 'error';
+  // Determine error state
+  const isError = connectionStatus === 'error';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

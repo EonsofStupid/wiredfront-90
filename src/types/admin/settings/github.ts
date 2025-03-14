@@ -40,3 +40,35 @@ export interface GitHubAuthError {
   trace_id?: string;
   details?: any;
 }
+
+// Standardized interface for components to use (camelCase properties)
+export interface GitHubConnectionStatusProps {
+  status: string;
+  lastCheck: string | null;
+  errorMessage: string | null;
+  metadata: Record<string, any> | null;
+}
+
+// Helper function to normalize connection status for components
+export const normalizeConnectionStatus = (status: GitHubConnectionStatusType): GitHubConnectionStatusProps => {
+  if (typeof status === 'string') {
+    return {
+      status,
+      lastCheck: null,
+      errorMessage: null,
+      metadata: null
+    };
+  }
+  
+  return {
+    status: status.status,
+    lastCheck: status.last_check,
+    errorMessage: status.error_message || null,
+    metadata: status.metadata || null
+  };
+};
+
+// Helper to check if an object is a GitHubConnectionStatus
+export const isConnectionStatusObject = (status: GitHubConnectionStatusType): status is GitHubConnectionStatus => {
+  return typeof status === 'object' && 'user_id' in status;
+};

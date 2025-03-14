@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import { logger } from "@/services/chat/LoggingService";
 import { toast } from "sonner";
-import { GitHubConnectionState } from "@/types/admin/settings/github";
+import { GitHubConnectionStatusProps } from "@/types/admin/settings/github";
 
 export function useProjectOverview() {
   const { 
@@ -149,14 +149,11 @@ export function useProjectOverview() {
   };
 
   // Extract username from metadata if available
-  const githubUsername = typeof connectionStatus === 'object' && connectionStatus.metadata && 'username' in connectionStatus.metadata 
-    ? connectionStatus.metadata.username || null 
-    : null;
+  const githubUsername = connectionStatus.metadata && 
+    connectionStatus.metadata.username ? connectionStatus.metadata.username : null;
     
   // Extract error message if available
-  const errorMessage = typeof connectionStatus === 'object' && 'errorMessage' in connectionStatus
-    ? connectionStatus.errorMessage || null 
-    : null;
+  const errorMessage = connectionStatus.errorMessage;
 
   return {
     projects,

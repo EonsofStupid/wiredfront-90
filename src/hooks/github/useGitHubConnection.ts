@@ -3,17 +3,18 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuthStore } from "@/stores/auth";
-import { GitHubConnectionState } from "@/types/admin/settings/github";
+import { 
+  GitHubConnectionState, 
+  GitHubConnectionStatus,
+  GitHubConnectionStatusProps,
+  normalizeConnectionStatus,
+  isConnectionStatusObject
+} from "@/types/admin/settings/github";
 
 export function useGitHubConnection() {
   const [isConnected, setIsConnected] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
-  const [connectionStatus, setConnectionStatus] = useState<{
-    status: string;
-    lastCheck: string | null;
-    errorMessage: string | null;
-    metadata: Record<string, any> | null;
-  }>({
+  const [connectionStatus, setConnectionStatus] = useState<GitHubConnectionStatusProps>({
     status: "unknown",
     lastCheck: null,
     errorMessage: null,
@@ -39,21 +40,16 @@ export function useGitHubConnection() {
       }
       
       if (data) {
-        setConnectionStatus({
-          status: data.status,
-          lastCheck: data.last_check,
-          errorMessage: data.error_message,
-          metadata: data.metadata as Record<string, any> | null
-        });
-        
-        setIsConnected(data.status === "connected");
+        // Transform snake_case to camelCase
+        const normalizedStatus = normalizeConnectionStatus(data as GitHubConnectionStatus);
+        setConnectionStatus(normalizedStatus);
+        setIsConnected(normalizedStatus.status === "connected");
         
         // Type guard for metadata
-        if (data.metadata && typeof data.metadata === 'object' && data.metadata !== null) {
+        if (normalizedStatus.metadata && typeof normalizedStatus.metadata === 'object' && normalizedStatus.metadata !== null) {
           // Only log if metadata has a username property
-          const metadata = data.metadata as Record<string, any>;
-          if (metadata.username) {
-            console.log(`GitHub connected as: ${metadata.username}`);
+          if ('username' in normalizedStatus.metadata) {
+            console.log(`GitHub connected as: ${normalizedStatus.metadata.username}`);
           }
         }
       } else {
@@ -95,6 +91,13 @@ export function useGitHubConnection() {
             last_check: new Date().toISOString()
           });
         
+        setConnectionStatus({
+          status: "connecting",
+          lastCheck: new Date().toISOString(),
+          errorMessage: null,
+          metadata: null
+        });
+        
         toast({
           title: "GitHub Authorization",
           description: "Please complete the GitHub authorization in the new window."
@@ -102,6 +105,14 @@ export function useGitHubConnection() {
       }
     } catch (error) {
       console.error("Error initiating GitHub connection:", error);
+      
+      setConnectionStatus({
+        status: "error",
+        lastCheck: new Date().toISOString(),
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
+        metadata: null
+      });
+      
       toast({
         title: "Connection Failed",
         description: "Could not connect to GitHub. Please try again.",
@@ -114,6 +125,14 @@ export function useGitHubConnection() {
     if (!user?.id) return;
     
     try {
+      // Set status to disconnecting
+      setConnectionStatus({
+        status: "connecting", // Reuse connecting state for disconnecting UI
+        lastCheck: new Date().toISOString(),
+        errorMessage: null,
+        metadata: connectionStatus.metadata
+      });
+      
       // Call edge function to revoke GitHub token
       await supabase.functions.invoke("github-oauth-init", {
         body: { action: "disconnect" }
@@ -143,6 +162,14 @@ export function useGitHubConnection() {
       });
     } catch (error) {
       console.error("Error disconnecting from GitHub:", error);
+      
+      setConnectionStatus({
+        status: "error",
+        lastCheck: new Date().toISOString(),
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
+        metadata: connectionStatus.metadata
+      });
+      
       toast({
         title: "Disconnection Failed",
         description: "Could not disconnect from GitHub. Please try again.",
