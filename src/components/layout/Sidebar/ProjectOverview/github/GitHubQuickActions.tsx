@@ -6,19 +6,21 @@ import {
   GitBranch, 
   RefreshCw, 
   GitPullRequest,
-  Settings
+  Settings,
+  Code
 } from "lucide-react";
-import { useGitHubConnection } from "@/hooks/github/useGitHubConnection";
 import { useRouter } from "next/router";
 
 interface GitHubQuickActionsProps {
   username: string | null;
   onRefreshConnection: () => void;
+  onOpenRepositories: () => void;
 }
 
 export function GitHubQuickActions({ 
   username,
-  onRefreshConnection
+  onRefreshConnection,
+  onOpenRepositories
 }: GitHubQuickActionsProps) {
   const router = useRouter();
   
@@ -38,9 +40,9 @@ export function GitHubQuickActions({
           variant="outline"
           size="sm"
           className="h-9 text-xs justify-start border-neon-blue/20 hover:bg-neon-blue/10"
-          onClick={() => handleOpenSettings('github-repos')}
+          onClick={onOpenRepositories}
         >
-          <GitBranch className="h-3.5 w-3.5 mr-2 text-neon-blue" />
+          <Code className="h-3.5 w-3.5 mr-2 text-neon-blue" />
           Repositories
         </Button>
         
@@ -69,6 +71,7 @@ export function GitHubQuickActions({
           size="sm"
           className="h-9 text-xs justify-start border-neon-blue/20 hover:bg-neon-blue/10"
           onClick={() => window.open(`https://github.com/${username}`, '_blank')}
+          disabled={!username}
         >
           <GitBranch className="h-3.5 w-3.5 mr-2 text-neon-blue" />
           Open GitHub

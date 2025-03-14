@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useGitHubConnection } from "@/hooks/github/useGitHubConnection";
+import { useRouter } from "next/router";
 import { 
   Github, 
   Plus, 
@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { GitHubAccountCard } from "./github/GitHubAccountCard";
 import { GitHubQuickActions } from "./github/GitHubQuickActions";
 import { GitHubRecentActivity } from "./github/GitHubRecentActivity";
+import { useGitHubConnection } from "@/hooks/github/useGitHubConnection";
 
 interface GitHubManagementTabProps {
   isConnected: boolean;
@@ -31,8 +32,12 @@ export function GitHubManagementTab({
   connectGitHub,
   disconnectGitHub
 }: GitHubManagementTabProps) {
+  const router = useRouter();
   const { linkedAccounts, checkConnectionStatus } = useGitHubConnection();
-  const [isAddAccountOpen, setIsAddAccountOpen] = useState(false);
+  
+  const handleOpenRepositories = () => {
+    router.push('/settings?tab=github-repos');
+  };
   
   if (!isConnected) {
     return (
@@ -60,7 +65,7 @@ export function GitHubManagementTab({
       <div className="p-4 space-y-4">
         <GitHubAccountCard 
           username={githubUsername} 
-          accounts={linkedAccounts}
+          accounts={linkedAccounts || []}
           onAddAccount={connectGitHub}
           onDisconnect={disconnectGitHub}
         />
@@ -68,6 +73,7 @@ export function GitHubManagementTab({
         <GitHubQuickActions 
           username={githubUsername} 
           onRefreshConnection={checkConnectionStatus}
+          onOpenRepositories={handleOpenRepositories}
         />
         
         <Card className="bg-background/30 border border-neon-blue/20 p-3">
@@ -83,7 +89,7 @@ export function GitHubManagementTab({
             variant="link"
             size="sm"
             className="text-xs text-muted-foreground hover:text-neon-blue"
-            onClick={() => window.location.href = '/settings'}
+            onClick={() => router.push('/settings?tab=github')}
           >
             <UserCog className="h-3 w-3 mr-1" />
             Advanced GitHub Settings
