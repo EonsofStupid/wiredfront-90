@@ -1,13 +1,12 @@
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useGitHubProjects, GitHubRepo } from "@/hooks/github/useGitHubProjects";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, AlertCircle, Github } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ErrorMessage } from "@/components/ui/error-message";
+import { ProjectIndexingStatus } from "@/components/projects/ProjectIndexingStatus";
+import { supabase } from "@/integrations/supabase/client";
+import { useGitHubConnection } from "@/hooks/useGitHubConnection";
+import { toast } from "sonner";
 
 interface GitHubImportModalProps {
   isOpen: boolean;
@@ -15,153 +14,171 @@ interface GitHubImportModalProps {
   onImportComplete: (projectId: string) => void;
 }
 
-export function GitHubImportModal({
-  isOpen,
-  onClose,
-  onImportComplete
-}: GitHubImportModalProps) {
-  const { repos, isLoading, isImporting, fetchUserRepos, importProject } = useGitHubProjects();
-  const [selectedRepo, setSelectedRepo] = useState<string>("");
-  const [projectName, setProjectName] = useState<string>("");
-  const [projectDescription, setProjectDescription] = useState<string>("");
+export function GitHubImportModal({ isOpen, onClose, onImportComplete }: GitHubImportModalProps) {
+  const [repositories, setRepositories] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
+  const [importedProjectId, setImportedProjectId] = useState<string | null>(null);
+  const { isConnected } = useGitHubConnection();
 
   useEffect(() => {
-    if (isOpen) {
-      fetchUserRepos().catch(console.error);
-      setSelectedRepo("");
-      setProjectName("");
-      setProjectDescription("");
-      setError(null);
+    if (isOpen && isConnected) {
+      fetchRepositories();
     }
-  }, [isOpen]);
+  }, [isOpen, isConnected]);
 
-  // Update project name when repo is selected
-  useEffect(() => {
-    if (selectedRepo) {
-      const repo = repos.find(r => r.full_name === selectedRepo);
-      if (repo) {
-        setProjectName(repo.name);
-      }
-    }
-  }, [selectedRepo, repos]);
-
-  const handleImport = async () => {
-    if (!selectedRepo) {
-      setError("Please select a repository");
-      return;
-    }
-
-    if (!projectName.trim()) {
-      setError("Please enter a project name");
-      return;
-    }
+  const fetchRepositories = async () => {
+    setIsLoading(true);
+    setError(null);
 
     try {
-      const project = await importProject(selectedRepo, projectName, projectDescription);
-      if (project) {
-        onImportComplete(project.id);
-        onClose();
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("You must be logged in to import repositories");
       }
-    } catch (err) {
-      console.error("Import error:", err);
-      setError("Failed to import project. Please try again.");
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/github-repo-management`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'fetch-repos'
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch repositories');
+      }
+
+      const data = await response.json();
+      setRepositories(data.repos);
+    } catch (error) {
+      console.error("Error fetching repositories:", error);
+      setError(error instanceof Error ? error.message : "Failed to fetch GitHub repositories");
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const handleImportRepo = async (repoFullName: string) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("You must be logged in to import a repository");
+      }
+
+      // Create a project in the database
+      const repoName = repoFullName.split('/')[1]; // Get repo name from full name (owner/name)
+      const { data: project, error: projectError } = await supabase
+        .from('projects')
+        .insert({
+          name: repoName,
+          description: `Imported from GitHub: ${repoFullName}`,
+          github_repo: repoFullName,
+          is_active: true
+        })
+        .select()
+        .single();
+
+      if (projectError || !project) {
+        throw new Error(projectError?.message || "Failed to create project");
+      }
+
+      // Start indexing the repository for RAG
+      const indexResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/github-repo-management`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'index-repo',
+          repoFullName,
+          projectId: project.id
+        })
+      });
+
+      if (!indexResponse.ok) {
+        const errorData = await indexResponse.json();
+        throw new Error(errorData.error || 'Failed to index repository');
+      }
+
+      setSelectedRepo(repoFullName);
+      setImportedProjectId(project.id);
+      toast.success("Repository imported successfully!");
+    } catch (error) {
+      console.error("Error importing repository:", error);
+      setError(error instanceof Error ? error.message : "Failed to import repository");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleComplete = () => {
+    if (importedProjectId) {
+      onImportComplete(importedProjectId);
+    }
+    onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Github className="h-5 w-5" />
-            Import GitHub Repository
-          </DialogTitle>
-          <DialogDescription>
-            Choose a GitHub repository to import as a new project
-          </DialogDescription>
+          <DialogTitle>Import GitHub Repository</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+        {error && (
+          <ErrorMessage message={error} />
+        )}
 
-          <div className="space-y-2">
-            <label htmlFor="repo-select" className="text-sm font-medium">Repository</label>
+        {importedProjectId && selectedRepo ? (
+          <div className="space-y-4">
+            <ProjectIndexingStatus projectId={importedProjectId} repoName={selectedRepo} />
+            <div className="flex justify-end">
+              <Button onClick={handleComplete}>Done</Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
             {isLoading ? (
-              <div className="flex items-center gap-2 p-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Loading repositories...</span>
-              </div>
-            ) : repos.length === 0 ? (
-              <div className="text-sm text-muted-foreground p-2">
-                No repositories found. Make sure you've connected your GitHub account.
+              <div className="py-4 text-center">Loading repositories...</div>
+            ) : repositories.length > 0 ? (
+              <div className="max-h-[400px] overflow-y-auto space-y-2">
+                {repositories.map((repo) => (
+                  <div 
+                    key={repo.id}
+                    className="p-3 border rounded-md hover:bg-accent cursor-pointer flex justify-between items-center"
+                    onClick={() => handleImportRepo(repo.full_name)}
+                  >
+                    <div>
+                      <div className="font-medium">{repo.name}</div>
+                      <div className="text-sm text-muted-foreground">{repo.full_name}</div>
+                    </div>
+                    <Button variant="outline" size="sm">Import</Button>
+                  </div>
+                ))}
               </div>
             ) : (
-              <Select value={selectedRepo} onValueChange={setSelectedRepo}>
-                <SelectTrigger id="repo-select">
-                  <SelectValue placeholder="Select a repository" />
-                </SelectTrigger>
-                <SelectContent>
-                  {repos.map((repo) => (
-                    <SelectItem key={repo.id} value={repo.full_name}>
-                      {repo.name} {repo.private ? "(Private)" : "(Public)"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="py-4 text-center">
+                No repositories found. Please make sure your GitHub account has repositories.
+              </div>
             )}
+            
+            <div className="flex justify-end">
+              <Button variant="outline" onClick={onClose}>Cancel</Button>
+            </div>
           </div>
-
-          <div className="space-y-2">
-            <label htmlFor="project-name" className="text-sm font-medium">Project Name</label>
-            <Input
-              id="project-name"
-              value={projectName}
-              onChange={(e) => setProjectName(e.target.value)}
-              placeholder="My Awesome Project"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="project-description" className="text-sm font-medium">Description (Optional)</label>
-            <Textarea
-              id="project-description"
-              value={projectDescription}
-              onChange={(e) => setProjectDescription(e.target.value)}
-              placeholder="Describe your project to help AI understand it better"
-              rows={3}
-            />
-          </div>
-
-          <div className="text-sm text-muted-foreground mt-4">
-            <p>
-              After import, your project will be indexed for AI-assisted development. This helps WiredFront understand your codebase better.
-            </p>
-            <p className="mt-2">
-              Note: You have a 1GB storage limit for project files and AI indexing.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button 
-            onClick={handleImport} 
-            disabled={isImporting || isLoading}
-          >
-            {isImporting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Importing...
-              </>
-            ) : "Import Project"}
-          </Button>
-        </div>
+        )}
       </DialogContent>
     </Dialog>
   );

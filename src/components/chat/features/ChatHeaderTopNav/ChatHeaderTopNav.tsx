@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { logger } from '@/services/chat/LoggingService';
+import './styles.css';
 
 export function ChatHeaderTopNav() {
   const [isMenuVisible, setIsMenuVisible] = useState(false);
@@ -15,13 +16,13 @@ export function ChatHeaderTopNav() {
   };
 
   return (
-    <div className="relative">
+    <div className="relative chat-header-top-nav">
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
           size="sm"
           onClick={toggleMenu}
-          className="hover:bg-white/10"
+          className="hover:bg-white/10 chat-header-top-nav-button"
           aria-label="Toggle navigation menu"
         >
           <Menu className="h-4 w-4" />

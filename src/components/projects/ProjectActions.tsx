@@ -32,12 +32,12 @@ export function ProjectActions({ onAddProject, onImportProject }: ProjectActions
 
   return (
     <>
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2 w-full">
         <Button 
           variant="outline" 
           size="sm" 
           onClick={onAddProject}
-          className="gap-1"
+          className="gap-1 w-full justify-start"
         >
           <Plus className="h-4 w-4" />
           New Project
@@ -47,7 +47,7 @@ export function ProjectActions({ onAddProject, onImportProject }: ProjectActions
           variant="outline"
           size="sm"
           onClick={handleImportClick}
-          className="gap-1"
+          className="gap-1 w-full justify-start"
         >
           <Github className="h-4 w-4" />
           Import from GitHub
