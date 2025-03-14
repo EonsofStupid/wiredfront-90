@@ -2,8 +2,7 @@
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Database } from "@/components/ui/database";
-import { InfoIcon } from "lucide-react";
+import { DatabaseIcon, InfoIcon } from "lucide-react";
 
 interface ProjectIndexingStatusProps {
   projectId: string;
@@ -67,7 +66,7 @@ export function ProjectIndexingStatus({ projectId, repoName }: ProjectIndexingSt
   if (indexingStatus.status === "completed") {
     return (
       <Alert className="bg-green-50 border-green-200 text-green-800">
-        <Database className="h-4 w-4" />
+        <DatabaseIcon className="h-4 w-4" />
         <AlertTitle>Project Indexing Complete</AlertTitle>
         <AlertDescription>
           Your project has been successfully indexed for AI-assisted development.

@@ -71,7 +71,7 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
         if (vectorCreatedAt > fiveMinutesAgo) {
           setIsIndexing(true);
           
-          // Get project details to show repo name
+          // Get project details from Supabase to show repo name
           const { data: project } = await supabase
             .from('projects')
             .select('github_repo')
@@ -114,12 +114,27 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
     // For demo purposes, let's simulate RAG indexing
     setIsIndexing(true);
     
-    // Find the project to get the repo name
-    const project = projects.find(p => p.id === projectId);
-    if (project && project.github_repo) {
-      const repoName = project.github_repo.split('/').pop() || '';
-      setRecentlyImportedProject({ id: projectId, repoName });
-    }
+    // Fetch the project from Supabase to get the repo name
+    const fetchProjectDetails = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { data: project } = await supabase
+          .from('projects')
+          .select('github_repo')
+          .eq('id', projectId)
+          .single();
+          
+        if (project?.github_repo) {
+          const repoName = project.github_repo.split('/').pop() || '';
+          setRecentlyImportedProject({ id: projectId, repoName });
+        }
+      } catch (error) {
+        console.error("Error fetching project details:", error);
+      }
+    };
+    
+    fetchProjectDetails();
     
     // Reset after some time (simulating completion)
     setTimeout(() => {

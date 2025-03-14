@@ -14,6 +14,7 @@ export interface UIState {
       name: string;
       description?: string;
       lastModified: Date;
+      github_repo?: string; // Added github_repo property
     }>;
   };
   accessibility: {
