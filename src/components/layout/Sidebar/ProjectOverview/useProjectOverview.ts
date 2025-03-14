@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useGitHubConnection } from "@/hooks/github/useGitHubConnection";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth";
@@ -34,12 +34,14 @@ export function useProjectOverview() {
     isConnected,
     isChecking,
     connectionStatus,
+    githubUsername,
+    linkedAccounts,
     connectGitHub,
     disconnectGitHub,
     checkConnectionStatus
   } = useGitHubConnection();
   
-  const checkIndexingStatus = async (projectId: string) => {
+  const checkIndexingStatus = useCallback(async (projectId: string) => {
     if (!user?.id) return;
     
     try {
@@ -81,81 +83,102 @@ export function useProjectOverview() {
     } catch (error) {
       console.error("Error checking indexing status:", error);
     }
-  };
+  }, [user?.id]);
   
   const handleAddProject = async () => {
-    logger.info("New project button clicked");
-    
-    const projectData: ProjectCreateDTO = {
-      name: `New Project ${(projects?.length || 0) + 1}`,
-      description: "Add a description"
-    };
-    
-    await createProject(projectData);
+    try {
+      logger.info("New project button clicked");
+      
+      const projectData: ProjectCreateDTO = {
+        name: `New Project ${(projects?.length || 0) + 1}`,
+        description: "Add a description"
+      };
+      
+      await createProject(projectData);
+    } catch (error) {
+      console.error("Error adding project:", error);
+      toast.error("Failed to create new project");
+    }
   };
 
   const handleGitHubConnect = () => {
-    logger.info("GitHub connect button clicked");
-    setIsConnectDialogOpen(true);
+    try {
+      logger.info("GitHub connect button clicked");
+      setIsConnectDialogOpen(true);
+    } catch (error) {
+      console.error("Error handling GitHub connect:", error);
+      toast.error("Failed to open GitHub connect dialog");
+    }
   };
   
   const handleImportProject = (projectId: string) => {
-    logger.info("Project import completed", { projectId });
-    setActiveProject(projectId);
-    
-    // For demo purposes, let's simulate RAG indexing
-    setIsIndexing(true);
-    
-    // Fetch the project from Supabase to get the repo name
-    const fetchProjectDetails = async () => {
-      if (!user?.id) return;
+    try {
+      logger.info("Project import completed", { projectId });
+      setActiveProject(projectId);
       
-      try {
-        const { data: project } = await supabase
-          .from('projects')
-          .select('github_repo')
-          .eq('id', projectId)
-          .single();
-          
-        if (project?.github_repo) {
-          const repoName = project.github_repo.split('/').pop() || '';
-          setRecentlyImportedProject({ id: projectId, repoName });
+      // For demo purposes, let's simulate RAG indexing
+      setIsIndexing(true);
+      
+      // Fetch the project from Supabase to get the repo name
+      const fetchProjectDetails = async () => {
+        if (!user?.id) return;
+        
+        try {
+          const { data: project } = await supabase
+            .from('projects')
+            .select('github_repo')
+            .eq('id', projectId)
+            .single();
+            
+          if (project?.github_repo) {
+            const repoName = project.github_repo.split('/').pop() || '';
+            setRecentlyImportedProject({ id: projectId, repoName });
+          }
+        } catch (error) {
+          console.error("Error fetching project details:", error);
         }
-      } catch (error) {
-        console.error("Error fetching project details:", error);
-      }
-    };
-    
-    fetchProjectDetails();
-    
-    // Reset after some time (simulating completion)
-    setTimeout(() => {
-      setIsIndexing(false);
-      setRecentlyImportedProject(null);
-    }, 15000);
+      };
+      
+      fetchProjectDetails();
+      
+      // Reset after some time (simulating completion)
+      setTimeout(() => {
+        setIsIndexing(false);
+        setRecentlyImportedProject(null);
+      }, 15000);
+    } catch (error) {
+      console.error("Error handling import project:", error);
+      toast.error("Failed to import project");
+    }
   };
 
   const handleOpenImportModal = () => {
-    logger.info("Import from GitHub button clicked");
-    
-    if (!isConnected) {
-      logger.warn("GitHub import attempted without connection");
-      toast.error("You need to connect your GitHub account first");
-      return;
+    try {
+      logger.info("Import from GitHub button clicked");
+      
+      if (!isConnected) {
+        logger.warn("GitHub import attempted without connection");
+        toast.error("You need to connect your GitHub account first");
+        return;
+      }
+      
+      setIsImportModalOpen(true);
+    } catch (error) {
+      console.error("Error opening import modal:", error);
+      toast.error("Failed to open import modal");
     }
-    
-    setIsImportModalOpen(true);
   };
 
   const handleDeleteProject = async (projectId: string) => {
-    logger.info("Delete project button clicked", { projectId });
-    await deleteProject(projectId);
+    try {
+      logger.info("Delete project button clicked", { projectId });
+      await deleteProject(projectId);
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      toast.error("Failed to delete project");
+    }
   };
 
-  // Extract username from metadata if available
-  const githubUsername = connectionStatus.metadata && 
-    connectionStatus.metadata.username ? connectionStatus.metadata.username : null;
-    
   // Extract error message if available
   const errorMessage = connectionStatus.errorMessage;
 
@@ -177,6 +200,7 @@ export function useProjectOverview() {
     setIsImportModalOpen,
     githubUsername,
     errorMessage,
+    linkedAccounts,
     handleAddProject,
     handleGitHubConnect,
     handleImportProject,

@@ -7,7 +7,8 @@ import {
   RefreshCw, 
   GitPullRequest,
   Settings,
-  Code
+  Code,
+  AlertCircle
 } from "lucide-react";
 import { useRouter } from "next/router";
 
@@ -15,18 +16,40 @@ interface GitHubQuickActionsProps {
   username: string | null;
   onRefreshConnection: () => void;
   onOpenRepositories: () => void;
+  isRefreshing?: boolean;
 }
 
 export function GitHubQuickActions({ 
   username,
   onRefreshConnection,
-  onOpenRepositories
+  onOpenRepositories,
+  isRefreshing = false
 }: GitHubQuickActionsProps) {
   const router = useRouter();
   
   const handleOpenSettings = (section: string) => {
-    router.push(`/settings?tab=${section}`);
+    try {
+      router.push(`/settings?tab=${section}`);
+    } catch (error) {
+      console.error("Navigation error:", error);
+      // Fallback to window.location if router fails
+      window.location.href = `/settings?tab=${section}`;
+    }
   };
+  
+  if (!username) {
+    return (
+      <Card className="bg-background/30 border border-neon-blue/20 p-3">
+        <div className="flex items-center gap-2 mb-2 text-sm font-medium">
+          <AlertCircle className="h-4 w-4 text-amber-500" />
+          <span>GitHub Not Connected</span>
+        </div>
+        <div className="text-xs text-muted-foreground mb-2">
+          Connect your GitHub account to access quick actions.
+        </div>
+      </Card>
+    );
+  }
   
   return (
     <Card className="bg-background/30 border border-neon-blue/20 p-3">
@@ -51,9 +74,10 @@ export function GitHubQuickActions({
           size="sm"
           className="h-9 text-xs justify-start border-neon-blue/20 hover:bg-neon-blue/10"
           onClick={onRefreshConnection}
+          disabled={isRefreshing}
         >
-          <RefreshCw className="h-3.5 w-3.5 mr-2 text-neon-blue" />
-          Refresh Sync
+          <RefreshCw className={`h-3.5 w-3.5 mr-2 text-neon-blue ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Refreshing...' : 'Refresh Sync'}
         </Button>
         
         <Button
@@ -71,7 +95,6 @@ export function GitHubQuickActions({
           size="sm"
           className="h-9 text-xs justify-start border-neon-blue/20 hover:bg-neon-blue/10"
           onClick={() => window.open(`https://github.com/${username}`, '_blank')}
-          disabled={!username}
         >
           <GitBranch className="h-3.5 w-3.5 mr-2 text-neon-blue" />
           Open GitHub

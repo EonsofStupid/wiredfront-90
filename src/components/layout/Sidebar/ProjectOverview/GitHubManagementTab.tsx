@@ -1,42 +1,75 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ErrorMessage } from "@/components/ui/error-message";
 import { useRouter } from "next/router";
 import { 
   Github, 
-  Plus, 
   UserCog, 
-  GitBranch,
-  RefreshCw,
   History,
+  RefreshCw,
   AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GitHubAccountCard } from "./github/GitHubAccountCard";
 import { GitHubQuickActions } from "./github/GitHubQuickActions";
 import { GitHubRecentActivity } from "./github/GitHubRecentActivity";
-import { useGitHubConnection } from "@/hooks/github/useGitHubConnection";
 
 interface GitHubManagementTabProps {
   isConnected: boolean;
   githubUsername: string | null;
   connectGitHub: () => void;
   disconnectGitHub: () => void;
+  isChecking?: boolean;
+  checkConnectionStatus?: () => void;
+  linkedAccounts?: Array<{
+    id: string;
+    username: string;
+    default: boolean;
+  }>;
+  error?: string | null;
 }
 
 export function GitHubManagementTab({
   isConnected,
   githubUsername,
   connectGitHub,
-  disconnectGitHub
+  disconnectGitHub,
+  isChecking = false,
+  checkConnectionStatus = () => {},
+  linkedAccounts = [],
+  error = null
 }: GitHubManagementTabProps) {
   const router = useRouter();
-  const { linkedAccounts, checkConnectionStatus } = useGitHubConnection();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [tabError, setTabError] = useState<string | null>(error);
+  
+  useEffect(() => {
+    setTabError(error);
+  }, [error]);
+  
+  const handleRefreshConnection = async () => {
+    try {
+      setIsRefreshing(true);
+      await checkConnectionStatus();
+      setTabError(null);
+    } catch (err) {
+      setTabError(err instanceof Error ? err.message : "Failed to refresh GitHub connection");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
   
   const handleOpenRepositories = () => {
-    router.push('/settings?tab=github-repos');
+    try {
+      router.push('/settings?tab=github-repos');
+    } catch (error) {
+      console.error("Navigation error:", error);
+      // Fallback to window.location if router fails
+      window.location.href = '/settings?tab=github-repos';
+    }
   };
   
   if (!isConnected) {
@@ -50,10 +83,20 @@ export function GitHubManagementTab({
           </p>
           <Button 
             onClick={connectGitHub}
+            disabled={isChecking}
             className="bg-neon-blue hover:bg-neon-blue/80"
           >
-            <Github className="h-4 w-4 mr-2" />
-            Connect GitHub
+            {isChecking ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Connecting...
+              </>
+            ) : (
+              <>
+                <Github className="h-4 w-4 mr-2" />
+                Connect GitHub
+              </>
+            )}
           </Button>
         </div>
       </div>
@@ -63,17 +106,25 @@ export function GitHubManagementTab({
   return (
     <ScrollArea className="flex-1">
       <div className="p-4 space-y-4">
+        {tabError && (
+          <ErrorMessage 
+            message={tabError} 
+            className="mb-4"
+          />
+        )}
+        
         <GitHubAccountCard 
           username={githubUsername} 
-          accounts={linkedAccounts || []}
+          accounts={linkedAccounts}
           onAddAccount={connectGitHub}
           onDisconnect={disconnectGitHub}
         />
         
         <GitHubQuickActions 
           username={githubUsername} 
-          onRefreshConnection={checkConnectionStatus}
+          onRefreshConnection={handleRefreshConnection}
           onOpenRepositories={handleOpenRepositories}
+          isRefreshing={isRefreshing}
         />
         
         <Card className="bg-background/30 border border-neon-blue/20 p-3">
@@ -89,7 +140,14 @@ export function GitHubManagementTab({
             variant="link"
             size="sm"
             className="text-xs text-muted-foreground hover:text-neon-blue"
-            onClick={() => router.push('/settings?tab=github')}
+            onClick={() => {
+              try {
+                router.push('/settings?tab=github');
+              } catch (error) {
+                console.error("Navigation error:", error);
+                window.location.href = '/settings?tab=github';
+              }
+            }}
           >
             <UserCog className="h-3 w-3 mr-1" />
             Advanced GitHub Settings
