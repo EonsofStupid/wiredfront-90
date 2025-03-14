@@ -7,6 +7,43 @@ import { toast } from "sonner";
  */
 export class ProjectEventService {
   /**
+   * Create a new project
+   * 
+   * @param userId - The ID of the user who owns the project
+   * @param projectData - The project data (name, description, etc.)
+   * @returns A promise that resolves to the created project
+   */
+  static async createProject(
+    userId: string,
+    projectData: {
+      name: string;
+      description?: string;
+      github_repo?: string;
+    }
+  ): Promise<{ data: any; error: any }> {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert({
+          user_id: userId,
+          name: projectData.name,
+          description: projectData.description || null,
+          github_repo: projectData.github_repo || null,
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      return { data, error: null };
+    } catch (error) {
+      console.error("Error creating project:", error);
+      return { data: null, error };
+    }
+  }
+
+  /**
    * Notify the system when a project has been created, updated, or imported
    * 
    * @param userId - The ID of the user who owns the project

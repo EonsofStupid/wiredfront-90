@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 export const useProjectActivation = () => {
   const [isActivating, setIsActivating] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const queryClient = useQueryClient();
 
   const activateProject = async (userId: string, projectId: string) => {
@@ -21,6 +22,36 @@ export const useProjectActivation = () => {
       toast.error("Failed to activate project");
     } finally {
       setIsActivating(false);
+    }
+  };
+
+  const createProject = async (userId: string, projectData: {
+    name: string;
+    description?: string;
+    github_repo?: string;
+  }) => {
+    setIsCreating(true);
+    try {
+      // Create project in Supabase
+      const { data, error } = await ProjectEventService.createProject(userId, projectData);
+      
+      if (error) throw error;
+      
+      // Notify the system about the new project
+      await notifyProjectCreated(userId, data.id);
+      
+      // Refresh project data
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['active-project'] });
+      
+      toast.success("Project created successfully");
+      return data;
+    } catch (error) {
+      console.error("Error creating project:", error);
+      toast.error("Failed to create project");
+      throw error;
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -52,8 +83,10 @@ export const useProjectActivation = () => {
 
   return {
     activateProject,
+    createProject,
     notifyProjectCreated,
     notifyProjectImported,
-    isActivating
+    isActivating,
+    isCreating
   };
 };

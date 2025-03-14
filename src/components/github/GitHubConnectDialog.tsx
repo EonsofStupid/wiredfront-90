@@ -1,98 +1,102 @@
 
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Github, HelpCircle, Terminal } from "lucide-react";
-import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AlertCircle, Github, ExternalLink } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface GitHubConnectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConnect: () => void;
-  errorMessage: string | null;
   connectionStatus: 'idle' | 'connecting' | 'connected' | 'error';
-  debugInfo?: any;
+  errorMessage: string | null;
 }
 
 export function GitHubConnectDialog({
   open,
   onOpenChange,
   onConnect,
-  errorMessage,
   connectionStatus,
-  debugInfo
+  errorMessage
 }: GitHubConnectDialogProps) {
-  const [showDebug, setShowDebug] = useState(false);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-card">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Connect to GitHub</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Github className="h-5 w-5" />
+            Connect to GitHub
+          </DialogTitle>
           <DialogDescription>
-            Connecting to GitHub allows you to sync your projects, access repositories, and collaborate on code.
+            Connect your GitHub account to enable repository creation and synchronization.
           </DialogDescription>
         </DialogHeader>
         
-        {errorMessage && connectionStatus === 'error' && (
-          <div className="p-4 border border-red-300 bg-red-50/10 rounded-md flex items-start gap-3 text-red-500">
-            <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
-            <div className="space-y-2">
-              <p className="font-medium mb-1">GitHub Connection Error</p>
-              <p className="text-sm">{errorMessage}</p>
-              
-              {errorMessage.includes('not configured') && (
-                <p className="text-sm">
-                  Make sure the GitHub client ID and secret are configured in your Supabase Edge Function secrets.
-                </p>
+        <div className="space-y-4 py-4">
+          <div className="text-center pb-2">
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={onConnect}
+              disabled={connectionStatus === 'connecting'}
+            >
+              {connectionStatus === 'connecting' ? (
+                <>
+                  <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Connecting...
+                </>
+              ) : (
+                <>
+                  <Github className="h-4 w-4 mr-2" />
+                  Connect with GitHub
+                </>
               )}
-              
-              {debugInfo && (
-                <div className="mt-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="flex items-center gap-1 text-xs"
-                    onClick={() => setShowDebug(!showDebug)}
-                  >
-                    <Terminal className="h-3 w-3" />
-                    {showDebug ? 'Hide Debug Info' : 'Show Debug Info'}
-                  </Button>
-                  
-                  {showDebug && (
-                    <pre className="mt-2 text-xs p-2 bg-slate-800 text-slate-200 rounded overflow-auto max-h-96">
-                      {JSON.stringify(debugInfo, null, 2)}
-                    </pre>
-                  )}
-                </div>
-              )}
-            </div>
+            </Button>
+            
+            <p className="text-xs text-muted-foreground mt-2">
+              This will redirect you to GitHub for authorization
+            </p>
           </div>
-        )}
+          
+          {errorMessage && connectionStatus === 'error' && (
+            <Alert variant="destructive" className="bg-red-500/10 text-red-500">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
+          )}
+          
+          <div className="rounded-md border p-3">
+            <h4 className="text-sm font-medium mb-2">What this allows:</h4>
+            <ul className="text-sm space-y-1 text-muted-foreground">
+              <li>• Creating repositories for your projects</li>
+              <li>• Syncing code changes automatically</li>
+              <li>• Collaborating with team members</li>
+            </ul>
+          </div>
+        </div>
         
-        <DialogFooter className="flex justify-end space-x-2">
-          <Button 
-            variant="outline" 
-            onClick={() => onOpenChange(false)}
-            disabled={connectionStatus === 'connecting'}
-          >
-            Cancel
-          </Button>
-          <Button 
-            onClick={onConnect}
-            disabled={connectionStatus === 'connecting'}
-          >
-            {connectionStatus === 'connecting' ? (
-              <>
-                <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                Connecting...
-              </>
-            ) : (
-              <>
-                <Github className="h-4 w-4 mr-2" />
-                Connect
-              </>
-            )}
-          </Button>
+        <DialogFooter>
+          <div className="w-full flex justify-between items-center">
+            <a 
+              href="https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-xs text-muted-foreground hover:text-neon-blue flex items-center gap-1"
+            >
+              <ExternalLink className="h-3 w-3" />
+              Learn about GitHub OAuth
+            </a>
+            
+            <Button
+              variant="ghost"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
