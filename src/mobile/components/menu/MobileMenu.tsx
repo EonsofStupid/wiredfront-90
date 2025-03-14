@@ -1,10 +1,9 @@
 
-import React from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
+import React, { useEffect } from "react";
 import { X } from "lucide-react";
-import { MobileNavigation } from "./MobileNavigation";
 import { cn } from "@/lib/utils";
+import { MobileNavigation } from "./MobileNavigation";
+import { Button } from "@/components/ui/button";
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -12,33 +11,71 @@ interface MobileMenuProps {
 }
 
 /**
- * Full-screen mobile menu with animated navigation items
+ * Mobile slide-in menu component
  */
 export const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
+  // Add escape key handler
+  useEffect(() => {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscapeKey);
+    
+    // Lock body scroll when menu is open
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+      document.body.style.overflow = '';
+    };
+  }, [isOpen, onClose]);
+
+  // Handle backdrop click
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent 
-        side="left" 
+    <div 
+      className="fixed inset-0 z-[var(--mobile-z-index-menu)] bg-black/50 backdrop-blur-sm"
+      onClick={handleBackdropClick}
+    >
+      <div 
         className={cn(
-          "w-full sm:w-[85%] max-w-[400px] border-r border-neon-blue/20",
-          "bg-dark-lighter/95 backdrop-blur-xl p-0"
+          "fixed top-0 left-0 h-full w-4/5 max-w-xs bg-dark-lighter",
+          "border-r border-neon-blue/20 shadow-lg",
+          "transform transition-transform duration-300 ease-in-out",
+          "flex flex-col",
+          isOpen ? "translate-x-0 mobile-slide-in-left" : "-translate-x-full"
         )}
       >
-        <SheetHeader className="p-4 border-b border-neon-blue/20">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="gradient-text text-xl font-bold">
-              wiredFRONT
-            </SheetTitle>
-            <SheetClose asChild>
-              <Button variant="ghost" size="icon" className="text-neon-pink hover:text-neon-blue">
-                <X className="h-5 w-5" />
-              </Button>
-            </SheetClose>
-          </div>
-        </SheetHeader>
-        
-        <MobileNavigation onItemClick={onClose} />
-      </SheetContent>
-    </Sheet>
+        <div className="flex items-center justify-between p-4 border-b border-neon-blue/20">
+          <h2 className="gradient-text text-xl font-bold">wiredFRONT</h2>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-neon-pink hover:text-neon-blue"
+            onClick={onClose}
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          <MobileNavigation onItemClick={onClose} />
+        </div>
+      </div>
+    </div>
   );
 };

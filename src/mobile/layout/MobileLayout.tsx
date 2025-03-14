@@ -1,10 +1,11 @@
 
-import React from "react";
+import React, { Suspense } from "react";
 import { MobileHeader } from "./MobileHeader";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { MobileMenuProvider } from "../providers/MobileMenuProvider";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { handleError } from "@/utils/errorHandling";
 
 interface MobileLayoutProps {
   children: React.ReactNode;
@@ -29,7 +30,13 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
           // Add padding based on screen size
           screenSize === 'xs' ? 'px-3' : 'px-4'
         )}>
-          {children}
+          <Suspense fallback={
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neon-blue"></div>
+            </div>
+          }>
+            {children}
+          </Suspense>
         </main>
 
         <MobileBottomNav />

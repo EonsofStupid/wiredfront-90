@@ -1,23 +1,26 @@
+
 import React from "react";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-interface Props {
+interface ErrorBoundaryProps {
   children: React.ReactNode;
+  FallbackComponent?: React.ComponentType<{ error: Error; resetErrorBoundary: () => void }>;
+  onReset?: () => void;
 }
 
-interface State {
+interface ErrorBoundaryState {
   hasError: boolean;
   error?: Error;
 }
 
-export class ErrorBoundary extends React.Component<Props, State> {
-  public state: State = {
+export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public state: ErrorBoundaryState = {
     hasError: false
   };
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
   }
 
@@ -25,8 +28,20 @@ export class ErrorBoundary extends React.Component<Props, State> {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
   }
 
+  resetErrorBoundary = () => {
+    this.props.onReset?.();
+    this.setState({ hasError: false, error: undefined });
+  };
+
   render() {
     if (this.state.hasError) {
+      if (this.props.FallbackComponent) {
+        return <this.props.FallbackComponent 
+          error={this.state.error || new Error('Unknown error')} 
+          resetErrorBoundary={this.resetErrorBoundary} 
+        />;
+      }
+
       return (
         <div className="flex items-center justify-center min-h-screen p-4">
           <Alert variant="destructive" className="max-w-md">
@@ -35,13 +50,20 @@ export class ErrorBoundary extends React.Component<Props, State> {
             <AlertDescription>
               {this.state.error?.message || 'An unexpected error occurred'}
             </AlertDescription>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => window.location.reload()}
-            >
-              Reload Page
-            </Button>
+            <div className="flex gap-2 mt-4">
+              <Button
+                variant="outline"
+                onClick={this.resetErrorBoundary}
+              >
+                Try Again
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => window.location.reload()}
+              >
+                Reload Page
+              </Button>
+            </div>
           </Alert>
         </div>
       );
