@@ -1,26 +1,26 @@
 
 import { LucideIcon } from "lucide-react";
 
-export interface AdminNavItem {
+export interface NavItem {
   name: string;
   href: string;
   icon: React.ReactNode;
 }
 
-export interface AdminTopNavOverlayProps {
+export interface TopNavProps {
   className?: string;
 }
 
-export interface AdminMainNavGroupProps {
+export interface MainNavGroupProps {
   isCollapsed: boolean;
 }
 
-export interface AdminNavToggleProps {
+export interface NavToggleProps {
   isExtended: boolean;
   onToggle: () => void;
 }
 
-export interface AdminNavIconButtonProps {
+export interface NavIconButtonProps {
   icon: LucideIcon;
   tooltip: string;
   route: string;
@@ -28,8 +28,8 @@ export interface AdminNavIconButtonProps {
   text?: string;
 }
 
-export interface UseAdminNavReturn {
+export interface UseTopNavLayoutReturn {
   isExtended: boolean;
-  adminIconOnly: boolean;
+  iconOnly: boolean;
   toggleExtended: () => void;
 }

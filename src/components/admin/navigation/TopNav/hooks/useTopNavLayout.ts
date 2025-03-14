@@ -2,9 +2,9 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useUIStore } from '@/stores/ui';
-import { UseAdminNavReturn } from '../types';
+import { UseTopNavLayoutReturn } from '../types';
 
-export const useAdminNav = (): UseAdminNavReturn => {
+export const useTopNavLayout = (): UseTopNavLayoutReturn => {
   const [isExtended, setIsExtended] = useState(true);
   const location = useLocation();
   const { layout } = useUIStore();
@@ -21,7 +21,7 @@ export const useAdminNav = (): UseAdminNavReturn => {
 
   return {
     isExtended,
-    adminIconOnly,
+    iconOnly: adminIconOnly,
     toggleExtended
   };
 };

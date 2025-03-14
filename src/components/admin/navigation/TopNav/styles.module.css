@@ -1,0 +1,59 @@
+
+:root {
+  --color-neon-blue-rgb: 0, 255, 255;
+  --color-neon-pink-rgb: 255, 0, 127;
+  --color-neon-violet-rgb: 157, 0, 255;
+  --z-navbar: 700;
+}
+
+.topNav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  transition: all 300ms ease-in-out;
+  z-index: var(--z-navbar);
+}
+
+.navPanel {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(30, 30, 30, 0.6);
+  backdrop-filter: blur(12px);
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.navContent {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  width: 100%;
+  padding: 0.5rem 1rem;
+}
+
+.extended {
+  transform: translateY(0);
+}
+
+.collapsed {
+  transform: translateY(calc(-100% + 0.75rem));
+}
+
+/* Add a subtle pulsing blue glow to the nav panel */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(var(--color-neon-blue-rgb), 0.1);
+  }
+  50% {
+    box-shadow: 0 4px 16px rgba(var(--color-neon-blue-rgb), 0.3);
+  }
+}
+
+.navPanel:hover {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+@media (max-width: 768px) {
+  .navContent {
+    padding: 0.5rem;
+  }
+}

@@ -8,11 +8,11 @@ import {
   NavigationMenuList
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
-import { adminMainNavItems } from "./config/navItems";
-import { AdminMainNavGroupProps } from "./types";
-import styles from "./styles/AdminNavStyles.module.css";
+import { mainNavItems } from "../../constants/navConfig";
+import { MainNavGroupProps } from "../../types";
+import styles from "./styles.module.css";
 
-export function AdminMainNavGroup({ isCollapsed }: AdminMainNavGroupProps) {
+export function MainNavGroup({ isCollapsed }: MainNavGroupProps) {
   const location = useLocation();
 
   return (
@@ -21,7 +21,7 @@ export function AdminMainNavGroup({ isCollapsed }: AdminMainNavGroupProps) {
         "flex flex-wrap",
         isCollapsed ? "gap-1" : "gap-2 items-center"
       )}>
-        {adminMainNavItems.map((item) => {
+        {mainNavItems.map((item) => {
           const isActive = location.pathname === item.href || 
                          (item.href !== '/admin' && location.pathname.startsWith(item.href));
 
@@ -30,15 +30,15 @@ export function AdminMainNavGroup({ isCollapsed }: AdminMainNavGroupProps) {
               <NavigationMenuLink
                 className={cn(
                   "group flex items-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
-                  isCollapsed ? styles.iconOnly : styles.withText,
-                  isActive && styles.navIconActive
+                  isCollapsed ? styles.navItemIconOnly : styles.navItemWithText,
+                  isActive && styles.navItemActive
                 )}
                 href={item.href}
                 asChild
               >
                 <a className="flex items-center">
-                  {item.icon}
-                  {!isCollapsed && <span className={styles.navLabel}>{item.name}</span>}
+                  <span className={styles.navItemIcon}>{item.icon}</span>
+                  {!isCollapsed && <span className={styles.navItemLabel}>{item.name}</span>}
                 </a>
               </NavigationMenuLink>
             </NavigationMenuItem>

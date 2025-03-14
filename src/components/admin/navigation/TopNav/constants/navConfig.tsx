@@ -9,11 +9,14 @@ import {
   Key,
   LayoutDashboard,
   Settings,
-  Users
+  Users,
+  Search,
+  Bell,
+  HelpCircle
 } from "lucide-react";
-import { AdminNavItem } from "../types";
+import { NavItem } from "../types";
 
-export const adminMainNavItems: AdminNavItem[] = [
+export const mainNavItems: NavItem[] = [
   { 
     name: "Dashboard", 
     href: "/admin", 
@@ -63,5 +66,23 @@ export const adminMainNavItems: AdminNavItem[] = [
     name: "Settings", 
     href: "/admin/settings", 
     icon: <Settings className="h-5 w-5" /> 
+  }
+];
+
+export const utilityNavItems = [
+  { 
+    name: "Search", 
+    href: "/admin/search", 
+    icon: <Search className="h-5 w-5" /> 
+  },
+  { 
+    name: "Notifications", 
+    href: "/admin/notifications", 
+    icon: <Bell className="h-5 w-5" /> 
+  },
+  { 
+    name: "Help", 
+    href: "/admin/help", 
+    icon: <HelpCircle className="h-5 w-5" /> 
   }
 ];

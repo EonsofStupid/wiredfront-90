@@ -2,10 +2,10 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronUp, ChevronDown } from "lucide-react";
-import { AdminNavToggleProps } from "./types";
-import styles from "./styles/AdminNavStyles.module.css";
+import { NavToggleProps } from "../../types";
+import styles from "./styles.module.css";
 
-export const AdminNavToggle = ({ isExtended, onToggle }: AdminNavToggleProps) => {
+export const NavHandle = ({ isExtended, onToggle }: NavToggleProps) => {
   return (
     <Button
       variant="ghost"

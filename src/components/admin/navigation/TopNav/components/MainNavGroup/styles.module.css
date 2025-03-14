@@ -1,0 +1,37 @@
+
+.mainNavGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.navItemActive {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: white;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+.navItemActive svg {
+  filter: drop-shadow(0 0 4px rgba(var(--color-neon-blue-rgb), 0.7));
+}
+
+.navItemIcon {
+  transition: all 150ms ease-in-out;
+}
+
+.navItemIconOnly {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  justify-content: center;
+}
+
+.navItemWithText {
+  height: 2.25rem;
+  padding: 0 0.75rem;
+}
+
+.navItemLabel {
+  margin-left: 0.5rem;
+}
