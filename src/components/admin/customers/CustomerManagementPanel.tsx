@@ -17,8 +17,9 @@ interface UserProfile {
 }
 
 interface UserRAGData {
+  id: string;
   user_id: string;
-  rag_tier: string;
+  tier: string;
   vectors_used: number;
   queries_made: number;
   max_vectors: number;
@@ -51,7 +52,7 @@ export const CustomerManagementPanel = () => {
       // Combine the data
       const usersWithRAG = profiles.map((profile: UserProfile) => {
         const ragData = ragSettings.find(
-          (settings: UserRAGData) => settings.user_id === profile.id
+          (settings: any) => settings.user_id === profile.id
         );
         return {
           ...profile,
@@ -87,7 +88,7 @@ export const CustomerManagementPanel = () => {
       // This is a placeholder - actual implementation would depend on how you track user suspension
       const { error } = await supabase
         .from('user_roles')
-        .update({ suspended: !isSuspended })
+        .update({ suspended: isSuspended ? false : true })
         .eq('user_id', userId);
         
       if (error) throw error;
@@ -101,7 +102,7 @@ export const CustomerManagementPanel = () => {
   };
 
   if (isLoading) return <div>Loading customers...</div>;
-  if (error) return <div>Error loading customer data: {error.message}</div>;
+  if (error) return <div>Error loading customer data: {(error as Error).message}</div>;
 
   return (
     <Card className="w-full">

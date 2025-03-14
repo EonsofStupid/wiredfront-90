@@ -19,7 +19,7 @@ interface Subscription {
   current_period_end: string;
   created_at: string;
   updated_at: string;
-  username?: string; // Joined from profiles
+  username?: string; // Will be added manually
 }
 
 export const SubscriptionManagementPanel = () => {
@@ -30,21 +30,31 @@ export const SubscriptionManagementPanel = () => {
   const { data: subscriptions, isLoading, error, refetch } = useQuery({
     queryKey: ['admin', 'subscriptions'],
     queryFn: async (): Promise<Subscription[]> => {
-      const { data, error } = await supabase
+      // Get subscription data
+      const { data: subscriptionData, error: subError } = await supabase
         .from('subscriptions')
-        .select(`
-          *,
-          profiles:user_id (username)
-        `)
+        .select('*')
         .order('updated_at', { ascending: false });
 
-      if (error) throw error;
+      if (subError) throw subError;
       
-      // Format response to include username directly in the object
-      return data.map(sub => ({
-        ...sub,
-        username: sub.profiles?.username
-      }));
+      // Get profile data to map usernames
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, username');
+        
+      if (profileError) throw profileError;
+      
+      // Map usernames to subscriptions
+      const subsWithUsernames = subscriptionData.map((sub: any) => {
+        const profile = profiles.find((p: any) => p.id === sub.user_id);
+        return {
+          ...sub,
+          username: profile?.username || sub.user_id.substring(0, 8)
+        };
+      });
+      
+      return subsWithUsernames;
     }
   });
 
@@ -96,7 +106,7 @@ export const SubscriptionManagementPanel = () => {
   };
 
   if (isLoading) return <div>Loading subscription data...</div>;
-  if (error) return <div>Error loading subscription data: {error.message}</div>;
+  if (error) return <div>Error loading subscription data: {(error as Error).message}</div>;
 
   return (
     <div className="space-y-6">

@@ -18,7 +18,7 @@ interface RAGMetrics {
   average_latency: number;
   created_at: string;
   updated_at: string;
-  username?: string; // Joined from profiles
+  username?: string; // Will be added manually after querying
 }
 
 export const UsageMonitoringPanel = () => {
@@ -41,28 +41,35 @@ export const UsageMonitoringPanel = () => {
         }
       }
 
-      // Build query with join to get usernames
-      let query = supabase
-        .from('rag_metrics')
-        .select(`
-          *,
-          profiles:user_id (username)
-        `);
+      // First, get the RAG metrics
+      let query = supabase.from('rag_metrics').select('*');
       
       // Add time range filter if applicable
       if (fromDate) {
         query = query.gte('created_at', fromDate);
       }
 
-      const { data, error } = await query;
+      const { data: metricsData, error: metricsError } = await query;
       
-      if (error) throw error;
+      if (metricsError) throw metricsError;
       
-      // Format response to include username directly in the object
-      return data.map(item => ({
-        ...item,
-        username: item.profiles?.username
-      }));
+      // Next, get the user profiles to map usernames
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username');
+        
+      if (profilesError) throw profilesError;
+      
+      // Map the usernames to the metrics data
+      const metricsWithUsernames = metricsData.map((metric: any) => {
+        const profile = profiles.find((p: any) => p.id === metric.user_id);
+        return {
+          ...metric,
+          username: profile?.username || metric.user_id.substring(0, 8)
+        };
+      });
+      
+      return metricsWithUsernames;
     },
     refetchInterval: 30000 // Refresh every 30 seconds
   });
@@ -76,7 +83,7 @@ export const UsageMonitoringPanel = () => {
       ["User", "Queries", "Vectors", "Tokens", "Avg Latency (ms)", "Last Updated"].join(","),
       // Data rows
       ...usageMetrics.map(metric => [
-        metric.username || metric.user_id,
+        metric.username || metric.user_id.substring(0, 8),
         metric.query_count,
         metric.vector_count,
         metric.token_usage,
@@ -106,7 +113,7 @@ export const UsageMonitoringPanel = () => {
   })) || [];
 
   if (isLoading) return <div>Loading usage data...</div>;
-  if (error) return <div>Error loading usage data: {error.message}</div>;
+  if (error) return <div>Error loading usage data: {(error as Error).message}</div>;
 
   return (
     <div className="space-y-6">

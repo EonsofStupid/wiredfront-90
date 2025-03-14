@@ -13,7 +13,7 @@ interface RAGSettings {
   id: string;
   tier: string;
   max_vectors: number;
-  allow_pinecone: boolean;
+  allow_pinecone?: boolean;
 }
 
 export const FeatureManagementPanel = () => {
@@ -57,7 +57,13 @@ export const FeatureManagementPanel = () => {
         .single();
         
       if (error) return false;
-      return data?.value?.enabled === true;
+      
+      // Safely check if enabled property exists in the value
+      if (data?.value && typeof data.value === 'object') {
+        return (data.value as any).enabled === true;
+      }
+      
+      return false;
     } catch (e) {
       console.error("Error fetching Pinecone status:", e);
       return false;
@@ -118,7 +124,7 @@ export const FeatureManagementPanel = () => {
   };
 
   if (isLoading) return <div>Loading feature management...</div>;
-  if (error) return <div>Error loading feature data: {error.message}</div>;
+  if (error) return <div>Error loading feature data: {(error as Error).message}</div>;
 
   return (
     <div className="space-y-6">

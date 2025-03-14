@@ -38,13 +38,25 @@ export const EnhancedSystemSettingsPanel = () => {
       
       // Set state from fetched data
       const ragEnabledSetting = data.find(s => s.key === 'rag_enabled');
-      if (ragEnabledSetting) setRagEnabled(ragEnabledSetting.value.enabled === true);
+      
+      if (ragEnabledSetting?.value && typeof ragEnabledSetting.value === 'object') {
+        setRagEnabled((ragEnabledSetting.value as any).enabled === true);
+      }
       
       const costSettings = data.filter(s => s.key.includes('cost_per_thousand'));
       costSettings.forEach(setting => {
-        if (setting.key === 'standard_cost_per_thousand') setStandardCost(setting.value.amount);
-        if (setting.key === 'premium_cost_per_thousand') setPremiumCost(setting.value.amount);
-        if (setting.key === 'enterprise_cost_per_thousand') setEnterpriseCost(setting.value.amount);
+        if (setting.key === 'standard_cost_per_thousand' && 
+            setting.value && typeof setting.value === 'object') {
+          setStandardCost((setting.value as any).amount || "0.01");
+        }
+        if (setting.key === 'premium_cost_per_thousand' && 
+            setting.value && typeof setting.value === 'object') {
+          setPremiumCost((setting.value as any).amount || "0.005");
+        }
+        if (setting.key === 'enterprise_cost_per_thousand' && 
+            setting.value && typeof setting.value === 'object') {
+          setEnterpriseCost((setting.value as any).amount || "0.003");
+        }
       });
       
       return data;
@@ -112,7 +124,7 @@ export const EnhancedSystemSettingsPanel = () => {
   };
 
   if (isLoading) return <div>Loading system settings...</div>;
-  if (error) return <div>Error loading system settings: {error.message}</div>;
+  if (error) return <div>Error loading system settings: {(error as Error).message}</div>;
 
   return (
     <div className="space-y-6">

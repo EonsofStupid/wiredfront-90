@@ -12,7 +12,7 @@ import {
   KanbanSquare,
   CreditCard,
   BarChart3,
-  Cog
+  Layers
 } from "lucide-react";
 import { AdminNavIconButton } from "./AdminNavIconButton";
 import { useUIStore } from "@/stores/ui";
