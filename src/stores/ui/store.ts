@@ -27,14 +27,7 @@ export const useUIStore = create<UIStore>()(
       },
       project: {
         activeProjectId: null,
-        projects: [
-          {
-            id: '1',
-            name: 'Demo Project',
-            description: 'A sample project to get started',
-            lastModified: new Date(),
-          }
-        ],
+        projects: [], // Removed the demo project
       },
       accessibility: {
         reducedMotion: false,

@@ -12,6 +12,7 @@ import { GitHubImportModal } from "@/components/github/GitHubImportModal";
 import { ProjectIndexingStatus } from "@/components/projects/ProjectIndexingStatus";
 import { useAuthStore } from "@/stores/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/services/chat/LoggingService";
 
 interface ProjectOverviewProps {
   className?: string;
@@ -96,6 +97,7 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
   };
   
   const handleAddProject = () => {
+    logger.info("New project button clicked");
     addProject({
       name: `New Project ${projects.length + 1}`,
       description: "Add a description",
@@ -104,11 +106,13 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
   };
 
   const handleGitHubConnect = () => {
+    logger.info("GitHub connect button clicked");
     setIsConnectDialogOpen(true);
     connectGitHub();
   };
   
   const handleImportProject = (projectId: string) => {
+    logger.info("Project import completed", { projectId });
     setActiveProject(projectId);
     
     // For demo purposes, let's simulate RAG indexing
@@ -141,6 +145,18 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
       setIsIndexing(false);
       setRecentlyImportedProject(null);
     }, 15000);
+  };
+
+  const handleOpenImportModal = () => {
+    logger.info("Import from GitHub button clicked");
+    
+    if (!isConnected) {
+      logger.warn("GitHub import attempted without connection");
+      setIsConnectDialogOpen(true);
+      return;
+    }
+    
+    setIsImportModalOpen(true);
   };
 
   // Extract username from metadata if available
@@ -190,7 +206,7 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
             
             <ProjectActions 
               onAddProject={handleAddProject} 
-              onImportProject={handleImportProject}
+              onImportProject={handleOpenImportModal}
             />
           </div>
         )}
