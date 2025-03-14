@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Menu, Search, GitBranch, Bell } from 'lucide-react';
+import { Menu, Search, GitBranch, Bell, FileSearch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -43,6 +43,7 @@ export function ChatHeaderTopNav() {
           >
             <ul className="space-y-1">
               <NavItem icon={<Search className="h-4 w-4" />} label="RAG Search" onClick={() => logger.info('RAG Search clicked')} />
+              <NavItem icon={<FileSearch className="h-4 w-4" />} label="Vector Database" onClick={() => logger.info('Vector Database clicked')} />
               <NavItem icon={<Bell className="h-4 w-4" />} label="Notifications" onClick={() => logger.info('Notifications clicked')} />
               <NavItem icon={<GitBranch className="h-4 w-4" />} label="GitHub Status" onClick={() => logger.info('GitHub Status clicked')} />
             </ul>

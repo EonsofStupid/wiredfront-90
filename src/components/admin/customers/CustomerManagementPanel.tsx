@@ -88,7 +88,7 @@ export const CustomerManagementPanel = () => {
       // This is a placeholder - actual implementation would depend on how you track user suspension
       const { error } = await supabase
         .from('user_roles')
-        .update({ suspended: isSuspended ? false : true })
+        .update({ is_active: isSuspended ? true : false })
         .eq('user_id', userId);
         
       if (error) throw error;
