@@ -1,51 +1,41 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { cn } from "@/lib/utils";
-import { useLocation } from "react-router-dom";
 import { AdminMainNavGroup } from "./AdminMainNavGroup";
 import { AdminUtilityNavGroup } from "./AdminUtilityNavGroup";
 import { AdminNavToggle } from "./AdminNavToggle";
 import { useUIStore } from "@/stores/ui";
-
-interface AdminTopNavOverlayProps {
-  className?: string;
-}
+import { AdminTopNavOverlayProps } from "./types";
+import { useAdminNav } from "./hooks/useAdminNav";
+import styles from "./styles/AdminNavStyles.module.css";
 
 export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
-  const [isExtended, setIsExtended] = useState(true);
-  const location = useLocation();
-  const { layout, toggleAdminIconOnly } = useUIStore();
+  const { layout } = useUIStore();
   const { adminIconOnly } = layout;
-
-  useEffect(() => {
-    setIsExtended(true);
-  }, [location.pathname]);
+  const { isExtended, toggleExtended } = useAdminNav();
 
   return (
     <div
       className={cn(
-        "fixed top-0 left-0 right-0 transition-all duration-300 ease-in-out z-[var(--z-navbar)]",
-        isExtended ? "translate-y-0" : "-translate-y-[calc(100%-0.75rem)]",
+        styles.adminTopNav,
+        isExtended ? styles.extended : styles.collapsed,
         className
       )}
     >
-      <div className="admin-glass-panel border-neon-border relative">
-        <div className="flex flex-col h-full p-4">
-          {/* Single row with main nav on left and utility nav on right */}
-          <div className="flex items-center justify-between w-full">
-            {/* Left side - Main navigation */}
+      <div className={styles.navPanel}>
+        <div className={styles.navContent}>
+          <div className={styles.navRow}>
+            {/* Main navigation items that will flex-wrap as needed */}
             <AdminMainNavGroup isCollapsed={adminIconOnly} />
-
-            {/* Right side - Utility navigation */}
-            <div className="flex-shrink-0">
-              <AdminUtilityNavGroup />
-            </div>
+            
+            {/* Utility group that will stay on the right */}
+            <AdminUtilityNavGroup />
           </div>
         </div>
 
         <AdminNavToggle 
           isExtended={isExtended} 
-          onToggle={() => setIsExtended(!isExtended)} 
+          onToggle={toggleExtended} 
         />
       </div>
     </div>

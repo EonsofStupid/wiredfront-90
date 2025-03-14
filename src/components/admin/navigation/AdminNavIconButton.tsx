@@ -2,23 +2,16 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
-import { LucideIcon } from "lucide-react";
 import { useUIStore } from "@/stores/ui";
 import { cn } from "@/lib/utils";
+import styles from "./styles/AdminNavStyles.module.css";
+import { AdminNavIconButtonProps } from "./types";
 import {
   AdminTooltip,
   AdminTooltipContent,
   AdminTooltipProvider,
   AdminTooltipTrigger
 } from "@/components/admin/ui/AdminTooltip";
-
-interface AdminNavIconButtonProps {
-  icon: LucideIcon;
-  tooltip: string;
-  route: string;
-  className?: string;
-  text?: string; // Optional text to display beside the icon
-}
 
 export const AdminNavIconButton = ({
   icon: Icon,
@@ -47,12 +40,13 @@ export const AdminNavIconButton = ({
       variant="ghost" 
       size={adminIconOnly || !text ? "icon" : "sm"}
       className={cn(
-        "admin-nav-icon transition-all",
-        isActive && "admin-nav-icon-active",
-        adminIconOnly ? "w-9 h-9 p-0" : "h-9 px-3",
+        styles.navIcon,
+        isActive && styles.navIconActive,
+        adminIconOnly ? styles.iconOnly : styles.withText,
         className
       )}
       onClick={() => navigate(route)}
+      aria-label={tooltip}
     >
       <Icon className={cn("h-5 w-5", !adminIconOnly && text && "mr-2")} />
       {!adminIconOnly && text && <span className={isActive ? "text-white" : ""}>{text}</span>}

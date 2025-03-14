@@ -3,15 +3,11 @@ import React from "react";
 import { Search, Bell, HelpCircle } from "lucide-react";
 import { AdminNavIconButton } from "./AdminNavIconButton";
 import { AdminViewToggle } from "./AdminViewToggle";
-import { cn } from "@/lib/utils";
-import { useUIStore } from "@/stores/ui";
+import styles from "./styles/AdminNavStyles.module.css";
 
 export const AdminUtilityNavGroup = () => {
-  const { layout } = useUIStore();
-  const { adminIconOnly } = layout;
-
   return (
-    <div className="flex items-center space-x-2">
+    <div className={styles.utilityNavGroup}>
       <AdminNavIconButton 
         icon={Search} 
         tooltip="Search" 

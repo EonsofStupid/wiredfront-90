@@ -3,6 +3,7 @@ import React from "react";
 import { LayoutGrid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUIStore } from "@/stores/ui";
+import styles from "./styles/AdminNavStyles.module.css";
 import {
   AdminTooltip,
   AdminTooltipContent,
@@ -22,7 +23,7 @@ export const AdminViewToggle = () => {
             variant="ghost"
             size="icon"
             onClick={toggleAdminIconOnly}
-            className="admin-nav-icon"
+            className={styles.navIcon}
             aria-label={adminIconOnly ? "Show labels" : "Hide labels"}
           >
             {adminIconOnly ? (
