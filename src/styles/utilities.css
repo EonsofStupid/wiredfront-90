@@ -1,6 +1,0 @@
-
-@layer components {
-  .hover-scale {
-    @apply transition-transform duration-200 hover:scale-[1.03];
-  }
-}
