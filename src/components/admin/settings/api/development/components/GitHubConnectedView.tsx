@@ -1,7 +1,8 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, GitBranch, Loader2, RefreshCw } from "lucide-react";
+import { Check, ExternalLink, GitBranch, Loader2, RefreshCw } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface GithubMetrics {
   remaining: number;
@@ -34,7 +35,21 @@ export function GitHubConnectedView({
           <h4 className="font-medium flex items-center gap-2">
             <Check className="h-4 w-4 text-green-500" />
             GitHub Connected
-            {githubUsername && <span className="text-sm">({githubUsername})</span>}
+            {githubUsername && (
+              <span className="text-sm flex items-center gap-1">
+                (
+                <a 
+                  href={`https://github.com/${githubUsername}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#8B5CF6] hover:text-[#7E69AB] transition-colors flex items-center"
+                >
+                  @{githubUsername}
+                  <ExternalLink className="h-3 w-3 ml-1" />
+                </a>
+                )
+              </span>
+            )}
           </h4>
           
           {metrics && (

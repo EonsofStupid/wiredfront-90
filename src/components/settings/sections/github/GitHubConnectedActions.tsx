@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { GitBranch, GitPullRequest, RefreshCw, Share2 } from "lucide-react";
+import { ExternalLink, GitBranch, GitPullRequest, RefreshCw, Share2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
@@ -56,7 +56,20 @@ export function GitHubConnectedActions({
           ) : (
             <div>
               <p className="text-sm text-muted-foreground">
-                Connected as <span className="font-medium text-primary">@{username}</span>
+                Connected as{" "}
+                {username ? (
+                  <a 
+                    href={`https://github.com/${username}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-[#8B5CF6] hover:text-[#7E69AB] transition-colors inline-flex items-center"
+                  >
+                    @{username}
+                    <ExternalLink className="h-3 w-3 ml-1" />
+                  </a>
+                ) : (
+                  <span className="font-medium text-primary">Unknown User</span>
+                )}
               </p>
               {repoCount !== undefined && (
                 <p className="text-sm text-muted-foreground">
