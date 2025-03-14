@@ -55,7 +55,7 @@ export const AdminNavIconButton = ({
       onClick={() => navigate(route)}
     >
       <Icon className={cn("h-5 w-5", !adminIconOnly && text && "mr-2")} />
-      {!adminIconOnly && text && <span>{text}</span>}
+      {!adminIconOnly && text && <span className={isActive ? "text-white" : ""}>{text}</span>}
     </Button>
   );
 
