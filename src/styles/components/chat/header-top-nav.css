@@ -1,0 +1,40 @@
+
+.chat-header-top-nav {
+  position: relative;
+  isolation: isolate;
+}
+
+.chat-header-top-nav::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom right,
+    var(--chat-knowledge-text),
+    transparent
+  );
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.chat-header-top-nav-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.chat-header-top-nav-button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, 
+    rgba(var(--color-neon-blue), 0.2),
+    rgba(var(--color-neon-pink), 0.2)
+  );
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.chat-header-top-nav-button:hover::after {
+  opacity: 1;
+}

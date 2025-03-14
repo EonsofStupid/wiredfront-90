@@ -1,46 +1,51 @@
 
-.hero--glitch {
+.glitch-text {
   position: relative;
-  background-color: #000;
-  overflow: hidden;
+  display: inline-block;
 }
 
-.hero--glitch::before,
-.hero--glitch::after {
-  content: "";
+.glitch-text::before,
+.glitch-text::after {
+  content: attr(data-text);
   position: absolute;
-  inset: 0;
-  background: inherit;
-  mix-blend-mode: screen;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.8;
 }
 
-.hero--glitch::before {
-  transform: translateX(-2px);
-  filter: hue-rotate(20deg);
-  animation: glitchAnim var(--anim-duration-fast) infinite steps(20, end);
+.glitch-text::before {
+  left: 2px;
+  text-shadow: -1px 0 var(--neon-pink);
+  animation: glitch-anim-1 2s infinite linear alternate-reverse;
 }
 
-.hero--glitch::after {
-  transform: translateX(2px);
-  filter: hue-rotate(-20deg);
-  animation: glitchAnim calc(var(--anim-duration-fast) * 1.5) infinite steps(25, end);
+.glitch-text::after {
+  left: -2px;
+  text-shadow: 2px 0 var(--neon-cyan);
+  animation: glitch-anim-2 3s infinite linear alternate-reverse;
 }
 
-@keyframes glitchAnim {
-  0% { clip-path: inset(0 0 0 0); transform: translate(0); }
-  5% { clip-path: inset(10% 0 0 0); transform: translate(-5px, -2px); }
-  6% { clip-path: inset(80% 0 0 0); transform: translate(-5px, -2px); }
-  7% { clip-path: inset(0 0 0 0); transform: translate(0); }
-  50% { clip-path: inset(0 0 0 0); transform: translate(0); }
-  55% { clip-path: inset(30% 0 40% 0); transform: translate(5px, 2px); }
-  56% { clip-path: inset(30% 0 40% 0); transform: translate(5px, 2px); }
-  57% { clip-path: inset(0 0 0 0); transform: translate(0); }
-  100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+@keyframes glitch-anim-1 {
+  0%, 100% { clip-path: inset(50% 0 30% 0); }
+  20% { clip-path: inset(33% 0 33% 0); }
+  40% { clip-path: inset(10% 0 60% 0); }
+  60% { clip-path: inset(70% 0 10% 0); }
+  80% { clip-path: inset(40% 0 43% 0); }
+}
+
+@keyframes glitch-anim-2 {
+  0%, 100% { clip-path: inset(30% 0 50% 0); }
+  20% { clip-path: inset(63% 0 23% 0); }
+  40% { clip-path: inset(20% 0 30% 0); }
+  60% { clip-path: inset(45% 0 40% 0); }
+  80% { clip-path: inset(5% 0 70% 0); }
 }
 
 @media (prefers-reduced-motion) {
-  .hero--glitch::before,
-  .hero--glitch::after {
+  .glitch-text::before,
+  .glitch-text::after {
     animation: none;
   }
 }
