@@ -22,9 +22,12 @@ interface Subscription {
   username?: string; // Will be added manually
 }
 
+// Define type for RAG tier
+type RagTier = "standard" | "premium";
+
 export const SubscriptionManagementPanel = () => {
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
-  const [newPlan, setNewPlan] = useState<string>("premium");
+  const [newPlan, setNewPlan] = useState<RagTier>("premium");
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const { data: subscriptions, isLoading, error, refetch } = useQuery({
@@ -73,7 +76,7 @@ export const SubscriptionManagementPanel = () => {
         
       if (error) throw error;
       
-      // Also update the user's RAG tier
+      // Also update the user's RAG tier with properly typed value
       const { error: ragError } = await supabase
         .from('rag_user_settings')
         .update({ tier: newPlan })
@@ -145,7 +148,7 @@ export const SubscriptionManagementPanel = () => {
                   Plan
                 </label>
                 <Select 
-                  onValueChange={setNewPlan}
+                  onValueChange={(value: string) => setNewPlan(value as RagTier)}
                   defaultValue="premium"
                 >
                   <SelectTrigger className="col-span-3">
@@ -154,7 +157,6 @@ export const SubscriptionManagementPanel = () => {
                   <SelectContent>
                     <SelectItem value="standard">Standard</SelectItem>
                     <SelectItem value="premium">Premium</SelectItem>
-                    <SelectItem value="enterprise">Enterprise</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
