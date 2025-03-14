@@ -1,21 +1,26 @@
 
-import { useState, useEffect } from "react";
-import { useUIStore } from "@/stores";
+import { useState } from "react";
 import { useGitHubConnection } from "@/hooks/github/useGitHubConnection";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import { logger } from "@/services/chat/LoggingService";
 import { toast } from "sonner";
 import { GitHubConnectionStatusProps } from "@/types/admin/settings/github";
+import { useProjects } from "@/hooks/projects/useProjects";
+import { ProjectCreateDTO } from "@/services/projects/ProjectService";
 
 export function useProjectOverview() {
-  const { 
-    project: { projects, activeProjectId },
-    setActiveProject, 
-    addProject 
-  } = useUIStore();
-  
   const { user } = useAuthStore();
+  const {
+    projects,
+    activeProject,
+    activeProjectId,
+    isLoadingProjects,
+    createProject,
+    setActiveProject,
+    deleteProject
+  } = useProjects();
+  
   const [isConnectDialogOpen, setIsConnectDialogOpen] = useState(false);
   const [isDisconnectDialogOpen, setIsDisconnectDialogOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -32,15 +37,6 @@ export function useProjectOverview() {
     connectGitHub,
     disconnectGitHub
   } = useGitHubConnection();
-  
-  const activeProject = projects.find(p => p.id === activeProjectId);
-  
-  useEffect(() => {
-    // Check for newly imported projects with RAG indexing in progress
-    if (activeProjectId && isConnected) {
-      checkIndexingStatus(activeProjectId);
-    }
-  }, [activeProjectId, isConnected]);
   
   const checkIndexingStatus = async (projectId: string) => {
     if (!user?.id) return;
@@ -86,13 +82,15 @@ export function useProjectOverview() {
     }
   };
   
-  const handleAddProject = () => {
+  const handleAddProject = async () => {
     logger.info("New project button clicked");
-    addProject({
-      name: `New Project ${projects.length + 1}`,
-      description: "Add a description",
-      lastModified: new Date(),
-    });
+    
+    const projectData: ProjectCreateDTO = {
+      name: `New Project ${(projects?.length || 0) + 1}`,
+      description: "Add a description"
+    };
+    
+    await createProject(projectData);
   };
 
   const handleGitHubConnect = () => {
@@ -148,6 +146,11 @@ export function useProjectOverview() {
     setIsImportModalOpen(true);
   };
 
+  const handleDeleteProject = async (projectId: string) => {
+    logger.info("Delete project button clicked", { projectId });
+    await deleteProject(projectId);
+  };
+
   // Extract username from metadata if available
   const githubUsername = connectionStatus.metadata && 
     connectionStatus.metadata.username ? connectionStatus.metadata.username : null;
@@ -159,6 +162,7 @@ export function useProjectOverview() {
     projects,
     activeProject,
     activeProjectId,
+    isLoadingProjects,
     isConnected,
     isChecking,
     connectionStatus,
@@ -176,6 +180,7 @@ export function useProjectOverview() {
     handleGitHubConnect,
     handleImportProject,
     handleOpenImportModal,
+    handleDeleteProject,
     connectGitHub,
     disconnectGitHub,
     setActiveProject

@@ -27,7 +27,7 @@ export const useUIStore = create<UIStore>()(
       },
       project: {
         activeProjectId: null,
-        projects: [], // Start with empty projects array
+        // We're removing the projects array as we'll now use Supabase
       },
       accessibility: {
         reducedMotion: false,
@@ -80,30 +80,7 @@ export const useUIStore = create<UIStore>()(
           },
         })),
         
-      addProject: (project) =>
-        set((state) => ({
-          project: {
-            ...state.project,
-            projects: [
-              ...state.project.projects,
-              {
-                ...project,
-                id: uuidv4(),
-              },
-            ],
-          },
-        })),
-        
-      removeProject: (projectId) =>
-        set((state) => ({
-          project: {
-            ...state.project,
-            projects: state.project.projects.filter(p => p.id !== projectId),
-            activeProjectId: state.project.activeProjectId === projectId 
-              ? (state.project.projects[0]?.id || null) 
-              : state.project.activeProjectId,
-          },
-        })),
+      // Removing addProject and removeProject as they'll be handled by the new service
     }),
     {
       name: 'ui-storage',

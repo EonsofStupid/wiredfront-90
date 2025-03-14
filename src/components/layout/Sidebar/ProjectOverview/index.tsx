@@ -21,6 +21,7 @@ export function ProjectOverview({ className, isCompact = false }: ProjectOvervie
     projects,
     activeProject,
     activeProjectId,
+    isLoadingProjects,
     isConnected,
     isChecking,
     connectionStatus,
@@ -38,6 +39,7 @@ export function ProjectOverview({ className, isCompact = false }: ProjectOvervie
     handleGitHubConnect,
     handleImportProject,
     handleOpenImportModal,
+    handleDeleteProject,
     connectGitHub,
     disconnectGitHub,
     setActiveProject
@@ -69,7 +71,15 @@ export function ProjectOverview({ className, isCompact = false }: ProjectOvervie
       <ScrollArea className="flex-1">
         {activeProject ? (
           <ProjectDetails
-            project={activeProject}
+            project={{
+              id: activeProject.id,
+              name: activeProject.name,
+              description: activeProject.description,
+              lastModified: new Date(activeProject.updated_at),
+              github_repo: activeProject.github_repo,
+              language: activeProject.tech_stack?.primaryLanguage,
+              files_count: activeProject.tech_stack?.files_count
+            }}
             isGithubConnected={isConnected}
             githubUsername={githubUsername}
           />
@@ -81,12 +91,17 @@ export function ProjectOverview({ className, isCompact = false }: ProjectOvervie
       </ScrollArea>
       
       <ProjectList
-        projects={projects}
+        projects={projects?.map(p => ({
+          ...p,
+          lastModified: new Date(p.updated_at)
+        })) || []}
         activeProjectId={activeProjectId}
         onSelectProject={setActiveProject}
         onAddProject={handleAddProject}
         onImportProject={handleOpenImportModal}
+        onDeleteProject={handleDeleteProject}
         isGithubConnected={isConnected}
+        isLoading={isLoadingProjects}
       />
       
       <GitHubConnectDialog

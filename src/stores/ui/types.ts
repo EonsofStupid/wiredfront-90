@@ -5,17 +5,11 @@ export interface UIState {
     sidebarExpanded: boolean;
     contentWidth: 'full' | 'contained';
     rightSidebarVisible: boolean;
-    adminIconOnly: boolean; // New property for admin nav display mode
+    adminIconOnly: boolean;
   };
   project: {
     activeProjectId: string | null;
-    projects: Array<{
-      id: string;
-      name: string;
-      description?: string;
-      lastModified: Date;
-      github_repo?: string; // Added github_repo property
-    }>;
+    // Removing the projects array from here
   };
   accessibility: {
     reducedMotion: boolean;
@@ -38,12 +32,11 @@ export interface UIActions {
   setTheme: (theme: UIState['theme']) => void;
   toggleSidebar: () => void;
   toggleRightSidebar: () => void;
-  toggleAdminIconOnly: () => void; // New action to toggle admin icon display
+  toggleAdminIconOnly: () => void;
   updateLayout: (updates: Partial<UIState['layout']>) => void;
   updateAccessibility: (updates: Partial<UIState['accessibility']>) => void;
   setActiveProject: (projectId: string) => void;
-  addProject: (project: Omit<UIState['project']['projects'][0], 'id'>) => void;
-  removeProject: (projectId: string) => void;
+  // Removing addProject and removeProject as they'll be handled by the new service
 }
 
 export type UIStore = UIState & UIActions;
