@@ -2,9 +2,16 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { Tables } from "@/integrations/supabase/types";
 
-type SystemLog = Tables["system_logs"]["Row"];
+export interface SystemLog {
+  id: string;
+  timestamp: string;
+  level: string;
+  source: string;
+  message: string;
+  metadata: any | null;
+  user_id: string | null;
+}
 
 export function useSystemLogs() {
   const [logs, setLogs] = useState<SystemLog[]>([]);
@@ -23,9 +30,10 @@ export function useSystemLogs() {
     setError(null);
     
     try {
+      // Use any type here since the system_logs table may not be in the types yet
       let query = supabase
         .from('system_logs')
-        .select('*');
+        .select('*') as any;
       
       // Sort by timestamp
       query = query.order('timestamp', { ascending: sortDirection === 'asc' });
@@ -41,7 +49,7 @@ export function useSystemLogs() {
         setLogs(data as SystemLog[]);
         
         // Extract unique sources for the filter
-        const sources = [...new Set(data.map(log => log.source))];
+        const sources = [...new Set(data.map((log: SystemLog) => log.source))];
         setUniqueSources(sources);
       }
     } catch (err) {
@@ -95,7 +103,7 @@ export function useSystemLogs() {
       const { error: deleteError } = await supabase
         .from('system_logs')
         .delete()
-        .not('id', 'is', null); // Dummy condition to delete all
+        .not('id', 'is', null) as any; // Type assertion to avoid type issues
       
       if (deleteError) throw deleteError;
       

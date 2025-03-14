@@ -1,10 +1,11 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-interface LogOptions {
+export interface LogOptions {
   source?: string;
   metadata?: Record<string, any>;
   userId?: string;
+  [key: string]: any; // Allow any additional properties
 }
 
 class Logger {

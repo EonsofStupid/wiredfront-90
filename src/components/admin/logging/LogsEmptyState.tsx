@@ -9,7 +9,7 @@ interface LogsEmptyStateProps {
 export function LogsEmptyState({ logsExist }: LogsEmptyStateProps) {
   return (
     <div className="py-8 text-center">
-      <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+      <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" data-testid="logs-empty-icon" />
       <h3 className="text-lg font-medium mb-1">No logs found</h3>
       <p className="text-sm text-muted-foreground">
         {logsExist 

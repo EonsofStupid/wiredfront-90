@@ -7,7 +7,7 @@ export function LogsHeader() {
   return (
     <CardHeader>
       <CardTitle className="text-xl font-semibold flex items-center gap-2">
-        <FileText className="h-5 w-5" />
+        <FileText className="h-5 w-5" data-testid="logs-header-icon" />
         System Logs
       </CardTitle>
       <CardDescription>
