@@ -28,7 +28,11 @@ export interface GitHubConnectionStatus {
   };
 }
 
+// String literal type for simple connection states
 export type GitHubConnectionState = 'idle' | 'connecting' | 'connected' | 'error';
+
+// Combined type that can be either the simple state or the detailed status object
+export type GitHubConnectionStatusType = GitHubConnectionState | GitHubConnectionStatus;
 
 export interface GitHubAuthError {
   code: string;

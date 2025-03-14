@@ -3,11 +3,20 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { GithubIcon } from "lucide-react";
 import { GitHubUserBadge } from "@/components/github/GitHubUserBadge";
+import { GitHubConnectionState } from "@/types/admin/settings/github";
 
 interface GitHubConnectionSectionProps {
   isConnected: boolean;
   isChecking: boolean;
-  connectionStatus: 'idle' | 'connecting' | 'connected' | 'error';
+  connectionStatus: GitHubConnectionState | {
+    status: string;
+    lastCheck: string;
+    errorMessage?: string;
+    metadata?: {
+      username?: string;
+      [key: string]: any;
+    };
+  };
   username: string | null;
   onConnect: () => void;
   onDisconnect: () => void;
@@ -23,6 +32,12 @@ export function GitHubConnectionSection({
   onDisconnect,
   className
 }: GitHubConnectionSectionProps) {
+  // Determine if the connection is in the connecting state
+  const isConnecting = isChecking || 
+    (typeof connectionStatus === 'string' ? 
+      connectionStatus === 'connecting' : 
+      connectionStatus.status === 'connecting');
+
   return (
     <div className={cn(
       "p-4 border-b border-neon-blue/20",
@@ -51,11 +66,11 @@ export function GitHubConnectionSection({
           <Button 
             variant="outline"
             size="sm"
-            disabled={isChecking || connectionStatus === 'connecting'}
+            disabled={isConnecting}
             onClick={onConnect}
             className="h-7 text-xs border-neon-blue text-neon-blue hover:bg-neon-blue/10 hover:shadow-[0_0_8px_theme(colors.neon.blue)]"
           >
-            {isChecking || connectionStatus === 'connecting' ? 'Connecting...' : 'Connect'}
+            {isConnecting ? 'Connecting...' : 'Connect'}
           </Button>
         )}
       </div>
