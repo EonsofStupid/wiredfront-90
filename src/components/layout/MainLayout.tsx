@@ -41,10 +41,11 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
         
         <div 
           className={cn(
-            "fixed right-0 top-16 bottom-12 glass-card border-l border-neon-blue/20 transition-all duration-300 z-[var(--z-navbar)]",
+            "fixed right-0 top-16 bottom-12 glass-card border-l border-neon-blue/20 transition-all duration-300",
             isRightSidebarVisible ? "translate-x-0" : "translate-x-full",
             "w-64"
           )}
+          style={{ position: 'fixed', zIndex: 'var(--z-projecthub)' }}
         >
           <ProjectOverview isCompact={isCompact} className="h-full" />
         </div>
@@ -53,4 +54,4 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
       <BottomBar className="fixed bottom-0 left-0 right-0 z-[var(--z-navbar)]" />
     </div>
   );
-};
+}

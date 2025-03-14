@@ -24,17 +24,18 @@
     --ring: 240 4.9% 83.9%;
     --radius: 0.5rem;
 
-    /* Updated Z-index hierarchy */
-    --z-chat: 9700;
-    --z-projecthub: 9600;
-    --z-modal: 1000;
-    --z-dropdown: 900;
-    --z-tooltip: 800;
-    --z-navbar: 700;
-    --z-floating: 600;
-    --z-content: 500;
-    --z-background: 400;
-    --z-base: 300;
+    /* Z-index hierarchy - CRITICAL: these must be used consistently */
+    --z-user-menu: 9750;      /* Highest priority - above all */
+    --z-chat: 9700;           /* Chat components */
+    --z-projecthub: 9600;     /* Project hub components */
+    --z-modal: 1000;          /* Modal dialogs */
+    --z-dropdown: 900;        /* Dropdown menus */
+    --z-tooltip: 800;         /* Tooltips */
+    --z-navbar: 700;          /* Navigation bars */
+    --z-floating: 600;        /* Floating elements */
+    --z-content: 500;         /* Main content */
+    --z-background: 400;      /* Background elements */
+    --z-base: 300;            /* Base elements */
 
     /* Color variables for rgb values */
     --color-neon-blue: 0 255 255;

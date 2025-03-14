@@ -19,7 +19,7 @@ export const TopBar = ({ className, isCompact, onToggleCompact }: TopBarProps) =
   const isRightSidebarVisible = layout.rightSidebarVisible;
 
   return (
-    <header className={cn("h-16 border-b border-neon-blue/20 glass-card px-6 relative z-40", className)}>
+    <header className={cn("h-16 border-b border-neon-blue/20 glass-card px-6 relative", className)}>
       <div className="h-full flex items-center justify-between">
         <div className="flex items-center gap-4">
           <h1 className="gradient-text text-2xl font-bold">wiredFRONT</h1>
@@ -91,7 +91,9 @@ export const TopBar = ({ className, isCompact, onToggleCompact }: TopBarProps) =
               <TooltipContent>Settings</TooltipContent>
             </Tooltip>
 
-            <UserMenu />
+            <div className="relative" style={{ zIndex: 'var(--z-user-menu)' }}>
+              <UserMenu />
+            </div>
           </div>
         </TooltipProvider>
       </div>

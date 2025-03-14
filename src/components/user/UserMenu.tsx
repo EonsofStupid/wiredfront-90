@@ -28,6 +28,7 @@ export const UserMenu = () => {
   return (
     <div 
       className={styles.userMenuContainer}
+      style={{ zIndex: 'var(--z-user-menu)' }} 
     >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
