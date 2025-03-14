@@ -1,7 +1,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Github, AlertCircle } from "lucide-react";
+import { Github, AlertCircle, ExternalLink } from "lucide-react";
 
 interface GitHubStatusSectionProps {
   isConnected: boolean;
@@ -38,7 +38,15 @@ export function GitHubStatusSection({
       {isConnected && username && (
         <div className="mt-2 text-sm">
           <span className="text-muted-foreground">Connected as: </span>
-          <span className="font-medium">@{username}</span>
+          <a 
+            href={`https://github.com/${username}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-[#8B5CF6] hover:text-[#7E69AB] transition-colors inline-flex items-center"
+          >
+            @{username}
+            <ExternalLink className="h-3 w-3 ml-1" />
+          </a>
         </div>
       )}
       
