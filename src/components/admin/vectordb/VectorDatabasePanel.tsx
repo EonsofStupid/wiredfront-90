@@ -16,14 +16,24 @@ export const VectorDatabasePanel = () => {
   const [expandedVector, setExpandedVector] = useState<string | null>(null);
 
   // Fetch project vectors with project information
-  const { data: vectors, isLoading, error } = useQuery({
+  const { data: vectors = [], isLoading, error } = useQuery({
     queryKey: ["project-vectors"],
     queryFn: async (): Promise<ProjectVector[]> => {
-      // We need to use a custom RPC function to fetch project vectors
-      // since the table isn't in the TypeScript types yet
+      // Use direct table access with join instead of RPC
       const { data, error } = await supabase
-        .rpc('get_project_vectors_with_details')
-        .select('*');
+        .from('project_vectors')
+        .select(`
+          id,
+          project_id,
+          vector_data,
+          embedding,
+          created_at,
+          updated_at,
+          projects:project_id (
+            name,
+            user_id
+          )
+        `);
 
       if (error) {
         console.error("Error fetching project vectors:", error);
@@ -38,7 +48,9 @@ export const VectorDatabasePanel = () => {
   const deleteMutation = useMutation({
     mutationFn: async (vectorId: string) => {
       const { error } = await supabase
-        .rpc('delete_project_vector', { vector_id: vectorId });
+        .from('project_vectors')
+        .delete()
+        .eq('id', vectorId);
       
       if (error) throw error;
       return vectorId;

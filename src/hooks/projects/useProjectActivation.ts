@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ProjectEventService } from "@/services/projects/ProjectEventService";
+import { toast } from "sonner";
 
 export const useProjectActivation = () => {
   const [isActivating, setIsActivating] = useState(false);
@@ -14,8 +15,10 @@ export const useProjectActivation = () => {
       // Refresh project data
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['active-project'] });
+      toast.success("Project activated successfully");
     } catch (error) {
       console.error("Error activating project:", error);
+      toast.error("Failed to activate project");
     } finally {
       setIsActivating(false);
     }
@@ -27,8 +30,10 @@ export const useProjectActivation = () => {
       // Refresh project data
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['active-project'] });
+      toast.success("Project created successfully");
     } catch (error) {
       console.error("Error notifying project creation:", error);
+      toast.error("Failed to register new project");
     }
   };
 
@@ -38,8 +43,10 @@ export const useProjectActivation = () => {
       // Refresh project data
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['active-project'] });
+      toast.success("Project imported successfully");
     } catch (error) {
       console.error("Error notifying project import:", error);
+      toast.error("Failed to register imported project");
     }
   };
 

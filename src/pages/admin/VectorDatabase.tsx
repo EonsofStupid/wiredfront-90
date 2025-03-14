@@ -1,6 +1,6 @@
 
 import React from "react";
-import { AdminCard } from "@/components/admin/ui/AdminCard";
+import { AdminCard, AdminCardTitle } from "@/components/admin/ui/AdminCard";
 import { VectorDatabasePanel } from "@/components/admin/vectordb/VectorDatabasePanel";
 import { Database } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -40,7 +40,11 @@ export default function VectorDatabasePage() {
         <VectorDatabasePanel />
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <AdminCard title="Indexing Rules" icon={<Database className="h-5 w-5" />}>
+          <AdminCard>
+            <AdminCardTitle className="flex items-center gap-2">
+              <Database className="h-5 w-5" />
+              Indexing Rules
+            </AdminCardTitle>
             <div className="space-y-4">
               <div className="space-y-2">
                 <h3 className="font-medium">Current Indexing Settings</h3>
@@ -56,7 +60,11 @@ export default function VectorDatabasePage() {
             </div>
           </AdminCard>
           
-          <AdminCard title="System Status" icon={<Database className="h-5 w-5" />}>
+          <AdminCard>
+            <AdminCardTitle className="flex items-center gap-2">
+              <Database className="h-5 w-5" />
+              System Status
+            </AdminCardTitle>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
