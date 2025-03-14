@@ -8,270 +8,225 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-function generateTraceId(): string {
-  return uuidv4();
-}
-
-function logEvent(type: string, data: any, traceId?: string) {
-  const timestamp = new Date().toISOString();
-  console.log(JSON.stringify({
-    timestamp,
-    type,
-    data,
-    function: 'github-oauth-init',
-    trace_id: traceId || 'not_set'
-  }));
-}
-
 serve(async (req) => {
-  // Generate trace ID for request tracking
-  const traceId = generateTraceId();
-  logEvent('init_function_called', { 
-    method: req.method, 
-    url: req.url 
-  }, traceId);
-
-  // Handle CORS preflight request
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    logEvent('cors_preflight', {}, traceId);
-    return new Response(null, { 
-      headers: corsHeaders,
-      status: 200 
-    });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Parse the request body
-    let requestData;
-    try {
-      requestData = await req.json();
-      logEvent('request_parsed', { 
-        check_only: requestData.check_only,
-        redirect_url: requestData.redirect_url
-      }, traceId);
-    } catch (error) {
-      logEvent('json_parse_error', { error: error.message }, traceId);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Invalid JSON in request body',
-          trace_id: traceId 
-        }),
-        { 
-          status: 400,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json'
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
+    
+    // Extract authorization token
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header provided');
+    }
+    
+    // Get the user from the token
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+    
+    if (userError || !user) {
+      throw new Error('User not authenticated');
+    }
+    
+    // Parse request body
+    const { redirect_url, action, accountId } = await req.json();
+    
+    // Handle different actions
+    if (action === 'disconnect') {
+      // Disconnect GitHub account
+      if (accountId) {
+        // Disconnect specific account
+        const { error: deleteError } = await supabaseAdmin
+          .from('oauth_connections')
+          .delete()
+          .eq('id', accountId)
+          .eq('user_id', user.id);
+          
+        if (deleteError) {
+          throw deleteError;
+        }
+        
+        // Check if there are any remaining connections
+        const { data: remainingConnections, error: countError } = await supabaseAdmin
+          .from('oauth_connections')
+          .select('id, metadata')
+          .eq('user_id', user.id)
+          .eq('provider', 'github');
+          
+        if (countError) {
+          throw countError;
+        }
+        
+        if (remainingConnections.length === 0) {
+          // No connections left, update status to disconnected
+          await supabaseAdmin
+            .from('github_connection_status')
+            .upsert({
+              user_id: user.id,
+              status: 'disconnected',
+              last_check: new Date().toISOString(),
+              metadata: {
+                disconnected_at: new Date().toISOString()
+              }
+            }, {
+              onConflict: 'user_id'
+            });
+        } else {
+          // If we removed the default account, set a new default
+          const wasDefault = remainingConnections.some(conn => 
+            conn.id === accountId && conn.metadata?.default === true);
+            
+          if (wasDefault && remainingConnections.length > 0) {
+            await supabaseAdmin
+              .from('oauth_connections')
+              .update({
+                metadata: {
+                  ...remainingConnections[0].metadata,
+                  default: true
+                }
+              })
+              .eq('id', remainingConnections[0].id);
           }
         }
-      );
-    }
-
-    // Check if we're just validating configuration
-    if (requestData.check_only) {
-      // Try different variations of GitHub client ID env var names
-      let clientId = Deno.env.get('GITHUB_CLIENT_ID');
-      if (!clientId) {
-        clientId = Deno.env.get('GITHUB_CLIENTID');
+      } else {
+        // Disconnect all GitHub accounts
+        await supabaseAdmin
+          .from('oauth_connections')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('provider', 'github');
+          
+        // Update connection status
+        await supabaseAdmin
+          .from('github_connection_status')
+          .upsert({
+            user_id: user.id,
+            status: 'disconnected',
+            last_check: new Date().toISOString(),
+            metadata: {
+              disconnected_at: new Date().toISOString()
+            }
+          }, {
+            onConflict: 'user_id'
+          });
       }
-      
-      // Try different variations of GitHub client secret env var names
-      let clientSecret = Deno.env.get('GITHUB_CLIENT_SECRET');
-      if (!clientSecret) {
-        clientSecret = Deno.env.get('GITHUB_CLIENTSECRET');
-      }
-      
-      logEvent('config_check', {
-        clientIdConfigured: !!clientId,
-        clientSecretConfigured: !!clientSecret
-      }, traceId);
       
       return new Response(
         JSON.stringify({
-          status: 'ok',
-          clientIdConfigured: !!clientId,
-          clientSecretConfigured: !!clientSecret,
-          trace_id: traceId
+          success: true,
+          message: 'GitHub account(s) disconnected successfully'
         }),
-        { 
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          },
-          status: 200
-        }
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        },
       );
-    }
-
-    // Extract the redirect URL from the request
-    const redirectUrl = requestData.redirect_url;
-    if (!redirectUrl) {
-      logEvent('missing_redirect_url', {}, traceId);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Missing redirect URL in request',
-          trace_id: traceId 
-        }),
-        { 
-          status: 400,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-    }
-
-    // Get the current authenticated user
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
-    if (!supabaseUrl || !supabaseKey) {
-      logEvent('missing_supabase_credentials', {}, traceId);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Server configuration error: Missing Supabase credentials',
-          trace_id: traceId 
-        }),
-        { 
-          status: 500,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-    }
-
-    // Try to get the user ID from the request
-    const authHeader = req.headers.get('authorization');
-    let userId = null;
-    
-    if (authHeader) {
-      try {
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        const token = authHeader.replace('Bearer ', '');
-        const { data: userData, error: userError } = await supabase.auth.getUser(token);
-        
-        if (!userError && userData?.user) {
-          userId = userData.user.id;
-          logEvent('user_identified', { userId, email: userData.user.email }, traceId);
-        } else if (userError) {
-          logEvent('auth_error', { error: userError.message }, traceId);
-        }
-      } catch (error) {
-        logEvent('auth_exception', { error: error.message }, traceId);
+    } else if (action === 'check_only') {
+      // Just check if GitHub integration is properly configured
+      const clientId = Deno.env.get('GITHUB_CLIENTID');
+      const clientSecret = Deno.env.get('GITHUB_CLIENTSECRET');
+      
+      if (!clientId || !clientSecret) {
+        throw new Error('GitHub OAuth is not properly configured');
       }
-    }
-
-    // Get OAuth configuration for GitHub
-    let clientId = Deno.env.get('GITHUB_CLIENT_ID');
-    if (!clientId) {
-      clientId = Deno.env.get('GITHUB_CLIENTID');
-    }
-    
-    if (!clientId) {
-      logEvent('missing_client_id', {}, traceId);
+      
       return new Response(
-        JSON.stringify({ 
-          error: 'GitHub client ID not configured',
-          trace_id: traceId 
+        JSON.stringify({
+          status: 'configured',
+          trace_id: uuidv4()
         }),
-        { 
-          status: 500,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json'
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        },
+      );
+    } else {
+      // Initialize OAuth flow
+      // Generate a unique state parameter to prevent CSRF attacks
+      const state = uuidv4();
+      
+      // Store the state in the database to validate it later
+      await supabaseAdmin
+        .from('github_oauth_logs')
+        .insert({
+          event_type: 'oauth_init',
+          user_id: user.id,
+          request_id: state,
+          metadata: {
+            redirect_url,
+            initiated_at: new Date().toISOString(),
+            ip_address: req.headers.get('x-forwarded-for') || 'unknown'
           }
-        }
+        });
+      
+      // Get GitHub OAuth configuration
+      const clientId = Deno.env.get('GITHUB_CLIENTID');
+      if (!clientId) {
+        throw new Error('GitHub Client ID not configured');
+      }
+      
+      // Build the authorization URL
+      const scopes = 'repo,read:user,user:email';
+      const authUrl = new URL('https://github.com/login/oauth/authorize');
+      authUrl.searchParams.append('client_id', clientId);
+      authUrl.searchParams.append('scope', scopes);
+      authUrl.searchParams.append('state', state);
+      
+      if (redirect_url) {
+        authUrl.searchParams.append('redirect_uri', redirect_url);
+      }
+      
+      // Update connection status to pending
+      await supabaseAdmin
+        .from('github_connection_status')
+        .upsert({
+          user_id: user.id,
+          status: 'pending',
+          last_check: new Date().toISOString(),
+          metadata: {
+            initiated_at: new Date().toISOString()
+          }
+        }, {
+          onConflict: 'user_id'
+        });
+      
+      return new Response(
+        JSON.stringify({
+          url: authUrl.toString(),
+          state,
+          trace_id: uuidv4()
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        },
       );
     }
-
-    // Generate a state parameter to prevent CSRF attacks and encode user info
-    const stateId = uuidv4();
-    const stateObj = {
-      id: stateId,
-      t: Date.now().toString(),
-      u: userId,
-      r: redirectUrl // Save redirect URL in state for use in callback
-    };
+  } catch (error) {
+    console.error('Error in github-oauth-init:', error);
     
-    const state = btoa(JSON.stringify(stateObj));
-    logEvent('state_generated', { 
-      stateId,
-      userId,
-      redirectUrl,
-      state: state.substring(0, 20) + '...' 
-    }, traceId);
-
-    // Build the GitHub authorization URL
-    const scope = 'repo user read:org';
-    const authUrl = new URL('https://github.com/login/oauth/authorize');
-    authUrl.searchParams.append('client_id', clientId);
-    authUrl.searchParams.append('redirect_uri', redirectUrl);
-    authUrl.searchParams.append('state', state);
-    authUrl.searchParams.append('scope', scope);
-    
-    logEvent('github_url_generated', { 
-      url: authUrl.toString(),
-      clientId: clientId.substring(0, 5) + '...',
-      redirect_uri: redirectUrl,
-      scope
-    }, traceId);
-
-    // Store initialization in database if a user is authenticated
-    if (userId && supabaseUrl && supabaseKey) {
-      try {
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        await supabase
-          .from('github_oauth_logs')
-          .insert({
-            event_type: 'oauth_initialized',
-            user_id: userId,
-            success: true,
-            metadata: {
-              state_id: stateId,
-              redirect_url: redirectUrl,
-              trace_id: traceId
-            },
-            request_id: traceId
-          });
-        
-        logEvent('initialization_logged', { userId, stateId, redirectUrl }, traceId);
-      } catch (error) {
-        logEvent('log_error', { error: error.message }, traceId);
-      }
-    }
-
-    // Return the GitHub authorization URL
     return new Response(
       JSON.stringify({
-        url: authUrl.toString(),
-        state,
-        trace_id: traceId
+        error: error.message || 'Failed to initialize GitHub OAuth',
+        details: error.toString()
       }),
-      { 
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        },
-        status: 200
-      }
-    );
-  } catch (error) {
-    logEvent('unhandled_error', { error: error.message, stack: error.stack }, traceId);
-    
-    return new Response(
-      JSON.stringify({ 
-        error: `Unhandled error: ${error.message}`,
-        trace_id: traceId
-      }),
-      { 
-        status: 500,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      }
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      },
     );
   }
 });

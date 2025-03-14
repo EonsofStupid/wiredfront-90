@@ -1,14 +1,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth";
 import { 
   GitHubConnectionState, 
-  GitHubConnectionStatus,
   GitHubConnectionStatusProps,
-  normalizeConnectionStatus,
-  isConnectionStatusObject
+  normalizeConnectionStatus
 } from "@/types/admin/settings/github";
 
 export function useGitHubConnection() {
@@ -20,193 +18,227 @@ export function useGitHubConnection() {
     errorMessage: null,
     metadata: null
   });
+  const [githubUsername, setGithubUsername] = useState<string | null>(null);
+  const [linkedAccounts, setLinkedAccounts] = useState<Array<{
+    id: string;
+    username: string;
+    default: boolean;
+  }>>([]);
   
-  const { toast } = useToast();
   const { user } = useAuthStore();
 
+  // Check connection status when component mounts
+  useEffect(() => {
+    if (user?.id) {
+      checkConnectionStatus();
+      fetchLinkedAccounts();
+    }
+  }, [user?.id]);
+
+  // Fetch the current GitHub connection status
   const checkConnectionStatus = useCallback(async () => {
     if (!user?.id) return;
     
     setIsChecking(true);
     try {
-      const { data, error } = await supabase
-        .from("github_connection_status")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-      
-      if (error && error.code !== "PGRST116") {
-        throw error;
-      }
-      
-      if (data) {
-        // Transform snake_case to camelCase
-        const normalizedStatus = normalizeConnectionStatus(data as GitHubConnectionStatus);
-        setConnectionStatus(normalizedStatus);
-        setIsConnected(normalizedStatus.status === "connected");
-        
-        // Type guard for metadata
-        if (normalizedStatus.metadata && typeof normalizedStatus.metadata === 'object' && normalizedStatus.metadata !== null) {
-          // Only log if metadata has a username property
-          if ('username' in normalizedStatus.metadata) {
-            console.log(`GitHub connected as: ${normalizedStatus.metadata.username}`);
-          }
+      const { data, error } = await supabase.functions.invoke("github-token-management", {
+        body: { 
+          action: "status"
         }
-      } else {
-        // No entry found, user is not connected
-        setIsConnected(false);
-        setConnectionStatus({
-          status: "disconnected",
-          lastCheck: null,
-          errorMessage: null,
-          metadata: null
-        });
-      }
+      });
+      
+      if (error) throw error;
+      
+      // Set isConnected based on the response
+      setIsConnected(data.isConnected);
+      
+      // Set GitHub username
+      setGithubUsername(data.username || null);
+      
+      // Normalize and set connection status
+      setConnectionStatus({
+        status: data.status || "unknown",
+        lastCheck: data.lastChecked || null,
+        errorMessage: data.error || null,
+        metadata: {
+          username: data.username,
+          scopes: data.scopes,
+          ...data
+        }
+      });
     } catch (error) {
       console.error("Error checking GitHub connection status:", error);
       setIsConnected(false);
+      setConnectionStatus({
+        status: "error",
+        lastCheck: new Date().toISOString(),
+        errorMessage: error instanceof Error ? error.message : "Unknown error checking connection status",
+        metadata: null
+      });
     } finally {
       setIsChecking(false);
     }
   }, [user?.id]);
 
+  // Fetch all linked GitHub accounts for the user
+  const fetchLinkedAccounts = useCallback(async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("oauth_connections")
+        .select("id, provider, account_username, metadata")
+        .eq("user_id", user.id)
+        .eq("provider", "github");
+      
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        const accounts = data.map(account => ({
+          id: account.id,
+          username: account.account_username || "Unknown",
+          default: account.metadata?.default || false
+        }));
+        
+        setLinkedAccounts(accounts);
+      } else {
+        setLinkedAccounts([]);
+      }
+    } catch (error) {
+      console.error("Error fetching linked GitHub accounts:", error);
+    }
+  }, [user?.id]);
+
+  // Initiate GitHub OAuth connection
   const connectGitHub = async () => {
     try {
+      setConnectionStatus({
+        ...connectionStatus,
+        status: "connecting"
+      });
+      
+      // Start the OAuth flow
       const { data, error } = await supabase.functions.invoke("github-oauth-init", {
-        body: { returnUrl: window.location.origin }
+        body: { 
+          redirect_url: `${window.location.origin}/github-callback` 
+        }
       });
       
       if (error) throw error;
       
-      if (data?.authUrl) {
-        // Open GitHub OAuth flow in a new window
-        window.open(data.authUrl, "_blank", "width=800,height=600");
-        
-        // Update local status to pending
-        await supabase
-          .from("github_connection_status")
-          .upsert({
-            user_id: user?.id,
-            status: "pending",
-            last_check: new Date().toISOString()
-          });
-        
-        setConnectionStatus({
-          status: "connecting",
-          lastCheck: new Date().toISOString(),
-          errorMessage: null,
-          metadata: null
-        });
-        
-        toast({
-          title: "GitHub Authorization",
-          description: "Please complete the GitHub authorization in the new window."
-        });
+      if (!data.url) {
+        throw new Error("No GitHub authorization URL returned");
       }
+      
+      // Open GitHub login in a popup window
+      const width = 600;
+      const height = 800;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
+      
+      const popup = window.open(
+        data.url,
+        "github-oauth",
+        `width=${width},height=${height},left=${left},top=${top}`
+      );
+      
+      // Check if popup was blocked
+      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+        throw new Error("The popup window was blocked. Please allow popups for this site.");
+      }
+      
+      // The popup will handle the redirect and the popup will close when complete
+      // We'll need to check the connection status again after a short delay
+      setTimeout(() => {
+        checkConnectionStatus();
+        fetchLinkedAccounts();
+      }, 2000);
     } catch (error) {
       console.error("Error initiating GitHub connection:", error);
       
       setConnectionStatus({
         status: "error",
         lastCheck: new Date().toISOString(),
-        errorMessage: error instanceof Error ? error.message : "Unknown error",
+        errorMessage: error instanceof Error ? error.message : "Unknown error initiating connection",
         metadata: null
       });
       
-      toast({
-        title: "Connection Failed",
-        description: "Could not connect to GitHub. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to connect to GitHub");
     }
   };
 
-  const disconnectGitHub = async () => {
+  // Disconnect from GitHub
+  const disconnectGitHub = async (accountId?: string) => {
+    try {
+      setIsChecking(true);
+      
+      const { error } = await supabase.functions.invoke("github-token-management", {
+        body: { 
+          action: "revoke",
+          accountId: accountId // If not provided, it will revoke the default account
+        }
+      });
+      
+      if (error) throw error;
+      
+      await checkConnectionStatus();
+      await fetchLinkedAccounts();
+      
+      toast.success("Successfully disconnected from GitHub");
+    } catch (error) {
+      console.error("Error disconnecting from GitHub:", error);
+      toast.error("Failed to disconnect from GitHub");
+    } finally {
+      setIsChecking(false);
+    }
+  };
+
+  // Set a GitHub account as the default for the user
+  const setDefaultGitHubAccount = async (accountId: string) => {
     if (!user?.id) return;
     
     try {
-      // Set status to disconnecting
-      setConnectionStatus({
-        status: "connecting", // Reuse connecting state for disconnecting UI
-        lastCheck: new Date().toISOString(),
-        errorMessage: null,
-        metadata: connectionStatus.metadata
-      });
+      // Update the metadata for the selected account
+      const { error: updateError } = await supabase
+        .from("oauth_connections")
+        .update({ 
+          metadata: { default: true }
+        })
+        .eq("id", accountId)
+        .eq("user_id", user.id);
       
-      // Call edge function to revoke GitHub token
-      await supabase.functions.invoke("github-oauth-init", {
-        body: { action: "disconnect" }
-      });
+      if (updateError) throw updateError;
       
-      // Update status in database
-      await supabase
-        .from("github_connection_status")
-        .upsert({
-          user_id: user.id,
-          status: "disconnected",
-          last_check: new Date().toISOString(),
-          metadata: null
-        });
+      // Reset 'default' for all other accounts
+      const { error: resetError } = await supabase
+        .from("oauth_connections")
+        .update({ 
+          metadata: { default: false }
+        })
+        .eq("user_id", user.id)
+        .eq("provider", "github")
+        .neq("id", accountId);
       
-      setIsConnected(false);
-      setConnectionStatus({
-        status: "disconnected",
-        lastCheck: new Date().toISOString(),
-        errorMessage: null,
-        metadata: null
-      });
+      if (resetError) throw resetError;
       
-      toast({
-        title: "Disconnected",
-        description: "Your GitHub account has been disconnected."
-      });
+      await fetchLinkedAccounts();
+      toast.success("Default GitHub account updated");
     } catch (error) {
-      console.error("Error disconnecting from GitHub:", error);
-      
-      setConnectionStatus({
-        status: "error",
-        lastCheck: new Date().toISOString(),
-        errorMessage: error instanceof Error ? error.message : "Unknown error",
-        metadata: connectionStatus.metadata
-      });
-      
-      toast({
-        title: "Disconnection Failed",
-        description: "Could not disconnect from GitHub. Please try again.",
-        variant: "destructive"
-      });
+      console.error("Error setting default GitHub account:", error);
+      toast.error("Failed to update default GitHub account");
     }
   };
-
-  // Poll for status changes when status is pending
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-    
-    if (connectionStatus.status === "pending") {
-      intervalId = setInterval(checkConnectionStatus, 5000);
-    }
-    
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [connectionStatus.status, checkConnectionStatus]);
-
-  // Check connection status on mount and when user changes
-  useEffect(() => {
-    if (user?.id) {
-      checkConnectionStatus();
-    } else {
-      setIsConnected(false);
-      setIsChecking(false);
-    }
-  }, [user?.id, checkConnectionStatus]);
-
+  
   return {
     isConnected,
     isChecking,
     connectionStatus,
+    githubUsername,
+    linkedAccounts,
     connectGitHub,
     disconnectGitHub,
-    refreshStatus: checkConnectionStatus
+    checkConnectionStatus,
+    fetchLinkedAccounts,
+    setDefaultGitHubAccount
   };
 }
