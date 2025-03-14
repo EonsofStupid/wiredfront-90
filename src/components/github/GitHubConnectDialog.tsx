@@ -6,12 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertCircle, Github, ExternalLink } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { GitHubConnectionStatusType } from "@/types/admin/settings/github";
 
 interface GitHubConnectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConnect: () => void;
-  connectionStatus: 'idle' | 'connecting' | 'connected' | 'error';
+  connectionStatus: GitHubConnectionStatusType;
   errorMessage: string | null;
 }
 
@@ -22,6 +23,16 @@ export function GitHubConnectDialog({
   connectionStatus,
   errorMessage
 }: GitHubConnectDialogProps) {
+  // Determine if we're in connecting state from either form of connectionStatus
+  const isConnecting = typeof connectionStatus === 'string' 
+    ? connectionStatus === 'connecting'
+    : connectionStatus.status === 'connecting';
+
+  // Determine error state from either form
+  const isError = typeof connectionStatus === 'string'
+    ? connectionStatus === 'error'
+    : connectionStatus.status === 'error';
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -41,9 +52,9 @@ export function GitHubConnectDialog({
               variant="outline" 
               className="w-full"
               onClick={onConnect}
-              disabled={connectionStatus === 'connecting'}
+              disabled={isConnecting}
             >
-              {connectionStatus === 'connecting' ? (
+              {isConnecting ? (
                 <>
                   <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
                   Connecting...
@@ -61,7 +72,7 @@ export function GitHubConnectDialog({
             </p>
           </div>
           
-          {errorMessage && connectionStatus === 'error' && (
+          {errorMessage && isError && (
             <Alert variant="destructive" className="bg-red-500/10 text-red-500">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{errorMessage}</AlertDescription>
