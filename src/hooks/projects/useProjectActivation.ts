@@ -4,12 +4,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ProjectEventService } from "@/services/projects/ProjectEventService";
 import { RAGService } from "@/services/rag/RAGService";
 import { toast } from "sonner";
+import { useRAGOperations } from "@/hooks/rag/useRAGOperations";
 
 export const useProjectActivation = () => {
   const [isActivating, setIsActivating] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isIndexing, setIsIndexing] = useState(false);
   const queryClient = useQueryClient();
+  const { shouldMigrate, vectorLimitStatus, handleUpgradePrompt } = useRAGOperations();
 
   const activateProject = async (userId: string, projectId: string) => {
     setIsActivating(true);
@@ -19,6 +21,28 @@ export const useProjectActivation = () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['active-project'] });
       toast.success("Project activated successfully");
+      
+      // Check if project should be migrated to premium RAG
+      if (await RAGService.shouldMigrateToPreium(projectId)) {
+        toast({
+          title: "Vector storage recommendation",
+          description: "This project has a large number of vectors. Consider upgrading to premium RAG for better performance.",
+          action: {
+            label: "Upgrade",
+            onClick: () => RAGService.migrateProjectToPremium(projectId)
+          }
+        });
+      }
+      
+      // Also check vector limits
+      const limitStatus = await queryClient.fetchQuery({
+        queryKey: ['vector-limit-status', projectId],
+        queryFn: () => RAGService.shouldMigrateToPreium(projectId)
+      });
+      
+      if (limitStatus) {
+        handleUpgradePrompt();
+      }
     } catch (error) {
       console.error("Error activating project:", error);
       toast.error("Failed to activate project");

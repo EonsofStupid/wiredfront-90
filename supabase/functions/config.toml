@@ -1,2 +1,13 @@
 
+# project_id is used to identify your project
 project_id = "deksjwrdczcsnryjohzg"
+
+# This is an array of function names to include in the build process.
+include = [
+  "index-project",
+  "migrate-project-vectors",
+  "track-rag-usage",
+  "vector-db-stats",
+  "vector-management",
+  "vector-search"
+]

@@ -2,7 +2,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { logger } from "@/services/chat/LoggingService";
-import { useRoleStore } from "@/stores/role";
 
 export type RAGTier = 'standard' | 'premium';
 
@@ -231,6 +230,69 @@ export class RAGService {
       });
     } catch (error) {
       logger.error("Error tracking RAG usage:", error);
+    }
+  }
+  
+  /**
+   * Check if a project exceeds standard tier limits and should be migrated
+   */
+  static async shouldMigrateToPreium(projectId: string): Promise<boolean> {
+    try {
+      const userMetrics = await this.getUserRAGMetrics();
+      
+      // If already premium, no need to migrate
+      if (userMetrics.tier === 'premium') {
+        return false;
+      }
+      
+      // Get project vector stats
+      const { data: stats, error } = await supabase
+        .from('project_vectors')
+        .select('id')
+        .eq('project_id', projectId)
+        .count();
+        
+      if (error) throw error;
+      
+      const vectorCount = stats || 0;
+      const usagePercentage = (vectorCount / userMetrics.limits.maxVectors) * 100;
+      
+      // Recommend migration if usage is over 85%
+      return usagePercentage > 85;
+    } catch (error) {
+      logger.error("Error checking migration status:", error);
+      return false;
+    }
+  }
+  
+  /**
+   * Migrate a project from standard to premium tier
+   * This includes moving vectors from Supabase to Pinecone
+   */
+  static async migrateProjectToPremium(projectId: string): Promise<boolean> {
+    try {
+      // First upgrade the user to premium
+      const upgradeSuccess = await this.upgradeToRagPremium();
+      if (!upgradeSuccess) {
+        throw new Error("Failed to upgrade to premium tier");
+      }
+      
+      // Then migrate the vectors
+      const { data, error } = await supabase.functions.invoke('migrate-project-vectors', {
+        body: {
+          projectId,
+          targetStore: 'pinecone'
+        }
+      });
+      
+      if (error) throw error;
+      
+      toast.success("Project successfully migrated to premium tier");
+      return true;
+    } catch (error) {
+      logger.error("Error migrating project to premium:", error);
+      toast.error("Failed to migrate project to premium tier");
+      return false;
     }
   }
 }
