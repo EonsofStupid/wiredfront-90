@@ -2,7 +2,7 @@
 /* Chat-specific CSS variables with isolation from app variables */
 :root {
   /* Z-index for chat components - ensuring it's always on top */
-  --z-chat: 9999;
+  --z-chat: 9700;
   
   /* Chat dimensions */
   --chat-width: 400px;
