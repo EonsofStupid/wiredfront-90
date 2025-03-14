@@ -35,7 +35,8 @@ export function useProjectOverview() {
     isChecking,
     connectionStatus,
     connectGitHub,
-    disconnectGitHub
+    disconnectGitHub,
+    checkConnectionStatus
   } = useGitHubConnection();
   
   const checkIndexingStatus = async (projectId: string) => {
@@ -183,6 +184,7 @@ export function useProjectOverview() {
     handleDeleteProject,
     connectGitHub,
     disconnectGitHub,
+    checkConnectionStatus,
     setActiveProject
   };
 }

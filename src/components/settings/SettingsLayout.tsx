@@ -7,6 +7,7 @@ import { GitHubRepositorySettings } from "@/components/settings/sections/GitHubR
 import { ProfileSettings } from "@/components/settings/sections/ProfileSettings";
 import { ApiSettings } from "@/components/settings/sections/ApiSettings";
 import { GeneralSettings } from "@/components/settings/sections/GeneralSettings";
+import { ProjectHubSettings } from "@/components/settings/sections/ProjectHubSettings";
 
 export function SettingsLayout() {
   return (
@@ -14,11 +15,12 @@ export function SettingsLayout() {
       <h1 className="text-3xl font-bold mb-6">Settings</h1>
       
       <Tabs defaultValue="account" className="space-y-4">
-        <TabsList className="grid grid-cols-5">
+        <TabsList className="grid grid-cols-6">
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="api">API</TabsTrigger>
           <TabsTrigger value="github">GitHub</TabsTrigger>
           <TabsTrigger value="github-repos">GitHub Repos</TabsTrigger>
+          <TabsTrigger value="project-hub">Project Hub</TabsTrigger>
           <TabsTrigger value="general">General</TabsTrigger>
         </TabsList>
         
@@ -36,6 +38,10 @@ export function SettingsLayout() {
         
         <TabsContent value="github-repos">
           <GitHubRepositorySettings />
+        </TabsContent>
+        
+        <TabsContent value="project-hub">
+          <ProjectHubSettings />
         </TabsContent>
         
         <TabsContent value="general">
