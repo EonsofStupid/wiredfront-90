@@ -1264,6 +1264,36 @@ export type Database = {
         }
         Relationships: []
       }
+      system_logs: {
+        Row: {
+          id: string
+          level: string
+          message: string
+          metadata: Json | null
+          source: string
+          timestamp: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          level: string
+          message: string
+          metadata?: Json | null
+          source: string
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          level?: string
+          message?: string
+          metadata?: Json | null
+          source?: string
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_analytics: {
         Row: {
           device_info: Json | null
