@@ -45,7 +45,7 @@ export function ProjectOverview({ className, isCompact = false }: ProjectOvervie
       <GitHubConnectionSection
         isConnected={isConnected}
         isChecking={isChecking}
-        connectionStatus={connectionStatus as 'idle' | 'connecting' | 'connected' | 'error'}
+        connectionStatus={connectionStatus}
         username={githubUsername}
         onConnect={handleGitHubConnect}
         onDisconnect={disconnectGitHub}
@@ -78,7 +78,7 @@ export function ProjectOverview({ className, isCompact = false }: ProjectOvervie
         onOpenChange={setIsConnectDialogOpen}
         onConnect={connectGitHub}
         errorMessage={errorMessage}
-        connectionStatus={connectionStatus as 'idle' | 'connecting' | 'connected' | 'error'}
+        connectionStatus={connectionStatus}
       />
       
       <GitHubImportModal

@@ -12,6 +12,9 @@ This project was created with [Lovable](https://lovable.ai), the AI-powered web 
 - GitHub integration
 - Project management
 - Modern, responsive UI
+- Live component tagging in development mode
+- Advanced debugging tools
+- Vector database integration
 
 ## Getting Started
 
@@ -28,7 +31,13 @@ This project was created with [Lovable](https://lovable.ai), the AI-powered web 
 - `/src/stores` - State management
 - `/src/types` - TypeScript type definitions
 - `/src/styles` - CSS and Tailwind styles
+- `/src/services` - API and service functions
+- `/src/utils` - Utility functions
 
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+MIT

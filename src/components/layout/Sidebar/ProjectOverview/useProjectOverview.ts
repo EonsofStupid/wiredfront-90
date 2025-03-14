@@ -151,15 +151,19 @@ export function useProjectOverview() {
   // Extract error message if available
   const errorMessage = connectionStatus.errorMessage || null;
 
+  // Map connectionStatus to a simpler format for the component
+  const mappedStatus: 'idle' | 'connecting' | 'connected' | 'error' = 
+    connectionStatus.status === "connected" ? "connected" : 
+    connectionStatus.status === "pending" ? "connecting" : 
+    connectionStatus.status === "error" ? "error" : "idle";
+
   return {
     projects,
     activeProject,
     activeProjectId,
     isConnected,
     isChecking,
-    connectionStatus: connectionStatus.status === "connected" ? "connected" : 
-                     connectionStatus.status === "pending" ? "connecting" : 
-                     connectionStatus.status === "error" ? "error" : "idle",
+    connectionStatus: mappedStatus,
     isIndexing,
     recentlyImportedProject,
     isConnectDialogOpen,
