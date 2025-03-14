@@ -8,7 +8,8 @@ type MobileMenuContextType = {
   closeMenu: () => void;
 };
 
-const MobileMenuContext = createContext<MobileMenuContextType | undefined>(undefined);
+// Export the context so it can be imported in the hook
+export const MobileMenuContext = createContext<MobileMenuContextType | undefined>(undefined);
 
 /**
  * Provider for mobile menu state and functionality
@@ -25,12 +26,4 @@ export const MobileMenuProvider = ({ children }: { children: React.ReactNode }) 
       <MobileMenu isOpen={isMenuOpen} onClose={closeMenu} />
     </MobileMenuContext.Provider>
   );
-};
-
-export const useMobileMenu = (): MobileMenuContextType => {
-  const context = useContext(MobileMenuContext);
-  if (!context) {
-    throw new Error("useMobileMenu must be used within a MobileMenuProvider");
-  }
-  return context;
 };

@@ -3,14 +3,26 @@ import React from "react";
 import { Folder, File, Star, Clock, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Define proper types for document items
+type DocumentType = 'file' | 'folder';
+
+interface DocumentItem {
+  id: string;
+  name: string;
+  type: DocumentType;
+  starred: boolean;
+  updated: string;
+  tags: string[];
+}
+
 /**
  * Mobile-optimized documents screen with filter tabs
  */
 export const MobileDocuments = () => {
   const [activeTab, setActiveTab] = React.useState("all");
   
-  // Sample documents data
-  const documents = [
+  // Sample documents data with proper typing
+  const documents: DocumentItem[] = [
     { id: '1', name: 'Project Proposal', type: 'file', starred: true, updated: '2 hours ago', tags: ['important'] },
     { id: '2', name: 'Research Folder', type: 'folder', starred: false, updated: 'Yesterday', tags: [] },
     { id: '3', name: 'Design Guidelines', type: 'file', starred: true, updated: '3 days ago', tags: ['reference'] },
@@ -112,7 +124,7 @@ const DocumentItem = ({
   tags
 }: { 
   name: string; 
-  type: 'file' | 'folder'; 
+  type: DocumentType; // Use the proper type here
   starred: boolean;
   updated: string;
   tags: string[];
