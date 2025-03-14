@@ -3,7 +3,6 @@ import React, { useEffect } from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { MobileLayout } from "@/components/layout/MobileLayout";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -37,6 +36,7 @@ import { FeatureManagementPanel } from "@/components/admin/features/FeatureManag
 import { UsageMonitoringPanel } from "@/components/admin/analytics/UsageMonitoringPanel";
 import { SubscriptionManagementPanel } from "@/components/admin/subscriptions/SubscriptionManagementPanel";
 import { EnhancedSystemSettingsPanel } from "@/components/admin/settings/EnhancedSystemSettingsPanel";
+import MobileExperience from "./mobile";
 
 const PROTECTED_ROUTES = [
   '/dashboard', 
@@ -77,7 +77,7 @@ const ADMIN_ROUTES = [
 ];
 
 const App = () => {
-  const isMobile = useIsMobile();
+  const { isMobile } = useIsMobile();
   const { user, isAuthenticated, initializeAuth } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
@@ -104,6 +104,16 @@ const App = () => {
     handleAuth();
   }, [isAuthenticated, location.pathname, navigate]);
 
+  // If on mobile, render the mobile experience
+  if (isMobile) {
+    return (
+      <ChatProvider>
+        <MobileExperience />
+        <Toaster position="top-center" />
+      </ChatProvider>
+    );
+  }
+
   const isPublicRoute = location.pathname === '/login' || location.pathname === '/' || location.pathname === '/github-callback';
   const isAdminRoute = ADMIN_ROUTES.some(route => location.pathname.startsWith(route));
   
@@ -118,7 +128,7 @@ const App = () => {
           </Routes>
         </AppLayout>
       ) : (
-        <CurrentLayout>
+        <MainLayout>
           {isAdminRoute && <AdminTopNavOverlay />}
           <Routes>
             <Route path="/dashboard" element={<Dashboard />} />
@@ -166,19 +176,12 @@ const App = () => {
             <Route path="/admin/github-connections" element={<div>GitHub Connections</div>} />
           </Routes>
           <GuestCTA />
-        </CurrentLayout>
+        </MainLayout>
       )}
       <DraggableChat />
       <Toaster />
     </ChatProvider>
   );
-};
-
-const CurrentLayout = ({ children }: { children: React.ReactNode }) => {
-  const isMobile = useIsMobile();
-  
-  if (isMobile) return <MobileLayout>{children}</MobileLayout>;
-  return <MainLayout>{children}</MainLayout>;
 };
 
 export default App;
