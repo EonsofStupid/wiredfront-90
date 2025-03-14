@@ -11,10 +11,7 @@ export const AdminUtilityNavGroup = () => {
   const { adminIconOnly } = layout;
 
   return (
-    <div className={cn(
-      "flex items-center",
-      adminIconOnly ? "space-x-1" : "space-x-2"
-    )}>
+    <div className="flex items-center space-x-2">
       <AdminNavIconButton 
         icon={Search} 
         tooltip="Search" 

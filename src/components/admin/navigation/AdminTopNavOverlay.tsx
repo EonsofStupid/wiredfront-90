@@ -14,7 +14,7 @@ interface AdminTopNavOverlayProps {
 export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
   const [isExtended, setIsExtended] = useState(true);
   const location = useLocation();
-  const { layout } = useUIStore();
+  const { layout, toggleAdminIconOnly } = useUIStore();
   const { adminIconOnly } = layout;
 
   useEffect(() => {

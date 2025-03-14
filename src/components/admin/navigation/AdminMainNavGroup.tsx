@@ -1,3 +1,4 @@
+
 import {
   BarChart,
   CreditCard,
@@ -38,19 +39,22 @@ export function AdminMainNavGroup({ isCollapsed }: AdminNavGroupProps) {
   ];
 
   return (
-    <NavigationMenu className="flex flex-col">
-      <NavigationMenuList className="flex flex-col gap-1">
+    <NavigationMenu>
+      <NavigationMenuList className={cn(
+        "flex",
+        isCollapsed ? "flex-wrap gap-1" : "flex-row items-center gap-2"
+      )}>
         {adminNavItems.map((item) => (
           <NavigationMenuItem key={item.name}>
             <NavigationMenuLink
               className={cn(
-                "group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
-                isCollapsed ? "justify-center" : "justify-start"
+                "group flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                isCollapsed ? "justify-center w-10 h-10" : "justify-start"
               )}
               href={item.href}
               asChild
             >
-              <a className="flex w-full items-center">
+              <a className="flex items-center">
                 {item.icon}
                 {!isCollapsed && <span className="ml-2">{item.name}</span>}
               </a>

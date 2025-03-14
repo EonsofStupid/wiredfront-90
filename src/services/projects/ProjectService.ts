@@ -13,6 +13,11 @@ export interface Project {
   user_id: string;
   is_active: boolean;
   status: string;
+  tech_stack?: {
+    primaryLanguage?: string;
+    files_count?: number;
+    languages?: Record<string, number>;
+  };
 }
 
 export interface ProjectCreateDTO {
