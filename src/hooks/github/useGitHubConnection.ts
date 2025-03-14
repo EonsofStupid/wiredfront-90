@@ -198,7 +198,7 @@ export function useGitHubConnection() {
     if (!user?.id) return;
     
     try {
-      // Update the metadata for the selected account
+      // Update the metadata for the selected account to set as default
       const { error: updateError } = await supabase
         .from("oauth_connections")
         .update({ 

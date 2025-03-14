@@ -817,6 +817,7 @@ export type Database = {
           expires_at: string | null
           id: string
           last_used: string | null
+          metadata: Json | null
           provider: string
           provider_user_id: string | null
           refresh_token: string | null
@@ -832,6 +833,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           last_used?: string | null
+          metadata?: Json | null
           provider: string
           provider_user_id?: string | null
           refresh_token?: string | null
@@ -847,6 +849,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           last_used?: string | null
+          metadata?: Json | null
           provider?: string
           provider_user_id?: string | null
           refresh_token?: string | null
