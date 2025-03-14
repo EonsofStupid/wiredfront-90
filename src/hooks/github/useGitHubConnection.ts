@@ -8,6 +8,7 @@ import {
   GitHubConnectionStatusProps,
   normalizeConnectionStatus
 } from "@/types/admin/settings/github";
+import { Json } from "@/integrations/supabase/types";
 
 export function useGitHubConnection() {
   const [isConnected, setIsConnected] = useState(false);
@@ -94,11 +95,17 @@ export function useGitHubConnection() {
       if (error) throw error;
       
       if (data && data.length > 0) {
-        const accounts = data.map(account => ({
-          id: account.id,
-          username: account.account_username || "Unknown",
-          default: account.metadata?.default || false
-        }));
+        const accounts = data.map(account => {
+          // Safely check if metadata is an object and has a default property
+          const metadataObj = account.metadata as Record<string, unknown> | null;
+          const isDefault = metadataObj && typeof metadataObj === 'object' ? !!metadataObj.default : false;
+          
+          return {
+            id: account.id,
+            username: account.account_username || "Unknown",
+            default: isDefault
+          };
+        });
         
         setLinkedAccounts(accounts);
       } else {

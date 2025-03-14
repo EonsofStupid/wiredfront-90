@@ -549,7 +549,9 @@ export type Database = {
       }
       github_connection_status: {
         Row: {
+          connection_id: string | null
           error_message: string | null
+          is_default: boolean | null
           last_check: string | null
           last_successful_operation: string | null
           metadata: Json | null
@@ -557,7 +559,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          connection_id?: string | null
           error_message?: string | null
+          is_default?: boolean | null
           last_check?: string | null
           last_successful_operation?: string | null
           metadata?: Json | null
@@ -565,7 +569,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          connection_id?: string | null
           error_message?: string | null
+          is_default?: boolean | null
           last_check?: string | null
           last_successful_operation?: string | null
           metadata?: Json | null
@@ -633,6 +639,104 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      github_repositories: {
+        Row: {
+          auto_sync: boolean | null
+          connection_id: string | null
+          created_at: string | null
+          id: string
+          last_synced_at: string | null
+          project_id: string | null
+          repo_name: string
+          repo_owner: string
+          repo_url: string
+          sync_schedule: Json | null
+          sync_status: string | null
+          updated_at: string | null
+          webhook_secret: string | null
+        }
+        Insert: {
+          auto_sync?: boolean | null
+          connection_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_synced_at?: string | null
+          project_id?: string | null
+          repo_name: string
+          repo_owner: string
+          repo_url: string
+          sync_schedule?: Json | null
+          sync_status?: string | null
+          updated_at?: string | null
+          webhook_secret?: string | null
+        }
+        Update: {
+          auto_sync?: boolean | null
+          connection_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_synced_at?: string | null
+          project_id?: string | null
+          repo_name?: string
+          repo_owner?: string
+          repo_url?: string
+          sync_schedule?: Json | null
+          sync_status?: string | null
+          updated_at?: string | null
+          webhook_secret?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "github_repositories_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "github_connection_status"
+            referencedColumns: ["connection_id"]
+          },
+          {
+            foreignKeyName: "github_repositories_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      github_sync_logs: {
+        Row: {
+          created_at: string | null
+          details: Json | null
+          id: string
+          repo_id: string | null
+          status: string
+          sync_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          repo_id?: string | null
+          status: string
+          sync_type: string
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          repo_id?: string | null
+          status?: string
+          sync_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "github_sync_logs_repo_id_fkey"
+            columns: ["repo_id"]
+            isOneToOne: false
+            referencedRelation: "github_repositories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       live_preview_status: {
         Row: {
