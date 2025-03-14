@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ProjectEventService } from "@/services/projects/ProjectEventService";
@@ -24,8 +23,7 @@ export const useProjectActivation = () => {
       
       // Check if project should be migrated to premium RAG
       if (await RAGService.shouldMigrateToPreium(projectId)) {
-        toast({
-          title: "Vector storage recommendation",
+        toast("Vector storage recommendation", {
           description: "This project has a large number of vectors. Consider upgrading to premium RAG for better performance.",
           action: {
             label: "Upgrade",

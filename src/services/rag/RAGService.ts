@@ -246,15 +246,14 @@ export class RAGService {
       }
       
       // Get project vector stats
-      const { data: stats, error } = await supabase
+      const { data, error, count } = await supabase
         .from('project_vectors')
-        .select('id')
-        .eq('project_id', projectId)
-        .count();
+        .select('id', { count: 'exact' })
+        .eq('project_id', projectId);
         
       if (error) throw error;
       
-      const vectorCount = stats || 0;
+      const vectorCount = count || 0;
       const usagePercentage = (vectorCount / userMetrics.limits.maxVectors) * 100;
       
       // Recommend migration if usage is over 85%

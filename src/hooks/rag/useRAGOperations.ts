@@ -88,7 +88,7 @@ export function useRAGOperations(projectId?: string) {
   });
   
   // Migrate project to premium mutation
-  const migrateMutation = useMutation({
+  const migrateToRagPremiumMutation = useMutation({
     mutationFn: (pid: string) => RAGService.migrateProjectToPremium(pid),
     onSuccess: () => {
       if (projectId) {
@@ -121,7 +121,7 @@ export function useRAGOperations(projectId?: string) {
   });
   
   // Migrate vectors mutation (from Supabase to Pinecone)
-  const migrateMutation = useMutation({
+  const migrateVectorsMutation = useMutation({
     mutationFn: (pid: string) => VectorDBService.migrateVectors(pid),
     onSuccess: () => {
       if (projectId) {
@@ -177,12 +177,11 @@ export function useRAGOperations(projectId?: string) {
   // Handle upgrade prompt for project
   const handleUpgradePrompt = () => {
     if (vectorLimitStatus?.usagePercentage > 85) {
-      toast({
-        title: "Project approaching vector limit",
+      toast("Project approaching vector limit", {
         description: `Your project is using ${vectorLimitStatus.usagePercentage.toFixed(1)}% of available vector storage. Consider upgrading to Premium.`,
         action: {
           label: "Upgrade",
-          onClick: () => migrateMutation.mutate(projectId!)
+          onClick: () => migrateToRagPremiumMutation.mutate(projectId!)
         }
       });
     }
@@ -216,14 +215,14 @@ export function useRAGOperations(projectId?: string) {
     upgradeToRagPremium: upgradeMutation.mutate,
     isUpgrading: upgradeMutation.isPending,
     
-    migrateProjectToPremium: migrateMutation.mutate,
-    isMigratingProject: migrateMutation.isPending,
+    migrateProjectToPremium: migrateToRagPremiumMutation.mutate,
+    isMigratingProject: migrateToRagPremiumMutation.isPending,
     
     indexProject: indexMutation.mutate,
     isIndexing: indexMutation.isPending,
     
-    migrateVectors: migrateMutation.mutate,
-    isMigrating: migrateMutation.isPending,
+    migrateVectors: migrateVectorsMutation.mutate,
+    isMigrating: migrateVectorsMutation.isPending,
     
     deleteVectors: deleteMutation.mutate,
     isDeleting: deleteMutation.isPending,
