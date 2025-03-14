@@ -87,7 +87,7 @@ export function useGitHubConnection() {
     try {
       const { data, error } = await supabase
         .from("oauth_connections")
-        .select("id, provider, account_username, metadata")
+        .select("id, account_username, metadata")
         .eq("user_id", user.id)
         .eq("provider", "github");
       
