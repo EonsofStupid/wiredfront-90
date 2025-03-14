@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, prefer',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
 serve(async (req) => {
@@ -14,290 +14,210 @@ serve(async (req) => {
   }
 
   try {
-    const { action, name, isPrivate, description, projectId, repoFullName } = await req.json();
-    
-    // Create a Supabase client with the Auth context of the logged in user
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-    
-    // Get the user id from the JWT in the Authorization header
+
+    // Get the authorization header from the request
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('No authorization header');
+      throw new Error('Missing Authorization header');
     }
 
+    // Get the JWT token from the authorization header
     const token = authHeader.replace('Bearer ', '');
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     
-    if (userError || !userData.user) {
-      throw new Error('Unauthorized');
+    // Verify the JWT and get the user
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+    if (userError || !user) {
+      throw new Error('Invalid token or user not found');
     }
 
-    const userId = userData.user.id;
+    // Get the request body
+    const body = await req.json();
+    const { action, repoFullName, projectId } = body;
 
-    // Process the request based on action
-    switch (action) {
-      case 'create':
-        return await createRepository(name, isPrivate, description, userId, supabaseClient);
-      case 'fetch-repos':
-        return await fetchUserRepos(userId, supabaseClient);
-      case 'index-repo':
-        return await indexRepository(projectId, repoFullName, userId, supabaseClient);
-      default:
-        throw new Error(`Unknown action: ${action}`);
+    console.log(`Received GitHub action: ${action}`);
+
+    // Fetch user's GitHub repositories
+    if (action === 'fetch-repos') {
+      // Check if the user has a GitHub connection
+      const { data: connection, error: connectionError } = await supabaseClient
+        .from('oauth_connections')
+        .select('access_token')
+        .eq('user_id', user.id)
+        .eq('provider', 'github')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (connectionError || !connection) {
+        throw new Error('GitHub connection not found');
+      }
+
+      // Fetch the user's repositories from GitHub
+      const githubResponse = await fetch('https://api.github.com/user/repos?sort=updated&per_page=100', {
+        headers: {
+          'Authorization': `token ${connection.access_token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+
+      if (!githubResponse.ok) {
+        throw new Error(`GitHub API error: ${githubResponse.status}`);
+      }
+
+      const repos = await githubResponse.json();
+      
+      return new Response(
+        JSON.stringify({ success: true, repos }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json' 
+          },
+          status: 200 
+        }
+      );
     }
-  } catch (error) {
-    console.error(`Error processing request:`, error);
+
+    // Create a new GitHub repository
+    if (action === 'create') {
+      const { name, isPrivate, description } = body;
+      
+      // Check if the user has a GitHub connection
+      const { data: connection, error: connectionError } = await supabaseClient
+        .from('oauth_connections')
+        .select('access_token')
+        .eq('user_id', user.id)
+        .eq('provider', 'github')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (connectionError || !connection) {
+        throw new Error('GitHub connection not found');
+      }
+
+      // Create a repository on GitHub
+      const githubResponse = await fetch('https://api.github.com/user/repos', {
+        method: 'POST',
+        headers: {
+          'Authorization': `token ${connection.access_token}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name,
+          description: description || '',
+          private: isPrivate,
+          auto_init: true
+        })
+      });
+
+      if (!githubResponse.ok) {
+        const error = await githubResponse.json();
+        throw new Error(`GitHub API error: ${JSON.stringify(error)}`);
+      }
+
+      const repo = await githubResponse.json();
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          repoUrl: repo.html_url,
+          repoName: repo.full_name 
+        }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json' 
+          },
+          status: 200 
+        }
+      );
+    }
+
+    // Index a GitHub repository for RAG
+    if (action === 'index-repo') {
+      if (!projectId || !repoFullName) {
+        throw new Error('Missing required fields: projectId and repoFullName are required');
+      }
+
+      // In a real implementation, you would:
+      // 1. Clone the repository to a temporary location
+      // 2. Parse files and create embeddings
+      // 3. Store the embeddings in the project_vectors table
+      
+      console.log(`Starting indexing for project ${projectId}, repo ${repoFullName}`);
+      
+      // For demonstration, we'll insert a few sample vectors
+      const sampleFiles = [
+        { path: 'README.md', content: '# Project Overview\nThis is a sample README file.' },
+        { path: 'src/index.js', content: 'console.log("Hello World");' },
+        { path: 'package.json', content: '{"name": "sample", "version": "1.0.0"}' }
+      ];
+      
+      // Insert sample vectors (in a real app, these would be actual embeddings)
+      for (const file of sampleFiles) {
+        const vectorData = {
+          type: 'file_content',
+          content: file.content,
+          path: file.path
+        };
+        
+        // Create a simple dummy embedding (in production, you'd use a real embedding model)
+        const embedding = Array(1536).fill(0).map(() => Math.random() - 0.5);
+        
+        // Insert into project_vectors
+        await supabaseClient.from('project_vectors').insert({
+          project_id: projectId,
+          file_path: file.path,
+          content: file.content,
+          vector_data: vectorData,
+          embedding: embedding
+        });
+      }
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: `Indexing started for project ${projectId}` 
+        }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json' 
+          },
+          status: 200 
+        }
+      );
+    }
+
     return new Response(
-      JSON.stringify({
-        error: error.message || 'An unexpected error occurred',
-      }),
-      {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      JSON.stringify({ error: 'Unsupported action type' }),
+      { 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json' 
+        },
+        status: 400 
+      }
+    );
+
+  } catch (error) {
+    console.error('Error processing GitHub action:', error);
+    
+    return new Response(
+      JSON.stringify({ error: error.message || 'An unknown error occurred' }),
+      { 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json' 
+        },
+        status: 500 
       }
     );
   }
 });
-
-async function createRepository(name, isPrivate, description, userId, supabaseClient) {
-  // Get GitHub token for the user
-  const githubToken = await getGitHubToken(userId, supabaseClient);
-  
-  if (!githubToken) {
-    return new Response(
-      JSON.stringify({
-        error: 'Could not retrieve GitHub token. Please reconnect your GitHub account.',
-      }),
-      {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-  }
-  
-  // Create the repository
-  try {
-    const response = await fetch('https://api.github.com/user/repos', {
-      method: 'POST',
-      headers: {
-        'Authorization': `token ${githubToken}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        name: name,
-        description: description || "",
-        private: isPrivate,
-        auto_init: true
-      })
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.text();
-      throw new Error(`GitHub API error: ${response.status} - ${errorData}`);
-    }
-    
-    const repo = await response.json();
-    
-    // Log success metrics
-    await logGitHubMetric('repo_creation', 1, {
-      userId: userId,
-      repoName: name
-    }, supabaseClient);
-    
-    return new Response(
-      JSON.stringify({
-        success: true,
-        repoUrl: repo.html_url,
-        cloneUrl: repo.clone_url,
-        sshUrl: repo.ssh_url
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-  } catch (error) {
-    console.error('Error creating GitHub repository:', error);
-    // Log error metrics
-    await logGitHubMetric('repo_creation_error', 1, {
-      userId: userId,
-      error: error.message
-    }, supabaseClient);
-    
-    throw error;
-  }
-}
-
-async function fetchUserRepos(userId, supabaseClient) {
-  // Get GitHub token for the user
-  const githubToken = await getGitHubToken(userId, supabaseClient);
-  
-  if (!githubToken) {
-    return new Response(
-      JSON.stringify({
-        error: 'Could not retrieve GitHub token. Please reconnect your GitHub account.',
-        repos: []
-      }),
-      {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-  }
-  
-  try {
-    const response = await fetch('https://api.github.com/user/repos?sort=updated&per_page=100', {
-      headers: {
-        'Authorization': `token ${githubToken}`,
-        'Accept': 'application/vnd.github.v3+json'
-      }
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.text();
-      throw new Error(`GitHub API error: ${response.status} - ${errorData}`);
-    }
-    
-    const repos = await response.json();
-    
-    // Log metrics
-    await logGitHubMetric('repo_fetch', repos.length, {
-      userId: userId
-    }, supabaseClient);
-    
-    return new Response(
-      JSON.stringify({
-        success: true,
-        repos: repos
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-  } catch (error) {
-    console.error('Error fetching GitHub repositories:', error);
-    throw error;
-  }
-}
-
-async function indexRepository(projectId, repoFullName, userId, supabaseClient) {
-  // This function would begin the process of indexing a repository for RAG
-  // This is a simplified version that would just fetch basic repo information
-  // In a real implementation, you would:
-  // 1. Clone the repo (or fetch files via GitHub API)
-  // 2. Parse the code files
-  // 3. Generate vector embeddings for the content
-  // 4. Store the embeddings in the project_vectors table
-  
-  try {
-    if (!projectId || !repoFullName) {
-      throw new Error("Project ID and repository name are required");
-    }
-    
-    // Get GitHub token for the user
-    const githubToken = await getGitHubToken(userId, supabaseClient);
-    
-    if (!githubToken) {
-      throw new Error("GitHub token not found");
-    }
-    
-    // Fetch repository details to get tech stack info
-    const repoResponse = await fetch(`https://api.github.com/repos/${repoFullName}`, {
-      headers: {
-        'Authorization': `token ${githubToken}`,
-        'Accept': 'application/vnd.github.v3+json'
-      }
-    });
-    
-    if (!repoResponse.ok) {
-      throw new Error(`Failed to fetch repository details: ${repoResponse.status}`);
-    }
-    
-    const repoData = await repoResponse.json();
-    
-    // Update project with tech stack info
-    await supabaseClient
-      .from('projects')
-      .update({
-        tech_stack: JSON.stringify({ 
-          primaryLanguage: repoData.language || "unknown",
-          updated_at: new Date().toISOString()
-        })
-      })
-      .eq('id', projectId);
-    
-    // For demo purposes, we'll create a simple vector entry for the repository
-    // In a real implementation, you would process individual files
-    await supabaseClient
-      .from('project_vectors')
-      .insert({
-        project_id: projectId,
-        file_path: "repository.json",
-        vector_data: {
-          type: "repository_metadata",
-          name: repoData.name,
-          full_name: repoData.full_name,
-          description: repoData.description,
-          language: repoData.language,
-          default_branch: repoData.default_branch,
-          created_at: repoData.created_at,
-          updated_at: repoData.updated_at,
-        },
-        embedding: Array(1536).fill(0).map(() => Math.random() - 0.5) // Placeholder embedding
-      });
-    
-    // Log success
-    await logGitHubMetric('repo_indexing', 1, {
-      userId,
-      projectId,
-      repoName: repoFullName
-    }, supabaseClient);
-    
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Repository indexing started",
-        techStack: repoData.language
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-  } catch (error) {
-    console.error('Error indexing repository:', error);
-    
-    // Log error
-    await logGitHubMetric('repo_indexing_error', 1, {
-      userId,
-      projectId,
-      repoName: repoFullName,
-      error: error.message
-    }, supabaseClient);
-    
-    throw error;
-  }
-}
-
-async function getGitHubToken(userId, supabaseClient) {
-  const { data } = await supabaseClient
-    .from('oauth_connections')
-    .select('access_token')
-    .eq('user_id', userId)
-    .eq('provider', 'github')
-    .maybeSingle();
-  
-  return data?.access_token || null;
-}
-
-async function logGitHubMetric(metricType, value, metadata = {}, supabaseClient) {
-  await supabaseClient
-    .from('github_metrics')
-    .insert({
-      metric_type: metricType,
-      value: value,
-      metadata: metadata
-    });
-}

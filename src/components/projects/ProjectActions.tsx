@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Import, Github } from "lucide-react";
+import { Plus, Github } from "lucide-react";
 import { GitHubImportModal } from "@/components/github/GitHubImportModal";
 import { useGitHubConnection } from "@/hooks/useGitHubConnection";
 import { toast } from "sonner";
