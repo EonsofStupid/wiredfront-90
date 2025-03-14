@@ -2,11 +2,13 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ProjectEventService } from "@/services/projects/ProjectEventService";
+import { RAGService } from "@/services/rag/RAGService";
 import { toast } from "sonner";
 
 export const useProjectActivation = () => {
   const [isActivating, setIsActivating] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isIndexing, setIsIndexing] = useState(false);
   const queryClient = useQueryClient();
 
   const activateProject = async (userId: string, projectId: string) => {
@@ -40,6 +42,10 @@ export const useProjectActivation = () => {
       // Notify the system about the new project
       await notifyProjectCreated(userId, data.id);
       
+      // Start indexing the project in the background
+      setIsIndexing(true);
+      await RAGService.indexProject(data.id);
+      
       // Refresh project data
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['active-project'] });
@@ -52,6 +58,7 @@ export const useProjectActivation = () => {
       throw error;
     } finally {
       setIsCreating(false);
+      setIsIndexing(false);
     }
   };
 
@@ -75,9 +82,15 @@ export const useProjectActivation = () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['active-project'] });
       toast.success("Project imported successfully");
+      
+      // Start indexing the imported project
+      setIsIndexing(true);
+      await RAGService.indexProject(projectId);
     } catch (error) {
       console.error("Error notifying project import:", error);
       toast.error("Failed to register imported project");
+    } finally {
+      setIsIndexing(false);
     }
   };
 
@@ -87,6 +100,7 @@ export const useProjectActivation = () => {
     notifyProjectCreated,
     notifyProjectImported,
     isActivating,
-    isCreating
+    isCreating,
+    isIndexing
   };
 };

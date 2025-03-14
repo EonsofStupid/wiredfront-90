@@ -47,5 +47,77 @@ export const NavigationService = {
       logger.error("External navigation error:", error);
       toast.error("Failed to open external link.");
     }
+  },
+
+  /**
+   * Navigate to a project view
+   */
+  navigateToProject: (projectId: string, tab: string = 'overview'): void => {
+    try {
+      const url = `/projects/${projectId}?tab=${tab}`;
+      
+      if (typeof window !== 'undefined' && window.history) {
+        window.history.pushState({}, '', url);
+        window.dispatchEvent(new PopStateEvent('popstate'));
+        return;
+      }
+      
+      window.location.href = url;
+    } catch (error) {
+      logger.error("Project navigation error:", error);
+      toast.error("Failed to navigate to project");
+      
+      if (typeof window !== 'undefined') {
+        window.location.href = `/projects`;
+      }
+    }
+  },
+
+  /**
+   * Navigate to RAG management 
+   */
+  navigateToRAG: (projectId?: string): void => {
+    try {
+      const url = projectId ? `/rag?projectId=${projectId}` : '/rag';
+      
+      if (typeof window !== 'undefined' && window.history) {
+        window.history.pushState({}, '', url);
+        window.dispatchEvent(new PopStateEvent('popstate'));
+        return;
+      }
+      
+      window.location.href = url;
+    } catch (error) {
+      logger.error("RAG navigation error:", error);
+      toast.error("Failed to navigate to RAG management");
+      
+      if (typeof window !== 'undefined') {
+        window.location.href = '/rag';
+      }
+    }
+  },
+
+  /**
+   * Navigate to GitHub integration page
+   */
+  navigateToGitHub: (section: string = 'repositories'): void => {
+    try {
+      const url = `/github?section=${section}`;
+      
+      if (typeof window !== 'undefined' && window.history) {
+        window.history.pushState({}, '', url);
+        window.dispatchEvent(new PopStateEvent('popstate'));
+        return;
+      }
+      
+      window.location.href = url;
+    } catch (error) {
+      logger.error("GitHub navigation error:", error);
+      toast.error("Failed to navigate to GitHub page");
+      
+      if (typeof window !== 'undefined') {
+        window.location.href = '/github';
+      }
+    }
   }
 };

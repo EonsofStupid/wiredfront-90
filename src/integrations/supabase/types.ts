@@ -53,6 +53,7 @@ export type Database = {
       }
       api_configurations: {
         Row: {
+          allowed_tiers: string[] | null
           api_type: Database["public"]["Enums"]["api_type"]
           assistant_id: string | null
           assistant_name: string | null
@@ -86,6 +87,7 @@ export type Database = {
           training_enabled: boolean | null
           updated_at: string | null
           usage_count: number | null
+          usage_limits: Json | null
           usage_metrics: Json | null
           user_id: string | null
           validation_status:
@@ -93,6 +95,7 @@ export type Database = {
             | null
         }
         Insert: {
+          allowed_tiers?: string[] | null
           api_type: Database["public"]["Enums"]["api_type"]
           assistant_id?: string | null
           assistant_name?: string | null
@@ -126,6 +129,7 @@ export type Database = {
           training_enabled?: boolean | null
           updated_at?: string | null
           usage_count?: number | null
+          usage_limits?: Json | null
           usage_metrics?: Json | null
           user_id?: string | null
           validation_status?:
@@ -133,6 +137,7 @@ export type Database = {
             | null
         }
         Update: {
+          allowed_tiers?: string[] | null
           api_type?: Database["public"]["Enums"]["api_type"]
           assistant_id?: string | null
           assistant_name?: string | null
@@ -166,6 +171,7 @@ export type Database = {
           training_enabled?: boolean | null
           updated_at?: string | null
           usage_count?: number | null
+          usage_limits?: Json | null
           usage_metrics?: Json | null
           user_id?: string | null
           validation_status?:
@@ -177,6 +183,7 @@ export type Database = {
       api_usage_stats: {
         Row: {
           api_key_id: string | null
+          cost_tracking: Json | null
           endpoint: string
           error_message: string | null
           id: string
@@ -187,12 +194,14 @@ export type Database = {
           response_size_bytes: number | null
           response_time_ms: number
           status_code: number
+          tier: string | null
           timestamp: string | null
           user_agent: string | null
           user_id: string | null
         }
         Insert: {
           api_key_id?: string | null
+          cost_tracking?: Json | null
           endpoint: string
           error_message?: string | null
           id?: string
@@ -203,12 +212,14 @@ export type Database = {
           response_size_bytes?: number | null
           response_time_ms: number
           status_code: number
+          tier?: string | null
           timestamp?: string | null
           user_agent?: string | null
           user_id?: string | null
         }
         Update: {
           api_key_id?: string | null
+          cost_tracking?: Json | null
           endpoint?: string
           error_message?: string | null
           id?: string
@@ -219,6 +230,7 @@ export type Database = {
           response_size_bytes?: number | null
           response_time_ms?: number
           status_code?: number
+          tier?: string | null
           timestamp?: string | null
           user_agent?: string | null
           user_id?: string | null
@@ -309,7 +321,10 @@ export type Database = {
           metadata: Json | null
           name: string
           required_role: Database["public"]["Enums"]["app_role"] | null
+          required_tier: string | null
+          system_command: boolean | null
           updated_at: string | null
+          workflow_trigger: Json | null
         }
         Insert: {
           created_at?: string | null
@@ -319,7 +334,10 @@ export type Database = {
           metadata?: Json | null
           name: string
           required_role?: Database["public"]["Enums"]["app_role"] | null
+          required_tier?: string | null
+          system_command?: boolean | null
           updated_at?: string | null
+          workflow_trigger?: Json | null
         }
         Update: {
           created_at?: string | null
@@ -329,7 +347,10 @@ export type Database = {
           metadata?: Json | null
           name?: string
           required_role?: Database["public"]["Enums"]["app_role"] | null
+          required_tier?: string | null
+          system_command?: boolean | null
           updated_at?: string | null
+          workflow_trigger?: Json | null
         }
         Relationships: []
       }
@@ -433,6 +454,44 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      command_executions: {
+        Row: {
+          command_id: string | null
+          created_at: string | null
+          error_log: string | null
+          execution_time: number | null
+          id: string
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          command_id?: string | null
+          created_at?: string | null
+          error_log?: string | null
+          execution_time?: number | null
+          id: string
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          command_id?: string | null
+          created_at?: string | null
+          error_log?: string | null
+          execution_time?: number | null
+          id?: string
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "command_executions_command_id_fkey"
+            columns: ["command_id"]
+            isOneToOne: false
+            referencedRelation: "chat_commands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       document_categories: {
         Row: {
@@ -1146,39 +1205,127 @@ export type Database = {
       }
       projects: {
         Row: {
+          auto_index: boolean | null
           created_at: string | null
           description: string | null
           github_repo: string | null
           id: string
+          indexing_status: string | null
           is_active: boolean | null
           name: string
           status: string | null
+          sync_frequency: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
+          auto_index?: boolean | null
           created_at?: string | null
           description?: string | null
           github_repo?: string | null
           id?: string
+          indexing_status?: string | null
           is_active?: boolean | null
           name: string
           status?: string | null
+          sync_frequency?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
+          auto_index?: boolean | null
           created_at?: string | null
           description?: string | null
           github_repo?: string | null
           id?: string
+          indexing_status?: string | null
           is_active?: boolean | null
           name?: string
           status?: string | null
+          sync_frequency?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Relationships: []
+      }
+      rag_analytics: {
+        Row: {
+          avg_latency: number | null
+          created_at: string | null
+          id: string
+          project_id: string | null
+          query_count: number | null
+          total_tokens: number | null
+          updated_at: string | null
+          vectorstore_type: string | null
+        }
+        Insert: {
+          avg_latency?: number | null
+          created_at?: string | null
+          id: string
+          project_id?: string | null
+          query_count?: number | null
+          total_tokens?: number | null
+          updated_at?: string | null
+          vectorstore_type?: string | null
+        }
+        Update: {
+          avg_latency?: number | null
+          created_at?: string | null
+          id?: string
+          project_id?: string | null
+          query_count?: number | null
+          total_tokens?: number | null
+          updated_at?: string | null
+          vectorstore_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rag_analytics_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rag_chunks: {
+        Row: {
+          content: string
+          created_at: string | null
+          embedding: string | null
+          id: string
+          metadata: Json | null
+          project_id: string | null
+          source_type: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          embedding?: string | null
+          id: string
+          metadata?: Json | null
+          project_id?: string | null
+          source_type: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          embedding?: string | null
+          id?: string
+          metadata?: Json | null
+          project_id?: string | null
+          source_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rag_chunks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rag_metrics: {
         Row: {
@@ -1217,32 +1364,44 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          max_repositories: number | null
+          max_storage: number | null
           max_vectors: number | null
           queries_made: number | null
+          storage_used: number | null
           tier: Database["public"]["Enums"]["rag_tier_type"] | null
           updated_at: string | null
           user_id: string | null
           vectors_used: number | null
+          vectorstore_type: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
+          max_repositories?: number | null
+          max_storage?: number | null
           max_vectors?: number | null
           queries_made?: number | null
+          storage_used?: number | null
           tier?: Database["public"]["Enums"]["rag_tier_type"] | null
           updated_at?: string | null
           user_id?: string | null
           vectors_used?: number | null
+          vectorstore_type?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
+          max_repositories?: number | null
+          max_storage?: number | null
           max_vectors?: number | null
           queries_made?: number | null
+          storage_used?: number | null
           tier?: Database["public"]["Enums"]["rag_tier_type"] | null
           updated_at?: string | null
           user_id?: string | null
           vectors_used?: number | null
+          vectorstore_type?: string | null
         }
         Relationships: []
       }
@@ -1512,17 +1671,163 @@ export type Database = {
         }
         Relationships: []
       }
+      workflow_executions: {
+        Row: {
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          project_id: string | null
+          status: string | null
+          workflow_type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          metadata?: Json | null
+          project_id?: string | null
+          status?: string | null
+          workflow_type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          project_id?: string | null
+          status?: string | null
+          workflow_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_executions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      binary_quantize:
+        | {
+            Args: {
+              "": string
+            }
+            Returns: unknown
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: unknown
+          }
+      halfvec_avg: {
+        Args: {
+          "": number[]
+        }
+        Returns: unknown
+      }
+      halfvec_out: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      halfvec_send: {
+        Args: {
+          "": unknown
+        }
+        Returns: string
+      }
+      halfvec_typmod_in: {
+        Args: {
+          "": unknown[]
+        }
+        Returns: number
+      }
+      hnsw_bit_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      hnsw_halfvec_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      hnsw_sparsevec_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      hnswhandler: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
       is_super_admin: {
         Args: {
           user_id: string
         }
         Returns: boolean
       }
+      ivfflat_bit_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ivfflat_halfvec_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ivfflathandler: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      l2_norm:
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: number
+          }
+      l2_normalize:
+        | {
+            Args: {
+              "": string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: unknown
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: unknown
+          }
       log_admin_action: {
         Args: {
           action: string
@@ -1538,11 +1843,72 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      sparsevec_out: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      sparsevec_send: {
+        Args: {
+          "": unknown
+        }
+        Returns: string
+      }
+      sparsevec_typmod_in: {
+        Args: {
+          "": unknown[]
+        }
+        Returns: number
+      }
       user_has_permission: {
         Args: {
           permission_key: string
         }
         Returns: boolean
+      }
+      vector_avg: {
+        Args: {
+          "": number[]
+        }
+        Returns: string
+      }
+      vector_dims:
+        | {
+            Args: {
+              "": string
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: number
+          }
+      vector_norm: {
+        Args: {
+          "": string
+        }
+        Returns: number
+      }
+      vector_out: {
+        Args: {
+          "": string
+        }
+        Returns: unknown
+      }
+      vector_send: {
+        Args: {
+          "": string
+        }
+        Returns: string
+      }
+      vector_typmod_in: {
+        Args: {
+          "": unknown[]
+        }
+        Returns: number
       }
     }
     Enums: {
