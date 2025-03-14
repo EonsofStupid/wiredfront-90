@@ -4,7 +4,7 @@
 /* Base z-index and styling for the user menu container */
 .userMenuContainer {
   position: relative;
-  --user-menu-z-index: 9730;
+  --user-menu-z-index: 9750;
   z-index: var(--user-menu-z-index);
   isolation: isolate;
 }
@@ -194,3 +194,4 @@
   80% { clip: rect(0, 900px, 3px, 0); }
   100% { clip: rect(0, 900px, 5px, 0); }
 }
+
