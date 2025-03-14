@@ -10,7 +10,7 @@ import {
   Code,
   AlertCircle
 } from "lucide-react";
-import { useRouter } from "next/router";
+import { NavigationService } from "@/services/navigation/NavigationService";
 
 interface GitHubQuickActionsProps {
   username: string | null;
@@ -25,16 +25,9 @@ export function GitHubQuickActions({
   onOpenRepositories,
   isRefreshing = false
 }: GitHubQuickActionsProps) {
-  const router = useRouter();
   
   const handleOpenSettings = (section: string) => {
-    try {
-      router.push(`/settings?tab=${section}`);
-    } catch (error) {
-      console.error("Navigation error:", error);
-      // Fallback to window.location if router fails
-      window.location.href = `/settings?tab=${section}`;
-    }
+    NavigationService.navigateToSettings(section);
   };
   
   if (!username) {
@@ -94,7 +87,7 @@ export function GitHubQuickActions({
           variant="outline"
           size="sm"
           className="h-9 text-xs justify-start border-neon-blue/20 hover:bg-neon-blue/10"
-          onClick={() => window.open(`https://github.com/${username}`, '_blank')}
+          onClick={() => NavigationService.openExternalUrl(`https://github.com/${username}`)}
         >
           <GitBranch className="h-3.5 w-3.5 mr-2 text-neon-blue" />
           Open GitHub

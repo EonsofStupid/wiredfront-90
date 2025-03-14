@@ -11,15 +11,28 @@ import { GitHubImportModal } from "@/components/github/GitHubImportModal";
 import { ProjectDetails } from "@/components/projects/ProjectDetails";
 import { GitHubDisconnectDialog } from "@/components/github/GitHubDisconnectDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Github, Folder, AlertTriangle } from "lucide-react";
+import { Github, Folder, AlertTriangle, Loader2 } from "lucide-react";
 import { GitHubManagementTab } from "./GitHubManagementTab";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, lazy } from "react";
 import { ErrorMessage } from "@/components/ui/error-message";
+import { GitHubErrorBoundary } from "@/components/github/GitHubErrorBoundary";
 
 interface ProjectOverviewProps {
   className?: string;
   isCompact?: boolean;
 }
+
+// Fallback component for the GitHub tab
+const GitHubTabFallback = () => (
+  <div className="flex-1 flex items-center justify-center p-8">
+    <div className="text-center">
+      <Loader2 className="h-8 w-8 mx-auto mb-3 animate-spin text-neon-blue/50" />
+      <p className="text-muted-foreground">
+        Loading GitHub tab...
+      </p>
+    </div>
+  </div>
+);
 
 export function ProjectOverview({ className, isCompact = false }: ProjectOverviewProps) {
   const {
@@ -54,11 +67,18 @@ export function ProjectOverview({ className, isCompact = false }: ProjectOvervie
   
   const [activeTab, setActiveTab] = useState("projects");
   const [tabError, setTabError] = useState<string | null>(null);
+  const [isGithubTabMounted, setIsGithubTabMounted] = useState(false);
   
   // Handle tab changes safely
   const handleTabChange = (tab: string) => {
     try {
       setTabError(null);
+      
+      // Only mount GitHub tab when selected
+      if (tab === "github") {
+        setIsGithubTabMounted(true);
+      }
+      
       setActiveTab(tab);
     } catch (error) {
       console.error("Tab change error:", error);
@@ -163,33 +183,20 @@ export function ProjectOverview({ className, isCompact = false }: ProjectOvervie
         </TabsContent>
         
         <TabsContent value="github" className="flex-1 flex flex-col mt-0 data-[state=inactive]:hidden">
-          {/* Error boundary fallback for GitHub tab */}
-          <ErrorBoundary fallback={
-            <div className="p-4 text-center">
-              <AlertTriangle className="h-8 w-8 text-amber-500 mx-auto mb-2" />
-              <h3 className="font-medium mb-1">Something went wrong</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                There was an error loading the GitHub tab.
-              </p>
-              <button 
-                className="text-xs text-neon-blue hover:underline"
-                onClick={() => window.location.reload()}
-              >
-                Refresh the page
-              </button>
-            </div>
-          }>
-            <GitHubManagementTab 
-              isConnected={isConnected}
-              githubUsername={githubUsername}
-              connectGitHub={handleGitHubConnect}
-              disconnectGitHub={() => setIsDisconnectDialogOpen(true)}
-              isChecking={isChecking}
-              checkConnectionStatus={checkConnectionStatus}
-              linkedAccounts={linkedAccounts}
-              error={errorMessage}
-            />
-          </ErrorBoundary>
+          <GitHubErrorBoundary>
+            {isGithubTabMounted && (
+              <GitHubManagementTab 
+                isConnected={isConnected}
+                githubUsername={githubUsername}
+                connectGitHub={handleGitHubConnect}
+                disconnectGitHub={() => setIsDisconnectDialogOpen(true)}
+                isChecking={isChecking}
+                checkConnectionStatus={checkConnectionStatus}
+                linkedAccounts={linkedAccounts}
+                error={errorMessage}
+              />
+            )}
+          </GitHubErrorBoundary>
         </TabsContent>
       </Tabs>
       
@@ -215,24 +222,4 @@ export function ProjectOverview({ className, isCompact = false }: ProjectOvervie
       />
     </div>
   );
-}
-
-// Simple error boundary component
-function ErrorBoundary({ children, fallback }: { children: React.ReactNode, fallback: React.ReactNode }) {
-  const [hasError, setHasError] = useState(false);
-  
-  useEffect(() => {
-    const errorHandler = (error: ErrorEvent) => {
-      console.error("Error caught by boundary:", error);
-      setHasError(true);
-    };
-    
-    window.addEventListener('error', errorHandler);
-    
-    return () => {
-      window.removeEventListener('error', errorHandler);
-    };
-  }, []);
-  
-  return hasError ? <>{fallback}</> : <>{children}</>;
 }
