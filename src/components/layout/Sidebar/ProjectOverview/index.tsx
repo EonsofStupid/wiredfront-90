@@ -11,10 +11,10 @@ import { GitHubImportModal } from "@/components/github/GitHubImportModal";
 
 interface ProjectOverviewProps {
   className?: string;
-  isCompact: boolean;
+  isCompact?: boolean;
 }
 
-export function ProjectOverview({ className }: ProjectOverviewProps) {
+export function ProjectOverview({ className, isCompact = false }: ProjectOverviewProps) {
   const {
     projects,
     activeProject,
@@ -45,7 +45,7 @@ export function ProjectOverview({ className }: ProjectOverviewProps) {
       <GitHubConnectionSection
         isConnected={isConnected}
         isChecking={isChecking}
-        connectionStatus={connectionStatus}
+        connectionStatus={connectionStatus as 'idle' | 'connecting' | 'connected' | 'error'}
         username={githubUsername}
         onConnect={handleGitHubConnect}
         onDisconnect={disconnectGitHub}
@@ -78,7 +78,7 @@ export function ProjectOverview({ className }: ProjectOverviewProps) {
         onOpenChange={setIsConnectDialogOpen}
         onConnect={connectGitHub}
         errorMessage={errorMessage}
-        connectionStatus={connectionStatus}
+        connectionStatus={connectionStatus as 'idle' | 'connecting' | 'connected' | 'error'}
       />
       
       <GitHubImportModal
@@ -89,5 +89,3 @@ export function ProjectOverview({ className }: ProjectOverviewProps) {
     </div>
   );
 }
-
-export { ProjectOverview };
