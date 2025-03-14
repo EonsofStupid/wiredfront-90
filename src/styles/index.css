@@ -1,0 +1,33 @@
+
+/* Base Tailwind directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+@import './base/variables.css';
+@import './base/scrollbars.css';
+@import './base/layout.css';
+
+/* Component styles */
+@import './components/glass.css';
+@import './components/neon.css';
+
+/* Admin styles */
+@import './admin/base.css';
+@import './admin/cards.css';
+@import './admin/animations.css';
+@import './admin/navigation.css';
+@import './admin/tooltips.css';
+@import './admin/buttons.css';
+@import './admin/tabs.css';
+@import './admin/toast.css';
+
+/* Utility styles */
+@import './utilities.css';
+
+/* Animations */
+@import '../styles/animations/index.css';
+
+/* Chat-specific styles */
+@import '../components/chat/styles/chat-variables.css';

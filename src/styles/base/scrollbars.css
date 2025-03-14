@@ -1,0 +1,41 @@
+
+/* Global scrollbar styling */
+* {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgb(var(--color-neon-blue)) var(--scrollbar-track-bg) !important;
+}
+
+/* Webkit scrollbar styling */
+::-webkit-scrollbar {
+  width: var(--scrollbar-size) !important;
+  height: var(--scrollbar-size) !important;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track-bg) !important;
+  backdrop-filter: blur(8px) !important;
+  border-radius: var(--radius) !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb-gradient) !important;
+  border-radius: var(--radius) !important;
+  border: 2px solid transparent !important;
+  background-clip: content-box !important;
+  box-shadow: 0 0 8px rgb(var(--color-neon-blue)),
+              0 0 12px rgb(var(--color-neon-pink)) !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    45deg,
+    rgb(var(--color-neon-pink)),
+    rgb(var(--color-neon-blue))
+  ) !important;
+  box-shadow: 0 0 12px rgb(var(--color-neon-blue)),
+              0 0 16px rgb(var(--color-neon-pink)) !important;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent !important;
+}

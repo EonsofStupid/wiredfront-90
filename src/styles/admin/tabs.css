@@ -1,0 +1,10 @@
+
+@layer components {
+  .admin-tabs-list {
+    @apply bg-[#1A1F2C]/50 border border-[#8B5CF6]/20 p-1;
+  }
+  
+  .admin-tab {
+    @apply data-[state=active]:bg-[#8B5CF6]/20 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all duration-200;
+  }
+}
