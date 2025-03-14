@@ -1,0 +1,81 @@
+
+@layer components {  
+  /* Admin Card Components */
+  .admin-card {
+    @apply bg-[#1A1F2C]/80 backdrop-blur-md border-[#8B5CF6]/20 shadow-lg transition-all duration-300;
+    position: relative;
+    isolation: isolate;
+  }
+  
+  .admin-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(139, 92, 246, 0.1),
+      transparent,
+      rgba(217, 70, 239, 0.1)
+    );
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: -1;
+    border-radius: inherit;
+  }
+  
+  .admin-card:hover {
+    @apply border-[#8B5CF6]/40;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  }
+  
+  .admin-card-accent {
+    @apply border-[#D946EF]/30;
+  }
+  
+  .admin-card-accent::before {
+    background: linear-gradient(
+      135deg,
+      rgba(217, 70, 239, 0.1),
+      transparent,
+      rgba(14, 165, 233, 0.1)
+    );
+  }
+  
+  .admin-card-highlight {
+    @apply border-[#0EA5E9]/30;
+  }
+  
+  .admin-card-highlight::before {
+    background: linear-gradient(
+      135deg,
+      rgba(14, 165, 233, 0.1),
+      transparent,
+      rgba(139, 92, 246, 0.1)
+    );
+  }
+  
+  .admin-card-glow {
+    position: relative;
+  }
+  
+  .admin-card-glow::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.5), 
+                0 0 30px rgba(217, 70, 239, 0.3);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+  }
+  
+  .admin-card-glow:hover::after {
+    opacity: 1;
+  }
+  
+  .admin-dashboard-card {
+    @apply cursor-pointer;
+  }
+}

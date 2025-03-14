@@ -1,0 +1,61 @@
+
+@layer components {
+  /* Admin navigation components */
+  .admin-container {
+    @apply w-full max-w-6xl mx-auto px-4 py-6;
+  }
+  
+  .admin-heading {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#8B5CF6] via-[#D946EF] to-[#0EA5E9] animate-gradient-x;
+  }
+  
+  .admin-text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#8B5CF6] to-[#D946EF];
+  }
+  
+  .admin-glass-panel {
+    @apply bg-[#1A1F2C]/60 backdrop-blur-md border border-[#8B5CF6]/20 rounded-xl shadow-xl;
+    position: relative;
+    isolation: isolate;
+  }
+  
+  .admin-glass-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom right,
+      rgba(139, 92, 246, 0.2),
+      transparent,
+      rgba(217, 70, 239, 0.2)
+    );
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: -1;
+    border-radius: inherit;
+  }
+  
+  .admin-nav-divider {
+    @apply h-6 w-px bg-white/20 mx-2;
+  }
+  
+  .admin-nav-horizontal {
+    @apply flex flex-row items-center space-x-2;
+  }
+  
+  .admin-secondary-button {
+    @apply border-[#8B5CF6]/30 text-white hover:bg-[#8B5CF6]/10 hover:border-[#8B5CF6]/50 transition-all duration-200;
+  }
+  
+  .admin-primary-button {
+    @apply bg-gradient-to-r from-[#8B5CF6] to-[#D946EF] text-white border-none hover:opacity-90 transition-all duration-200;
+  }
+  
+  .admin-tabs-list {
+    @apply bg-[#1A1F2C]/50 border border-[#8B5CF6]/20 p-1;
+  }
+  
+  .admin-tab {
+    @apply data-[state=active]:bg-[#8B5CF6]/20 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all duration-200;
+  }
+}
