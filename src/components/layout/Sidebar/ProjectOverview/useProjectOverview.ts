@@ -17,6 +17,7 @@ export function useProjectOverview() {
   
   const { user } = useAuthStore();
   const [isConnectDialogOpen, setIsConnectDialogOpen] = useState(false);
+  const [isDisconnectDialogOpen, setIsDisconnectDialogOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isIndexing, setIsIndexing] = useState(false);
   const [recentlyImportedProject, setRecentlyImportedProject] = useState<{
@@ -148,12 +149,12 @@ export function useProjectOverview() {
   };
 
   // Extract username from metadata if available
-  const githubUsername = typeof connectionStatus === 'object' && connectionStatus.status === 'connected' 
-    ? connectionStatus.metadata?.username || null 
+  const githubUsername = typeof connectionStatus === 'object' && connectionStatus.metadata && 'username' in connectionStatus.metadata 
+    ? connectionStatus.metadata.username || null 
     : null;
     
   // Extract error message if available
-  const errorMessage = typeof connectionStatus === 'object' && connectionStatus.status === 'error' 
+  const errorMessage = typeof connectionStatus === 'object' && 'errorMessage' in connectionStatus
     ? connectionStatus.errorMessage || null 
     : null;
 
@@ -168,6 +169,8 @@ export function useProjectOverview() {
     recentlyImportedProject,
     isConnectDialogOpen,
     setIsConnectDialogOpen,
+    isDisconnectDialogOpen,
+    setIsDisconnectDialogOpen,
     isImportModalOpen,
     setIsImportModalOpen,
     githubUsername,

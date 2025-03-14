@@ -9,6 +9,7 @@ import { ProjectList } from "@/components/projects/ProjectList";
 import { GitHubConnectDialog } from "@/components/github/GitHubConnectDialog";
 import { GitHubImportModal } from "@/components/github/GitHubImportModal";
 import { ProjectDetails } from "@/components/projects/ProjectDetails";
+import { GitHubDisconnectDialog } from "@/components/github/GitHubDisconnectDialog";
 
 interface ProjectOverviewProps {
   className?: string;
@@ -27,6 +28,8 @@ export function ProjectOverview({ className, isCompact = false }: ProjectOvervie
     recentlyImportedProject,
     isConnectDialogOpen,
     setIsConnectDialogOpen,
+    isDisconnectDialogOpen,
+    setIsDisconnectDialogOpen,
     isImportModalOpen,
     setIsImportModalOpen,
     githubUsername,
@@ -55,7 +58,7 @@ export function ProjectOverview({ className, isCompact = false }: ProjectOvervie
         connectionStatus={connectionStatus}
         username={githubUsername}
         onConnect={handleGitHubConnect}
-        onDisconnect={disconnectGitHub}
+        onDisconnect={() => setIsDisconnectDialogOpen(true)}
       />
       
       <IndexingStatusSection
@@ -92,6 +95,13 @@ export function ProjectOverview({ className, isCompact = false }: ProjectOvervie
         onConnect={connectGitHub}
         errorMessage={errorMessage}
         connectionStatus={connectionStatus}
+      />
+      
+      <GitHubDisconnectDialog
+        open={isDisconnectDialogOpen}
+        onOpenChange={setIsDisconnectDialogOpen}
+        onDisconnect={disconnectGitHub}
+        username={githubUsername}
       />
       
       <GitHubImportModal
