@@ -50,7 +50,7 @@ export function useSystemLogs() {
         
         // Extract unique sources for the filter
         const sources = [...new Set(data.map((log: SystemLog) => log.source))];
-        setUniqueSources(sources);
+        setUniqueSources(sources as string[]);
       }
     } catch (err) {
       console.error("Error fetching logs:", err);

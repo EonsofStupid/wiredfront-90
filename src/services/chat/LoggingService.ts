@@ -64,7 +64,7 @@ class Logger {
         message,
         metadata,
         user_id: userId
-      });
+      } as any); // Type assertion since table might not be in types
       
       if (error) {
         console.error('Failed to write log to database:', error);
