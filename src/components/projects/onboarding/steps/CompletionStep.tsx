@@ -1,50 +1,51 @@
 
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Github } from "lucide-react";
-import { ProjectType } from "../ProjectOnboardingDialog";
+import { Check } from "lucide-react";
 
 interface CompletionStepProps {
   projectName: string;
-  projectType: ProjectType;
-  hasGithubRepo: boolean;
+  isImporting: boolean;
+  repoUrl?: string;
   onComplete: () => void;
 }
 
 export function CompletionStep({
   projectName,
-  projectType,
-  hasGithubRepo,
+  isImporting,
+  repoUrl,
   onComplete
 }: CompletionStepProps) {
   return (
     <div className="space-y-6 text-center">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
-        <CheckCircle2 className="h-6 w-6 text-green-500" />
+      <div className="flex justify-center">
+        <div className="h-16 w-16 rounded-full bg-green-500/20 flex items-center justify-center">
+          <Check className="h-8 w-8 text-green-500" />
+        </div>
       </div>
       
-      <div className="space-y-2">
-        <h3 className="text-lg font-medium">
-          {projectType === "new" ? "Project Created!" : "Project Imported!"}
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          {`Your project "${projectName}" has been successfully ${projectType === "new" ? "created" : "imported"}.`}
+      <h2 className="text-2xl font-bold">Project Created!</h2>
+      
+      <p>
+        Your project <span className="font-medium">{projectName}</span> has been successfully created.
+      </p>
+      
+      {isImporting ? (
+        <p className="text-muted-foreground">
+          Your imported project is ready to use.
         </p>
-      </div>
-
-      {hasGithubRepo && (
-        <div className="rounded-md border p-3 bg-muted/50 mx-auto max-w-xs">
-          <div className="flex items-center justify-center gap-2">
-            <Github className="h-4 w-4 text-neon-blue" />
-            <span className="text-sm">GitHub repository created</span>
-          </div>
-        </div>
+      ) : repoUrl ? (
+        <p className="text-muted-foreground">
+          A new GitHub repository has been created and linked to your project.
+        </p>
+      ) : (
+        <p className="text-muted-foreground">
+          Your project is ready to use.
+        </p>
       )}
       
-      <div className="pt-4">
-        <Button onClick={onComplete}>
-          Continue to Project
-        </Button>
-      </div>
+      <Button onClick={onComplete} className="mt-4">
+        Start Using Your Project
+      </Button>
     </div>
   );
 }

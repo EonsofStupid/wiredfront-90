@@ -4,18 +4,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { GitHubConnectionStatus } from "./github/GitHubConnectionStatus";
 import { GitHubErrorMessage } from "./github/GitHubErrorMessage";
 import { GitHubConnectedActions } from "./github/GitHubConnectedActions";
-import { useGitHubConnection } from "@/hooks/github/useGitHubConnection";
+import { useGitHubConnection } from "@/hooks/useGitHubConnection";
 
 export function GitHubSettings() {
   const {
     isConnected,
-    username,
+    isChecking,
     connectionStatus,
-    errorMessage,
-    isCheckingConnection,
-    connect,
-    disconnect
+    connectGitHub,
+    disconnectGitHub
   } = useGitHubConnection();
+
+  // Extract username and error message from connection status
+  const githubUsername = connectionStatus.metadata?.username || null;
+  const errorMessage = connectionStatus.errorMessage || null;
 
   return (
     <Card>
@@ -26,16 +28,20 @@ export function GitHubSettings() {
       <CardContent className="space-y-4">
         <GitHubConnectionStatus
           isConnected={isConnected}
-          username={username}
-          loading={isCheckingConnection}
-          connectionStatus={connectionStatus}
-          onConnect={connect}
-          onDisconnect={disconnect}
+          username={githubUsername}
+          loading={isChecking}
+          connectionStatus={connectionStatus.status === "connected" ? "connected" : 
+                           connectionStatus.status === "pending" ? "connecting" : 
+                           connectionStatus.status === "error" ? "error" : "idle"}
+          onConnect={connectGitHub}
+          onDisconnect={disconnectGitHub}
         />
         
         <GitHubErrorMessage 
           errorMessage={errorMessage}
-          connectionStatus={connectionStatus}
+          connectionStatus={connectionStatus.status === "connected" ? "connected" : 
+                           connectionStatus.status === "pending" ? "connecting" : 
+                           connectionStatus.status === "error" ? "error" : "idle"}
         />
         
         <GitHubConnectedActions isConnected={isConnected} />

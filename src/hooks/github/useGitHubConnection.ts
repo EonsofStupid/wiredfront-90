@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuthStore } from "@/stores/auth";
+import { GitHubConnectionState } from "@/types/admin/settings/github";
 
 export function useGitHubConnection() {
   const [isConnected, setIsConnected] = useState(false);

@@ -24,13 +24,11 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
   const [isConnectDialogOpen, setIsConnectDialogOpen] = useState(false);
   
   const {
-    isConnected: isGithubConnected,
-    username: githubUsername,
+    isConnected,
+    isChecking,
     connectionStatus,
-    errorMessage,
-    isCheckingConnection,
-    connect: connectGitHub,
-    disconnect: disconnectGitHub
+    connectGitHub,
+    disconnectGitHub
   } = useGitHubConnection();
   
   const activeProject = projects.find(p => p.id === activeProjectId);
@@ -47,6 +45,11 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
     setIsConnectDialogOpen(true);
     connectGitHub();
   };
+
+  // Extract username from metadata if available
+  const githubUsername = connectionStatus.metadata?.username || null;
+  // Extract error message if available
+  const errorMessage = connectionStatus.errorMessage || null;
   
   return (
     <div className={cn("flex flex-col h-full", className)}>
@@ -55,19 +58,21 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
       </div>
       
       <GitHubStatusSection
-        isConnected={isGithubConnected}
+        isConnected={isConnected}
         username={githubUsername}
-        isCheckingConnection={isCheckingConnection}
+        isCheckingConnection={isChecking}
         onConnect={handleGitHubConnect}
         onDisconnect={disconnectGitHub}
-        connectionStatus={connectionStatus}
+        connectionStatus={connectionStatus.status === "connected" ? "connected" : 
+                          connectionStatus.status === "pending" ? "connecting" : 
+                          connectionStatus.status === "error" ? "error" : "idle"}
       />
       
       <div className="flex-1 overflow-auto">
         {activeProject ? (
           <ProjectDetails
             project={activeProject}
-            isGithubConnected={isGithubConnected}
+            isGithubConnected={isConnected}
             githubUsername={githubUsername}
           />
         ) : (
@@ -94,7 +99,9 @@ export const ProjectOverview = ({ className }: ProjectOverviewProps) => {
         onOpenChange={setIsConnectDialogOpen}
         onConnect={connectGitHub}
         errorMessage={errorMessage}
-        connectionStatus={connectionStatus}
+        connectionStatus={connectionStatus.status === "connected" ? "connected" : 
+                          connectionStatus.status === "pending" ? "connecting" : 
+                          connectionStatus.status === "error" ? "error" : "idle"}
       />
     </div>
   );
