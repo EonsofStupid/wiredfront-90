@@ -2,6 +2,7 @@
 import React from "react";
 import { AdminTopNav } from "./TopNav";
 import { cn } from "@/lib/utils";
+import "./adminNav.css";
 
 export const AdminTopNavOverlay: React.FC = () => {
   return (

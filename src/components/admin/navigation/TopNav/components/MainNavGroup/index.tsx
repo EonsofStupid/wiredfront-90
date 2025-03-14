@@ -29,7 +29,7 @@ export function MainNavGroup({ isCollapsed }: MainNavGroupProps) {
             <NavigationMenuItem key={item.name}>
               <NavigationMenuLink
                 className={cn(
-                  "group flex items-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                  "group flex items-center rounded-md text-sm font-medium transition-colors",
                   isCollapsed ? styles.navItemIconOnly : styles.navItemWithText,
                   isActive && styles.navItemActive
                 )}

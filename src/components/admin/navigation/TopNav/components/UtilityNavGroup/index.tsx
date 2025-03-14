@@ -39,7 +39,7 @@ export const UtilityNavGroup = () => {
                   {item.icon}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="bottom">{item.name}</TooltipContent>
+              <TooltipContent side="bottom" className="admin-tooltip">{item.name}</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         );
@@ -62,7 +62,7 @@ export const UtilityNavGroup = () => {
               )}
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="bottom">
+          <TooltipContent side="bottom" className="admin-tooltip">
             {adminIconOnly ? "Show labels" : "Hide labels"}
           </TooltipContent>
         </Tooltip>

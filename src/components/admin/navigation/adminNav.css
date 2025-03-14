@@ -1,0 +1,110 @@
+
+/* Global admin nav styling to ensure proper application of styles */
+:root {
+  --admin-nav-bg: rgba(30, 30, 30, 0.7);
+  --admin-nav-border: rgba(139, 92, 246, 0.2);
+  --admin-nav-text: rgba(255, 255, 255, 0.9);
+  --admin-nav-text-hover: #ffffff;
+  --admin-nav-item-hover: rgba(139, 92, 246, 0.15);
+  --admin-nav-active-bg: rgba(139, 92, 246, 0.25);
+  --admin-nav-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --admin-nav-glow: 0 0 15px rgba(139, 92, 246, 0.5), 0 0 30px rgba(217, 70, 239, 0.3);
+}
+
+.wf-admin-nav-container {
+  position: relative;
+  width: 100%;
+  z-index: var(--z-navbar, 700);
+}
+
+.wf-admin-nav .navPanel {
+  border-color: var(--admin-nav-border) !important;
+  background-color: var(--admin-nav-bg) !important;
+  box-shadow: var(--admin-nav-shadow) !important;
+}
+
+/* Override NavigationMenu styles */
+.wf-admin-nav .mainNavGroup [data-radix-navigation-menu-root] {
+  width: 100%;
+}
+
+.wf-admin-nav .mainNavGroup [data-radix-navigation-menu-list] {
+  justify-content: flex-start;
+  width: 100%;
+}
+
+/* Override icon and text colors */
+.wf-admin-nav .navItemIcon,
+.wf-admin-nav .navItemLabel,
+.wf-admin-nav .navIcon {
+  color: var(--admin-nav-text) !important;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Active state for nav items */
+.wf-admin-nav .navItemActive .navItemIcon,
+.wf-admin-nav .navItemActive .navItemLabel,
+.wf-admin-nav .navIconActive {
+  color: var(--admin-nav-text-hover) !important;
+  text-shadow: 0 0 8px rgba(139, 92, 246, 0.8) !important;
+}
+
+/* Hover effects */
+.wf-admin-nav a:hover .navItemIcon,
+.wf-admin-nav a:hover .navItemLabel {
+  color: var(--admin-nav-text-hover) !important;
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 5px rgba(217, 70, 239, 0.6));
+}
+
+.wf-admin-nav .navIcon:hover {
+  color: var(--admin-nav-text-hover) !important;
+  background-color: var(--admin-nav-item-hover) !important;
+  transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.3), 
+              0 0 20px rgba(217, 70, 239, 0.2);
+}
+
+/* Make sure active items retain their styling */
+.wf-admin-nav .navItemActive,
+.wf-admin-nav .navIconActive {
+  background-color: var(--admin-nav-active-bg) !important;
+}
+
+/* Enhance the NavHandle styling */
+.wf-admin-nav .navHandle {
+  background-color: var(--admin-nav-bg) !important;
+  border-color: var(--admin-nav-border) !important;
+}
+
+.wf-admin-nav .navHandle:hover {
+  background-color: rgba(60, 60, 60, 0.8) !important;
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.4) !important;
+}
+
+/* Add cyberpunk font to labels */
+.wf-admin-nav .navItemLabel {
+  font-family: "Courier New", monospace !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+  font-size: 0.85rem !important;
+}
+
+/* Enhance active glow effect */
+.wf-admin-nav .navPanel:hover {
+  box-shadow: var(--admin-nav-glow) !important;
+}
+
+/* Animations for the nav panel */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+  }
+  50% {
+    box-shadow: 0 4px 16px rgba(217, 70, 239, 0.4);
+  }
+}
+
+.wf-admin-nav .navPanel {
+  animation: pulse-glow 4s ease-in-out infinite;
+}
