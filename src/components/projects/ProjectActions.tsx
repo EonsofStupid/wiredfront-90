@@ -1,56 +1,64 @@
 
-import { Button } from "@/components/ui/button";
-import { Import, Plus } from "lucide-react";
 import { useState } from "react";
-import { ProjectOnboardingDialog } from "./onboarding/ProjectOnboardingDialog";
-import { useUIStore } from "@/stores";
-import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { Plus, Import, Github } from "lucide-react";
+import { GitHubImportModal } from "@/components/github/GitHubImportModal";
+import { useGitHubConnection } from "@/hooks/useGitHubConnection";
+import { toast } from "sonner";
 
 interface ProjectActionsProps {
   onAddProject: () => void;
+  onImportProject?: (projectId: string) => void;
 }
 
-export function ProjectActions({ onAddProject }: ProjectActionsProps) {
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
-  const [isImportMode, setIsImportMode] = useState(false);
-  const { setActiveProject } = useUIStore();
-  const { toast } = useToast();
+export function ProjectActions({ onAddProject, onImportProject }: ProjectActionsProps) {
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const { isConnected } = useGitHubConnection();
 
-  const handleProjectCreated = (projectId: string) => {
-    setActiveProject(projectId);
-    onAddProject();
+  const handleImportClick = () => {
+    if (!isConnected) {
+      toast.error("You need to connect your GitHub account first");
+      return;
+    }
+
+    setIsImportModalOpen(true);
   };
 
-  const openOnboarding = (importMode: boolean) => {
-    setIsImportMode(importMode);
-    setIsOnboardingOpen(true);
+  const handleImportComplete = (projectId: string) => {
+    if (onImportProject) {
+      onImportProject(projectId);
+    }
   };
 
   return (
-    <div className="w-full space-y-2">
-      <Button
-        variant="default"
-        className="w-full justify-start gap-2"
-        onClick={() => openOnboarding(false)}
-      >
-        <Plus className="h-4 w-4" />
-        Create New Project
-      </Button>
-      
-      <Button
-        variant="outline"
-        className="w-full justify-start gap-2"
-        onClick={() => openOnboarding(true)}
-      >
-        <Import className="h-4 w-4" />
-        Import Project
-      </Button>
+    <>
+      <div className="flex gap-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onAddProject}
+          className="gap-1"
+        >
+          <Plus className="h-4 w-4" />
+          New Project
+        </Button>
+        
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleImportClick}
+          className="gap-1"
+        >
+          <Github className="h-4 w-4" />
+          Import from GitHub
+        </Button>
+      </div>
 
-      <ProjectOnboardingDialog
-        isOpen={isOnboardingOpen}
-        onClose={() => setIsOnboardingOpen(false)}
-        onComplete={handleProjectCreated}
+      <GitHubImportModal 
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImportComplete={handleImportComplete}
       />
-    </div>
+    </>
   );
 }

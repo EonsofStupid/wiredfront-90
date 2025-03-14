@@ -10,6 +10,8 @@ import { SummaryStep } from "./steps/SummaryStep";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import { ProjectEventService } from "@/services/project/ProjectEventService";
+import { GitHubIntegrationStep } from "./steps/GitHubIntegrationStep";
+import { useGitHubConnection } from "@/hooks/useGitHubConnection";
 
 interface ProjectOnboardingDialogProps {
   isOpen: boolean;
@@ -26,6 +28,10 @@ export function ProjectOnboardingDialog({
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuthStore();
+  const { isConnected, connectionStatus } = useGitHubConnection();
+  
+  // Extract username from metadata if available
+  const githubUsername = connectionStatus.metadata?.username || null;
   
   // Form state
   const [projectDetails, setProjectDetails] = useState({
@@ -40,7 +46,9 @@ export function ProjectOnboardingDialog({
     isPrivate: true
   });
 
-  const steps = ["Project Details", "Repository Setup", "Summary"];
+  const steps = projectDetails.isImporting 
+    ? ["Project Details", "Repository Setup", "Summary"] 
+    : ["Project Details", "Repository Setup", "GitHub Integration", "Summary"];
 
   const handleNextStep = () => {
     if (currentStep === 0 && !projectDetails.name.trim()) {
@@ -93,7 +101,8 @@ export function ProjectOnboardingDialog({
         body: {
           action: "create",
           name: repoDetails.repoName || projectDetails.name,
-          isPrivate: repoDetails.isPrivate
+          isPrivate: repoDetails.isPrivate,
+          description: projectDetails.description
         }
       });
       
@@ -120,6 +129,9 @@ export function ProjectOnboardingDialog({
       // If not importing, create a new GitHub repo
       if (!projectDetails.isImporting) {
         githubRepoUrl = await createGitHubRepo();
+        if (!githubRepoUrl && !projectDetails.isImporting) {
+          throw new Error("Failed to create GitHub repository");
+        }
       } else if (repoDetails.repoUrl) {
         githubRepoUrl = repoDetails.repoUrl;
       }
@@ -132,7 +144,8 @@ export function ProjectOnboardingDialog({
           description: projectDetails.description,
           user_id: user.id,
           github_repo: githubRepoUrl,
-          is_active: true
+          is_active: true,
+          tech_stack: JSON.stringify({ primaryLanguage: "unknown" }) // Will be updated during indexing
         })
         .select("id")
         .single();
@@ -145,6 +158,22 @@ export function ProjectOnboardingDialog({
         hasGithubRepo: !!githubRepoUrl,
         isImported: projectDetails.isImporting
       });
+      
+      // Start indexing the repository for RAG if a GitHub repo was connected
+      if (githubRepoUrl) {
+        try {
+          await supabase.functions.invoke("github-repo-management", {
+            body: { 
+              action: "index-repo", 
+              projectId: project.id,
+              repoFullName: githubRepoUrl.replace("https://github.com/", "")
+            }
+          });
+        } catch (indexError) {
+          console.error("Error starting repository indexing:", indexError);
+          // We don't fail the project creation if indexing fails
+        }
+      }
       
       toast({
         title: "Project Created",
@@ -183,6 +212,23 @@ export function ProjectOnboardingDialog({
           />
         );
       case 2:
+        // If importing, show summary. Otherwise show GitHub integration
+        return projectDetails.isImporting ? (
+          <SummaryStep
+            projectDetails={projectDetails}
+            repoDetails={repoDetails}
+          />
+        ) : (
+          <GitHubIntegrationStep
+            projectName={repoDetails.repoName || projectDetails.name.toLowerCase().replace(/\s+/g, '-')}
+            isGithubConnected={isConnected}
+            githubUsername={githubUsername}
+            onPrevious={handlePreviousStep}
+            onContinue={handleNextStep}
+            isSubmitting={isLoading}
+          />
+        );
+      case 3:
         return (
           <SummaryStep
             projectDetails={projectDetails}
@@ -214,7 +260,10 @@ export function ProjectOnboardingDialog({
             </Button>
             
             {currentStep < steps.length - 1 ? (
-              <Button onClick={handleNextStep} disabled={isLoading}>
+              <Button 
+                onClick={handleNextStep} 
+                disabled={isLoading || (currentStep === 2 && !projectDetails.isImporting && !isConnected)}
+              >
                 Next
               </Button>
             ) : (
