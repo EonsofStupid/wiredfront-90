@@ -65,10 +65,10 @@ export function ProjectIndexingStatus({ projectId, repoName }: ProjectIndexingSt
 
   if (indexingStatus.status === "completed") {
     return (
-      <Alert className="bg-green-50 border-green-200 text-green-800">
+      <Alert className="border border-neon-blue/30 bg-neon-blue/10 text-neon-blue">
         <DatabaseIcon className="h-4 w-4" />
         <AlertTitle>Project Indexing Complete</AlertTitle>
-        <AlertDescription>
+        <AlertDescription className="text-gray-300">
           Your project has been successfully indexed for AI-assisted development.
           {indexingStatus.files_processed} files processed.
         </AlertDescription>
@@ -77,12 +77,12 @@ export function ProjectIndexingStatus({ projectId, repoName }: ProjectIndexingSt
   }
 
   return (
-    <Alert>
-      <InfoIcon className="h-4 w-4" />
-      <AlertTitle>
+    <Alert className="border border-neon-pink/30 bg-neon-pink/5">
+      <InfoIcon className="h-4 w-4 text-neon-pink" />
+      <AlertTitle className="text-neon-pink">
         {indexingStatus.status === "pending" ? "Preparing to Index" : "Indexing Project"}
       </AlertTitle>
-      <AlertDescription className="space-y-2">
+      <AlertDescription className="space-y-2 text-gray-300">
         <p>
           {indexingStatus.status === "pending" 
             ? "Getting ready to analyze your repository..."
@@ -95,7 +95,8 @@ export function ProjectIndexingStatus({ projectId, repoName }: ProjectIndexingSt
             </span>
             <span>{indexingStatus.progress}%</span>
           </div>
-          <Progress value={indexingStatus.progress} className="h-2" />
+          <Progress value={indexingStatus.progress} className="h-2" 
+            indicatorClassName="bg-gradient-to-r from-neon-blue to-neon-pink" />
         </div>
       </AlertDescription>
     </Alert>

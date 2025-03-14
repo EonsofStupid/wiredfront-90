@@ -1,10 +1,11 @@
 
 import { useState, useEffect } from "react";
 import { useUIStore } from "@/stores";
-import { useGitHubConnection } from "@/hooks/useGitHubConnection";
+import { useGitHubConnection } from "@/hooks/github/useGitHubConnection";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import { logger } from "@/services/chat/LoggingService";
+import { toast } from "sonner";
 
 export function useProjectOverview() {
   const { 
@@ -95,7 +96,6 @@ export function useProjectOverview() {
   const handleGitHubConnect = () => {
     logger.info("GitHub connect button clicked");
     setIsConnectDialogOpen(true);
-    connectGitHub();
   };
   
   const handleImportProject = (projectId: string) => {
@@ -139,7 +139,7 @@ export function useProjectOverview() {
     
     if (!isConnected) {
       logger.warn("GitHub import attempted without connection");
-      setIsConnectDialogOpen(true);
+      toast.error("You need to connect your GitHub account first");
       return;
     }
     
@@ -147,15 +147,14 @@ export function useProjectOverview() {
   };
 
   // Extract username from metadata if available
-  const githubUsername = connectionStatus.metadata?.username || null;
+  const githubUsername = connectionStatus === 'connected' 
+    ? (typeof connectionStatus === 'object' && connectionStatus.metadata?.username) || null 
+    : null;
+    
   // Extract error message if available
-  const errorMessage = connectionStatus.errorMessage || null;
-
-  // Map connectionStatus to a simpler format for the component
-  const mappedStatus: 'idle' | 'connecting' | 'connected' | 'error' = 
-    connectionStatus.status === "connected" ? "connected" : 
-    connectionStatus.status === "pending" ? "connecting" : 
-    connectionStatus.status === "error" ? "error" : "idle";
+  const errorMessage = connectionStatus === 'error'
+    ? (typeof connectionStatus === 'object' && connectionStatus.errorMessage) || null
+    : null;
 
   return {
     projects,
@@ -163,7 +162,7 @@ export function useProjectOverview() {
     activeProjectId,
     isConnected,
     isChecking,
-    connectionStatus: mappedStatus,
+    connectionStatus,
     isIndexing,
     recentlyImportedProject,
     isConnectDialogOpen,

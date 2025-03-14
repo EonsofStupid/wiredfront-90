@@ -4,10 +4,11 @@ import { useProjectOverview } from "./useProjectOverview";
 import { ProjectOverviewHeader } from "./ProjectOverviewHeader";
 import { GitHubConnectionSection } from "./GitHubConnectionSection";
 import { IndexingStatusSection } from "./IndexingStatusSection";
-import { ProjectContentSection } from "./ProjectContentSection";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ProjectList } from "@/components/projects/ProjectList";
 import { GitHubConnectDialog } from "@/components/github/GitHubConnectDialog";
 import { GitHubImportModal } from "@/components/github/GitHubImportModal";
+import { ProjectDetails } from "@/components/projects/ProjectDetails";
 
 interface ProjectOverviewProps {
   className?: string;
@@ -33,13 +34,19 @@ export function ProjectOverview({ className, isCompact = false }: ProjectOvervie
     handleAddProject,
     handleGitHubConnect,
     handleImportProject,
+    handleOpenImportModal,
     connectGitHub,
     disconnectGitHub,
     setActiveProject
   } = useProjectOverview();
   
   return (
-    <div className={cn("flex flex-col h-full", className)}>
+    <div className={cn(
+      "flex flex-col h-full", 
+      "bg-gradient-to-br from-dark-lighter/30 to-transparent backdrop-blur-md",
+      "border-neon-blue/20",
+      className
+    )}>
       <ProjectOverviewHeader />
       
       <GitHubConnectionSection
@@ -56,21 +63,27 @@ export function ProjectOverview({ className, isCompact = false }: ProjectOvervie
         recentlyImportedProject={recentlyImportedProject}
       />
       
-      <div className="flex-1 overflow-auto">
-        <ProjectContentSection
-          activeProject={activeProject}
-          isGithubConnected={isConnected}
-          githubUsername={githubUsername}
-          onAddProject={handleAddProject}
-          onImportComplete={handleImportProject}
-        />
-      </div>
+      <ScrollArea className="flex-1">
+        {activeProject ? (
+          <ProjectDetails
+            project={activeProject}
+            isGithubConnected={isConnected}
+            githubUsername={githubUsername}
+          />
+        ) : (
+          <div className="p-4 text-center">
+            <p className="text-sm text-gray-400">No project selected</p>
+          </div>
+        )}
+      </ScrollArea>
       
       <ProjectList
         projects={projects}
         activeProjectId={activeProjectId}
         onSelectProject={setActiveProject}
         onAddProject={handleAddProject}
+        onImportProject={handleOpenImportModal}
+        isGithubConnected={isConnected}
       />
       
       <GitHubConnectDialog

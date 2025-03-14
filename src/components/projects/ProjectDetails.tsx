@@ -1,84 +1,105 @@
 
-import { Button } from "@/components/ui/button";
-import { Code, ExternalLink, Folder, Info } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { GitHubUserBadge } from "@/components/github/GitHubUserBadge";
+import { Badge } from "@/components/ui/badge";
+import { 
+  CalendarIcon, 
+  CodeIcon, 
+  EditIcon, 
+  FileIcon, 
+  FolderIcon, 
+  GithubIcon 
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Project {
   id: string;
   name: string;
-  description?: string; // Made optional to match the store type
+  description?: string;
   lastModified: Date;
+  github_repo?: string;
+  language?: string;
+  files_count?: number;
 }
 
 interface ProjectDetailsProps {
-  project: Project | undefined;
-  isGithubConnected: boolean;
-  githubUsername: string | null;
+  project: Project;
+  isGithubConnected?: boolean;
+  githubUsername?: string | null;
+  className?: string;
 }
 
-export function ProjectDetails({
-  project,
-  isGithubConnected,
-  githubUsername
+export function ProjectDetails({ 
+  project, 
+  isGithubConnected, 
+  githubUsername,
+  className 
 }: ProjectDetailsProps) {
-  if (!project) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full p-4 space-y-6">
-        <div className="text-center space-y-2">
-          <h3 className="text-lg font-medium">No Project Selected</h3>
-          <p className="text-sm text-muted-foreground">Create a new project or select one from the list below</p>
-        </div>
-      </div>
-    );
-  }
-
+  const hasGitHubRepo = !!project.github_repo;
+  
   return (
-    <div className="p-4 space-y-4">
-      <div>
-        <h3 className="text-lg font-medium">{project.name}</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          Last updated {formatDistanceToNow(new Date(project.lastModified), { addSuffix: true })}
-        </p>
-      </div>
-      
-      <div className="space-y-1">
-        <p className="text-sm font-medium">Description</p>
-        <p className="text-sm text-muted-foreground">{project.description || "No description provided"}</p>
-      </div>
-      
-      {isGithubConnected && githubUsername && (
-        <div className="space-y-2">
-          <p className="text-sm font-medium">GitHub Repository</p>
-          <a 
-            href={`https://github.com/${githubUsername}/${project.name}`} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-sm text-neon-blue hover:underline"
-          >
-            <ExternalLink className="h-4 w-4" />
-            {`${githubUsername}/${project.name}`}
-          </a>
+    <div className={cn("p-4", className)}>
+      <div className="space-y-6">
+        <div>
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-xl font-medium text-neon-blue">
+              {project.name}
+            </h3>
+            <button className="text-gray-400 hover:text-neon-blue">
+              <EditIcon className="h-4 w-4" />
+            </button>
+          </div>
+          
+          <p className="text-sm text-gray-300">
+            {project.description || "No description provided"}
+          </p>
         </div>
-      )}
-      
-      <div className="pt-2 space-y-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full justify-start gap-2"
-        >
-          <Code className="h-4 w-4" />
-          View Code
-        </Button>
         
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full justify-start gap-2"
-        >
-          <Info className="h-4 w-4" />
-          Project Settings
-        </Button>
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-sm text-gray-400">
+            <CalendarIcon className="h-4 w-4 text-neon-blue/70" />
+            <span>Last modified {formatDistanceToNow(new Date(project.lastModified), { addSuffix: true })}</span>
+          </div>
+          
+          {hasGitHubRepo && (
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <GithubIcon className="h-4 w-4 text-neon-blue/70" />
+              <span>{project.github_repo}</span>
+              {isGithubConnected && githubUsername && (
+                <GitHubUserBadge username={githubUsername} />
+              )}
+            </div>
+          )}
+          
+          {project.language && (
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <CodeIcon className="h-4 w-4 text-neon-blue/70" />
+              <span>Primary language: {project.language}</span>
+            </div>
+          )}
+          
+          {project.files_count && (
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <FileIcon className="h-4 w-4 text-neon-blue/70" />
+              <span>{project.files_count} files</span>
+            </div>
+          )}
+        </div>
+        
+        <div className="pt-4 border-t border-neon-blue/10">
+          <h4 className="text-sm font-medium text-neon-blue/90 mb-2">Project Status</h4>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="bg-neon-blue/10 text-neon-blue border-neon-blue/30">
+              Active
+            </Badge>
+            {hasGitHubRepo && (
+              <Badge variant="outline" className="bg-neon-pink/10 text-neon-pink border-neon-pink/30">
+                GitHub Synced
+              </Badge>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
