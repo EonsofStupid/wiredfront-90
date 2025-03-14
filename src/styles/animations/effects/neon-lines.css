@@ -1,47 +1,68 @@
 
-.neon-lines {
+.hero--neon-lines {
   position: relative;
-  isolation: isolate;
+  background: #080810;
+  overflow: hidden;
+  min-height: 40vh; /* Ensures visibility */
 }
 
-.neon-line {
-  position: absolute;
-  background: var(--neon-cyan);
-  box-shadow: var(--neon-cyan-shadow);
-  opacity: 0.7;
-}
-
-.neon-line-h {
-  height: var(--grid-line-width);
-  width: 100%;
-  left: 0;
-}
-
-.neon-line-v {
-  width: var(--grid-line-width);
-  height: 100%;
-  top: 0;
-}
-
-.neon-line-1 { top: 20%; }
-.neon-line-2 { top: 70%; }
-.neon-line-3 { left: 30%; }
-.neon-line-4 { left: 60%; }
-
-.neon-grid {
+.hero--neon-lines::before,
+.hero--neon-lines::after {
+  content: "";
   position: absolute;
   inset: 0;
-  background-image: 
-    linear-gradient(to right, var(--neon-cyan) var(--grid-line-width), transparent var(--grid-line-width)),
-    linear-gradient(to bottom, var(--neon-cyan) var(--grid-line-width), transparent var(--grid-line-width));
-  background-size: var(--grid-size) var(--grid-size);
-  background-position: 0 0;
-  opacity: 0.2;
+  width: 200%;
+  height: 200%;
+  z-index: 0; /* Behind content */
+}
+
+.hero--neon-lines::before {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--neon-cyan-glow) 0 var(--grid-line-width),
+    transparent var(--grid-line-width) var(--grid-size)
+  );
+  box-shadow: var(--neon-cyan-shadow);
+  animation: moveLines var(--anim-duration-slow) linear infinite;
+}
+
+.hero--neon-lines::after {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--neon-pink-glow) 0 var(--grid-line-width),
+    transparent var(--grid-line-width) calc(var(--grid-size) * 1.5)
+  );
+  box-shadow: var(--neon-pink-shadow);
+  opacity: 0.7;
+  animation: moveLines calc(var(--anim-duration-slow) * 1.5) linear infinite reverse;
+}
+
+@keyframes moveLines {
+  to { 
+    transform: translate(-25%, -25%); 
+  }
+}
+
+/* Glow effect to enhance visibility */
+.hero--neon-lines .neon-border {
+  position: relative;
+  z-index: 10;
+}
+
+.hero--neon-lines .neon-border::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: inherit;
+  background: transparent;
+  box-shadow: var(--neon-cyan-shadow), var(--neon-pink-shadow);
+  opacity: 0.4;
   z-index: -1;
 }
 
 @media (prefers-reduced-motion) {
-  .neon-grid, .neon-line {
+  .hero--neon-lines::before,
+  .hero--neon-lines::after {
     animation: none;
   }
 }
