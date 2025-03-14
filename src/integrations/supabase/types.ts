@@ -1011,7 +1011,7 @@ export type Database = {
           token_usage: number | null
           updated_at: string | null
           user_id: string | null
-          vector_store_id: string | null
+          vector_count: number | null
         }
         Insert: {
           average_latency?: number | null
@@ -1021,7 +1021,7 @@ export type Database = {
           token_usage?: number | null
           updated_at?: string | null
           user_id?: string | null
-          vector_store_id?: string | null
+          vector_count?: number | null
         }
         Update: {
           average_latency?: number | null
@@ -1031,17 +1031,42 @@ export type Database = {
           token_usage?: number | null
           updated_at?: string | null
           user_id?: string | null
-          vector_store_id?: string | null
+          vector_count?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "rag_metrics_vector_store_id_fkey"
-            columns: ["vector_store_id"]
-            isOneToOne: false
-            referencedRelation: "vector_store_configs"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
+      }
+      rag_user_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          max_vectors: number | null
+          queries_made: number | null
+          tier: Database["public"]["Enums"]["rag_tier_type"] | null
+          updated_at: string | null
+          user_id: string | null
+          vectors_used: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          max_vectors?: number | null
+          queries_made?: number | null
+          tier?: Database["public"]["Enums"]["rag_tier_type"] | null
+          updated_at?: string | null
+          user_id?: string | null
+          vectors_used?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          max_vectors?: number | null
+          queries_made?: number | null
+          tier?: Database["public"]["Enums"]["rag_tier_type"] | null
+          updated_at?: string | null
+          user_id?: string | null
+          vectors_used?: number | null
+        }
+        Relationships: []
       }
       role_permissions: {
         Row: {
@@ -1093,6 +1118,36 @@ export type Database = {
           id?: string
           name?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string | null
+          current_period_end: string | null
+          id: string
+          status: Database["public"]["Enums"]["subscription_status"] | null
+          stripe_subscription_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_period_end?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["subscription_status"] | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_period_end?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["subscription_status"] | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1317,6 +1372,8 @@ export type Database = {
       metric_trend: "up" | "down" | "neutral"
       plan_mode_type: "basic" | "detailed" | "architectural"
       provider_category: "ai" | "vector" | "voice" | "storage" | "development"
+      rag_tier_type: "standard" | "premium"
+      subscription_status: "active" | "past_due" | "canceled" | "trialing"
       token_validation_status:
         | "valid"
         | "invalid"

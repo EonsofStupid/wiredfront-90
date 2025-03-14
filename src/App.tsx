@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { Toaster } from "sonner";
@@ -31,6 +32,11 @@ import MetricsOverview from "./pages/admin/MetricsOverview";
 import GitHubCallback from "./pages/github-callback";
 import { RAGKeysSettings } from "@/components/admin/settings/api/RAGKeysSettings";
 import { APIKeyManagement } from "@/components/admin/settings/api/APIKeyManagement";
+import { CustomerManagementPanel } from "@/components/admin/customers/CustomerManagementPanel";
+import { FeatureManagementPanel } from "@/components/admin/features/FeatureManagementPanel";
+import { UsageMonitoringPanel } from "@/components/admin/analytics/UsageMonitoringPanel";
+import { SubscriptionManagementPanel } from "@/components/admin/subscriptions/SubscriptionManagementPanel";
+import { EnhancedSystemSettingsPanel } from "@/components/admin/settings/EnhancedSystemSettingsPanel";
 
 const PROTECTED_ROUTES = [
   '/dashboard', 
@@ -63,7 +69,11 @@ const ADMIN_ROUTES = [
   '/admin/activity',
   '/admin/database',
   '/admin/search',
-  '/admin/notifications'
+  '/admin/notifications',
+  '/admin/customers',
+  '/admin/feature-management',
+  '/admin/usage-analytics',
+  '/admin/subscriptions'
 ];
 
 const App = () => {
@@ -131,12 +141,16 @@ const App = () => {
             <Route path="/admin/settings/api" element={<APISettings />} />
             <Route path="/admin/settings/accessibility" element={<AccessibilitySettings />} />
             <Route path="/admin/settings/notifications" element={<NotificationSettings />} />
-            <Route path="/admin/settings/general" element={<GeneralSettings />} />
+            <Route path="/admin/settings/general" element={<EnhancedSystemSettingsPanel />} />
             <Route path="/admin/settings/chat" element={<ChatSettings />} />
             <Route path="/admin/settings/chat-features" element={<ChatFeatureSettings />} />
             <Route path="/admin/settings/live-preview" element={<LivePreviewSettings />} />
             <Route path="/admin/settings/feature-flags" element={<FeatureFlagsPage />} />
             <Route path="/admin/users" element={<div>Users Management</div>} />
+            <Route path="/admin/customers" element={<CustomerManagementPanel />} />
+            <Route path="/admin/feature-management" element={<FeatureManagementPanel />} />
+            <Route path="/admin/usage-analytics" element={<UsageMonitoringPanel />} />
+            <Route path="/admin/subscriptions" element={<SubscriptionManagementPanel />} />
             <Route path="/admin/api-keys" element={<APIKeyManagement />} />
             <Route path="/admin/rag-settings" element={<RAGKeysSettings />} />
             <Route path="/admin/prompt-enhancements" element={<div>Prompt Enhancement Management</div>} />

@@ -5,12 +5,14 @@ import {
   Users, 
   Settings, 
   Database, 
-  Layers, 
   KeyRound,
   MessageSquare,
   Github,
   FileCode,
-  KanbanSquare
+  KanbanSquare,
+  CreditCard,
+  BarChart3,
+  Cog
 } from "lucide-react";
 import { AdminNavIconButton } from "./AdminNavIconButton";
 import { useUIStore } from "@/stores/ui";
@@ -35,21 +37,33 @@ export const AdminMainNavGroup = () => {
       />
       <AdminNavIconButton 
         icon={Users} 
-        tooltip="User Management" 
-        text="Users"
-        route="/admin/users" 
+        tooltip="Customer Management" 
+        text="Customers"
+        route="/admin/customers" 
+      />
+      <AdminNavIconButton 
+        icon={CreditCard} 
+        tooltip="Subscription Management" 
+        text="Subscriptions"
+        route="/admin/subscriptions" 
+      />
+      <AdminNavIconButton 
+        icon={Layers} 
+        tooltip="Feature Management" 
+        text="Features"
+        route="/admin/feature-management" 
+      />
+      <AdminNavIconButton 
+        icon={BarChart3} 
+        tooltip="Usage Analytics" 
+        text="Analytics"
+        route="/admin/usage-analytics" 
       />
       <AdminNavIconButton 
         icon={Settings} 
         tooltip="System Settings" 
         text="Settings"
         route="/admin/settings/general" 
-      />
-      <AdminNavIconButton 
-        icon={Layers} 
-        tooltip="RAG Configuration" 
-        text="RAG"
-        route="/admin/rag-settings" 
       />
       <AdminNavIconButton 
         icon={KeyRound} 
