@@ -21,6 +21,7 @@ export interface UIState {
     dropdown: number;
     tooltip: number;
     navbar: number;
+    projecthub: number;
     floating: number;
     content: number;
     background: number;

@@ -9,6 +9,7 @@ const Z_INDEX = {
   dropdown: 900,
   tooltip: 800,
   navbar: 700,
+  projecthub: 9600,
   floating: 600,
   content: 500,
   background: 400,

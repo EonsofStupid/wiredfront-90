@@ -50,6 +50,7 @@ export function ProjectOverview({ className, isCompact = false }: ProjectOvervie
       "flex flex-col h-full", 
       "bg-gradient-to-br from-dark-lighter/30 to-transparent backdrop-blur-md",
       "border-neon-blue/20",
+      "z-[var(--z-projecthub)]",
       className
     )}>
       <ProjectOverviewHeader />
