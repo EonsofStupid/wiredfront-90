@@ -1,3 +1,4 @@
+
 import { Json } from './database';
 import { MessageType, SettingType } from './enums';
 
@@ -108,6 +109,35 @@ export interface Tables {
       is_public?: boolean | null;
       created_at?: string | null;
       updated_at?: string | null;
+    };
+  };
+  system_logs: {
+    Row: {
+      id: string;
+      timestamp: string;
+      level: string;
+      source: string;
+      message: string;
+      metadata: Json | null;
+      user_id: string | null;
+    };
+    Insert: {
+      id?: string;
+      timestamp?: string;
+      level: string;
+      source: string;
+      message: string;
+      metadata?: Json | null;
+      user_id?: string | null;
+    };
+    Update: {
+      id?: string;
+      timestamp?: string;
+      level?: string;
+      source?: string;
+      message?: string;
+      metadata?: Json | null;
+      user_id?: string | null;
     };
   };
   user_settings: {
