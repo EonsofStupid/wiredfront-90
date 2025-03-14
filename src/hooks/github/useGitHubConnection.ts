@@ -76,8 +76,8 @@ export function useGitHubConnection() {
 
   const connectGitHub = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke("github-repo-management", {
-        body: { action: "get-auth-url" }
+      const { data, error } = await supabase.functions.invoke("github-oauth-init", {
+        body: { returnUrl: window.location.origin }
       });
       
       if (error) throw error;
@@ -115,7 +115,7 @@ export function useGitHubConnection() {
     
     try {
       // Call edge function to revoke GitHub token
-      await supabase.functions.invoke("github-repo-management", {
+      await supabase.functions.invoke("github-oauth-init", {
         body: { action: "disconnect" }
       });
       
