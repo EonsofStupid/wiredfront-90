@@ -1,24 +1,15 @@
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { OnboardingSteps } from "./OnboardingSteps";
 import { ProjectDetailsStep } from "./steps/ProjectDetailsStep";
-import { GitHubIntegrationStep } from "./steps/GitHubIntegrationStep";
-import { CompletionStep } from "./steps/CompletionStep";
-import { useProjectActivation } from "@/hooks/projects/useProjectActivation";
-import { useGitHubConnection } from "@/hooks/github/useGitHubConnection";
-
-export type ProjectType = "new" | "import";
-
-interface ProjectFormData {
-  name: string;
-  description: string;
-  projectType: ProjectType;
-  githubIntegration: boolean;
-}
+import { RepositoryStep } from "./steps/RepositoryStep";
+import { SummaryStep } from "./steps/SummaryStep";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuthStore } from "@/stores/auth";
+import { ProjectEventService } from "@/services/project/ProjectEventService";
 
 interface ProjectOnboardingDialogProps {
   isOpen: boolean;
@@ -26,219 +17,214 @@ interface ProjectOnboardingDialogProps {
   onComplete: (projectId: string) => void;
 }
 
-export function ProjectOnboardingDialog({ 
-  isOpen, 
-  onClose, 
-  onComplete 
+export function ProjectOnboardingDialog({
+  isOpen,
+  onClose,
+  onComplete
 }: ProjectOnboardingDialogProps) {
   const [currentStep, setCurrentStep] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [projectId, setProjectId] = useState<string | null>(null);
-  const [formData, setFormData] = useState<ProjectFormData>({
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const { user } = useAuthStore();
+  
+  // Form state
+  const [projectDetails, setProjectDetails] = useState({
     name: "",
     description: "",
-    projectType: "new",
-    githubIntegration: false
+    isImporting: false
   });
   
-  const { toast } = useToast();
-  const { 
-    notifyProjectCreated, 
-    notifyProjectImported 
-  } = useProjectActivation();
-  const { 
-    isConnected: isGithubConnected,
-    username: githubUsername
-  } = useGitHubConnection();
+  const [repoDetails, setRepoDetails] = useState({
+    repoName: "",
+    repoUrl: "",
+    isPrivate: true
+  });
 
-  const steps = [
-    "Project Details",
-    "GitHub Integration",
-    "Complete"
-  ];
+  const steps = ["Project Details", "Repository Setup", "Summary"];
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      description: "",
-      projectType: "new",
-      githubIntegration: false
-    });
-    setCurrentStep(0);
-    setProjectId(null);
-  };
-
-  const handleClose = () => {
-    if (!isSubmitting) {
-      resetForm();
-      onClose();
+  const handleNextStep = () => {
+    if (currentStep === 0 && !projectDetails.name.trim()) {
+      toast({
+        title: "Project name required",
+        description: "Please enter a name for your project",
+        variant: "destructive"
+      });
+      return;
     }
-  };
-
-  const nextStep = () => {
+    
+    if (currentStep === 1 && !projectDetails.isImporting && !repoDetails.repoName.trim()) {
+      toast({
+        title: "Repository name required",
+        description: "Please enter a name for your repository",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     }
   };
 
-  const prevStep = () => {
+  const handlePreviousStep = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
   };
 
-  const handleCreateProject = async () => {
-    setIsSubmitting(true);
-    
-    try {
-      // Create the project in the database
-      const { data: projectData, error } = await supabase
-        .from("projects")
-        .insert({
-          name: formData.name,
-          description: formData.description || null,
-          status: "active"
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      // Store the project ID
-      setProjectId(projectData.id);
-
-      // Notify the system about the new project
-      if (formData.projectType === "new") {
-        await notifyProjectCreated(supabase.auth.getUser().then(res => res.data.user?.id || ""), projectData.id);
-      } else {
-        await notifyProjectImported(supabase.auth.getUser().then(res => res.data.user?.id || ""), projectData.id);
-      }
-
-      // If GitHub integration is enabled and the user chose a new project, create a GitHub repo
-      if (formData.githubIntegration && formData.projectType === "new" && isGithubConnected) {
-        nextStep(); // Move to GitHub integration step
-      } else {
-        // Skip to completion step
-        setCurrentStep(steps.length - 1);
-      }
-      
-      toast({
-        title: "Project created successfully",
-        description: `Your project "${formData.name}" has been created.`
-      });
-    } catch (error) {
-      console.error("Error creating project:", error);
-      toast({
-        variant: "destructive",
-        title: "Error creating project",
-        description: error.message || "An unknown error occurred."
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleCreateGithubRepo = async () => {
-    if (!projectId) return;
-    
-    setIsSubmitting(true);
-    
-    try {
-      const user = await supabase.auth.getUser();
-      const userId = user.data.user?.id;
-      
-      if (!userId) throw new Error("User not authenticated");
-
-      const response = await supabase.functions.invoke("github-repo-management", {
-        body: { 
-          action: "create-repo", 
-          payload: {
-            userId,
-            projectId,
-            projectName: formData.name,
-            description: formData.description
-          }
-        }
-      });
-
-      if (response.error) throw new Error(response.error.message || "Failed to create GitHub repository");
-      
-      toast({
-        title: "GitHub repository created",
-        description: "Your project has been linked to a new GitHub repository."
-      });
-      
-      // Move to completion step
-      setCurrentStep(steps.length - 1);
-    } catch (error) {
-      console.error("Error creating GitHub repository:", error);
-      toast({
-        variant: "destructive",
-        title: "GitHub repository creation failed",
-        description: error.message || "Failed to create GitHub repository. Please try again later."
-      });
-      
-      // Still move to completion step, but the GitHub repo creation failed
-      setCurrentStep(steps.length - 1);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleComplete = () => {
-    if (projectId) {
-      onComplete(projectId);
-    }
-    resetForm();
+  const handleClose = () => {
+    setCurrentStep(0);
+    setProjectDetails({
+      name: "",
+      description: "",
+      isImporting: false
+    });
+    setRepoDetails({
+      repoName: "",
+      repoUrl: "",
+      isPrivate: true
+    });
     onClose();
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>New Project Setup</DialogTitle>
-          <DialogDescription>
-            {currentStep === 0 && "Create a new project or import an existing one."}
-            {currentStep === 1 && "Set up GitHub integration for your project."}
-            {currentStep === 2 && "Your project is ready!"}
-          </DialogDescription>
-        </DialogHeader>
+  const createGitHubRepo = async (): Promise<string> => {
+    try {
+      const { data, error } = await supabase.functions.invoke("github-repo-management", {
+        body: {
+          action: "create",
+          name: repoDetails.repoName || projectDetails.name,
+          isPrivate: repoDetails.isPrivate
+        }
+      });
+      
+      if (error) throw error;
+      return data.repoUrl || "";
+    } catch (error) {
+      console.error("Error creating GitHub repo:", error);
+      toast({
+        title: "GitHub Repository Creation Failed",
+        description: "Could not create a GitHub repository. Please try again later.",
+        variant: "destructive"
+      });
+      return "";
+    }
+  };
 
-        <div className="py-4">
-          <OnboardingSteps 
-            steps={steps} 
-            currentStep={currentStep} 
+  const handleCreateProject = async () => {
+    if (!user?.id) return;
+    
+    setIsLoading(true);
+    try {
+      let githubRepoUrl = "";
+      
+      // If not importing, create a new GitHub repo
+      if (!projectDetails.isImporting) {
+        githubRepoUrl = await createGitHubRepo();
+      } else if (repoDetails.repoUrl) {
+        githubRepoUrl = repoDetails.repoUrl;
+      }
+      
+      // Create project in Supabase
+      const { data: project, error } = await supabase
+        .from("projects")
+        .insert({
+          name: projectDetails.name,
+          description: projectDetails.description,
+          user_id: user.id,
+          github_repo: githubRepoUrl,
+          is_active: true
+        })
+        .select("id")
+        .single();
+      
+      if (error) throw error;
+      
+      // Log project creation event
+      await ProjectEventService.logProjectCreation(project.id, {
+        projectName: projectDetails.name,
+        hasGithubRepo: !!githubRepoUrl,
+        isImported: projectDetails.isImporting
+      });
+      
+      toast({
+        title: "Project Created",
+        description: `${projectDetails.name} has been created successfully`,
+      });
+      
+      onComplete(project.id);
+      handleClose();
+    } catch (error) {
+      console.error("Error creating project:", error);
+      toast({
+        title: "Project Creation Failed",
+        description: "Could not create the project. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 0:
+        return (
+          <ProjectDetailsStep
+            projectDetails={projectDetails}
+            setProjectDetails={setProjectDetails}
           />
+        );
+      case 1:
+        return (
+          <RepositoryStep
+            projectDetails={projectDetails}
+            repoDetails={repoDetails}
+            setRepoDetails={setRepoDetails}
+          />
+        );
+      case 2:
+        return (
+          <SummaryStep
+            projectDetails={projectDetails}
+            repoDetails={repoDetails}
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
-          <div className="mt-6">
-            {currentStep === 0 && (
-              <ProjectDetailsStep
-                formData={formData}
-                onChange={setFormData}
-                onSubmit={handleCreateProject}
-                isSubmitting={isSubmitting}
-              />
-            )}
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="sm:max-w-[550px]">
+        <div className="space-y-6">
+          <OnboardingSteps steps={steps} currentStep={currentStep} />
+          
+          <div className="py-4 min-h-[300px]">
+            {renderStepContent()}
+          </div>
+          
+          <div className="flex justify-between">
+            <Button
+              variant="outline"
+              onClick={currentStep === 0 ? handleClose : handlePreviousStep}
+              disabled={isLoading}
+            >
+              {currentStep === 0 ? "Cancel" : "Back"}
+            </Button>
             
-            {currentStep === 1 && (
-              <GitHubIntegrationStep
-                projectName={formData.name}
-                isGithubConnected={isGithubConnected}
-                githubUsername={githubUsername}
-                onPrevious={prevStep}
-                onContinue={handleCreateGithubRepo}
-                isSubmitting={isSubmitting}
-              />
-            )}
-            
-            {currentStep === 2 && (
-              <CompletionStep
-                projectName={formData.name}
-                projectType={formData.projectType}
-                hasGithubRepo={formData.githubIntegration && isGithubConnected}
-                onComplete={handleComplete}
-              />
+            {currentStep < steps.length - 1 ? (
+              <Button onClick={handleNextStep} disabled={isLoading}>
+                Next
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleCreateProject} 
+                disabled={isLoading}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {isLoading ? "Creating..." : "Create Project"}
+              </Button>
             )}
           </div>
         </div>

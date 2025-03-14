@@ -1,194 +1,184 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-
-export type GitHubConnectionState = 'idle' | 'connecting' | 'connected' | 'error';
+import { useToast } from "@/components/ui/use-toast";
+import { useAuthStore } from "@/stores/auth";
 
 export function useGitHubConnection() {
   const [isConnected, setIsConnected] = useState(false);
-  const [username, setUsername] = useState<string | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<GitHubConnectionState>('idle');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isCheckingConnection, setIsCheckingConnection] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+  const [connectionStatus, setConnectionStatus] = useState<{
+    status: string;
+    lastCheck: string | null;
+    errorMessage: string | null;
+    metadata: Record<string, any> | null;
+  }>({
+    status: "unknown",
+    lastCheck: null,
+    errorMessage: null,
+    metadata: null
+  });
+  
+  const { toast } = useToast();
+  const { user } = useAuthStore();
 
-  useEffect(() => {
-    checkConnection();
-  }, []);
-
-  const checkConnection = async () => {
-    setIsCheckingConnection(true);
+  const checkConnectionStatus = useCallback(async () => {
+    if (!user?.id) return;
+    
+    setIsChecking(true);
     try {
-      // First check if we have a connection record in the database
-      const { data: connectionData, error: connectionError } = await supabase
-        .from('github_connection_status')
-        .select('*')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id || '')
+      const { data, error } = await supabase
+        .from("github_connection_status")
+        .select("*")
+        .eq("user_id", user.id)
         .single();
-
-      if (!connectionError && connectionData && connectionData.status === 'connected') {
-        setIsConnected(true);
-        setUsername(connectionData.metadata?.username || null);
-        setConnectionStatus('connected');
-        return;
+      
+      if (error && error.code !== "PGRST116") {
+        throw error;
       }
-
-      // Check with the GitHub endpoint
-      const response = await supabase.functions.invoke("github-repo-management", {
-        body: { 
-          action: "check-github-status", 
-          payload: {
-            userId: (await supabase.auth.getUser()).data.user?.id
+      
+      if (data) {
+        setConnectionStatus({
+          status: data.status,
+          lastCheck: data.last_check,
+          errorMessage: data.error_message,
+          metadata: data.metadata as Record<string, any> | null
+        });
+        
+        setIsConnected(data.status === "connected");
+        
+        // Type guard for metadata
+        if (data.metadata && typeof data.metadata === 'object' && data.metadata !== null) {
+          // Only log if metadata has a username property
+          const metadata = data.metadata as Record<string, any>;
+          if (metadata.username) {
+            console.log(`GitHub connected as: ${metadata.username}`);
           }
         }
-      });
-
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
-      if (response.data.connected) {
-        setIsConnected(true);
-        setUsername(response.data.username);
-        setConnectionStatus('connected');
       } else {
+        // No entry found, user is not connected
         setIsConnected(false);
-        setUsername(null);
-        setConnectionStatus('idle');
+        setConnectionStatus({
+          status: "disconnected",
+          lastCheck: null,
+          errorMessage: null,
+          metadata: null
+        });
       }
     } catch (error) {
-      console.error("Error checking GitHub connection:", error);
+      console.error("Error checking GitHub connection status:", error);
       setIsConnected(false);
-      setConnectionStatus('idle');
     } finally {
-      setIsCheckingConnection(false);
+      setIsChecking(false);
     }
-  };
+  }, [user?.id]);
 
-  const connect = async () => {
-    setConnectionStatus('connecting');
-    setErrorMessage(null);
-    
+  const connectGitHub = async () => {
     try {
-      // In a real implementation, this would use OAuth to connect to GitHub
-      // For demonstration, we're simulating the connection
-      toast.info("GitHub OAuth flow would start here");
-      
-      // Simulate a delay for the OAuth flow
-      setTimeout(() => {
-        // This would be the callback handler after successful OAuth
-        setIsConnected(true);
-        setUsername("github_user"); // In real app, this would come from GitHub
-        setConnectionStatus('connected');
-        toast.success("Connected to GitHub successfully");
-        
-        // In a real app, this data would come from the OAuth response
-        saveConnectionStatus({
-          status: 'connected',
-          username: 'github_user',
-          scopes: ['repo']
-        });
-      }, 1500);
-    } catch (error) {
-      console.error("Error connecting to GitHub:", error);
-      setErrorMessage(error.message || "Failed to connect to GitHub");
-      setConnectionStatus('error');
-      toast.error("Failed to connect to GitHub");
-    }
-  };
-
-  const disconnect = async () => {
-    try {
-      // In a real implementation, this would revoke the GitHub OAuth token
-      // For demonstration, we're just updating the state
-      
-      // Update the connection status in the database
-      const { error } = await supabase
-        .from('github_connection_status')
-        .update({
-          status: 'disconnected',
-          last_check: new Date().toISOString(),
-          metadata: null
-        })
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id || '');
+      const { data, error } = await supabase.functions.invoke("github-repo-management", {
+        body: { action: "get-auth-url" }
+      });
       
       if (error) throw error;
       
-      setIsConnected(false);
-      setUsername(null);
-      setConnectionStatus('idle');
-      toast.success("Disconnected from GitHub");
+      if (data?.authUrl) {
+        // Open GitHub OAuth flow in a new window
+        window.open(data.authUrl, "_blank", "width=800,height=600");
+        
+        // Update local status to pending
+        await supabase
+          .from("github_connection_status")
+          .upsert({
+            user_id: user?.id,
+            status: "pending",
+            last_check: new Date().toISOString()
+          });
+        
+        toast({
+          title: "GitHub Authorization",
+          description: "Please complete the GitHub authorization in the new window."
+        });
+      }
     } catch (error) {
-      console.error("Error disconnecting from GitHub:", error);
-      toast.error("Failed to disconnect from GitHub");
+      console.error("Error initiating GitHub connection:", error);
+      toast({
+        title: "Connection Failed",
+        description: "Could not connect to GitHub. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
-  const saveConnectionStatus = async (data: {
-    status: string;
-    username: string;
-    scopes: string[];
-  }) => {
+  const disconnectGitHub = async () => {
+    if (!user?.id) return;
+    
     try {
-      const userId = (await supabase.auth.getUser()).data.user?.id;
-      if (!userId) return;
+      // Call edge function to revoke GitHub token
+      await supabase.functions.invoke("github-repo-management", {
+        body: { action: "disconnect" }
+      });
       
-      // Check if we already have a record
-      const { data: existingData, error: checkError } = await supabase
-        .from('github_connection_status')
-        .select('id')
-        .eq('user_id', userId)
-        .maybeSingle();
+      // Update status in database
+      await supabase
+        .from("github_connection_status")
+        .upsert({
+          user_id: user.id,
+          status: "disconnected",
+          last_check: new Date().toISOString(),
+          metadata: null
+        });
       
-      if (checkError && checkError.code !== 'PGRST116') {
-        throw checkError;
-      }
+      setIsConnected(false);
+      setConnectionStatus({
+        status: "disconnected",
+        lastCheck: new Date().toISOString(),
+        errorMessage: null,
+        metadata: null
+      });
       
-      if (existingData) {
-        // Update existing record
-        const { error } = await supabase
-          .from('github_connection_status')
-          .update({
-            status: data.status,
-            last_check: new Date().toISOString(),
-            metadata: {
-              username: data.username,
-              scopes: data.scopes,
-              connected_at: new Date().toISOString()
-            }
-          })
-          .eq('user_id', userId);
-        
-        if (error) throw error;
-      } else {
-        // Insert new record
-        const { error } = await supabase
-          .from('github_connection_status')
-          .insert({
-            user_id: userId,
-            status: data.status,
-            metadata: {
-              username: data.username,
-              scopes: data.scopes,
-              connected_at: new Date().toISOString()
-            }
-          });
-        
-        if (error) throw error;
-      }
+      toast({
+        title: "Disconnected",
+        description: "Your GitHub account has been disconnected."
+      });
     } catch (error) {
-      console.error("Error saving GitHub connection status:", error);
+      console.error("Error disconnecting from GitHub:", error);
+      toast({
+        title: "Disconnection Failed",
+        description: "Could not disconnect from GitHub. Please try again.",
+        variant: "destructive"
+      });
     }
   };
+
+  // Poll for status changes when status is pending
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+    
+    if (connectionStatus.status === "pending") {
+      intervalId = setInterval(checkConnectionStatus, 5000);
+    }
+    
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [connectionStatus.status, checkConnectionStatus]);
+
+  // Check connection status on mount and when user changes
+  useEffect(() => {
+    if (user?.id) {
+      checkConnectionStatus();
+    } else {
+      setIsConnected(false);
+      setIsChecking(false);
+    }
+  }, [user?.id, checkConnectionStatus]);
 
   return {
     isConnected,
-    username,
+    isChecking,
     connectionStatus,
-    errorMessage,
-    isCheckingConnection,
-    connect,
-    disconnect,
-    checkConnection
+    connectGitHub,
+    disconnectGitHub,
+    refreshStatus: checkConnectionStatus
   };
 }

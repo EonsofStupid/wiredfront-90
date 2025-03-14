@@ -1,10 +1,9 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, prefer',
 };
 
 serve(async (req) => {
@@ -14,173 +13,305 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    // Get the request body
-    const { action, payload } = await req.json();
+    const { action, name, isPrivate } = await req.json();
     
-    console.log(`GitHub repo management - Action: ${action}`, payload);
-
-    if (action === 'create-repo') {
-      const { userId, projectName, projectId, description = '' } = payload;
-      
-      if (!userId || !projectName || !projectId) {
-        throw new Error('Missing required fields: userId, projectName, and projectId are required');
-      }
-
-      // Get GitHub token from API configurations
-      const { data: apiConfig, error: configError } = await supabaseClient
-        .from('api_configurations')
-        .select('secret_key_name')
-        .eq('api_type', 'github')
-        .eq('is_enabled', true)
-        .order('priority', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (configError || !apiConfig?.secret_key_name) {
-        throw new Error('No GitHub token found. Please add a GitHub token in the API Key Management settings.');
-      }
-
-      // Get the actual token value from the secret store
-      const token = Deno.env.get(apiConfig.secret_key_name);
-      if (!token) {
-        throw new Error(`GitHub token not found in environment variables: ${apiConfig.secret_key_name}`);
-      }
-
-      // Create GitHub repository
-      const githubResponse = await fetch('https://api.github.com/user/repos', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/vnd.github+json',
-          'Authorization': `token ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: projectName,
-          description: description || `Project created with WiredFront`,
-          private: true,
-          auto_init: true, // Initialize with a README
-        }),
-      });
-
-      if (!githubResponse.ok) {
-        const errorData = await githubResponse.json();
-        console.error('GitHub API error:', errorData);
-        throw new Error(`GitHub API error: ${errorData.message || githubResponse.statusText}`);
-      }
-
-      const repoData = await githubResponse.json();
-      const repoUrl = repoData.html_url;
-
-      // Update project with GitHub repository URL
-      const { error: updateError } = await supabaseClient
-        .from('projects')
-        .update({ 
-          github_repo: repoUrl,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', projectId)
-        .eq('user_id', userId);
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      // Log the GitHub integration for tracking
-      await supabaseClient
-        .from('user_analytics')
-        .insert({
-          user_id: userId,
-          event_type: 'github_integration',
-          metadata: { 
-            project_id: projectId,
-            repo_url: repoUrl,
-            action: 'create_repo'
-          }
-        });
-
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'GitHub repository created successfully',
-          data: {
-            repoUrl: repoUrl,
-            repoName: repoData.name,
-            repoOwner: repoData.owner.login
-          }
-        }),
-        { 
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json' 
-          },
-          status: 200 
-        }
-      );
+    // Create a Supabase client with the Auth context of the logged in user
+    const supabaseClient = createSupabaseClient(req);
+    
+    // Get the user id
+    const {
+      data: { user },
+    } = await supabaseClient.auth.getUser();
+    
+    if (!user) {
+      throw new Error('Unauthorized');
     }
 
-    if (action === 'check-github-status') {
-      const { userId } = payload;
-      
-      if (!userId) {
-        throw new Error('Missing required field: userId is required');
-      }
-
-      // Check GitHub connection status
-      const { data: connectionStatus, error: statusError } = await supabaseClient
-        .from('github_connection_status')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (statusError && statusError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
-        throw statusError;
-      }
-
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          connected: connectionStatus?.status === 'connected',
-          status: connectionStatus?.status || 'disconnected',
-          username: connectionStatus?.metadata?.username || null 
-        }),
-        { 
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json' 
-          },
-          status: 200 
-        }
-      );
+    // Process the request based on action
+    switch (action) {
+      case 'create':
+        return await createRepository(name, isPrivate, user.id);
+      case 'get-auth-url':
+        return await getAuthUrl(user.id);
+      case 'disconnect':
+        return await disconnectGitHub(user.id);
+      default:
+        throw new Error(`Unknown action: ${action}`);
     }
-
-    return new Response(
-      JSON.stringify({ error: 'Unsupported action type' }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json' 
-        },
-        status: 400 
-      }
-    );
-
   } catch (error) {
-    console.error('Error in GitHub repo management:', error);
-    
+    console.error(`Error processing request:`, error);
     return new Response(
-      JSON.stringify({ error: error.message || 'An unknown error occurred' }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json' 
-        },
-        status: 500 
+      JSON.stringify({
+        error: error.message || 'An unexpected error occurred',
+      }),
+      {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
   }
 });
+
+// Creates a Supabase client with the Auth context of the user making the request
+function createSupabaseClient(req) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+  
+  return createClient(supabaseUrl, supabaseKey, {
+    global: {
+      headers: {
+        Authorization: req.headers.get('Authorization') ?? '',
+      },
+    },
+  });
+}
+
+async function createRepository(name, isPrivate, userId) {
+  // Check if the user has GitHub connected
+  const { data: connectionStatus } = await getConnectionStatus(userId);
+  
+  if (!connectionStatus || connectionStatus.status !== 'connected') {
+    return new Response(
+      JSON.stringify({
+        error: 'GitHub is not connected. Please connect your GitHub account first.',
+      }),
+      {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+  
+  // Get GitHub token for the user
+  const githubToken = await getGitHubToken(userId);
+  
+  if (!githubToken) {
+    return new Response(
+      JSON.stringify({
+        error: 'Could not retrieve GitHub token. Please reconnect your GitHub account.',
+      }),
+      {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+  
+  // Create the repository
+  try {
+    const response = await fetch('https://api.github.com/user/repos', {
+      method: 'POST',
+      headers: {
+        'Authorization': `token ${githubToken}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: name,
+        private: isPrivate,
+        auto_init: true
+      })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.text();
+      throw new Error(`GitHub API error: ${response.status} - ${errorData}`);
+    }
+    
+    const repo = await response.json();
+    
+    // Log success metrics
+    await logGitHubMetric('repo_creation', 1, {
+      userId: userId,
+      repoName: name
+    });
+    
+    return new Response(
+      JSON.stringify({
+        success: true,
+        repoUrl: repo.html_url,
+        cloneUrl: repo.clone_url,
+        sshUrl: repo.ssh_url
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  } catch (error) {
+    console.error('Error creating GitHub repository:', error);
+    // Log error metrics
+    await logGitHubMetric('repo_creation_error', 1, {
+      userId: userId,
+      error: error.message
+    });
+    
+    throw error;
+  }
+}
+
+async function getAuthUrl(userId) {
+  const clientId = Deno.env.get('GITHUB_CLIENTID');
+  const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/github-oauth-callback`;
+  
+  if (!clientId) {
+    throw new Error('GitHub client ID not configured');
+  }
+  
+  // Generate a random state parameter
+  const state = crypto.randomUUID();
+  
+  // Store the state in the database for validation
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
+  
+  await supabase
+    .from('github_oauth_logs')
+    .insert({
+      event_type: 'auth_started',
+      user_id: userId,
+      request_id: state,
+      metadata: { state }
+    });
+  
+  const authUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=repo&state=${state}`;
+  
+  return new Response(
+    JSON.stringify({
+      authUrl
+    }),
+    {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    }
+  );
+}
+
+async function disconnectGitHub(userId) {
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
+  
+  // Get the user's GitHub connection status
+  const { data: connectionStatus } = await getConnectionStatus(userId);
+  
+  if (!connectionStatus || connectionStatus.status !== 'connected') {
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: 'User was not connected to GitHub'
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+  
+  // Attempt to revoke the token if we have it
+  const githubToken = await getGitHubToken(userId);
+  
+  if (githubToken) {
+    try {
+      // Revoke the token using GitHub API
+      await fetch('https://api.github.com/applications/{client_id}/token', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Basic ${btoa(`${Deno.env.get('GITHUB_CLIENTID')}:${Deno.env.get('GITHUB_CLIENTSECRET')}`)}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          access_token: githubToken
+        })
+      });
+    } catch (error) {
+      console.error('Error revoking GitHub token:', error);
+      // Continue anyway as we'll delete the local token reference
+    }
+  }
+  
+  // Update user's connection status
+  await supabase
+    .from('github_connection_status')
+    .upsert({
+      user_id: userId,
+      status: 'disconnected',
+      last_check: new Date().toISOString(),
+      error_message: null,
+      metadata: null
+    });
+  
+  // Remove the OAuth connection record
+  await supabase
+    .from('oauth_connections')
+    .delete()
+    .eq('user_id', userId)
+    .eq('provider', 'github');
+  
+  // Log the disconnection
+  await supabase
+    .from('github_oauth_logs')
+    .insert({
+      event_type: 'disconnected',
+      user_id: userId,
+      success: true
+    });
+  
+  return new Response(
+    JSON.stringify({
+      success: true,
+      message: 'Successfully disconnected from GitHub'
+    }),
+    {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    }
+  );
+}
+
+async function getConnectionStatus(userId) {
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
+  
+  return await supabase
+    .from('github_connection_status')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+}
+
+async function getGitHubToken(userId) {
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
+  
+  const { data } = await supabase
+    .from('oauth_connections')
+    .select('access_token')
+    .eq('user_id', userId)
+    .eq('provider', 'github')
+    .maybeSingle();
+  
+  return data?.access_token || null;
+}
+
+async function logGitHubMetric(metricType, value, metadata = {}) {
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
+  
+  await supabase
+    .from('github_metrics')
+    .insert({
+      metric_type: metricType,
+      value: value,
+      metadata: metadata
+    });
+}
+
+// Import createClient from the Supabase JS library
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
