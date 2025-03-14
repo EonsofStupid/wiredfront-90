@@ -1,106 +1,63 @@
-
-import React from "react";
-import { 
-  LayoutDashboard, 
-  Users, 
-  Settings, 
-  Database, 
-  KeyRound,
-  MessageSquare,
-  Github,
-  FileCode,
-  KanbanSquare,
+import {
+  BarChart,
   CreditCard,
-  BarChart3,
-  Layers
+  Database,
+  FileText,
+  Flag,
+  Folders,
+  Key,
+  LayoutDashboard as LucideLayoutDashboard,
+  Settings,
+  Users
 } from "lucide-react";
-import { AdminNavIconButton } from "./AdminNavIconButton";
-import { useUIStore } from "@/stores/ui";
+
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList
+} from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 
-export const AdminMainNavGroup = () => {
-  const { layout } = useUIStore();
-  const { adminIconOnly } = layout;
+interface AdminNavGroupProps {
+  isCollapsed: boolean;
+}
+
+export function AdminMainNavGroup({ isCollapsed }: AdminNavGroupProps) {
+  const adminNavItems = [
+    { name: "Dashboard", href: "/admin", icon: <LucideLayoutDashboard className="h-5 w-5" /> },
+    { name: "Projects", href: "/admin/projects", icon: <Folders className="h-5 w-5" /> },
+    { name: "Customers", href: "/admin/customers", icon: <Users className="h-5 w-5" /> },
+    { name: "Subscriptions", href: "/admin/subscriptions", icon: <CreditCard className="h-5 w-5" /> },
+    { name: "API Keys", href: "/admin/api-keys", icon: <Key className="h-5 w-5" /> },
+    { name: "Metrics", href: "/admin/metrics", icon: <BarChart className="h-5 w-5" /> },
+    { name: "Vector DB", href: "/admin/vector-database", icon: <Database className="h-5 w-5" /> },
+    { name: "System Logs", href: "/admin/system-logs", icon: <FileText className="h-5 w-5" /> },
+    { name: "Features", href: "/admin/features", icon: <Flag className="h-5 w-5" /> },
+    { name: "Settings", href: "/admin/settings", icon: <Settings className="h-5 w-5" /> }
+  ];
 
   return (
-    <div className={cn(
-      "flex",
-      adminIconOnly 
-        ? "items-center space-x-1"
-        : "flex-wrap items-center gap-2"
-    )}>
-      <AdminNavIconButton 
-        icon={LayoutDashboard} 
-        tooltip="Dashboard" 
-        text="Dashboard"
-        route="/admin/metrics-overview" 
-      />
-      <AdminNavIconButton 
-        icon={Users} 
-        tooltip="Customer Management" 
-        text="Customers"
-        route="/admin/customers" 
-      />
-      <AdminNavIconButton 
-        icon={CreditCard} 
-        tooltip="Subscription Management" 
-        text="Subscriptions"
-        route="/admin/subscriptions" 
-      />
-      <AdminNavIconButton 
-        icon={Layers} 
-        tooltip="Feature Management" 
-        text="Features"
-        route="/admin/feature-management" 
-      />
-      <AdminNavIconButton 
-        icon={BarChart3} 
-        tooltip="Usage Analytics" 
-        text="Analytics"
-        route="/admin/usage-analytics" 
-      />
-      <AdminNavIconButton 
-        icon={Settings} 
-        tooltip="System Settings" 
-        text="Settings"
-        route="/admin/settings/general" 
-      />
-      <AdminNavIconButton 
-        icon={KeyRound} 
-        tooltip="API Keys" 
-        text="API Keys"
-        route="/admin/api-keys" 
-      />
-      <AdminNavIconButton 
-        icon={FileCode} 
-        tooltip="Prompt Enhancements" 
-        text="Prompts"
-        route="/admin/prompt-enhancements" 
-      />
-      <AdminNavIconButton 
-        icon={KanbanSquare} 
-        tooltip="Project Management" 
-        text="Projects"
-        route="/admin/projects" 
-      />
-      <AdminNavIconButton 
-        icon={MessageSquare} 
-        tooltip="Chat Settings" 
-        text="Chat"
-        route="/admin/chat-settings" 
-      />
-      <AdminNavIconButton 
-        icon={Database} 
-        tooltip="Database" 
-        text="Database"
-        route="/admin/database" 
-      />
-      <AdminNavIconButton 
-        icon={Github} 
-        tooltip="GitHub Connections" 
-        text="GitHub"
-        route="/admin/github-connections" 
-      />
-    </div>
+    <NavigationMenu className="flex flex-col">
+      <NavigationMenuList className="flex flex-col gap-1">
+        {adminNavItems.map((item) => (
+          <NavigationMenuItem key={item.name}>
+            <NavigationMenuLink
+              className={cn(
+                "group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                isCollapsed ? "justify-center" : "justify-start"
+              )}
+              href={item.href}
+              asChild
+            >
+              <a className="flex w-full items-center">
+                {item.icon}
+                {!isCollapsed && <span className="ml-2">{item.name}</span>}
+              </a>
+            </NavigationMenuLink>
+          </NavigationMenuItem>
+        ))}
+      </NavigationMenuList>
+    </NavigationMenu>
   );
-};
+}

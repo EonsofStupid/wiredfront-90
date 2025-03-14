@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ErrorMessage } from "@/components/ui/error-message";
 import { ProjectIndexingStatus } from "@/components/projects/ProjectIndexingStatus";
 import { supabase } from "@/integrations/supabase/client";
-import { useGitHubConnection } from "@/hooks/useGitHubConnection";
+import { useGitHubConnection } from "@/hooks/github/useGitHubConnection";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { logger } from "@/services/chat/LoggingService";
 
 interface GitHubImportModalProps {
   isOpen: boolean;
@@ -83,9 +84,12 @@ export function GitHubImportModal({ isOpen, onClose, onImportComplete }: GitHubI
     setError(null);
 
     try {
+      logger.info('Fetching GitHub repositories');
+      
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
+        logger.error('Authentication required to fetch repositories');
         throw new Error("You must be logged in to import repositories");
       }
 
@@ -100,12 +104,16 @@ export function GitHubImportModal({ isOpen, onClose, onImportComplete }: GitHubI
         })
       });
 
+      // Log the status code for debugging
+      logger.debug('GitHub API response status', { status: response.status });
+      
       // Get the raw response text
       const responseText = await response.text();
+      logger.debug('GitHub API raw response', { responseText: responseText.substring(0, 500) });
       
       if (!response.ok) {
-        console.error("GitHub API error response:", responseText);
-        throw new Error('Failed to fetch repositories');
+        logger.error("GitHub API error response", { status: response.status, text: responseText });
+        throw new Error(`Failed to fetch repositories: ${responseText}`);
       }
 
       // Try to parse the response as JSON
@@ -113,17 +121,24 @@ export function GitHubImportModal({ isOpen, onClose, onImportComplete }: GitHubI
       try {
         data = JSON.parse(responseText);
       } catch (parseError) {
-        console.error("JSON parsing error:", parseError, "Raw response:", responseText);
+        logger.error("JSON parsing error", { 
+          error: parseError, 
+          responseText: responseText.substring(0, 500) 
+        });
         throw new Error('Invalid response format from server');
       }
 
-      if (data.error) {
-        throw new Error(data.error);
+      if (!data.success) {
+        logger.error("GitHub API unsuccessful response", { error: data.error });
+        throw new Error(data.error || "Failed to fetch repositories");
       }
 
+      logger.info(`Successfully fetched ${data.repos?.length || 0} GitHub repositories`);
       setRepositories(data.repos || []);
     } catch (error) {
-      console.error("Error fetching repositories:", error);
+      logger.error("Error fetching repositories", { 
+        error: error instanceof Error ? error.message : String(error) 
+      });
       setError(error instanceof Error ? error.message : "Failed to fetch GitHub repositories");
     } finally {
       setIsLoading(false);
@@ -131,6 +146,7 @@ export function GitHubImportModal({ isOpen, onClose, onImportComplete }: GitHubI
   };
 
   const handleSelectRepo = (repo: GitHubRepo) => {
+    logger.info("Repository selected", { repoName: repo.full_name });
     setSelectedRepo(repo);
     setProjectDetails({
       name: repo.name,
@@ -147,6 +163,8 @@ export function GitHubImportModal({ isOpen, onClose, onImportComplete }: GitHubI
     setError(null);
 
     try {
+      logger.info("Starting repository import", { repoName: selectedRepo.full_name });
+      
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
@@ -158,6 +176,11 @@ export function GitHubImportModal({ isOpen, onClose, onImportComplete }: GitHubI
         primaryLanguage: selectedRepo.language || "unknown",
         languages: projectDetails.techStack
       };
+      
+      logger.info("Creating project record", { 
+        projectName: projectDetails.name, 
+        repo: selectedRepo.full_name 
+      });
       
       const { data: project, error: projectError } = await supabase
         .from('projects')
@@ -172,10 +195,18 @@ export function GitHubImportModal({ isOpen, onClose, onImportComplete }: GitHubI
         .single();
 
       if (projectError || !project) {
+        logger.error("Failed to create project", { error: projectError });
         throw new Error(projectError?.message || "Failed to create project");
       }
 
+      logger.info("Project created successfully", { projectId: project.id });
+
       // Start indexing the repository for RAG
+      logger.info("Starting repository indexing", { 
+        projectId: project.id, 
+        repoName: selectedRepo.full_name 
+      });
+      
       const indexResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/github-repo-management`, {
         method: 'POST',
         headers: {
@@ -191,7 +222,7 @@ export function GitHubImportModal({ isOpen, onClose, onImportComplete }: GitHubI
 
       if (!indexResponse.ok) {
         const errorText = await indexResponse.text();
-        console.error("Indexing error response:", errorText);
+        logger.error("Indexing error response", { errorText });
         
         let errorData;
         try {
@@ -203,11 +234,20 @@ export function GitHubImportModal({ isOpen, onClose, onImportComplete }: GitHubI
         throw new Error(errorData.error || 'Failed to index repository');
       }
 
+      const indexData = await indexResponse.json();
+      logger.info("Indexing initiated successfully", { 
+        projectId: project.id,
+        message: indexData.message 
+      });
+
       setImportedProjectId(project.id);
       setCurrentStep('indexing');
       toast.success("Repository imported successfully!");
     } catch (error) {
-      console.error("Error importing repository:", error);
+      logger.error("Error importing repository", { 
+        error: error instanceof Error ? error.message : String(error),
+        repoName: selectedRepo?.full_name
+      });
       setError(error instanceof Error ? error.message : "Failed to import repository");
     } finally {
       setIsLoading(false);
@@ -216,6 +256,7 @@ export function GitHubImportModal({ isOpen, onClose, onImportComplete }: GitHubI
 
   const handleComplete = () => {
     if (importedProjectId) {
+      logger.info("Import completed", { projectId: importedProjectId });
       onImportComplete(importedProjectId);
     }
     onClose();
@@ -226,6 +267,11 @@ export function GitHubImportModal({ isOpen, onClose, onImportComplete }: GitHubI
         repo.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
         repo.full_name.toLowerCase().includes(searchQuery.toLowerCase()))
     : repositories;
+
+  const handleRetryFetch = () => {
+    logger.info("Retrying repository fetch");
+    fetchRepositories();
+  };
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -246,6 +292,17 @@ export function GitHubImportModal({ isOpen, onClose, onImportComplete }: GitHubI
               <div className="py-8 flex flex-col items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
                 <p className="text-muted-foreground">Loading repositories...</p>
+              </div>
+            ) : error ? (
+              <div className="py-8 flex flex-col items-center gap-4">
+                <ErrorMessage message={error} />
+                <Button 
+                  variant="outline"
+                  onClick={handleRetryFetch}
+                >
+                  <Loader2 className="h-4 w-4 mr-2" />
+                  Retry
+                </Button>
               </div>
             ) : filteredRepos.length > 0 ? (
               <div className="max-h-[400px] overflow-y-auto space-y-2">

@@ -3,8 +3,9 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Github } from "lucide-react";
 import { GitHubImportModal } from "@/components/github/GitHubImportModal";
-import { useGitHubConnection } from "@/hooks/useGitHubConnection";
+import { useGitHubConnection } from "@/hooks/github/useGitHubConnection";
 import { toast } from "sonner";
+import { logger } from "@/services/chat/LoggingService";
 
 interface ProjectActionsProps {
   onAddProject: () => void;
@@ -16,7 +17,10 @@ export function ProjectActions({ onAddProject, onImportProject }: ProjectActions
   const { isConnected } = useGitHubConnection();
 
   const handleImportClick = () => {
+    logger.info("GitHub import button clicked");
+    
     if (!isConnected) {
+      logger.warn("GitHub import attempted without connection");
       toast.error("You need to connect your GitHub account first");
       return;
     }
@@ -25,6 +29,8 @@ export function ProjectActions({ onAddProject, onImportProject }: ProjectActions
   };
 
   const handleImportComplete = (projectId: string) => {
+    logger.info("GitHub import completed", { projectId });
+    
     if (onImportProject) {
       onImportProject(projectId);
     }
