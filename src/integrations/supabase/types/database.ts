@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -159,6 +158,35 @@ export interface Database {
           last_retry?: string | null;
           rate_limit_window?: string | null;
           message_status?: string;
+        };
+      };
+      system_logs: {
+        Row: {
+          id: string;
+          timestamp: string;
+          level: string;
+          source: string;
+          message: string;
+          metadata: Json | null;
+          user_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          timestamp?: string;
+          level: string;
+          source: string;
+          message: string;
+          metadata?: Json | null;
+          user_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          timestamp?: string;
+          level?: string;
+          source?: string;
+          message?: string;
+          metadata?: Json | null;
+          user_id?: string | null;
         };
       };
       // Other table definitions can be added here

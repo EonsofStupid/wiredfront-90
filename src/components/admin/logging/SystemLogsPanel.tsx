@@ -21,16 +21,9 @@ import {
   Trash
 } from "lucide-react";
 import { format } from "date-fns";
+import { Database } from "@/integrations/supabase/types/database";
 
-interface SystemLog {
-  id: string;
-  timestamp: string;
-  level: 'info' | 'error' | 'warn' | 'debug';
-  source: string;
-  message: string;
-  metadata: Record<string, any> | null;
-  user_id: string | null;
-}
+type SystemLog = Database['public']['Tables']['system_logs']['Row'];
 
 export function SystemLogsPanel() {
   const [logs, setLogs] = useState<SystemLog[]>([]);
@@ -189,7 +182,7 @@ export function SystemLogsPanel() {
     switch (level) {
       case 'info': return 'default';
       case 'error': return 'destructive';
-      case 'warn': return 'warning';
+      case 'warn': return 'outline'; // Changed from 'warning' to 'outline'
       case 'debug': return 'secondary';
       default: return 'default';
     }

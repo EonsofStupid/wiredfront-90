@@ -34,7 +34,7 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
           {/* Single row with main nav on left and utility nav on right */}
           <div className="flex items-center justify-between w-full">
             {/* Left side - Main navigation */}
-            <AdminMainNavGroup />
+            <AdminMainNavGroup isCollapsed={adminIconOnly} />
 
             {/* Right side - Utility navigation */}
             <div className="flex-shrink-0">
