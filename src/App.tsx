@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { Toaster } from "sonner";
@@ -30,6 +29,8 @@ import { AdminTopNavOverlay } from "@/components/admin/navigation/AdminTopNavOve
 import FeatureFlagsPage from "./pages/admin/FeatureFlagsPage";
 import MetricsOverview from "./pages/admin/MetricsOverview";
 import GitHubCallback from "./pages/github-callback";
+import { RAGKeysSettings } from "@/components/admin/settings/api/RAGKeysSettings";
+import { APIKeyManagement } from "@/components/admin/settings/api/APIKeyManagement";
 
 const PROTECTED_ROUTES = [
   '/dashboard', 
@@ -136,6 +137,11 @@ const App = () => {
             <Route path="/admin/settings/live-preview" element={<LivePreviewSettings />} />
             <Route path="/admin/settings/feature-flags" element={<FeatureFlagsPage />} />
             <Route path="/admin/users" element={<div>Users Management</div>} />
+            <Route path="/admin/api-keys" element={<APIKeyManagement />} />
+            <Route path="/admin/rag-settings" element={<RAGKeysSettings />} />
+            <Route path="/admin/prompt-enhancements" element={<div>Prompt Enhancement Management</div>} />
+            <Route path="/admin/projects" element={<div>Project Management</div>} />
+            <Route path="/admin/chat-settings" element={<ChatSettings />} />
             <Route path="/admin/models" element={<div>Models Configuration</div>} />
             <Route path="/admin/queues" element={<div>Queue Management</div>} />
             <Route path="/admin/cache" element={<div>Cache Control</div>} />
@@ -143,6 +149,7 @@ const App = () => {
             <Route path="/admin/database" element={<div>Database Management</div>} />
             <Route path="/admin/search" element={<div>Admin Search</div>} />
             <Route path="/admin/notifications" element={<div>Admin Notifications</div>} />
+            <Route path="/admin/github-connections" element={<div>GitHub Connections</div>} />
           </Routes>
           <GuestCTA />
         </CurrentLayout>

@@ -3,11 +3,9 @@ import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useLocation } from "react-router-dom";
 import { AdminMainNavGroup } from "./AdminMainNavGroup";
-import AdminFeaturesNavGroup from "./AdminFeaturesNavGroup";
 import { AdminUtilityNavGroup } from "./AdminUtilityNavGroup";
 import { AdminNavToggle } from "./AdminNavToggle";
 import { useUIStore } from "@/stores/ui";
-import { Separator } from "@/components/ui/separator";
 
 interface AdminTopNavOverlayProps {
   className?: string;
@@ -36,9 +34,9 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
           {/* Main content container - flexbox that wraps on overflow */}
           <div className={cn(
             "flex justify-between",
-            adminIconOnly ? "flex-row" : "flex-col space-y-2"
+            adminIconOnly ? "flex-row items-center" : "flex-col space-y-2"
           )}>
-            {/* Left side navigation groups - will wrap in text mode */}
+            {/* Left side navigation - will wrap in text mode */}
             <div className={cn(
               "flex",
               adminIconOnly 
@@ -46,11 +44,6 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
                 : "flex-row flex-wrap gap-2 items-start"
             )}>
               <AdminMainNavGroup />
-              
-              {/* Separator - only shown in icon-only mode */}
-              {adminIconOnly && <div className="h-6 w-px bg-white/20" />}
-              
-              <AdminFeaturesNavGroup />
             </div>
 
             {/* Right side controls - always aligned to the right/top */}

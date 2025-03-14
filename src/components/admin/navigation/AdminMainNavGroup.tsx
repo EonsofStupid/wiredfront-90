@@ -5,10 +5,16 @@ import {
   Users, 
   Settings, 
   Database, 
-  Code 
+  Layers, 
+  KeyRound,
+  MessageSquare,
+  Github,
+  FileCode,
+  KanbanSquare
 } from "lucide-react";
 import { AdminNavIconButton } from "./AdminNavIconButton";
 import { useUIStore } from "@/stores/ui";
+import { cn } from "@/lib/utils";
 
 export const AdminMainNavGroup = () => {
   const { layout } = useUIStore();
@@ -23,7 +29,7 @@ export const AdminMainNavGroup = () => {
     )}>
       <AdminNavIconButton 
         icon={LayoutDashboard} 
-        tooltip="Metrics Overview" 
+        tooltip="Dashboard" 
         text="Dashboard"
         route="/admin/metrics-overview" 
       />
@@ -40,20 +46,47 @@ export const AdminMainNavGroup = () => {
         route="/admin/settings/general" 
       />
       <AdminNavIconButton 
+        icon={Layers} 
+        tooltip="RAG Configuration" 
+        text="RAG"
+        route="/admin/rag-settings" 
+      />
+      <AdminNavIconButton 
+        icon={KeyRound} 
+        tooltip="API Keys" 
+        text="API Keys"
+        route="/admin/api-keys" 
+      />
+      <AdminNavIconButton 
+        icon={FileCode} 
+        tooltip="Prompt Enhancements" 
+        text="Prompts"
+        route="/admin/prompt-enhancements" 
+      />
+      <AdminNavIconButton 
+        icon={KanbanSquare} 
+        tooltip="Project Management" 
+        text="Projects"
+        route="/admin/projects" 
+      />
+      <AdminNavIconButton 
+        icon={MessageSquare} 
+        tooltip="Chat Settings" 
+        text="Chat"
+        route="/admin/chat-settings" 
+      />
+      <AdminNavIconButton 
         icon={Database} 
         tooltip="Database" 
         text="Database"
         route="/admin/database" 
       />
       <AdminNavIconButton 
-        icon={Code} 
-        tooltip="Models" 
-        text="Models"
-        route="/admin/models" 
+        icon={Github} 
+        tooltip="GitHub Connections" 
+        text="GitHub"
+        route="/admin/github-connections" 
       />
     </div>
   );
 };
-
-// Import cn utility at the top
-import { cn } from "@/lib/utils";
