@@ -98,7 +98,9 @@ export function useGitHubConnection() {
         const accounts = data.map(account => {
           // Safely check if metadata is an object and has a default property
           const metadataObj = account.metadata as Record<string, unknown> | null;
-          const isDefault = metadataObj && typeof metadataObj === 'object' ? !!metadataObj.default : false;
+          const isDefault = metadataObj && typeof metadataObj === 'object' 
+            ? !!metadataObj.default 
+            : false;
           
           return {
             id: account.id,
