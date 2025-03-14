@@ -31,18 +31,15 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
     >
       <div className="admin-glass-panel border-neon-border relative">
         <div className="flex flex-col h-full p-4">
-          {/* Single row flexbox that contains all navigation elements */}
-          <div className="flex flex-wrap justify-between items-center">
-            {/* Left side - Main navigation wrapped in a flex container */}
-            <div className={cn(
-              "flex flex-grow flex-wrap gap-2 items-center",
-              adminIconOnly ? "justify-start" : "justify-start"
-            )}>
+          {/* Single row that contains all navigation elements */}
+          <div className="flex items-center">
+            {/* Left side - Main navigation */}
+            <div className="flex-1 flex flex-wrap items-center gap-2">
               <AdminMainNavGroup />
             </div>
 
-            {/* Right side - Utility navigation always aligned to end */}
-            <div className="flex items-center ml-auto">
+            {/* Right side - Utility navigation */}
+            <div className="flex items-center">
               <AdminUtilityNavGroup />
             </div>
           </div>
