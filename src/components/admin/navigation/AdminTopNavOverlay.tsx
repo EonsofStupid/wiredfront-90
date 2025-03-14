@@ -31,13 +31,15 @@ export const AdminTopNavOverlay = ({ className }: AdminTopNavOverlayProps) => {
     >
       <div className="admin-glass-panel border-neon-border relative">
         <div className="flex flex-col h-full p-4">
-          {/* Single row for all navigation items with utility on right */}
-          <div className="flex items-center justify-between">
+          {/* Single row with main nav on left and utility nav on right */}
+          <div className="flex items-center justify-between w-full">
             {/* Left side - Main navigation */}
             <AdminMainNavGroup />
 
-            {/* Right side - Utility navigation - always stays on right */}
-            <AdminUtilityNavGroup />
+            {/* Right side - Utility navigation */}
+            <div className="flex-shrink-0">
+              <AdminUtilityNavGroup />
+            </div>
           </div>
         </div>
 

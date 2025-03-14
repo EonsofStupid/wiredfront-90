@@ -1002,6 +1002,42 @@ export type Database = {
           },
         ]
       }
+      projects: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          github_repo: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          github_repo?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          github_repo?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       rag_metrics: {
         Row: {
           average_latency: number | null

@@ -40,7 +40,7 @@ export const ProjectManagementPanel = () => {
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
         .select('*')
-        .order('updated_at', { ascending: false });
+        .order('updated_at', { ascending: false }) as any; // Type assertion needed because the projects table is not in the types
 
       if (projectsError) throw projectsError;
       
@@ -71,7 +71,7 @@ export const ProjectManagementPanel = () => {
       const { error: updateError } = await supabase
         .from('projects')
         .update({ is_active: false })
-        .eq('user_id', userId);
+        .eq('user_id', userId) as any; // Type assertion
       
       if (updateError) throw updateError;
       
@@ -79,7 +79,7 @@ export const ProjectManagementPanel = () => {
       const { error: activateError } = await supabase
         .from('projects')
         .update({ is_active: true })
-        .eq('id', projectId);
+        .eq('id', projectId) as any; // Type assertion
         
       if (activateError) throw activateError;
       
@@ -102,7 +102,7 @@ export const ProjectManagementPanel = () => {
           status,
           updated_at: new Date().toISOString()
         })
-        .eq('id', projectId);
+        .eq('id', projectId) as any; // Type assertion
         
       if (error) throw error;
       
