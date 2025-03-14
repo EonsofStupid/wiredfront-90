@@ -27,7 +27,7 @@ export const useUIStore = create<UIStore>()(
       },
       project: {
         activeProjectId: null,
-        projects: [], // Removed the demo project
+        projects: [], // Start with empty projects array
       },
       accessibility: {
         reducedMotion: false,
