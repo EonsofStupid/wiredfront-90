@@ -27,7 +27,7 @@
   display: grid;
   grid-template-columns: 1fr auto;
   width: 100%;
-  padding: 0.5rem 1rem;
+  padding: 0.25rem 0.5rem; /* Reduced horizontal padding */
 }
 
 .extended {
@@ -54,6 +54,6 @@
 
 @media (max-width: 768px) {
   .navContent {
-    padding: 0.5rem;
+    padding: 0.25rem; /* Further reduce padding on mobile */
   }
 }

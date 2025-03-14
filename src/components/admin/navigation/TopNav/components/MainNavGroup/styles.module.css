@@ -34,4 +34,12 @@
 
 .navItemLabel {
   margin-left: 0.5rem;
+  letter-spacing: 0.5px; /* Tighter text spacing for cyber look */
+  font-family: monospace, 'Courier New', Courier; /* More cyber-looking font */
+}
+
+/* Enhance hover effects */
+a:hover .navItemIcon {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 5px rgba(var(--color-neon-pink-rgb), 0.8));
 }
