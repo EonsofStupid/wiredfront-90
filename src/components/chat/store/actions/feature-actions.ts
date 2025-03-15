@@ -1,4 +1,3 @@
-
 import { StateCreator } from 'zustand';
 import { ChatState, ChatProvider } from "../types/chat-store-types";
 
@@ -13,63 +12,78 @@ export type FeatureActions = {
   updateChatProvider: (providers: ChatProvider[]) => void;
 };
 
-export const createFeatureActions: StateCreator<
+type StoreWithDevtools = StateCreator<
   ChatState,
-  [],
+  [["zustand/devtools", never]],
   [],
   FeatureActions
-> = (set, get, api) => ({
+>;
+
+export const createFeatureActions: StoreWithDevtools = (set) => ({
   toggleFeature: (feature) =>
     set(
       (state) => ({
+        ...state,
         features: {
           ...state.features,
           [feature]: !state.features[feature],
         },
       }),
+      false,
       { type: 'features/toggle', feature }
     ),
 
   enableFeature: (feature) =>
     set(
       (state) => ({
+        ...state,
         features: {
           ...state.features,
           [feature]: true,
         },
       }),
+      false,
       { type: 'features/enable', feature }
     ),
 
   disableFeature: (feature) =>
     set(
       (state) => ({
+        ...state,
         features: {
           ...state.features,
           [feature]: false,
         },
       }),
+      false,
       { type: 'features/disable', feature }
     ),
 
   setFeatureState: (feature, isEnabled) =>
     set(
       (state) => ({
+        ...state,
         features: {
           ...state.features,
           [feature]: isEnabled,
         },
       }),
+      false,
       { type: 'features/setState', feature, isEnabled }
     ),
-    
-  // Update available chat providers
+
   updateChatProvider: (providers) =>
     set(
       (state) => ({
+        ...state,
         availableProviders: providers,
-        currentProvider: providers.find((p: ChatProvider) => p.isDefault) || providers[0] || state.currentProvider,
+        currentProvider: providers.find((p) => p.isDefault) || providers[0] || state.currentProvider,
+        providers: {
+          ...state.providers,
+          availableProviders: providers,
+        },
       }),
-      { type: 'providers/update', providers }
+      false,
+      { type: 'providers/update', count: providers.length }
     ),
 });
