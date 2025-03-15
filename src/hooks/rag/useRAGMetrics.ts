@@ -1,6 +1,8 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { RAGService, RAGTier } from "@/services/rag/RAGService";
+import { RAGTierService } from "@/services/rag/RAGTierService";
+import { RAGMetricsService } from "@/services/rag/RAGMetricsService";
+import { RAGTier } from "@/services/rag/types";
 import { ragUtils } from "./ragUtils";
 
 /**
@@ -15,7 +17,7 @@ export function useRAGMetrics() {
     refetch: refetchRAGInfo
   } = useQuery({
     queryKey: ['rag-info'],
-    queryFn: () => RAGService.getUserRAGMetrics(),
+    queryFn: () => RAGMetricsService.getUserRAGMetrics(),
     refetchOnWindowFocus: false,
   });
   
@@ -25,7 +27,7 @@ export function useRAGMetrics() {
     isLoading: isCheckingPremium
   } = useQuery({
     queryKey: ['premium-rag-available'],
-    queryFn: () => RAGService.canUsePremiumRAG(),
+    queryFn: () => RAGTierService.canUsePremiumRAG(),
     refetchOnWindowFocus: false,
   });
 

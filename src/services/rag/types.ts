@@ -30,3 +30,6 @@ export interface VectorLimitStatus {
   vectorCount: number;
   maxVectors: number;
 }
+
+// Add the RAGTier type that was previously in RAGService.ts
+export type RAGTier = 'standard' | 'premium';

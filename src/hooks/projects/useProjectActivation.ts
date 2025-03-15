@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ProjectEventService } from "@/services/projects/ProjectEventService";
-import { RAGService } from "@/services/rag/RAGService";
+import { RAGTierService } from "@/services/rag/RAGTierService";
+import { RAGIndexingService } from "@/services/rag/RAGIndexingService";
 import { toast } from "sonner";
 import { useProjectVectors } from "@/hooks/rag/useProjectVectors";
 import { useRAGTier } from "@/hooks/rag/useRAGTier";
@@ -25,7 +26,7 @@ export const useProjectActivation = () => {
       toast.success("Project activated successfully");
       
       // Check if project should be migrated to premium RAG
-      if (await RAGService.shouldMigrateToPreium(projectId)) {
+      if (await RAGTierService.shouldMigrateToPreium(projectId)) {
         toast("Vector storage recommendation", {
           description: "This project has a large number of vectors. Consider upgrading to premium RAG for better performance.",
           action: {
@@ -38,7 +39,7 @@ export const useProjectActivation = () => {
       // Also check vector limits
       const limitStatus = await queryClient.fetchQuery({
         queryKey: ['vector-limit-status', projectId],
-        queryFn: () => RAGService.shouldMigrateToPreium(projectId)
+        queryFn: () => RAGTierService.shouldMigrateToPreium(projectId)
       });
       
       if (limitStatus) {
@@ -69,7 +70,7 @@ export const useProjectActivation = () => {
       
       // Start indexing the project in the background
       setIsIndexing(true);
-      await RAGService.indexProject(data.id);
+      await RAGIndexingService.indexProject(data.id);
       
       // Refresh project data
       queryClient.invalidateQueries({ queryKey: ['projects'] });
@@ -110,7 +111,7 @@ export const useProjectActivation = () => {
       
       // Start indexing the imported project
       setIsIndexing(true);
-      await RAGService.indexProject(projectId);
+      await RAGIndexingService.indexProject(projectId);
     } catch (error) {
       console.error("Error notifying project import:", error);
       toast.error("Failed to register imported project");

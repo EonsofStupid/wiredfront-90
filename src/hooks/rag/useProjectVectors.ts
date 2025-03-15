@@ -3,7 +3,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { VectorStatsService } from "@/services/rag/VectorStatsService";
 import { VectorManagementService } from "@/services/rag/VectorManagementService";
 import { VectorMigrationService } from "@/services/rag/VectorMigrationService";
-import { RAGService } from "@/services/rag/RAGService";
+import { RAGIndexingService } from "@/services/rag/RAGIndexingService";
+import { RAGTierService } from "@/services/rag/RAGTierService";
 import { logger } from "@/services/chat/LoggingService";
 import { toast } from "sonner";
 import { ragUtils } from "./ragUtils";
@@ -33,7 +34,7 @@ export function useProjectVectors(projectId?: string) {
     isLoading: isCheckingMigration
   } = useQuery({
     queryKey: ['should-migrate-project', projectId],
-    queryFn: () => projectId ? RAGService.shouldMigrateToPreium(projectId) : Promise.resolve(false),
+    queryFn: () => projectId ? RAGTierService.shouldMigrateToPreium(projectId) : Promise.resolve(false),
     enabled: !!projectId,
     refetchOnWindowFocus: false,
   });
@@ -56,7 +57,7 @@ export function useProjectVectors(projectId?: string) {
   
   // Index project mutation
   const indexMutation = useMutation({
-    mutationFn: (pid: string) => RAGService.indexProject(pid),
+    mutationFn: (pid: string) => RAGIndexingService.indexProject(pid),
     onSuccess: () => {
       if (projectId) {
         queryClient.invalidateQueries({ queryKey: ['project-vector-stats', projectId] });
@@ -106,7 +107,7 @@ export function useProjectVectors(projectId?: string) {
         description: `Your project is using ${vectorLimitStatus.usagePercentage.toFixed(1)}% of available vector storage. Consider upgrading to Premium.`,
         action: {
           label: "Upgrade",
-          onClick: () => projectId && RAGService.migrateProjectToPremium(projectId)
+          onClick: () => projectId && RAGIndexingService.migrateProjectToPremium(projectId)
         }
       });
     }
