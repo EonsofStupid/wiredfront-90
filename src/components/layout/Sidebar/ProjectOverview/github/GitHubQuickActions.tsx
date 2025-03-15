@@ -1,5 +1,6 @@
 
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -25,9 +26,10 @@ export function GitHubQuickActions({
   onOpenRepositories,
   isRefreshing = false
 }: GitHubQuickActionsProps) {
+  const navigate = useNavigate();
   
   const handleOpenSettings = (section: string) => {
-    NavigationService.navigateToSettings(section);
+    NavigationService.navigateToSettings(navigate, section);
   };
   
   if (!username) {

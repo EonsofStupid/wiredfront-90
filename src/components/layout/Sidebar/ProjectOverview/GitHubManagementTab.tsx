@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -44,6 +45,7 @@ export function GitHubManagementTab({
   linkedAccounts = [],
   error = null
 }: GitHubManagementTabProps) {
+  const navigate = useNavigate();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [tabError, setTabError] = useState<string | null>(error);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -74,11 +76,11 @@ export function GitHubManagementTab({
   };
   
   const handleOpenRepositories = () => {
-    NavigationService.navigateToSettings('github-repos');
+    NavigationService.navigateToSettings(navigate, 'github-repos');
   };
 
   const handleAdvancedSettings = () => {
-    NavigationService.navigateToSettings('github');
+    NavigationService.navigateToSettings(navigate, 'github');
   };
   
   // Show loading state while component is initializing
