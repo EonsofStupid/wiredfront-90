@@ -1,16 +1,19 @@
+
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ProjectEventService } from "@/services/projects/ProjectEventService";
 import { RAGService } from "@/services/rag/RAGService";
 import { toast } from "sonner";
-import { useRAGOperations } from "@/hooks/rag/useRAGOperations";
+import { useProjectVectors } from "@/hooks/rag/useProjectVectors";
+import { useRAGTier } from "@/hooks/rag/useRAGTier";
 
 export const useProjectActivation = () => {
   const [isActivating, setIsActivating] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isIndexing, setIsIndexing] = useState(false);
   const queryClient = useQueryClient();
-  const { shouldMigrate, vectorLimitStatus, handleUpgradePrompt } = useRAGOperations();
+  const { shouldMigrate, vectorLimitStatus, handleUpgradePrompt } = useProjectVectors();
+  const { migrateProjectToPremium } = useRAGTier();
 
   const activateProject = async (userId: string, projectId: string) => {
     setIsActivating(true);
@@ -27,7 +30,7 @@ export const useProjectActivation = () => {
           description: "This project has a large number of vectors. Consider upgrading to premium RAG for better performance.",
           action: {
             label: "Upgrade",
-            onClick: () => RAGService.migrateProjectToPremium(projectId)
+            onClick: () => migrateProjectToPremium(projectId)
           }
         });
       }
