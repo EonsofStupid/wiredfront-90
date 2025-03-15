@@ -6,6 +6,7 @@ import { logger } from "@/services/chat/LoggingService";
 import { useFeatureFlag } from "./useFeatureFlag";
 import { toast } from "sonner";
 import { useFeatureUsage } from "./useFeatureUsage";
+import { debounce } from "lodash";
 
 export type FeatureKey = 'voice' | 'rag' | 'modeSwitch' | 'notifications' | 'github' | 
                          'codeAssistant' | 'ragSupport' | 'githubSync';
@@ -26,10 +27,10 @@ export function useFeatureFlags() {
   );
 
   /**
-   * Toggle a feature with database logging
+   * Toggle a feature with database logging (debounced)
    */
   const handleToggleFeature = useCallback(
-    async (featureKey: FeatureKey) => {
+    debounce(async (featureKey: FeatureKey) => {
       if (isUpdating) return;
       
       setIsUpdating(true);
@@ -39,14 +40,17 @@ export function useFeatureFlags() {
         
         // Log the feature usage
         await logFeatureUsage(featureKey, { action: 'toggle' });
+        
+        // Log to feature toggle history table
+        await logFeatureToggleToHistory(featureKey, !features[featureKey], features[featureKey]);
       } catch (error) {
         logger.error(`Error toggling feature ${featureKey}:`, error);
         toast.error(`Failed to toggle ${featureKey} feature`);
       } finally {
         setIsUpdating(false);
       }
-    },
-    [toggleFeature, logFeatureUsage, isUpdating]
+    }, 300),
+    [toggleFeature, logFeatureUsage, isUpdating, features]
   );
 
   /**
@@ -63,6 +67,9 @@ export function useFeatureFlags() {
         
         // Log the feature usage
         await logFeatureUsage(featureKey, { action: 'enable' });
+        
+        // Log to feature toggle history table
+        await logFeatureToggleToHistory(featureKey, features[featureKey], true);
       } catch (error) {
         logger.error(`Error enabling feature ${featureKey}:`, error);
         toast.error(`Failed to enable ${featureKey} feature`);
@@ -70,7 +77,7 @@ export function useFeatureFlags() {
         setIsUpdating(false);
       }
     },
-    [enableFeature, logFeatureUsage, isUpdating]
+    [enableFeature, logFeatureUsage, isUpdating, features]
   );
 
   /**
@@ -87,6 +94,9 @@ export function useFeatureFlags() {
         
         // Log the feature usage
         await logFeatureUsage(featureKey, { action: 'disable' });
+        
+        // Log to feature toggle history table
+        await logFeatureToggleToHistory(featureKey, features[featureKey], false);
       } catch (error) {
         logger.error(`Error disabling feature ${featureKey}:`, error);
         toast.error(`Failed to disable ${featureKey} feature`);
@@ -94,7 +104,7 @@ export function useFeatureFlags() {
         setIsUpdating(false);
       }
     },
-    [disableFeature, logFeatureUsage, isUpdating]
+    [disableFeature, logFeatureUsage, isUpdating, features]
   );
 
   /**
@@ -114,6 +124,9 @@ export function useFeatureFlags() {
           action: 'setState', 
           enabled: isEnabled 
         });
+        
+        // Log to feature toggle history table
+        await logFeatureToggleToHistory(featureKey, features[featureKey], isEnabled);
       } catch (error) {
         logger.error(`Error setting feature ${featureKey} state:`, error);
         toast.error(`Failed to update ${featureKey} feature`);
@@ -121,8 +134,40 @@ export function useFeatureFlags() {
         setIsUpdating(false);
       }
     },
-    [setFeatureState, logFeatureUsage, isUpdating]
+    [setFeatureState, logFeatureUsage, isUpdating, features]
   );
+
+  // Helper function to log feature toggle to history table
+  const logFeatureToggleToHistory = async (
+    featureKey: FeatureKey,
+    oldValue: boolean | undefined,
+    newValue: boolean
+  ) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) return;
+
+      // Log to feature_toggle_history table
+      await supabase.from('feature_toggle_history').insert({
+        user_id: userData.user.id,
+        feature_name: featureKey,
+        old_value: oldValue,
+        new_value: newValue,
+        metadata: { 
+          source: 'client_app',
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      logger.info(`Feature ${featureKey} ${newValue ? 'enabled' : 'disabled'}`, { 
+        feature: featureKey, 
+        oldValue, 
+        newValue 
+      });
+    } catch (error) {
+      logger.error('Error logging feature toggle to history:', error);
+    }
+  };
 
   return {
     features,

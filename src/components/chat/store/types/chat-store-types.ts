@@ -1,6 +1,8 @@
 
 import { Message } from "@/types/chat";
 
+export type ChatMode = 'chat' | 'dev' | 'image' | 'training';
+
 export interface ChatProvider {
   id: string;
   name: string;
@@ -11,6 +13,24 @@ export interface ChatProvider {
 }
 
 export type ChatPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+
+export interface TokenUsage {
+  available: number;
+  used: number;
+  lastRefilled: string; // ISO date string
+}
+
+export interface ChatSession {
+  id: string;
+  mode: ChatMode;
+  title?: string;
+  projectId?: string;
+  githubRepo?: string;
+  lastSyncedCommit?: string;
+  tokensUsed: number;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface ChatState {
   initialized: boolean;
@@ -38,9 +58,16 @@ export interface ChatState {
     ragSupport: boolean;
     githubSync: boolean;
   };
-  currentMode: 'chat' | 'dev' | 'image';
+  currentMode: ChatMode;
   availableProviders: ChatProvider[];
   currentProvider: ChatProvider | null;
+  
+  // Add session management properties
+  currentSession: ChatSession | null;
+  sessions: Record<string, ChatSession>;
+  
+  // Add token management
+  tokenUsage: TokenUsage;
   
   // Add providers mapping for session management
   providers?: {
@@ -66,5 +93,5 @@ export interface UIStateActions {
   setMessageLoading: (isLoading: boolean) => void;
   setProviderLoading: (isLoading: boolean) => void;
   setScale: (scale: number) => void;
-  setCurrentMode: (mode: 'chat' | 'dev' | 'image') => void;
+  setCurrentMode: (mode: ChatMode) => void;
 }
