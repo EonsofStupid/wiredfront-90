@@ -65,9 +65,30 @@ export class AIProviderService {
    */
   static async setDefaultProvider(providerId: string): Promise<boolean> {
     try {
-      const { error } = await supabase.rpc('set_default_api_config', { config_id: providerId });
+      // Fix: Use update method instead of rpc since set_default_api_config doesn't exist
+      const { data: provider, error: getError } = await supabase
+        .from('api_configurations')
+        .select('id, api_type, category')
+        .eq('id', providerId)
+        .single();
+        
+      if (getError) throw getError;
       
-      if (error) throw error;
+      // First set all providers of the same type to not default
+      const { error: updateAllError } = await supabase
+        .from('api_configurations')
+        .update({ is_default: false })
+        .eq('api_type', provider.api_type);
+        
+      if (updateAllError) throw updateAllError;
+      
+      // Then set the selected provider as default
+      const { error: updateError } = await supabase
+        .from('api_configurations')
+        .update({ is_default: true })
+        .eq('id', providerId);
+        
+      if (updateError) throw updateError;
       
       return true;
     } catch (error) {

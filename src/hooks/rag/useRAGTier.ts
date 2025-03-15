@@ -1,54 +1,71 @@
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { RAGTierService } from "@/services/rag/RAGTierService";
-import { RAGIndexingService } from "@/services/rag/RAGIndexingService";
-import { logger } from "@/services/chat/LoggingService";
 import { toast } from "sonner";
-import { useRAGMetrics } from "./useRAGMetrics";
+import { logger } from "@/services/chat/LoggingService";
 
-/**
- * Hook for managing RAG tier operations
- */
 export function useRAGTier() {
-  const queryClient = useQueryClient();
-  const { isPremiumAvailable } = useRAGMetrics();
+  const [isPremiumAvailable, setIsPremiumAvailable] = useState<boolean>(false);
+  const [isUpgrading, setIsUpgrading] = useState<boolean>(false);
   
-  // Upgrade to premium RAG mutation
-  const upgradeMutation = useMutation({
-    mutationFn: () => RAGTierService.upgradeToRagPremium(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['rag-info'] });
-      queryClient.invalidateQueries({ queryKey: ['premium-rag-available'] });
-      toast.success("Successfully upgraded to Premium RAG tier");
-    },
-    onError: (error) => {
-      logger.error("Upgrade error:", error);
-      toast.error("Failed to upgrade to Premium RAG tier");
+  // Check if the user can use premium RAG features
+  const checkPremiumStatus = async () => {
+    try {
+      const canUsePremium = await RAGTierService.canUsePremiumRAG();
+      setIsPremiumAvailable(canUsePremium);
+      return canUsePremium;
+    } catch (error) {
+      logger.error("Error checking premium RAG status:", error);
+      return false;
     }
-  });
+  };
   
-  // Migrate project to premium mutation
-  const migrateToRagPremiumMutation = useMutation({
-    mutationFn: (projectId: string) => RAGIndexingService.migrateProjectToPremium(projectId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['premium-rag-available'] });
-      toast.success("Project successfully migrated to Premium tier");
-    },
-    onError: (error) => {
-      logger.error("Migration error:", error);
-      toast.error("Failed to migrate project to Premium tier");
+  // Upgrade the user to premium RAG tier
+  const upgradeToRagPremium = async () => {
+    setIsUpgrading(true);
+    try {
+      const success = await RAGTierService.upgradeToRagPremium();
+      
+      if (success) {
+        setIsPremiumAvailable(true);
+        toast.success("Successfully upgraded to premium RAG tier");
+        logger.info("User upgraded to premium RAG tier");
+      } else {
+        toast.error("Failed to upgrade to premium RAG tier");
+        logger.error("Failed to upgrade to premium RAG tier");
+      }
+      
+      return success;
+    } catch (error) {
+      logger.error("Error upgrading to premium RAG tier:", error);
+      toast.error("Error upgrading to premium RAG tier");
+      return false;
+    } finally {
+      setIsUpgrading(false);
     }
-  });
-
+  };
+  
+  // Check if a project should be migrated to premium tier
+  const checkMigrationStatus = async (projectId: string) => {
+    try {
+      const shouldMigrate = await RAGTierService.shouldMigrateToPreium(projectId);
+      
+      if (shouldMigrate && !isPremiumAvailable) {
+        toast.info("Your project would benefit from premium RAG features. Consider upgrading.");
+      }
+      
+      return shouldMigrate;
+    } catch (error) {
+      logger.error("Error checking migration status:", error);
+      return false;
+    }
+  };
+  
   return {
-    // Premium status
     isPremiumAvailable,
-    
-    // Operations
-    upgradeToRagPremium: upgradeMutation.mutate,
-    isUpgrading: upgradeMutation.isPending,
-    
-    migrateProjectToPremium: migrateToRagPremiumMutation.mutate,
-    isMigratingProject: migrateToRagPremiumMutation.isPending,
+    isUpgrading,
+    checkPremiumStatus,
+    upgradeToRagPremium,
+    checkMigrationStatus
   };
 }

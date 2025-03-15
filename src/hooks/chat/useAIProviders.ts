@@ -12,7 +12,7 @@ export function useAIProviders() {
   const [providers, setProviders] = useState<ChatProvider[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedProvider, setSelectedProvider] = useState<ChatProvider | null>(null);
-  const { updateCurrentProvider } = useChatStore();
+  const { updateCurrentProvider, updateAvailableProviders } = useChatStore();
   
   // Load providers when component mounts
   useEffect(() => {
@@ -25,6 +25,9 @@ export function useAIProviders() {
     try {
       const allProviders = await AIProviderService.getAllProviders();
       setProviders(allProviders);
+      
+      // Also update the providers in the global store
+      updateAvailableProviders(allProviders);
       
       // Set default provider
       const defaultProvider = allProviders.find(p => p.isDefault) || 
