@@ -61,7 +61,7 @@ export function AIProviderStatusDialog() {
   };
 
   // Group providers by type
-  const groupedProviders = providers.reduce((acc, provider) => {
+  const groupedProviders = providers.reduce<Record<ProviderType, ChatProvider[]>>((acc, provider) => {
     const type = provider.type as ProviderType;
     if (!acc[type]) {
       acc[type] = [];
@@ -71,8 +71,8 @@ export function AIProviderStatusDialog() {
   }, {} as Record<ProviderType, ChatProvider[]>);
 
   // Get display name for provider type
-  const getProviderTypeDisplayName = (type: string): string => {
-    const displayNames: Record<string, string> = {
+  const getProviderTypeDisplayName = (type: ProviderType): string => {
+    const displayNames: Record<ProviderType, string> = {
       'openai': 'OpenAI',
       'anthropic': 'Anthropic',
       'gemini': 'Google Gemini',
@@ -112,7 +112,7 @@ export function AIProviderStatusDialog() {
             {Object.entries(groupedProviders).map(([type, typeProviders]) => (
               <div key={type} className="space-y-2">
                 <h3 className="text-sm font-medium flex items-center gap-1">
-                  {getProviderTypeDisplayName(type)}
+                  {getProviderTypeDisplayName(type as ProviderType)}
                 </h3>
                 <div className="grid grid-cols-1 gap-2">
                   {typeProviders.map(provider => (

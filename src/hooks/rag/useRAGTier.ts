@@ -61,7 +61,7 @@ export function useRAGTier() {
     }
   };
   
-  // Add the missing migrateProjectToPremium method
+  // Migrate a project to premium tier
   const migrateProjectToPremium = async (projectId: string) => {
     setIsUpgrading(true);
     try {

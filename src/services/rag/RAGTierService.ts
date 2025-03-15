@@ -127,4 +127,36 @@ export class RAGTierService {
       return false;
     }
   }
+
+  /**
+   * Migrate a project from standard to premium tier
+   * This includes moving vectors from Supabase to Pinecone
+   */
+  static async migrateProjectToPremium(projectId: string): Promise<boolean> {
+    try {
+      // First upgrade the user to premium
+      const upgradeSuccess = await this.upgradeToRagPremium();
+      if (!upgradeSuccess) {
+        throw new Error("Failed to upgrade to premium tier");
+      }
+      
+      // Then migrate the vectors
+      const { data, error } = await supabase.functions.invoke('migrate-project-vectors', {
+        body: {
+          projectId,
+          targetStore: 'pinecone'
+        }
+      });
+      
+      if (error) throw error;
+      
+      logger.info(`Project ${projectId} successfully migrated to premium RAG tier`);
+      toast.success("Project successfully migrated to premium tier");
+      return true;
+    } catch (error) {
+      logger.error(`Error migrating project ${projectId} to premium tier:`, error);
+      toast.error("Failed to migrate project to premium tier");
+      return false;
+    }
+  }
 }

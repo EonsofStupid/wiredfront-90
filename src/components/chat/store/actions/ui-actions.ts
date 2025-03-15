@@ -2,7 +2,22 @@
 import { StateCreator } from 'zustand';
 import { ChatState, ChatProvider, ChatPosition } from '../types/chat-store-types';
 
-export const createUIActions = (set: StateCreator<ChatState>) => ({
+export interface UISlice {
+  toggleMinimize: () => void;
+  toggleSidebar: () => void;
+  toggleChat: () => void;
+  togglePosition: () => void;
+  toggleDocked: () => void;
+  setSessionLoading: (isLoading: boolean) => void;
+  setMessageLoading: (isLoading: boolean) => void;
+  setProviderLoading: (isLoading: boolean) => void;
+  setScale: (scale: number) => void;
+  setCurrentMode: (mode: 'chat' | 'dev' | 'image') => void;
+  updateCurrentProvider: (provider: ChatProvider) => void;
+  updateAvailableProviders: (providers: ChatProvider[]) => void;
+}
+
+export const createUIActions: StateCreator<ChatState, [], [], UISlice> = (set) => ({
   toggleMinimize: () => {
     set((state) => ({
       isMinimized: !state.isMinimized,
@@ -18,7 +33,6 @@ export const createUIActions = (set: StateCreator<ChatState>) => ({
       isOpen: !state.isOpen,
     }));
   },
-  // Add position toggling functionality
   togglePosition: () => {
     set((state) => {
       if (typeof state.position === 'string') {
@@ -30,7 +44,6 @@ export const createUIActions = (set: StateCreator<ChatState>) => ({
       return { position: 'bottom-right' };
     });
   },
-  // Add docking toggle functionality
   toggleDocked: () => {
     set((state) => ({
       docked: !state.docked
@@ -70,7 +83,6 @@ export const createUIActions = (set: StateCreator<ChatState>) => ({
       currentMode: mode,
     }));
   },
-  // Add the missing updateCurrentProvider action
   updateCurrentProvider: (provider: ChatProvider) => {
     set((state) => ({
       currentProvider: provider,
@@ -82,7 +94,6 @@ export const createUIActions = (set: StateCreator<ChatState>) => ({
       }
     }));
   },
-  // Add function to update available providers
   updateAvailableProviders: (providers: ChatProvider[]) => {
     set((state) => ({
       providers: {

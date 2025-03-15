@@ -7,6 +7,12 @@ import { createFeatureActions } from './actions/feature-actions';
 import { createUIActions } from './actions/ui-actions';
 import { ChatState } from './types/chat-store-types';
 
+// Define the full store type with all action slices
+type FullChatStore = ChatState & 
+  ReturnType<typeof createInitializationActions> & 
+  ReturnType<typeof createFeatureActions> & 
+  ReturnType<typeof createUIActions>;
+
 const initialState: ChatState = {
   initialized: false,
   messages: [],
@@ -53,9 +59,7 @@ const initialState: ChatState = {
   },
 };
 
-export const useChatStore = create<
-  ChatState & ReturnType<typeof createInitializationActions> & ReturnType<typeof createFeatureActions> & ReturnType<typeof createUIActions>
->()(
+export const useChatStore = create<FullChatStore>()(
   devtools(
     (set, get) => ({
       ...initialState,
