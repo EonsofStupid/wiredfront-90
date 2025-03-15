@@ -38,10 +38,21 @@ const initialState: ChatState = {
     codeAssistant: true,
     ragSupport: true,
     githubSync: true,
+    tokenEnforcement: false, // Default to disabled
   },
   currentMode: 'chat',
   availableProviders: [],
   currentProvider: null,
+  
+  // Token control system initialization
+  tokenControl: {
+    balance: 0,
+    enforcementMode: 'never',
+    lastUpdated: null,
+    tokensPerQuery: 1,
+    freeQueryLimit: 5,
+    queriesUsed: 0
+  },
   
   // Add providers mapping for session management
   providers: {

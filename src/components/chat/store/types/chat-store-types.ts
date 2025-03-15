@@ -1,6 +1,6 @@
 
 import { Message } from "@/types/chat";
-import { ChatMode } from "@/integrations/supabase/types/enums";
+import { ChatMode, TokenEnforcementMode } from "@/integrations/supabase/types/enums";
 
 export interface ChatProvider {
   id: string;
@@ -12,6 +12,15 @@ export interface ChatProvider {
 }
 
 export type ChatPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+
+export interface TokenControl {
+  balance: number;
+  enforcementMode: TokenEnforcementMode;
+  lastUpdated: string | null;
+  tokensPerQuery: number;
+  freeQueryLimit: number;
+  queriesUsed: number;
+}
 
 export interface ChatState {
   initialized: boolean;
@@ -38,10 +47,14 @@ export interface ChatState {
     codeAssistant: boolean;
     ragSupport: boolean;
     githubSync: boolean;
+    tokenEnforcement: boolean;
   };
   currentMode: ChatMode;
   availableProviders: ChatProvider[];
   currentProvider: ChatProvider | null;
+  
+  // Token control system
+  tokenControl: TokenControl;
   
   // Add providers mapping for session management
   providers?: {

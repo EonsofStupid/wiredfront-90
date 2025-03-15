@@ -368,32 +368,54 @@ export type Database = {
       chat_sessions: {
         Row: {
           created_at: string | null
+          dev_metadata: Json | null
           id: string
           is_active: boolean | null
           last_accessed: string | null
           metadata: Json | null
+          mode: string | null
+          project_id: string | null
+          revert_history: Json | null
           title: string | null
+          tokens_used: number | null
           user_id: string
         }
         Insert: {
           created_at?: string | null
+          dev_metadata?: Json | null
           id?: string
           is_active?: boolean | null
           last_accessed?: string | null
           metadata?: Json | null
+          mode?: string | null
+          project_id?: string | null
+          revert_history?: Json | null
           title?: string | null
+          tokens_used?: number | null
           user_id: string
         }
         Update: {
           created_at?: string | null
+          dev_metadata?: Json | null
           id?: string
           is_active?: boolean | null
           last_accessed?: string | null
           metadata?: Json | null
+          mode?: string | null
+          project_id?: string | null
+          revert_history?: Json | null
           title?: string | null
+          tokens_used?: number | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "chat_sessions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "chat_sessions_user_id_fkey"
             columns: ["user_id"]
@@ -500,6 +522,44 @@ export type Database = {
             columns: ["command_id"]
             isOneToOne: false
             referencedRelation: "chat_commands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dev_session_reverts: {
+        Row: {
+          applied_at: string | null
+          commit_hash: string | null
+          created_at: string | null
+          file_changes: Json
+          id: string
+          revert_status: string | null
+          session_id: string
+        }
+        Insert: {
+          applied_at?: string | null
+          commit_hash?: string | null
+          created_at?: string | null
+          file_changes: Json
+          id?: string
+          revert_status?: string | null
+          session_id: string
+        }
+        Update: {
+          applied_at?: string | null
+          commit_hash?: string | null
+          created_at?: string | null
+          file_changes?: Json
+          id?: string
+          revert_status?: string | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dev_session_reverts_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -1311,6 +1371,95 @@ export type Database = {
           },
         ]
       }
+      project_images: {
+        Row: {
+          assignment_type: string | null
+          created_at: string | null
+          id: string
+          image_id: string
+          metadata: Json | null
+          project_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          assignment_type?: string | null
+          created_at?: string | null
+          id?: string
+          image_id: string
+          metadata?: Json | null
+          project_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          assignment_type?: string | null
+          created_at?: string | null
+          id?: string
+          image_id?: string
+          metadata?: Json | null
+          project_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_images_image_id_fkey"
+            columns: ["image_id"]
+            isOneToOne: false
+            referencedRelation: "gallery_images"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_images_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_rag_indexes: {
+        Row: {
+          created_at: string | null
+          force_indexed_at: string | null
+          id: string
+          last_indexed: string | null
+          metadata: Json | null
+          project_id: string
+          status: string | null
+          tokens_spent: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          force_indexed_at?: string | null
+          id?: string
+          last_indexed?: string | null
+          metadata?: Json | null
+          project_id: string
+          status?: string | null
+          tokens_spent?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          force_indexed_at?: string | null
+          id?: string
+          last_indexed?: string | null
+          metadata?: Json | null
+          project_id?: string
+          status?: string | null
+          tokens_spent?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_rag_indexes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_vectors: {
         Row: {
           created_at: string | null
@@ -1815,6 +1964,42 @@ export type Database = {
           created_at?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_tokens: {
+        Row: {
+          balance: number | null
+          created_at: string | null
+          id: string
+          last_reset: string | null
+          tier: string | null
+          total_earned: number | null
+          total_spent: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          balance?: number | null
+          created_at?: string | null
+          id?: string
+          last_reset?: string | null
+          tier?: string | null
+          total_earned?: number | null
+          total_spent?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          balance?: number | null
+          created_at?: string | null
+          id?: string
+          last_reset?: string | null
+          tier?: string | null
+          total_earned?: number | null
+          total_spent?: number | null
           updated_at?: string | null
           user_id?: string
         }

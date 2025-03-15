@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 
 export type FeatureKey = 'voice' | 'rag' | 'modeSwitch' | 'notifications' | 'github' | 
-                         'codeAssistant' | 'ragSupport' | 'githubSync';
+                         'codeAssistant' | 'ragSupport' | 'githubSync' | 'tokenEnforcement';
 
 export type FeatureActions = {
   toggleFeature: (feature: FeatureKey) => void;
@@ -13,6 +13,12 @@ export type FeatureActions = {
   disableFeature: (feature: FeatureKey) => void;
   setFeatureState: (feature: FeatureKey, isEnabled: boolean) => void;
   updateChatProvider: (providers: ChatProvider[]) => void;
+  
+  // Token management actions
+  setTokenEnforcementMode: (mode: string) => void;
+  addTokens: (amount: number) => Promise<boolean>;
+  spendTokens: (amount: number) => Promise<boolean>;
+  setTokenBalance: (amount: number) => Promise<boolean>;
 };
 
 type StoreWithDevtools = StateCreator<
@@ -51,6 +57,50 @@ const logFeatureToggle = async (
     logger.info(`Feature ${feature} ${newValue ? 'enabled' : 'disabled'}`, { feature, value: newValue });
   } catch (error) {
     logger.error('Error logging feature toggle:', error);
+  }
+};
+
+// Helper function to update user token balance
+const updateUserTokens = async (userId: string, amount: number): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_tokens')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') {
+      logger.error('Error fetching user tokens:', error);
+      return false;
+    }
+    
+    if (!data) {
+      // Create new token record if it doesn't exist
+      const { error: insertError } = await supabase
+        .from('user_tokens')
+        .insert({ user_id: userId, balance: amount });
+      
+      if (insertError) {
+        logger.error('Error creating user tokens:', insertError);
+        return false;
+      }
+    } else {
+      // Update existing token record
+      const { error: updateError } = await supabase
+        .from('user_tokens')
+        .update({ balance: amount })
+        .eq('user_id', userId);
+      
+      if (updateError) {
+        logger.error('Error updating user tokens:', updateError);
+        return false;
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    logger.error('Error in updateUserTokens:', error);
+    return false;
   }
 };
 
@@ -158,6 +208,126 @@ export const createFeatureActions: StoreWithDevtools = (set, get) => ({
       false,
       { type: 'providers/update', count: providers.length }
     ),
+    
+  // Token management actions
+  setTokenEnforcementMode: (mode) =>
+    set(
+      (state) => ({
+        ...state,
+        tokenControl: {
+          ...state.tokenControl,
+          enforcementMode: mode
+        }
+      }),
+      false,
+      { type: 'tokens/setEnforcementMode', mode }
+    ),
+  
+  addTokens: async (amount) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) return false;
+      
+      const userId = userData.user.id;
+      const currentBalance = get().tokenControl.balance;
+      const newBalance = currentBalance + amount;
+      
+      const success = await updateUserTokens(userId, newBalance);
+      
+      if (success) {
+        set(
+          (state) => ({
+            ...state,
+            tokenControl: {
+              ...state.tokenControl,
+              balance: newBalance,
+              lastUpdated: new Date().toISOString()
+            }
+          }),
+          false,
+          { type: 'tokens/add', amount }
+        );
+      }
+      
+      return success;
+    } catch (error) {
+      logger.error('Error adding tokens:', error);
+      return false;
+    }
+  },
+  
+  spendTokens: async (amount) => {
+    try {
+      // Check if token enforcement is disabled
+      if (!get().features.tokenEnforcement) {
+        return true; // Allow operation without spending tokens when disabled
+      }
+      
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) return false;
+      
+      const userId = userData.user.id;
+      const currentBalance = get().tokenControl.balance;
+      
+      // Check if user has enough tokens
+      if (currentBalance < amount) {
+        return false;
+      }
+      
+      const newBalance = currentBalance - amount;
+      const success = await updateUserTokens(userId, newBalance);
+      
+      if (success) {
+        set(
+          (state) => ({
+            ...state,
+            tokenControl: {
+              ...state.tokenControl,
+              balance: newBalance,
+              lastUpdated: new Date().toISOString()
+            }
+          }),
+          false,
+          { type: 'tokens/spend', amount }
+        );
+      }
+      
+      return success;
+    } catch (error) {
+      logger.error('Error spending tokens:', error);
+      return false;
+    }
+  },
+  
+  setTokenBalance: async (amount) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) return false;
+      
+      const userId = userData.user.id;
+      const success = await updateUserTokens(userId, amount);
+      
+      if (success) {
+        set(
+          (state) => ({
+            ...state,
+            tokenControl: {
+              ...state.tokenControl,
+              balance: amount,
+              lastUpdated: new Date().toISOString()
+            }
+          }),
+          false,
+          { type: 'tokens/setBalance', amount }
+        );
+      }
+      
+      return success;
+    } catch (error) {
+      logger.error('Error setting token balance:', error);
+      return false;
+    }
+  }
 });
 
 // Helper function to log provider changes to the database

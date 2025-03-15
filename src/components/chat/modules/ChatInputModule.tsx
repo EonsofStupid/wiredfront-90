@@ -4,12 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useMessageStore } from "../messaging/MessageManager";
 import { useChatMode } from "../providers/ChatModeProvider";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, Coins } from "lucide-react";
 import { logger } from '@/services/chat/LoggingService';
 import { KnowledgeSourceButton } from '../features/knowledge-source/KnowledgeSourceButton';
 import { VoiceToTextButton } from '../features/voice-to-text';
 import { toast } from "sonner";
 import { useSessionManager } from '@/hooks/useSessionManager';
+import { useTokenManagement } from '@/hooks/useTokenManagement';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ChatInputModuleProps {
   onMessageSubmit?: (content: string) => void;
@@ -21,12 +23,25 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
   const { addMessage, currentSessionId, isProcessing } = useMessageStore();
   const { createSession } = useSessionManager();
   const { mode } = useChatMode();
+  const { 
+    isTokenEnforcementEnabled, 
+    hasEnoughTokens, 
+    spendTokens, 
+    tokenBalance,
+    tokensPerQuery
+  } = useTokenManagement();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
     if (!message.trim()) return;
+    
+    // Check if token enforcement is enabled and user has enough tokens
+    if (isTokenEnforcementEnabled && !hasEnoughTokens(tokensPerQuery)) {
+      toast.error(`You need ${tokensPerQuery} tokens to send a message. Your balance: ${tokenBalance}`);
+      return;
+    }
     
     try {
       // Create a new session if we don't have one
@@ -49,6 +64,14 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
         messageLength: message.length,
         sessionId
       });
+      
+      // Spend tokens if enforcement is enabled
+      if (isTokenEnforcementEnabled) {
+        const success = await spendTokens(tokensPerQuery);
+        if (!success) {
+          return; // Don't continue if token spending failed
+        }
+      }
       
       if (onMessageSubmit) {
         onMessageSubmit(message.trim());
@@ -78,6 +101,12 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
       logger.warn('Empty transcription received');
       return;
     }
+    
+    // Check if token enforcement is enabled and user has enough tokens for voice
+    if (isTokenEnforcementEnabled && !hasEnoughTokens(tokensPerQuery)) {
+      toast.error(`You need ${tokensPerQuery} tokens to send a voice message. Your balance: ${tokenBalance}`);
+      return;
+    }
 
     try {
       logger.info('Submitting transcription', { 
@@ -85,6 +114,14 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
         transcriptionLength: text.length,
         sessionId: currentSessionId
       });
+      
+      // Spend tokens if enforcement is enabled
+      if (isTokenEnforcementEnabled) {
+        const success = await spendTokens(tokensPerQuery);
+        if (!success) {
+          return; // Don't continue if token spending failed
+        }
+      }
       
       await addMessage({
         content: text,
@@ -120,6 +157,8 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
     }
   };
 
+  const showTokenWarning = isTokenEnforcementEnabled && !hasEnoughTokens(tokensPerQuery);
+
   return (
     <form onSubmit={handleSubmit} className="flex gap-2 w-full h-full items-center" onClick={(e) => e.stopPropagation()}>
       <div className="relative flex-1 group">
@@ -129,7 +168,9 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
           onClick={handleInputClick}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="chat-input chat-cyber-border font-mono text-chat-input-text h-[var(--chat-input-height)]"
+          className={`chat-input chat-cyber-border font-mono text-chat-input-text h-[var(--chat-input-height)] ${
+            showTokenWarning ? 'border-red-500' : ''
+          }`}
           disabled={isProcessing}
           data-testid="chat-input"
           aria-label="Message input"
@@ -144,9 +185,28 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
         isProcessing={isProcessing}
       />
       
+      {isTokenEnforcementEnabled && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className={`flex items-center gap-1 px-2 py-1 rounded font-mono text-xs ${
+                showTokenWarning ? 'text-red-400' : 'text-green-400'
+              }`}>
+                <Coins className="h-3 w-3" />
+                <span>{tokenBalance}</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Your token balance: {tokenBalance}</p>
+              <p>Cost per message: {tokensPerQuery}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+      
       <Button 
         type="submit" 
-        disabled={isProcessing || !message.trim()}
+        disabled={isProcessing || !message.trim() || showTokenWarning}
         className="min-w-[80px] bg-gradient-to-r from-[#1EAEDB] to-[#0080B3] hover:opacity-90 text-white border-none transition-all duration-200 font-mono h-[var(--chat-input-height)]"
         data-testid="send-button"
       >

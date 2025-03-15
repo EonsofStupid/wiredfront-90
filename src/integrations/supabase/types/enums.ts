@@ -8,3 +8,5 @@ export interface Enums {
 }
 
 export type ChatMode = "chat" | "dev" | "image" | "training";
+export type TokenEnforcementMode = "always" | "never" | "role_based" | "mode_based";
+
