@@ -15,7 +15,7 @@ export const createInitializationActions: StateCreator<
 > = (set, get, api) => ({
   initializeChatSettings: () => {
     const state = get();
-    if (state.isInitialized) return;
+    if (state.initialized) return;
     
     // Set default position based on screen size
     const isMobile = window.innerWidth < 768;
@@ -38,7 +38,7 @@ export const createInitializationActions: StateCreator<
       position: defaultPosition,
       scale: defaultScale,
       docked: defaultDocked,
-      isInitialized: true
+      initialized: true
     });
   }
 });

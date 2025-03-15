@@ -27,7 +27,6 @@ export const createFeatureActions: StateCreator<
           [feature]: !state.features[feature],
         },
       }),
-      false,
       { type: 'features/toggle', feature }
     ),
 
@@ -39,7 +38,6 @@ export const createFeatureActions: StateCreator<
           [feature]: true,
         },
       }),
-      false,
       { type: 'features/enable', feature }
     ),
 
@@ -51,7 +49,6 @@ export const createFeatureActions: StateCreator<
           [feature]: false,
         },
       }),
-      false,
       { type: 'features/disable', feature }
     ),
 
@@ -63,7 +60,6 @@ export const createFeatureActions: StateCreator<
           [feature]: isEnabled,
         },
       }),
-      false,
       { type: 'features/setState', feature, isEnabled }
     ),
     
@@ -74,7 +70,6 @@ export const createFeatureActions: StateCreator<
         availableProviders: providers,
         currentProvider: providers.find((p: ChatProvider) => p.isDefault) || providers[0] || state.currentProvider,
       }),
-      false,
       { type: 'providers/update', providers }
     ),
 });
