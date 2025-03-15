@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { Toaster } from "sonner";
@@ -13,7 +14,7 @@ import { ChatProvider } from "@/components/chat/ChatProvider";
 import { useAuthStore } from "@/stores/auth";
 import { storeLastVisitedPath } from "@/utils/auth";
 import { EditorModeProvider } from "@/components/editor/providers/EditorModeProvider";
-import { MainLayout } from "@/components/layout/MainLayout";
+import { CoreLayout } from "@/core/layout/CoreLayout";
 import { APISettings } from "@/components/admin/settings/APISettings";
 import { AccessibilitySettings } from "@/components/admin/settings/AccessibilitySettings";
 import { NotificationSettings } from "@/components/admin/settings/NotificationSettings";
@@ -141,7 +142,7 @@ const App = () => {
           </Routes>
         </AppLayout>
       ) : (
-        <MainLayout>
+        <CoreLayout>
           {isAdminRoute && <AdminTopNavOverlay />}
           <Routes>
             <Route path="/dashboard" element={<Dashboard />} />
@@ -158,6 +159,7 @@ const App = () => {
             <Route path="/gallery" element={<div>Gallery</div>} />
             <Route path="/training" element={<div>Training</div>} />
             
+            {/* Admin routes */}
             <Route path="/admin" element={<MetricsOverview />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/metrics-overview" element={<MetricsOverview />} />
@@ -191,7 +193,7 @@ const App = () => {
             <Route path="/admin/github-connections" element={<div>GitHub Connections</div>} />
           </Routes>
           <GuestCTA />
-        </MainLayout>
+        </CoreLayout>
       )}
       <DraggableChat />
       <Toaster />

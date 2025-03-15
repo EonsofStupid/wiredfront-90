@@ -1,0 +1,82 @@
+
+/* CORE LAYOUT CSS - DO NOT MODIFY */
+/* These styles are critical for the layout system */
+
+:root {
+  /* Z-index variables - CRITICAL: these must be used consistently */
+  --z-user-menu: 9750;      /* Highest priority - above all */
+  --z-chat: 9700;           /* Chat components */
+  --z-projecthub: 9600;     /* Project hub components */
+  --z-modal: 1000;          /* Modal dialogs */
+  --z-dropdown: 900;        /* Dropdown menus */
+  --z-tooltip: 800;         /* Tooltips */
+  --z-navbar: 700;          /* Navigation bars */
+  --z-floating: 600;        /* Floating elements */
+  --z-content: 500;         /* Main content */
+  --z-background: 400;      /* Background elements */
+  --z-base: 300;            /* Base elements */
+}
+
+/* Core layout container */
+.wf-core-layout-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Core layout elements - these provide the fundamental structure */
+.wf-core-topbar {
+  height: 4rem; /* 64px */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-navbar);
+}
+
+.wf-core-leftsidebar {
+  position: fixed;
+  top: 4rem; /* 64px */
+  bottom: 3rem; /* 48px */
+  left: 0;
+  z-index: var(--z-navbar);
+  transition: width 0.3s ease-in-out;
+}
+
+.wf-core-rightsidebar {
+  position: fixed;
+  top: 4rem; /* 64px */
+  bottom: 3rem; /* 48px */
+  right: 0;
+  width: 16rem; /* 256px */
+  z-index: var(--z-projecthub);
+  transition: transform 0.3s ease-in-out;
+}
+
+.wf-core-bottombar {
+  height: 3rem; /* 48px */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-navbar);
+}
+
+.wf-core-main-content {
+  flex: 1;
+  padding: 1.5rem;
+  margin-top: 4rem; /* 64px - topbar height */
+  margin-bottom: 3rem; /* 48px - bottombar height */
+  transition: 
+    margin-left 0.3s ease-in-out,
+    margin-right 0.3s ease-in-out;
+}
+
+/* Utility class to protect elements from z-index conflicts */
+.wf-protected {
+  position: relative;
+  z-index: var(--z-content);
+}

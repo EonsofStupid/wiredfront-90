@@ -5,6 +5,7 @@ import { MainLayout } from "./MainLayout";
 import { MobileHeader } from "./mobile/MobileHeader";
 import { MobileBottomNav } from "./mobile/MobileBottomNav";
 import { cn } from "@/lib/utils";
+import { CoreLayoutContainer } from "@/core/layout/CoreLayoutContainer";
 
 interface MobileLayoutProps {
   children: React.ReactNode;
@@ -18,7 +19,7 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <CoreLayoutContainer>
       <MobileHeader />
       
       <main className={cn(
@@ -32,6 +33,6 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
       </main>
 
       <MobileBottomNav />
-    </div>
+    </CoreLayoutContainer>
   );
 };

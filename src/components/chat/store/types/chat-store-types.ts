@@ -1,5 +1,6 @@
 
 import { Message } from "@/types/chat";
+import { ChatMode } from "@/integrations/supabase/types/enums";
 
 export interface ChatProvider {
   id: string;
@@ -38,7 +39,7 @@ export interface ChatState {
     ragSupport: boolean;
     githubSync: boolean;
   };
-  currentMode: 'chat' | 'dev' | 'image';
+  currentMode: ChatMode;
   availableProviders: ChatProvider[];
   currentProvider: ChatProvider | null;
   
@@ -66,5 +67,5 @@ export interface UIStateActions {
   setMessageLoading: (isLoading: boolean) => void;
   setProviderLoading: (isLoading: boolean) => void;
   setScale: (scale: number) => void;
-  setCurrentMode: (mode: 'chat' | 'dev' | 'image') => void;
+  setCurrentMode: (mode: ChatMode) => void;
 }
