@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { GitBranchIcon, BellIcon, AlertCircle, CheckCircle } from 'lucide-react';
 import { GitHubStatusDialog } from './GitHubStatusDialog';
 import { NotificationsStatusDialog } from './NotificationsStatusDialog';
+import { AIProviderStatusButton } from './AIProviderStatusButton';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import { useChatStore } from '../../store/chatStore';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -58,6 +59,9 @@ export function StatusButton() {
   return (
     <ErrorBoundary fallback={<div className="text-xs text-destructive">Error loading status</div>}>
       <div className="flex gap-2 justify-end" role="toolbar" aria-label="Status controls">
+        {/* AI Provider Status Button */}
+        <AIProviderStatusButton />
+        
         {features.githubSync && (
           <Dialog>
             <HoverCard openDelay={300} closeDelay={200}>

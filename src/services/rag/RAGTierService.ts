@@ -38,6 +38,22 @@ export class RAGTierService {
         return false;
       }
       
+      // Check if Pinecone is configured
+      const { data: pineconeConfig, error: configError } = await supabase
+        .from('api_configurations')
+        .select('*')
+        .eq('api_type', 'pinecone')
+        .eq('is_enabled', true)
+        .maybeSingle();
+      
+      if (configError) throw configError;
+      
+      if (!pineconeConfig) {
+        toast.error("Pinecone is not configured. Please set up Pinecone in API settings.");
+        return false;
+      }
+      
+      // Upgrade user to premium tier
       const { error } = await supabase
         .from('rag_user_settings')
         .update({
@@ -49,6 +65,29 @@ export class RAGTierService {
         .eq('user_id', session.user.id);
         
       if (error) throw error;
+      
+      // Initialize Pinecone vector store configuration if not already set up
+      const { error: vectorStoreError } = await supabase
+        .from('vector_store_configs')
+        .insert({
+          user_id: session.user.id,
+          store_type: 'pinecone',
+          is_active: true,
+          endpoint_url: pineconeConfig.endpoint_url,
+          environment: pineconeConfig.environment,
+          index_name: pineconeConfig.index_name,
+          config: {
+            dimensions: 1536, // OpenAI embedding dimensions
+            metric: 'cosine'
+          }
+        })
+        .select()
+        .single();
+      
+      // If the error is "duplicate key value" it means the config already exists, so we ignore it
+      if (vectorStoreError && !vectorStoreError.message.includes('duplicate key value')) {
+        throw vectorStoreError;
+      }
       
       logger.info("User upgraded to premium RAG tier");
       return true;
