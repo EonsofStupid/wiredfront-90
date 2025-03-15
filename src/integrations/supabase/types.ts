@@ -83,6 +83,7 @@ export type Database = {
           role_assignments: Json | null
           rotation_priority: number | null
           rotation_schedule: Json | null
+          secret_id: string | null
           secret_key_name: string | null
           training_enabled: boolean | null
           updated_at: string | null
@@ -125,6 +126,7 @@ export type Database = {
           role_assignments?: Json | null
           rotation_priority?: number | null
           rotation_schedule?: Json | null
+          secret_id?: string | null
           secret_key_name?: string | null
           training_enabled?: boolean | null
           updated_at?: string | null
@@ -167,6 +169,7 @@ export type Database = {
           role_assignments?: Json | null
           rotation_priority?: number | null
           rotation_schedule?: Json | null
+          secret_id?: string | null
           secret_key_name?: string | null
           training_enabled?: boolean | null
           updated_at?: string | null
@@ -178,7 +181,15 @@ export type Database = {
             | Database["public"]["Enums"]["extended_validation_status"]
             | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "api_configurations_secret_id_fkey"
+            columns: ["secret_id"]
+            isOneToOne: false
+            referencedRelation: "secret_store"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       api_usage_stats: {
         Row: {
@@ -1458,6 +1469,27 @@ export type Database = {
         }
         Relationships: []
       }
+      secret_store: {
+        Row: {
+          api_key: string
+          created_at: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          api_key: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          api_key?: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string | null
@@ -1860,6 +1892,17 @@ export type Database = {
           "": unknown[]
         }
         Returns: number
+      }
+      track_rag_usage: {
+        Args: {
+          p_operation: string
+          p_user_id: string
+          p_project_id: string
+          p_vectors_added?: number
+          p_tokens_used?: number
+          p_latency_ms?: number
+        }
+        Returns: undefined
       }
       user_has_permission: {
         Args: {
