@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { VectorDBService } from "@/services/rag/VectorDBService";
+import { VectorSearchService } from "@/services/rag/VectorSearchService";
 import { logger } from "@/services/chat/LoggingService";
 import { toast } from "sonner";
 
@@ -18,7 +18,7 @@ export function useVectorSearch(projectId?: string) {
     try {
       setIsSearching(true);
       
-      const results = await VectorDBService.search({
+      const results = await VectorSearchService.search({
         text: query,
         projectId,
         limit: 10,

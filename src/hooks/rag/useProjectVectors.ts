@@ -1,6 +1,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { VectorDBService } from "@/services/rag/VectorDBService";
+import { VectorStatsService } from "@/services/rag/VectorStatsService";
+import { VectorManagementService } from "@/services/rag/VectorManagementService";
+import { VectorMigrationService } from "@/services/rag/VectorMigrationService";
 import { RAGService } from "@/services/rag/RAGService";
 import { logger } from "@/services/chat/LoggingService";
 import { toast } from "sonner";
@@ -20,7 +22,7 @@ export function useProjectVectors(projectId?: string) {
     refetch: refetchVectorStats
   } = useQuery({
     queryKey: ['project-vector-stats', projectId],
-    queryFn: () => projectId ? VectorDBService.getProjectVectorStats(projectId) : Promise.resolve(null),
+    queryFn: () => projectId ? VectorStatsService.getProjectVectorStats(projectId) : Promise.resolve(null),
     enabled: !!projectId,
     refetchOnWindowFocus: false,
   });
@@ -42,7 +44,7 @@ export function useProjectVectors(projectId?: string) {
     isLoading: isCheckingVectorLimit
   } = useQuery({
     queryKey: ['vector-limit-status', projectId],
-    queryFn: () => projectId ? VectorDBService.isProjectAtVectorLimit(projectId) : Promise.resolve({
+    queryFn: () => projectId ? VectorStatsService.isProjectAtVectorLimit(projectId) : Promise.resolve({
       atLimit: false,
       usagePercentage: 0,
       vectorCount: 0,
@@ -69,7 +71,7 @@ export function useProjectVectors(projectId?: string) {
   
   // Migrate vectors mutation (from Supabase to Pinecone)
   const migrateVectorsMutation = useMutation({
-    mutationFn: (pid: string) => VectorDBService.migrateVectors(pid),
+    mutationFn: (pid: string) => VectorMigrationService.migrateVectors(pid),
     onSuccess: () => {
       if (projectId) {
         queryClient.invalidateQueries({ queryKey: ['project-vector-stats', projectId] });
@@ -84,7 +86,7 @@ export function useProjectVectors(projectId?: string) {
   
   // Delete vectors mutation
   const deleteMutation = useMutation({
-    mutationFn: (pid: string) => VectorDBService.deleteProjectVectors(pid),
+    mutationFn: (pid: string) => VectorManagementService.deleteProjectVectors(pid),
     onSuccess: () => {
       if (projectId) {
         queryClient.invalidateQueries({ queryKey: ['project-vector-stats', projectId] });
