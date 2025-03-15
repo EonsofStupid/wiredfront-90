@@ -617,6 +617,99 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_toggle_history: {
+        Row: {
+          changed_at: string | null
+          feature_name: string
+          id: string
+          metadata: Json | null
+          new_value: boolean
+          old_value: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          changed_at?: string | null
+          feature_name: string
+          id?: string
+          metadata?: Json | null
+          new_value: boolean
+          old_value?: boolean | null
+          user_id?: string | null
+        }
+        Update: {
+          changed_at?: string | null
+          feature_name?: string
+          id?: string
+          metadata?: Json | null
+          new_value?: boolean
+          old_value?: boolean | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      feature_usage: {
+        Row: {
+          context: Json | null
+          count: number | null
+          feature_name: string
+          id: string
+          used_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          context?: Json | null
+          count?: number | null
+          feature_name: string
+          id?: string
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          context?: Json | null
+          count?: number | null
+          feature_name?: string
+          id?: string
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      feature_usage_summary: {
+        Row: {
+          daily_count: number | null
+          feature_name: string
+          id: string
+          monthly_count: number | null
+          period_end: string
+          period_start: string
+          unique_users: number | null
+          updated_at: string | null
+          weekly_count: number | null
+        }
+        Insert: {
+          daily_count?: number | null
+          feature_name: string
+          id?: string
+          monthly_count?: number | null
+          period_end: string
+          period_start: string
+          unique_users?: number | null
+          updated_at?: string | null
+          weekly_count?: number | null
+        }
+        Update: {
+          daily_count?: number | null
+          feature_name?: string
+          id?: string
+          monthly_count?: number | null
+          period_end?: string
+          period_start?: string
+          unique_users?: number | null
+          updated_at?: string | null
+          weekly_count?: number | null
+        }
+        Relationships: []
+      }
       github_connection_status: {
         Row: {
           connection_id: string | null
@@ -1255,6 +1348,39 @@ export type Database = {
           status?: string | null
           sync_frequency?: string | null
           updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      provider_change_log: {
+        Row: {
+          changed_at: string | null
+          id: string
+          metadata: Json | null
+          new_provider: string
+          old_provider: string | null
+          provider_name: string
+          reason: string | null
+          user_id: string | null
+        }
+        Insert: {
+          changed_at?: string | null
+          id?: string
+          metadata?: Json | null
+          new_provider: string
+          old_provider?: string | null
+          provider_name: string
+          reason?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          changed_at?: string | null
+          id?: string
+          metadata?: Json | null
+          new_provider?: string
+          old_provider?: string | null
+          provider_name?: string
+          reason?: string | null
           user_id?: string | null
         }
         Relationships: []

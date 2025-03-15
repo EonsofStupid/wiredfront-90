@@ -1,6 +1,8 @@
 
 import { StateCreator } from 'zustand';
 import { ChatState, ChatProvider, ChatPosition } from '../types/chat-store-types';
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/services/chat/LoggingService';
 
 export interface UISlice {
   toggleMinimize: () => void;
@@ -17,12 +19,38 @@ export interface UISlice {
   updateAvailableProviders: (providers: ChatProvider[]) => void;
 }
 
+// Helper function to log provider changes to the database
+const logProviderChange = async (oldProvider: string | undefined, newProvider: string | undefined) => {
+  if (!newProvider) return;
+  
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData?.user) return;
+
+    await supabase.from('provider_change_log').insert({
+      user_id: userData.user.id,
+      provider_name: newProvider,
+      old_provider: oldProvider,
+      new_provider: newProvider,
+      reason: 'user_action',
+      metadata: { source: 'client_app', action: 'update_current_provider' }
+    });
+
+    logger.info(`Provider changed from ${oldProvider || 'none'} to ${newProvider}`, { 
+      oldProvider, 
+      newProvider 
+    });
+  } catch (error) {
+    logger.error('Error logging provider change:', error);
+  }
+};
+
 export const createUIActions: StateCreator<
   ChatState, 
   [["zustand/devtools", never]], 
   [], 
   UISlice
-> = (set, get, api) => ({
+> = (set, get) => ({
   toggleMinimize: () => {
     set(
       (state) => ({
@@ -139,16 +167,26 @@ export const createUIActions: StateCreator<
   },
   updateCurrentProvider: (provider: ChatProvider) => {
     set(
-      (state) => ({
-        ...state,
-        currentProvider: provider,
-        providers: {
-          ...state.providers,
-          availableProviders: state.providers?.availableProviders.map(p => 
-            p.id === provider.id ? {...p, isDefault: true} : {...p, isDefault: false}
-          ) || []
+      (state) => {
+        // Log provider change if it's different
+        if (state.currentProvider?.id !== provider.id) {
+          logProviderChange(
+            state.currentProvider?.name, 
+            provider.name
+          );
         }
-      }),
+        
+        return {
+          ...state,
+          currentProvider: provider,
+          providers: {
+            ...state.providers,
+            availableProviders: state.providers?.availableProviders.map(p => 
+              p.id === provider.id ? {...p, isDefault: true} : {...p, isDefault: false}
+            ) || []
+          }
+        };
+      },
       false,
       { type: 'ui/updateCurrentProvider', provider }
     );
