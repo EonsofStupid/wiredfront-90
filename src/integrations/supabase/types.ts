@@ -710,45 +710,6 @@ export type Database = {
         }
         Relationships: []
       }
-      gallery_images: {
-        Row: {
-          created_at: string | null
-          file_path: string
-          id: string
-          message_id: string | null
-          metadata: Json | null
-          prompt: string | null
-          public_url: string | null
-          session_id: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          file_path: string
-          id?: string
-          message_id?: string | null
-          metadata?: Json | null
-          prompt?: string | null
-          public_url?: string | null
-          session_id?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          file_path?: string
-          id?: string
-          message_id?: string | null
-          metadata?: Json | null
-          prompt?: string | null
-          public_url?: string | null
-          session_id?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       github_connection_status: {
         Row: {
           connection_id: string | null
@@ -2147,7 +2108,7 @@ export type Database = {
         | "error"
         | "pending"
       message_behavior_type: "enter_send" | "ctrl_enter"
-      message_type: "text" | "command" | "system" | "image"
+      message_type: "text" | "command" | "system"
       message_validation_status: "pending" | "valid" | "invalid"
       metric_status: "success" | "warning" | "error"
       metric_timeframe: "daily" | "weekly" | "monthly" | "yearly"

@@ -1,5 +1,4 @@
-
-export type MessageType = "text" | "command" | "system" | "image";
+export type MessageType = "text" | "command" | "system";
 export type SettingType = "string" | "number" | "boolean" | "json" | "array";
 
 export interface Enums {

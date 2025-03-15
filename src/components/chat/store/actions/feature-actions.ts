@@ -1,6 +1,6 @@
 
 import { StateCreator } from 'zustand';
-import { ChatMode, ChatState, ChatProvider } from "../types/chat-store-types";
+import { ChatState, ChatProvider } from "../types/chat-store-types";
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 
@@ -13,13 +13,11 @@ export type FeatureActions = {
   disableFeature: (feature: FeatureKey) => void;
   setFeatureState: (feature: FeatureKey, isEnabled: boolean) => void;
   updateChatProvider: (providers: ChatProvider[]) => void;
-  updateCurrentProvider: (provider: ChatProvider) => void;
-  updateAvailableProviders: (providers: ChatProvider[]) => void;
 };
 
 type StoreWithDevtools = StateCreator<
   ChatState,
-  [["zustand/devtools", never], ["zustand/persist", unknown]],
+  [["zustand/devtools", never]],
   [],
   FeatureActions
 >;
@@ -159,39 +157,6 @@ export const createFeatureActions: StoreWithDevtools = (set, get) => ({
       },
       false,
       { type: 'providers/update', count: providers.length }
-    ),
-    
-  updateCurrentProvider: (provider) =>
-    set(
-      (state) => {
-        // If the provider is changing, log it
-        if (state.currentProvider?.id !== provider.id) {
-          logProviderChange(state.currentProvider?.name, provider.name);
-        }
-        
-        return {
-          ...state,
-          currentProvider: provider,
-        };
-      },
-      false,
-      { type: 'providers/setCurrent', providerId: provider.id }
-    ),
-    
-  updateAvailableProviders: (providers) =>
-    set(
-      (state) => {
-        return {
-          ...state,
-          availableProviders: providers,
-          providers: {
-            ...state.providers,
-            availableProviders: providers,
-          },
-        };
-      },
-      false,
-      { type: 'providers/setAvailable', count: providers.length }
     ),
 });
 

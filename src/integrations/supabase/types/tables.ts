@@ -1,3 +1,4 @@
+
 import { Json } from './database';
 import { MessageType, SettingType } from './enums';
 
@@ -161,44 +162,6 @@ export interface Tables {
       user_id?: string | null;
       setting_id?: string | null;
       value?: Json;
-      created_at?: string | null;
-      updated_at?: string | null;
-    };
-  };
-  gallery_images: {
-    Row: {
-      id: string;
-      user_id: string;
-      file_path: string;
-      public_url: string | null;
-      prompt: string | null;
-      message_id: string | null;
-      session_id: string | null;
-      metadata: Json | null;
-      created_at: string | null;
-      updated_at: string | null;
-    };
-    Insert: {
-      id?: string;
-      user_id: string;
-      file_path: string;
-      public_url?: string | null;
-      prompt?: string | null;
-      message_id?: string | null;
-      session_id?: string | null;
-      metadata?: Json | null;
-      created_at?: string | null;
-      updated_at?: string | null;
-    };
-    Update: {
-      id?: string;
-      user_id?: string;
-      file_path?: string;
-      public_url?: string | null;
-      prompt?: string | null;
-      message_id?: string | null;
-      session_id?: string | null;
-      metadata?: Json | null;
       created_at?: string | null;
       updated_at?: string | null;
     };
