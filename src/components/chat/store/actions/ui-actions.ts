@@ -1,8 +1,8 @@
 
-import { SetState } from 'zustand';
-import { ChatState, ChatProvider } from '../types/chat-store-types';
+import { StateCreator } from 'zustand';
+import { ChatState, ChatProvider, ChatPosition } from '../types/chat-store-types';
 
-export const createUIActions = (set: SetState<ChatState>) => ({
+export const createUIActions = (set: StateCreator<ChatState>) => ({
   toggleMinimize: () => {
     set((state) => ({
       isMinimized: !state.isMinimized,
@@ -16,6 +16,24 @@ export const createUIActions = (set: SetState<ChatState>) => ({
   toggleChat: () => {
     set((state) => ({
       isOpen: !state.isOpen,
+    }));
+  },
+  // Add position toggling functionality
+  togglePosition: () => {
+    set((state) => {
+      if (typeof state.position === 'string') {
+        const positions: ChatPosition[] = ['bottom-right', 'bottom-left', 'top-right', 'top-left'];
+        const currentIndex = positions.indexOf(state.position as ChatPosition);
+        const nextIndex = (currentIndex + 1) % positions.length;
+        return { position: positions[nextIndex] };
+      }
+      return { position: 'bottom-right' };
+    });
+  },
+  // Add docking toggle functionality
+  toggleDocked: () => {
+    set((state) => ({
+      docked: !state.docked
     }));
   },
   setSessionLoading: (isLoading: boolean) => {

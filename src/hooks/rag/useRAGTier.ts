@@ -61,11 +61,37 @@ export function useRAGTier() {
     }
   };
   
+  // Add the missing migrateProjectToPremium method
+  const migrateProjectToPremium = async (projectId: string) => {
+    setIsUpgrading(true);
+    try {
+      const success = await RAGTierService.migrateProjectToPremium(projectId);
+      
+      if (success) {
+        setIsPremiumAvailable(true);
+        toast.success("Project successfully migrated to premium RAG tier");
+        logger.info(`Project ${projectId} migrated to premium RAG tier`);
+      } else {
+        toast.error("Failed to migrate project to premium RAG tier");
+        logger.error(`Failed to migrate project ${projectId} to premium RAG tier`);
+      }
+      
+      return success;
+    } catch (error) {
+      logger.error(`Error migrating project ${projectId} to premium RAG tier:`, error);
+      toast.error("Error migrating project to premium RAG tier");
+      return false;
+    } finally {
+      setIsUpgrading(false);
+    }
+  };
+  
   return {
     isPremiumAvailable,
     isUpgrading,
     checkPremiumStatus,
     upgradeToRagPremium,
-    checkMigrationStatus
+    checkMigrationStatus,
+    migrateProjectToPremium
   };
 }
