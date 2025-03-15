@@ -35,6 +35,10 @@ export function ChatImageThumbnail({
       const res = await fetch(imageUrl);
       const blob = await res.blob();
       
+      // Get user info
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) throw new Error('User not authenticated');
+      
       // Generate filename
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const shortPrompt = prompt ? prompt.slice(0, 20).replace(/[^a-zA-Z0-9]/g, '_') : 'image';
@@ -54,20 +58,25 @@ export function ChatImageThumbnail({
       const { data: urlData } = supabase.storage
         .from('gallery')
         .getPublicUrl(`user_images/${filename}`);
-        
-      // Save metadata to database
-      await supabase.from('gallery_images').insert({
-        file_path: data.path,
-        public_url: urlData.publicUrl,
-        prompt: prompt,
-        message_id: messageId,
-        session_id: currentSession?.id,
-        metadata: {
-          originalSource: 'chat',
-          size: blob.size,
-          type: blob.type
-        }
-      });
+      
+      // Insert into gallery_images table
+      const { error: insertError } = await supabase
+        .from('gallery_images')
+        .insert({
+          user_id: userData.user.id,
+          file_path: data.path,
+          public_url: urlData.publicUrl,
+          prompt: prompt,
+          message_id: messageId,
+          session_id: currentSession?.id,
+          metadata: {
+            originalSource: 'chat',
+            size: blob.size,
+            type: blob.type
+          }
+        });
+      
+      if (insertError) throw insertError;
       
       setIsSaved(true);
       toast.success('Image saved to gallery');

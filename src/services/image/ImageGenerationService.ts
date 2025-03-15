@@ -83,7 +83,7 @@ export class ImageGenerationService {
       const messageId = uuidv4();
       const timestamp = new Date().toISOString();
       
-      // Insert message record
+      // Insert message record with type 'image' which we've added to our DB enum
       const { error } = await supabase.from('messages').insert({
         id: messageId,
         content: prompt,
@@ -159,19 +159,24 @@ export class ImageGenerationService {
         .from('gallery')
         .getPublicUrl(`user_images/${filename}`);
         
-      // Save metadata to database
-      await supabase.from('gallery_images').insert({
-        file_path: data.path,
-        public_url: urlData.publicUrl,
-        prompt: prompt,
-        message_id: messageId,
-        session_id: currentSession?.id,
-        metadata: {
-          originalSource: 'chat',
-          size: blob.size,
-          type: blob.type
-        }
-      });
+      // Save metadata to our new gallery_images table
+      const { error: insertError } = await supabase
+        .from('gallery_images')
+        .insert({
+          file_path: data.path,
+          public_url: urlData.publicUrl,
+          prompt: prompt,
+          message_id: messageId,
+          session_id: currentSession?.id,
+          user_id: userData.user.id,
+          metadata: {
+            originalSource: 'chat',
+            size: blob.size,
+            type: blob.type
+          }
+        });
+        
+      if (insertError) throw insertError;
       
       logger.info('Image saved to gallery', { prompt });
       
