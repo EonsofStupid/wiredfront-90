@@ -59,9 +59,10 @@ const initialState: ChatState = {
   },
 };
 
+// Fix the devtools middleware implementation by properly defining the generic types
 export const useChatStore = create<FullChatStore>()(
   devtools(
-    (set, get) => ({
+    (set, get, api) => ({
       ...initialState,
       ...createInitializationActions(set, get),
       ...createFeatureActions(set),

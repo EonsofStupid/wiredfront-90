@@ -1,5 +1,6 @@
 
-import { ChatProvider } from "../types/chat-store-types";
+import { StateCreator } from 'zustand';
+import { ChatState, ChatProvider } from "../types/chat-store-types";
 
 export type FeatureKey = 'voice' | 'rag' | 'modeSwitch' | 'notifications' | 'github' | 
                          'codeAssistant' | 'ragSupport' | 'githubSync';
@@ -12,10 +13,15 @@ export type FeatureActions = {
   updateChatProvider: (providers: ChatProvider[]) => void;
 };
 
-export const createFeatureActions = (set: any): FeatureActions => ({
+export const createFeatureActions: StateCreator<
+  ChatState,
+  [],
+  [],
+  FeatureActions
+> = (set, get, api) => ({
   toggleFeature: (feature) =>
     set(
-      (state: any) => ({
+      (state) => ({
         features: {
           ...state.features,
           [feature]: !state.features[feature],
@@ -27,7 +33,7 @@ export const createFeatureActions = (set: any): FeatureActions => ({
 
   enableFeature: (feature) =>
     set(
-      (state: any) => ({
+      (state) => ({
         features: {
           ...state.features,
           [feature]: true,
@@ -39,7 +45,7 @@ export const createFeatureActions = (set: any): FeatureActions => ({
 
   disableFeature: (feature) =>
     set(
-      (state: any) => ({
+      (state) => ({
         features: {
           ...state.features,
           [feature]: false,
@@ -51,7 +57,7 @@ export const createFeatureActions = (set: any): FeatureActions => ({
 
   setFeatureState: (feature, isEnabled) =>
     set(
-      (state: any) => ({
+      (state) => ({
         features: {
           ...state.features,
           [feature]: isEnabled,
@@ -64,7 +70,7 @@ export const createFeatureActions = (set: any): FeatureActions => ({
   // Update available chat providers
   updateChatProvider: (providers) =>
     set(
-      (state: any) => ({
+      (state) => ({
         availableProviders: providers,
         currentProvider: providers.find((p: ChatProvider) => p.isDefault) || providers[0] || state.currentProvider,
       }),

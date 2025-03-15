@@ -17,7 +17,12 @@ export interface UISlice {
   updateAvailableProviders: (providers: ChatProvider[]) => void;
 }
 
-export const createUIActions: StateCreator<ChatState, [], [], UISlice> = (set) => ({
+export const createUIActions: StateCreator<
+  ChatState, 
+  [], 
+  [], 
+  UISlice
+> = (set, get, api) => ({
   toggleMinimize: () => {
     set((state) => ({
       isMinimized: !state.isMinimized,

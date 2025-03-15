@@ -1,8 +1,18 @@
 
+import { StateCreator } from 'zustand';
 import { logger } from '@/services/chat/LoggingService';
 import { ChatState } from '../types/chat-store-types';
 
-export const createInitializationActions = (set: Function, get: Function) => ({
+export interface InitializationActions {
+  initializeChatSettings: () => void;
+}
+
+export const createInitializationActions: StateCreator<
+  ChatState,
+  [],
+  [],
+  InitializationActions
+> = (set, get, api) => ({
   initializeChatSettings: () => {
     const state = get();
     if (state.isInitialized) return;
