@@ -1,39 +1,43 @@
 
 import { toast } from "sonner";
 import { logger } from "@/services/chat/LoggingService";
+import { RouteLoggingService } from "./RouteLoggingService";
 
 /**
- * NavigationService provides a safe way to navigate in the application
- * regardless of the underlying router implementation (Next.js, React Router, etc.)
+ * NavigationService provides a centralized way to navigate in the application
+ * and logs navigation events for analytics and debugging
  */
 export const NavigationService = {
   /**
-   * Navigate to a settings page with the specified tab
+   * Navigate using the provided navigate function from useNavigate
    */
-  navigateToSettings: (section: string): void => {
+  navigate: (navigate: Function, to: string, options?: any): void => {
     try {
-      // Since we might be in different router contexts (Next.js or React Router)
-      // we'll use a safe approach that falls back to direct URL navigation
-      const url = `/settings?tab=${section}`;
+      // Capture previous route
+      const from = window.location.pathname + window.location.search;
       
-      // Try to use history API first (works in both contexts)
-      if (typeof window !== 'undefined' && window.history) {
-        window.history.pushState({}, '', url);
-        // Dispatch a popstate event to notify router
-        window.dispatchEvent(new PopStateEvent('popstate'));
-        return;
-      }
+      // Perform navigation
+      navigate(to, options);
       
-      // Fallback to direct location change
-      window.location.href = url;
+      // Log the navigation event
+      RouteLoggingService.logRouteChange(from, to);
     } catch (error) {
       logger.error("Navigation error:", error);
       toast.error("Navigation failed. Please try again.");
-      
-      // Final fallback
-      if (typeof window !== 'undefined') {
-        window.location.href = `/settings?tab=${section}`;
-      }
+    }
+  },
+  
+  /**
+   * Navigate to a settings page with the specified tab
+   * For use within component hooks where navigate is available
+   */
+  navigateToSettings: (navigate: Function, section: string): void => {
+    try {
+      const to = `/settings?tab=${section}`;
+      NavigationService.navigate(navigate, to);
+    } catch (error) {
+      logger.error("Settings navigation error:", error);
+      toast.error("Failed to navigate to settings");
     }
   },
   
@@ -52,72 +56,39 @@ export const NavigationService = {
   /**
    * Navigate to a project view
    */
-  navigateToProject: (projectId: string, tab: string = 'overview'): void => {
+  navigateToProject: (navigate: Function, projectId: string, tab: string = 'overview'): void => {
     try {
-      const url = `/projects/${projectId}?tab=${tab}`;
-      
-      if (typeof window !== 'undefined' && window.history) {
-        window.history.pushState({}, '', url);
-        window.dispatchEvent(new PopStateEvent('popstate'));
-        return;
-      }
-      
-      window.location.href = url;
+      const to = `/projects/${projectId}?tab=${tab}`;
+      NavigationService.navigate(navigate, to);
     } catch (error) {
       logger.error("Project navigation error:", error);
       toast.error("Failed to navigate to project");
-      
-      if (typeof window !== 'undefined') {
-        window.location.href = `/projects`;
-      }
     }
   },
 
   /**
    * Navigate to RAG management 
    */
-  navigateToRAG: (projectId?: string): void => {
+  navigateToRAG: (navigate: Function, projectId?: string): void => {
     try {
-      const url = projectId ? `/rag?projectId=${projectId}` : '/rag';
-      
-      if (typeof window !== 'undefined' && window.history) {
-        window.history.pushState({}, '', url);
-        window.dispatchEvent(new PopStateEvent('popstate'));
-        return;
-      }
-      
-      window.location.href = url;
+      const to = projectId ? `/rag?projectId=${projectId}` : '/rag';
+      NavigationService.navigate(navigate, to);
     } catch (error) {
       logger.error("RAG navigation error:", error);
       toast.error("Failed to navigate to RAG management");
-      
-      if (typeof window !== 'undefined') {
-        window.location.href = '/rag';
-      }
     }
   },
 
   /**
    * Navigate to GitHub integration page
    */
-  navigateToGitHub: (section: string = 'repositories'): void => {
+  navigateToGitHub: (navigate: Function, section: string = 'repositories'): void => {
     try {
-      const url = `/github?section=${section}`;
-      
-      if (typeof window !== 'undefined' && window.history) {
-        window.history.pushState({}, '', url);
-        window.dispatchEvent(new PopStateEvent('popstate'));
-        return;
-      }
-      
-      window.location.href = url;
+      const to = `/github?section=${section}`;
+      NavigationService.navigate(navigate, to);
     } catch (error) {
       logger.error("GitHub navigation error:", error);
       toast.error("Failed to navigate to GitHub page");
-      
-      if (typeof window !== 'undefined') {
-        window.location.href = '/github';
-      }
     }
   }
 };

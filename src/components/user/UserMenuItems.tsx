@@ -11,6 +11,7 @@ import { useRoleStore, getRoleDisplayName } from "@/stores/role";
 import { LayoutDashboard, Settings, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import styles from "./styles/UserMenu.module.css";
+import { NavigationService } from "@/services/navigation/NavigationService";
 
 interface UserMenuItemsProps {
   user: any | null;
@@ -43,7 +44,7 @@ export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
   if (!user) {
     return (
       <DropdownMenuItem 
-        onClick={() => navigate('/login')}
+        onClick={() => NavigationService.navigate(navigate, '/login')}
         className={styles.menuItem}
       >
         Login
@@ -75,7 +76,7 @@ export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
           `cursor-pointer flex items-center gap-2 ${styles.menuItem}`,
           isCurrentPath('/dashboard') && `${styles.menuItemActive}`
         )}
-        onClick={() => navigate('/dashboard')}
+        onClick={() => NavigationService.navigate(navigate, '/dashboard')}
         data-text="Dashboard"
       >
         <LayoutDashboard className="h-4 w-4" />
@@ -86,7 +87,7 @@ export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
           `cursor-pointer flex items-center gap-2 ${styles.menuItem}`,
           isCurrentPath('/settings') && `${styles.menuItemActive}`
         )}
-        onClick={() => navigate('/settings')}
+        onClick={() => NavigationService.navigate(navigate, '/settings')}
         data-text="Settings"
       >
         <Settings className="h-4 w-4" />
@@ -98,7 +99,7 @@ export const UserMenuItems = ({ user, onLogout }: UserMenuItemsProps) => {
             `cursor-pointer flex items-center gap-2 ${styles.menuItem} ${styles.adminMenuItem}`,
             location.pathname.startsWith('/admin') && `${styles.menuItemActive}`
           )}
-          onClick={() => navigate('/admin')}
+          onClick={() => NavigationService.navigate(navigate, '/admin')}
           data-text="Admin Dashboard"
         >
           <Shield className="h-4 w-4" />

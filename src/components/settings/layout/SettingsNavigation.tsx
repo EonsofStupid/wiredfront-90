@@ -1,3 +1,4 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface SettingsTab {
@@ -9,12 +10,28 @@ interface SettingsTab {
 interface SettingsNavigationProps {
   tabs: SettingsTab[];
   defaultValue?: string;
+  onTabChange?: (value: string) => void;
 }
 
-export function SettingsNavigation({ tabs, defaultValue = "general" }: SettingsNavigationProps) {
+export function SettingsNavigation({ 
+  tabs, 
+  defaultValue = "general",
+  onTabChange
+}: SettingsNavigationProps) {
+  const handleValueChange = (value: string) => {
+    if (onTabChange) {
+      onTabChange(value);
+    }
+  };
+
   return (
-    <Tabs defaultValue={defaultValue} className="w-full">
-      <TabsList>
+    <Tabs 
+      defaultValue={defaultValue} 
+      value={defaultValue}
+      onValueChange={handleValueChange}
+      className="w-full"
+    >
+      <TabsList className="grid grid-cols-6">
         {tabs.map((tab) => (
           <TabsTrigger key={tab.value} value={tab.value}>
             {tab.label}

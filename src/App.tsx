@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { Toaster } from "sonner";
@@ -36,7 +35,10 @@ import { FeatureManagementPanel } from "@/components/admin/features/FeatureManag
 import { UsageMonitoringPanel } from "@/components/admin/analytics/UsageMonitoringPanel";
 import { SubscriptionManagementPanel } from "@/components/admin/subscriptions/SubscriptionManagementPanel";
 import { EnhancedSystemSettingsPanel } from "@/components/admin/settings/EnhancedSystemSettingsPanel";
+import SystemLogsPage from "./pages/admin/SystemLogs";
+import NavigationLogsPage from "./pages/admin/NavigationLogs";
 import MobileExperience from "./mobile";
+import { RouteLoggingService } from "./services/navigation/RouteLoggingService";
 
 const PROTECTED_ROUTES = [
   '/dashboard', 
@@ -73,7 +75,9 @@ const ADMIN_ROUTES = [
   '/admin/customers',
   '/admin/feature-management',
   '/admin/usage-analytics',
-  '/admin/subscriptions'
+  '/admin/subscriptions',
+  '/admin/logs/system',
+  '/admin/logs/navigation'
 ];
 
 const App = () => {
@@ -104,7 +108,16 @@ const App = () => {
     handleAuth();
   }, [isAuthenticated, location.pathname, navigate]);
 
-  // If on mobile, render the mobile experience
+  useEffect(() => {
+    const cleanPath = location.pathname + location.search;
+    const storedPath = sessionStorage.getItem('currentPath');
+    
+    if (storedPath !== cleanPath) {
+      RouteLoggingService.logRouteChange(storedPath || 'initial', cleanPath);
+      sessionStorage.setItem('currentPath', cleanPath);
+    }
+  }, [location.pathname, location.search]);
+
   if (isMobile) {
     return (
       <ChatProvider>
@@ -156,6 +169,8 @@ const App = () => {
             <Route path="/admin/settings/chat-features" element={<ChatFeatureSettings />} />
             <Route path="/admin/settings/live-preview" element={<LivePreviewSettings />} />
             <Route path="/admin/settings/feature-flags" element={<FeatureFlagsPage />} />
+            <Route path="/admin/logs/system" element={<SystemLogsPage />} />
+            <Route path="/admin/logs/navigation" element={<NavigationLogsPage />} />
             <Route path="/admin/users" element={<div>Users Management</div>} />
             <Route path="/admin/customers" element={<CustomerManagementPanel />} />
             <Route path="/admin/feature-management" element={<FeatureManagementPanel />} />

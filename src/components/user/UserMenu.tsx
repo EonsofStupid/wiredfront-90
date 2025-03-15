@@ -10,6 +10,7 @@ import {
 import { UserMenuItems } from "./UserMenuItems";
 import { UserMenuTrigger } from "./UserMenuTrigger";
 import { useAuthStore } from "@/stores/auth";
+import { NavigationService } from "@/services/navigation/NavigationService";
 import styles from "./styles/UserMenu.module.css";
 
 export const UserMenu = () => {
@@ -19,7 +20,8 @@ export const UserMenu = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/login');
+      NavigationService.navigate(navigate, '/login');
+      toast.success('Successfully logged out');
     } catch (error) {
       toast.error('Error logging out');
     }
