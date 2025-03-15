@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/services/chat/LoggingService";
 import { toast } from "sonner";
 import { RAGTier } from "./types";
+import { RAGMetricsService } from "./RAGMetricsService";
 
 export class RAGTierService {
   /**

@@ -1,5 +1,5 @@
 
-import { RAGService, RAGTier } from "@/services/rag/RAGService";
+import { RAGTier } from "@/services/rag/types";
 
 /**
  * Utility functions for RAG operations
