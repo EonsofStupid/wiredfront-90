@@ -1,11 +1,13 @@
+
 import { StateCreator } from 'zustand';
 import { ChatState, ChatProvider } from "../types/chat-store-types";
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
-import { FeatureKey } from '@/types/admin/settings/feature-flags';
+import { KnownFeatureFlag } from '@/types/admin/settings/feature-flags';
 
-export type { FeatureKey };
+// Export KnownFeatureFlag as FeatureKey for usage throughout the application
+export type FeatureKey = KnownFeatureFlag;
 
 export type FeatureActions = {
   toggleFeature: (feature: FeatureKey) => void;

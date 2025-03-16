@@ -6,9 +6,10 @@ import { logger } from "@/services/chat/LoggingService";
 import { useFeatureFlag } from "./useFeatureFlag";
 import { toast } from "sonner";
 import { KnownFeatureFlag } from "@/types/admin/settings/feature-flags";
+import { FeatureKey } from "@/components/chat/store/actions/feature-actions";
 
-// Export the type alias for use throughout the application
-export type FeatureKey = KnownFeatureFlag;
+// Export is now handled by re-exporting from feature-actions.ts
+// export type FeatureKey = KnownFeatureFlag;
 
 export function useFeatureFlags() {
   const { features, toggleFeature, enableFeature, disableFeature, setFeatureState } = useChatStore();

@@ -3,7 +3,7 @@ import React from 'react';
 import { useAuthStore } from '@/stores/auth';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { useRouter } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface TokenAuthGuardProps {
   children: React.ReactNode;
@@ -11,10 +11,10 @@ interface TokenAuthGuardProps {
 }
 
 export function TokenAuthGuard({ children, fallback }: TokenAuthGuardProps) {
-  const { user, isLoading } = useAuthStore();
-  const router = useRouter();
+  const { user, loading } = useAuthStore();
+  const navigate = useNavigate();
   
-  if (isLoading) {
+  if (loading) {
     return <div className="animate-pulse h-4 w-24 bg-muted rounded" />;
   }
   
@@ -31,7 +31,7 @@ export function TokenAuthGuard({ children, fallback }: TokenAuthGuardProps) {
           <Button 
             size="sm" 
             variant="outline" 
-            onClick={() => router.navigate('/login')}
+            onClick={() => navigate('/login')}
           >
             Log In
           </Button>
