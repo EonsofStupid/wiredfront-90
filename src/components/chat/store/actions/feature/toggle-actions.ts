@@ -1,12 +1,17 @@
 
-import { StoreWithDevtools, FeatureKey } from './types';
+import { StateCreator } from 'zustand';
+import { ChatState } from '../../types/chat-store-types';
+import { StoreWithDevtools, FeatureKey, FeatureActions } from './types';
 import { logFeatureToggle, logProviderChange } from './helpers';
 
 // Feature toggle and provider actions
-export const createToggleActions = (set: any, get: any) => ({
+export const createToggleActions = (
+  set: StateCreator<ChatState>['setState'],
+  get: StateCreator<ChatState>['getState']
+): Pick<FeatureActions, 'toggleFeature' | 'enableFeature' | 'disableFeature' | 'setFeatureState' | 'updateChatProvider'> => ({
   toggleFeature: (feature: FeatureKey) =>
     set(
-      (state: any) => {
+      (state: ChatState) => {
         const newValue = !state.features[feature];
         
         // Log the change to the database
@@ -26,7 +31,7 @@ export const createToggleActions = (set: any, get: any) => ({
 
   enableFeature: (feature: FeatureKey) =>
     set(
-      (state: any) => {
+      (state: ChatState) => {
         // Only log if the feature wasn't already enabled
         if (!state.features[feature]) {
           logFeatureToggle(feature, state.features[feature], true);
@@ -46,7 +51,7 @@ export const createToggleActions = (set: any, get: any) => ({
 
   disableFeature: (feature: FeatureKey) =>
     set(
-      (state: any) => {
+      (state: ChatState) => {
         // Only log if the feature wasn't already disabled
         if (state.features[feature]) {
           logFeatureToggle(feature, state.features[feature], false);
@@ -66,7 +71,7 @@ export const createToggleActions = (set: any, get: any) => ({
 
   setFeatureState: (feature: FeatureKey, isEnabled: boolean) =>
     set(
-      (state: any) => {
+      (state: ChatState) => {
         // Only log if there's an actual change
         if (state.features[feature] !== isEnabled) {
           logFeatureToggle(feature, state.features[feature], isEnabled);
@@ -84,10 +89,10 @@ export const createToggleActions = (set: any, get: any) => ({
       { type: 'features/setState', feature, isEnabled }
     ),
 
-  updateChatProvider: (providers: any) =>
+  updateChatProvider: (providers: ChatState['availableProviders']) =>
     set(
-      (state: any) => {
-        const newDefaultProvider = providers.find((p: any) => p.isDefault) || providers[0] || state.currentProvider;
+      (state: ChatState) => {
+        const newDefaultProvider = providers.find((p) => p.isDefault) || providers[0] || state.currentProvider;
         
         // If the provider is changing, log it
         if (state.currentProvider?.id !== newDefaultProvider?.id) {

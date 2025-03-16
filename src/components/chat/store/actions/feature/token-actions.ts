@@ -4,7 +4,7 @@ import { logger } from '@/services/chat/LoggingService';
 import { StoreWithDevtools, FeatureActions } from './types';
 import { ChatState } from '../../types/chat-store-types';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
-import { StoreApi, SetState, GetState } from 'zustand';
+import { StateCreator } from 'zustand';
 
 // Helper function to update user token balance
 export const updateUserTokens = async (userId: string, amount: number): Promise<boolean> => {
@@ -90,8 +90,8 @@ export const logTokenTransaction = async (
 
 // Token management actions
 export const createTokenActions = (
-  set: SetState<ChatState>, 
-  get: GetState<ChatState>
+  set: StateCreator<ChatState>['setState'], 
+  get: StateCreator<ChatState>['getState']
 ): Pick<FeatureActions, 'setTokenEnforcementMode' | 'addTokens' | 'spendTokens' | 'setTokenBalance'> => ({
   setTokenEnforcementMode: (mode: TokenEnforcementMode) =>
     set(
