@@ -11,14 +11,13 @@ export function useProjectActions() {
   const {
     createProject,
     setActiveProject,
-    deleteProject
+    deleteProject,
+    projects
   } = useProjects();
   
   const handleAddProject = async () => {
     try {
       logger.info("New project button clicked");
-      
-      const { projects } = useProjects.getState();
       
       const projectData: ProjectCreateDTO = {
         name: `New Project ${(projects?.length || 0) + 1}`,

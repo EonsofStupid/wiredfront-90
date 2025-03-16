@@ -1,12 +1,11 @@
 
 import { useState } from 'react';
-import { useChatStore } from '@/components/chat/store/chatStore';
+import { useChatStore } from '@/components/chat/store';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 
 export const useMessageAPI = () => {
   // Access the specific functions we need from the store
-  // Use the correct store methods with proper type checking
   const addMessage = useChatStore((state) => state.addMessage);
   const isWaitingForResponse = useChatStore(state => state.isWaitingForResponse);
   const [isLoading, setIsLoading] = useState(false);

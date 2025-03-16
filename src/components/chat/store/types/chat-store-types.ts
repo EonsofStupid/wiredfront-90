@@ -107,4 +107,3 @@ export type SetState<T> = (
 ) => void;
 
 export type GetState<T> = () => T;
-
