@@ -4,7 +4,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { ChatState, ProviderCategory } from '../types/chat-store-types';
 
 export const createInitializationActions = (
-  set: StateCreator<ChatState>['setState'],
+  set: (
+    partial: ChatState | Partial<ChatState> | ((state: ChatState) => ChatState | Partial<ChatState>), 
+    replace?: boolean, 
+    action?: { type: string; [key: string]: any }
+  ) => void,
   get: () => ChatState
 ) => ({
   initializeChatSettings: () => {

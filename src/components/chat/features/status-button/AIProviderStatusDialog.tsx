@@ -1,279 +1,157 @@
-import React, { useState, useEffect } from 'react';
-import {
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+
+import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Bot, Check, RefreshCw, History } from 'lucide-react';
-import { useAIProviders } from '@/hooks/chat/useAIProviders';
-import { ChatProvider } from '@/components/chat/store/types/chat-store-types';
-import { logger } from '@/services/chat/LoggingService';
-import { AIProviderService } from '@/services/chat/AIProviderService';
-import { toast } from 'sonner';
-import { useProviderChanges } from '@/hooks/useProviderChanges';
-import { formatDistanceToNow } from 'date-fns';
+import { CheckCircle2, XCircle, AlertTriangle, CloudOff } from 'lucide-react';
+import { ProviderCategory } from '@/components/chat/store/types/chat-store-types';
 
-type ProviderType = 'openai' | 'anthropic' | 'gemini' | 'huggingface' | 'pinecone' | 
-  'weaviate' | 'openrouter' | 'replicate' | 'sonnet' | 'elevenlabs' | 'whisper' | 'github';
+interface AIProviderStatusDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  providers: ProviderCategory[];
+  currentProvider: ProviderCategory | null;
+}
 
-export function AIProviderStatusDialog() {
-  const { providers, selectedProvider, isLoading, refreshProviders } = useAIProviders();
-  const { 
-    changeProvider, 
-    isChanging, 
-    changeHistory, 
-    isLoadingHistory, 
-    fetchProviderChanges, 
-    rollbackToProvider 
-  } = useProviderChanges();
-  const [testingProvider, setTestingProvider] = useState<string | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      refreshProviders();
-      fetchProviderChanges();
-    }
-  }, [isOpen, refreshProviders, fetchProviderChanges]);
-
-  const handleProviderSelect = async (providerId: string) => {
-    try {
-      const success = await changeProvider(providerId);
-      if (success) {
-        toast.success("AI provider updated successfully");
-        logger.info("AI provider changed", { id: providerId });
-      } else {
-        toast.error("Failed to update AI provider");
-      }
-    } catch (error) {
-      toast.error("Failed to update AI provider");
-      logger.error("Error changing AI provider", error);
-    }
-  };
-
-  const handleRollback = async (historyEntryId: string) => {
-    try {
-      const success = await rollbackToProvider(historyEntryId);
-      if (success) {
-        toast.success("Successfully rolled back to previous provider");
-        refreshProviders();
-      } else {
-        toast.error("Failed to roll back provider");
-      }
-    } catch (error) {
-      toast.error("Error rolling back provider");
-      logger.error("Error rolling back provider", error);
-    }
-  };
-
-  const testProviderConnection = async (providerId: string) => {
-    setTestingProvider(providerId);
-    try {
-      const result = await AIProviderService.testProviderConnection(providerId);
-      if (result.success) {
-        toast.success(`Connection to provider successful: ${result.message}`);
-      } else {
-        toast.error(`Connection failed: ${result.message}`);
-      }
-      logger.info("Provider connection test", { id: providerId, success: result.success });
-    } catch (error) {
-      toast.error("Error testing provider connection");
-      logger.error("Error testing provider connection", error);
-    } finally {
-      setTestingProvider(null);
-    }
-  };
-
-  const groupedProviders = providers.reduce<Record<ProviderType, ChatProvider[]>>((acc, provider) => {
-    const type = provider.type as ProviderType;
-    if (!acc[type]) {
-      acc[type] = [];
-    }
-    acc[type].push(provider);
-    return acc;
-  }, {} as Record<ProviderType, ChatProvider[]>);
-
-  const getProviderTypeDisplayName = (type: ProviderType): string => {
-    const displayNames: Record<ProviderType, string> = {
-      'openai': 'OpenAI',
-      'anthropic': 'Anthropic',
-      'gemini': 'Google Gemini',
-      'huggingface': 'Hugging Face',
-      'pinecone': 'Pinecone',
-      'weaviate': 'Weaviate',
-      'openrouter': 'OpenRouter',
-      'replicate': 'Replicate',
-      'sonnet': 'Adept Sonnet',
-      'elevenlabs': 'Eleven Labs',
-      'whisper': 'Whisper',
-      'github': 'GitHub'
-    };
-    return displayNames[type] || type.charAt(0).toUpperCase() + type.slice(1);
-  };
-
+export function AIProviderStatusDialog({ 
+  open, 
+  onOpenChange, 
+  providers, 
+  currentProvider 
+}: AIProviderStatusDialogProps) {
   return (
-    <DialogContent className="chat-dialog-content max-w-2xl">
-      <DialogHeader>
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-2">
-            <Bot className="h-5 w-5" />
-            <DialogTitle>AI Provider Settings</DialogTitle>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="chat-glass-card border-0 max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold text-white">
+            AI Provider Status
+          </DialogTitle>
+        </DialogHeader>
+        
+        <ScrollArea className="max-h-[60vh] px-1">
+          <div className="space-y-4 my-4">
+            {providers.length === 0 ? (
+              <div className="p-8 text-center rounded-lg border border-white/10 bg-black/20">
+                <CloudOff className="h-10 w-10 mx-auto text-white/40 mb-3" />
+                <h3 className="text-lg font-medium text-white">No Providers Available</h3>
+                <p className="text-sm text-white/60 mt-2">
+                  No AI providers have been configured yet. Set up your API keys in settings.
+                </p>
+              </div>
+            ) : (
+              providers.map(provider => (
+                <ProviderStatusCard 
+                  key={provider.id} 
+                  provider={provider} 
+                  isActive={currentProvider?.id === provider.id} 
+                />
+              ))
+            )}
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setShowHistory(!showHistory)}
-          >
-            <History className="h-4 w-4 mr-2" />
-            {showHistory ? 'Hide History' : 'Show History'}
-          </Button>
-        </div>
-        <DialogDescription>
-          Select which AI provider to use for chat, code, and image generation
-        </DialogDescription>
-      </DialogHeader>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
-      {!showHistory ? (
-        <div className="max-h-[60vh] overflow-y-auto pr-2">
-          {isLoading ? (
-            <div className="flex items-center justify-center p-8">
-              <RefreshCw className="h-6 w-6 animate-spin" />
-              <span className="ml-2">Loading providers...</span>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {Object.entries(groupedProviders).map(([type, typeProviders]) => (
-                <div key={type} className="space-y-2">
-                  <h3 className="text-sm font-medium flex items-center gap-1">
-                    {getProviderTypeDisplayName(type as ProviderType)}
-                  </h3>
-                  <div className="grid grid-cols-1 gap-2">
-                    {typeProviders.map(provider => (
-                      <div 
-                        key={provider.id} 
-                        className={`
-                          flex items-center justify-between p-3 rounded-md border 
-                          ${selectedProvider?.id === provider.id ? 'border-primary bg-primary/5' : 'border-border'}
-                          hover:border-primary/50 transition-colors
-                        `}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="bg-primary/10 p-2 rounded-md">
-                            <Bot className="h-4 w-4 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-sm">{provider.name}</p>
-                            <p className="text-xs text-muted-foreground">{type}</p>
-                          </div>
-                          {provider.isDefault && (
-                            <Badge variant="outline" className="ml-2 text-xs">Default</Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => testProviderConnection(provider.id)}
-                            disabled={testingProvider === provider.id}
-                          >
-                            {testingProvider === provider.id ? (
-                              <RefreshCw className="h-3 w-3 animate-spin mr-1" />
-                            ) : (
-                              "Test"
-                            )}
-                          </Button>
-                          <Button
-                            variant={selectedProvider?.id === provider.id ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => handleProviderSelect(provider.id)}
-                            disabled={selectedProvider?.id === provider.id || isChanging}
-                          >
-                            {selectedProvider?.id === provider.id ? (
-                              <>
-                                <Check className="h-3 w-3 mr-1" />
-                                Selected
-                              </>
-                            ) : isChanging ? (
-                              <RefreshCw className="h-3 w-3 animate-spin mr-1" />
-                            ) : (
-                              "Select"
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="max-h-[60vh] overflow-y-auto pr-2">
-          <h3 className="text-sm font-medium mb-4">Provider Change History</h3>
-          {isLoadingHistory ? (
-            <div className="flex items-center justify-center p-8">
-              <RefreshCw className="h-6 w-6 animate-spin" />
-              <span className="ml-2">Loading history...</span>
-            </div>
-          ) : changeHistory.length === 0 ? (
-            <div className="text-center p-6 border rounded-md bg-muted/10">
-              <p className="text-muted-foreground">No provider changes have been recorded yet</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {changeHistory.map(entry => (
-                <div key={entry.id} className="p-3 border rounded-md">
-                  <div className="flex justify-between">
-                    <div>
-                      <p className="text-sm font-medium">
-                        {entry.new_provider} 
-                        <span className="text-xs text-muted-foreground ml-2">
-                          {entry.old_provider ? `(from ${entry.old_provider})` : '(initial)'}
-                        </span>
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(entry.changed_at), { addSuffix: true })}
-                      </p>
-                      {entry.reason && (
-                        <p className="text-xs">
-                          Reason: {entry.reason}
-                        </p>
-                      )}
-                    </div>
-                    {entry.old_provider && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleRollback(entry.id)}
-                        disabled={isChanging}
-                      >
-                        Roll Back
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+interface ProviderStatusCardProps {
+  provider: ProviderCategory;
+  isActive: boolean;
+}
 
-      <DialogFooter>
-        {showHistory ? (
-          <Button onClick={() => setShowHistory(false)}>Back to Providers</Button>
-        ) : (
-          <Button onClick={refreshProviders}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh Providers
-          </Button>
-        )}
-      </DialogFooter>
-    </DialogContent>
+function ProviderStatusCard({ provider, isActive }: ProviderStatusCardProps) {
+  // Mock status for demo - in real app you'd fetch this from the provider's service
+  const mockStatuses = [
+    'operational', 'degraded', 'outage', 'operational', 'operational', 'degraded'
+  ];
+  const randomStatus = mockStatuses[Math.floor(Math.random() * mockStatuses.length)];
+  
+  const getStatusDetails = (status: string) => {
+    switch (status) {
+      case 'operational':
+        return {
+          label: 'Operational',
+          color: 'text-green-400',
+          bg: 'bg-green-500/20',
+          border: 'border-green-500/30',
+          icon: <CheckCircle2 className="h-5 w-5 text-green-400" />
+        };
+      case 'degraded':
+        return {
+          label: 'Degraded',
+          color: 'text-yellow-400',
+          bg: 'bg-yellow-500/20',
+          border: 'border-yellow-500/30',
+          icon: <AlertTriangle className="h-5 w-5 text-yellow-400" />
+        };
+      case 'outage':
+        return {
+          label: 'Outage',
+          color: 'text-red-400',
+          bg: 'bg-red-500/20',
+          border: 'border-red-500/30',
+          icon: <XCircle className="h-5 w-5 text-red-400" />
+        };
+      default:
+        return {
+          label: 'Unknown',
+          color: 'text-gray-400',
+          bg: 'bg-gray-500/20',
+          border: 'border-gray-500/30',
+          icon: <AlertTriangle className="h-5 w-5 text-gray-400" />
+        };
+    }
+  };
+  
+  const status = getStatusDetails(randomStatus);
+  
+  return (
+    <div className={`rounded-lg border ${isActive 
+      ? 'bg-chat-neon-purple/10 border-chat-neon-purple/30'
+      : 'bg-black/20 border-white/10'
+    }`}>
+      <div className="p-4">
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="flex items-center">
+              <h3 className="text-md font-medium text-white">{provider.name}</h3>
+              {isActive && (
+                <Badge className="ml-2 bg-chat-neon-purple/30 text-white text-[10px]">Active</Badge>
+              )}
+            </div>
+            <p className="text-sm text-white/60 mt-1">{provider.description}</p>
+          </div>
+          <div className={`flex items-center px-2 py-1 rounded-full ${status.bg} ${status.border}`}>
+            {status.icon}
+            <span className={`text-xs font-medium ml-1 ${status.color}`}>{status.label}</span>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-3 mt-4">
+          <div className="bg-black/30 rounded-md p-2">
+            <p className="text-xs text-white/50">Supported Models</p>
+            <p className="text-sm text-white mt-1">{provider.models.length}</p>
+          </div>
+          <div className="bg-black/30 rounded-md p-2">
+            <p className="text-xs text-white/50">Streaming</p>
+            <p className="text-sm text-white mt-1">
+              {provider.supportsStreaming ? 'Supported' : 'Not Supported'}
+            </p>
+          </div>
+          <div className="bg-black/30 rounded-md p-2">
+            <p className="text-xs text-white/50">Cost / 1K Tokens</p>
+            <p className="text-sm text-white mt-1">
+              {provider.costPerToken 
+                ? `$${provider.costPerToken.toFixed(4)}` 
+                : 'Not specified'}
+            </p>
+          </div>
+          <div className="bg-black/30 rounded-md p-2">
+            <p className="text-xs text-white/50">Category</p>
+            <p className="text-sm text-white mt-1 capitalize">{provider.category}</p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

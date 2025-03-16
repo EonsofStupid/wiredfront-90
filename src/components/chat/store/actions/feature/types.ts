@@ -5,9 +5,7 @@ import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 import { KnownFeatureFlag } from '@/types/admin/settings/feature-flags';
 
 // Export KnownFeatureFlag as FeatureKey for usage throughout the application
-export type FeatureKey = KnownFeatureFlag | 
-  'voice' | 'rag' | 'modeSwitch' | 'codeAssistant' | 'ragSupport' | 
-  'githubSync' | 'notifications' | 'tokenEnforcement';
+export type FeatureKey = keyof ChatState['features'] | KnownFeatureFlag;
 
 // Define proper Zustand types for state management
 export type SetState<T> = (
@@ -19,10 +17,10 @@ export type SetState<T> = (
 export type GetState<T> = () => T;
 
 export interface FeatureActions {
-  toggleFeature: (feature: FeatureKey) => void;
-  enableFeature: (feature: FeatureKey) => void;
-  disableFeature: (feature: FeatureKey) => void;
-  setFeatureState: (feature: FeatureKey, isEnabled: boolean) => void;
+  toggleFeature: (feature: keyof ChatState['features']) => void;
+  enableFeature: (feature: keyof ChatState['features']) => void;
+  disableFeature: (feature: keyof ChatState['features']) => void;
+  setFeatureState: (feature: keyof ChatState['features'], isEnabled: boolean) => void;
   updateChatProvider: (providers: ChatProvider[]) => void;
   updateCurrentProvider: (provider: ChatProvider) => void;
   updateAvailableProviders: (providers: ChatProvider[]) => void;

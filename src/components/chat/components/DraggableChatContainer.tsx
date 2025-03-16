@@ -1,137 +1,94 @@
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useDraggable } from '@dnd-kit/core';
 import { useChatStore } from '../store/chatStore';
-import { useChatMode } from '../providers/ChatModeProvider';
 import { ChatHeader } from './ChatHeader';
-import ChatContent from './ChatContent';
+import { ChatModeDialog } from '../features/ModeSwitch/ChatModeDialog';
+import { ChatMode } from '@/integrations/supabase/types/enums';
 import '../styles/index.css';
 
 interface DraggableChatContainerProps {
-  children?: React.ReactNode;
-  scrollRef?: React.RefObject<HTMLDivElement>;
-  isEditorPage?: boolean;
+  scrollRef: React.RefObject<HTMLDivElement>;
+  isEditorPage: boolean;
 }
 
 const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({ 
-  children,
   scrollRef,
-  isEditorPage = false
+  isEditorPage
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: 'draggable-chat',
+  });
+
+  const { isMinimized, docked, scale } = useChatStore();
+  const [modeDialogOpen, setModeDialogOpen] = useState(false);
   
-  const { 
-    isMinimized, 
-    toggleMinimize, 
-    showSidebar,
-    toggleSidebar,
-    docked,
-    isOpen,
-    toggleChat
-  } = useChatStore();
-  
-  const { mode } = useChatMode();
-
-  // Set initial position based on screen dimensions
-  useEffect(() => {
-    if (containerRef.current && typeof window !== 'undefined') {
-      const rect = containerRef.current.getBoundingClientRect();
-      setPosition({
-        x: window.innerWidth - rect.width - 20,
-        y: window.innerHeight - rect.height - 20
-      });
-    }
-  }, []);
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (docked) return;
+  const handleModeSelect = (mode: ChatMode, providerId: string) => {
+    useChatStore.getState().setCurrentMode(mode);
     
-    setIsDragging(true);
-    if (containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      setDragOffset({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      });
+    // Find the provider by ID and set it as current
+    const provider = useChatStore.getState().availableProviders.find(p => p.id === providerId);
+    if (provider) {
+      useChatStore.getState().updateCurrentProvider(provider);
     }
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging || docked) return;
-    
-    setPosition({
-      x: e.clientX - dragOffset.x,
-      y: e.clientY - dragOffset.y
-    });
+  const handleToggleSidebar = () => {
+    useChatStore.getState().toggleSidebar();
   };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  // Add and remove event listeners
-  useEffect(() => {
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-    } else {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    }
-    
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging]);
-
-  if (!isOpen) return null;
-
-  // Determine position styles based on docked state
-  const containerStyle = docked
-    ? { bottom: '20px', right: '20px', position: 'fixed' as const } 
-    : { left: `${position.x}px`, top: `${position.y}px`, position: 'fixed' as const };
-
-  // Dynamic classes based on state
-  const chatContainerClasses = `
-    chat-container 
-    chat-component
-    chat-glass-card
-    chat-cyber-border
-    ${isMinimized ? 'chat-minimized' : 'chat-expanded'} 
-    ${docked ? 'chat-docked' : 'chat-floating'}
-    ${(mode === 'dev' && isEditorPage) ? 'chat-editor-mode' : ''}
-    ${mode === 'chat-only' ? 'chat-only-mode' : ''}
-    ${isDragging ? 'chat-dragging' : ''}
-  `;
+  const transformStyle = transform ? {
+    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+  } : undefined;
 
   return (
-    <div 
-      ref={containerRef}
-      className={chatContainerClasses}
-      style={containerStyle}
-      data-mode={mode}
-      data-minimized={isMinimized}
-      data-docked={docked}
+    <div
+      ref={setNodeRef}
+      style={docked ? undefined : transformStyle}
+      {...(docked ? {} : { ...listeners, ...attributes })}
+      className={`chat-container chat-glass-card chat-neon-border overflow-hidden flex flex-col`}
     >
-      {/* Chat header with all controls */}
-      <ChatHeader
-        title={mode === 'dev' ? 'Developer Assistant' : 'Chat Assistant'}
-        showSidebar={showSidebar}
-        isMinimized={isMinimized}
-        onToggleSidebar={toggleSidebar}
-        onMinimize={toggleMinimize}
-        onClose={toggleChat}
+      <ChatHeader 
+        onToggleSidebar={handleToggleSidebar}
+        onOpenModeSelector={() => setModeDialogOpen(true)}
       />
       
-      {/* Chat content area */}
       {!isMinimized && (
-        <div className="chat-content-wrapper chat-messages-container" ref={scrollRef}>
-          {children || <ChatContent />}
+        <div 
+          className="flex-1 overflow-y-auto p-4 chat-messages-container" 
+          ref={scrollRef}
+        >
+          <div className="space-y-4">
+            <div className="text-center opacity-60">
+              <p className="text-xs text-white/60">
+                {new Date().toLocaleDateString()} • {isEditorPage ? 'Editor' : 'Dashboard'} Mode
+              </p>
+            </div>
+            
+            <div className="chat-message chat-message-assistant">
+              How can I help you today?
+            </div>
+          </div>
         </div>
       )}
+      
+      {!isMinimized && (
+        <div className="chat-footer p-3 flex">
+          <div className="flex-1 chat-input-container">
+            <textarea 
+              className="chat-input h-[40px] max-h-[120px] min-h-[40px]"
+              placeholder="Type a message..."
+              rows={1}
+            />
+          </div>
+        </div>
+      )}
+      
+      <ChatModeDialog
+        open={modeDialogOpen}
+        onOpenChange={setModeDialogOpen}
+        onModeSelect={handleModeSelect}
+      />
     </div>
   );
 };

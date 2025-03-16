@@ -3,7 +3,11 @@ import { StateCreator } from 'zustand';
 import { ChatState } from '../types/chat-store-types';
 
 export const createUIActions = (
-  set: StateCreator<ChatState>['setState'],
+  set: (
+    partial: ChatState | Partial<ChatState> | ((state: ChatState) => ChatState | Partial<ChatState>), 
+    replace?: boolean, 
+    action?: { type: string; [key: string]: any }
+  ) => void,
   get: () => ChatState
 ) => ({
   setSessionLoading: (loading: boolean) => {

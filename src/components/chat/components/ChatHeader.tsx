@@ -1,129 +1,146 @@
 
-import React from "react";
-import { ChevronLeft, ChevronRight, Minus, X, Pin, PinOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ChatPositionToggle } from "./ChatPositionToggle";
-import { useChatStore } from "../store/chatStore";
-import { motion } from "framer-motion";
-import { useLocation } from "react-router-dom";
-import { GitHubInfoButton } from "../features/githubinfo";
-import { NotificationsButton } from "../features/notifications/NotificationsButton";
-import { KnowledgeSourceButton } from "../features/knowledge-source/KnowledgeSourceButton";
-import { StatusButton } from "../features/status-button";
-import "../styles/index.css";
+import React, { useState } from 'react';
+import { useChatStore } from '../store/chatStore';
+import { Button } from '@/components/ui/button';
+import { 
+  Minimize2, 
+  Maximize2, 
+  X, 
+  Menu, 
+  Github, 
+  Bell, 
+  Database, 
+  LayoutGrid
+} from 'lucide-react';
+import { ChatPositionToggle } from './ChatPositionToggle';
+import { AIProviderStatusDialog } from '../features/status-button/AIProviderStatusDialog';
 
 interface ChatHeaderProps {
-  title: string;
-  showSidebar: boolean;
-  isMinimized: boolean;
   onToggleSidebar: () => void;
-  onMinimize: () => void;
-  onClose: () => void;
+  onOpenModeSelector: () => void;
 }
 
-export function ChatHeader({
-  title,
-  showSidebar,
-  isMinimized,
-  onToggleSidebar,
-  onMinimize,
-  onClose,
-}: ChatHeaderProps) {
-  const { docked, toggleDocked } = useChatStore();
-  const location = useLocation();
-  const isEditorPage = location.pathname === '/editor';
-  const isGalleryPage = location.pathname === '/gallery';
+export function ChatHeader({ onToggleSidebar, onOpenModeSelector }: ChatHeaderProps) {
+  const { 
+    toggleMinimize, 
+    isMinimized, 
+    closeChat, 
+    currentMode, 
+    currentProvider,
+    availableProviders
+  } = useChatStore();
   
-  // Get display mode label
-  const getModeLabel = () => {
-    if (isEditorPage) return "DEV";
-    if (isGalleryPage) return "IMAGE";
-    return title;
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  
+  const getModeIcon = () => {
+    switch (currentMode) {
+      case 'dev': return <LayoutGrid className="h-4 w-4" />;
+      case 'image': return <LayoutGrid className="h-4 w-4" />;
+      case 'training': return <LayoutGrid className="h-4 w-4" />;
+      default: return <LayoutGrid className="h-4 w-4" />;
+    }
   };
-
-  // Prevent propagation to avoid triggering drag when clicking buttons
-  const handleButtonClick = (e: React.MouseEvent, callback: () => void) => {
-    e.stopPropagation();
-    callback();
-  };
-
+  
   return (
-    <motion.div 
-      className="chat-header"
-      style={{ position: 'relative', zIndex: 'var(--z-chat)' }}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.2 }}
-    >
-      <div className="flex items-center gap-2">
+    <div className="chat-header h-12 px-3 flex items-center justify-between">
+      <div className="flex items-center">
         <Button
           variant="ghost"
           size="icon"
           className="chat-control-button h-8 w-8"
-          onClick={(e) => handleButtonClick(e, onToggleSidebar)}
-          title={showSidebar ? "Hide sidebar" : "Show sidebar"}
-          data-testid="toggle-sidebar-button"
+          onClick={onToggleSidebar}
+          aria-label="Toggle sidebar"
+          data-testid="sidebar-toggle"
         >
-          {showSidebar ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
+          <Menu className="h-4 w-4" />
         </Button>
         
-        <span className="chat-neon-glow font-mono text-sm md:text-base bg-gradient-to-r chat-cyber-border
-          font-bold px-2 py-1 rounded">
-          {getModeLabel()}
-        </span>
-      </div>
-
-      <div className="chat-controls flex gap-1 items-center">
-        {/* Status/feature buttons */}
-        <StatusButton />
+        <Button
+          variant="ghost"
+          size="sm"
+          className="ml-2 h-8 text-xs chat-control-button"
+          onClick={onOpenModeSelector}
+          aria-label="Select AI mode"
+        >
+          <span className="flex items-center gap-1">
+            {getModeIcon()}
+            <span className="capitalize">{currentMode}</span>
+          </span>
+        </Button>
         
-        {/* Position toggle */}
+        <span className="ml-2 text-xs text-white/40">|</span>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          className="ml-2 h-8 text-xs chat-control-button"
+          onClick={() => setStatusDialogOpen(true)}
+          aria-label="AI Provider status"
+        >
+          <span className="flex items-center gap-1">
+            <div className="h-2 w-2 rounded-full bg-green-500"></div>
+            <span>{currentProvider?.name || 'AI Provider'}</span>
+          </span>
+        </Button>
+      </div>
+      
+      <div className="flex items-center space-x-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="chat-control-button h-8 w-8"
+          aria-label="GitHub"
+        >
+          <Github className="h-4 w-4" />
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          className="chat-control-button h-8 w-8"
+          aria-label="Notifications"
+        >
+          <Bell className="h-4 w-4" />
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          className="chat-control-button h-8 w-8"
+          aria-label="Knowledge Base"
+        >
+          <Database className="h-4 w-4" />
+        </Button>
+        
         <ChatPositionToggle />
         
-        {/* Pin/dock button */}
         <Button
           variant="ghost"
           size="icon"
           className="chat-control-button h-8 w-8"
-          onClick={(e) => handleButtonClick(e, toggleDocked)}
-          title={docked ? "Undock chat" : "Dock chat"}
-          data-testid="toggle-dock-button"
+          onClick={toggleMinimize}
+          aria-label={isMinimized ? "Maximize" : "Minimize"}
         >
-          {docked ? (
-            <PinOff className="h-4 w-4" />
-          ) : (
-            <Pin className="h-4 w-4" />
-          )}
+          {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
         </Button>
         
-        {/* Minimize button */}
         <Button
           variant="ghost"
           size="icon"
-          className="chat-control-button h-8 w-8"
-          onClick={(e) => handleButtonClick(e, onMinimize)}
-          title={isMinimized ? "Maximize chat" : "Minimize chat"}
-          data-testid="minimize-button"
-        >
-          <Minus className="h-4 w-4" />
-        </Button>
-        
-        {/* Close button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="chat-control-button h-8 w-8" 
-          onClick={(e) => handleButtonClick(e, onClose)}
-          title="Close chat"
-          data-testid="close-button"
+          className="chat-control-button h-8 w-8 hover:bg-red-500/20 hover:text-red-400"
+          onClick={closeChat}
+          aria-label="Close chat"
         >
           <X className="h-4 w-4" />
         </Button>
       </div>
-    </motion.div>
+      
+      <AIProviderStatusDialog
+        open={statusDialogOpen}
+        onOpenChange={setStatusDialogOpen}
+        providers={availableProviders}
+        currentProvider={currentProvider}
+      />
+    </div>
   );
 }

@@ -7,14 +7,14 @@ export type ChatMode = 'chat' | 'chat-only' | 'dev' | 'image' | 'training';
 
 export interface TokenControl {
   balance: number;
-  enforcementMode: 'always' | 'warn' | 'never';
+  enforcementMode: 'always' | 'never' | 'role_based' | 'mode_based';
   lastUpdated: string | null;
   tokensPerQuery: number;
   freeQueryLimit: number;
   queriesUsed: number;
 }
 
-export interface ProviderCategory {
+export interface ChatProvider {
   id: string;
   name: string;
   description: string;
@@ -23,7 +23,10 @@ export interface ProviderCategory {
   icon?: string;
   category: 'chat' | 'image' | 'vector' | 'voice' | 'other';
   costPerToken?: number;
+  isDefault?: boolean;
 }
+
+export type ProviderCategory = ChatProvider;
 
 export interface UI {
   sessionLoading: boolean;
@@ -33,6 +36,12 @@ export interface UI {
 
 export interface ProvidersState {
   availableProviders: ProviderCategory[];
+}
+
+export interface MessageActions {
+  addMessage: (message: any) => void;
+  updateMessage: (id: string, updates: any) => void;
+  resetChatState: () => void;
 }
 
 export interface ChatState {
@@ -79,4 +88,24 @@ export interface ChatState {
   togglePosition: () => void;
   toggleDocked: () => void;
   setScale: (scale: number) => void;
+  
+  // Mode actions
+  setCurrentMode: (mode: ChatMode) => void;
+  
+  // Provider actions
+  updateCurrentProvider: (provider: ProviderCategory) => void;
+  updateAvailableProviders: (providers: ProviderCategory[]) => void;
+  updateChatProvider: (providers: ProviderCategory[]) => void;
+  
+  // Feature actions
+  toggleFeature: (featureName: keyof ChatState['features']) => void;
+  enableFeature: (featureName: keyof ChatState['features']) => void;
+  disableFeature: (featureName: keyof ChatState['features']) => void;
+  setFeatureState: (featureName: keyof ChatState['features'], isEnabled: boolean) => void;
+  
+  // Token actions
+  setTokenEnforcementMode: (mode: TokenControl['enforcementMode']) => void;
+  addTokens: (amount: number) => Promise<boolean>;
+  spendTokens: (amount: number) => Promise<boolean>;
+  setTokenBalance: (amount: number) => Promise<boolean>;
 }

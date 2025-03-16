@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { DndContext } from "@dnd-kit/core";
 import { ChatSidebar } from "./ChatSidebar";
 import ChatToggleButton from "./components/ChatToggleButton";
@@ -9,6 +9,8 @@ import { useChatStore } from "./store/chatStore";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { logger } from "@/services/chat/LoggingService";
+import { ChatModeDialog } from "./features/ModeSwitch/ChatModeDialog";
+import { ChatMode } from "@/integrations/supabase/types/enums";
 import "./styles/index.css";
 
 export function DraggableChat() {
@@ -19,13 +21,17 @@ export function DraggableChat() {
     isMinimized, 
     showSidebar, 
     scale,
-    docked
+    docked,
+    setCurrentMode,
+    updateCurrentProvider,
+    availableProviders
   } = useChatStore();
   
   const { containerRef, isOverflowing } = useViewportAwareness();
   const scrollRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const isEditorPage = location.pathname === '/editor';
+  const [modeDialogOpen, setModeDialogOpen] = useState(false);
 
   // Scroll to bottom of messages when new message is added
   useEffect(() => {
@@ -47,8 +53,33 @@ export function DraggableChat() {
     });
   }, [isOpen, position, isMinimized, showSidebar, scale, isOverflowing, location.pathname]);
 
+  // Handle selecting a mode from the dialog
+  const handleModeSelect = (mode: ChatMode, providerId: string) => {
+    setCurrentMode(mode);
+    
+    // Find and update current provider
+    const provider = availableProviders.find(p => p.id === providerId);
+    if (provider) {
+      updateCurrentProvider(provider);
+    }
+    
+    // Ensure chat is open when changing modes
+    if (!isOpen) {
+      toggleChat();
+    }
+  };
+
   if (!isOpen) {
-    return <ChatToggleButton onClick={toggleChat} />;
+    return (
+      <>
+        <ChatToggleButton onClick={toggleChat} />
+        <ChatModeDialog
+          open={modeDialogOpen}
+          onOpenChange={setModeDialogOpen}
+          onModeSelect={handleModeSelect}
+        />
+      </>
+    );
   }
 
   // Determine position class based on position state
