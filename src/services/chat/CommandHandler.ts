@@ -1,155 +1,88 @@
-import { supabase } from '@/integrations/supabase/client';
-import { logger } from './LoggingService';
-import { useMessageStore, clearMessages } from '@/components/chat/messaging/MessageManager';
+
 import { useChatStore } from '@/components/chat/store/chatStore';
+import { logger } from './LoggingService';
+import { toast } from 'sonner';
+import { clearMiddlewareStorage } from '@/components/chat/store/chatStore';
+import { MessageManager } from '@/components/chat/messaging/MessageManager';
 
-class CommandHandlerClass {
-  // List of commands with handlers
-  private commands = {
-    help: this.handleHelpCommand,
-    clear: this.handleClearCommand,
-    reset: this.handleResetCommand,
-    tokens: this.handleTokensCommand,
-    mode: this.handleModeCommand,
-    provider: this.handleProviderCommand,
-  };
-
-  // Parse input to check if it's a command
-  parseCommand(input: string): { isCommand: boolean; command: string; args: string[] } {
-    // Start with assumption it's not a command
-    const result = { isCommand: false, command: '', args: [] as string[] };
-    
-    // Check if input starts with a slash
-    if (!input.startsWith('/')) return result;
-    
-    // Extract command and arguments
-    const parts = input.slice(1).split(' ').filter(Boolean);
-    const command = parts[0].toLowerCase();
-    
-    // Check if it's a recognized command
-    if (command in this.commands) {
-      result.isCommand = true;
-      result.command = command;
-      result.args = parts.slice(1);
-    }
-    
-    return result;
+/**
+ * Parse a command string to determine if it's a valid command
+ * @param input The input string to check for commands
+ */
+export const parseCommand = (input: string): { isCommand: boolean; command: string; args: string[] } => {
+  // Check if the input starts with a command prefix
+  const commandPrefixes = ['/', '!', '$'];
+  const prefix = commandPrefixes.find(p => input.startsWith(p));
+  
+  if (!prefix) {
+    return { isCommand: false, command: '', args: [] };
   }
+  
+  // Split the input into command and arguments
+  const parts = input.slice(1).split(' ');
+  const command = parts[0].toLowerCase();
+  const args = parts.slice(1);
+  
+  return { isCommand: true, command, args };
+};
 
-  // Handle command execution
-  async executeCommand(command: string, args: string[]): Promise<string> {
-    logger.info(`Executing command: /${command}`, { args });
-    
-    try {
-      // Check if the command exists
-      if (command in this.commands) {
-        // Execute the command handler
-        return await this.commands[command as keyof typeof this.commands].call(this, args);
+/**
+ * Execute a chat command
+ * @param command The command name
+ * @param args Command arguments
+ */
+export const executeCommand = async (command: string, args: string[]): Promise<boolean> => {
+  logger.info('Executing command', { command, args });
+  
+  switch (command) {
+    case 'clear':
+      // Clear the current chat messages
+      MessageManager.clearMessages();
+      toast.success('Chat cleared');
+      return true;
+      
+    case 'reset':
+      // Reset the chat state and clear storage
+      clearMiddlewareStorage();
+      useChatStore.getState().resetChatState();
+      toast.success('Chat reset');
+      return true;
+      
+    case 'provider':
+      // Set or show the current provider
+      if (args.length === 0) {
+        const currentProvider = useChatStore.getState().currentProvider;
+        toast.info(`Current provider: ${currentProvider?.name || 'None'}`);
+      } else {
+        // Try to switch to the named provider
+        const providerName = args[0].toLowerCase();
+        const providers = useChatStore.getState().availableProviders;
+        const provider = providers.find(p => p.name.toLowerCase() === providerName);
+        
+        if (provider) {
+          useChatStore.getState().updateCurrentProvider(provider);
+          toast.success(`Provider switched to ${provider.name}`);
+        } else {
+          toast.error(`Provider '${args[0]}' not found`);
+          toast.info(`Available providers: ${providers.map(p => p.name).join(', ') || 'None'}`);
+        }
       }
+      return true;
       
-      return `Unknown command: /${command}. Type /help for available commands.`;
-    } catch (error) {
-      logger.error(`Error executing command /${command}:`, error);
-      return `Error executing command: /${command}`;
-    }
-  }
-
-  // Handle /help command
-  private async handleHelpCommand(args: string[]): Promise<string> {
-    return `
-**Available Commands:**
-- **/help** - Show this help message
-- **/clear** - Clear the current chat session
-- **/reset** - Reset the chat and clear all sessions
-- **/tokens** - Show your token balance
-- **/mode [chat|dev|image]** - Change chat mode
-- **/provider [provider-id]** - Change AI provider
-    `;
-  }
-
-  // Handle /clear command
-  private async handleClearCommand(args: string[]): Promise<string> {
-    // Clear messages from the store
-    clearMessages();
-    
-    return "Messages cleared from the current chat session.";
-  }
-
-  // Handle /reset command
-  private async handleResetCommand(args: string[]): Promise<string> {
-    // Get the chat store functions
-    const chatStore = useChatStore.getState();
-    
-    // Reset state in the chat store
-    chatStore.resetChatState();
-    
-    // Clear messages
-    clearMessages();
-    
-    return "Chat state has been reset. Starting fresh!";
-  }
-
-  // Handle /tokens command
-  private async handleTokensCommand(args: string[]): Promise<string> {
-    const { tokenControl } = useChatStore.getState();
-    
-    return `
-**Token Information:**
-- Current Balance: ${tokenControl.balance}
-- Queries Used: ${tokenControl.queriesUsed}
-- Free Query Limit: ${tokenControl.freeQueryLimit}
-- Enforcement Mode: ${tokenControl.enforcementMode}
-    `;
-  }
-
-  // Handle /mode command
-  private async handleModeCommand(args: string[]): Promise<string> {
-    const { setCurrentMode } = useChatStore.getState();
-    
-    if (args.length === 0) {
-      return "Please specify a mode: /mode [chat|dev|image]";
-    }
-    
-    const mode = args[0].toLowerCase();
-    
-    if (mode === 'chat' || mode === 'dev' || mode === 'image') {
-      setCurrentMode(mode);
-      return `Mode changed to: ${mode}`;
-    }
-    
-    return `Invalid mode: ${mode}. Available modes: chat, dev, image`;
-  }
-
-  // Handle /provider command
-  private async handleProviderCommand(args: string[]): Promise<string> {
-    const { availableProviders, updateCurrentProvider } = useChatStore.getState();
-    
-    if (args.length === 0) {
-      // List available providers
-      const providerList = availableProviders.map(p => 
-        `- ${p.name} (${p.id})${p.isDefault ? ' (default)' : ''}`
-      ).join('\n');
+    case 'stats':
+      // Show chat statistics
+      const state = useChatStore.getState();
+      toast.info(`Chat Stats: ${state.messages.length} messages, Provider: ${state.currentProvider?.name || 'None'}`);
+      return true;
       
-      return `
-**Available Providers:**
-${providerList || 'No providers available'}
-
-To change provider: /provider [provider-id]
-      `;
-    }
-    
-    const providerId = args[0];
-    const provider = availableProviders.find(p => p.id === providerId);
-    
-    if (!provider) {
-      return `Provider not found: ${providerId}`;
-    }
-    
-    updateCurrentProvider(provider);
-    return `Provider changed to: ${provider.name}`;
+    case 'help':
+      // Show available commands
+      toast.info('Available commands:\n/clear - Clear chat\n/reset - Reset chat\n/provider [name] - Show or set provider\n/stats - Show chat stats');
+      return true;
+      
+    default:
+      // Unknown command
+      toast.error(`Unknown command: /${command}`);
+      return false;
   }
-}
-
-// Create and export an instance of the command handler
-export const commandHandler = new CommandHandlerClass();
-export const parseCommand = commandHandler.parseCommand.bind(commandHandler);
+};

@@ -1,262 +1,133 @@
 
-import React, { useState } from 'react';
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useMessageStore } from "../messaging/MessageManager";
-import { useChatMode } from "../providers/ChatModeProvider";
-import { Send, Loader2, Coins } from "lucide-react";
-import { logger } from '@/services/chat/LoggingService';
-import { KnowledgeSourceButton } from '../features/knowledge-source/KnowledgeSourceButton';
+import React, { useState, useCallback } from 'react';
+import { useChatStore } from '../store';
+import { useMessageStore } from '../messaging/MessageManager';
+import { v4 as uuidv4 } from 'uuid';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Send, Mic } from 'lucide-react';
 import { VoiceToTextButton } from '../features/voice-to-text';
-import { toast } from "sonner";
-import { useSessionManager } from '@/hooks/useSessionManager';
-import { useTokenManagement } from '@/hooks/useTokenManagement';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { parseCommand } from '@/services/chat/CommandHandler';
+import { supabase } from '@/integrations/supabase/client';
+import { parseCommand, executeCommand } from '@/services/chat/CommandHandler';
+import { toast } from 'sonner';
 
-interface ChatInputModuleProps {
-  onMessageSubmit?: (content: string) => void;
-  isEditorPage?: boolean;
-}
-
-export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatInputModuleProps) {
-  const [message, setMessage] = useState("");
-  const { addMessage, currentSessionId, isProcessing } = useMessageStore();
-  const { createSession } = useSessionManager();
-  const { mode } = useChatMode();
-  const { 
-    isTokenEnforcementEnabled, 
-    hasEnoughTokens, 
-    spendTokens, 
-    tokenBalance,
-    tokensPerQuery
-  } = useTokenManagement();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!message.trim()) return;
-    
-    // Check if this is a command
-    if (message.startsWith('/')) {
-      const { isCommand, response } = await parseCommand(message);
-      
-      if (isCommand && response) {
-        // Create a session if needed
-        let sessionId = currentSessionId;
-        if (!sessionId) {
-          logger.info('No active session, creating a new one for command...');
-          sessionId = await createSession({
-            title: `Chat ${new Date().toLocaleString()}`,
-            metadata: { mode: 'chat' }
-          });
-        }
-        
-        // Add the command as a user message
-        await addMessage({
-          content: message.trim(),
-          role: 'user',
-          sessionId
-        });
-        
-        // Add the response as a system message
-        await addMessage({
-          content: response,
-          role: 'system',
-          sessionId
-        });
-        
-        setMessage("");
-        return;
-      }
-    }
-    
-    // Check if token enforcement is enabled and user has enough tokens
-    if (isTokenEnforcementEnabled && !hasEnoughTokens(tokensPerQuery)) {
-      toast.error(`You need ${tokensPerQuery} tokens to send a message. Your balance: ${tokenBalance}`);
-      return;
-    }
-    
-    try {
-      // Create a new session if we don't have one
-      let sessionId = currentSessionId;
-      if (!sessionId) {
-        logger.info('No active session, creating a new one...');
-        sessionId = await createSession({
-          title: `Chat ${new Date().toLocaleString()}`,
-          metadata: { mode: mode || 'chat' }
-        });
-        
-        if (!sessionId) {
-          toast.error('Failed to create a new session');
-          return;
-        }
-      }
-      
-      logger.info('Submitting message', { 
-        mode, 
-        messageLength: message.length,
-        sessionId
-      });
-      
-      // Spend tokens if enforcement is enabled
-      if (isTokenEnforcementEnabled) {
-        const success = await spendTokens(tokensPerQuery);
-        if (!success) {
-          return; // Don't continue if token spending failed
-        }
-      }
-      
-      if (onMessageSubmit) {
-        onMessageSubmit(message.trim());
-      }
-      
-      await addMessage({
-        content: message.trim(),
-        role: 'user',
-        sessionId
-      });
-      setMessage("");
-    } catch (error) {
-      console.error('Failed to send message:', error);
-      logger.error('Message submission failed', { error });
-      toast.error('Failed to send message');
-    }
-  };
-
-  const handleTranscription = async (text: string) => {
-    if (!currentSessionId) {
-      toast.error('No active chat session');
-      logger.error('Transcription submission failed - no active session');
-      return;
-    }
-
-    if (!text.trim()) {
-      logger.warn('Empty transcription received');
-      return;
-    }
-    
-    // Check if token enforcement is enabled and user has enough tokens for voice
-    if (isTokenEnforcementEnabled && !hasEnoughTokens(tokensPerQuery)) {
-      toast.error(`You need ${tokensPerQuery} tokens to send a voice message. Your balance: ${tokenBalance}`);
-      return;
-    }
-
-    try {
-      logger.info('Submitting transcription', { 
-        mode, 
-        transcriptionLength: text.length,
-        sessionId: currentSessionId
-      });
-      
-      // Spend tokens if enforcement is enabled
-      if (isTokenEnforcementEnabled) {
-        const success = await spendTokens(tokensPerQuery);
-        if (!success) {
-          return; // Don't continue if token spending failed
-        }
-      }
-      
-      await addMessage({
-        content: text,
-        role: 'user',
-        sessionId: currentSessionId
-      });
-    } catch (error) {
-      console.error('Failed to send transcribed message:', error);
-      logger.error('Transcription submission failed', { error });
-      toast.error('Failed to send message');
-    }
-  };
-
-  let placeholder = 'Type a message...';
-  
-  if (mode === 'editor') {
-    placeholder = "Ask for code assistance...";
-  } else if (mode === 'chat-only') {
-    placeholder = "Discuss ideas and refine context...";
-  }
+export const ChatInputModule = () => {
+  const { userInput, setUserInput, isWaitingForResponse, chatId } = useChatStore();
+  const addMessage = useMessageStore((state) => state.addMessage);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setMessage(e.target.value);
+    setUserInput(e.target.value);
   };
 
-  const handleInputClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
+  const sendMessage = useCallback(async () => {
+    if (!userInput.trim() || isWaitingForResponse || isProcessing) return;
+
+    // Check if the input is a command
+    const { isCommand, command, args } = parseCommand(userInput);
+    
+    if (isCommand) {
+      // Execute command and clear input
+      const processed = await executeCommand(command, args);
+      setUserInput('');
+      return;
+    }
+
+    // Create new message ID
+    const messageId = uuidv4();
+    
+    // Add the user message
+    addMessage({
+      id: messageId,
+      role: 'user',
+      content: userInput,
+      timestamp: new Date(),
+      status: 'sent',
+      sessionId: chatId || 'default',
+    });
+
+    // Clear the input
+    setUserInput('');
+    
+    // Set processing state
+    setIsProcessing(true);
+    
+    try {
+      // Send the message to the API
+      const { data, error } = await supabase.functions.invoke('chat', {
+        body: { message: userInput, chatId }
+      });
+      
+      if (error) {
+        toast.error('Error sending message');
+        console.error('Error sending message:', error);
+        
+        // Add error response
+        addMessage({
+          id: uuidv4(),
+          role: 'assistant',
+          content: `Error: ${error.message || 'Failed to send message'}`,
+          timestamp: new Date(),
+          status: 'error',
+          sessionId: chatId || 'default',
+        });
+        
+        return;
+      }
+      
+      // Add the assistant response
+      addMessage({
+        id: uuidv4(),
+        role: 'assistant',
+        content: data?.response || 'No response received',
+        timestamp: new Date(),
+        status: 'received',
+        sessionId: chatId || 'default',
+      });
+    } catch (error) {
+      console.error('Error in chat flow:', error);
+      
+      // Add error response
+      addMessage({
+        id: uuidv4(),
+        role: 'assistant',
+        content: `Error: ${error.message || 'An unexpected error occurred'}`,
+        timestamp: new Date(),
+        status: 'error',
+        sessionId: chatId || 'default',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [userInput, isWaitingForResponse, isProcessing, chatId, addMessage, setUserInput]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      handleSubmit(e);
+      e.preventDefault();
+      sendMessage();
     }
   };
 
-  const showTokenWarning = isTokenEnforcementEnabled && !hasEnoughTokens(tokensPerQuery);
-
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 w-full h-full items-center" onClick={(e) => e.stopPropagation()}>
-      <div className="relative flex-1 group">
-        <Input
-          value={message}
-          onChange={handleInputChange}
-          onClick={handleInputClick}
-          onKeyDown={handleKeyDown}
-          placeholder={message.startsWith('/') ? "Enter command..." : "Type a message..."}
-          className={`chat-input chat-cyber-border font-mono text-chat-input-text h-[var(--chat-input-height)] ${
-            showTokenWarning ? 'border-red-500' : ''
-          }`}
-          disabled={isProcessing}
-          data-testid="chat-input"
-          aria-label="Message input"
-        />
-        <div className="absolute inset-0 rounded-md bg-gradient-to-r from-[#1EAEDB]/5 to-[#1EAEDB]/5 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-300"></div>
-      </div>
+    <div className="p-4 border-t bg-background flex items-center gap-2">
+      <VoiceToTextButton onVoiceInput={setUserInput} />
       
-      <KnowledgeSourceButton />
-      
-      <VoiceToTextButton 
-        onTranscription={(text) => {
-          setMessage(text);
-          // Don't auto-submit voice transcriptions to give the user a chance to review
-        }}
-        isProcessing={isProcessing}
+      <Input
+        placeholder="Type a message..."
+        value={userInput}
+        onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
+        disabled={isWaitingForResponse || isProcessing}
+        className="flex-1"
       />
       
-      {isTokenEnforcementEnabled && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className={`flex items-center gap-1 px-2 py-1 rounded font-mono text-xs ${
-                showTokenWarning ? 'text-red-400' : 'text-green-400'
-              }`}>
-                <Coins className="h-3 w-3" />
-                <span>{tokenBalance}</span>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Your token balance: {tokenBalance}</p>
-              <p>Cost per message: {tokensPerQuery}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )}
-      
       <Button 
-        type="submit" 
-        disabled={isProcessing || !message.trim() || showTokenWarning}
-        className="min-w-[80px] bg-gradient-to-r from-[#1EAEDB] to-[#0080B3] hover:opacity-90 text-white border-none transition-all duration-200 font-mono h-[var(--chat-input-height)]"
-        data-testid="send-button"
+        onClick={sendMessage} 
+        disabled={!userInput.trim() || isWaitingForResponse || isProcessing}
+        size="icon"
       >
-        {isProcessing ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <>
-            <Send className="h-4 w-4 mr-2" />
-            Send
-          </>
-        )}
+        <Send className="h-4 w-4" />
       </Button>
-    </form>
+    </div>
   );
-}
+};

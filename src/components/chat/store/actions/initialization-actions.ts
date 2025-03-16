@@ -1,11 +1,15 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ChatState } from '../types/chat-store-types';
 import { logger } from '@/services/chat/LoggingService';
-import { StateCreator } from 'zustand';
+import type { StateCreator } from 'zustand';
+
+type SetState = (state: Partial<ChatState>, replace?: boolean, action?: any) => void;
+type GetState = () => ChatState;
 
 export const createInitializationActions = (
-  set: (state: Partial<ChatState>, replace?: boolean, action?: any) => void,
-  get: () => ChatState,
+  set: SetState,
+  get: GetState,
 ) => ({
   /**
    * Initialize chat settings from the database or local storage
@@ -55,31 +59,47 @@ export const createInitializationActions = (
         if (chatSettings) {
           logger.info('Chat settings loaded from database');
           
-          // Safely access nested properties with proper type checking
+          // Safely handle nested properties with proper type checking
           const uiCustomizations = chatSettings.ui_customizations || {};
+          const currentState = get();
           
           // Apply settings from database with proper type safety
           set({
-            // Apply database settings while preserving defaults for missing fields
-            ...get(),
             features: {
-              ...get().features,
+              ...currentState.features,
               ...(typeof uiCustomizations === 'object' && 
-                 'features' in uiCustomizations ? 
-                 uiCustomizations.features as Record<string, unknown> : {})
+                 uiCustomizations.features ? 
+                 uiCustomizations.features as Record<string, boolean> : {})
             },
             // Apply token control settings if available with proper type checks
             tokenControl: {
-              ...get().tokenControl,
+              ...currentState.tokenControl,
               enforcementMode: typeof uiCustomizations === 'object' && 
-                'tokenEnforcement' in uiCustomizations ? 
+                uiCustomizations.tokenEnforcement ? 
                 uiCustomizations.tokenEnforcement : 'never',
               ...(typeof uiCustomizations === 'object' && 
-                 'tokenControl' in uiCustomizations ? 
-                 uiCustomizations.tokenControl as Record<string, unknown> : {})
+                 uiCustomizations.tokenControl ? 
+                 uiCustomizations.tokenControl as Record<string, any> : {})
             }
           });
         }
+      }
+
+      // If no provider is set, use OpenAI as default
+      const currentState = get();
+      if (!currentState.currentProvider) {
+        const defaultProvider = {
+          id: 'openai-default',
+          name: 'OpenAI',
+          type: 'openai',
+          isDefault: true,
+          category: 'chat'
+        };
+        
+        set({
+          currentProvider: defaultProvider,
+          availableProviders: [...(currentState.availableProviders || []), defaultProvider]
+        });
       }
 
       // Finally, mark initialization as complete

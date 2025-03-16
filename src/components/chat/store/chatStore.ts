@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
@@ -69,22 +70,40 @@ const initialState: ChatState = {
   },
 };
 
-// Create a function to reset local storage for middleware persistence
+// Enhanced function to clear all Zustand middleware storage
 export const clearMiddlewareStorage = () => {
-  // Clear any persisted state in localStorage
   try {
+    // Clear specific chat-state items
     localStorage.removeItem('chat-state');
     localStorage.removeItem('ChatStore');
     
-    // Clear any other relevant localStorage items
-    const keys = Object.keys(localStorage);
-    keys.forEach(key => {
-      if (key.startsWith('chat-') || key.includes('zustand')) {
-        localStorage.removeItem(key);
-      }
+    // Clear all Zustand storage items
+    const zustandKeys = Object.keys(localStorage).filter(key => 
+      key.startsWith('chat-') || 
+      key.includes('zustand') || 
+      key.includes('session-') ||
+      key.includes('provider-')
+    );
+    
+    zustandKeys.forEach(key => {
+      localStorage.removeItem(key);
+      console.log(`Removed storage key: ${key}`);
     });
     
-    console.log('Middleware storage cleared');
+    // Clear IndexedDB if available
+    if (window.indexedDB) {
+      try {
+        const chatDBs = ['zustand-chat', 'chat-sessions', 'chat-providers'];
+        chatDBs.forEach(dbName => {
+          window.indexedDB.deleteDatabase(dbName);
+          console.log(`Deleted IndexedDB: ${dbName}`);
+        });
+      } catch (idbError) {
+        console.error('Error clearing IndexedDB:', idbError);
+      }
+    }
+    
+    console.log('All middleware storage cleared successfully');
   } catch (e) {
     console.error('Error clearing middleware storage:', e);
   }
