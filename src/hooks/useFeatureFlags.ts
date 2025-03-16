@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useChatStore } from "@/components/chat/store/chatStore";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,7 +12,6 @@ export type FeatureKey = KnownFeatureFlag;
 
 export function useFeatureFlags() {
   const { features, toggleFeature, enableFeature, disableFeature, setFeatureState } = useChatStore();
-  const { logFeatureUsage } = useFeatureUsage();
   const [isUpdating, setIsUpdating] = useState(false);
 
   /**
@@ -45,7 +45,7 @@ export function useFeatureFlags() {
         setIsUpdating(false);
       }
     },
-    [toggleFeature, logFeatureUsage, isUpdating]
+    [toggleFeature, isUpdating]
   );
 
   /**
@@ -69,7 +69,7 @@ export function useFeatureFlags() {
         setIsUpdating(false);
       }
     },
-    [enableFeature, logFeatureUsage, isUpdating]
+    [enableFeature, isUpdating]
   );
 
   /**
@@ -93,7 +93,7 @@ export function useFeatureFlags() {
         setIsUpdating(false);
       }
     },
-    [disableFeature, logFeatureUsage, isUpdating]
+    [disableFeature, isUpdating]
   );
 
   /**
@@ -120,8 +120,24 @@ export function useFeatureFlags() {
         setIsUpdating(false);
       }
     },
-    [setFeatureState, logFeatureUsage, isUpdating]
+    [setFeatureState, isUpdating]
   );
+
+  // Helper function to log feature usage
+  const logFeatureUsage = async (featureKey: FeatureKey, context: Record<string, any> = {}) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) return;
+      
+      await supabase.from('feature_usage').insert({
+        user_id: userData.user.id,
+        feature_name: featureKey,
+        context
+      });
+    } catch (error) {
+      logger.error(`Error logging feature usage for ${featureKey}:`, error);
+    }
+  };
 
   return {
     features,

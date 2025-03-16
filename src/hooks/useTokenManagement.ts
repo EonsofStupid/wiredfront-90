@@ -10,6 +10,7 @@ import { FeatureKey } from './useFeatureFlags';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 import { Json } from '@/integrations/supabase/types';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
+import { isTokenEnforcementMode, extractEnforcementMode } from '@/utils/token-utils';
 
 export function useTokenManagement() {
   const { user } = useAuthStore();
@@ -99,15 +100,11 @@ export function useTokenManagement() {
           
           // Set enforcement mode from metadata if available
           if (data.metadata) {
-            // Safely access metadata
-            const metadata = data.metadata as Record<string, any>;
-            if (metadata && typeof metadata === 'object' && 'enforcementMode' in metadata) {
-              const enforcementMode = metadata.enforcementMode as TokenEnforcementMode;
-              if (isValidEnforcementMode(enforcementMode)) {
-                setTokenEnforcementMode(enforcementMode);
-              } else {
-                logger.warn(`Invalid enforcement mode: ${metadata.enforcementMode}`);
-              }
+            const mode = extractEnforcementMode(data.metadata);
+            if (mode) {
+              setTokenEnforcementMode(mode);
+            } else {
+              logger.warn('No valid enforcement mode found in metadata');
             }
           }
         }
@@ -118,11 +115,6 @@ export function useTokenManagement() {
     
     fetchTokenConfig();
   }, [user?.id, setFeatureState, setTokenEnforcementMode]);
-  
-  // Function to validate enforcement mode
-  const isValidEnforcementMode = (mode: any): mode is TokenEnforcementMode => {
-    return ['always', 'never', 'role_based', 'mode_based'].includes(mode);
-  };
   
   // Function to check if a user has enough tokens for an operation
   const hasEnoughTokens = (amount = 1) => {
