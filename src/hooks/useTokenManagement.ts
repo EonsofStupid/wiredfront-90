@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useChatStore } from '@/components/chat/store/chatStore';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,7 +5,7 @@ import { useAuthStore } from '@/stores/auth';
 import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';
 import { useCombinedFeatureFlag } from './useFeatureFlags';
-import { FeatureKey } from './useFeatureFlags';
+import { FeatureKey } from '@/components/chat/store/actions/feature-actions';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 import { Json } from '@/integrations/supabase/types';
 import { isTokenEnforcementMode, extractEnforcementMode } from '@/utils/token-utils';

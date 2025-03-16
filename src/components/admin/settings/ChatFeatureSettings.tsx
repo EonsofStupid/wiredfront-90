@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { useChatStore } from "@/components/chat/store/chatStore";
 import { ArrowLeftRight, Pin, PinOff, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
-import { useFeatureFlags, FeatureKey } from "@/hooks/useFeatureFlags";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import { FeatureKey } from "@/components/chat/store/actions/feature-actions";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const ChatFeatureSettings = () => {
