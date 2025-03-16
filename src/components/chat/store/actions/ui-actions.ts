@@ -1,8 +1,14 @@
+
 import { ChatState, ChatPosition } from '../types/chat-store-types';
 import { StateCreator } from 'zustand';
 
-type SetState<T> = StateCreator<T>['setState'];
-type GetState<T> = StateCreator<T>['getState'];
+type SetState<T> = (
+  partial: T | Partial<T> | ((state: T) => T | Partial<T>),
+  replace?: boolean,
+  action?: { type: string; [key: string]: any }
+) => void;
+
+type GetState<T> = () => T;
 
 export const createUIActions = (
   set: SetState<ChatState>,
