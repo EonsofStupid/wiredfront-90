@@ -92,3 +92,19 @@ export interface UIStateActions {
   setScale: (scale: number) => void;
   setCurrentMode: (mode: ChatMode) => void;
 }
+
+// Define message management actions
+export interface MessageActions {
+  addMessage: (message: Message) => void;
+  updateMessage: (id: string, updates: Partial<Message>) => void;
+}
+
+// Reusable type definitions for state management
+export type SetState<T> = (
+  partial: T | Partial<T> | ((state: T) => T | Partial<T>),
+  replace?: boolean,
+  action?: { type: string; [key: string]: any }
+) => void;
+
+export type GetState<T> = () => T;
+

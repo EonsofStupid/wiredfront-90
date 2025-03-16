@@ -6,8 +6,8 @@ import { toast } from 'sonner';
 
 export const useMessageAPI = () => {
   // Access the specific functions we need from the store
-  // The store has an addMessage function as defined in chatStore.ts
-  const addMessageToChat = useChatStore((state) => state.addMessage);
+  // Use the correct store methods with proper type checking
+  const addMessage = useChatStore((state) => state.addMessage);
   const isWaitingForResponse = useChatStore(state => state.isWaitingForResponse);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -19,7 +19,7 @@ export const useMessageAPI = () => {
       
       // Add user message to chat
       const messageId = uuidv4();
-      addMessageToChat({
+      addMessage({
         id: messageId,
         content,
         role: 'user',
@@ -29,7 +29,7 @@ export const useMessageAPI = () => {
       // Here you would typically call your API to get a response
       // For now, we'll simulate a response after a delay
       setTimeout(() => {
-        addMessageToChat({
+        addMessage({
           id: uuidv4(),
           content: `Response to: ${content}`,
           role: 'assistant',
