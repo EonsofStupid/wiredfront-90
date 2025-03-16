@@ -9,8 +9,8 @@ import { useCombinedFeatureFlag } from './useFeatureFlags';
 import { FeatureKey } from './useFeatureFlags';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 import { Json } from '@/integrations/supabase/types';
-import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { isTokenEnforcementMode, extractEnforcementMode } from '@/utils/token-utils';
+import { withTokenErrorBoundary } from '@/components/tokens/TokenErrorBoundary';
 
 export function useTokenManagement() {
   const { user } = useAuthStore();
@@ -171,26 +171,5 @@ export function useTokenManagement() {
   };
 }
 
-// Create a component wrapper with error boundary for token-related components
-export function withTokenErrorBoundary<P extends object>(Component: React.ComponentType<P>) {
-  return function TokenErrorBoundaryWrapper(props: P) {
-    return (
-      <ErrorBoundary
-        FallbackComponent={({ error, resetErrorBoundary }) => (
-          <div className="p-4 border border-red-200 rounded-md bg-red-50 text-red-800">
-            <h3 className="font-medium mb-2">Token System Error</h3>
-            <p className="text-sm mb-4">{error.message}</p>
-            <button 
-              onClick={resetErrorBoundary}
-              className="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-800 rounded text-sm"
-            >
-              Retry
-            </button>
-          </div>
-        )}
-      >
-        <Component {...props} />
-      </ErrorBoundary>
-    );
-  };
-}
+// Export the error boundary wrapper for token-related components
+export { withTokenErrorBoundary };
