@@ -152,12 +152,12 @@ export const useChatStore = create<FullChatStore>()(
           availableProviders: get().availableProviders,
           currentProvider: get().currentProvider,
           features: get().features,
-        }, false, 'chat/resetState');
+        }, false, { type: 'chat/resetState' });
       },
       
       // Implement setUserInput function
       setUserInput: (input: string) => {
-        set({ userInput: input }, false, 'chat/setUserInput');
+        set({ userInput: input }, false, { type: 'chat/setUserInput' });
       },
       
       // Add methods to add, update, and retrieve messages
@@ -168,7 +168,7 @@ export const useChatStore = create<FullChatStore>()(
             timestamp: new Date().toISOString(),
             ...message,
           }]
-        }), false, 'chat/addMessage');
+        }), false, { type: 'chat/addMessage' });
       },
       
       updateMessage: (id: string, updates: Partial<Message>) => {
@@ -176,7 +176,7 @@ export const useChatStore = create<FullChatStore>()(
           messages: state.messages.map(msg => 
             msg.id === id ? { ...msg, ...updates } : msg
           )
-        }), false, 'chat/updateMessage');
+        }), false, { type: 'chat/updateMessage' });
       },
       
       ...createInitializationActions(set, get),

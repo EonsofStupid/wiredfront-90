@@ -1,132 +1,125 @@
-import React, { useState, useCallback } from 'react';
-import { useChatStore } from '../store';
-import { useMessageStore } from '../messaging/MessageManager';
-import { v4 as uuidv4 } from 'uuid';
+
+import React, { useState, useRef, useEffect } from 'react';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Send, Mic } from 'lucide-react';
-import { VoiceToTextButton } from '../features/voice-to-text';
-import { supabase } from '@/integrations/supabase/client';
-import { parseCommand, executeCommand } from '@/services/chat/CommandHandler';
-import { toast } from 'sonner';
+import { Send, Mic, MicOff } from 'lucide-react';
+import { useChatStore } from '../store/chatStore';
+import { VoiceToTextButton } from '../components/VoiceToTextButton';
+import { Message } from '@/types/chat';
+import { v4 as uuidv4 } from 'uuid';
 
-export const ChatInputModule = () => {
-  const { userInput, setUserInput, isWaitingForResponse, chatId } = useChatStore();
-  const addMessage = useMessageStore((state) => state.addMessage);
-  const [isProcessing, setIsProcessing] = useState(false);
+interface ChatInputModuleProps {
+  onSubmit?: (message: Message) => void;
+  placeholder?: string;
+  autoFocus?: boolean;
+  disabled?: boolean;
+}
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUserInput(e.target.value);
-  };
+export const ChatInputModule: React.FC<ChatInputModuleProps> = ({
+  onSubmit,
+  placeholder = 'Type a message...',
+  autoFocus = false,
+  disabled = false,
+}) => {
+  const { userInput, setUserInput, features } = useChatStore();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isRecording, setIsRecording] = useState(false);
 
-  const sendMessage = useCallback(async () => {
-    if (!userInput.trim() || isWaitingForResponse || isProcessing) return;
-
-    // Check if the input is a command
-    const { isCommand, command, args } = parseCommand(userInput);
-    
-    if (isCommand) {
-      // Execute command and clear input
-      const processed = await executeCommand(command, args);
-      setUserInput('');
-      return;
+  useEffect(() => {
+    if (autoFocus && textareaRef.current) {
+      textareaRef.current.focus();
     }
+  }, [autoFocus]);
 
-    // Create new message ID
-    const messageId = uuidv4();
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     
-    // Add the user message
-    addMessage({
-      id: messageId,
+    if (!userInput.trim()) return;
+    
+    const newMessage: Message = {
+      id: uuidv4(),
+      content: userInput.trim(),
       role: 'user',
-      content: userInput,
-      timestamp: new Date(),
-      status: 'sent',
-      sessionId: chatId || 'default',
-    });
-
-    // Clear the input
+      timestamp: new Date().toISOString(),
+      metadata: {}
+    };
+    
+    onSubmit?.(newMessage);
     setUserInput('');
     
-    // Set processing state
-    setIsProcessing(true);
-    
-    try {
-      // Send the message to the API
-      const { data, error } = await supabase.functions.invoke('chat', {
-        body: { message: userInput, chatId }
-      });
-      
-      if (error) {
-        toast.error('Error sending message');
-        console.error('Error sending message:', error);
-        
-        // Add error response
-        addMessage({
-          id: uuidv4(),
-          role: 'assistant',
-          content: `Error: ${error.message || 'Failed to send message'}`,
-          timestamp: new Date(),
-          status: 'error',
-          sessionId: chatId || 'default',
-        });
-        
-        return;
-      }
-      
-      // Add the assistant response
-      addMessage({
-        id: uuidv4(),
-        role: 'assistant',
-        content: data?.response || 'No response received',
-        timestamp: new Date(),
-        status: 'received',
-        sessionId: chatId || 'default',
-      });
-    } catch (error) {
-      console.error('Error in chat flow:', error);
-      
-      // Add error response
-      addMessage({
-        id: uuidv4(),
-        role: 'assistant',
-        content: `Error: ${error.message || 'An unexpected error occurred'}`,
-        timestamp: new Date(),
-        status: 'error',
-        sessionId: chatId || 'default',
-      });
-    } finally {
-      setIsProcessing(false);
+    // Auto-focus the textarea after submission
+    if (textareaRef.current) {
+      textareaRef.current.focus();
     }
-  }, [userInput, isWaitingForResponse, isProcessing, chatId, addMessage, setUserInput]);
+  };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Submit on Enter (without Shift)
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      handleSubmit();
     }
+  };
+
+  const toggleRecording = () => {
+    setIsRecording(!isRecording);
+    
+    if (!isRecording) {
+      // Start recording logic
+    } else {
+      // Stop recording logic
+    }
+  };
+
+  const handleVoiceInput = (text: string) => {
+    setUserInput(prev => prev ? `${prev} ${text}` : text);
+    
+    // Create speech recognition message
+    const speechRecognitionMessage: Message = {
+      id: uuidv4(),
+      content: text,
+      role: 'system',
+      timestamp: new Date().toISOString(),
+      metadata: {
+        type: 'voice-recognition',
+        recognized: true
+      }
+    };
+    
+    // Log the recognized speech
+    console.log('Voice input recognized:', speechRecognitionMessage);
   };
 
   return (
-    <div className="p-4 border-t bg-background flex items-center gap-2">
-      <VoiceToTextButton onVoiceInput={setUserInput} />
-      
-      <Input
-        placeholder="Type a message..."
-        value={userInput}
-        onChange={handleInputChange}
-        onKeyDown={handleKeyDown}
-        disabled={isWaitingForResponse || isProcessing}
-        className="flex-1"
-      />
-      
-      <Button 
-        onClick={sendMessage} 
-        disabled={!userInput.trim() || isWaitingForResponse || isProcessing}
-        size="icon"
-      >
-        <Send className="h-4 w-4" />
-      </Button>
-    </div>
+    <form onSubmit={handleSubmit} className="chat-input-module mt-4">
+      <div className="flex items-end space-x-2">
+        <div className="flex-1 relative">
+          <Textarea
+            ref={textareaRef}
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            className="min-h-[60px] resize-none pr-10"
+            disabled={disabled}
+          />
+          
+          {features.voice && (
+            <div className="absolute right-2 bottom-2">
+              <VoiceToTextButton onVoiceCapture={handleVoiceInput} />
+            </div>
+          )}
+        </div>
+        
+        <Button 
+          type="submit" 
+          size="icon" 
+          disabled={!userInput.trim() || disabled}
+          className="h-[60px]"
+        >
+          <Send className="h-5 w-5" />
+        </Button>
+      </div>
+    </form>
   );
 };

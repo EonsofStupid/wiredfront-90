@@ -21,7 +21,7 @@ export function createFeatureToggleActions(
           }
         }),
         false,
-        `features/toggle/${feature}`
+        { type: 'toggleFeature', feature, value: !get().features[feature as keyof typeof get().features] }
       );
     },
     
@@ -39,7 +39,7 @@ export function createFeatureToggleActions(
           }
         }),
         false,
-        `features/enable/${feature}`
+        { type: 'enableFeature', feature }
       );
     },
     
@@ -57,7 +57,7 @@ export function createFeatureToggleActions(
           }
         }),
         false,
-        `features/disable/${feature}`
+        { type: 'disableFeature', feature }
       );
     },
     
@@ -75,7 +75,7 @@ export function createFeatureToggleActions(
           }
         }),
         false,
-        `features/setState/${feature}/${isEnabled}`
+        { type: 'setFeatureState', feature, isEnabled }
       );
     }
   };

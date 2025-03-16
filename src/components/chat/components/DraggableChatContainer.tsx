@@ -1,139 +1,172 @@
 
-import React, { useRef, useEffect, memo } from "react";
-import { useDraggable } from "@dnd-kit/core";
-import { Card, CardHeader } from "@/components/ui/card";
-import { ChatHeader } from "./ChatHeader";
-import { ChatContent } from "./ChatContent";
-import { useChatMode } from "../providers/ChatModeProvider";
-import { useChatStore } from "../store/chatStore";
-import { motion } from "framer-motion";
-import { logger } from "@/services/chat/LoggingService";
+import React, { useRef, useState, useEffect } from 'react';
+import { X, Minus, Maximize, ArrowDownToLine } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useChatStore } from '../store/chatStore';
+import { useChatMode } from '../providers/ChatModeProvider';
+import ChatContent from './ChatContent';
+import { ChatMode } from '@/integrations/supabase/types/enums';
 
 interface DraggableChatContainerProps {
-  scrollRef: React.RefObject<HTMLDivElement>;
-  isEditorPage: boolean;
+  children?: React.ReactNode;
 }
 
-function DraggableChatContainerBase({
-  scrollRef,
-  isEditorPage,
-}: DraggableChatContainerProps) {
-  const { mode } = useChatMode();
-  const chatRef = useRef<HTMLDivElement>(null);
-  const { isMinimized, showSidebar, toggleSidebar, toggleMinimize, toggleChat, docked, position } = useChatStore();
-  const prevPosition = useRef(position);
+const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({ children }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  
+  const { 
+    isMinimized, 
+    toggleMinimize, 
+    docked,
+    toggleDocked,
+    isOpen,
+    toggleChat
+  } = useChatStore();
+  
+  const { mode, isEditorPage } = useChatMode();
 
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: "chat-window",
-    disabled: docked
-  });
-
-  const adjustedTransform = transform && !docked ? {
-    x: transform.x,
-    y: transform.y,
-  } : undefined;
-
-  const style = adjustedTransform ? {
-    transform: `translate3d(${adjustedTransform.x}px, ${adjustedTransform.y}px, 0)`,
-  } : undefined;
-
-  // Handle position change and viewport boundaries
+  // Set initial position based on screen dimensions
   useEffect(() => {
-    if (!chatRef.current || docked) return;
-
-    const updatePosition = () => {
-      if (!chatRef.current) return;
-      const rect = chatRef.current.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      
-      let transformX = 0;
-      let transformY = 0;
-      
-      // Horizontal bounds
-      if (rect.right > viewportWidth) {
-        transformX = viewportWidth - rect.right - 20;
-      } else if (rect.left < 0) {
-        transformX = Math.abs(rect.left) + 20;
-      }
-      
-      // Vertical bounds
-      if (rect.bottom > viewportHeight) {
-        transformY = viewportHeight - rect.bottom - 20;
-      } else if (rect.top < 0) {
-        transformY = Math.abs(rect.top) + 20;
-      }
-      
-      if (transformX !== 0 || transformY !== 0) {
-        chatRef.current.style.transform = `translate3d(${transformX}px, ${transformY}px, 0)`;
-        logger.info('Chat position adjusted to fit viewport', { transformX, transformY });
-      }
-    };
-
-    updatePosition();
-    
-    // Performance optimization: Use passive listener
-    window.addEventListener('resize', updatePosition, { passive: true });
-    return () => window.removeEventListener('resize', updatePosition);
-  }, [docked]);
-
-  // Log position changes
-  useEffect(() => {
-    if (prevPosition.current !== position) {
-      logger.info('Chat position changed', { from: prevPosition.current, to: position });
-      prevPosition.current = position;
+    if (containerRef.current && typeof window !== 'undefined') {
+      const rect = containerRef.current.getBoundingClientRect();
+      setPosition({
+        x: window.innerWidth - rect.width - 20,
+        y: window.innerHeight - rect.height - 20
+      });
     }
-  }, [position]);
+  }, []);
 
-  // Determine the title based on the current mode
-  const title = mode === 'editor' ? 'Code Assistant' : mode === 'chat-only' ? 'Context Planning' : 'Chat';
-
-  // Stop propagation for clicks inside the chat window
-  const handleContainerClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (docked) return;
+    
+    setIsDragging(true);
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+    }
   };
 
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging || docked) return;
+    
+    setPosition({
+      x: e.clientX - dragOffset.x,
+      y: e.clientY - dragOffset.y
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Add and remove event listeners
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    } else {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    }
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
+
+  if (!isOpen) return null;
+
+  // Determine position styles
+  const positionStyles = docked
+    ? { bottom: '20px', right: '20px' } // Docked position
+    : { left: `${position.x}px`, top: `${position.y}px` }; // Free-floating position
+
+  // Dynamic classes based on state
+  const chatContainerClasses = `
+    chat-container 
+    ${isMinimized ? 'minimized' : 'expanded'} 
+    ${docked ? 'docked' : 'floating'}
+    ${(mode === 'dev' && isEditorPage) ? 'editor-mode' : mode === 'chat-only' ? 'chat-only-mode' : ''}
+  `;
+
   return (
-    <motion.div 
-      ref={(node) => {
-        setNodeRef(node);
-        if (chatRef) {
-          chatRef.current = node;
-        }
+    <div 
+      ref={containerRef}
+      className={chatContainerClasses}
+      style={{
+        ...positionStyles,
+        cursor: isDragging ? 'grabbing' : docked ? 'default' : 'grab',
+        zIndex: 1000,
+        position: 'fixed',
+        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.12)',
+        borderRadius: '8px',
+        overflow: 'hidden',
+        background: 'var(--background)',
+        display: 'flex',
+        flexDirection: 'column',
+        width: isMinimized ? '300px' : '400px',
+        height: isMinimized ? '50px' : '600px',
+        resize: 'both',
+        transition: 'width 0.2s, height 0.2s',
       }}
-      style={style}
-      {...(docked ? {} : { ...attributes, ...listeners })}
-      className="w-[var(--chat-width)] transition-all duration-300 chat-container flex flex-col h-[var(--chat-height)]" 
-      onClick={handleContainerClick}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-      transition={{ duration: 0.2 }}
-      data-testid="chat-container"
     >
-      <Card className="shadow-xl glass-card neon-border overflow-hidden h-full flex flex-col">
-        <CardHeader className={`p-0 flex-shrink-0 ${docked ? '' : 'cursor-move'}`}>
-          <ChatHeader 
-            title={title}
-            showSidebar={showSidebar}
-            isMinimized={isMinimized}
-            onToggleSidebar={toggleSidebar}
-            onMinimize={toggleMinimize}
-            onClose={toggleChat}
-          />
-        </CardHeader>
-
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          <ChatContent 
-            scrollRef={scrollRef} 
-            isMinimized={isMinimized} 
-            isEditorPage={isEditorPage}
-          />
+      {/* Chat header/drag handle */}
+      <div 
+        className="chat-header flex items-center justify-between p-3 bg-background border-b"
+        onMouseDown={handleMouseDown}
+      >
+        <div className="chat-title font-medium text-sm">
+          {mode === 'dev' ? 'Developer Assistant' : 'Chat Assistant'}
         </div>
-      </Card>
-    </motion.div>
+        
+        <div className="flex items-center space-x-1">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-6 w-6" 
+            onClick={toggleDocked}
+            title={docked ? "Undock" : "Dock"}
+          >
+            {docked ? <ArrowDownToLine className="h-4 w-4" /> : <ArrowDownToLine className="h-4 w-4" />}
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-6 w-6" 
+            onClick={toggleMinimize}
+            title={isMinimized ? "Maximize" : "Minimize"}
+          >
+            {isMinimized ? <Maximize className="h-4 w-4" /> : <Minus className="h-4 w-4" />}
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-6 w-6" 
+            onClick={toggleChat}
+            title="Close"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+      
+      {/* Chat content area */}
+      {!isMinimized && (
+        <div className="chat-content-wrapper flex-1 overflow-auto p-4">
+          {children || <ChatContent />}
+        </div>
+      )}
+    </div>
   );
-}
+};
 
-// Optimize with memo to prevent unnecessary re-renders
-export const DraggableChatContainer = memo(DraggableChatContainerBase);
+export default DraggableChatContainer;

@@ -1,174 +1,141 @@
-import { useEffect, useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useChatStore } from '@/components/chat/store/chatStore';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuthStore } from '@/stores/auth';
 import { toast } from 'sonner';
-import { logger } from '@/services/chat/LoggingService';
-import { useCombinedFeatureFlag } from './useFeatureFlags';
-import { FeatureKey } from '@/components/chat/store/actions/feature-actions';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
-import { Json } from '@/integrations/supabase/types';
-import { isTokenEnforcementMode, extractEnforcementMode } from '@/utils/token-utils';
-import { withTokenErrorBoundary } from '@/components/tokens/TokenErrorBoundary';
+import { useFeatureFlags } from './useFeatureFlags';
+import { KnownFeatureFlag } from '@/types/admin/settings/feature-flags';
 
 export function useTokenManagement() {
-  const { user } = useAuthStore();
-  const { 
-    tokenControl, 
-    features,
-    addTokens, 
-    spendTokens, 
-    setTokenBalance,
-    setTokenEnforcementMode,
-    setFeatureState 
-  } = useChatStore();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  
-  const tokenEnforcementFlag = useCombinedFeatureFlag('tokenEnforcement');
-  
-  // Fetch user's token balance on mount if authenticated
+  const { tokenControl, setTokenEnforcementMode, addTokens, spendTokens, setTokenBalance } = useChatStore();
+  const { isEnabled: isTokenEnforcementEnabled, toggleFeature } = useFeatureFlags();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load token settings from the database
   useEffect(() => {
-    const fetchTokenBalance = async () => {
-      if (!user?.id) return;
-      
-      setIsLoading(true);
-      setError(null);
-      
+    const loadTokenSettings = async () => {
       try {
-        const { data, error } = await supabase
-          .from('user_tokens')
-          .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle();
+        setIsLoading(true);
         
-        if (error) {
-          logger.error('Error fetching token balance:', error);
-          setError(new Error(`Failed to fetch token balance: ${error.message}`));
+        // Get current user
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData?.user) {
+          setIsLoading(false);
           return;
         }
         
-        if (data) {
-          setTokenBalance(data.balance);
-        } else {
-          // Create a new entry if one doesn't exist
-          const { error: insertError } = await supabase
-            .from('user_tokens')
-            .insert({ user_id: user.id, balance: 10 }); // Default 10 tokens
+        // Get token settings
+        const { data, error } = await supabase
+          .from('user_tokens')
+          .select('*')
+          .eq('user_id', userData.user.id)
+          .single();
+        
+        if (error && error.code !== 'PGRST116') {
+          // PGRST116 is "no rows returned" which is expected for new users
+          console.error('Error loading token settings:', error);
+          toast.error('Failed to load token settings');
+        } else if (data) {
+          // Set token balance and settings
+          setTokenBalance(data.balance || 0);
+          setTokenEnforcementMode(data.enforcement_mode || 'never');
           
-          if (insertError) {
-            logger.error('Error creating token balance:', insertError);
-            setError(new Error(`Failed to create token balance: ${insertError.message}`));
-            return;
+          // Enable token enforcement feature flag if it's enabled in settings
+          if (data.enforcement_mode !== 'never' && !isTokenEnforcementEnabled(KnownFeatureFlag.TOKEN_CONTROL)) {
+            toggleFeature(KnownFeatureFlag.TOKEN_CONTROL);
           }
-          
-          setTokenBalance(10);
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        logger.error('Error in fetchTokenBalance:', error);
-        setError(new Error(`An unexpected error occurred: ${errorMessage}`));
+        console.error('Error in loadTokenSettings:', error);
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchTokenBalance();
-  }, [user?.id, setTokenBalance]);
-  
-  // Fetch token enforcement configuration
-  useEffect(() => {
-    const fetchTokenConfig = async () => {
-      if (!user?.id) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('feature_flags')
-          .select('*')
-          .eq('key', 'token_enforcement')
-          .maybeSingle();
-        
-        if (error) {
-          logger.error('Error fetching token config:', error);
-          return;
-        }
-        
-        if (data) {
-          // Enable/disable token enforcement based on global flag
-          setFeatureState('tokenEnforcement', data.enabled);
-          
-          // Set enforcement mode from metadata if available
-          if (data.metadata) {
-            const mode = extractEnforcementMode(data.metadata);
-            if (mode) {
-              setTokenEnforcementMode(mode);
-            } else {
-              logger.warn('No valid enforcement mode found in metadata');
-            }
-          }
-        }
-      } catch (error) {
-        logger.error('Error in fetchTokenConfig:', error);
-      }
-    };
-    
-    fetchTokenConfig();
-  }, [user?.id, setFeatureState, setTokenEnforcementMode]);
-  
-  // Function to check if a user has enough tokens for an operation
-  const hasEnoughTokens = (amount = 1) => {
-    // If token enforcement is disabled, always return true
-    if (!features.tokenEnforcement) return true;
-    
-    return tokenControl.balance >= amount;
-  };
-  
-  // Function to handle token spending with error handling
-  const handleSpendTokens = async (amount = 1) => {
-    // If token enforcement is disabled, allow the operation
-    if (!features.tokenEnforcement) return true;
-    
-    if (!user) {
-      toast.error('You must be logged in to use this feature');
-      return false;
-    }
-    
-    if (!hasEnoughTokens(amount)) {
-      toast.error(`Not enough tokens. You need ${amount} tokens for this operation.`);
-      return false;
-    }
-    
+    loadTokenSettings();
+  }, []);
+
+  // Toggle token enforcement
+  const toggleTokenEnforcement = async () => {
     try {
-      const success = await spendTokens(amount);
-      if (!success) {
-        toast.error('Failed to process tokens. Please try again.');
-      }
-      return success;
+      setIsSubmitting(true);
+      
+      // Toggle the feature flag
+      toggleFeature(KnownFeatureFlag.TOKEN_CONTROL);
+      
+      // If it's being enabled, set the enforcement mode to 'always'
+      // If it's being disabled, set it to 'never'
+      const newMode: TokenEnforcementMode = isTokenEnforcementEnabled(KnownFeatureFlag.TOKEN_CONTROL) ? 'never' : 'always';
+      
+      await handleUpdateEnforcementConfig(newMode);
+      
+      toast.success(`Token enforcement ${newMode === 'never' ? 'disabled' : 'enabled'}`);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('Error spending tokens:', error);
-      toast.error(`Error processing tokens: ${errorMessage}`);
-      return false;
+      console.error('Error toggling token enforcement:', error);
+      toast.error('Failed to update token enforcement settings');
+    } finally {
+      setIsSubmitting(false);
     }
   };
-  
+
+  // Update token enforcement configuration
+  const handleUpdateEnforcementConfig = async (mode: TokenEnforcementMode) => {
+    try {
+      setIsSubmitting(true);
+      
+      // Update local state
+      setTokenEnforcementMode(mode);
+      
+      // Get current user
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) {
+        throw new Error('User not authenticated');
+      }
+      
+      // Update in database
+      const { error } = await supabase
+        .from('user_tokens')
+        .upsert({
+          user_id: userData.user.id,
+          enforcement_mode: mode,
+          last_updated: new Date().toISOString()
+        }, { onConflict: 'user_id' });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // If mode is 'never', ensure tokenEnforcement feature is disabled
+      if (mode === 'never' && isTokenEnforcementEnabled(KnownFeatureFlag.TOKEN_CONTROL)) {
+        toggleFeature(KnownFeatureFlag.TOKEN_CONTROL);
+      }
+      
+      // If mode is not 'never', ensure tokenEnforcement feature is enabled
+      if (mode !== 'never' && !isTokenEnforcementEnabled(KnownFeatureFlag.TOKEN_CONTROL)) {
+        toggleFeature(KnownFeatureFlag.TOKEN_CONTROL);
+      }
+      
+      toast.success('Token enforcement settings updated');
+    } catch (error) {
+      console.error('Error updating enforcement config:', error);
+      toast.error('Failed to update token enforcement settings');
+      throw error;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return {
-    tokenBalance: tokenControl.balance,
-    enforcementMode: tokenControl.enforcementMode,
-    isTokenEnforcementEnabled: features.tokenEnforcement,
-    tokensPerQuery: tokenControl.tokensPerQuery,
-    freeQueryLimit: tokenControl.freeQueryLimit,
-    queriesUsed: tokenControl.queriesUsed,
-    isLoading,
-    error,
+    tokenControl,
+    isTokenEnforcementEnabled: isTokenEnforcementEnabled(KnownFeatureFlag.TOKEN_CONTROL),
+    toggleTokenEnforcement,
+    handleUpdateEnforcementConfig,
     addTokens,
-    spendTokens: handleSpendTokens,
+    spendTokens,
     setTokenBalance,
-    hasEnoughTokens,
-    setEnforcementMode: setTokenEnforcementMode,
-    toggleTokenEnforcement: () => setFeatureState('tokenEnforcement', !features.tokenEnforcement)
+    isSubmitting,
+    isLoading
   };
 }
-
-// Export the error boundary wrapper for token-related components
-export { withTokenErrorBoundary };

@@ -1,165 +1,139 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
-import { FeatureKey } from './feature/types';
-import { TokenEnforcementMode } from '@/integrations/supabase/types';
-import { Json } from '@/integrations/supabase/types';
+import { toast } from 'sonner';
+import { ChatState } from '../types/chat-store-types';
+import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
+import { KnownFeatureFlag } from '@/types/admin/settings/feature-flags';
 
-// Default initialization state for chat features and settings
-const DEFAULT_FEATURES = {
-  [FeatureKey.DEV_MODE]: false,
-  [FeatureKey.CHAT_GPT4]: false,
-  [FeatureKey.ADVANCED_RAG]: false,
-  [FeatureKey.VOICE_COMMANDS]: false,
-  [FeatureKey.GITHUB_SYNC]: true,
-  [FeatureKey.IMAGE_GENERATION]: false,
-  [FeatureKey.TOKEN_CONTROL]: false
+const FEATURE_MAP = {
+  [KnownFeatureFlag.CODE_ASSISTANT]: 'codeAssistant',
+  [KnownFeatureFlag.RAG_SUPPORT]: 'ragSupport',
+  [KnownFeatureFlag.GITHUB_SYNC]: 'githubSync',
+  [KnownFeatureFlag.NOTIFICATIONS]: 'notifications',
+  [KnownFeatureFlag.TOKEN_CONTROL]: 'tokenEnforcement',
+  [KnownFeatureFlag.VOICE_COMMANDS]: 'voice',
+  [KnownFeatureFlag.ADVANCED_RAG]: 'rag',
 };
 
-// Default token control settings
-const DEFAULT_TOKEN_CONTROL = {
-  enforcementMode: 'never' as TokenEnforcementMode,
-  balance: 1000,
-  usageHistory: [],
-  tierLimits: {
-    free: 1000,
-    basic: 5000,
-    premium: 20000,
-    enterprise: -1 // unlimited
-  }
-};
-
-export function createInitializationActions(set: any, get: any) {
+export const createInitializationActions = (set: any, get: any) => {
   return {
-    // Initialize the store with user settings
-    initializeStore: async () => {
+    // Initialize chat settings and feature flags
+    initializeChatSettings: async () => {
       try {
-        // Log initialization start
-        logger.info('Initializing chat store');
+        logger.info('Initializing chat settings');
         
-        // First, set default values
-        set(
-          (state: any) => ({
-            isInitialized: false,
-            isLoading: true,
-            error: null,
-            features: DEFAULT_FEATURES,
-            tokenControl: DEFAULT_TOKEN_CONTROL,
-            providers: [],
-            currentProvider: null,
-            availableProviders: [],
-          }),
-          false,
-          { type: 'initializeStoreDefaults' }
-        );
-
-        // Get the current user
-        const { data: authData } = await supabase.auth.getSession();
-        if (!authData?.session?.user) {
-          // No authenticated user
-          logger.warn('No authenticated user during store initialization');
-          set(
-            (state: any) => ({
-              isInitialized: true,
-              isLoading: false,
-              userLoggedIn: false,
-            }),
-            false,
-            { type: 'initializeStoreComplete' }
-          );
+        // Check for user session first
+        const { data: sessionData } = await supabase.auth.getSession();
+        const isAuthenticated = !!sessionData?.session;
+        
+        if (!isAuthenticated) {
+          logger.info('No authenticated user, using default settings');
           return;
         }
-
-        // User is authenticated
-        const userId = authData.session.user.id;
-
-        // Load user settings from the database
-        const { data: settings, error: settingsError } = await supabase
-          .from('chat_settings')
+        
+        // Fetch feature flags from database if authenticated
+        const { data: featureFlags, error: flagError } = await supabase
+          .from('feature_flags')
           .select('*')
-          .eq('user_id', userId)
+          .eq('enabled', true);
+        
+        if (flagError) {
+          logger.error('Error fetching feature flags:', flagError);
+        } else if (featureFlags) {
+          logger.info(`Loaded ${featureFlags.length} feature flags`);
+          
+          // Apply feature flags to local state
+          const featureUpdates: Record<string, boolean> = {};
+          
+          featureFlags.forEach((flag) => {
+            const mappedFeature = FEATURE_MAP[flag.key as KnownFeatureFlag];
+            if (mappedFeature) {
+              featureUpdates[mappedFeature] = true;
+            }
+          });
+          
+          if (Object.keys(featureUpdates).length > 0) {
+            set(
+              (state: ChatState) => ({
+                features: {
+                  ...state.features,
+                  ...featureUpdates
+                }
+              }),
+              false,
+              { type: 'initializeChatSettings/features', features: featureUpdates }
+            );
+          }
+        }
+        
+        // Fetch token settings if authenticated
+        const { data: tokenData, error: tokenError } = await supabase
+          .from('user_tokens')
+          .select('*')
+          .eq('user_id', sessionData.session?.user.id)
           .single();
-
-        if (settingsError && settingsError.code !== 'PGRST116') {
-          // Log error but continue with defaults
-          logger.error('Failed to load chat settings', { error: settingsError });
+        
+        if (tokenError && tokenError.code !== 'PGRST116') {
+          // PGRST116 is "no rows returned" which is fine for new users
+          logger.error('Error fetching token settings:', tokenError);
+        } else if (tokenData) {
+          logger.info('Loaded token settings:', tokenData);
+          
+          set(
+            (state: ChatState) => ({
+              tokenControl: {
+                ...state.tokenControl,
+                balance: tokenData.balance || 0,
+                enforcementMode: tokenData.enforcement_mode || 'never',
+                lastUpdated: tokenData.last_updated,
+                queriesUsed: tokenData.queries_used || 0,
+                freeQueryLimit: tokenData.free_query_limit || 5,
+                tokensPerQuery: tokenData.tokens_per_query || 1
+              }
+            }),
+            false,
+            { type: 'initializeChatSettings/tokenControl', tokenData }
+          );
         }
-
-        // Extract feature flags from settings
-        let features = { ...DEFAULT_FEATURES };
-        if (settings?.ui_customizations && typeof settings.ui_customizations === 'object') {
-          // Check for features property
-          const customizations = settings.ui_customizations as Record<string, any>;
-          if (customizations.features) {
-            features = {
-              ...features,
-              ...customizations.features
-            };
-          }
-        }
-
-        // Extract token control settings
-        let tokenControl = { ...DEFAULT_TOKEN_CONTROL };
-        if (settings?.ui_customizations && typeof settings.ui_customizations === 'object') {
-          const customizations = settings.ui_customizations as Record<string, any>; 
-          if (customizations.tokenControl) {
-            tokenControl = {
-              ...tokenControl,
-              ...customizations.tokenControl,
-              // Ensure the enforcement mode is valid
-              enforcementMode: isValidEnforcementMode(customizations.tokenControl?.enforcementMode) 
-                ? customizations.tokenControl.enforcementMode 
-                : DEFAULT_TOKEN_CONTROL.enforcementMode
-            };
-          }
-        }
-
-        // Get data about available providers
-        const { data: availableProviders, error: providersError } = await supabase
-          .from('available_providers')
+        
+        // Fetch available chat providers
+        const { data: providerData, error: providerError } = await supabase
+          .from('api_configurations')
           .select('*')
           .eq('is_enabled', true);
-
-        if (providersError) {
-          logger.error('Failed to load available providers', { error: providersError });
+        
+        if (providerError) {
+          logger.error('Error fetching providers:', providerError);
+        } else if (providerData) {
+          logger.info(`Loaded ${providerData.length} providers`);
+          
+          const chatProviders = providerData.map((provider) => ({
+            id: provider.id,
+            name: provider.api_type,
+            type: provider.api_type,
+            isDefault: provider.is_default || false,
+            isEnabled: provider.is_enabled,
+            category: (provider.provider_settings?.category || 'chat') as 'chat' | 'image' | 'mixed' | 'integration',
+            models: provider.provider_settings?.models || []
+          }));
+          
+          set(
+            (state: ChatState) => ({
+              availableProviders: chatProviders,
+              currentProvider: chatProviders.find((p) => p.isDefault) || chatProviders[0] || state.currentProvider
+            }),
+            false,
+            { type: 'initializeChatSettings/providers', providers: chatProviders }
+          );
         }
-
-        // Finally set the fully loaded state
-        set(
-          (state: any) => ({
-            isInitialized: true,
-            isLoading: false,
-            error: null,
-            userLoggedIn: true,
-            features,
-            tokenControl,
-            availableProviders: availableProviders || [],
-            currentProvider: settings?.api_provider || 'openai',
-          }),
-          false,
-          { type: 'initializeStoreComplete' }
-        );
-
-        logger.info('Chat store initialization completed successfully');
+        
+        set({ initialized: true }, false, { type: 'initializeChatSettings/complete' });
+        
       } catch (error) {
-        // Log the error and set error state
-        logger.error('Error initializing chat store', { error });
-        set(
-          (state: any) => ({
-            isInitialized: true,
-            isLoading: false,
-            error: error instanceof Error ? error.message : 'Unknown initialization error',
-          }),
-          false,
-          { type: 'initializeStoreError', error }
-        );
+        logger.error('Failed to initialize chat settings:', error);
+        toast.error('Failed to initialize chat. Some features may be unavailable.');
       }
-    },
+    }
   };
-}
-
-// Helper to validate the enforcement mode
-function isValidEnforcementMode(mode: any): mode is TokenEnforcementMode {
-  const validModes: TokenEnforcementMode[] = ['always', 'never', 'role_based', 'mode_based'];
-  return typeof mode === 'string' && validModes.includes(mode as TokenEnforcementMode);
-}
+};

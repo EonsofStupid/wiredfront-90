@@ -1,153 +1,145 @@
 
-import { TokenEnforcementMode } from '@/integrations/supabase/types';
 import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/services/chat/LoggingService';
-import { FeatureKey } from '../types';
-import { ChatProvider } from '../../../types/chat-store-types';
+import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
+import { ChatState } from '../../../types/chat-store-types';
+import { SetState, GetState } from '../types';
+import { toast } from 'sonner';
 
-export const createTokenActions = (set: any, get: any) => ({
-  setTokenEnforcementMode: (mode: TokenEnforcementMode) => {
-    set(
-      (state: any) => ({
-        tokenControl: {
-          ...state.tokenControl,
-          enforcementMode: mode
-        }
-      }),
-      false,
-      { type: 'setTokenEnforcementMode', mode }
-    );
-
-    // Log the mode change
-    logger.info(`Token enforcement mode set to: ${mode}`);
-  },
-
-  addTokens: async (amount: number) => {
-    try {
+export function createTokenActions(
+  set: SetState<ChatState>,
+  get: GetState<ChatState>
+) {
+  return {
+    setTokenEnforcementMode: (mode: TokenEnforcementMode) => {
       set(
-        (state: any) => ({
+        state => ({
           tokenControl: {
             ...state.tokenControl,
-            balance: state.tokenControl.balance + amount
+            enforcementMode: mode
           }
         }),
         false,
-        { type: 'addTokens', amount }
+        { type: 'setTokenEnforcementMode', mode }
       );
+    },
 
-      // Log token addition
-      logger.info(`Added ${amount} tokens to balance`);
+    addTokens: async (amount: number): Promise<boolean> => {
+      try {
+        const currentBalance = get().tokenControl.balance;
+        
+        set(
+          state => ({
+            tokenControl: {
+              ...state.tokenControl,
+              balance: currentBalance + amount,
+              lastUpdated: new Date().toISOString()
+            }
+          }),
+          false,
+          { type: 'addTokens', amount, newBalance: currentBalance + amount }
+        );
+        
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user) {
+          await supabase.from('user_tokens').upsert({
+            user_id: userData.user.id,
+            balance: currentBalance + amount,
+            last_updated: new Date().toISOString(),
+            last_transaction: {
+              type: 'add',
+              amount,
+              timestamp: new Date().toISOString()
+            }
+          }, { onConflict: 'user_id' });
+        }
+        
+        return true;
+      } catch (error) {
+        console.error('Error adding tokens:', error);
+        toast.error('Failed to add tokens to your account');
+        return false;
+      }
+    },
 
-      // Record token addition in database
-      await recordTokenTransaction('add', amount, {
-        reason: 'manual_add',
-      });
+    spendTokens: async (amount: number): Promise<boolean> => {
+      try {
+        const currentBalance = get().tokenControl.balance;
+        
+        if (currentBalance < amount) {
+          toast.error(`Not enough tokens. You need ${amount} but have ${currentBalance}`);
+          return false;
+        }
+        
+        set(
+          state => ({
+            tokenControl: {
+              ...state.tokenControl,
+              balance: currentBalance - amount,
+              queriesUsed: state.tokenControl.queriesUsed + 1,
+              lastUpdated: new Date().toISOString()
+            }
+          }),
+          false,
+          { type: 'spendTokens', amount, newBalance: currentBalance - amount }
+        );
+        
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user) {
+          await supabase.from('user_tokens').upsert({
+            user_id: userData.user.id,
+            balance: currentBalance - amount,
+            last_updated: new Date().toISOString(),
+            last_transaction: {
+              type: 'spend',
+              amount,
+              timestamp: new Date().toISOString()
+            },
+            queries_used: get().tokenControl.queriesUsed
+          }, { onConflict: 'user_id' });
+        }
+        
+        return true;
+      } catch (error) {
+        console.error('Error spending tokens:', error);
+        toast.error('Failed to process token transaction');
+        return false;
+      }
+    },
 
-      return true;
-    } catch (error) {
-      logger.error('Failed to add tokens', { error });
-      return false;
-    }
-  },
-
-  spendTokens: async (amount: number) => {
-    const state = get();
-    const { enforcementMode, balance } = state.tokenControl;
-
-    // If there's no enforcement, spending always succeeds
-    if (enforcementMode === 'never') {
-      logger.info('Token spending bypassed due to enforcement mode: never');
-      return true;
-    }
-
-    // Check if user has enough tokens (but only if enforcement is active)
-    if (enforcementMode === 'always' && balance < amount) {
-      logger.warn(`Token spend blocked: Requested ${amount}, balance ${balance}`);
-      return false;
-    }
-
-    // Handle role-based enforcement
-    if (enforcementMode === 'mode_based') {
-      // Implementation depends on the current mode
-      // For example, different modes might have different rules
-      const { activeMode } = state;
-      if (activeMode === 'training' && balance < amount * 2) {
-        logger.warn(`Training mode token spend blocked: Requested ${amount}, balance ${balance}`);
-        return false; 
+    setTokenBalance: async (amount: number): Promise<boolean> => {
+      try {
+        set(
+          state => ({
+            tokenControl: {
+              ...state.tokenControl,
+              balance: amount,
+              lastUpdated: new Date().toISOString()
+            }
+          }),
+          false,
+          { type: 'setTokenBalance', amount }
+        );
+        
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user) {
+          await supabase.from('user_tokens').upsert({
+            user_id: userData.user.id,
+            balance: amount,
+            last_updated: new Date().toISOString(),
+            last_transaction: {
+              type: 'set',
+              amount,
+              timestamp: new Date().toISOString()
+            }
+          }, { onConflict: 'user_id' });
+        }
+        
+        return true;
+      } catch (error) {
+        console.error('Error setting token balance:', error);
+        toast.error('Failed to update token balance');
+        return false;
       }
     }
-
-    // If we get here, spending is allowed
-    try {
-      set(
-        (state: any) => ({
-          tokenControl: {
-            ...state.tokenControl,
-            balance: state.tokenControl.balance - amount
-          }
-        }),
-        false, 
-        { type: 'spendTokens', amount }
-      );
-
-      // Record token spending in database
-      await recordTokenTransaction('spend', amount, {
-        reason: 'api_usage',
-      });
-
-      return true;
-    } catch (error) {
-      logger.error('Failed to spend tokens', { error });
-      return false;
-    }
-  },
-
-  setTokenBalance: async (amount: number) => {
-    try {
-      set(
-        (state: any) => ({
-          tokenControl: {
-            ...state.tokenControl,
-            balance: amount
-          }
-        }),
-        false,
-        { type: 'setTokenBalance', amount }
-      );
-
-      // Record token balance update in database
-      await recordTokenTransaction('set', amount, {
-        reason: 'admin_adjustment',
-      });
-
-      return true;
-    } catch (error) {
-      logger.error('Failed to set token balance', { error });
-      return false;
-    }
-  },
-});
-
-// Record token transactions to the database
-async function recordTokenTransaction(
-  transactionType: 'add' | 'spend' | 'set',
-  amount: number,
-  metadata: Record<string, any> = {}
-) {
-  try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData?.session) return;
-
-    const userId = sessionData.session.user.id;
-
-    await supabase.from('token_transaction_log').insert({
-      user_id: userId,
-      amount: transactionType === 'spend' ? -amount : amount,
-      transaction_type: transactionType,
-      description: `${transactionType} ${amount} tokens`,
-      metadata
-    });
-  } catch (error) {
-    logger.error('Failed to record token transaction', { error });
-  }
+  };
 }

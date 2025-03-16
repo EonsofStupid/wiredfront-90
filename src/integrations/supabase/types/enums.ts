@@ -7,5 +7,6 @@ export interface Enums {
   setting_type: SettingType;
 }
 
-export type ChatMode = "chat" | "dev" | "image" | "training";
+// Consistent ChatMode enum with all supported modes
+export type ChatMode = "chat" | "dev" | "image" | "training" | "code" | "editor" | "chat-only";
 export type TokenEnforcementMode = "always" | "never" | "role_based" | "mode_based";

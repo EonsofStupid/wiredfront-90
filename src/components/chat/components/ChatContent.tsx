@@ -1,5 +1,7 @@
+
 import React from 'react';
 import { useChatMode } from '../providers/ChatModeProvider';
+import { ChatMode } from '@/integrations/supabase/types/enums';
 
 interface ChatContentProps {
   className?: string;
@@ -17,11 +19,14 @@ const ChatContent: React.FC<ChatContentProps> = ({ className, ...props }) => {
       {mode === 'chat' && (
         <div>Chat Mode Content</div>
       )}
-      {mode === 'code' && (
-        <div>Code Mode Content</div>
+      {mode === 'dev' && (
+        <div>Developer Mode Content</div>
       )}
       {mode === 'image' && (
         <div>Image Mode Content</div>
+      )}
+      {mode === 'training' && (
+        <div>Training Mode Content</div>
       )}
       
       {/* Use isEditorPage to conditionally render editor-specific UI */}

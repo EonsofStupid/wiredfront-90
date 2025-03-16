@@ -9,35 +9,32 @@ export function createProviderActions(
   return {
     updateChatProvider: (providers: ChatProvider[]) => {
       set(
-        {
-          availableProviders: providers
-        }, 
-        false, 
-        'providers/update'
+        state => ({
+          availableProviders: providers,
+        }),
+        false,
+        { type: 'updateChatProvider', providers }
       );
     },
-    
+
     updateCurrentProvider: (provider: ChatProvider) => {
       set(
-        {
-          currentProvider: provider
-        },
+        state => ({
+          currentProvider: provider,
+        }),
         false,
-        'providers/setCurrent'
+        { type: 'updateCurrentProvider', provider }
       );
     },
-    
+
     updateAvailableProviders: (providers: ChatProvider[]) => {
       set(
         state => ({
-          providers: {
-            ...state.providers,
-            availableProviders: providers
-          }
+          availableProviders: providers,
         }),
         false,
-        'providers/setAvailable'
+        { type: 'updateAvailableProviders', providers }
       );
-    }
+    },
   };
 }

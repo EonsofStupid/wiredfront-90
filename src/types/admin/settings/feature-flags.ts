@@ -9,11 +9,14 @@ export enum KnownFeatureFlag {
   VOICE_COMMANDS = 'voice_commands',
   GITHUB_SYNC = 'github_sync',
   IMAGE_GENERATION = 'image_generation',
-  TOKEN_CONTROL = 'token_control'
+  TOKEN_CONTROL = 'token_control',
+  CODE_ASSISTANT = 'code_assistant',
+  RAG_SUPPORT = 'rag_support',
+  NOTIFICATIONS = 'notifications'
 }
 
 // Feature flag definitions with metadata
-export const featureFlags = {
+export const featureFlags: Record<KnownFeatureFlag, { name: string; description: string }> = {
   [KnownFeatureFlag.DEV_MODE]: {
     name: 'Developer Mode',
     description: 'Enable advanced developer features'
@@ -41,6 +44,18 @@ export const featureFlags = {
   [KnownFeatureFlag.TOKEN_CONTROL]: {
     name: 'Token Control System',
     description: 'Enable the token economy and usage limits'
+  },
+  [KnownFeatureFlag.CODE_ASSISTANT]: {
+    name: 'Code Assistant',
+    description: 'Enable code assistance and development support'
+  },
+  [KnownFeatureFlag.RAG_SUPPORT]: {
+    name: 'RAG Support',
+    description: 'Enable retrieval-augmented generation capabilities'
+  },
+  [KnownFeatureFlag.NOTIFICATIONS]: {
+    name: 'Notifications',
+    description: 'Enable system notifications and alerts'
   }
 };
 
@@ -72,6 +87,3 @@ export interface FeatureFlagFormValues {
   target_roles?: AppRole[];
   rollout_percentage: number;
 }
-
-// Export the KnownFeatureFlag enum and featureFlags definitions
-export { KnownFeatureFlag, featureFlags };
