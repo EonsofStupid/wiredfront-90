@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { createInitializationActions } from './actions/initialization-actions';
 import { createFeatureActions } from './actions/feature';
 import { createUIActions } from './actions/ui-actions';
-import { ChatState, ProviderCategory } from './types/chat-store-types';
+import { ChatState, ProviderCategory, ChatMode, FeatureState } from './types/chat-store-types';
 import { Message } from '@/types/chat';
 
 // Define the full store type with all action slices
@@ -13,6 +13,10 @@ type FullChatStore = ChatState &
   ReturnType<typeof createInitializationActions> & 
   ReturnType<typeof createFeatureActions> & 
   ReturnType<typeof createUIActions>;
+
+// Create empty function implementations for initial state
+const noop = () => {};
+const asyncNoop = async () => false;
 
 const initialState: ChatState = {
   initialized: false,
@@ -66,22 +70,34 @@ const initialState: ChatState = {
     providerLoading: false,
   },
   
-  // Add empty implementations for MessageActions methods
-  addMessage: () => {}, // No-op placeholder for initialState
-  updateMessage: () => {}, // No-op placeholder for initialState
+  // Initialize actions with no-op placeholders for initialState
+  addMessage: noop,
+  updateMessage: noop,
+  resetChatState: noop,
+  setUserInput: noop,
+  togglePosition: noop,
+  toggleDocked: noop,
+  setScale: noop,
   
-  // Define the resetChatState function in initialState to satisfy type requirements
-  resetChatState: () => {},
+  // Mode actions
+  setCurrentMode: noop,
   
-  // Define setUserInput in initialState
-  setUserInput: () => {},
+  // Provider actions
+  updateCurrentProvider: noop,
+  updateAvailableProviders: noop,
+  updateChatProvider: noop,
   
-  // Define toggle functions for position and docked state
-  togglePosition: () => {},
-  toggleDocked: () => {},
+  // Feature actions
+  toggleFeature: noop,
+  enableFeature: noop,
+  disableFeature: noop,
+  setFeatureState: noop,
   
-  // Define setScale for adjusting chat size
-  setScale: () => {},
+  // Token actions
+  setTokenEnforcementMode: noop,
+  addTokens: asyncNoop,
+  spendTokens: asyncNoop,
+  setTokenBalance: asyncNoop,
 };
 
 // Enhanced function to clear all Zustand middleware storage
@@ -208,6 +224,131 @@ export const useChatStore = create<FullChatStore>()(
       // Implement setScale for adjusting chat size
       setScale: (scale: number) => {
         set({ scale }, false, { type: 'chat/setScale' });
+      },
+      
+      // Implement setCurrentMode
+      setCurrentMode: (mode: ChatMode) => {
+        set({ currentMode: mode }, false, { type: 'chat/setCurrentMode', mode });
+      },
+      
+      // Implement provider update functions
+      updateCurrentProvider: (provider: ProviderCategory) => {
+        set({ currentProvider: provider }, false, { type: 'chat/updateCurrentProvider', provider });
+      },
+      
+      updateAvailableProviders: (providers: ProviderCategory[]) => {
+        set({ availableProviders: providers }, false, { type: 'chat/updateAvailableProviders', providers });
+      },
+      
+      updateChatProvider: (providers: ProviderCategory[]) => {
+        set({ availableProviders: providers }, false, { type: 'chat/updateChatProvider', providers });
+      },
+      
+      // Implement feature toggle functions
+      toggleFeature: (featureName: keyof FeatureState) => {
+        set(state => ({
+          features: {
+            ...state.features,
+            [featureName]: !state.features[featureName],
+          },
+        }), false, { type: 'chat/toggleFeature', feature: featureName });
+      },
+      
+      enableFeature: (featureName: keyof FeatureState) => {
+        set(state => ({
+          features: {
+            ...state.features,
+            [featureName]: true,
+          },
+        }), false, { type: 'chat/enableFeature', feature: featureName });
+      },
+      
+      disableFeature: (featureName: keyof FeatureState) => {
+        set(state => ({
+          features: {
+            ...state.features,
+            [featureName]: false,
+          },
+        }), false, { type: 'chat/disableFeature', feature: featureName });
+      },
+      
+      setFeatureState: (featureName: keyof FeatureState, isEnabled: boolean) => {
+        set(state => ({
+          features: {
+            ...state.features,
+            [featureName]: isEnabled,
+          },
+        }), false, { type: 'chat/setFeatureState', feature: featureName, isEnabled });
+      },
+      
+      // Implement token control functions
+      setTokenEnforcementMode: (mode: ChatState['tokenControl']['enforcementMode']) => {
+        set(state => ({
+          tokenControl: {
+            ...state.tokenControl,
+            enforcementMode: mode
+          }
+        }), false, { type: 'chat/setTokenEnforcementMode', mode });
+      },
+      
+      addTokens: async (amount: number): Promise<boolean> => {
+        try {
+          const currentBalance = get().tokenControl.balance;
+          
+          set(state => ({
+            tokenControl: {
+              ...state.tokenControl,
+              balance: currentBalance + amount,
+              lastUpdated: new Date().toISOString()
+            }
+          }), false, { type: 'chat/addTokens', amount });
+          
+          return true;
+        } catch (error) {
+          console.error('Error adding tokens:', error);
+          return false;
+        }
+      },
+      
+      spendTokens: async (amount: number): Promise<boolean> => {
+        try {
+          const currentBalance = get().tokenControl.balance;
+          
+          if (currentBalance < amount) {
+            return false;
+          }
+          
+          set(state => ({
+            tokenControl: {
+              ...state.tokenControl,
+              balance: currentBalance - amount,
+              queriesUsed: state.tokenControl.queriesUsed + 1,
+              lastUpdated: new Date().toISOString()
+            }
+          }), false, { type: 'chat/spendTokens', amount });
+          
+          return true;
+        } catch (error) {
+          console.error('Error spending tokens:', error);
+          return false;
+        }
+      },
+      
+      setTokenBalance: async (amount: number): Promise<boolean> => {
+        try {
+          set(state => ({
+            tokenControl: {
+              ...state.tokenControl,
+              balance: amount,
+              lastUpdated: new Date().toISOString()
+            }
+          }), false, { type: 'chat/setTokenBalance', amount });
+          
+          return true;
+        } catch (error) {
+          console.error('Error setting token balance:', error);
+          return false;
+        }
       },
       
       ...createInitializationActions(set, get),

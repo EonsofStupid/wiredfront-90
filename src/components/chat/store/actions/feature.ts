@@ -1,6 +1,5 @@
 
-import { StateCreator } from 'zustand';
-import { ChatState } from '../types/chat-store-types';
+import { ChatState, FeatureState } from '../types/chat-store-types';
 
 export const createFeatureActions = (
   set: (
@@ -10,7 +9,7 @@ export const createFeatureActions = (
   ) => void,
   get: () => ChatState
 ) => ({
-  toggleFeature: (featureName: keyof ChatState['features']) => {
+  toggleFeature: (featureName: keyof FeatureState) => {
     set((state) => ({
       features: {
         ...state.features,
@@ -19,7 +18,7 @@ export const createFeatureActions = (
     }), false, { type: 'chat/toggleFeature', feature: featureName });
   },
   
-  enableFeature: (featureName: keyof ChatState['features']) => {
+  enableFeature: (featureName: keyof FeatureState) => {
     set((state) => ({
       features: {
         ...state.features,
@@ -28,7 +27,7 @@ export const createFeatureActions = (
     }), false, { type: 'chat/enableFeature', feature: featureName });
   },
   
-  disableFeature: (featureName: keyof ChatState['features']) => {
+  disableFeature: (featureName: keyof FeatureState) => {
     set((state) => ({
       features: {
         ...state.features,
@@ -57,7 +56,7 @@ export const createFeatureActions = (
     set({ availableProviders: providers }, false, { type: 'chat/updateChatProvider', providers });
   },
   
-  setFeatureState: (featureName: keyof ChatState['features'], isEnabled: boolean) => {
+  setFeatureState: (featureName: keyof FeatureState, isEnabled: boolean) => {
     set((state) => ({
       features: {
         ...state.features,

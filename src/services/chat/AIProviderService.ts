@@ -33,7 +33,7 @@ export class AIProviderService {
         type: config.api_type,
         isDefault: config.is_default || false,
         isEnabled: config.is_enabled,
-        category: this.getCategoryForProvider(config.api_type)
+        category: this.getCategoryForProvider(config.api_type) as "chat" | "image" | "vector" | "voice" | "other"
       })) || [];
     } catch (error) {
       logger.error("Error fetching AI providers", error);
@@ -157,14 +157,16 @@ export class AIProviderService {
   /**
    * Determine the category for a provider type
    */
-  private static getCategoryForProvider(type: string): string {
+  private static getCategoryForProvider(type: string): "chat" | "image" | "vector" | "voice" | "other" {
     if (['openai', 'anthropic', 'gemini', 'perplexity', 'openrouter'].includes(type)) {
       return 'chat';
     } else if (['dalle', 'stabilityai', 'replicate'].includes(type)) {
       return 'image';
-    } else if (['mixed', 'integration'].includes(type)) {
-      return type;
+    } else if (['pinecone', 'weaviate', 'qdrant'].includes(type)) {
+      return 'vector';
+    } else if (['elevenlabs', 'whisper', 'sonnet'].includes(type)) {
+      return 'voice';
     }
-    return 'chat';
+    return 'other';
   }
 }

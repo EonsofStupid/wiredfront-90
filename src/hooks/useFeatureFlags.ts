@@ -11,6 +11,7 @@ import {
   ChatFeatureKey 
 } from "@/types/admin/settings/feature-flags";
 import { convertFeatureKeyToChatFeature } from "@/components/chat/store/actions/feature/types";
+import { FeatureState } from "@/components/chat/store/types/chat-store-types";
 
 export function useFeatureFlags() {
   const { features, toggleFeature, enableFeature, disableFeature, setFeatureState } = useChatStore();
@@ -202,7 +203,8 @@ export function useFeatureFlags() {
  * Hook to check a specific feature from both local store and Supabase flag
  */
 export function useCombinedFeatureFlag(featureKey: string) {
-  const { features, isEnabled: checkLocalEnabled } = useFeatureFlags();
+  const { features } = useChatStore();
+  const { isEnabled: checkLocalEnabled } = useFeatureFlags();
   const { isEnabled: isRemoteEnabled, isLoading } = useFeatureFlag(featureKey);
   
   // Check if the key is a valid chat feature key

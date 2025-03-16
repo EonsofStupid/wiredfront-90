@@ -46,6 +46,20 @@ export interface MessageActions {
   resetChatState: () => void;
 }
 
+// Define a clear FeatureState interface to simplify type safety
+export interface FeatureState {
+  voice: boolean;
+  rag: boolean;
+  modeSwitch: boolean;
+  notifications: boolean;
+  github: boolean;
+  codeAssistant: boolean;
+  ragSupport: boolean;
+  githubSync: boolean;
+  tokenEnforcement: boolean;
+}
+
+// Updated ChatState interface with proper feature state management
 export interface ChatState {
   initialized: boolean;
   messages: any[];
@@ -62,17 +76,7 @@ export interface ChatState {
   isHidden: boolean;
   position: ChatPosition;
   startTime: number;
-  features: {
-    voice: boolean;
-    rag: boolean;
-    modeSwitch: boolean;
-    notifications: boolean;
-    github: boolean;
-    codeAssistant: boolean;
-    ragSupport: boolean;
-    githubSync: boolean;
-    tokenEnforcement: boolean;
-  };
+  features: FeatureState;
   tokenControl: TokenControl;
   providers: ProvidersState;
   availableProviders: ProviderCategory[];
@@ -100,10 +104,10 @@ export interface ChatState {
   updateChatProvider: (providers: ProviderCategory[]) => void;
   
   // Feature actions
-  toggleFeature: (featureName: keyof ChatState['features']) => void;
-  enableFeature: (featureName: keyof ChatState['features']) => void;
-  disableFeature: (featureName: keyof ChatState['features']) => void;
-  setFeatureState: (featureName: keyof ChatState['features'], isEnabled: boolean) => void;
+  toggleFeature: (featureName: keyof FeatureState) => void;
+  enableFeature: (featureName: keyof FeatureState) => void;
+  disableFeature: (featureName: keyof FeatureState) => void;
+  setFeatureState: (featureName: keyof FeatureState, isEnabled: boolean) => void;
   
   // Token actions
   setTokenEnforcementMode: (mode: TokenControl['enforcementMode']) => void;
