@@ -1,7 +1,7 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { SessionOperationResult } from '@/types/sessions';
 import { logger } from '@/services/chat/LoggingService';
+import { clearMiddlewareStorage } from '@/components/chat/store/chatStore';
 
 /**
  * Deletes inactive sessions, keeping the current session and recent ones
@@ -59,6 +59,11 @@ export async function cleanupSessions(currentSessionId: string): Promise<number>
       logger.warn('Failed to delete some associated messages', { error: messagesError });
     }
 
+    // Clear Zustand persistence for deleted sessions
+    sessionsToDelete.forEach(sessionId => {
+      localStorage.removeItem(`chat-session-${sessionId}`);
+    });
+
     logger.info('Cleaned up inactive sessions', { count: sessionsToDelete.length });
     return sessionsToDelete.length;
   } catch (error) {
@@ -102,6 +107,14 @@ export async function clearAllSessions(currentSessionId: string | null = null): 
       
       if (error) throw error;
       
+      // Clear Zustand persistence for all sessions except current
+      const keys = Object.keys(localStorage);
+      keys.forEach(key => {
+        if (key.startsWith('chat-session-') && !key.includes(currentSessionId)) {
+          localStorage.removeItem(key);
+        }
+      });
+      
       logger.info('Cleared sessions except current', { 
         count: count, 
         preservedSessionId: currentSessionId 
@@ -121,6 +134,9 @@ export async function clearAllSessions(currentSessionId: string | null = null): 
       const { error, count } = await query.eq('user_id', user.id);
       
       if (error) throw error;
+      
+      // Clear all Zustand persistence
+      clearMiddlewareStorage();
       
       logger.info('Cleared all sessions', { count });
     }

@@ -70,7 +70,7 @@ const initialState: ChatState = {
 };
 
 // Create a function to reset local storage for middleware persistence
-const clearMiddlewareStorage = () => {
+export const clearMiddlewareStorage = () => {
   // Clear any persisted state in localStorage
   try {
     localStorage.removeItem('chat-state');

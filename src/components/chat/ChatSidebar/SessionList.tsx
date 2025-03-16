@@ -1,14 +1,16 @@
-
 import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SessionItem } from "./SessionItem";
 import { motion } from "framer-motion";
+import { useChatStore } from "../store/chatStore";
 
 interface SessionListProps {
   sessions: Array<{
     id: string;
     lastAccessed: Date;
     isActive: boolean;
+    provider?: string;
+    messageCount?: number;
   }>;
   onSelectSession: (id: string) => void;
 }
@@ -28,6 +30,9 @@ export const SessionList = ({ sessions, onSelectSession }: SessionListProps) => 
     hidden: { opacity: 0, y: 10 },
     show: { opacity: 1, y: 0 }
   };
+
+  // Get current provider from chat store
+  const currentProvider = useChatStore(state => state.currentProvider);
 
   return (
     <ScrollArea className="h-full w-full pr-4 chat-messages-container">
@@ -53,6 +58,8 @@ export const SessionList = ({ sessions, onSelectSession }: SessionListProps) => 
                 lastAccessed={session.lastAccessed}
                 isActive={session.isActive}
                 onSelect={onSelectSession}
+                provider={session.provider || currentProvider?.name}
+                messageCount={session.messageCount}
               />
             </motion.div>
           ))}
