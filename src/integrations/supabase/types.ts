@@ -643,6 +643,7 @@ export type Database = {
           enabled: boolean
           id: string
           key: string
+          metadata: Json | null
           name: string
           rollout_percentage: number | null
           target_roles: Database["public"]["Enums"]["app_role"][] | null
@@ -656,6 +657,7 @@ export type Database = {
           enabled?: boolean
           id?: string
           key: string
+          metadata?: Json | null
           name: string
           rollout_percentage?: number | null
           target_roles?: Database["public"]["Enums"]["app_role"][] | null
@@ -669,6 +671,7 @@ export type Database = {
           enabled?: boolean
           id?: string
           key?: string
+          metadata?: Json | null
           name?: string
           rollout_percentage?: number | null
           target_roles?: Database["public"]["Enums"]["app_role"][] | null
@@ -1903,6 +1906,36 @@ export type Database = {
           source?: string
           timestamp?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      token_transaction_log: {
+        Row: {
+          amount: number
+          created_at: string | null
+          description: string | null
+          id: string
+          metadata: Json | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          transaction_type?: string
+          user_id?: string
         }
         Relationships: []
       }

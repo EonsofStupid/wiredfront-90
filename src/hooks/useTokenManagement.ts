@@ -6,6 +6,8 @@ import { useAuthStore } from '@/stores/auth';
 import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';
 import { useCombinedFeatureFlag } from './useFeatureFlags';
+import { FeatureKey } from '@/components/chat/store/actions/feature-actions';
+import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 
 export function useTokenManagement() {
   const { user } = useAuthStore();
@@ -20,7 +22,7 @@ export function useTokenManagement() {
   } = useChatStore();
   const [isLoading, setIsLoading] = useState(false);
   
-  const tokenEnforcementFlag = useCombinedFeatureFlag('tokenEnforcement');
+  const tokenEnforcementFlag = useCombinedFeatureFlag('tokenEnforcement' as FeatureKey);
   
   // Fetch user's token balance on mount if authenticated
   useEffect(() => {
@@ -81,11 +83,11 @@ export function useTokenManagement() {
         
         if (data) {
           // Enable/disable token enforcement based on global flag
-          setFeatureState('tokenEnforcement', data.enabled);
+          setFeatureState('tokenEnforcement' as FeatureKey, data.enabled);
           
           // Set enforcement mode from metadata if available
           if (data.metadata && data.metadata.enforcementMode) {
-            setTokenEnforcementMode(data.metadata.enforcementMode);
+            setTokenEnforcementMode(data.metadata.enforcementMode as TokenEnforcementMode);
           }
         }
       } catch (error) {
@@ -139,6 +141,6 @@ export function useTokenManagement() {
     setTokenBalance,
     hasEnoughTokens,
     setEnforcementMode: setTokenEnforcementMode,
-    toggleTokenEnforcement: () => setFeatureState('tokenEnforcement', !features.tokenEnforcement)
+    toggleTokenEnforcement: () => setFeatureState('tokenEnforcement' as FeatureKey, !features.tokenEnforcement)
   };
 }

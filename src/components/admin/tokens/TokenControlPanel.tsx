@@ -53,6 +53,15 @@ export function TokenControlPanel() {
         throw error;
       }
       
+      // Log the transaction for auditing
+      await supabase.from('token_transaction_log').insert({
+        user_id: userId,
+        amount: parseInt(amount),
+        transaction_type: 'admin_update',
+        description: 'Updated by administrator',
+        metadata: { admin_id: (await supabase.auth.getUser()).data.user?.id }
+      });
+      
       toast.success(`Updated tokens for user ${userId}`);
     } catch (error) {
       console.error('Error updating user tokens:', error);

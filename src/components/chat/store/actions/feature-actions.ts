@@ -3,6 +3,7 @@ import { StateCreator } from 'zustand';
 import { ChatState, ChatProvider } from "../types/chat-store-types";
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
+import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 
 export type FeatureKey = 'voice' | 'rag' | 'modeSwitch' | 'notifications' | 'github' | 
                          'codeAssistant' | 'ragSupport' | 'githubSync' | 'tokenEnforcement';
@@ -15,7 +16,7 @@ export type FeatureActions = {
   updateChatProvider: (providers: ChatProvider[]) => void;
   
   // Token management actions
-  setTokenEnforcementMode: (mode: string) => void;
+  setTokenEnforcementMode: (mode: TokenEnforcementMode) => void;
   addTokens: (amount: number) => Promise<boolean>;
   spendTokens: (amount: number) => Promise<boolean>;
   setTokenBalance: (amount: number) => Promise<boolean>;
@@ -97,9 +98,47 @@ const updateUserTokens = async (userId: string, amount: number): Promise<boolean
       }
     }
     
+    // Log this transaction for auditing
+    await supabase.from('token_transaction_log').insert({
+      user_id: userId,
+      amount: amount,
+      transaction_type: 'update',
+      description: 'Balance updated manually',
+      metadata: { source: 'client_app' }
+    });
+    
     return true;
   } catch (error) {
     logger.error('Error in updateUserTokens:', error);
+    return false;
+  }
+};
+
+// Helper function to log token transactions
+const logTokenTransaction = async (
+  userId: string,
+  amount: number,
+  type: 'add' | 'spend' | 'set',
+  description: string = ''
+): Promise<boolean> => {
+  try {
+    // Insert transaction record
+    const { error } = await supabase.from('token_transaction_log').insert({
+      user_id: userId,
+      amount: amount,
+      transaction_type: type,
+      description,
+      metadata: { source: 'client_app' }
+    });
+    
+    if (error) {
+      logger.error('Error logging token transaction:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    logger.error('Error in logTokenTransaction:', error);
     return false;
   }
 };
@@ -235,6 +274,9 @@ export const createFeatureActions: StoreWithDevtools = (set, get) => ({
       const success = await updateUserTokens(userId, newBalance);
       
       if (success) {
+        // Log the transaction
+        await logTokenTransaction(userId, amount, 'add', 'Tokens added to balance');
+        
         set(
           (state) => ({
             ...state,
@@ -278,13 +320,17 @@ export const createFeatureActions: StoreWithDevtools = (set, get) => ({
       const success = await updateUserTokens(userId, newBalance);
       
       if (success) {
+        // Log the transaction
+        await logTokenTransaction(userId, amount, 'spend', 'Tokens spent on operation');
+        
         set(
           (state) => ({
             ...state,
             tokenControl: {
               ...state.tokenControl,
               balance: newBalance,
-              lastUpdated: new Date().toISOString()
+              lastUpdated: new Date().toISOString(),
+              queriesUsed: state.tokenControl.queriesUsed + 1
             }
           }),
           false,
@@ -305,9 +351,18 @@ export const createFeatureActions: StoreWithDevtools = (set, get) => ({
       if (!userData?.user) return false;
       
       const userId = userData.user.id;
+      const currentBalance = get().tokenControl.balance;
       const success = await updateUserTokens(userId, amount);
       
       if (success) {
+        // Log the transaction
+        await logTokenTransaction(
+          userId, 
+          amount - currentBalance, 
+          'set', 
+          'Token balance set manually'
+        );
+        
         set(
           (state) => ({
             ...state,
