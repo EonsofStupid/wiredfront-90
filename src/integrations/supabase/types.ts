@@ -78,13 +78,16 @@ export type Database = {
           model_preferences: Json | null
           monthly_token_limit: number | null
           priority: number | null
+          provider_category: string | null
           provider_settings: Json | null
           read_only_key: string | null
           role_assignments: Json | null
           rotation_priority: number | null
           rotation_schedule: Json | null
+          runtime_settings: Json | null
           secret_id: string | null
           secret_key_name: string | null
+          supported_features: string[] | null
           training_enabled: boolean | null
           updated_at: string | null
           usage_count: number | null
@@ -121,13 +124,16 @@ export type Database = {
           model_preferences?: Json | null
           monthly_token_limit?: number | null
           priority?: number | null
+          provider_category?: string | null
           provider_settings?: Json | null
           read_only_key?: string | null
           role_assignments?: Json | null
           rotation_priority?: number | null
           rotation_schedule?: Json | null
+          runtime_settings?: Json | null
           secret_id?: string | null
           secret_key_name?: string | null
+          supported_features?: string[] | null
           training_enabled?: boolean | null
           updated_at?: string | null
           usage_count?: number | null
@@ -164,13 +170,16 @@ export type Database = {
           model_preferences?: Json | null
           monthly_token_limit?: number | null
           priority?: number | null
+          provider_category?: string | null
           provider_settings?: Json | null
           read_only_key?: string | null
           role_assignments?: Json | null
           rotation_priority?: number | null
           rotation_schedule?: Json | null
+          runtime_settings?: Json | null
           secret_id?: string | null
           secret_key_name?: string | null
+          supported_features?: string[] | null
           training_enabled?: boolean | null
           updated_at?: string | null
           usage_count?: number | null
@@ -635,77 +644,130 @@ export type Database = {
           },
         ]
       }
+      feature_flag_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       feature_flags: {
         Row: {
+          category_id: string | null
+          config_schema: Json | null
           created_at: string | null
           created_by: string | null
           description: string | null
           enabled: boolean
+          feature_type: string | null
           id: string
           key: string
           metadata: Json | null
           name: string
           rollout_percentage: number | null
+          supported_modes: Database["public"]["Enums"]["chat_mode"][] | null
           target_roles: Database["public"]["Enums"]["app_role"][] | null
           updated_at: string | null
           updated_by: string | null
         }
         Insert: {
+          category_id?: string | null
+          config_schema?: Json | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           enabled?: boolean
+          feature_type?: string | null
           id?: string
           key: string
           metadata?: Json | null
           name: string
           rollout_percentage?: number | null
+          supported_modes?: Database["public"]["Enums"]["chat_mode"][] | null
           target_roles?: Database["public"]["Enums"]["app_role"][] | null
           updated_at?: string | null
           updated_by?: string | null
         }
         Update: {
+          category_id?: string | null
+          config_schema?: Json | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           enabled?: boolean
+          feature_type?: string | null
           id?: string
           key?: string
           metadata?: Json | null
           name?: string
           rollout_percentage?: number | null
+          supported_modes?: Database["public"]["Enums"]["chat_mode"][] | null
           target_roles?: Database["public"]["Enums"]["app_role"][] | null
           updated_at?: string | null
           updated_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "feature_flags_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "feature_flag_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       feature_toggle_history: {
         Row: {
+          application_version: string | null
           changed_at: string | null
+          context: Json | null
           feature_name: string
           id: string
           metadata: Json | null
           new_value: boolean
           old_value: boolean | null
+          session_id: string | null
           user_id: string | null
         }
         Insert: {
+          application_version?: string | null
           changed_at?: string | null
+          context?: Json | null
           feature_name: string
           id?: string
           metadata?: Json | null
           new_value: boolean
           old_value?: boolean | null
+          session_id?: string | null
           user_id?: string | null
         }
         Update: {
+          application_version?: string | null
           changed_at?: string | null
+          context?: Json | null
           feature_name?: string
           id?: string
           metadata?: Json | null
           new_value?: boolean
           old_value?: boolean | null
+          session_id?: string | null
           user_id?: string | null
         }
         Relationships: []
@@ -1939,6 +2001,33 @@ export type Database = {
         }
         Relationships: []
       }
+      token_usage: {
+        Row: {
+          context: Json | null
+          feature_name: string
+          id: string
+          timestamp: string | null
+          tokens_used: number | null
+          user_id: string | null
+        }
+        Insert: {
+          context?: Json | null
+          feature_name: string
+          id?: string
+          timestamp?: string | null
+          tokens_used?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          context?: Json | null
+          feature_name?: string
+          id?: string
+          timestamp?: string | null
+          tokens_used?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_analytics: {
         Row: {
           device_info: Json | null
@@ -2006,9 +2095,15 @@ export type Database = {
         Row: {
           balance: number | null
           created_at: string | null
+          enforcement_mode: string | null
+          enforcement_settings: Json | null
+          free_query_limit: number | null
           id: string
           last_reset: string | null
+          last_updated: string | null
+          queries_used: number | null
           tier: string | null
+          tokens_per_query: number | null
           total_earned: number | null
           total_spent: number | null
           updated_at: string | null
@@ -2017,9 +2112,15 @@ export type Database = {
         Insert: {
           balance?: number | null
           created_at?: string | null
+          enforcement_mode?: string | null
+          enforcement_settings?: Json | null
+          free_query_limit?: number | null
           id?: string
           last_reset?: string | null
+          last_updated?: string | null
+          queries_used?: number | null
           tier?: string | null
+          tokens_per_query?: number | null
           total_earned?: number | null
           total_spent?: number | null
           updated_at?: string | null
@@ -2028,9 +2129,15 @@ export type Database = {
         Update: {
           balance?: number | null
           created_at?: string | null
+          enforcement_mode?: string | null
+          enforcement_settings?: Json | null
+          free_query_limit?: number | null
           id?: string
           last_reset?: string | null
+          last_updated?: string | null
+          queries_used?: number | null
           tier?: string | null
+          tokens_per_query?: number | null
           total_earned?: number | null
           total_spent?: number | null
           updated_at?: string | null
@@ -2355,6 +2462,14 @@ export type Database = {
         | "github"
       app_role: "super_admin" | "admin" | "developer" | "subscriber" | "guest"
       chat_api_provider: "openai" | "anthropic" | "gemini" | "huggingface"
+      chat_mode:
+        | "chat"
+        | "dev"
+        | "image"
+        | "training"
+        | "code"
+        | "editor"
+        | "chat-only"
       document_import_status: "pending" | "processing" | "completed" | "error"
       document_status: "pending" | "processing" | "completed" | "error"
       extended_validation_status:
@@ -2374,6 +2489,7 @@ export type Database = {
       provider_category: "ai" | "vector" | "voice" | "storage" | "development"
       rag_tier_type: "standard" | "premium"
       subscription_status: "active" | "past_due" | "canceled" | "trialing"
+      token_enforcement_mode: "always" | "never" | "role_based" | "mode_based"
       token_validation_status:
         | "valid"
         | "invalid"

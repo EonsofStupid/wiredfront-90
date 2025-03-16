@@ -1,125 +1,115 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Textarea } from '@/components/ui/textarea';
+import React, { useState, useRef, KeyboardEvent } from 'react';
 import { Button } from '@/components/ui/button';
-import { Send, Mic, MicOff } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { SendIcon, Loader2 } from 'lucide-react';
 import { useChatStore } from '../store/chatStore';
-import { VoiceToTextButton } from '../components/VoiceToTextButton';
-import { Message } from '@/types/chat';
-import { v4 as uuidv4 } from 'uuid';
+import { useMessageAPI } from '@/hooks/chat/useMessageAPI';
+import { VoiceToTextButton } from '../features/voice-to-text';
+import { useVoiceRecognition } from '../features/voice-to-text/useVoiceRecognition';
 
-interface ChatInputModuleProps {
-  onSubmit?: (message: Message) => void;
+type ChatInputModuleProps = {
+  className?: string;
   placeholder?: string;
-  autoFocus?: boolean;
-  disabled?: boolean;
-}
+  onSend?: (message: string) => void;
+};
 
-export const ChatInputModule: React.FC<ChatInputModuleProps> = ({
-  onSubmit,
+export const ChatInputModule = ({ 
+  className = '',
   placeholder = 'Type a message...',
-  autoFocus = false,
-  disabled = false,
-}) => {
-  const { userInput, setUserInput, features } = useChatStore();
+  onSend
+}: ChatInputModuleProps) => {
+  const { userInput, setUserInput, isWaitingForResponse } = useChatStore();
+  const { sendMessage, isLoading } = useMessageAPI();
+  const { isListening, transcript, startListening, stopListening, error } = useVoiceRecognition();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [isRecording, setIsRecording] = useState(false);
-
-  useEffect(() => {
-    if (autoFocus && textareaRef.current) {
-      textareaRef.current.focus();
+  
+  const handleSendMessage = async () => {
+    if (!userInput.trim() || isWaitingForResponse) return;
+    
+    const message = userInput.trim();
+    setUserInput(''); // Clear input immediately for better UX
+    
+    if (onSend) {
+      onSend(message);
+    } else {
+      await sendMessage(message);
     }
-  }, [autoFocus]);
-
-  const handleSubmit = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
     
-    if (!userInput.trim()) return;
-    
-    const newMessage: Message = {
-      id: uuidv4(),
-      content: userInput.trim(),
-      role: 'user',
-      timestamp: new Date().toISOString(),
-      metadata: {}
-    };
-    
-    onSubmit?.(newMessage);
-    setUserInput('');
-    
-    // Auto-focus the textarea after submission
+    // Focus back on textarea after sending
     if (textareaRef.current) {
       textareaRef.current.focus();
     }
   };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Submit on Enter (without Shift)
+  
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    // Send message on Enter (without Shift)
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit();
+      handleSendMessage();
     }
   };
-
-  const toggleRecording = () => {
-    setIsRecording(!isRecording);
-    
-    if (!isRecording) {
-      // Start recording logic
+  
+  // Handle voice recognition
+  React.useEffect(() => {
+    if (transcript && transcript.length > 0) {
+      // Set the transcript as the input value
+      setUserInput(transcript);
+    }
+  }, [transcript]);
+  
+  // Handle voice button click
+  const handleVoiceButtonClick = () => {
+    if (isListening) {
+      stopListening();
     } else {
-      // Stop recording logic
+      startListening();
     }
   };
-
-  const handleVoiceInput = (text: string) => {
-    setUserInput(prev => prev ? `${prev} ${text}` : text);
-    
-    // Create speech recognition message
-    const speechRecognitionMessage: Message = {
-      id: uuidv4(),
-      content: text,
-      role: 'system',
-      timestamp: new Date().toISOString(),
-      metadata: {
-        type: 'voice-recognition',
-        recognized: true
-      }
-    };
-    
-    // Log the recognized speech
-    console.log('Voice input recognized:', speechRecognitionMessage);
+  
+  // Auto-resize textarea
+  const handleInput = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
   };
-
+  
   return (
-    <form onSubmit={handleSubmit} className="chat-input-module mt-4">
-      <div className="flex items-end space-x-2">
-        <div className="flex-1 relative">
-          <Textarea
-            ref={textareaRef}
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            className="min-h-[60px] resize-none pr-10"
-            disabled={disabled}
-          />
-          
-          {features.voice && (
-            <div className="absolute right-2 bottom-2">
-              <VoiceToTextButton onVoiceCapture={handleVoiceInput} />
-            </div>
-          )}
-        </div>
+    <div className={`flex items-end gap-2 p-2 bg-background border-t ${className}`}>
+      <div className="relative flex-1">
+        <Textarea
+          ref={textareaRef}
+          value={userInput}
+          onChange={(e) => setUserInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onInput={handleInput}
+          placeholder={placeholder}
+          className="min-h-[40px] max-h-[200px] py-2 pr-10 resize-none"
+          disabled={isWaitingForResponse || isLoading}
+        />
         
-        <Button 
-          type="submit" 
-          size="icon" 
-          disabled={!userInput.trim() || disabled}
-          className="h-[60px]"
-        >
-          <Send className="h-5 w-5" />
-        </Button>
+        <VoiceToTextButton 
+          isListening={isListening}
+          onClick={handleVoiceButtonClick}
+          className="absolute right-2 bottom-2"
+        />
       </div>
-    </form>
+      
+      <Button 
+        onClick={handleSendMessage}
+        disabled={!userInput.trim() || isWaitingForResponse || isLoading}
+        size="icon"
+        className="h-10 w-10"
+      >
+        {isWaitingForResponse || isLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <SendIcon className="h-4 w-4" />
+        )}
+      </Button>
+    </div>
   );
 };
+
+export default ChatInputModule;

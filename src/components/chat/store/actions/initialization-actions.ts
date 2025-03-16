@@ -86,7 +86,7 @@ export const createInitializationActions = (set: any, get: any) => {
                 ...state.tokenControl,
                 balance: tokenData.balance || 0,
                 enforcementMode: tokenData.enforcement_mode || 'never',
-                lastUpdated: tokenData.last_updated,
+                lastUpdated: tokenData.last_updated || null,
                 queriesUsed: tokenData.queries_used || 0,
                 freeQueryLimit: tokenData.free_query_limit || 5,
                 tokensPerQuery: tokenData.tokens_per_query || 1
@@ -108,15 +108,18 @@ export const createInitializationActions = (set: any, get: any) => {
         } else if (providerData) {
           logger.info(`Loaded ${providerData.length} providers`);
           
-          const chatProviders = providerData.map((provider) => ({
-            id: provider.id,
-            name: provider.api_type,
-            type: provider.api_type,
-            isDefault: provider.is_default || false,
-            isEnabled: provider.is_enabled,
-            category: (provider.provider_settings?.category || 'chat') as 'chat' | 'image' | 'mixed' | 'integration',
-            models: provider.provider_settings?.models || []
-          }));
+          const chatProviders = providerData.map((provider) => {
+            const providerSettings = provider.provider_settings || {};
+            return {
+              id: provider.id,
+              name: provider.api_type,
+              type: provider.api_type,
+              isDefault: provider.is_default || false,
+              isEnabled: provider.is_enabled,
+              category: (providerSettings.category || 'chat') as 'chat' | 'image' | 'mixed' | 'integration',
+              models: providerSettings.models || []
+            };
+          });
           
           set(
             (state: ChatState) => ({

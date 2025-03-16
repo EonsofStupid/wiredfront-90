@@ -9,9 +9,15 @@ import { ChatMode } from '@/integrations/supabase/types/enums';
 
 interface DraggableChatContainerProps {
   children?: React.ReactNode;
+  scrollRef?: React.RefObject<HTMLDivElement>;
+  isEditorPage?: boolean;
 }
 
-const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({ children }) => {
+const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({ 
+  children,
+  scrollRef,
+  isEditorPage = false
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -26,7 +32,7 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({ childre
     toggleChat
   } = useChatStore();
   
-  const { mode, isEditorPage } = useChatMode();
+  const { mode } = useChatMode();
 
   // Set initial position based on screen dimensions
   useEffect(() => {
@@ -161,7 +167,7 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({ childre
       
       {/* Chat content area */}
       {!isMinimized && (
-        <div className="chat-content-wrapper flex-1 overflow-auto p-4">
+        <div className="chat-content-wrapper flex-1 overflow-auto p-4" ref={scrollRef}>
           {children || <ChatContent />}
         </div>
       )}

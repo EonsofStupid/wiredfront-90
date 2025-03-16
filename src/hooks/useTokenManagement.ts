@@ -6,18 +6,40 @@ import { toast } from 'sonner';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 import { useFeatureFlags } from './useFeatureFlags';
 import { KnownFeatureFlag } from '@/types/admin/settings/feature-flags';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
+import React from 'react';
+
+// Higher-order component for error handling
+export function withTokenErrorBoundary<T extends object>(Component: React.ComponentType<T>) {
+  return (props: T) => (
+    <ErrorBoundary fallback={<div className="text-red-500 text-sm">Error loading token data</div>}>
+      <Component {...props} />
+    </ErrorBoundary>
+  );
+}
 
 export function useTokenManagement() {
   const { tokenControl, setTokenEnforcementMode, addTokens, spendTokens, setTokenBalance } = useChatStore();
   const { isEnabled: isTokenEnforcementEnabled, toggleFeature } = useFeatureFlags();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  // Expose tokenBalance and enforcementMode directly
+  const tokenBalance = tokenControl.balance;
+  const enforcementMode = tokenControl.enforcementMode;
+
+  // Setters for token enforcement mode
+  const setEnforcementMode = (mode: TokenEnforcementMode) => {
+    setTokenEnforcementMode(mode);
+  };
 
   // Load token settings from the database
   useEffect(() => {
     const loadTokenSettings = async () => {
       try {
         setIsLoading(true);
+        setError(null);
         
         // Get current user
         const { data: userData } = await supabase.auth.getUser();
@@ -37,6 +59,7 @@ export function useTokenManagement() {
           // PGRST116 is "no rows returned" which is expected for new users
           console.error('Error loading token settings:', error);
           toast.error('Failed to load token settings');
+          setError(new Error(error.message));
         } else if (data) {
           // Set token balance and settings
           setTokenBalance(data.balance || 0);
@@ -49,6 +72,7 @@ export function useTokenManagement() {
         }
       } catch (error) {
         console.error('Error in loadTokenSettings:', error);
+        setError(error instanceof Error ? error : new Error('Unknown error loading token settings'));
       } finally {
         setIsLoading(false);
       }
@@ -75,6 +99,7 @@ export function useTokenManagement() {
     } catch (error) {
       console.error('Error toggling token enforcement:', error);
       toast.error('Failed to update token enforcement settings');
+      setError(error instanceof Error ? error : new Error('Failed to toggle token enforcement'));
     } finally {
       setIsSubmitting(false);
     }
@@ -86,7 +111,7 @@ export function useTokenManagement() {
       setIsSubmitting(true);
       
       // Update local state
-      setTokenEnforcementMode(mode);
+      setEnforcementMode(mode);
       
       // Get current user
       const { data: userData } = await supabase.auth.getUser();
@@ -121,6 +146,7 @@ export function useTokenManagement() {
     } catch (error) {
       console.error('Error updating enforcement config:', error);
       toast.error('Failed to update token enforcement settings');
+      setError(error instanceof Error ? error : new Error('Failed to update enforcement config'));
       throw error;
     } finally {
       setIsSubmitting(false);
@@ -129,13 +155,17 @@ export function useTokenManagement() {
 
   return {
     tokenControl,
+    tokenBalance,
+    enforcementMode,
     isTokenEnforcementEnabled: isTokenEnforcementEnabled(KnownFeatureFlag.TOKEN_CONTROL),
     toggleTokenEnforcement,
     handleUpdateEnforcementConfig,
+    setEnforcementMode,
     addTokens,
     spendTokens,
     setTokenBalance,
     isSubmitting,
-    isLoading
+    isLoading,
+    error
   };
 }
