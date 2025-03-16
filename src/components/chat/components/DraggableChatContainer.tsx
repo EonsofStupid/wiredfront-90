@@ -6,6 +6,7 @@ import { ChatHeader } from './ChatHeader';
 import { ChatModeDialog } from '../features/ModeSwitch/ChatModeDialog';
 import { ChatMode } from '@/integrations/supabase/types/enums';
 import ChatInputArea from './ChatInputArea';
+import ChatIconStack from './ChatIconStack';
 import '../styles/index.css';
 import '../styles/cyber-theme.css';
 
@@ -59,7 +60,7 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
       ref={setNodeRef}
       style={docked ? undefined : transformStyle}
       {...(docked ? {} : { ...listeners, ...attributes })}
-      className="chat-container chat-glass-card chat-neon-border overflow-hidden flex flex-col cyber-bg"
+      className="chat-container chat-glass-card chat-neon-border overflow-hidden flex flex-col cyber-bg relative"
     >
       <ChatHeader 
         onToggleSidebar={handleToggleSidebar}
@@ -94,6 +95,8 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
         onOpenChange={setModeDialogOpen}
         onModeSelect={handleModeSelect}
       />
+      
+      <ChatIconStack />
     </div>
   );
 };

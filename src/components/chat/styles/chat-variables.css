@@ -28,6 +28,7 @@
   --chat-neon-pink: #EC4899;
   --chat-neon-blue: #3B82F6;
   --chat-neon-green: #10B981;
+  --chat-ocean-blue: #0EA5E9;
   
   /* Knowledge source colors */
   --chat-knowledge-border: rgba(59, 130, 246, 0.5);
@@ -39,6 +40,8 @@
   --chat-height: 500px;
   --chat-border-radius: 12px;
   --chat-button-radius: 8px;
+  --chat-toggle-size: 3rem;
+  --chat-icon-size: 2.5rem;
   
   /* Animations */
   --chat-transition-speed: 0.3s;
@@ -46,4 +49,10 @@
   /* Shadows */
   --chat-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
   --chat-inner-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+  
+  /* Z-index values - match with global z-index for consistency */
+  --z-chat-button: 9700;
+  --z-chat-container: 9650;
+  --z-chat-icons: 9600;
+  --z-chat-popover: 9550;
 }

@@ -73,9 +73,7 @@ export function DraggableChat() {
   if (!isOpen) {
     return (
       <>
-        <div className="fixed bottom-4 right-4 z-50">
-          <ChatToggleButton onClick={toggleChat} />
-        </div>
+        <ChatToggleButton onClick={toggleChat} />
         <ChatModeDialog
           open={modeDialogOpen}
           onOpenChange={setModeDialogOpen}
