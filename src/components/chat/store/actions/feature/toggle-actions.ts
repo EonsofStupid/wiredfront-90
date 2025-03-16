@@ -1,13 +1,12 @@
 
-import { StateCreator } from 'zustand';
 import { ChatState } from '../../types/chat-store-types';
-import { StoreWithDevtools, FeatureKey, FeatureActions } from './types';
+import { FeatureKey, FeatureActions, SetState, GetState } from './types';
 import { logFeatureToggle, logProviderChange } from './helpers';
 
 // Feature toggle and provider actions
 export const createToggleActions = (
-  set: StateCreator<ChatState>['setState'],
-  get: StateCreator<ChatState>['getState']
+  set: SetState<ChatState>,
+  get: GetState<ChatState>
 ): Pick<FeatureActions, 'toggleFeature' | 'enableFeature' | 'disableFeature' | 'setFeatureState' | 'updateChatProvider'> => ({
   toggleFeature: (feature: FeatureKey) =>
     set(

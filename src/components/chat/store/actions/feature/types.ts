@@ -7,6 +7,15 @@ import { KnownFeatureFlag } from '@/types/admin/settings/feature-flags';
 // Export KnownFeatureFlag as FeatureKey for usage throughout the application
 export type FeatureKey = KnownFeatureFlag;
 
+// Define proper Zustand types for state management
+export type SetState<T> = (
+  partial: T | Partial<T> | ((state: T) => T | Partial<T>),
+  replace?: boolean,
+  action?: { type: string; [key: string]: any }
+) => void;
+
+export type GetState<T> = () => T;
+
 export type FeatureActions = {
   toggleFeature: (feature: FeatureKey) => void;
   enableFeature: (feature: FeatureKey) => void;
