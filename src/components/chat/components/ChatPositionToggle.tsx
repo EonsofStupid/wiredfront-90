@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { ArrowLeftRight } from "lucide-react";
+import { Button } from '@/components/ui/button';
 import { useChatStore } from '../store/chatStore';
 import { logger } from '@/services/chat/LoggingService';
-import { ChatPosition } from '../store/types/chat-store-types';
 
 export function ChatPositionToggle() {
   const { togglePosition, position } = useChatStore();
@@ -23,13 +23,15 @@ export function ChatPositionToggle() {
   };
   
   return (
-    <button
-      className="h-8 w-8 hover:bg-white/10 text-chat-text transition-colors duration-200"
+    <Button
+      variant="ghost"
+      size="icon"
+      className="chat-control-button h-8 w-8"
       onClick={handleClick}
       title={`Toggle chat position (currently ${getPositionDisplay()})`}
       data-testid="chat-position-toggle"
     >
       <ArrowLeftRight className="h-4 w-4" />
-    </button>
+    </Button>
   );
 }

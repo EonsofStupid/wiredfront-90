@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { MessageCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import '../styles/ChatButtonStyle.css';
 
 interface ChatToggleButtonProps {

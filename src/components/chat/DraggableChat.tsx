@@ -18,7 +18,8 @@ export function DraggableChat() {
     position, 
     isMinimized, 
     showSidebar, 
-    scale 
+    scale,
+    docked
   } = useChatStore();
   
   const { containerRef, isOverflowing } = useViewportAwareness();
@@ -50,7 +51,8 @@ export function DraggableChat() {
     return <ChatToggleButton onClick={toggleChat} />;
   }
 
-  const positionClass = position === 'bottom-right' ? 'right-4' : 'left-4';
+  // Determine position class based on position state
+  const positionClass = typeof position === 'string' && position === 'bottom-right' ? 'right-4' : 'left-4';
 
   return (
     <DndContext>

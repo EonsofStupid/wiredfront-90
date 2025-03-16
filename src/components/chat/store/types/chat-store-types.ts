@@ -1,52 +1,55 @@
 
-import { Message } from "@/types/chat";
-import { ChatMode, TokenEnforcementMode } from "@/integrations/supabase/types/enums";
+export type ChatPosition = 'bottom-right' | 'bottom-left' | { x: number, y: number };
 
-export type ProviderCategory = 'chat' | 'image' | 'mixed' | 'integration';
+export type SelectedMode = 'chat' | 'dev' | 'image' | 'training';
 
-export interface ChatProvider {
-  id: string;
-  name: string;
-  type: string;
-  isDefault: boolean;
-  isEnabled?: boolean;
-  category?: ProviderCategory;
-  models?: string[];
-  features?: string[];
-}
-
-export type ChatPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+export type ChatMode = 'chat' | 'chat-only' | 'dev' | 'image' | 'training';
 
 export interface TokenControl {
   balance: number;
-  enforcementMode: TokenEnforcementMode;
+  enforcementMode: 'always' | 'warn' | 'never';
   lastUpdated: string | null;
   tokensPerQuery: number;
   freeQueryLimit: number;
   queriesUsed: number;
 }
 
-// Define message management actions
-export interface MessageActions {
-  addMessage: (message: Message) => void;
-  updateMessage: (id: string, updates: Partial<Message>) => void;
+export interface ProviderCategory {
+  id: string;
+  name: string;
+  description: string;
+  models: string[];
+  supportsStreaming: boolean;
+  icon?: string;
+  category: 'chat' | 'image' | 'vector' | 'voice' | 'other';
+  costPerToken?: number;
 }
 
-// The ChatState should extend MessageActions to ensure those methods are typed
-export interface ChatState extends MessageActions {
+export interface UI {
+  sessionLoading: boolean;
+  messageLoading: boolean;
+  providerLoading: boolean;
+}
+
+export interface ProvidersState {
+  availableProviders: ProviderCategory[];
+}
+
+export interface ChatState {
   initialized: boolean;
-  messages: Message[];
+  messages: any[];
   userInput: string;
   isWaitingForResponse: boolean;
   selectedModel: string;
   selectedMode: string;
+  currentMode: ChatMode;
   modelFetchStatus: 'idle' | 'loading' | 'success' | 'error';
   error: string | null;
   chatId: string | null;
   docked: boolean;
   isOpen: boolean;
   isHidden: boolean;
-  position: ChatPosition | { x: number; y: number };
+  position: ChatPosition;
   startTime: number;
   features: {
     voice: boolean;
@@ -54,64 +57,26 @@ export interface ChatState extends MessageActions {
     modeSwitch: boolean;
     notifications: boolean;
     github: boolean;
-    // Feature flags that components expect
     codeAssistant: boolean;
     ragSupport: boolean;
     githubSync: boolean;
     tokenEnforcement: boolean;
   };
-  currentMode: ChatMode;
-  availableProviders: ChatProvider[];
-  currentProvider: ChatProvider | null;
-  
-  // Token control system
   tokenControl: TokenControl;
-  
-  // Add providers mapping for session management
-  providers?: {
-    availableProviders: ChatProvider[];
-  };
-  
-  // UI state properties
+  providers: ProvidersState;
+  availableProviders: ProviderCategory[];
+  currentProvider: ProviderCategory | null;
   isMinimized: boolean;
   showSidebar: boolean;
   scale: number;
-  ui: {
-    sessionLoading: boolean;
-    messageLoading: boolean;
-    providerLoading: boolean;
-  };
-
-  // Store actions
+  ui: UI;
+  
+  // Actions for messages
+  addMessage: (message: any) => void;
+  updateMessage: (id: string, updates: any) => void;
   resetChatState: () => void;
-  
-  // Add setUserInput to the ChatState interface
   setUserInput: (input: string) => void;
-  
-  // Add these for position controls
   togglePosition: () => void;
   toggleDocked: () => void;
-  
-  // Manage scale
   setScale: (scale: number) => void;
 }
-
-export interface UIStateActions {
-  toggleMinimize: () => void;
-  toggleSidebar: () => void;
-  toggleChat: () => void;
-  setSessionLoading: (isLoading: boolean) => void;
-  setMessageLoading: (isLoading: boolean) => void;
-  setProviderLoading: (isLoading: boolean) => void;
-  setScale: (scale: number) => void;
-  setCurrentMode: (mode: ChatMode) => void;
-}
-
-// Reusable type definitions for state management
-export type SetState<T> = (
-  partial: T | Partial<T> | ((state: T) => T | Partial<T>),
-  replace?: boolean,
-  action?: { type: string; [key: string]: any }
-) => void;
-
-export type GetState<T> = () => T;

@@ -1,11 +1,9 @@
 
 import React, { useRef, useState, useEffect } from 'react';
-import { X, Minus, Maximize, ArrowDownToLine } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useChatStore } from '../store/chatStore';
 import { useChatMode } from '../providers/ChatModeProvider';
+import { ChatHeader } from './ChatHeader';
 import ChatContent from './ChatContent';
-import { ChatMode } from '@/integrations/supabase/types/enums';
 import '../styles/index.css';
 
 interface DraggableChatContainerProps {
@@ -27,8 +25,9 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
   const { 
     isMinimized, 
     toggleMinimize, 
+    showSidebar,
+    toggleSidebar,
     docked,
-    toggleDocked,
     isOpen,
     toggleChat
   } = useChatStore();
@@ -108,11 +107,6 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
     ${isDragging ? 'chat-dragging' : ''}
   `;
 
-  const headerClasses = `
-    chat-header 
-    ${isDragging ? 'cursor-grabbing' : docked ? 'cursor-default' : 'cursor-grab'}
-  `;
-
   return (
     <div 
       ref={containerRef}
@@ -122,47 +116,15 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
       data-minimized={isMinimized}
       data-docked={docked}
     >
-      {/* Chat header/drag handle */}
-      <div 
-        className={headerClasses}
-        onMouseDown={handleMouseDown}
-      >
-        <div className="chat-title font-medium text-sm">
-          {mode === 'dev' ? 'Developer Assistant' : 'Chat Assistant'}
-        </div>
-        
-        <div className="chat-controls flex items-center space-x-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="chat-control-button h-6 w-6" 
-            onClick={toggleDocked}
-            title={docked ? "Undock" : "Dock"}
-          >
-            <ArrowDownToLine className="h-4 w-4" />
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="chat-control-button h-6 w-6" 
-            onClick={toggleMinimize}
-            title={isMinimized ? "Maximize" : "Minimize"}
-          >
-            {isMinimized ? <Maximize className="h-4 w-4" /> : <Minus className="h-4 w-4" />}
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="chat-control-button h-6 w-6" 
-            onClick={toggleChat}
-            title="Close"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      {/* Chat header with all controls */}
+      <ChatHeader
+        title={mode === 'dev' ? 'Developer Assistant' : 'Chat Assistant'}
+        showSidebar={showSidebar}
+        isMinimized={isMinimized}
+        onToggleSidebar={toggleSidebar}
+        onMinimize={toggleMinimize}
+        onClose={toggleChat}
+      />
       
       {/* Chat content area */}
       {!isMinimized && (

@@ -1,63 +1,88 @@
 
-import React from 'react';
-import { Dialog, DialogTrigger } from '@/components/ui/dialog';
+import React, { useState } from 'react';
+import { Zap, Server, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Bot } from 'lucide-react';
-import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
-import { AIProviderStatusDialog } from './AIProviderStatusDialog';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import { ProviderCategory } from '../../store/types/chat-store-types';
+import { useChatStore } from '../../store/chatStore';
 import { logger } from '@/services/chat/LoggingService';
-import { useChatStore } from '@/components/chat/store';
 
 export function AIProviderStatusButton() {
   const { currentProvider } = useChatStore();
   
-  const handleOpenSettings = () => {
-    logger.info("AI Provider settings opened");
+  // Get status info
+  const getStatus = () => {
+    if (!currentProvider) {
+      return { 
+        text: 'Not Connected', 
+        color: 'text-yellow-500', 
+        icon: AlertTriangle, 
+        description: 'No AI provider connected' 
+      };
+    }
+    
+    return { 
+      text: 'Connected', 
+      color: 'text-green-500', 
+      icon: Zap, 
+      description: `Using ${currentProvider.name}` 
+    };
+  };
+  
+  const status = getStatus();
+  const Icon = status.icon;
+  
+  const handleClick = () => {
+    logger.info('AI Provider status clicked');
   };
   
   return (
-    <Dialog>
-      <HoverCard openDelay={300} closeDelay={200}>
-        <HoverCardTrigger asChild>
-          <DialogTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-chat-ai-text border-chat-ai-border hover:bg-chat-ai-background/10"
-              onClick={handleOpenSettings}
-              aria-label="AI Provider Settings"
-            >
-              <Bot className="h-4 w-4" />
-            </Button>
-          </DialogTrigger>
-        </HoverCardTrigger>
-        <HoverCardContent 
-          className="w-64 p-3 chat-dialog-content"
-          side="top"
-          align="end"
+    <HoverCard openDelay={300} closeDelay={200}>
+      <HoverCardTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleClick}
+          className={`border-chat-knowledge-border hover:bg-chat-knowledge-background/10 ${status.color}`}
         >
+          <Icon className="h-4 w-4" />
+        </Button>
+      </HoverCardTrigger>
+      <HoverCardContent align="end" className="w-80 chat-dialog-content">
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium flex items-center gap-1">
+            <Server className="h-3.5 w-3.5" />
+            AI Provider Status
+          </h4>
           <div className="space-y-2">
-            <h4 className="text-sm font-medium flex items-center gap-1">
-              <Bot className="h-3.5 w-3.5" />
-              AI Provider Settings
-            </h4>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">Current provider</span>
-                <span className="text-xs font-medium">{currentProvider?.name || 'None selected'}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">Status</span>
-                <div className="flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-full bg-green-500"></span>
-                  <span className="text-xs">Active</span>
-                </div>
-              </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Status</span>
+              <span className={`text-xs font-medium flex items-center gap-1 ${status.color}`}>
+                <Icon className="h-3 w-3" />
+                <span>{status.text}</span>
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Provider</span>
+              <span className="text-xs font-medium">
+                {currentProvider?.name || 'None'}
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Model</span>
+              <span className="text-xs font-medium">
+                {currentProvider?.models?.[0] || 'Not specified'}
+              </span>
+            </div>
+            
+            <div className="text-xs text-muted-foreground mt-2">
+              {status.description}
             </div>
           </div>
-        </HoverCardContent>
-      </HoverCard>
-      <AIProviderStatusDialog />
-    </Dialog>
+        </div>
+      </HoverCardContent>
+    </HoverCard>
   );
 }
