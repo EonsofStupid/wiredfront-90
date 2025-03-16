@@ -1,97 +1,83 @@
 
-import { useEffect } from 'react';
-import { useChatStore, clearMiddlewareStorage } from '@/components/chat/store/chatStore';
-import { clearAllSessions } from '@/services/sessions/sessionDelete';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { clearChatSessions, cleanupInactiveChatSessions } from '@/services/sessions';
 import { logger } from '@/services/chat/LoggingService';
-import { messageCache } from '@/services/chat/MessageCacheService';
-import { useMessageStore } from '@/components/chat/messaging/MessageManager';
+import { CreateSessionParams } from '@/types/sessions';
+import { SESSION_QUERY_KEYS } from './useSessionCore';
 
 /**
- * Hook to handle chat session cleanup and persistence management
+ * Hook for session cleanup functionality
  */
 export function useSessionCleanup(
-  currentSessionId: string | null = null,
-  clearMessages: () => void = () => {},
-  createSession: (params?: any) => Promise<string> = async () => '',
-  refreshSessions: () => void = () => {}
+  currentSessionId: string | null,
+  clearMessages: () => void,
+  createSession: (params?: CreateSessionParams) => Promise<string>,
+  refreshSessions: () => Promise<unknown>
 ) {
-  const { resetChatState } = useChatStore();
+  const queryClient = useQueryClient();
 
-  /**
-   * Delete all sessions except the current one
-   */
-  const cleanupInactiveSessions = async () => {
-    try {
-      if (!currentSessionId) {
-        toast.error('No active session');
-        return;
+  const { mutateAsync: clearSessions } = useMutation({
+    mutationFn: async (preserveCurrent: boolean = true) => {
+      // Make sure we have a valid current session if we need to preserve it
+      if (preserveCurrent && !currentSessionId) {
+        throw new Error('No current session to preserve');
       }
       
-      const result = await clearAllSessions(currentSessionId);
-      if (result.success) {
-        toast.success('Inactive sessions cleared');
-        logger.info('Inactive sessions cleared', { preservedSession: currentSessionId });
-        
-        // Also clear local storage for inactive sessions
-        const keys = Object.keys(localStorage);
-        keys.forEach(key => {
-          if (key.startsWith('chat-session-') && !key.includes(currentSessionId)) {
-            localStorage.removeItem(key);
-          }
-        });
-      } else {
-        toast.error('Failed to clear inactive sessions');
-        logger.error('Failed to clear inactive sessions', result.error);
+      const result = await clearChatSessions(preserveCurrent ? currentSessionId : null);
+      if (!result.success) {
+        throw new Error('Failed to clear chat sessions');
       }
-    } catch (error) {
-      toast.error('Error cleaning up sessions');
-      logger.error('Error in cleanupInactiveSessions', error);
-    }
-  };
+      
+      return result;
+    },
+    onMutate: async (preserveCurrent) => {
+      // If we're clearing all sessions including current, clear messages
+      if (!preserveCurrent) {
+        clearMessages();
+      }
+    },
+    onSuccess: async (result, preserveCurrent) => {
+      // If we cleared all sessions, create a new one
+      if (!preserveCurrent) {
+        try {
+          await createSession();
+        } catch (err) {
+          logger.error('Error creating new session after clearing all:', err);
+        }
+      }
+      
+      queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEYS.SESSIONS });
+      toast.success(preserveCurrent 
+        ? 'Other sessions cleared successfully' 
+        : 'All sessions cleared successfully');
+    },
+    onError: (err) => {
+      toast.error('Failed to clear sessions');
+      logger.error('Error clearing sessions:', err);
+    },
+  });
 
-  /**
-   * Completely flush all persistent storage and start fresh
-   */
-  const clearSessions = async (preserveCurrentSession: boolean = false) => {
-    try {
-      // Clear DB sessions
-      await clearAllSessions(preserveCurrentSession ? currentSessionId : null);
-      
-      // Clear message cache
-      messageCache.clearAllCache();
-      
-      // Clear messages from MessageStore
-      clearMessages();
-      
-      // Reset chat state (clears Zustand store)
-      resetChatState();
-      
-      // Force clear any middleware storage directly
-      clearMiddlewareStorage();
-      
-      // If we're not preserving sessions, create a new one
-      if (!preserveCurrentSession) {
-        const newSessionId = await createSession();
-        logger.info('New session created after clearing all', { newSessionId });
+  const { mutateAsync: cleanupInactiveSessions } = useMutation({
+    mutationFn: async () => {
+      const result = await cleanupInactiveChatSessions();
+      if (!result.success) {
+        throw new Error('Failed to cleanup inactive sessions');
       }
-      
-      // Refresh sessions list
-      refreshSessions();
-      
-      toast.success(
-        preserveCurrentSession 
-          ? 'All sessions except current cleared' 
-          : 'All sessions cleared, new session created'
-      );
-    } catch (error) {
-      toast.error('Error clearing sessions');
-      logger.error('Error in clearSessions', error);
-    }
-  };
+      return result;
+    },
+    onSuccess: async (result) => {
+      await refreshSessions();
+      toast.success(`Cleaned up ${result.count || 0} inactive sessions`);
+    },
+    onError: (err) => {
+      toast.error('Failed to cleanup inactive sessions');
+      logger.error('Error cleaning up sessions:', err);
+    },
+  });
 
   return {
+    clearSessions,
     cleanupInactiveSessions,
-    clearSessions
   };
 }

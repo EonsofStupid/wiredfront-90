@@ -1,67 +1,43 @@
 
 import { ChatState, ChatProvider } from '../../../types/chat-store-types';
 import { SetState, GetState } from '../types';
-import { logProviderChange } from './toggle-utils';
 
-// Create provider-specific actions
-export const createProviderActions = (
+export function createProviderActions(
   set: SetState<ChatState>,
   get: GetState<ChatState>
-) => ({
-  updateChatProvider: (providers: ChatProvider[]) =>
-    set(
-      (state: ChatState) => {
-        const newDefaultProvider = providers.find((p) => p.isDefault) || providers[0] || state.currentProvider;
-        
-        // If the provider is changing, log it
-        if (state.currentProvider?.id !== newDefaultProvider?.id) {
-          logProviderChange(state.currentProvider?.name, newDefaultProvider?.name);
-        }
-        
-        return {
-          ...state,
-          availableProviders: providers,
-          currentProvider: newDefaultProvider,
-          providers: {
-            ...state.providers,
-            availableProviders: providers,
-          },
-        };
-      },
-      false,
-      { type: 'providers/update', count: providers.length }
-    ),
+) {
+  return {
+    updateChatProvider: (providers: ChatProvider[]) => {
+      set(
+        {
+          availableProviders: providers
+        }, 
+        false, 
+        'providers/update'
+      );
+    },
     
-  updateCurrentProvider: (provider: ChatProvider) =>
-    set(
-      (state: ChatState) => {
-        // If the provider is changing, log it
-        if (state.currentProvider?.id !== provider.id) {
-          logProviderChange(state.currentProvider?.name, provider.name);
-        }
-        
-        return {
-          ...state,
+    updateCurrentProvider: (provider: ChatProvider) => {
+      set(
+        {
           currentProvider: provider
-        };
-      },
-      false,
-      { type: 'providers/setCurrent', provider: provider.id }
-    ),
+        },
+        false,
+        'providers/setCurrent'
+      );
+    },
     
-  updateAvailableProviders: (providers: ChatProvider[]) =>
-    set(
-      (state: ChatState) => {
-        return {
-          ...state,
-          availableProviders: providers,
+    updateAvailableProviders: (providers: ChatProvider[]) => {
+      set(
+        state => ({
           providers: {
             ...state.providers,
-            availableProviders: providers,
+            availableProviders: providers
           }
-        };
-      },
-      false,
-      { type: 'providers/setAvailable' }
-    )
-});
+        }),
+        false,
+        'providers/setAvailable'
+      );
+    }
+  };
+}

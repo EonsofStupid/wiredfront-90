@@ -1,4 +1,6 @@
 
+// This file already exists, but let's make sure it's correctly imported
+// Importing from the local feature flag type we just created
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth";
