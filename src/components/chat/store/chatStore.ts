@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { createInitializationActions } from './actions/initialization-actions';
-import { createFeatureActions } from './actions/feature-actions';
+import { createFeatureActions } from './actions/feature';
 import { createUIActions } from './actions/ui-actions';
 import { ChatState } from './types/chat-store-types';
 
@@ -44,7 +44,7 @@ const initialState: ChatState = {
   availableProviders: [],
   currentProvider: null,
   
-  // Token control system initialization
+  // Token control system
   tokenControl: {
     balance: 0,
     enforcementMode: 'never',
@@ -74,6 +74,19 @@ export const useChatStore = create<FullChatStore>()(
   devtools(
     (set, get, api) => ({
       ...initialState,
+      
+      // Add a method to reset the chat state
+      resetChatState: () => {
+        set({
+          ...initialState,
+          initialized: true, // Keep initialized true
+          availableProviders: get().availableProviders, // Keep available providers
+          currentProvider: get().currentProvider, // Keep current provider
+          // Preserve feature settings
+          features: get().features,
+        });
+      },
+      
       ...createInitializationActions(set, get, api),
       ...createFeatureActions(set, get, api),
       ...createUIActions(set, get, api),

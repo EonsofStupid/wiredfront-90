@@ -1,8 +1,6 @@
 
 project_id = "deksjwrdczcsnryjohzg"
-
-[global.env_variables]
-MY_GLOBAL_VAR = "some_value"
-
-[functions.track-rag-usage]
+[functions.initialize-chat-session]
+verify_jwt = true
+[functions.initialize-providers]
 verify_jwt = true

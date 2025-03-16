@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { cleanupSessions, clearAllSessions } from '@/services/sessions';
 import { logger } from '@/services/chat/LoggingService';
 import { SESSION_QUERY_KEYS } from './useSessionCore';
+import { useChatStore } from '@/components/chat/store/chatStore';
 
 const toastStyles = {
   success: {
@@ -27,6 +28,7 @@ export function useSessionCleanup(
   refreshSessions: () => Promise<any>
 ) {
   const queryClient = useQueryClient();
+  const { resetChatState } = useChatStore();
 
   const { mutateAsync: clearSessionsMutation } = useMutation({
     mutationFn: async (preserveCurrentSession: boolean) => {
@@ -35,14 +37,23 @@ export function useSessionCleanup(
       return clearAllSessions(sessionIdToPreserve);
     },
     onSuccess: async (_, preserveCurrentSession) => {
-      // Only clear messages if we're not preserving the current session
-      if (!preserveCurrentSession) {
-        clearMessages();
-      }
+      // Reset chat state in store
+      resetChatState();
+      
+      // Clear messages from local state
+      clearMessages();
       
       // Create a new session if we deleted all sessions including current
       if (!preserveCurrentSession || !currentSessionId) {
-        await createSession(undefined);
+        await createSession({
+          title: `New Chat ${new Date().toLocaleString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            hour: 'numeric', 
+            minute: 'numeric' 
+          })}`,
+          metadata: { mode: 'chat' }
+        });
       }
       
       await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEYS.SESSIONS });

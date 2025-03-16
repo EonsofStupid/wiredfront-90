@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { useSessionManager } from '@/hooks/useSessionManager';
 import { useTokenManagement } from '@/hooks/useTokenManagement';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { parseCommand } from '@/services/chat/CommandHandler';
 
 interface ChatInputModuleProps {
   onMessageSubmit?: (content: string) => void;
@@ -36,6 +37,40 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
     e.stopPropagation();
     
     if (!message.trim()) return;
+    
+    // Check if this is a command
+    if (message.startsWith('/')) {
+      const { isCommand, response } = await parseCommand(message);
+      
+      if (isCommand && response) {
+        // Create a session if needed
+        let sessionId = currentSessionId;
+        if (!sessionId) {
+          logger.info('No active session, creating a new one for command...');
+          sessionId = await createSession({
+            title: `Chat ${new Date().toLocaleString()}`,
+            metadata: { mode: 'chat' }
+          });
+        }
+        
+        // Add the command as a user message
+        await addMessage({
+          content: message.trim(),
+          role: 'user',
+          sessionId
+        });
+        
+        // Add the response as a system message
+        await addMessage({
+          content: response,
+          role: 'system',
+          sessionId
+        });
+        
+        setMessage("");
+        return;
+      }
+    }
     
     // Check if token enforcement is enabled and user has enough tokens
     if (isTokenEnforcementEnabled && !hasEnoughTokens(tokensPerQuery)) {
@@ -167,7 +202,7 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
           onChange={handleInputChange}
           onClick={handleInputClick}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder}
+          placeholder={message.startsWith('/') ? "Enter command..." : "Type a message..."}
           className={`chat-input chat-cyber-border font-mono text-chat-input-text h-[var(--chat-input-height)] ${
             showTokenWarning ? 'border-red-500' : ''
           }`}
@@ -181,7 +216,10 @@ export function ChatInputModule({ onMessageSubmit, isEditorPage = false }: ChatI
       <KnowledgeSourceButton />
       
       <VoiceToTextButton 
-        onTranscription={handleTranscription}
+        onTranscription={(text) => {
+          setMessage(text);
+          // Don't auto-submit voice transcriptions to give the user a chance to review
+        }}
         isProcessing={isProcessing}
       />
       
