@@ -24,6 +24,8 @@ export interface ChatProvider {
   category: 'chat' | 'image' | 'vector' | 'voice' | 'other';
   costPerToken?: number;
   isDefault?: boolean;
+  isEnabled?: boolean;
+  type?: string;
 }
 
 export type ProviderCategory = ChatProvider;

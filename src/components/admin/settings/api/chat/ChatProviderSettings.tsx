@@ -22,10 +22,10 @@ export const ChatProviderSettings: React.FC<ChatProviderSettingsProps> = ({
 
   const handleReset = () => {
     // Reset all features to default
-    if (!features.codeAssistant) toggleFeature(KnownFeatureFlag.CODE_ASSISTANT);
-    if (!features.ragSupport) toggleFeature(KnownFeatureFlag.RAG_SUPPORT);
-    if (!features.githubSync) toggleFeature(KnownFeatureFlag.GITHUB_SYNC);
-    if (!features.notifications) toggleFeature(KnownFeatureFlag.NOTIFICATIONS);
+    if (!features.codeAssistant) toggleFeature('codeAssistant');
+    if (!features.ragSupport) toggleFeature('ragSupport');
+    if (!features.githubSync) toggleFeature('githubSync');
+    if (!features.notifications) toggleFeature('notifications');
     
     toast.success("Chat features reset to defaults");
   };
@@ -53,7 +53,7 @@ export const ChatProviderSettings: React.FC<ChatProviderSettingsProps> = ({
             <Switch 
               id="codeAssistant" 
               checked={features.codeAssistant} 
-              onCheckedChange={() => toggleFeature(KnownFeatureFlag.CODE_ASSISTANT)}
+              onCheckedChange={() => toggleFeature('codeAssistant')}
               disabled={isUpdating}
             />
           </div>
@@ -68,7 +68,7 @@ export const ChatProviderSettings: React.FC<ChatProviderSettingsProps> = ({
             <Switch 
               id="ragSupport" 
               checked={features.ragSupport} 
-              onCheckedChange={() => toggleFeature(KnownFeatureFlag.RAG_SUPPORT)}
+              onCheckedChange={() => toggleFeature('ragSupport')}
               disabled={isUpdating}
             />
           </div>
@@ -83,7 +83,7 @@ export const ChatProviderSettings: React.FC<ChatProviderSettingsProps> = ({
             <Switch 
               id="githubSync" 
               checked={features.githubSync} 
-              onCheckedChange={() => toggleFeature(KnownFeatureFlag.GITHUB_SYNC)}
+              onCheckedChange={() => toggleFeature('githubSync')}
               disabled={isUpdating}
             />
           </div>
@@ -98,7 +98,7 @@ export const ChatProviderSettings: React.FC<ChatProviderSettingsProps> = ({
             <Switch 
               id="notifications" 
               checked={features.notifications} 
-              onCheckedChange={() => toggleFeature(KnownFeatureFlag.NOTIFICATIONS)}
+              onCheckedChange={() => toggleFeature('notifications')}
               disabled={isUpdating}
             />
           </div>

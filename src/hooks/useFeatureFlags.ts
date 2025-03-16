@@ -6,10 +6,7 @@ import { logger } from "@/services/chat/LoggingService";
 import { useFeatureFlag } from "./useFeatureFlag";
 import { toast } from "sonner";
 import { KnownFeatureFlag } from "@/types/admin/settings/feature-flags";
-import { FeatureKey } from "@/components/chat/store/actions/feature-actions";
-
-// Export is now handled by re-exporting from feature-actions.ts
-// export type FeatureKey = KnownFeatureFlag;
+import { FeatureKey } from "@/components/chat/store/actions/feature/types";
 
 export function useFeatureFlags() {
   const { features, toggleFeature, enableFeature, disableFeature, setFeatureState } = useChatStore();
@@ -19,8 +16,8 @@ export function useFeatureFlags() {
    * Check if a feature is enabled in the local store
    */
   const isEnabled = useCallback(
-    (featureKey: FeatureKey) => {
-      return features[featureKey] || false;
+    (featureKey: keyof typeof features) => {
+      return features[featureKey as keyof typeof features] || false;
     },
     [features]
   );
@@ -29,7 +26,7 @@ export function useFeatureFlags() {
    * Toggle a feature with database logging
    */
   const handleToggleFeature = useCallback(
-    async (featureKey: FeatureKey) => {
+    async (featureKey: keyof typeof features) => {
       if (isUpdating) return;
       
       setIsUpdating(true);
@@ -53,7 +50,7 @@ export function useFeatureFlags() {
    * Enable a feature with database logging
    */
   const handleEnableFeature = useCallback(
-    async (featureKey: FeatureKey) => {
+    async (featureKey: keyof typeof features) => {
       if (isUpdating) return;
       
       setIsUpdating(true);
@@ -77,7 +74,7 @@ export function useFeatureFlags() {
    * Disable a feature with database logging
    */
   const handleDisableFeature = useCallback(
-    async (featureKey: FeatureKey) => {
+    async (featureKey: keyof typeof features) => {
       if (isUpdating) return;
       
       setIsUpdating(true);
@@ -101,7 +98,7 @@ export function useFeatureFlags() {
    * Set a feature state with database logging
    */
   const handleSetFeatureState = useCallback(
-    async (featureKey: FeatureKey, isEnabled: boolean) => {
+    async (featureKey: keyof typeof features, isEnabled: boolean) => {
       if (isUpdating) return;
       
       setIsUpdating(true);
@@ -125,7 +122,7 @@ export function useFeatureFlags() {
   );
 
   // Helper function to log feature usage
-  const logFeatureUsage = async (featureKey: FeatureKey, context: Record<string, any> = {}) => {
+  const logFeatureUsage = async (featureKey: string, context: Record<string, any> = {}) => {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData?.user) return;
@@ -154,18 +151,18 @@ export function useFeatureFlags() {
 /**
  * Hook to check a specific feature from both local store and Supabase flag
  */
-export function useCombinedFeatureFlag(featureKey: FeatureKey) {
+export function useCombinedFeatureFlag(featureKey: string) {
   const { isEnabled: isLocalEnabled } = useFeatureFlags();
   const { isEnabled: isRemoteEnabled, isLoading } = useFeatureFlag(featureKey);
   
   // Combined flag is enabled if either local or remote is enabled
   // We prioritize the remote flag when it's available
-  const isEnabled = isLoading ? isLocalEnabled(featureKey) : (isRemoteEnabled || isLocalEnabled(featureKey));
+  const isEnabled = isLoading ? isLocalEnabled(featureKey as keyof typeof features) : (isRemoteEnabled || isLocalEnabled(featureKey as keyof typeof features));
   
   return {
     isEnabled,
     isLoading,
-    isLocalEnabled: isLocalEnabled(featureKey),
+    isLocalEnabled: isLocalEnabled(featureKey as keyof typeof features),
     isRemoteEnabled
   };
 }

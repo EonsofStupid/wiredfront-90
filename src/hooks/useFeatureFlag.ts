@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import { useRoleStore } from "@/stores/role";
-import { FeatureFlag, AppRole } from "@/types/admin/settings/feature-flags";
+import { FeatureFlag } from "@/types/admin/settings/feature-flags";
+import { AppRole } from "@/integrations/supabase/types/enums";
 
 export function useFeatureFlag(flagKey: string) {
   const { user } = useAuthStore();
@@ -57,7 +58,7 @@ export function useFeatureFlag(flagKey: string) {
     }
     
     // Check percentage rollout
-    if (data.rollout_percentage < 100) {
+    if (data.rollout_percentage && data.rollout_percentage < 100) {
       // Use user ID as consistent seed for randomization
       // This ensures a user always gets the same result
       if (!user?.id) return false;

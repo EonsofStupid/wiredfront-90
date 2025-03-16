@@ -27,6 +27,9 @@ export class AIProviderService {
       return data?.map(config => ({
         id: config.id,
         name: config.memorable_name || `${config.api_type} Provider`,
+        description: `${config.api_type} integration`,
+        models: ['default'],
+        supportsStreaming: true,
         type: config.api_type,
         isDefault: config.is_default || false,
         isEnabled: config.is_enabled,
@@ -41,7 +44,7 @@ export class AIProviderService {
   /**
    * Get the default provider for a specific category
    */
-  static async getDefaultProvider(category: ProviderCategory): Promise<ChatProvider | null> {
+  static async getDefaultProvider(category: string): Promise<ChatProvider | null> {
     try {
       const providers = await this.getAllProviders();
       
@@ -154,13 +157,13 @@ export class AIProviderService {
   /**
    * Determine the category for a provider type
    */
-  private static getCategoryForProvider(type: string): ProviderCategory {
+  private static getCategoryForProvider(type: string): string {
     if (['openai', 'anthropic', 'gemini', 'perplexity', 'openrouter'].includes(type)) {
       return 'chat';
     } else if (['dalle', 'stabilityai', 'replicate'].includes(type)) {
       return 'image';
     } else if (['mixed', 'integration'].includes(type)) {
-      return type as ProviderCategory;
+      return type;
     }
     return 'chat';
   }

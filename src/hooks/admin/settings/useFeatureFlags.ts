@@ -3,8 +3,11 @@ import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { FeatureFlag, FeatureFlagFormValues, AppRole } from "@/types/admin/settings/feature-flags";
+import { FeatureFlag, FeatureFlagFormData, AppRole } from "@/types/admin/settings/feature-flags";
 import { useRoleStore } from "@/stores/role";
+
+// Type for form inputs
+export type FeatureFlagFormValues = FeatureFlagFormData;
 
 export const useFeatureFlags = () => {
   const { hasRole } = useRoleStore();
@@ -67,11 +70,6 @@ export const useFeatureFlags = () => {
         updated_at: new Date().toISOString()
       };
 
-      // Ensure target_roles is of the correct type
-      if (newFlag.target_roles && !Array.isArray(newFlag.target_roles)) {
-        newFlag.target_roles = [newFlag.target_roles as unknown as AppRole];
-      }
-
       const { data, error } = await supabase
         .from('feature_flags')
         .insert(newFlag)
@@ -105,11 +103,6 @@ export const useFeatureFlags = () => {
         updated_by: (await supabase.auth.getUser()).data.user?.id,
         updated_at: new Date().toISOString()
       };
-
-      // Ensure target_roles is of the correct type
-      if (updatePayload.target_roles && !Array.isArray(updatePayload.target_roles)) {
-        updatePayload.target_roles = [updatePayload.target_roles as unknown as AppRole];
-      }
 
       const { data, error } = await supabase
         .from('feature_flags')
