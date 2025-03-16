@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 import { useFeatureFlags } from './useFeatureFlags';
 import { KnownFeatureFlag } from '@/types/admin/settings/feature-flags';
+import { isTokenEnforcementMode } from '@/utils/token-utils';
 
 export function useTokenManagement() {
   const { tokenControl, setTokenEnforcementMode, addTokens, spendTokens, setTokenBalance } = useChatStore();
@@ -18,9 +19,15 @@ export function useTokenManagement() {
   const tokenBalance = tokenControl.balance;
   const enforcementMode = tokenControl.enforcementMode;
 
-  // Setters for token enforcement mode
+  // Setters for token enforcement mode with validation
   const setEnforcementMode = (mode: TokenEnforcementMode) => {
-    setTokenEnforcementMode(mode);
+    // Validate the mode - this will ensure TypeScript knows it's a valid value
+    if (isTokenEnforcementMode(mode)) {
+      setTokenEnforcementMode(mode);
+    } else {
+      console.error(`Invalid token enforcement mode: ${mode}`);
+      toast.error('Invalid token enforcement mode');
+    }
   };
 
   // Load token settings from the database
@@ -50,9 +57,17 @@ export function useTokenManagement() {
           toast.error('Failed to load token settings');
           setError(new Error(error.message));
         } else if (data) {
-          // Set token balance and settings
+          // Set token balance and settings with validation
           setTokenBalance(data.balance || 0);
-          setTokenEnforcementMode(data.enforcement_mode || 'never');
+          
+          // Validate enforcement_mode before setting it
+          const enforcementMode = data.enforcement_mode || 'never';
+          if (isTokenEnforcementMode(enforcementMode)) {
+            setTokenEnforcementMode(enforcementMode);
+          } else {
+            // Default to 'never' if invalid
+            setTokenEnforcementMode('never');
+          }
           
           // Enable token enforcement feature flag if it's enabled in settings
           if (data.enforcement_mode !== 'never' && !isEnabled(KnownFeatureFlag.TOKEN_CONTROL)) {

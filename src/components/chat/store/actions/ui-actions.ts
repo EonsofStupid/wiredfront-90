@@ -1,6 +1,8 @@
-
 import { ChatState, ChatPosition } from '../types/chat-store-types';
-import { SetState, GetState } from 'zustand';
+import { StateCreator } from 'zustand';
+
+type SetState<T> = StateCreator<T>['setState'];
+type GetState<T> = StateCreator<T>['getState'];
 
 export const createUIActions = (
   set: SetState<ChatState>,
@@ -27,7 +29,6 @@ export const createUIActions = (
   },
 
   toggleChat: () => {
-    // Make sure the chat is not minimized when opened
     const currentlyOpen = get().isOpen;
     set(
       state => ({
@@ -38,7 +39,6 @@ export const createUIActions = (
       { type: 'chat/toggleChat', wasOpen: currentlyOpen }
     );
     
-    // Log the state change
     console.log(`Chat toggled: ${!currentlyOpen ? 'opened' : 'closed'}`);
   },
 

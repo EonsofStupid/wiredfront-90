@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { SendIcon, Loader2 } from 'lucide-react';
 import { useChatStore } from '../store/chatStore';
 import { useMessageAPI } from '@/hooks/chat/useMessageAPI';
-import { VoiceToTextButton } from '../features/voice-to-text';
+import { VoiceToTextButton } from '../features/voice-to-text/VoiceToTextButton';
 import { useVoiceRecognition } from '../features/voice-to-text/useVoiceRecognition';
 
 type ChatInputModuleProps = {
@@ -21,8 +21,13 @@ export const ChatInputModule = ({
 }: ChatInputModuleProps) => {
   const { userInput, setUserInput, isWaitingForResponse } = useChatStore();
   const { sendMessage, isLoading } = useMessageAPI();
-  const { isListening, transcript, startListening, stopListening, error } = useVoiceRecognition();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  const handleVoiceTranscription = (text: string) => {
+    setUserInput(text);
+  };
+  
+  const { isListening, isError, errorMessage, startListening, stopListening } = useVoiceRecognition(handleVoiceTranscription);
   
   const handleSendMessage = async () => {
     if (!userInput.trim() || isWaitingForResponse) return;
@@ -49,14 +54,6 @@ export const ChatInputModule = ({
       handleSendMessage();
     }
   };
-  
-  // Handle voice recognition
-  React.useEffect(() => {
-    if (transcript && transcript.length > 0) {
-      // Set the transcript as the input value
-      setUserInput(transcript);
-    }
-  }, [transcript, setUserInput]);
   
   // Handle voice button click
   const handleVoiceButtonClick = () => {

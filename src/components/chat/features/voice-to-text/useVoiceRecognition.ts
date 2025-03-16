@@ -6,6 +6,7 @@ interface VoiceRecognitionState {
   isListening: boolean;
   isError: boolean;
   errorMessage: string | null;
+  transcript: string;
 }
 
 export const useVoiceRecognition = (onTranscription: (text: string) => void) => {
@@ -13,6 +14,7 @@ export const useVoiceRecognition = (onTranscription: (text: string) => void) => 
     isListening: false,
     isError: false,
     errorMessage: null,
+    transcript: ''
   });
 
   const recognition = useCallback(() => {
@@ -49,8 +51,13 @@ export const useVoiceRecognition = (onTranscription: (text: string) => void) => 
         recognitionInstance.onresult = (event) => {
           const transcript = event.results[0][0].transcript;
           logger.info('Voice transcription received', { transcript });
+          
+          setState(prev => ({ ...prev, transcript }));
           onTranscription(transcript);
-          setState(prev => ({ ...prev, isListening: false }));
+          
+          setTimeout(() => {
+            setState(prev => ({ ...prev, isListening: false }));
+          }, 500);
         };
 
         recognitionInstance.onerror = (event) => {
@@ -84,7 +91,7 @@ export const useVoiceRecognition = (onTranscription: (text: string) => void) => 
   }, [state.isListening, recognition, onTranscription]);
 
   const startListening = useCallback(() => {
-    setState(prev => ({ ...prev, isListening: true }));
+    setState(prev => ({ ...prev, isListening: true, transcript: '' }));
   }, []);
 
   const stopListening = useCallback(() => {

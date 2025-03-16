@@ -2,9 +2,19 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { toast } from 'sonner';
-import { ChatState } from '../types/chat-store-types';
+import { ChatState, ProviderCategory } from '../types/chat-store-types';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 import { KnownFeatureFlag } from '@/types/admin/settings/feature-flags';
+import { Json } from '@/integrations/supabase/types';
+
+// Helper function to safely get a property from a JSON object
+const getJsonProperty = <T>(obj: Json | null, key: string, fallback: T): T => {
+  if (!obj || typeof obj !== 'object' || obj === null) {
+    return fallback;
+  }
+  
+  return (obj as Record<string, any>)[key] as T ?? fallback;
+};
 
 const FEATURE_MAP = {
   [KnownFeatureFlag.CODE_ASSISTANT]: 'codeAssistant',
@@ -116,8 +126,16 @@ export const createInitializationActions = (set: any, get: any) => {
               type: provider.api_type,
               isDefault: provider.is_default || false,
               isEnabled: provider.is_enabled,
-              category: (providerSettings.category || 'chat') as 'chat' | 'image' | 'mixed' | 'integration',
-              models: providerSettings.models || []
+              category: getJsonProperty<ProviderCategory>(
+                provider.provider_settings, 
+                'category', 
+                'chat'
+              ),
+              models: getJsonProperty<string[]>(
+                provider.provider_settings, 
+                'models', 
+                []
+              )
             };
           });
           
