@@ -1,10 +1,12 @@
+
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { createInitializationActions } from './actions/initialization-actions';
 import { createFeatureActions } from './actions/feature';
 import { createUIActions } from './actions/ui-actions';
-import { ChatState } from './types/chat-store-types';
+import { ChatState, ProviderCategory } from './types/chat-store-types';
+import { Message } from '@/types/chat';
 
 // Define the full store type with all action slices
 type FullChatStore = ChatState & 
@@ -63,6 +65,12 @@ const initialState: ChatState = {
     messageLoading: false,
     providerLoading: false,
   },
+  
+  // Define the resetChatState function in initialState to satisfy type requirements
+  resetChatState: () => {},
+  
+  // Define setUserInput in initialState
+  setUserInput: () => {},
 };
 
 // Enhanced function to clear all Zustand middleware storage
@@ -134,6 +142,7 @@ export const useChatStore = create<FullChatStore>()(
     (set, get) => ({
       ...initialState,
       
+      // Properly implement the resetChatState function
       resetChatState: () => {
         clearMiddlewareStorage();
         
@@ -144,6 +153,30 @@ export const useChatStore = create<FullChatStore>()(
           currentProvider: get().currentProvider,
           features: get().features,
         }, false, 'chat/resetState');
+      },
+      
+      // Implement setUserInput function
+      setUserInput: (input: string) => {
+        set({ userInput: input }, false, 'chat/setUserInput');
+      },
+      
+      // Add methods to add, update, and retrieve messages
+      addMessage: (message: Message) => {
+        set(state => ({
+          messages: [...state.messages, {
+            id: message.id || uuidv4(),
+            timestamp: new Date().toISOString(),
+            ...message,
+          }]
+        }), false, 'chat/addMessage');
+      },
+      
+      updateMessage: (id: string, updates: Partial<Message>) => {
+        set(state => ({
+          messages: state.messages.map(msg => 
+            msg.id === id ? { ...msg, ...updates } : msg
+          )
+        }), false, 'chat/updateMessage');
       },
       
       ...createInitializationActions(set, get),

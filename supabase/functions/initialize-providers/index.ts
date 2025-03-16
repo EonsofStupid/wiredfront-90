@@ -6,6 +6,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Define proper types
+type ProviderCategory = 'chat' | 'image' | 'mixed' | 'integration';
+
+interface ChatProvider {
+  id: string;
+  name: string;
+  type: string;
+  isDefault: boolean;
+  category: ProviderCategory;
+  models?: string[];
+  features?: string[];
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -13,8 +26,8 @@ serve(async (req) => {
   }
 
   try {
-    // Define providers
-    const providers = [
+    // Define providers with proper type annotations
+    const providers: ChatProvider[] = [
       {
         id: 'openai-default',
         name: 'OpenAI',

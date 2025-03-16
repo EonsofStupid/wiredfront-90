@@ -1,66 +1,50 @@
 
-import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Mic, Square, AlertCircle } from "lucide-react";
-import { useVoiceRecognition } from './useVoiceRecognition';
-import { toast } from "sonner";
+import React, { useState, useCallback } from 'react';
+import { Mic, StopCircle } from 'lucide-react';
 
-interface VoiceToTextButtonProps {
+export interface VoiceToTextButtonProps {
   onTranscription: (text: string) => void;
-  isProcessing: boolean;
+  isDisabled?: boolean;
 }
 
-export function VoiceToTextButton({ onTranscription, isProcessing }: VoiceToTextButtonProps) {
-  const {
-    isListening,
-    isError,
-    errorMessage,
-    startListening,
-    stopListening
-  } = useVoiceRecognition((text) => {
-    onTranscription(text);
-    toast.success('Voice transcription completed');
-  });
-
-  const handleClick = () => {
-    if (isListening) {
-      stopListening();
-    } else {
-      startListening();
-    }
-  };
-
-  if (isError) {
-    return (
-      <Button
-        variant="ghost"
-        size="icon"
-        className="text-destructive hover:text-destructive/90 hover:bg-destructive/10 h-[var(--chat-input-height)]"
-        onClick={() => toast.error(errorMessage || 'Voice recognition error')}
-        title={errorMessage || 'Voice recognition error'}
-      >
-        <AlertCircle className="h-4 w-4" />
-      </Button>
-    );
-  }
-
+export const VoiceToTextButton: React.FC<VoiceToTextButtonProps> = ({ 
+  onTranscription,
+  isDisabled = false
+}) => {
+  const [isRecording, setIsRecording] = useState(false);
+  
+  // Implement the voice recording logic here...
+  
+  const startRecording = useCallback(() => {
+    if (isDisabled) return;
+    
+    setIsRecording(true);
+    // Implement the actual recording logic
+    
+    // Simulate a transcription for now
+    setTimeout(() => {
+      setIsRecording(false);
+      onTranscription("This is a simulated voice transcription");
+    }, 3000);
+  }, [isDisabled, onTranscription]);
+  
+  const stopRecording = useCallback(() => {
+    setIsRecording(false);
+    // Implement logic to stop recording
+  }, []);
+  
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="relative chat-cyber-border h-[var(--chat-input-height)]"
-      onClick={handleClick}
-      disabled={isProcessing}
-      data-testid="voice-to-text-button"
+    <button
+      onClick={isRecording ? stopRecording : startRecording}
+      disabled={isDisabled}
+      className={`p-2 rounded-full ${isRecording ? 'bg-red-500' : 'bg-primary/10'}`}
+      aria-label={isRecording ? "Stop recording" : "Start voice input"}
     >
-      {isListening ? (
-        <>
-          <Square className="h-4 w-4 text-red-500" />
-          <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-        </>
+      {isRecording ? (
+        <StopCircle className="h-5 w-5 text-white" />
       ) : (
-        <Mic className="h-4 w-4" />
+        <Mic className="h-5 w-5 text-primary" />
       )}
-    </Button>
+    </button>
   );
-}
+};

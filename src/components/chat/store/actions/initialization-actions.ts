@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { ChatState } from '../types/chat-store-types';
+import { ChatState, ProviderCategory } from '../types/chat-store-types';
 import { logger } from '@/services/chat/LoggingService';
 import type { StateCreator } from 'zustand';
 
@@ -31,16 +31,28 @@ export const createInitializationActions = (
           // Always set OpenAI as the default provider if available
           const openaiProvider = data.availableProviders.find((p: any) => p.type === 'openai');
           
+          // Transform the category to ensure it matches our type expectations
+          const typedProviders = data.availableProviders.map((p: any) => ({
+            ...p,
+            category: ensureValidCategory(p.category)
+          }));
+          
+          const typedDefaultProvider = openaiProvider 
+            ? { ...openaiProvider, category: ensureValidCategory(openaiProvider.category) }
+            : data.defaultProvider 
+              ? { ...data.defaultProvider, category: ensureValidCategory(data.defaultProvider.category) }
+              : null;
+          
           set({
-            availableProviders: data.availableProviders,
-            currentProvider: openaiProvider || data.defaultProvider,
+            availableProviders: typedProviders,
+            currentProvider: typedDefaultProvider,
             providers: {
-              availableProviders: data.availableProviders
+              availableProviders: typedProviders
             }
           });
           
           logger.info('Set current provider', { 
-            provider: openaiProvider ? openaiProvider.name : data.defaultProvider?.name 
+            provider: typedDefaultProvider?.name || 'None' 
           });
         }
       } catch (providerError) {
@@ -52,7 +64,7 @@ export const createInitializationActions = (
           name: 'OpenAI',
           type: 'openai',
           isDefault: true,
-          category: 'chat'
+          category: 'chat' as ProviderCategory
         };
         
         set({
@@ -87,24 +99,35 @@ export const createInitializationActions = (
           const currentState = get();
           
           // Apply settings from database with proper type safety
-          set({
-            features: {
-              ...currentState.features,
-              ...(typeof uiCustomizations === 'object' && 
-                 uiCustomizations.features ? 
-                 uiCustomizations.features as Record<string, boolean> : {})
-            },
-            // Apply token control settings if available with proper type checks
-            tokenControl: {
-              ...currentState.tokenControl,
-              enforcementMode: typeof uiCustomizations === 'object' && 
-                uiCustomizations.tokenEnforcement ? 
-                uiCustomizations.tokenEnforcement : 'never',
-              ...(typeof uiCustomizations === 'object' && 
-                 uiCustomizations.tokenControl ? 
-                 uiCustomizations.tokenControl as Record<string, any> : {})
+          if (typeof uiCustomizations === 'object') {
+            const updatedState: Partial<ChatState> = { ...currentState };
+            
+            // Handle features if they exist
+            if (uiCustomizations.features && typeof uiCustomizations.features === 'object') {
+              updatedState.features = {
+                ...currentState.features,
+                ...uiCustomizations.features
+              };
             }
-          });
+            
+            // Handle token enforcement if it exists
+            if ('tokenEnforcement' in uiCustomizations) {
+              updatedState.tokenControl = {
+                ...currentState.tokenControl,
+                enforcementMode: uiCustomizations.tokenEnforcement as TokenEnforcementMode
+              };
+            }
+            
+            // Handle token control if it exists
+            if (uiCustomizations.tokenControl && typeof uiCustomizations.tokenControl === 'object') {
+              updatedState.tokenControl = {
+                ...updatedState.tokenControl,
+                ...uiCustomizations.tokenControl
+              };
+            }
+            
+            set(updatedState);
+          }
         }
       }
 
@@ -116,7 +139,7 @@ export const createInitializationActions = (
           name: 'OpenAI',
           type: 'openai',
           isDefault: true,
-          category: 'chat'
+          category: 'chat' as ProviderCategory
         };
         
         set({
@@ -139,3 +162,11 @@ export const createInitializationActions = (
     }
   },
 });
+
+/**
+ * Helper function to ensure category is one of the valid ProviderCategory values
+ */
+function ensureValidCategory(category: any): ProviderCategory {
+  const validCategories: ProviderCategory[] = ['chat', 'image', 'mixed', 'integration'];
+  return validCategories.includes(category) ? category : 'chat';
+}

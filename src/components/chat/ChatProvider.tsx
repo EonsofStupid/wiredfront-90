@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import { Toaster } from "sonner";
 import { ChatModeProvider } from './providers/ChatModeProvider';
@@ -16,7 +17,11 @@ interface ChatContextType {
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
-export function ChatProvider({ children }: { children: ReactNode }) {
+interface ChatProviderProps {
+  children: ReactNode;
+}
+
+export function ChatProvider({ children }: ChatProviderProps) {
   const location = useLocation();
   const isEditorPage = location.pathname === '/editor';
   const { isOpen, initializeChatSettings, setSessionLoading } = useChatStore();

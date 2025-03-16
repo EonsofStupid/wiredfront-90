@@ -1,5 +1,8 @@
+
 import { Message } from "@/types/chat";
 import { ChatMode, TokenEnforcementMode } from "@/integrations/supabase/types/enums";
+
+export type ProviderCategory = 'chat' | 'image' | 'mixed' | 'integration';
 
 export interface ChatProvider {
   id: string;
@@ -7,7 +10,9 @@ export interface ChatProvider {
   type: string;
   isDefault: boolean;
   isEnabled?: boolean;
-  category?: 'chat' | 'image' | 'integration';
+  category?: ProviderCategory;
+  models?: string[];
+  features?: string[];
 }
 
 export type ChatPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
@@ -72,6 +77,9 @@ export interface ChatState {
 
   // Store actions
   resetChatState: () => void;
+  
+  // Add setUserInput to the ChatState interface
+  setUserInput: (input: string) => void;
 }
 
 export interface UIStateActions {

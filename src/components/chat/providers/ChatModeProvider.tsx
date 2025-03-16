@@ -1,42 +1,42 @@
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-
-// Extended mode types to include 'image'
-export type ChatMode = 'standard' | 'editor' | 'chat-only' | 'image';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import { ChatMode } from '@/integrations/supabase/types/enums';
+import { useChatStore } from '../store/chatStore';
 
 interface ChatModeContextType {
   mode: ChatMode;
+  setMode: (mode: ChatMode) => void;
   isEditorPage: boolean;
-  setMode?: (mode: ChatMode) => void;
 }
-
-const ChatModeContext = createContext<ChatModeContextType | undefined>(undefined);
 
 interface ChatModeProviderProps {
   children: ReactNode;
   isEditorPage: boolean;
 }
 
-export function ChatModeProvider({ children, isEditorPage }: ChatModeProviderProps) {
-  // Default mode based on page context
-  const defaultMode: ChatMode = isEditorPage ? 'editor' : 'standard';
-  const [mode, setMode] = useState<ChatMode>(defaultMode);
+const ChatModeContext = createContext<ChatModeContextType | undefined>(undefined);
 
-  // Reset mode when switching pages
+export const ChatModeProvider: React.FC<ChatModeProviderProps> = ({ 
+  children, isEditorPage 
+}) => {
+  const [mode, setMode] = useState<ChatMode>('chat');
+  const { setCurrentMode } = useChatStore();
+  
+  // Update global state when mode changes
   useEffect(() => {
-    setMode(isEditorPage ? 'editor' : 'standard');
-  }, [isEditorPage]);
-
+    setCurrentMode(mode);
+  }, [mode, setCurrentMode]);
+  
   return (
-    <ChatModeContext.Provider value={{ mode, isEditorPage, setMode }}>
+    <ChatModeContext.Provider value={{ mode, setMode, isEditorPage }}>
       {children}
     </ChatModeContext.Provider>
   );
-}
+};
 
 export const useChatMode = () => {
   const context = useContext(ChatModeContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useChatMode must be used within a ChatModeProvider');
   }
   return context;

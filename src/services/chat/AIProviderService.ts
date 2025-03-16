@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/services/chat/LoggingService";
-import { ChatProvider } from "@/components/chat/store/types/chat-store-types";
+import { ChatProvider, ProviderCategory } from "@/components/chat/store/types/chat-store-types";
 
 interface ProviderUsageMetrics {
   tokensUsed?: number;
@@ -41,7 +41,7 @@ export class AIProviderService {
   /**
    * Get the default provider for a specific category
    */
-  static async getDefaultProvider(category: 'chat' | 'image' | 'integration'): Promise<ChatProvider | null> {
+  static async getDefaultProvider(category: ProviderCategory): Promise<ChatProvider | null> {
     try {
       const providers = await this.getAllProviders();
       
@@ -154,12 +154,14 @@ export class AIProviderService {
   /**
    * Determine the category for a provider type
    */
-  private static getCategoryForProvider(type: string): 'chat' | 'image' | 'integration' {
+  private static getCategoryForProvider(type: string): ProviderCategory {
     if (['openai', 'anthropic', 'gemini', 'perplexity', 'openrouter'].includes(type)) {
       return 'chat';
     } else if (['dalle', 'stabilityai', 'replicate'].includes(type)) {
       return 'image';
+    } else if (['mixed', 'integration'].includes(type)) {
+      return type as ProviderCategory;
     }
-    return 'integration';
+    return 'chat';
   }
 }

@@ -1,6 +1,6 @@
 
 import { StateCreator } from 'zustand';
-import { ChatState, ChatProvider } from "../../types/chat-store-types";
+import { ChatState, ChatProvider, ProviderCategory } from "../../types/chat-store-types";
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 import { KnownFeatureFlag } from '@/types/admin/settings/feature-flags';
 
@@ -16,19 +16,21 @@ export type SetState<T> = (
 
 export type GetState<T> = () => T;
 
-export type FeatureActions = {
+export interface FeatureActions {
   toggleFeature: (feature: FeatureKey) => void;
   enableFeature: (feature: FeatureKey) => void;
   disableFeature: (feature: FeatureKey) => void;
   setFeatureState: (feature: FeatureKey, isEnabled: boolean) => void;
   updateChatProvider: (providers: ChatProvider[]) => void;
+  updateCurrentProvider: (provider: ChatProvider) => void;
+  updateAvailableProviders: (providers: ChatProvider[]) => void;
   
   // Token management actions
   setTokenEnforcementMode: (mode: TokenEnforcementMode) => void;
   addTokens: (amount: number) => Promise<boolean>;
   spendTokens: (amount: number) => Promise<boolean>;
   setTokenBalance: (amount: number) => Promise<boolean>;
-};
+}
 
 export type StoreWithDevtools = StateCreator<
   ChatState,
