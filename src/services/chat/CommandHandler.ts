@@ -1,9 +1,9 @@
 
-import { useChatStore } from '@/components/chat/store/chatStore';
+import { useChatStore, clearMiddlewareStorage } from '@/components/chat/store/chatStore';
 import { logger } from './LoggingService';
 import { toast } from 'sonner';
-import { clearMiddlewareStorage } from '@/components/chat/store/chatStore';
 import { MessageManager } from '@/components/chat/messaging/MessageManager';
+import { messageCache } from './MessageCacheService';
 
 /**
  * Parse a command string to determine if it's a valid command
@@ -47,6 +47,31 @@ export const executeCommand = async (command: string, args: string[]): Promise<b
       useChatStore.getState().resetChatState();
       toast.success('Chat reset');
       return true;
+    
+    case 'flush':
+      // More aggressive clearing of all storage
+      try {
+        messageCache.clearAllCache();
+        MessageManager.clearMessages();
+        const cleared = clearMiddlewareStorage();
+        useChatStore.getState().resetChatState();
+        
+        if (cleared) {
+          toast.success('All persistence flushed. Please refresh the page.', {
+            duration: 5000,
+            action: {
+              label: 'Refresh',
+              onClick: () => window.location.reload()
+            }
+          });
+        } else {
+          toast.error('Failed to clear all persistence');
+        }
+      } catch (error) {
+        logger.error('Error flushing storage', { error });
+        toast.error('Error flushing storage');
+      }
+      return true;
       
     case 'provider':
       // Set or show the current provider
@@ -77,7 +102,7 @@ export const executeCommand = async (command: string, args: string[]): Promise<b
       
     case 'help':
       // Show available commands
-      toast.info('Available commands:\n/clear - Clear chat\n/reset - Reset chat\n/provider [name] - Show or set provider\n/stats - Show chat stats');
+      toast.info('Available commands:\n/clear - Clear chat\n/reset - Reset chat\n/flush - Clear all storage\n/provider [name] - Show or set provider\n/stats - Show chat stats');
       return true;
       
     default:

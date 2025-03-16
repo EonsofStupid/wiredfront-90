@@ -1,91 +1,97 @@
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.37.0';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const getKeyPrefix = (providerName: string) => {
-  return `${providerName.toUpperCase()}_CHAT_APIKEY`;
-};
-
 serve(async (req) => {
-  // Handle CORS preflight request
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
-  
+
   try {
-    // List of supported providers to check
+    // Define providers
     const providers = [
-      { name: 'openai', type: 'openai', isDefault: true, category: 'chat' },
-      { name: 'gemini', type: 'gemini', isDefault: false, category: 'chat' },
-      { name: 'anthropic', type: 'anthropic', isDefault: false, category: 'chat' },
-      { name: 'replicate', type: 'replicate', isDefault: false, category: 'chat' },
-      { name: 'stabilityai', type: 'stabilityai', isDefault: false, category: 'image' }
-    ];
-    
-    // Check which providers have API keys configured
-    const availableProviders = [];
-    let defaultProvider = null;
-    
-    for (const provider of providers) {
-      const keyName = getKeyPrefix(provider.name);
-      const apiKey = Deno.env.get(keyName);
-      
-      if (apiKey) {
-        const providerInfo = {
-          id: `${provider.name}-${Date.now()}`,
-          name: provider.name === 'openai' ? 'OpenAI' :
-                provider.name === 'gemini' ? 'Google Gemini' :
-                provider.name === 'anthropic' ? 'Anthropic Claude' :
-                provider.name === 'replicate' ? 'Replicate' :
-                provider.name === 'stabilityai' ? 'Stability AI' :
-                provider.name.charAt(0).toUpperCase() + provider.name.slice(1),
-          type: provider.type,
-          isDefault: provider.isDefault,
-          category: provider.category,
-          isEnabled: true
-        };
-        
-        availableProviders.push(providerInfo);
-        
-        // Set as default provider if it's marked as default or if we don't have a default yet
-        if (provider.isDefault || !defaultProvider) {
-          defaultProvider = providerInfo;
-        }
-      }
-    }
-    
-    // If no providers are available, add OpenAI as a default (even without API key)
-    if (availableProviders.length === 0) {
-      const openAIProvider = {
-        id: `openai-${Date.now()}`,
+      {
+        id: 'openai-default',
         name: 'OpenAI',
         type: 'openai',
         isDefault: true,
         category: 'chat',
-        isEnabled: true
-      };
-      
-      availableProviders.push(openAIProvider);
-      defaultProvider = openAIProvider;
-    }
-    
+        models: ['gpt-4', 'gpt-3.5-turbo'],
+        features: ['chat', 'rag', 'code']
+      },
+      {
+        id: 'gemini-default',
+        name: 'Google Gemini',
+        type: 'gemini',
+        isDefault: false,
+        category: 'chat',
+        models: ['gemini-1.5-flash', 'gemini-1.5-pro'],
+        features: ['chat', 'rag']
+      },
+      {
+        id: 'anthropic-default',
+        name: 'Anthropic Claude',
+        type: 'anthropic',
+        isDefault: false,
+        category: 'chat',
+        models: ['claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku'],
+        features: ['chat', 'rag']
+      },
+      {
+        id: 'replicate-default',
+        name: 'Replicate',
+        type: 'replicate',
+        isDefault: false,
+        category: 'mixed',
+        models: ['llama-3', 'mistral'],
+        features: ['chat', 'image']
+      },
+      {
+        id: 'stabilityai-default',
+        name: 'Stability AI',
+        type: 'stabilityai',
+        isDefault: false,
+        category: 'image',
+        models: ['stable-diffusion-xl'],
+        features: ['image']
+      }
+    ];
+
+    // Always make OpenAI the default provider
+    const defaultProvider = providers.find(p => p.type === 'openai');
+
+    // Return available providers
     return new Response(
       JSON.stringify({
-        availableProviders,
-        defaultProvider,
-        count: availableProviders.length
+        availableProviders: providers,
+        defaultProvider: defaultProvider,
+        status: 'success'
       }),
-      { headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders
+        }
+      }
     );
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
+      JSON.stringify({
+        error: error.message,
+        status: 'error'
+      }),
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders
+        },
+        status: 500
+      }
     );
   }
 });

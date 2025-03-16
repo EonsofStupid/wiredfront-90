@@ -28,16 +28,39 @@ export const createInitializationActions = (
         } else if (data && data.availableProviders) {
           logger.info('Loaded available providers', { count: data.availableProviders.length });
           
+          // Always set OpenAI as the default provider if available
+          const openaiProvider = data.availableProviders.find((p: any) => p.type === 'openai');
+          
           set({
             availableProviders: data.availableProviders,
-            currentProvider: data.defaultProvider,
+            currentProvider: openaiProvider || data.defaultProvider,
             providers: {
               availableProviders: data.availableProviders
             }
           });
+          
+          logger.info('Set current provider', { 
+            provider: openaiProvider ? openaiProvider.name : data.defaultProvider?.name 
+          });
         }
       } catch (providerError) {
         logger.error('Failed to load providers from edge function', providerError);
+        
+        // Fallback to default OpenAI provider if edge function fails
+        const fallbackProvider = {
+          id: 'openai-default',
+          name: 'OpenAI',
+          type: 'openai',
+          isDefault: true,
+          category: 'chat'
+        };
+        
+        set({
+          availableProviders: [fallbackProvider],
+          currentProvider: fallbackProvider
+        });
+        
+        logger.info('Set fallback OpenAI provider');
       }
 
       // Then, try to load user chat settings from the database
@@ -100,6 +123,8 @@ export const createInitializationActions = (
           currentProvider: defaultProvider,
           availableProviders: [...(currentState.availableProviders || []), defaultProvider]
         });
+        
+        logger.info('Set default OpenAI provider as fallback');
       }
 
       // Finally, mark initialization as complete

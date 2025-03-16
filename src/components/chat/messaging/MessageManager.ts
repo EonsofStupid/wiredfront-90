@@ -9,6 +9,7 @@ interface MessageState {
   updateMessage: (id: string, updates: Partial<Message>) => void;
   getMessageById: (id: string) => Message | undefined;
   clearMessages: () => void;
+  fetchSessionMessages: (sessionId: string) => Promise<void>;
 }
 
 export const useMessageStore = create<MessageState>((set, get) => ({
@@ -37,7 +38,21 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   
   clearMessages: () => {
     set({ messages: [] });
+    console.log("Message store cleared");
   },
+  
+  fetchSessionMessages: async (sessionId: string) => {
+    try {
+      // First clear existing messages
+      set({ messages: [] });
+      
+      // In the future, we can fetch messages from Supabase here
+      // For now, just reset to empty array
+      console.log(`Fetched messages for session ${sessionId}`);
+    } catch (error) {
+      console.error('Failed to fetch session messages:', error);
+    }
+  }
 }));
 
 // Static methods for easier access outside of React components
@@ -57,4 +72,8 @@ export const MessageManager = {
   clearMessages: () => {
     useMessageStore.getState().clearMessages();
   },
+  
+  fetchSessionMessages: async (sessionId: string): Promise<void> => {
+    return useMessageStore.getState().fetchSessionMessages(sessionId);
+  }
 };

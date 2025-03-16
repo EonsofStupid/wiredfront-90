@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
@@ -34,17 +33,15 @@ const initialState: ChatState = {
     modeSwitch: true,
     notifications: true,
     github: true,
-    // Add new feature flags matching what UI components expect
     codeAssistant: true,
     ragSupport: true,
     githubSync: true,
-    tokenEnforcement: false, // Default to disabled
+    tokenEnforcement: false,
   },
   currentMode: 'chat',
   availableProviders: [],
   currentProvider: null,
   
-  // Token control system
   tokenControl: {
     balance: 0,
     enforcementMode: 'never',
@@ -54,12 +51,10 @@ const initialState: ChatState = {
     queriesUsed: 0
   },
   
-  // Add providers mapping for session management
   providers: {
     availableProviders: [],
   },
   
-  // UI state properties
   isMinimized: false,
   showSidebar: false,
   scale: 1,
@@ -73,39 +68,64 @@ const initialState: ChatState = {
 // Enhanced function to clear all Zustand middleware storage
 export const clearMiddlewareStorage = () => {
   try {
-    // Clear specific chat-state items
-    localStorage.removeItem('chat-state');
-    localStorage.removeItem('ChatStore');
+    console.log("🧹 Starting complete middleware storage cleanup");
     
-    // Clear all Zustand storage items
-    const zustandKeys = Object.keys(localStorage).filter(key => 
-      key.startsWith('chat-') || 
+    // 1. Clear localStorage items
+    const allKeys = Object.keys(localStorage);
+    const zustandKeys = allKeys.filter(key => 
       key.includes('zustand') || 
+      key.includes('chat-') || 
+      key.includes('provider-') || 
       key.includes('session-') ||
-      key.includes('provider-')
+      key.startsWith('persist:')
     );
     
+    console.log(`Found ${zustandKeys.length} Zustand-related localStorage keys to remove`);
     zustandKeys.forEach(key => {
       localStorage.removeItem(key);
       console.log(`Removed storage key: ${key}`);
     });
     
-    // Clear IndexedDB if available
+    // 2. Clear sessionStorage items
+    const sessionKeys = Object.keys(sessionStorage);
+    const zustandSessionKeys = sessionKeys.filter(key => 
+      key.includes('zustand') || 
+      key.includes('chat-') || 
+      key.includes('provider-') ||
+      key.includes('session-')
+    );
+    
+    zustandSessionKeys.forEach(key => {
+      sessionStorage.removeItem(key);
+      console.log(`Removed session storage key: ${key}`);
+    });
+    
+    // 3. Attempt to clear IndexedDB if available
     if (window.indexedDB) {
       try {
-        const chatDBs = ['zustand-chat', 'chat-sessions', 'chat-providers'];
-        chatDBs.forEach(dbName => {
-          window.indexedDB.deleteDatabase(dbName);
-          console.log(`Deleted IndexedDB: ${dbName}`);
+        const dbNames = [
+          'zustand-persist', 
+          'zustand-chat', 
+          'chat-sessions', 
+          'chat-providers',
+          'message-cache'
+        ];
+        
+        dbNames.forEach(dbName => {
+          const request = window.indexedDB.deleteDatabase(dbName);
+          request.onsuccess = () => console.log(`Deleted IndexedDB: ${dbName}`);
+          request.onerror = () => console.error(`Failed to delete IndexedDB: ${dbName}`);
         });
       } catch (idbError) {
         console.error('Error clearing IndexedDB:', idbError);
       }
     }
     
-    console.log('All middleware storage cleared successfully');
+    console.log('Middleware storage cleanup completed');
+    return true;
   } catch (e) {
     console.error('Error clearing middleware storage:', e);
+    return false;
   }
 };
 
@@ -114,18 +134,14 @@ export const useChatStore = create<FullChatStore>()(
     (set, get) => ({
       ...initialState,
       
-      // Add a method to reset the chat state
       resetChatState: () => {
-        // First clear middleware storage
         clearMiddlewareStorage();
         
-        // Then reset the state
         set({
           ...initialState,
-          initialized: true, // Keep initialized true
-          availableProviders: get().availableProviders, // Keep available providers
-          currentProvider: get().currentProvider, // Keep current provider
-          // Preserve feature settings
+          initialized: true,
+          availableProviders: get().availableProviders,
+          currentProvider: get().currentProvider,
           features: get().features,
         }, false, 'chat/resetState');
       },
