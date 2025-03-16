@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
@@ -109,7 +108,7 @@ export const useChatStore = create<FullChatStore>()(
           currentProvider: get().currentProvider, // Keep current provider
           // Preserve feature settings
           features: get().features,
-        }, false, { type: 'chat/resetState' });
+        }, false, 'chat/resetState');
       },
       
       ...createInitializationActions(set, get),

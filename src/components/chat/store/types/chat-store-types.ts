@@ -1,4 +1,3 @@
-
 import { Message } from "@/types/chat";
 import { ChatMode, TokenEnforcementMode } from "@/integrations/supabase/types/enums";
 
@@ -70,6 +69,9 @@ export interface ChatState {
     messageLoading: boolean;
     providerLoading: boolean;
   };
+
+  // Store actions
+  resetChatState: () => void;
 }
 
 export interface UIStateActions {

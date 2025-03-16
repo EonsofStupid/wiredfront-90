@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from './LoggingService';
 import { useMessageStore, clearMessages } from '@/components/chat/messaging/MessageManager';
@@ -151,5 +150,6 @@ To change provider: /provider [provider-id]
   }
 }
 
-// Export a singleton instance
-export const CommandHandler = new CommandHandlerClass();
+// Create and export an instance of the command handler
+export const commandHandler = new CommandHandlerClass();
+export const parseCommand = commandHandler.parseCommand.bind(commandHandler);

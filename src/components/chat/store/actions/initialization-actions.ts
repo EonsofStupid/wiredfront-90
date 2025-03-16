@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ChatState } from '../types/chat-store-types';
 import { logger } from '@/services/chat/LoggingService';
@@ -67,7 +66,7 @@ export const createInitializationActions = (
               ...get().features,
               ...(typeof uiCustomizations === 'object' && 
                  'features' in uiCustomizations ? 
-                 uiCustomizations.features : {})
+                 uiCustomizations.features as Record<string, unknown> : {})
             },
             // Apply token control settings if available with proper type checks
             tokenControl: {
@@ -77,7 +76,7 @@ export const createInitializationActions = (
                 uiCustomizations.tokenEnforcement : 'never',
               ...(typeof uiCustomizations === 'object' && 
                  'tokenControl' in uiCustomizations ? 
-                 uiCustomizations.tokenControl : {})
+                 uiCustomizations.tokenControl as Record<string, unknown> : {})
             }
           });
         }
