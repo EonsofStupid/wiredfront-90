@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useChatStore } from "@/components/chat/store/chatStore";
 import { supabase } from "@/integrations/supabase/client";
@@ -5,9 +6,10 @@ import { logger } from "@/services/chat/LoggingService";
 import { useFeatureFlag } from "./useFeatureFlag";
 import { toast } from "sonner";
 import { useFeatureUsage } from "./useFeatureUsage";
+import { KnownFeatureFlag } from "@/types/admin/settings/feature-flags";
 
-export type FeatureKey = 'voice' | 'rag' | 'modeSwitch' | 'notifications' | 'github' | 
-                         'codeAssistant' | 'ragSupport' | 'githubSync' | 'tokenEnforcement';
+// Export the type alias for use throughout the application
+export type FeatureKey = KnownFeatureFlag;
 
 export function useFeatureFlags() {
   const { features, toggleFeature, enableFeature, disableFeature, setFeatureState } = useChatStore();

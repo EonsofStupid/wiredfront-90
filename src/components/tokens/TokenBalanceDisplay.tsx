@@ -1,98 +1,90 @@
 
 import React from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useTokenManagement } from '@/hooks/useTokenManagement';
+import { useTokenManagement, withTokenErrorBoundary } from '@/hooks/useTokenManagement';
+import { TokenAuthGuard } from './TokenAuthGuard';
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Coins, AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Progress } from '@/components/ui/progress';
 
-export function TokenBalanceDisplay() {
-  const { 
-    tokenBalance, 
-    isTokenEnforcementEnabled, 
+interface TokenBalanceDisplayProps {
+  showLabel?: boolean;
+  compact?: boolean;
+  className?: string;
+}
+
+const TokenBalanceDisplayComponent: React.FC<TokenBalanceDisplayProps> = ({
+  showLabel = true,
+  compact = false,
+  className = ''
+}) => {
+  const {
+    tokenBalance,
+    isTokenEnforcementEnabled,
+    enforcementMode,
     isLoading,
-    tokensPerQuery,
-    freeQueryLimit,
-    queriesUsed,
-    enforcementMode
+    error
   } = useTokenManagement();
 
-  if (isLoading) {
+  if (error) {
     return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-4 w-[200px]" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-8 w-[100px]" />
-        </CardContent>
-      </Card>
+      <div className="flex items-center text-red-500">
+        <AlertCircle size={16} className="mr-1" />
+        <span className="text-xs">Token error</span>
+      </div>
     );
   }
 
-  if (!isTokenEnforcementEnabled) {
-    return null; // Don't show anything if token enforcement is disabled
+  if (isLoading) {
+    return (
+      <div className={`animate-pulse ${className}`}>
+        <div className="h-5 w-16 bg-muted rounded"></div>
+      </div>
+    );
   }
 
-  // Low balance warning (when tokens are less than 2x the required per query)
-  const isLowBalance = tokenBalance < (tokensPerQuery * 2);
-  
-  // Free queries remaining
-  const freeQueriesRemaining = Math.max(0, freeQueryLimit - queriesUsed);
-  const showFreeQueries = freeQueryLimit > 0 && freeQueriesRemaining > 0;
-  
+  // If tokens aren't being enforced, don't show the display
+  if (!isTokenEnforcementEnabled && !compact) {
+    return null;
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Coins className="h-5 w-5" />
-          Your Token Balance
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="text-3xl font-bold">{tokenBalance}</div>
-          <div className="text-sm text-muted-foreground">
-            Cost per message: {tokensPerQuery}
-          </div>
-        </div>
-        
-        {/* Token usage progress bar */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-xs">
-            <span>Token Usage</span>
-            <span>{tokenBalance} remaining</span>
-          </div>
-          <Progress 
-            value={(tokenBalance / (tokenBalance + queriesUsed * tokensPerQuery)) * 100} 
-            className="h-2"
-          />
-        </div>
-        
-        {showFreeQueries && (
-          <div className="bg-muted p-2 rounded text-sm">
-            <span className="font-medium">{freeQueriesRemaining}</span> free queries remaining
-          </div>
-        )}
-        
-        {isLowBalance && (
-          <Alert variant="destructive" className="mt-2">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Low Token Balance</AlertTitle>
-            <AlertDescription>
-              You don't have enough tokens for your next {Math.floor(tokenBalance / tokensPerQuery) + 1} message(s). 
-              Contact an administrator to get more tokens.
-            </AlertDescription>
-          </Alert>
-        )}
-      </CardContent>
-      
-      {enforcementMode !== 'always' && (
-        <CardFooter className="bg-muted/50 rounded-b-lg text-xs text-muted-foreground pt-2">
-          Token enforcement mode: {enforcementMode.replace('_', ' ')}
-        </CardFooter>
-      )}
-    </Card>
+    <TokenAuthGuard fallback={compact ? <span className="text-muted-foreground text-xs">Sign in</span> : null}>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className={`flex items-center ${className}`}>
+              <Coins size={compact ? 14 : 16} className={`mr-1 ${isTokenEnforcementEnabled ? 'text-amber-500' : 'text-muted-foreground'}`} />
+              
+              {showLabel && !compact && (
+                <span className="text-sm mr-1.5">Tokens:</span>
+              )}
+              
+              <Badge variant={isTokenEnforcementEnabled ? "secondary" : "outline"} className={compact ? "text-xs px-1.5 py-0" : ""}>
+                {tokenBalance}
+              </Badge>
+              
+              {isTokenEnforcementEnabled && !compact && (
+                <Badge variant="outline" className="ml-2 text-xs">
+                  {enforcementMode}
+                </Badge>
+              )}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <div className="space-y-1">
+              <p className="font-medium text-sm">Token Balance: {tokenBalance}</p>
+              {isTokenEnforcementEnabled ? (
+                <p className="text-xs text-muted-foreground">Enforcement: {enforcementMode}</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">Token enforcement is disabled</p>
+              )}
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </TokenAuthGuard>
   );
-}
+};
+
+// Wrap with error boundary
+export const TokenBalanceDisplay = withTokenErrorBoundary(TokenBalanceDisplayComponent);

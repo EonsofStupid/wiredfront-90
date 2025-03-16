@@ -9,6 +9,7 @@ import { useCombinedFeatureFlag } from './useFeatureFlags';
 import { FeatureKey } from './useFeatureFlags';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 import { Json } from '@/integrations/supabase/types';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 
 export function useTokenManagement() {
   const { user } = useAuthStore();
@@ -22,6 +23,7 @@ export function useTokenManagement() {
     setFeatureState 
   } = useChatStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   
   const tokenEnforcementFlag = useCombinedFeatureFlag('tokenEnforcement');
   
@@ -31,15 +33,18 @@ export function useTokenManagement() {
       if (!user?.id) return;
       
       setIsLoading(true);
+      setError(null);
+      
       try {
         const { data, error } = await supabase
           .from('user_tokens')
           .select('*')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
         
-        if (error && error.code !== 'PGRST116') {
+        if (error) {
           logger.error('Error fetching token balance:', error);
+          setError(new Error(`Failed to fetch token balance: ${error.message}`));
           return;
         }
         
@@ -47,14 +52,22 @@ export function useTokenManagement() {
           setTokenBalance(data.balance);
         } else {
           // Create a new entry if one doesn't exist
-          await supabase
+          const { error: insertError } = await supabase
             .from('user_tokens')
             .insert({ user_id: user.id, balance: 10 }); // Default 10 tokens
+          
+          if (insertError) {
+            logger.error('Error creating token balance:', insertError);
+            setError(new Error(`Failed to create token balance: ${insertError.message}`));
+            return;
+          }
           
           setTokenBalance(10);
         }
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         logger.error('Error in fetchTokenBalance:', error);
+        setError(new Error(`An unexpected error occurred: ${errorMessage}`));
       } finally {
         setIsLoading(false);
       }
@@ -73,12 +86,10 @@ export function useTokenManagement() {
           .from('feature_flags')
           .select('*')
           .eq('key', 'token_enforcement')
-          .single();
+          .maybeSingle();
         
         if (error) {
-          if (error.code !== 'PGRST116') {
-            logger.error('Error fetching token config:', error);
-          }
+          logger.error('Error fetching token config:', error);
           return;
         }
         
@@ -88,9 +99,15 @@ export function useTokenManagement() {
           
           // Set enforcement mode from metadata if available
           if (data.metadata) {
+            // Safely access metadata
             const metadata = data.metadata as Record<string, any>;
-            if (metadata.enforcementMode) {
-              setTokenEnforcementMode(metadata.enforcementMode as TokenEnforcementMode);
+            if (metadata && typeof metadata === 'object' && 'enforcementMode' in metadata) {
+              const enforcementMode = metadata.enforcementMode as TokenEnforcementMode;
+              if (isValidEnforcementMode(enforcementMode)) {
+                setTokenEnforcementMode(enforcementMode);
+              } else {
+                logger.warn(`Invalid enforcement mode: ${metadata.enforcementMode}`);
+              }
             }
           }
         }
@@ -101,6 +118,11 @@ export function useTokenManagement() {
     
     fetchTokenConfig();
   }, [user?.id, setFeatureState, setTokenEnforcementMode]);
+  
+  // Function to validate enforcement mode
+  const isValidEnforcementMode = (mode: any): mode is TokenEnforcementMode => {
+    return ['always', 'never', 'role_based', 'mode_based'].includes(mode);
+  };
   
   // Function to check if a user has enough tokens for an operation
   const hasEnoughTokens = (amount = 1) => {
@@ -125,11 +147,18 @@ export function useTokenManagement() {
       return false;
     }
     
-    const success = await spendTokens(amount);
-    if (!success) {
-      toast.error('Failed to process tokens. Please try again.');
+    try {
+      const success = await spendTokens(amount);
+      if (!success) {
+        toast.error('Failed to process tokens. Please try again.');
+      }
+      return success;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error spending tokens:', error);
+      toast.error(`Error processing tokens: ${errorMessage}`);
+      return false;
     }
-    return success;
   };
   
   return {
@@ -140,11 +169,36 @@ export function useTokenManagement() {
     freeQueryLimit: tokenControl.freeQueryLimit,
     queriesUsed: tokenControl.queriesUsed,
     isLoading,
+    error,
     addTokens,
     spendTokens: handleSpendTokens,
     setTokenBalance,
     hasEnoughTokens,
     setEnforcementMode: setTokenEnforcementMode,
     toggleTokenEnforcement: () => setFeatureState('tokenEnforcement', !features.tokenEnforcement)
+  };
+}
+
+// Create a component wrapper with error boundary for token-related components
+export function withTokenErrorBoundary<P extends object>(Component: React.ComponentType<P>) {
+  return function TokenErrorBoundaryWrapper(props: P) {
+    return (
+      <ErrorBoundary
+        FallbackComponent={({ error, resetErrorBoundary }) => (
+          <div className="p-4 border border-red-200 rounded-md bg-red-50 text-red-800">
+            <h3 className="font-medium mb-2">Token System Error</h3>
+            <p className="text-sm mb-4">{error.message}</p>
+            <button 
+              onClick={resetErrorBoundary}
+              className="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-800 rounded text-sm"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+      >
+        <Component {...props} />
+      </ErrorBoundary>
+    );
   };
 }
