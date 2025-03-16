@@ -1,195 +1,155 @@
 
-import { toast } from "sonner";
-import { logger } from "./LoggingService";
-import { useSessionManager } from "@/hooks/useSessionManager";
-import { supabase } from "@/integrations/supabase/client";
-import { useChatStore } from "@/components/chat/store/chatStore";
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from './LoggingService';
+import { useMessageStore, clearMessages } from '@/components/chat/messaging/MessageManager';
+import { useChatStore } from '@/components/chat/store/chatStore';
 
-// Define command types
-type CommandHandler = (args: string[]) => Promise<string>;
+class CommandHandlerClass {
+  // List of commands with handlers
+  private commands = {
+    help: this.handleHelpCommand,
+    clear: this.handleClearCommand,
+    reset: this.handleResetCommand,
+    tokens: this.handleTokensCommand,
+    mode: this.handleModeCommand,
+    provider: this.handleProviderCommand,
+  };
 
-interface Command {
-  name: string;
-  description: string;
-  usage: string;
-  handler: CommandHandler;
-  isAdmin?: boolean;
-}
-
-// Collection of available commands
-const commands: Record<string, Command> = {
-  help: {
-    name: "help",
-    description: "Display available commands",
-    usage: "/help [command]",
-    handler: async (args) => {
-      if (args.length > 0) {
-        const cmdName = args[0].toLowerCase();
-        const cmd = commands[cmdName];
-        if (cmd) {
-          return `**Command:** \`${cmd.name}\`\n**Description:** ${cmd.description}\n**Usage:** ${cmd.usage}`;
-        } else {
-          return `Command \`${cmdName}\` not found. Type \`/help\` to see all available commands.`;
-        }
-      }
-      
-      const cmdList = Object.values(commands)
-        .filter(cmd => !cmd.isAdmin)
-        .map(cmd => `\`${cmd.name}\`: ${cmd.description}`)
-        .join('\n');
-      
-      return `**Available Commands**\n\n${cmdList}\n\nType \`/help [command]\` for more details on a specific command.`;
+  // Parse input to check if it's a command
+  parseCommand(input: string): { isCommand: boolean; command: string; args: string[] } {
+    // Start with assumption it's not a command
+    const result = { isCommand: false, command: '', args: [] as string[] };
+    
+    // Check if input starts with a slash
+    if (!input.startsWith('/')) return result;
+    
+    // Extract command and arguments
+    const parts = input.slice(1).split(' ').filter(Boolean);
+    const command = parts[0].toLowerCase();
+    
+    // Check if it's a recognized command
+    if (command in this.commands) {
+      result.isCommand = true;
+      result.command = command;
+      result.args = parts.slice(1);
     }
-  },
-  
-  clear: {
-    name: "clear",
-    description: "Clear the current chat conversation",
-    usage: "/clear",
-    handler: async () => {
-      try {
-        const { clearMessages } = await import("@/components/chat/messaging/MessageManager");
-        clearMessages();
-        return "Chat cleared";
-      } catch (error) {
-        logger.error("Error in clear command", error);
-        return "Failed to clear chat";
-      }
-    }
-  },
-  
-  stats: {
-    name: "stats",
-    description: "Show statistics about your usage",
-    usage: "/stats",
-    handler: async () => {
-      try {
-        const { data: userStats, error } = await supabase
-          .from('user_tokens')
-          .select('*')
-          .single();
-          
-        if (error) throw error;
-        
-        if (!userStats) {
-          return "No usage statistics available yet";
-        }
-        
-        return `**Your Usage Statistics**\n\n` +
-          `**Current Balance:** ${userStats.balance} tokens\n` +
-          `**Total Earned:** ${userStats.total_earned} tokens\n` +
-          `**Total Spent:** ${userStats.total_spent} tokens\n` +
-          `**Tier:** ${userStats.tier}\n` +
-          `**Last Reset:** ${userStats.last_reset ? new Date(userStats.last_reset).toLocaleString() : 'Never'}`;
-      } catch (error) {
-        logger.error("Error fetching stats", error);
-        return "Failed to retrieve statistics";
-      }
-    }
-  },
-  
-  mode: {
-    name: "mode",
-    description: "Switch between different chat modes (chat, code, image)",
-    usage: "/mode [chat|code|image]",
-    handler: async (args) => {
-      if (args.length === 0) {
-        const { currentMode } = useChatStore.getState();
-        return `Current mode: ${currentMode}`;
-      }
-      
-      const mode = args[0].toLowerCase();
-      const validModes = ['chat', 'code', 'image'];
-      
-      if (!validModes.includes(mode)) {
-        return `Invalid mode. Please use one of: ${validModes.join(', ')}`;
-      }
-      
-      try {
-        const { setCurrentMode } = useChatStore.getState();
-        setCurrentMode(mode as any);
-        return `Switched to ${mode} mode`;
-      } catch (error) {
-        logger.error("Error switching modes", error);
-        return "Failed to switch modes";
-      }
-    }
-  },
-  
-  provider: {
-    name: "provider",
-    description: "List or switch AI providers",
-    usage: "/provider [name]",
-    handler: async (args) => {
-      const { availableProviders, currentProvider, updateCurrentProvider } = useChatStore.getState();
-      
-      if (args.length === 0) {
-        if (availableProviders.length === 0) {
-          return "No AI providers are currently available";
-        }
-        
-        const providerList = availableProviders
-          .map(p => `${p.name}${p.id === currentProvider?.id ? ' (current)' : ''}`)
-          .join('\n');
-          
-        return `**Available AI Providers**\n\n${providerList}\n\nUse \`/provider [name]\` to switch.`;
-      }
-      
-      const providerName = args.join(' ').toLowerCase();
-      const provider = availableProviders.find(
-        p => p.name.toLowerCase() === providerName || p.type.toLowerCase() === providerName
-      );
-      
-      if (!provider) {
-        return `Provider "${providerName}" not found. Use \`/provider\` to see available options.`;
-      }
-      
-      try {
-        updateCurrentProvider(provider);
-        return `Switched to ${provider.name} provider`;
-      } catch (error) {
-        logger.error("Error switching providers", error);
-        return "Failed to switch providers";
-      }
-    }
-  },
-};
-
-// Main command parser
-export async function parseCommand(input: string): Promise<{ isCommand: boolean; response?: string }> {
-  if (!input.startsWith('/')) {
-    return { isCommand: false };
+    
+    return result;
   }
-  
-  // Extract command and arguments
-  const parts = input.slice(1).trim().split(/\s+/);
-  const commandName = parts[0].toLowerCase();
-  const args = parts.slice(1);
-  
-  // Look up the command
-  const command = commands[commandName];
-  
-  if (!command) {
-    return { 
-      isCommand: true, 
-      response: `Unknown command: \`/${commandName}\`. Type \`/help\` for a list of available commands.` 
-    };
+
+  // Handle command execution
+  async executeCommand(command: string, args: string[]): Promise<string> {
+    logger.info(`Executing command: /${command}`, { args });
+    
+    try {
+      // Check if the command exists
+      if (command in this.commands) {
+        // Execute the command handler
+        return await this.commands[command as keyof typeof this.commands].call(this, args);
+      }
+      
+      return `Unknown command: /${command}. Type /help for available commands.`;
+    } catch (error) {
+      logger.error(`Error executing command /${command}:`, error);
+      return `Error executing command: /${command}`;
+    }
   }
-  
-  try {
-    logger.info(`Executing command: /${commandName}`, { args });
-    const response = await command.handler(args);
-    return { isCommand: true, response };
-  } catch (error) {
-    logger.error(`Error executing command: /${commandName}`, error);
-    return { 
-      isCommand: true, 
-      response: `Error executing command: ${error.message}` 
-    };
+
+  // Handle /help command
+  private async handleHelpCommand(args: string[]): Promise<string> {
+    return `
+**Available Commands:**
+- **/help** - Show this help message
+- **/clear** - Clear the current chat session
+- **/reset** - Reset the chat and clear all sessions
+- **/tokens** - Show your token balance
+- **/mode [chat|dev|image]** - Change chat mode
+- **/provider [provider-id]** - Change AI provider
+    `;
+  }
+
+  // Handle /clear command
+  private async handleClearCommand(args: string[]): Promise<string> {
+    // Clear messages from the store
+    clearMessages();
+    
+    return "Messages cleared from the current chat session.";
+  }
+
+  // Handle /reset command
+  private async handleResetCommand(args: string[]): Promise<string> {
+    // Get the chat store functions
+    const chatStore = useChatStore.getState();
+    
+    // Reset state in the chat store
+    chatStore.resetChatState();
+    
+    // Clear messages
+    clearMessages();
+    
+    return "Chat state has been reset. Starting fresh!";
+  }
+
+  // Handle /tokens command
+  private async handleTokensCommand(args: string[]): Promise<string> {
+    const { tokenControl } = useChatStore.getState();
+    
+    return `
+**Token Information:**
+- Current Balance: ${tokenControl.balance}
+- Queries Used: ${tokenControl.queriesUsed}
+- Free Query Limit: ${tokenControl.freeQueryLimit}
+- Enforcement Mode: ${tokenControl.enforcementMode}
+    `;
+  }
+
+  // Handle /mode command
+  private async handleModeCommand(args: string[]): Promise<string> {
+    const { setCurrentMode } = useChatStore.getState();
+    
+    if (args.length === 0) {
+      return "Please specify a mode: /mode [chat|dev|image]";
+    }
+    
+    const mode = args[0].toLowerCase();
+    
+    if (mode === 'chat' || mode === 'dev' || mode === 'image') {
+      setCurrentMode(mode);
+      return `Mode changed to: ${mode}`;
+    }
+    
+    return `Invalid mode: ${mode}. Available modes: chat, dev, image`;
+  }
+
+  // Handle /provider command
+  private async handleProviderCommand(args: string[]): Promise<string> {
+    const { availableProviders, updateCurrentProvider } = useChatStore.getState();
+    
+    if (args.length === 0) {
+      // List available providers
+      const providerList = availableProviders.map(p => 
+        `- ${p.name} (${p.id})${p.isDefault ? ' (default)' : ''}`
+      ).join('\n');
+      
+      return `
+**Available Providers:**
+${providerList || 'No providers available'}
+
+To change provider: /provider [provider-id]
+      `;
+    }
+    
+    const providerId = args[0];
+    const provider = availableProviders.find(p => p.id === providerId);
+    
+    if (!provider) {
+      return `Provider not found: ${providerId}`;
+    }
+    
+    updateCurrentProvider(provider);
+    return `Provider changed to: ${provider.name}`;
   }
 }
 
-// Export the command list for other components
-export function getAvailableCommands() {
-  return Object.values(commands).filter(cmd => !cmd.isAdmin);
-}
+// Export a singleton instance
+export const CommandHandler = new CommandHandlerClass();

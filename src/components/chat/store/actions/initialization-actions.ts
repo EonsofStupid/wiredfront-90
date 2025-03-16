@@ -1,12 +1,12 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { ChatState } from '../types/chat-store-types';
-import { SetState, GetState } from 'zustand';
 import { logger } from '@/services/chat/LoggingService';
+import { StateCreator } from 'zustand';
 
 export const createInitializationActions = (
-  set: SetState<ChatState>,
-  get: GetState<ChatState>,
+  set: (state: Partial<ChatState>, replace?: boolean, action?: any) => void,
+  get: () => ChatState,
 ) => ({
   /**
    * Initialize chat settings from the database or local storage
@@ -56,19 +56,28 @@ export const createInitializationActions = (
         if (chatSettings) {
           logger.info('Chat settings loaded from database');
           
-          // Apply settings from database
+          // Safely access nested properties with proper type checking
+          const uiCustomizations = chatSettings.ui_customizations || {};
+          
+          // Apply settings from database with proper type safety
           set({
             // Apply database settings while preserving defaults for missing fields
             ...get(),
             features: {
               ...get().features,
-              ...chatSettings.ui_customizations?.features
+              ...(typeof uiCustomizations === 'object' && 
+                 'features' in uiCustomizations ? 
+                 uiCustomizations.features : {})
             },
-            // Apply token control settings if available
+            // Apply token control settings if available with proper type checks
             tokenControl: {
               ...get().tokenControl,
-              enforcementMode: chatSettings.ui_customizations?.tokenEnforcement || 'never',
-              ...(chatSettings.ui_customizations?.tokenControl || {})
+              enforcementMode: typeof uiCustomizations === 'object' && 
+                'tokenEnforcement' in uiCustomizations ? 
+                uiCustomizations.tokenEnforcement : 'never',
+              ...(typeof uiCustomizations === 'object' && 
+                 'tokenControl' in uiCustomizations ? 
+                 uiCustomizations.tokenControl : {})
             }
           });
         }

@@ -34,26 +34,34 @@ export function useSessionCleanup(
     mutationFn: async (preserveCurrentSession: boolean) => {
       logger.info('Clearing sessions', { preserveCurrentSession, currentSessionId });
       const sessionIdToPreserve = preserveCurrentSession ? currentSessionId : null;
+      
+      // Perform middleware cleanup first
+      if (!preserveCurrentSession) {
+        resetChatState();
+      }
+      
       return clearAllSessions(sessionIdToPreserve);
     },
     onSuccess: async (_, preserveCurrentSession) => {
-      // Reset chat state in store
-      resetChatState();
-      
       // Clear messages from local state
       clearMessages();
       
       // Create a new session if we deleted all sessions including current
       if (!preserveCurrentSession || !currentSessionId) {
-        await createSession({
-          title: `New Chat ${new Date().toLocaleString('en-US', { 
-            month: 'short', 
-            day: 'numeric', 
-            hour: 'numeric', 
-            minute: 'numeric' 
-          })}`,
-          metadata: { mode: 'chat' }
-        });
+        try {
+          await createSession({
+            title: `New Chat ${new Date().toLocaleString('en-US', { 
+              month: 'short', 
+              day: 'numeric', 
+              hour: 'numeric', 
+              minute: 'numeric' 
+            })}`,
+            metadata: { mode: 'chat' }
+          });
+        } catch (err) {
+          logger.error('Error creating new session after clearing all', err);
+          toast.error('Error creating new session', toastStyles.error);
+        }
       }
       
       await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEYS.SESSIONS });

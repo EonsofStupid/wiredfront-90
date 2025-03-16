@@ -70,13 +70,38 @@ const initialState: ChatState = {
   },
 };
 
+// Create a function to reset local storage for middleware persistence
+const clearMiddlewareStorage = () => {
+  // Clear any persisted state in localStorage
+  try {
+    localStorage.removeItem('chat-state');
+    localStorage.removeItem('ChatStore');
+    
+    // Clear any other relevant localStorage items
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.startsWith('chat-') || key.includes('zustand')) {
+        localStorage.removeItem(key);
+      }
+    });
+    
+    console.log('Middleware storage cleared');
+  } catch (e) {
+    console.error('Error clearing middleware storage:', e);
+  }
+};
+
 export const useChatStore = create<FullChatStore>()(
   devtools(
-    (set, get, api) => ({
+    (set, get) => ({
       ...initialState,
       
       // Add a method to reset the chat state
       resetChatState: () => {
+        // First clear middleware storage
+        clearMiddlewareStorage();
+        
+        // Then reset the state
         set({
           ...initialState,
           initialized: true, // Keep initialized true
@@ -84,12 +109,12 @@ export const useChatStore = create<FullChatStore>()(
           currentProvider: get().currentProvider, // Keep current provider
           // Preserve feature settings
           features: get().features,
-        });
+        }, false, { type: 'chat/resetState' });
       },
       
-      ...createInitializationActions(set, get, api),
-      ...createFeatureActions(set, get, api),
-      ...createUIActions(set, get, api),
+      ...createInitializationActions(set, get),
+      ...createFeatureActions(set, get),
+      ...createUIActions(set, get),
     }),
     {
       name: 'ChatStore',

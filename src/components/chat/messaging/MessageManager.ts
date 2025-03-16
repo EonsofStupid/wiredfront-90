@@ -43,6 +43,7 @@ const validateRole = (role: string): 'user' | 'assistant' | 'system' => {
   return 'user'; // Default fallback
 };
 
+// Create the message store with a properly exposed clearMessages method
 export const useMessageStore = create<MessageStore>((set) => ({
   messages: [],
   currentSessionId: null,
@@ -156,3 +157,6 @@ export const useMessageStore = create<MessageStore>((set) => ({
     }
   }
 }));
+
+// Explicitly export clearMessages to ensure it's available
+export const clearMessages = () => useMessageStore.getState().clearMessages();
