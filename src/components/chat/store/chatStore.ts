@@ -75,6 +75,13 @@ const initialState: ChatState = {
   
   // Define setUserInput in initialState
   setUserInput: () => {},
+  
+  // Define toggle functions for position and docked state
+  togglePosition: () => {},
+  toggleDocked: () => {},
+  
+  // Define setScale for adjusting chat size
+  setScale: () => {},
 };
 
 // Enhanced function to clear all Zustand middleware storage
@@ -181,6 +188,26 @@ export const useChatStore = create<FullChatStore>()(
             msg.id === id ? { ...msg, ...updates } : msg
           )
         }), false, { type: 'chat/updateMessage' });
+      },
+      
+      // Implement toggle functions for position and docked state
+      togglePosition: () => {
+        set(state => {
+          // Toggle between bottom-right and bottom-left
+          const newPosition = state.position === 'bottom-right' ? 'bottom-left' : 'bottom-right';
+          return { position: newPosition };
+        }, false, { type: 'chat/togglePosition' });
+      },
+      
+      toggleDocked: () => {
+        set(state => ({
+          docked: !state.docked
+        }), false, { type: 'chat/toggleDocked' });
+      },
+      
+      // Implement setScale for adjusting chat size
+      setScale: (scale: number) => {
+        set({ scale }, false, { type: 'chat/setScale' });
       },
       
       ...createInitializationActions(set, get),

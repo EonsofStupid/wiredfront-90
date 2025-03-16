@@ -11,6 +11,59 @@
   z-index: var(--z-chat);
 }
 
+/* Message styling */
+.chat-message {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.chat-message-direction-end {
+  justify-content: flex-end;
+}
+
+.chat-message-direction-start {
+  justify-content: flex-start;
+}
+
+.chat-message-bubble {
+  max-width: 80%;
+  padding: 0.5rem 1rem;
+  border-radius: var(--chat-border-radius);
+  transition: all 0.2s ease;
+}
+
+.chat-message-user {
+  background-color: var(--chat-message-user-bg);
+  color: var(--chat-message-user-text);
+}
+
+.chat-message-assistant {
+  background-color: var(--chat-message-assistant-bg);
+  color: var(--chat-message-assistant-text);
+}
+
+.chat-message-system {
+  background-color: var(--chat-message-system-bg);
+  color: var(--chat-message-system-text);
+}
+
+.chat-message-failed {
+  border: 1px solid var(--chat-notification-border);
+  cursor: pointer;
+}
+
+.chat-message-text {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.chat-message-timestamp {
+  font-size: 0.75rem;
+  color: var(--chat-message-timestamp-color, rgba(255, 255, 255, 0.6));
+}
+
 /* Chat glass card effect */
 .chat-glass-card {
   background: rgba(15, 23, 42, 0.75);

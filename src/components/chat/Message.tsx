@@ -54,8 +54,8 @@ const Message = memo(function Message({
   return (
     <div
       className={cn(
-        "flex w-full mb-4",
-        role === "user" ? "justify-end" : "justify-start"
+        "chat-message flex w-full mb-4",
+        role === "user" ? "chat-message-direction-end" : "chat-message-direction-start"
       )}
       role="listitem"
       aria-label={`${messageType} message: ${content}`}
@@ -65,9 +65,9 @@ const Message = memo(function Message({
     >
       <Card
         className={cn(
-          "max-w-[80%] px-4 py-2 shadow-sm transition-all duration-200",
+          "chat-message-bubble max-w-[80%] px-4 py-2 shadow-sm transition-all duration-200",
           messageClass,
-          status === 'failed' && "border-destructive hover:border-destructive/70 cursor-pointer"
+          status === 'failed' && "chat-message-failed border-destructive hover:border-destructive/70 cursor-pointer"
         )}
         onClick={status === 'failed' ? handleRetryClick : undefined}
         tabIndex={status === 'failed' ? 0 : undefined}
@@ -79,27 +79,27 @@ const Message = memo(function Message({
           }
         } : undefined}
       >
-        <div className="flex items-start gap-2">
-          <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{content}</p>
+        <div className="chat-message-content flex items-start gap-2">
+          <p className="chat-message-text text-sm leading-relaxed break-words whitespace-pre-wrap">{content}</p>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <span 
-                  className="ml-2 flex h-4 w-4 items-center justify-center self-end" 
+                  className="chat-message-status ml-2 flex h-4 w-4 items-center justify-center self-end" 
                   aria-label={statusText}
                 >
                   {icon}
                 </span>
               </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs chat-dialog-content">
+              <TooltipContent side="top" className="chat-tooltip-content text-xs">
                 <p>{tooltip}</p>
                 {timestamp && (
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="chat-message-timestamp text-xs text-muted-foreground mt-1">
                     {new Date(timestamp).toLocaleTimeString()}
                   </p>
                 )}
                 {status === 'failed' && (
-                  <p className="text-xs text-destructive mt-1">Click to retry</p>
+                  <p className="chat-message-retry text-xs text-destructive mt-1">Click to retry</p>
                 )}
               </TooltipContent>
             </Tooltip>

@@ -6,6 +6,7 @@ import { useChatStore } from '../store/chatStore';
 import { useChatMode } from '../providers/ChatModeProvider';
 import ChatContent from './ChatContent';
 import { ChatMode } from '@/integrations/supabase/types/enums';
+import '../styles/index.css';
 
 interface DraggableChatContainerProps {
   children?: React.ReactNode;
@@ -89,64 +90,61 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
 
   if (!isOpen) return null;
 
-  // Determine position styles
-  const positionStyles = docked
-    ? { bottom: '20px', right: '20px' } // Docked position
-    : { left: `${position.x}px`, top: `${position.y}px` }; // Free-floating position
+  // Determine position styles based on docked state
+  const containerStyle = docked
+    ? { bottom: '20px', right: '20px', position: 'fixed' as const } 
+    : { left: `${position.x}px`, top: `${position.y}px`, position: 'fixed' as const };
 
   // Dynamic classes based on state
   const chatContainerClasses = `
     chat-container 
-    ${isMinimized ? 'minimized' : 'expanded'} 
-    ${docked ? 'docked' : 'floating'}
-    ${(mode === 'dev' && isEditorPage) ? 'editor-mode' : mode === 'chat-only' ? 'chat-only-mode' : ''}
+    chat-component
+    ${isMinimized ? 'chat-minimized' : 'chat-expanded'} 
+    ${docked ? 'chat-docked' : 'chat-floating'}
+    ${(mode === 'dev' && isEditorPage) ? 'chat-editor-mode' : ''}
+    ${mode === 'chat-only' ? 'chat-only-mode' : ''}
+    ${isDragging ? 'chat-dragging' : ''}
+  `;
+
+  const headerClasses = `
+    chat-header 
+    flex items-center justify-between p-3
+    ${isDragging ? 'cursor-grabbing' : docked ? 'cursor-default' : 'cursor-grab'}
   `;
 
   return (
     <div 
       ref={containerRef}
       className={chatContainerClasses}
-      style={{
-        ...positionStyles,
-        cursor: isDragging ? 'grabbing' : docked ? 'default' : 'grab',
-        zIndex: 1000,
-        position: 'fixed',
-        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.12)',
-        borderRadius: '8px',
-        overflow: 'hidden',
-        background: 'var(--background)',
-        display: 'flex',
-        flexDirection: 'column',
-        width: isMinimized ? '300px' : '400px',
-        height: isMinimized ? '50px' : '600px',
-        resize: 'both',
-        transition: 'width 0.2s, height 0.2s',
-      }}
+      style={containerStyle}
+      data-mode={mode}
+      data-minimized={isMinimized}
+      data-docked={docked}
     >
       {/* Chat header/drag handle */}
       <div 
-        className="chat-header flex items-center justify-between p-3 bg-background border-b"
+        className={headerClasses}
         onMouseDown={handleMouseDown}
       >
         <div className="chat-title font-medium text-sm">
           {mode === 'dev' ? 'Developer Assistant' : 'Chat Assistant'}
         </div>
         
-        <div className="flex items-center space-x-1">
+        <div className="chat-controls flex items-center space-x-1">
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-6 w-6" 
+            className="chat-control-button h-6 w-6" 
             onClick={toggleDocked}
             title={docked ? "Undock" : "Dock"}
           >
-            {docked ? <ArrowDownToLine className="h-4 w-4" /> : <ArrowDownToLine className="h-4 w-4" />}
+            <ArrowDownToLine className="h-4 w-4" />
           </Button>
           
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-6 w-6" 
+            className="chat-control-button h-6 w-6" 
             onClick={toggleMinimize}
             title={isMinimized ? "Maximize" : "Minimize"}
           >
@@ -156,7 +154,7 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-6 w-6" 
+            className="chat-control-button h-6 w-6" 
             onClick={toggleChat}
             title="Close"
           >

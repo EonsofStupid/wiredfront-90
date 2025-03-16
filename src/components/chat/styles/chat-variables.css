@@ -54,6 +54,10 @@
   --chat-box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   --chat-neon-glow: 0 0 15px rgba(139, 92, 246, 0.5), 0 0 30px rgba(255, 0, 127, 0.3);
   --chat-cyber-glow: 0 0 10px rgba(30, 174, 219, 0.5), 0 0 20px rgba(30, 174, 219, 0.3);
+  
+  /* Message direction classes */
+  --chat-message-direction-end-align: flex-end;
+  --chat-message-direction-start-align: flex-start;
 }
 
 /* Ensure chat components have distinct styles */
@@ -73,10 +77,36 @@
   box-shadow: var(--chat-cyber-glow) !important;
 }
 
-.chat-container {
-  box-shadow: var(--chat-box-shadow) !important;
-  border-radius: var(--chat-border-radius) !important;
-  background-color: var(--chat-bg) !important;
-  backdrop-filter: blur(8px) !important;
-  z-index: var(--z-chat) !important;
+.chat-component {
+  font-family: var(--font-sans, system-ui, sans-serif);
+  color: var(--chat-text);
+  z-index: var(--z-chat);
+}
+
+/* Message styling */
+.chat-message-direction-end {
+  justify-content: var(--chat-message-direction-end-align);
+}
+
+.chat-message-direction-start {
+  justify-content: var(--chat-message-direction-start-align);
+}
+
+.chat-message-user {
+  background-color: var(--chat-message-user-bg) !important;
+  color: var(--chat-message-user-text) !important;
+}
+
+.chat-message-assistant {
+  background-color: var(--chat-message-assistant-bg) !important;
+  color: var(--chat-message-assistant-text) !important;
+}
+
+.chat-message-system {
+  background-color: var(--chat-message-system-bg) !important;
+  color: var(--chat-message-system-text) !important;
+}
+
+.chat-message-failed {
+  border: 1px solid var(--chat-notification-border) !important;
 }

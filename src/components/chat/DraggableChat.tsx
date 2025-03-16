@@ -9,6 +9,7 @@ import { useChatStore } from "./store/chatStore";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { logger } from "@/services/chat/LoggingService";
+import "./styles/index.css";
 
 export function DraggableChat() {
   const { 
@@ -71,6 +72,7 @@ export function DraggableChat() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: position === 'bottom-right' ? 20 : -20 }}
               transition={{ duration: 0.2 }}
+              className="chat-sidebar-container"
             >
               <ChatSidebar />
             </motion.div>

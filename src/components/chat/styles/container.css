@@ -15,6 +15,33 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  resize: both;
+  z-index: var(--z-chat);
+}
+
+/* Chat state variations */
+.chat-minimized {
+  height: var(--chat-header-height) !important;
+  resize: none;
+}
+
+.chat-expanded {
+  height: var(--chat-height);
+}
+
+.chat-docked {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+}
+
+.chat-floating {
+  position: fixed;
+}
+
+.chat-dragging {
+  opacity: 0.9;
+  cursor: grabbing !important;
 }
 
 /* Glass effect for chat components */
@@ -34,6 +61,48 @@
   align-items: center;
   height: var(--chat-header-height);
   flex-shrink: 0;
+}
+
+.chat-title {
+  font-weight: 500;
+  color: var(--chat-text);
+}
+
+.chat-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.chat-control-button {
+  color: var(--chat-text);
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.chat-control-button:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Chat content wrapper */
+.chat-content-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.chat-content-wrapper::-webkit-scrollbar {
+  width: var(--chat-scrollbar-width);
+}
+
+.chat-content-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-content-wrapper::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
 }
 
 /* Chat-specific glass card effect */
@@ -100,4 +169,13 @@
 .chat-messages-container::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.1);
   border-radius: 10px;
+}
+
+/* Chat mode variations */
+.chat-editor-mode {
+  border-left: 3px solid var(--chat-message-user-bg);
+}
+
+.chat-only-mode {
+  border-left: 3px solid var(--chat-message-assistant-bg);
 }

@@ -31,6 +31,29 @@ export function ChatProvider({ children }: ChatProviderProps) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
 
+  // Initialize CSS custom properties
+  useEffect(() => {
+    const initializeStyles = () => {
+      // Ensure CSS variables are set with defaults if they aren't already
+      const cssVars = {
+        '--chat-bg': 'rgba(0, 0, 0, 0.3)',
+        '--chat-message-user-bg': '#8B5CF6',
+        '--chat-message-assistant-bg': '#374151',
+        '--chat-width': '400px',
+        '--chat-height': '500px'
+      };
+      
+      Object.entries(cssVars).forEach(([property, defaultValue]) => {
+        const currentValue = getComputedStyle(document.documentElement).getPropertyValue(property);
+        if (!currentValue || currentValue === '') {
+          document.documentElement.style.setProperty(property, defaultValue);
+        }
+      });
+    };
+    
+    initializeStyles();
+  }, []);
+
   useEffect(() => {
     const initialize = async () => {
       try {

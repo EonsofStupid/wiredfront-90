@@ -87,6 +87,13 @@ export interface ChatState extends MessageActions {
   
   // Add setUserInput to the ChatState interface
   setUserInput: (input: string) => void;
+  
+  // Add these for position controls
+  togglePosition: () => void;
+  toggleDocked: () => void;
+  
+  // Manage scale
+  setScale: (scale: number) => void;
 }
 
 export interface UIStateActions {

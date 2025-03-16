@@ -1,10 +1,12 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMessageStore } from "@/components/chat/messaging/MessageManager";
 import { useSessionManager } from "@/hooks/useSessionManager";
 import { SettingsContainer } from "./layout/SettingsContainer";
 import { toast } from "sonner";
 import { ChatSettingsTabs } from "./chat/ChatSettingsTabs";
+import ChatFeatureSettings from "./ChatFeatureSettings";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export function ChatSettings() {
   const { clearMessages } = useMessageStore();
@@ -41,8 +43,43 @@ export function ChatSettings() {
     soundEnabled: true,
     desktopNotifications: false,
     mentionAlerts: true,
-    emailDigest: false
+    emailDigest: false,
+    
+    // Appearance settings
+    chatBackground: "rgba(0, 0, 0, 0.3)",
+    userMessageColor: "#8B5CF6",
+    assistantMessageColor: "#374151",
+    chatWidth: 400,
+    chatHeight: 500
   });
+  
+  // Initialize settings with CSS variable values
+  useEffect(() => {
+    // Get computed styles
+    const computedStyle = getComputedStyle(document.documentElement);
+    
+    // Extract values from CSS variables with fallbacks
+    const chatBg = computedStyle.getPropertyValue('--chat-bg').trim() || "rgba(0, 0, 0, 0.3)";
+    const userMsgBg = computedStyle.getPropertyValue('--chat-message-user-bg').trim() || "#8B5CF6";
+    const assistantMsgBg = computedStyle.getPropertyValue('--chat-message-assistant-bg').trim() || "#374151";
+    
+    // Parse width and height values from CSS variables
+    const widthValue = computedStyle.getPropertyValue('--chat-width').trim();
+    const heightValue = computedStyle.getPropertyValue('--chat-height').trim();
+    
+    const chatWidth = parseInt(widthValue) || 400;
+    const chatHeight = parseInt(heightValue) || 500;
+    
+    // Update settings state
+    setSettings(prev => ({
+      ...prev,
+      chatBackground: chatBg,
+      userMessageColor: userMsgBg,
+      assistantMessageColor: assistantMsgBg,
+      chatWidth,
+      chatHeight
+    }));
+  }, []);
   
   const handleSettingChange = (section: string, setting: string, value: any) => {
     setSettings(prev => ({
@@ -52,7 +89,14 @@ export function ChatSettings() {
   };
   
   const handleSave = () => {
-    // Save settings logic would go here
+    // Apply chat appearance settings
+    document.documentElement.style.setProperty('--chat-bg', settings.chatBackground);
+    document.documentElement.style.setProperty('--chat-message-user-bg', settings.userMessageColor);
+    document.documentElement.style.setProperty('--chat-message-assistant-bg', settings.assistantMessageColor);
+    document.documentElement.style.setProperty('--chat-width', `${settings.chatWidth}px`);
+    document.documentElement.style.setProperty('--chat-height', `${settings.chatHeight}px`);
+    
+    // Save settings logic would go here for other settings
     toast.success("Chat settings saved successfully");
   };
   
@@ -69,14 +113,27 @@ export function ChatSettings() {
       title="Chat System Settings"
       description="Configure the behavior and features of the chat system."
     >
-      <ChatSettingsTabs
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        settings={settings}
-        handleSettingChange={handleSettingChange}
-        handleClearHistory={handleClearHistory}
-        handleSave={handleSave}
-      />
+      <Tabs defaultValue="settings">
+        <TabsList className="mb-6">
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="features">Features & Appearance</TabsTrigger>
+        </TabsList>
+      
+        <TabsContent value="settings">
+          <ChatSettingsTabs
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            settings={settings}
+            handleSettingChange={handleSettingChange}
+            handleClearHistory={handleClearHistory}
+            handleSave={handleSave}
+          />
+        </TabsContent>
+        
+        <TabsContent value="features">
+          <ChatFeatureSettings />
+        </TabsContent>
+      </Tabs>
     </SettingsContainer>
   );
 }
