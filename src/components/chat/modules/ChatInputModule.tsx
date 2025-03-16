@@ -56,7 +56,7 @@ export const ChatInputModule = ({
       // Set the transcript as the input value
       setUserInput(transcript);
     }
-  }, [transcript]);
+  }, [transcript, setUserInput]);
   
   // Handle voice button click
   const handleVoiceButtonClick = () => {

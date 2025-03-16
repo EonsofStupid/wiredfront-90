@@ -55,3 +55,28 @@
   --chat-neon-glow: 0 0 15px rgba(139, 92, 246, 0.5), 0 0 30px rgba(255, 0, 127, 0.3);
   --chat-cyber-glow: 0 0 10px rgba(30, 174, 219, 0.5), 0 0 20px rgba(30, 174, 219, 0.3);
 }
+
+/* Ensure chat components have distinct styles */
+.chat-toggle-button {
+  background-color: var(--primary, #1EAEDB) !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: var(--chat-box-shadow) !important;
+  transition: all 0.2s ease-in-out !important;
+  opacity: 0.9 !important;
+  z-index: var(--z-chat) !important;
+}
+
+.chat-toggle-button:hover {
+  opacity: 1 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: var(--chat-cyber-glow) !important;
+}
+
+.chat-container {
+  box-shadow: var(--chat-box-shadow) !important;
+  border-radius: var(--chat-border-radius) !important;
+  background-color: var(--chat-bg) !important;
+  backdrop-filter: blur(8px) !important;
+  z-index: var(--z-chat) !important;
+}

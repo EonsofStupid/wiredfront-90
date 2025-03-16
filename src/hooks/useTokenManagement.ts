@@ -10,7 +10,9 @@ import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import React from 'react';
 
 // Higher-order component for error handling
-export function withTokenErrorBoundary<T extends object>(Component: React.ComponentType<T>) {
+export function withTokenErrorBoundary<T extends object>(
+  Component: React.ComponentType<T>
+) {
   return (props: T) => (
     <ErrorBoundary fallback={<div className="text-red-500 text-sm">Error loading token data</div>}>
       <Component {...props} />

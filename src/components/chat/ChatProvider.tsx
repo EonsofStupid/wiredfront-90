@@ -8,6 +8,7 @@ import { useSessionManager } from '@/hooks/useSessionManager';
 import { logger } from '@/services/chat/LoggingService';
 import { useMessageStore } from './messaging/MessageManager';
 import { Spinner } from './components/Spinner';
+import './styles/index.css'; // Import all chat styles
 
 interface ChatContextType {
   isEditorPage: boolean;

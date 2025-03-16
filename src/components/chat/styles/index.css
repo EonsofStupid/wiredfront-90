@@ -1,0 +1,52 @@
+
+/* Import all chat-related styles */
+@import "./chat-variables.css";
+@import "./ChatButtonStyle.css";
+@import "./container.css";
+
+/* Common class for chat elements to ensure they pick up the chat styling */
+.chat-component {
+  font-family: var(--font-sans, system-ui, sans-serif);
+  color: var(--chat-text);
+  z-index: var(--z-chat);
+}
+
+/* Chat glass card effect */
+.chat-glass-card {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  border-radius: var(--chat-border-radius);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--chat-box-shadow);
+}
+
+/* Chat neon border effect */
+.chat-neon-border {
+  box-shadow: var(--chat-neon-glow);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+/* Chat cyber border effect */
+.chat-cyber-border {
+  box-shadow: var(--chat-cyber-glow);
+  border: 1px solid rgba(30, 174, 219, 0.3);
+}
+
+/* Chat messages container with custom scrollbar */
+.chat-messages-container::-webkit-scrollbar {
+  width: var(--chat-scrollbar-width);
+}
+
+.chat-messages-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: var(--chat-scrollbar-width);
+}
+
+.chat-messages-container::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.3);
+  border-radius: var(--chat-scrollbar-width);
+}
+
+.chat-messages-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.5);
+}

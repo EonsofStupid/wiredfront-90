@@ -3,6 +3,7 @@ import React from 'react';
 import { Button, ButtonProps } from '@/components/ui/button';
 import { useChatMode } from '../providers/ChatModeProvider';
 import { useChatStore } from '../store/chatStore';
+import { MessageCircle, Code, Image } from 'lucide-react';
 import { ChatMode } from '@/integrations/supabase/types/enums';
 
 interface ChatToggleButtonProps extends ButtonProps {
@@ -16,7 +17,7 @@ const ChatToggleButton: React.FC<ChatToggleButtonProps> = ({
   className = '',
   ...props 
 }) => {
-  const { mode, setMode } = useChatMode();
+  const { mode } = useChatMode();
   const { isOpen, toggleChat } = useChatStore();
 
   const handleToggle = () => {
@@ -38,25 +39,25 @@ const ChatToggleButton: React.FC<ChatToggleButtonProps> = ({
   };
 
   // Get icon based on mode
-  const getIconClass = () => {
+  const getIcon = () => {
     if (mode === 'dev') {
-      return "code-icon";
-    } else if (mode === 'chat-only') {
-      return "chat-icon";
+      return <Code className="h-4 w-4 mr-2" />;
+    } else if (mode === 'image') {
+      return <Image className="h-4 w-4 mr-2" />;
     } else {
-      return "chat-icon";
+      return <MessageCircle className="h-4 w-4 mr-2" />;
     }
   };
 
   return (
     <Button
-      variant="outline"
+      variant="default"
       size="sm"
       onClick={handleToggle}
-      className={`chat-toggle-button ${className}`}
+      className={`chat-toggle-button fixed bottom-4 right-4 z-[var(--z-chat)] shadow-md ${className}`}
       {...props}
     >
-      <span className={getIconClass()}></span>
+      {getIcon()}
       {getButtonLabel()}
     </Button>
   );

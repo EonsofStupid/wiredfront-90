@@ -1,0 +1,49 @@
+
+/* Dedicated styles for the chat button to ensure visibility */
+.chat-toggle-button {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 9700; /* Same as --z-chat */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  background-color: #1EAEDB;
+  color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease-in-out;
+  opacity: 0.9;
+  border: none;
+  font-weight: 500;
+}
+
+.chat-toggle-button:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 0 10px rgba(30, 174, 219, 0.5), 0 0 20px rgba(30, 174, 219, 0.3);
+}
+
+.chat-toggle-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px white, 0 0 0 4px #1EAEDB;
+}
+
+.chat-toggle-button svg {
+  margin-right: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .chat-toggle-button {
+    padding: 0.5rem;
+  }
+  
+  .chat-toggle-button span {
+    display: none;
+  }
+  
+  .chat-toggle-button svg {
+    margin-right: 0;
+  }
+}

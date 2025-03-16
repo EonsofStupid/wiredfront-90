@@ -1,209 +1,128 @@
 
-import { StateCreator } from 'zustand';
-import { ChatState, ChatProvider, ChatPosition } from '../types/chat-store-types';
-import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/services/chat/LoggingService';
+import { ChatState, ChatPosition } from '../types/chat-store-types';
+import { SetState, GetState } from 'zustand';
 
-export interface UISlice {
-  toggleMinimize: () => void;
-  toggleSidebar: () => void;
-  toggleChat: () => void;
-  togglePosition: () => void;
-  toggleDocked: () => void;
-  setSessionLoading: (isLoading: boolean) => void;
-  setMessageLoading: (isLoading: boolean) => void;
-  setProviderLoading: (isLoading: boolean) => void;
-  setScale: (scale: number) => void;
-  setCurrentMode: (mode: 'chat' | 'dev' | 'image') => void;
-  updateCurrentProvider: (provider: ChatProvider) => void;
-  updateAvailableProviders: (providers: ChatProvider[]) => void;
-}
-
-// Helper function to log provider changes to the database
-const logProviderChange = async (oldProvider: string | undefined, newProvider: string | undefined) => {
-  if (!newProvider) return;
-  
-  try {
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData?.user) return;
-
-    await supabase.from('provider_change_log').insert({
-      user_id: userData.user.id,
-      provider_name: newProvider,
-      old_provider: oldProvider,
-      new_provider: newProvider,
-      reason: 'user_action',
-      metadata: { source: 'client_app', action: 'update_current_provider' }
-    });
-
-    logger.info(`Provider changed from ${oldProvider || 'none'} to ${newProvider}`, { 
-      oldProvider, 
-      newProvider 
-    });
-  } catch (error) {
-    logger.error('Error logging provider change:', error);
-  }
-};
-
-export const createUIActions: StateCreator<
-  ChatState, 
-  [["zustand/devtools", never]], 
-  [], 
-  UISlice
-> = (set, get) => ({
+export const createUIActions = (
+  set: SetState<ChatState>,
+  get: GetState<ChatState>
+) => ({
   toggleMinimize: () => {
     set(
-      (state) => ({
-        ...state,
-        isMinimized: !state.isMinimized,
+      state => ({
+        isMinimized: !state.isMinimized
       }),
       false,
-      { type: 'ui/toggleMinimize' }
+      { type: 'chat/toggleMinimize' }
     );
   },
+
   toggleSidebar: () => {
     set(
-      (state) => ({
-        ...state,
-        showSidebar: !state.showSidebar,
+      state => ({
+        showSidebar: !state.showSidebar
       }),
       false,
-      { type: 'ui/toggleSidebar' }
+      { type: 'chat/toggleSidebar' }
     );
   },
+
   toggleChat: () => {
+    // Make sure the chat is not minimized when opened
+    const currentlyOpen = get().isOpen;
     set(
-      (state) => ({
-        ...state,
+      state => ({
         isOpen: !state.isOpen,
+        isMinimized: !state.isOpen ? false : state.isMinimized
       }),
       false,
-      { type: 'ui/toggleChat' }
+      { type: 'chat/toggleChat', wasOpen: currentlyOpen }
     );
+    
+    // Log the state change
+    console.log(`Chat toggled: ${!currentlyOpen ? 'opened' : 'closed'}`);
   },
+
   togglePosition: () => {
+    const currentPosition = get().position;
+    const newPosition: ChatPosition = currentPosition === 'bottom-right' 
+      ? 'bottom-left' 
+      : 'bottom-right';
+    
     set(
-      (state) => {
-        if (typeof state.position === 'string') {
-          const positions: ChatPosition[] = ['bottom-right', 'bottom-left', 'top-right', 'top-left'];
-          const currentIndex = positions.indexOf(state.position as ChatPosition);
-          const nextIndex = (currentIndex + 1) % positions.length;
-          return { ...state, position: positions[nextIndex] };
-        }
-        return { ...state, position: 'bottom-right' };
+      {
+        position: newPosition
       },
       false,
-      { type: 'ui/togglePosition' }
+      { type: 'chat/togglePosition', from: currentPosition, to: newPosition }
     );
   },
+
   toggleDocked: () => {
     set(
-      (state) => ({
-        ...state,
+      state => ({
         docked: !state.docked
       }),
       false,
-      { type: 'ui/toggleDocked' }
+      { type: 'chat/toggleDocked' }
     );
   },
+
   setSessionLoading: (isLoading: boolean) => {
     set(
-      (state) => ({
-        ...state,
+      state => ({
         ui: {
           ...state.ui,
-          sessionLoading: isLoading,
-        },
+          sessionLoading: isLoading
+        }
       }),
       false,
-      { type: 'ui/setSessionLoading', isLoading }
+      { type: 'chat/setSessionLoading', isLoading }
     );
   },
+
   setMessageLoading: (isLoading: boolean) => {
     set(
-      (state) => ({
-        ...state,
+      state => ({
         ui: {
           ...state.ui,
-          messageLoading: isLoading,
-        },
+          messageLoading: isLoading
+        }
       }),
       false,
-      { type: 'ui/setMessageLoading', isLoading }
+      { type: 'chat/setMessageLoading', isLoading }
     );
   },
+
   setProviderLoading: (isLoading: boolean) => {
     set(
-      (state) => ({
-        ...state,
+      state => ({
         ui: {
           ...state.ui,
-          providerLoading: isLoading,
-        },
+          providerLoading: isLoading
+        }
       }),
       false,
-      { type: 'ui/setProviderLoading', isLoading }
+      { type: 'chat/setProviderLoading', isLoading }
     );
   },
+
   setScale: (scale: number) => {
     set(
-      (state) => ({
-        ...state,
-        scale,
-      }),
-      false,
-      { type: 'ui/setScale', scale }
-    );
-  },
-  setCurrentMode: (mode: 'chat' | 'dev' | 'image') => {
-    set(
-      (state) => ({
-        ...state,
-        currentMode: mode,
-      }),
-      false,
-      { type: 'ui/setCurrentMode', mode }
-    );
-  },
-  updateCurrentProvider: (provider: ChatProvider) => {
-    set(
-      (state) => {
-        // Log provider change if it's different
-        if (state.currentProvider?.id !== provider.id) {
-          logProviderChange(
-            state.currentProvider?.name, 
-            provider.name
-          );
-        }
-        
-        return {
-          ...state,
-          currentProvider: provider,
-          providers: {
-            ...state.providers,
-            availableProviders: state.providers?.availableProviders.map(p => 
-              p.id === provider.id ? {...p, isDefault: true} : {...p, isDefault: false}
-            ) || []
-          }
-        };
+      {
+        scale
       },
       false,
-      { type: 'ui/updateCurrentProvider', provider }
+      { type: 'chat/setScale', scale }
     );
   },
-  updateAvailableProviders: (providers: ChatProvider[]) => {
+
+  setCurrentMode: (mode) => {
     set(
-      (state) => ({
-        ...state,
-        providers: {
-          ...state.providers,
-          availableProviders: providers
-        }
-      }),
+      {
+        currentMode: mode
+      },
       false,
-      { type: 'ui/updateAvailableProviders', providers }
+      { type: 'chat/setCurrentMode', mode }
     );
   }
 });
-
-export type UIActions = ReturnType<typeof createUIActions>;
