@@ -5,6 +5,26 @@ export type SelectedMode = 'chat' | 'dev' | 'image' | 'training';
 
 export type ChatMode = 'chat' | 'chat-only' | 'dev' | 'image' | 'training';
 
+// Define a concrete provider category type
+export type ProviderCategoryType = 'chat' | 'image' | 'vector' | 'voice' | 'other';
+
+// Define provider type
+export type ProviderType = 
+  | 'openai' 
+  | 'anthropic' 
+  | 'gemini' 
+  | 'github' 
+  | 'huggingface' 
+  | 'pinecone' 
+  | 'weaviate' 
+  | 'openrouter' 
+  | 'replicate' 
+  | 'stabilityai' 
+  | 'sonnet' 
+  | 'elevenlabs' 
+  | 'whisper'
+  | string;
+
 export interface TokenControl {
   balance: number;
   enforcementMode: 'always' | 'never' | 'role_based' | 'mode_based';
@@ -21,11 +41,11 @@ export interface ChatProvider {
   models: string[];
   supportsStreaming: boolean;
   icon?: string;
-  category: 'chat' | 'image' | 'vector' | 'voice' | 'other';
+  category: ProviderCategoryType;
   costPerToken?: number;
   isDefault?: boolean;
   isEnabled?: boolean;
-  type?: string;
+  type?: ProviderType;
 }
 
 export type ProviderCategory = ChatProvider;

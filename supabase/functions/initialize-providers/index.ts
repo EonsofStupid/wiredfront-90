@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 // Define proper types
-type ProviderCategory = 'chat' | 'image' | 'mixed' | 'integration';
+type ProviderCategory = 'chat' | 'image' | 'vector' | 'voice' | 'other';
 
 interface ChatProvider {
   id: string;
@@ -17,6 +17,7 @@ interface ChatProvider {
   category: ProviderCategory;
   models?: string[];
   features?: string[];
+  supportsStreaming?: boolean;
 }
 
 serve(async (req) => {
@@ -35,7 +36,8 @@ serve(async (req) => {
         isDefault: true,
         category: 'chat',
         models: ['gpt-4', 'gpt-3.5-turbo'],
-        features: ['chat', 'rag', 'code']
+        features: ['chat', 'rag', 'code'],
+        supportsStreaming: true
       },
       {
         id: 'gemini-default',
@@ -44,7 +46,8 @@ serve(async (req) => {
         isDefault: false,
         category: 'chat',
         models: ['gemini-1.5-flash', 'gemini-1.5-pro'],
-        features: ['chat', 'rag']
+        features: ['chat', 'rag'],
+        supportsStreaming: true
       },
       {
         id: 'anthropic-default',
@@ -53,16 +56,18 @@ serve(async (req) => {
         isDefault: false,
         category: 'chat',
         models: ['claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku'],
-        features: ['chat', 'rag']
+        features: ['chat', 'rag'],
+        supportsStreaming: true
       },
       {
         id: 'replicate-default',
         name: 'Replicate',
         type: 'replicate',
         isDefault: false,
-        category: 'mixed',
+        category: 'image',
         models: ['llama-3', 'mistral'],
-        features: ['chat', 'image']
+        features: ['chat', 'image'],
+        supportsStreaming: false
       },
       {
         id: 'stabilityai-default',
@@ -71,7 +76,8 @@ serve(async (req) => {
         isDefault: false,
         category: 'image',
         models: ['stable-diffusion-xl'],
-        features: ['image']
+        features: ['image'],
+        supportsStreaming: false
       }
     ];
 

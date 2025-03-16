@@ -1,7 +1,7 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AIProviderService } from '@/services/chat/AIProviderService';
-import { ChatProvider } from '@/components/chat/store/types/chat-store-types';
+import { ChatProvider, ProviderCategoryType } from '@/components/chat/store/types/chat-store-types';
 import { logger } from '@/services/chat/LoggingService';
 import { useChatStore } from '@/components/chat/store';
 
@@ -55,6 +55,11 @@ export function useAIProviders() {
     logger.info("Selected AI provider", { id: provider.id, type: provider.type });
   };
   
+  // Filter providers by category
+  const getProvidersByCategory = (category: ProviderCategoryType): ChatProvider[] => {
+    return providers.filter(p => p.category === category);
+  };
+  
   // Track usage of the current provider
   const trackProviderUsage = async (operation: 'query' | 'index' | 'image', metrics: any) => {
     if (!selectedProvider) return;
@@ -72,6 +77,7 @@ export function useAIProviders() {
     isLoading,
     refreshProviders: loadProviders,
     selectProvider,
+    getProvidersByCategory,
     trackProviderUsage
   };
 }

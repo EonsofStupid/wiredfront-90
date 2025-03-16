@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { ChatProvider, useChatStore } from '@/components/chat/store';
+import { ChatProvider, ChatMode, ProviderCategoryType } from '@/components/chat/store/types/chat-store-types';
+import { useChatStore } from '@/components/chat/store';
 import { Badge } from '@/components/ui/badge';
 import { Bot, Image, Code, GraduationCap, CheckCircle2 } from 'lucide-react';
-import { ChatMode } from '@/integrations/supabase/types/enums';
 import { Button } from '@/components/ui/button';
 
 interface ChatModeDialogProps {
@@ -46,18 +45,16 @@ export function ChatModeDialog({ open, onOpenChange, onModeSelect }: ChatModeDia
 
   // Filter providers by category based on selected mode
   const getFilteredProviders = (): ChatProvider[] => {
-    switch (selectedMode) {
-      case 'chat':
-        return availableProviders.filter(p => p.category === 'chat' || p.category === 'other');
-      case 'image':
-        return availableProviders.filter(p => p.category === 'image');
-      case 'dev':
-        return availableProviders.filter(p => p.category === 'chat' || p.category === 'other');
-      case 'training':
-        return availableProviders.filter(p => p.category === 'chat' || p.category === 'other');
-      default:
-        return availableProviders;
-    }
+    const categoryMap: Record<ChatMode, ProviderCategoryType[]> = {
+      'chat': ['chat', 'other'],
+      'chat-only': ['chat', 'other'],
+      'dev': ['chat', 'other'],
+      'image': ['image'],
+      'training': ['chat', 'other']
+    };
+    
+    const categories = categoryMap[selectedMode] || ['chat'];
+    return availableProviders.filter(p => categories.includes(p.category));
   };
 
   const filteredProviders = getFilteredProviders();

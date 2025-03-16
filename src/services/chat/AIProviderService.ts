@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/services/chat/LoggingService";
-import { ChatProvider, ProviderCategory } from "@/components/chat/store/types/chat-store-types";
+import { ChatProvider, ProviderCategoryType } from "@/components/chat/store/types/chat-store-types";
 
 interface ProviderUsageMetrics {
   tokensUsed?: number;
@@ -33,7 +33,7 @@ export class AIProviderService {
         type: config.api_type,
         isDefault: config.is_default || false,
         isEnabled: config.is_enabled,
-        category: this.getCategoryForProvider(config.api_type) as "chat" | "image" | "vector" | "voice" | "other"
+        category: this.getCategoryForProvider(config.api_type)
       })) || [];
     } catch (error) {
       logger.error("Error fetching AI providers", error);
@@ -44,7 +44,7 @@ export class AIProviderService {
   /**
    * Get the default provider for a specific category
    */
-  static async getDefaultProvider(category: string): Promise<ChatProvider | null> {
+  static async getDefaultProvider(category: ProviderCategoryType): Promise<ChatProvider | null> {
     try {
       const providers = await this.getAllProviders();
       
@@ -157,7 +157,7 @@ export class AIProviderService {
   /**
    * Determine the category for a provider type
    */
-  private static getCategoryForProvider(type: string): "chat" | "image" | "vector" | "voice" | "other" {
+  private static getCategoryForProvider(type: string): ProviderCategoryType {
     if (['openai', 'anthropic', 'gemini', 'perplexity', 'openrouter'].includes(type)) {
       return 'chat';
     } else if (['dalle', 'stabilityai', 'replicate'].includes(type)) {

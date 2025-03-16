@@ -1,5 +1,5 @@
 
-import { ChatProvider } from '@/components/chat/store/types/chat-store-types';
+import { ChatProvider, ProviderType } from '@/components/chat/store/types/chat-store-types';
 import { OpenAIProvider } from './openai/OpenAIProvider';
 import { GeminiProvider } from './gemini/GeminiProvider';
 import { AnthropicProvider } from './anthropic/AnthropicProvider';
@@ -11,7 +11,7 @@ import { logger } from '@/services/chat/LoggingService';
 export interface LLMProvider {
   id: string;
   name: string;
-  type: string;
+  type: ProviderType;
   generateText: (prompt: string, options?: any) => Promise<string>;
   generateImage?: (prompt: string, options?: any) => Promise<string>;
   enhancePrompt: (prompt: string, context?: any) => Promise<string>;
