@@ -66,6 +66,10 @@ const initialState: ChatState = {
     providerLoading: false,
   },
   
+  // Add empty implementations for MessageActions methods
+  addMessage: () => {}, // No-op placeholder for initialState
+  updateMessage: () => {}, // No-op placeholder for initialState
+  
   // Define the resetChatState function in initialState to satisfy type requirements
   resetChatState: () => {},
   
