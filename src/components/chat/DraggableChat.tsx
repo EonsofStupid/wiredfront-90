@@ -12,6 +12,7 @@ import { logger } from "@/services/chat/LoggingService";
 import { ChatModeDialog } from "./features/ModeSwitch/ChatModeDialog";
 import { ChatMode } from "@/integrations/supabase/types/enums";
 import "./styles/index.css";
+import "./styles/cyber-theme.css";
 
 export function DraggableChat() {
   const { 
@@ -72,7 +73,9 @@ export function DraggableChat() {
   if (!isOpen) {
     return (
       <>
-        <ChatToggleButton onClick={toggleChat} />
+        <div className="fixed bottom-4 right-4 z-50">
+          <ChatToggleButton onClick={toggleChat} />
+        </div>
         <ChatModeDialog
           open={modeDialogOpen}
           onOpenChange={setModeDialogOpen}
@@ -88,7 +91,7 @@ export function DraggableChat() {
   return (
     <DndContext>
       <motion.div 
-        className={`fixed bottom-4 ${positionClass} flex gap-4 chat-component`}
+        className={`fixed bottom-4 ${positionClass} flex gap-4 chat-component z-[var(--z-chat)]`}
         style={{ 
           transformOrigin: position === 'bottom-right' ? 'bottom right' : 'bottom left'
         }}

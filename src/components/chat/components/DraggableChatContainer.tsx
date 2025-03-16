@@ -5,7 +5,9 @@ import { useChatStore } from '../store/chatStore';
 import { ChatHeader } from './ChatHeader';
 import { ChatModeDialog } from '../features/ModeSwitch/ChatModeDialog';
 import { ChatMode } from '@/integrations/supabase/types/enums';
+import ChatInputArea from './ChatInputArea';
 import '../styles/index.css';
+import '../styles/cyber-theme.css';
 
 interface DraggableChatContainerProps {
   scrollRef: React.RefObject<HTMLDivElement>;
@@ -41,12 +43,23 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
   } : undefined;
 
+  const handleSendMessage = (message: string) => {
+    console.log('Message sent from container:', message);
+    // Add message to chat store
+    useChatStore.getState().addMessage({
+      id: Date.now().toString(),
+      content: message,
+      role: 'user',
+      timestamp: new Date().toISOString()
+    });
+  };
+
   return (
     <div
       ref={setNodeRef}
       style={docked ? undefined : transformStyle}
       {...(docked ? {} : { ...listeners, ...attributes })}
-      className={`chat-container chat-glass-card chat-neon-border overflow-hidden flex flex-col`}
+      className="chat-container chat-glass-card chat-neon-border overflow-hidden flex flex-col cyber-bg"
     >
       <ChatHeader 
         onToggleSidebar={handleToggleSidebar}
@@ -55,7 +68,7 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
       
       {!isMinimized && (
         <div 
-          className="flex-1 overflow-y-auto p-4 chat-messages-container" 
+          className="flex-1 overflow-y-auto p-4 chat-messages-container cyber-bg" 
           ref={scrollRef}
         >
           <div className="space-y-4">
@@ -65,23 +78,15 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
               </p>
             </div>
             
-            <div className="chat-message chat-message-assistant">
-              How can I help you today?
+            <div className="chat-message chat-message-assistant cyber-border cyber-pulse">
+              <span className="cyber-glitch" data-text="How can I help you today?">How can I help you today?</span>
             </div>
           </div>
         </div>
       )}
       
       {!isMinimized && (
-        <div className="chat-footer p-3 flex">
-          <div className="flex-1 chat-input-container">
-            <textarea 
-              className="chat-input h-[40px] max-h-[120px] min-h-[40px]"
-              placeholder="Type a message..."
-              rows={1}
-            />
-          </div>
-        </div>
+        <ChatInputArea onSendMessage={handleSendMessage} />
       )}
       
       <ChatModeDialog

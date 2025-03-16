@@ -4,6 +4,7 @@
 @import './chat-base.css';
 @import './ChatButtonStyle.css';
 @import './animations.css';
+@import './cyber-theme.css';
 
 /* Any global chat styles that don't fit elsewhere */
 .chat-container {
@@ -11,6 +12,54 @@
   height: var(--chat-height);
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Cyber theme overrides */
+.chat-message {
+  position: relative;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+
+.chat-message-assistant {
+  background-color: rgba(0, 0, 0, 0.4);
+  color: white;
+  border: 1px solid var(--cyber-neon-blue);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+  margin-right: auto;
+  max-width: 85%;
+}
+
+.chat-message-user {
+  background-color: rgba(157, 0, 255, 0.2);
+  color: white;
+  border: 1px solid var(--cyber-neon-purple);
+  box-shadow: 0 0 10px rgba(157, 0, 255, 0.3);
+  margin-left: auto;
+  max-width: 85%;
+}
+
+/* Typing dots animation */
+.typing-dots {
+  display: inline-block;
+}
+
+.typing-dots::after {
+  display: inline-block;
+  animation: typing 1.5s infinite;
+  content: '';
+}
+
+@keyframes typing {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+  100% { content: ''; }
 }
 
 /* Make sure the chat is responsive */
