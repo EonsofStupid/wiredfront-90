@@ -26,7 +26,14 @@ export interface TokenControl {
   queriesUsed: number;
 }
 
-export interface ChatState {
+// Define message management actions
+export interface MessageActions {
+  addMessage: (message: Message) => void;
+  updateMessage: (id: string, updates: Partial<Message>) => void;
+}
+
+// The ChatState should extend MessageActions to ensure those methods are typed
+export interface ChatState extends MessageActions {
   initialized: boolean;
   messages: Message[];
   userInput: string;
@@ -91,12 +98,6 @@ export interface UIStateActions {
   setProviderLoading: (isLoading: boolean) => void;
   setScale: (scale: number) => void;
   setCurrentMode: (mode: ChatMode) => void;
-}
-
-// Define message management actions
-export interface MessageActions {
-  addMessage: (message: Message) => void;
-  updateMessage: (id: string, updates: Partial<Message>) => void;
 }
 
 // Reusable type definitions for state management
