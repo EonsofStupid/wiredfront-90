@@ -1,13 +1,13 @@
 
-import { ChatState } from '../../types/chat-store-types';
-import { FeatureKey, FeatureActions, SetState, GetState } from './types';
-import { logFeatureToggle, logProviderChange } from './helpers';
+import { ChatState } from '../../../types/chat-store-types';
+import { FeatureKey, SetState, GetState } from '../types';
+import { logFeatureToggle } from './toggle-utils';
 
-// Feature toggle and provider actions
-export const createToggleActions = (
+// Create feature toggle-specific actions
+export const createFeatureToggleActions = (
   set: SetState<ChatState>,
   get: GetState<ChatState>
-): Pick<FeatureActions, 'toggleFeature' | 'enableFeature' | 'disableFeature' | 'setFeatureState' | 'updateChatProvider'> => ({
+) => ({
   toggleFeature: (feature: FeatureKey) =>
     set(
       (state: ChatState) => {
@@ -86,29 +86,5 @@ export const createToggleActions = (
       },
       false,
       { type: 'features/setState', feature, isEnabled }
-    ),
-
-  updateChatProvider: (providers: ChatState['availableProviders']) =>
-    set(
-      (state: ChatState) => {
-        const newDefaultProvider = providers.find((p) => p.isDefault) || providers[0] || state.currentProvider;
-        
-        // If the provider is changing, log it
-        if (state.currentProvider?.id !== newDefaultProvider?.id) {
-          logProviderChange(state.currentProvider?.name, newDefaultProvider?.name);
-        }
-        
-        return {
-          ...state,
-          availableProviders: providers,
-          currentProvider: newDefaultProvider,
-          providers: {
-            ...state.providers,
-            availableProviders: providers,
-          },
-        };
-      },
-      false,
-      { type: 'providers/update', count: providers.length }
     ),
 });

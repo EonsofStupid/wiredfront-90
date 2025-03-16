@@ -1,6 +1,6 @@
 
 import { StoreWithDevtools, FeatureActions, FeatureKey } from './types';
-import { createToggleActions } from './toggle-actions';
+import { createToggleActions } from './toggle/index';
 import { createTokenActions } from './token/index';
 
 // Export the FeatureKey type for usage throughout the application
