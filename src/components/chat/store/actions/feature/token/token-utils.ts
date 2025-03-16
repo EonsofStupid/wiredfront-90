@@ -5,50 +5,21 @@ import { logger } from '@/services/chat/LoggingService';
 /**
  * Updates a user's token balance in the database
  */
-export const updateUserTokens = async (userId: string, amount: number): Promise<boolean> => {
+export const updateUserTokens = async (
+  userId: string,
+  newBalance: number
+): Promise<boolean> => {
   try {
-    const { data, error } = await supabase
-      .from('user_tokens')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
+    const { error } = await supabase.from('user_tokens').upsert({
+      user_id: userId,
+      balance: newBalance,
+      last_updated: new Date().toISOString()
+    }, { onConflict: 'user_id' });
     
-    if (error && error.code !== 'PGRST116') {
-      logger.error('Error fetching user tokens:', error);
+    if (error) {
+      logger.error('Error updating user tokens:', error);
       return false;
     }
-    
-    if (!data) {
-      // Create new token record if it doesn't exist
-      const { error: insertError } = await supabase
-        .from('user_tokens')
-        .insert({ user_id: userId, balance: amount });
-      
-      if (insertError) {
-        logger.error('Error creating user tokens:', insertError);
-        return false;
-      }
-    } else {
-      // Update existing token record
-      const { error: updateError } = await supabase
-        .from('user_tokens')
-        .update({ balance: amount })
-        .eq('user_id', userId);
-      
-      if (updateError) {
-        logger.error('Error updating user tokens:', updateError);
-        return false;
-      }
-    }
-    
-    // Log this transaction for auditing
-    await supabase.from('token_transaction_log').insert({
-      user_id: userId,
-      amount: amount,
-      transaction_type: 'update',
-      description: 'Balance updated manually',
-      metadata: { source: 'client_app' }
-    });
     
     return true;
   } catch (error) {
@@ -58,22 +29,21 @@ export const updateUserTokens = async (userId: string, amount: number): Promise<
 };
 
 /**
- * Logs token transactions to the database for auditing
+ * Logs a token transaction to the database
  */
 export const logTokenTransaction = async (
   userId: string,
   amount: number,
-  type: 'add' | 'spend' | 'set',
-  description: string = ''
+  transactionType: 'add' | 'spend' | 'set',
+  description: string
 ): Promise<boolean> => {
   try {
-    // Insert transaction record
     const { error } = await supabase.from('token_transaction_log').insert({
       user_id: userId,
-      amount: amount,
-      transaction_type: type,
+      amount,
+      transaction_type: transactionType,
       description,
-      metadata: { source: 'client_app' }
+      metadata: { timestamp: new Date().toISOString() }
     });
     
     if (error) {

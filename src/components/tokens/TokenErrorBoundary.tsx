@@ -7,7 +7,7 @@ export function withTokenErrorBoundary<P extends object>(Component: React.Compon
   return function TokenErrorBoundaryWrapper(props: P) {
     return (
       <ErrorBoundary
-        FallbackComponent={({ error, resetErrorBoundary }) => (
+        fallback={({ error, resetErrorBoundary }) => (
           <div className="p-4 border border-red-200 rounded-md bg-red-50 text-red-800">
             <h3 className="font-medium mb-2">Token System Error</h3>
             <p className="text-sm mb-4">{error.message}</p>

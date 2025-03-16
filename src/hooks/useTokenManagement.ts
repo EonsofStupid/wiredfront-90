@@ -22,7 +22,7 @@ export function withTokenErrorBoundary<T extends object>(
 
 export function useTokenManagement() {
   const { tokenControl, setTokenEnforcementMode, addTokens, spendTokens, setTokenBalance } = useChatStore();
-  const { isEnabled: isTokenEnforcementEnabled, toggleFeature } = useFeatureFlags();
+  const { isEnabled, toggleFeature } = useFeatureFlags();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -68,7 +68,7 @@ export function useTokenManagement() {
           setTokenEnforcementMode(data.enforcement_mode || 'never');
           
           // Enable token enforcement feature flag if it's enabled in settings
-          if (data.enforcement_mode !== 'never' && !isTokenEnforcementEnabled(KnownFeatureFlag.TOKEN_CONTROL)) {
+          if (data.enforcement_mode !== 'never' && !isEnabled(KnownFeatureFlag.TOKEN_CONTROL)) {
             toggleFeature(KnownFeatureFlag.TOKEN_CONTROL);
           }
         }
@@ -93,7 +93,7 @@ export function useTokenManagement() {
       
       // If it's being enabled, set the enforcement mode to 'always'
       // If it's being disabled, set it to 'never'
-      const newMode: TokenEnforcementMode = isTokenEnforcementEnabled(KnownFeatureFlag.TOKEN_CONTROL) ? 'never' : 'always';
+      const newMode: TokenEnforcementMode = isEnabled(KnownFeatureFlag.TOKEN_CONTROL) ? 'never' : 'always';
       
       await handleUpdateEnforcementConfig(newMode);
       
@@ -135,12 +135,12 @@ export function useTokenManagement() {
       }
       
       // If mode is 'never', ensure tokenEnforcement feature is disabled
-      if (mode === 'never' && isTokenEnforcementEnabled(KnownFeatureFlag.TOKEN_CONTROL)) {
+      if (mode === 'never' && isEnabled(KnownFeatureFlag.TOKEN_CONTROL)) {
         toggleFeature(KnownFeatureFlag.TOKEN_CONTROL);
       }
       
       // If mode is not 'never', ensure tokenEnforcement feature is enabled
-      if (mode !== 'never' && !isTokenEnforcementEnabled(KnownFeatureFlag.TOKEN_CONTROL)) {
+      if (mode !== 'never' && !isEnabled(KnownFeatureFlag.TOKEN_CONTROL)) {
         toggleFeature(KnownFeatureFlag.TOKEN_CONTROL);
       }
       
@@ -159,7 +159,7 @@ export function useTokenManagement() {
     tokenControl,
     tokenBalance,
     enforcementMode,
-    isTokenEnforcementEnabled: isTokenEnforcementEnabled(KnownFeatureFlag.TOKEN_CONTROL),
+    isTokenEnforcementEnabled: isEnabled(KnownFeatureFlag.TOKEN_CONTROL),
     toggleTokenEnforcement,
     handleUpdateEnforcementConfig,
     setEnforcementMode,
