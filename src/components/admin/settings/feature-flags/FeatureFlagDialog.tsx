@@ -12,7 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { CheckIcon, Trash } from 'lucide-react';
-import { FeatureFlag, FeatureFlagFormValues } from '@/types/admin/settings/feature-flags';
+import { FeatureFlag, FeatureFlagFormValues, AppRole } from '@/types/admin/settings/feature-flags';
 import { Database } from '@/integrations/supabase/types';
 
 // Schema for form validation
@@ -23,7 +23,7 @@ const formSchema = z.object({
   name: z.string().min(3, { message: 'Name is required' }).max(100),
   description: z.string().max(500).optional(),
   enabled: z.boolean().default(false),
-  target_roles: z.array(z.string()).optional(),
+  target_roles: z.array(z.custom<AppRole>()).optional(),
   rollout_percentage: z.number().min(0).max(100).default(100),
 });
 
@@ -37,7 +37,7 @@ type FeatureFlagDialogProps = {
   isSuperAdmin: boolean;
 };
 
-const roleOptions: Database["public"]["Enums"]["app_role"][] = ['super_admin', 'admin', 'developer', 'subscriber', 'guest'];
+const roleOptions: AppRole[] = ['super_admin', 'admin', 'developer', 'subscriber', 'guest'];
 
 export function FeatureFlagDialog({ 
   open, 
@@ -199,9 +199,10 @@ export function FeatureFlagDialog({
                           variant={isSelected ? "default" : "outline"}
                           className={`cursor-pointer ${isSelected ? 'bg-primary' : ''}`}
                           onClick={() => {
+                            const currentValues = field.value || [];
                             const newValue = isSelected
-                              ? field.value?.filter(r => r !== role)
-                              : [...(field.value || []), role];
+                              ? currentValues.filter(r => r !== role) 
+                              : [...currentValues, role];
                             field.onChange(newValue);
                           }}
                         >

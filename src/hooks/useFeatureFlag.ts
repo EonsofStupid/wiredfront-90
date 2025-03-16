@@ -1,17 +1,14 @@
 
-// This file already exists, but let's make sure it's correctly imported
-// Importing from the local feature flag type we just created
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import { useRoleStore } from "@/stores/role";
-import { Database } from "@/integrations/supabase/types";
-import { FeatureFlag } from "@/types/admin/settings/feature-flags";
+import { FeatureFlag, AppRole } from "@/types/admin/settings/feature-flags";
 
 export function useFeatureFlag(flagKey: string) {
   const { user } = useAuthStore();
   const { roles } = useRoleStore();
-  const userRole = roles[0] as Database["public"]["Enums"]["app_role"];
+  const userRole = roles[0] as AppRole;
 
   const { data, isLoading } = useQuery({
     queryKey: ['feature-flag', flagKey],
@@ -36,7 +33,8 @@ export function useFeatureFlag(flagKey: string) {
           created_at: null,
           updated_at: null,
           created_by: null,
-          updated_by: null
+          updated_by: null,
+          metadata: null
         } as FeatureFlag;
       }
 

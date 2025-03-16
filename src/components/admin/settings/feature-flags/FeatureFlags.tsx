@@ -1,14 +1,14 @@
 
 import React, { useState } from 'react';
 import { useFeatureFlags } from '@/hooks/admin/settings/useFeatureFlags';
-import { FeatureFlag, FeatureFlagFormValues } from '@/types/admin/settings/feature-flags';
+import { FeatureFlag, FeatureFlagFormValues, AppRole } from '@/types/admin/settings/feature-flags';
 import { FeatureFlagDialog } from './FeatureFlagDialog';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Plus, Search, Filter, Info, Trash } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -105,7 +105,6 @@ export default function FeatureFlags() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        {/* Filter button - can be expanded for more filtering options */}
         <Button variant="outline" size="icon">
           <Filter className="h-4 w-4" />
         </Button>

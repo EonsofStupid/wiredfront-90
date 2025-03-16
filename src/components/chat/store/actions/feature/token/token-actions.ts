@@ -1,134 +1,153 @@
 
-import { ChatState } from '../../../types/chat-store-types';
-import { FeatureActions, SetState, GetState } from '../types';
-import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
+import { TokenEnforcementMode } from '@/integrations/supabase/types';
+import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
+import { FeatureKey } from '../types';
+import { ChatProvider } from '../../../types/chat-store-types';
 
-export function createTokenActions(
-  set: SetState<ChatState>,
-  get: GetState<ChatState>
-): Pick<FeatureActions, 'setTokenEnforcementMode' | 'addTokens' | 'spendTokens' | 'setTokenBalance'> {
-  return {
-    setTokenEnforcementMode: (mode: TokenEnforcementMode) => {
+export const createTokenActions = (set: any, get: any) => ({
+  setTokenEnforcementMode: (mode: TokenEnforcementMode) => {
+    set(
+      (state: any) => ({
+        tokenControl: {
+          ...state.tokenControl,
+          enforcementMode: mode
+        }
+      }),
+      false,
+      { type: 'setTokenEnforcementMode', mode }
+    );
+
+    // Log the mode change
+    logger.info(`Token enforcement mode set to: ${mode}`);
+  },
+
+  addTokens: async (amount: number) => {
+    try {
       set(
-        state => ({
+        (state: any) => ({
           tokenControl: {
             ...state.tokenControl,
-            enforcementMode: mode,
-            lastUpdated: new Date().toISOString()
+            balance: state.tokenControl.balance + amount
           }
         }),
         false,
-        `tokens/setEnforcementMode/${mode}`
+        { type: 'addTokens', amount }
       );
-    },
-    
-    addTokens: async (amount: number) => {
-      if (amount <= 0) {
-        logger.warn('Attempted to add non-positive token amount:', amount);
-        return false;
-      }
-      
-      try {
-        const currentBalance = get().tokenControl.balance;
-        
-        set(
-          state => ({
-            tokenControl: {
-              ...state.tokenControl,
-              balance: currentBalance + amount,
-              lastUpdated: new Date().toISOString()
-            }
-          }),
-          false,
-          `tokens/add/${amount}`
-        );
-        
-        return true;
-      } catch (error) {
-        logger.error('Error adding tokens:', error);
-        return false;
-      }
-    },
-    
-    spendTokens: async (amount: number) => {
-      if (amount <= 0) {
-        logger.warn('Attempted to spend non-positive token amount:', amount);
-        return false;
-      }
-      
-      try {
-        const { balance, enforcementMode, queriesUsed, freeQueryLimit } = get().tokenControl;
-        
-        // Check if we're enforcing token limits
-        if (enforcementMode !== 'never') {
-          // If we're in free query mode and haven't exhausted free queries
-          if (enforcementMode === 'free-queries' && queriesUsed < freeQueryLimit) {
-            set(
-              state => ({
-                tokenControl: {
-                  ...state.tokenControl,
-                  queriesUsed: queriesUsed + 1,
-                  lastUpdated: new Date().toISOString()
-                }
-              }),
-              false,
-              `tokens/spend/freeQuery/${queriesUsed + 1}`
-            );
-            return true;
-          }
-          
-          // Check if we have enough tokens
-          if (balance < amount) {
-            logger.warn(`Token spend rejected: required ${amount}, available ${balance}`);
-            return false;
-          }
-        }
-        
-        // Update the balance
-        set(
-          state => ({
-            tokenControl: {
-              ...state.tokenControl,
-              balance: balance - amount,
-              lastUpdated: new Date().toISOString()
-            }
-          }),
-          false,
-          `tokens/spend/${amount}`
-        );
-        
-        return true;
-      } catch (error) {
-        logger.error('Error spending tokens:', error);
-        return false;
-      }
-    },
-    
-    setTokenBalance: async (amount: number) => {
-      if (amount < 0) {
-        logger.warn('Attempted to set negative token balance:', amount);
-        return false;
-      }
-      
-      try {
-        set(
-          state => ({
-            tokenControl: {
-              ...state.tokenControl,
-              balance: amount,
-              lastUpdated: new Date().toISOString()
-            }
-          }),
-          false,
-          `tokens/setBalance/${amount}`
-        );
-        
-        return true;
-      } catch (error) {
-        logger.error('Error setting token balance:', error);
-        return false;
+
+      // Log token addition
+      logger.info(`Added ${amount} tokens to balance`);
+
+      // Record token addition in database
+      await recordTokenTransaction('add', amount, {
+        reason: 'manual_add',
+      });
+
+      return true;
+    } catch (error) {
+      logger.error('Failed to add tokens', { error });
+      return false;
+    }
+  },
+
+  spendTokens: async (amount: number) => {
+    const state = get();
+    const { enforcementMode, balance } = state.tokenControl;
+
+    // If there's no enforcement, spending always succeeds
+    if (enforcementMode === 'never') {
+      logger.info('Token spending bypassed due to enforcement mode: never');
+      return true;
+    }
+
+    // Check if user has enough tokens (but only if enforcement is active)
+    if (enforcementMode === 'always' && balance < amount) {
+      logger.warn(`Token spend blocked: Requested ${amount}, balance ${balance}`);
+      return false;
+    }
+
+    // Handle role-based enforcement
+    if (enforcementMode === 'mode_based') {
+      // Implementation depends on the current mode
+      // For example, different modes might have different rules
+      const { activeMode } = state;
+      if (activeMode === 'training' && balance < amount * 2) {
+        logger.warn(`Training mode token spend blocked: Requested ${amount}, balance ${balance}`);
+        return false; 
       }
     }
-  };
+
+    // If we get here, spending is allowed
+    try {
+      set(
+        (state: any) => ({
+          tokenControl: {
+            ...state.tokenControl,
+            balance: state.tokenControl.balance - amount
+          }
+        }),
+        false, 
+        { type: 'spendTokens', amount }
+      );
+
+      // Record token spending in database
+      await recordTokenTransaction('spend', amount, {
+        reason: 'api_usage',
+      });
+
+      return true;
+    } catch (error) {
+      logger.error('Failed to spend tokens', { error });
+      return false;
+    }
+  },
+
+  setTokenBalance: async (amount: number) => {
+    try {
+      set(
+        (state: any) => ({
+          tokenControl: {
+            ...state.tokenControl,
+            balance: amount
+          }
+        }),
+        false,
+        { type: 'setTokenBalance', amount }
+      );
+
+      // Record token balance update in database
+      await recordTokenTransaction('set', amount, {
+        reason: 'admin_adjustment',
+      });
+
+      return true;
+    } catch (error) {
+      logger.error('Failed to set token balance', { error });
+      return false;
+    }
+  },
+});
+
+// Record token transactions to the database
+async function recordTokenTransaction(
+  transactionType: 'add' | 'spend' | 'set',
+  amount: number,
+  metadata: Record<string, any> = {}
+) {
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData?.session) return;
+
+    const userId = sessionData.session.user.id;
+
+    await supabase.from('token_transaction_log').insert({
+      user_id: userId,
+      amount: transactionType === 'spend' ? -amount : amount,
+      transaction_type: transactionType,
+      description: `${transactionType} ${amount} tokens`,
+      metadata
+    });
+  } catch (error) {
+    logger.error('Failed to record token transaction', { error });
+  }
 }

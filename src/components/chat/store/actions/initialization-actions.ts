@@ -1,172 +1,165 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { ChatState, ProviderCategory } from '../types/chat-store-types';
 import { logger } from '@/services/chat/LoggingService';
-import type { StateCreator } from 'zustand';
+import { FeatureKey } from './feature/types';
+import { TokenEnforcementMode } from '@/integrations/supabase/types';
+import { Json } from '@/integrations/supabase/types';
 
-type SetState = (state: Partial<ChatState>, replace?: boolean, action?: any) => void;
-type GetState = () => ChatState;
+// Default initialization state for chat features and settings
+const DEFAULT_FEATURES = {
+  [FeatureKey.DEV_MODE]: false,
+  [FeatureKey.CHAT_GPT4]: false,
+  [FeatureKey.ADVANCED_RAG]: false,
+  [FeatureKey.VOICE_COMMANDS]: false,
+  [FeatureKey.GITHUB_SYNC]: true,
+  [FeatureKey.IMAGE_GENERATION]: false,
+  [FeatureKey.TOKEN_CONTROL]: false
+};
 
-export const createInitializationActions = (
-  set: SetState,
-  get: GetState,
-) => ({
-  /**
-   * Initialize chat settings from the database or local storage
-   */
-  initializeChatSettings: async () => {
-    try {
-      logger.info('Initializing chat settings');
-      set({ initialized: false }, false, { type: 'initialization/start' });
+// Default token control settings
+const DEFAULT_TOKEN_CONTROL = {
+  enforcementMode: 'never' as TokenEnforcementMode,
+  balance: 1000,
+  usageHistory: [],
+  tierLimits: {
+    free: 1000,
+    basic: 5000,
+    premium: 20000,
+    enterprise: -1 // unlimited
+  }
+};
 
-      // First, try to load providers from Supabase edge function
+export function createInitializationActions(set: any, get: any) {
+  return {
+    // Initialize the store with user settings
+    initializeStore: async () => {
       try {
-        const { data, error } = await supabase.functions.invoke('initialize-providers');
+        // Log initialization start
+        logger.info('Initializing chat store');
         
-        if (error) {
-          logger.error('Error initializing providers', error);
-        } else if (data && data.availableProviders) {
-          logger.info('Loaded available providers', { count: data.availableProviders.length });
-          
-          // Always set OpenAI as the default provider if available
-          const openaiProvider = data.availableProviders.find((p: any) => p.type === 'openai');
-          
-          // Transform the category to ensure it matches our type expectations
-          const typedProviders = data.availableProviders.map((p: any) => ({
-            ...p,
-            category: ensureValidCategory(p.category)
-          }));
-          
-          const typedDefaultProvider = openaiProvider 
-            ? { ...openaiProvider, category: ensureValidCategory(openaiProvider.category) }
-            : data.defaultProvider 
-              ? { ...data.defaultProvider, category: ensureValidCategory(data.defaultProvider.category) }
-              : null;
-          
-          set({
-            availableProviders: typedProviders,
-            currentProvider: typedDefaultProvider,
-            providers: {
-              availableProviders: typedProviders
-            }
-          });
-          
-          logger.info('Set current provider', { 
-            provider: typedDefaultProvider?.name || 'None' 
-          });
-        }
-      } catch (providerError) {
-        logger.error('Failed to load providers from edge function', providerError);
-        
-        // Fallback to default OpenAI provider if edge function fails
-        const fallbackProvider = {
-          id: 'openai-default',
-          name: 'OpenAI',
-          type: 'openai',
-          isDefault: true,
-          category: 'chat' as ProviderCategory
-        };
-        
-        set({
-          availableProviders: [fallbackProvider],
-          currentProvider: fallbackProvider
-        });
-        
-        logger.info('Set fallback OpenAI provider');
-      }
+        // First, set default values
+        set(
+          (state: any) => ({
+            isInitialized: false,
+            isLoading: true,
+            error: null,
+            features: DEFAULT_FEATURES,
+            tokenControl: DEFAULT_TOKEN_CONTROL,
+            providers: [],
+            currentProvider: null,
+            availableProviders: [],
+          }),
+          false,
+          { type: 'initializeStoreDefaults' }
+        );
 
-      // Then, try to load user chat settings from the database
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user?.id) {
-        logger.info('User authenticated, loading settings from database');
-        
-        const { data: chatSettings, error: settingsError } = await supabase
+        // Get the current user
+        const { data: authData } = await supabase.auth.getSession();
+        if (!authData?.session?.user) {
+          // No authenticated user
+          logger.warn('No authenticated user during store initialization');
+          set(
+            (state: any) => ({
+              isInitialized: true,
+              isLoading: false,
+              userLoggedIn: false,
+            }),
+            false,
+            { type: 'initializeStoreComplete' }
+          );
+          return;
+        }
+
+        // User is authenticated
+        const userId = authData.session.user.id;
+
+        // Load user settings from the database
+        const { data: settings, error: settingsError } = await supabase
           .from('chat_settings')
           .select('*')
-          .eq('user_id', session.user.id)
+          .eq('user_id', userId)
           .single();
 
-        if (settingsError && settingsError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
-          logger.error('Error loading chat settings', settingsError);
+        if (settingsError && settingsError.code !== 'PGRST116') {
+          // Log error but continue with defaults
+          logger.error('Failed to load chat settings', { error: settingsError });
         }
 
-        if (chatSettings) {
-          logger.info('Chat settings loaded from database');
-          
-          // Safely handle nested properties with proper type checking
-          const uiCustomizations = chatSettings.ui_customizations || {};
-          const currentState = get();
-          
-          // Apply settings from database with proper type safety
-          if (typeof uiCustomizations === 'object') {
-            const updatedState: Partial<ChatState> = { ...currentState };
-            
-            // Handle features if they exist
-            if (uiCustomizations.features && typeof uiCustomizations.features === 'object') {
-              updatedState.features = {
-                ...currentState.features,
-                ...uiCustomizations.features
-              };
-            }
-            
-            // Handle token enforcement if it exists
-            if ('tokenEnforcement' in uiCustomizations) {
-              updatedState.tokenControl = {
-                ...currentState.tokenControl,
-                enforcementMode: uiCustomizations.tokenEnforcement as TokenEnforcementMode
-              };
-            }
-            
-            // Handle token control if it exists
-            if (uiCustomizations.tokenControl && typeof uiCustomizations.tokenControl === 'object') {
-              updatedState.tokenControl = {
-                ...updatedState.tokenControl,
-                ...uiCustomizations.tokenControl
-              };
-            }
-            
-            set(updatedState);
+        // Extract feature flags from settings
+        let features = { ...DEFAULT_FEATURES };
+        if (settings?.ui_customizations && typeof settings.ui_customizations === 'object') {
+          // Check for features property
+          const customizations = settings.ui_customizations as Record<string, any>;
+          if (customizations.features) {
+            features = {
+              ...features,
+              ...customizations.features
+            };
           }
         }
+
+        // Extract token control settings
+        let tokenControl = { ...DEFAULT_TOKEN_CONTROL };
+        if (settings?.ui_customizations && typeof settings.ui_customizations === 'object') {
+          const customizations = settings.ui_customizations as Record<string, any>; 
+          if (customizations.tokenControl) {
+            tokenControl = {
+              ...tokenControl,
+              ...customizations.tokenControl,
+              // Ensure the enforcement mode is valid
+              enforcementMode: isValidEnforcementMode(customizations.tokenControl?.enforcementMode) 
+                ? customizations.tokenControl.enforcementMode 
+                : DEFAULT_TOKEN_CONTROL.enforcementMode
+            };
+          }
+        }
+
+        // Get data about available providers
+        const { data: availableProviders, error: providersError } = await supabase
+          .from('available_providers')
+          .select('*')
+          .eq('is_enabled', true);
+
+        if (providersError) {
+          logger.error('Failed to load available providers', { error: providersError });
+        }
+
+        // Finally set the fully loaded state
+        set(
+          (state: any) => ({
+            isInitialized: true,
+            isLoading: false,
+            error: null,
+            userLoggedIn: true,
+            features,
+            tokenControl,
+            availableProviders: availableProviders || [],
+            currentProvider: settings?.api_provider || 'openai',
+          }),
+          false,
+          { type: 'initializeStoreComplete' }
+        );
+
+        logger.info('Chat store initialization completed successfully');
+      } catch (error) {
+        // Log the error and set error state
+        logger.error('Error initializing chat store', { error });
+        set(
+          (state: any) => ({
+            isInitialized: true,
+            isLoading: false,
+            error: error instanceof Error ? error.message : 'Unknown initialization error',
+          }),
+          false,
+          { type: 'initializeStoreError', error }
+        );
       }
+    },
+  };
+}
 
-      // If no provider is set, use OpenAI as default
-      const currentState = get();
-      if (!currentState.currentProvider) {
-        const defaultProvider = {
-          id: 'openai-default',
-          name: 'OpenAI',
-          type: 'openai',
-          isDefault: true,
-          category: 'chat' as ProviderCategory
-        };
-        
-        set({
-          currentProvider: defaultProvider,
-          availableProviders: [...(currentState.availableProviders || []), defaultProvider]
-        });
-        
-        logger.info('Set default OpenAI provider as fallback');
-      }
-
-      // Finally, mark initialization as complete
-      set({ initialized: true }, false, { type: 'initialization/complete' });
-      logger.info('Chat settings initialization complete');
-    } catch (error) {
-      logger.error('Failed to initialize chat settings', error);
-      set({ initialized: true, error: 'Failed to initialize chat settings' }, false, {
-        type: 'initialization/error',
-        error,
-      });
-    }
-  },
-});
-
-/**
- * Helper function to ensure category is one of the valid ProviderCategory values
- */
-function ensureValidCategory(category: any): ProviderCategory {
-  const validCategories: ProviderCategory[] = ['chat', 'image', 'mixed', 'integration'];
-  return validCategories.includes(category) ? category : 'chat';
+// Helper to validate the enforcement mode
+function isValidEnforcementMode(mode: any): mode is TokenEnforcementMode {
+  const validModes: TokenEnforcementMode[] = ['always', 'never', 'role_based', 'mode_based'];
+  return typeof mode === 'string' && validModes.includes(mode as TokenEnforcementMode);
 }

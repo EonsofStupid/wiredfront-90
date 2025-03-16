@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { FeatureFlag, FeatureFlagFormValues } from "@/types/admin/settings/feature-flags";
+import { FeatureFlag, FeatureFlagFormValues, AppRole } from "@/types/admin/settings/feature-flags";
 import { useRoleStore } from "@/stores/role";
 
 export const useFeatureFlags = () => {
@@ -32,7 +32,11 @@ export const useFeatureFlags = () => {
     mutationFn: async ({ id, enabled }: { id: string; enabled: boolean }) => {
       const { data, error } = await supabase
         .from('feature_flags')
-        .update({ enabled, updated_by: (await supabase.auth.getUser()).data.user?.id })
+        .update({ 
+          enabled, 
+          updated_by: (await supabase.auth.getUser()).data.user?.id,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', id)
         .select()
         .single();
@@ -53,11 +57,20 @@ export const useFeatureFlags = () => {
   // Create a new feature flag
   const createFeatureFlag = useMutation({
     mutationFn: async (formValues: FeatureFlagFormValues) => {
+      const currentUser = (await supabase.auth.getUser()).data.user?.id;
+      
       const newFlag = {
         ...formValues,
-        created_by: (await supabase.auth.getUser()).data.user?.id,
-        updated_by: (await supabase.auth.getUser()).data.user?.id,
+        created_by: currentUser,
+        updated_by: currentUser,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
+
+      // Ensure target_roles is of the correct type
+      if (newFlag.target_roles && !Array.isArray(newFlag.target_roles)) {
+        newFlag.target_roles = [newFlag.target_roles as unknown as AppRole];
+      }
 
       const { data, error } = await supabase
         .from('feature_flags')
@@ -87,12 +100,20 @@ export const useFeatureFlags = () => {
   // Update an existing feature flag
   const updateFeatureFlag = useMutation({
     mutationFn: async (flag: FeatureFlag) => {
+      const updatePayload = {
+        ...flag,
+        updated_by: (await supabase.auth.getUser()).data.user?.id,
+        updated_at: new Date().toISOString()
+      };
+
+      // Ensure target_roles is of the correct type
+      if (updatePayload.target_roles && !Array.isArray(updatePayload.target_roles)) {
+        updatePayload.target_roles = [updatePayload.target_roles as unknown as AppRole];
+      }
+
       const { data, error } = await supabase
         .from('feature_flags')
-        .update({ 
-          ...flag,
-          updated_by: (await supabase.auth.getUser()).data.user?.id 
-        })
+        .update(updatePayload)
         .eq('id', flag.id)
         .select()
         .single();

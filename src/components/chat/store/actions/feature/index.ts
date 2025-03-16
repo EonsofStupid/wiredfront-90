@@ -1,13 +1,20 @@
 
-import { StoreWithDevtools, FeatureActions, FeatureKey } from './types';
-import { createToggleActions } from './toggle/index';
-import { createTokenActions } from './token/index';
+import { createToggleActions } from './toggle';
+import { createTokenActions } from './token'; 
+import { SetState, GetState } from './types';
+import { ChatState } from '../../types/chat-store-types';
 
-// Export the FeatureKey type for usage throughout the application
-export type { FeatureKey };
+export const createFeatureActions = (set: SetState<ChatState>, get: GetState<ChatState>) => {
+  // Create individual action groups
+  const toggleActions = createToggleActions(set, get);
+  const tokenActions = createTokenActions(set, get);
 
-// Create the complete feature actions by combining toggle and token actions
-export const createFeatureActions: StoreWithDevtools = (set, get, api) => ({
-  ...createToggleActions(set, get),
-  ...createTokenActions(set, get)
-});
+  // Combine all feature-related actions
+  return {
+    ...toggleActions,
+    ...tokenActions,
+  };
+};
+
+// Re-export types
+export * from './types';
