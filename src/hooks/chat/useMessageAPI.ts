@@ -5,8 +5,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 
 export const useMessageAPI = () => {
-  // Use destructuring to access only what we need from the store
-  const addMessageToStore = useChatStore(state => state.addMessage);
+  // Access the specific functions we need from the store
+  // The store has an addMessage function as defined in chatStore.ts
+  const addMessageToChat = useChatStore((state) => state.addMessage);
   const isWaitingForResponse = useChatStore(state => state.isWaitingForResponse);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -18,7 +19,7 @@ export const useMessageAPI = () => {
       
       // Add user message to chat
       const messageId = uuidv4();
-      addMessageToStore({
+      addMessageToChat({
         id: messageId,
         content,
         role: 'user',
@@ -28,7 +29,7 @@ export const useMessageAPI = () => {
       // Here you would typically call your API to get a response
       // For now, we'll simulate a response after a delay
       setTimeout(() => {
-        addMessageToStore({
+        addMessageToChat({
           id: uuidv4(),
           content: `Response to: ${content}`,
           role: 'assistant',
