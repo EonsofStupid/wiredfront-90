@@ -7,6 +7,7 @@ import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 import { useFeatureFlags } from './useFeatureFlags';
 import { KnownFeatureFlag } from '@/types/admin/settings/feature-flags';
 import { isTokenEnforcementMode } from '@/utils/token-utils';
+import { convertFeatureKeyToChatFeature } from '@/components/chat/store/actions/feature/types';
 
 export function useTokenManagement() {
   const { tokenControl, setTokenEnforcementMode, addTokens, spendTokens, setTokenBalance } = useChatStore();
@@ -70,8 +71,9 @@ export function useTokenManagement() {
           }
           
           // Enable token enforcement feature flag if it's enabled in settings
-          if (data.enforcement_mode !== 'never' && !isEnabled(KnownFeatureFlag.TOKEN_CONTROL)) {
-            toggleFeature(KnownFeatureFlag.TOKEN_CONTROL);
+          const tokenEnforcementKey = convertFeatureKeyToChatFeature(KnownFeatureFlag.TOKEN_CONTROL);
+          if (data.enforcement_mode !== 'never' && tokenEnforcementKey && !isEnabled(KnownFeatureFlag.TOKEN_CONTROL)) {
+            toggleFeature(tokenEnforcementKey);
           }
         }
       } catch (error) {
@@ -90,8 +92,14 @@ export function useTokenManagement() {
     try {
       setIsSubmitting(true);
       
+      // Convert to chat feature key
+      const tokenEnforcementKey = convertFeatureKeyToChatFeature(KnownFeatureFlag.TOKEN_CONTROL);
+      if (!tokenEnforcementKey) {
+        throw new Error('Failed to map TOKEN_CONTROL to a chat feature key');
+      }
+      
       // Toggle the feature flag
-      toggleFeature(KnownFeatureFlag.TOKEN_CONTROL);
+      toggleFeature(tokenEnforcementKey);
       
       // If it's being enabled, set the enforcement mode to 'always'
       // If it's being disabled, set it to 'never'
@@ -136,14 +144,20 @@ export function useTokenManagement() {
         throw error;
       }
       
+      // Get chat feature key
+      const tokenEnforcementKey = convertFeatureKeyToChatFeature(KnownFeatureFlag.TOKEN_CONTROL);
+      if (!tokenEnforcementKey) {
+        throw new Error('Failed to map TOKEN_CONTROL to a chat feature key');
+      }
+      
       // If mode is 'never', ensure tokenEnforcement feature is disabled
       if (mode === 'never' && isEnabled(KnownFeatureFlag.TOKEN_CONTROL)) {
-        toggleFeature(KnownFeatureFlag.TOKEN_CONTROL);
+        toggleFeature(tokenEnforcementKey);
       }
       
       // If mode is not 'never', ensure tokenEnforcement feature is enabled
       if (mode !== 'never' && !isEnabled(KnownFeatureFlag.TOKEN_CONTROL)) {
-        toggleFeature(KnownFeatureFlag.TOKEN_CONTROL);
+        toggleFeature(tokenEnforcementKey);
       }
       
       toast.success('Token enforcement settings updated');

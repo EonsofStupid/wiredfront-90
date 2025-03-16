@@ -2,10 +2,10 @@
 import { StateCreator } from 'zustand';
 import { ChatState, ChatProvider } from "../../types/chat-store-types";
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
-import { KnownFeatureFlag } from '@/types/admin/settings/feature-flags';
+import { KnownFeatureFlag, ChatFeatureKey } from '@/types/admin/settings/feature-flags';
 
-// Export KnownFeatureFlag as FeatureKey for usage throughout the application
-export type FeatureKey = keyof ChatState['features'] | KnownFeatureFlag;
+// Export feature key types for usage throughout the application
+export type FeatureKey = ChatFeatureKey | KnownFeatureFlag;
 
 // Define proper Zustand types for state management
 export type SetState<T> = (
@@ -17,10 +17,10 @@ export type SetState<T> = (
 export type GetState<T> = () => T;
 
 export interface FeatureActions {
-  toggleFeature: (feature: keyof ChatState['features']) => void;
-  enableFeature: (feature: keyof ChatState['features']) => void;
-  disableFeature: (feature: keyof ChatState['features']) => void;
-  setFeatureState: (feature: keyof ChatState['features'], isEnabled: boolean) => void;
+  toggleFeature: (feature: ChatFeatureKey) => void;
+  enableFeature: (feature: ChatFeatureKey) => void;
+  disableFeature: (feature: ChatFeatureKey) => void;
+  setFeatureState: (feature: ChatFeatureKey, isEnabled: boolean) => void;
   updateChatProvider: (providers: ChatProvider[]) => void;
   updateCurrentProvider: (provider: ChatProvider) => void;
   updateAvailableProviders: (providers: ChatProvider[]) => void;
@@ -38,3 +38,38 @@ export type StoreWithDevtools = StateCreator<
   [],
   FeatureActions
 >;
+
+// Helper function to convert between KnownFeatureFlag and ChatFeatureKey
+export function convertFeatureKeyToChatFeature(key: FeatureKey): ChatFeatureKey | null {
+  // If it's already a ChatFeatureKey, return it directly
+  if (typeof key === 'string' && 
+      ['voice', 'rag', 'modeSwitch', 'notifications', 'github',
+       'codeAssistant', 'ragSupport', 'githubSync', 'tokenEnforcement'].includes(key)) {
+    return key as ChatFeatureKey;
+  }
+  
+  // Handle KnownFeatureFlag values
+  switch (key) {
+    case KnownFeatureFlag.VOICE:
+      return 'voice';
+    case KnownFeatureFlag.RAG:
+      return 'rag';
+    case KnownFeatureFlag.MODE_SWITCH:
+      return 'modeSwitch';
+    case KnownFeatureFlag.NOTIFICATIONS:
+      return 'notifications';
+    case KnownFeatureFlag.GITHUB_INTEGRATION:
+      return 'github';
+    case KnownFeatureFlag.CODE_ASSISTANT:
+      return 'codeAssistant';
+    case KnownFeatureFlag.RAG_SUPPORT:
+      return 'ragSupport';
+    case KnownFeatureFlag.GITHUB_SYNC:
+      return 'githubSync';
+    case KnownFeatureFlag.TOKEN_ENFORCEMENT:
+    case KnownFeatureFlag.TOKEN_CONTROL:
+      return 'tokenEnforcement';
+    default:
+      return null;
+  }
+}

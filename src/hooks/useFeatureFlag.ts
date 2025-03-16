@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import { useRoleStore } from "@/stores/role";
-import { FeatureFlag } from "@/types/admin/settings/feature-flags";
+import { FeatureFlag, mapFeatureFlagToChat } from "@/types/admin/settings/feature-flags";
 import { AppRole } from "@/integrations/supabase/types/enums";
 
 export function useFeatureFlag(flagKey: string) {
@@ -76,7 +76,9 @@ export function useFeatureFlag(flagKey: string) {
   return {
     isEnabled: isEnabled(),
     isLoading,
-    featureFlag: data
+    featureFlag: data,
+    // Add helper for chat features
+    chatFeatureKey: data?.key ? mapFeatureFlagToChat(data.key as any) : null
   };
 }
 

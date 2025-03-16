@@ -9,9 +9,10 @@ import { useChatStore } from "@/components/chat/store/chatStore";
 import { ArrowLeftRight, Pin, PinOff, RotateCcw, Palette } from "lucide-react";
 import { toast } from "sonner";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
-import { FeatureKey } from "@/components/chat/store/actions/feature-actions";
+import { KnownFeatureFlag, ChatFeatureKey } from "@/types/admin/settings/feature-flags";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { convertFeatureKeyToChatFeature } from "@/components/chat/store/actions/feature/types";
 
 export const ChatFeatureSettings = () => {
   const { position, togglePosition, docked, toggleDocked, scale, setScale } = useChatStore();
@@ -26,11 +27,16 @@ export const ChatFeatureSettings = () => {
   const [chatHeight, setChatHeight] = useState("500");
   
   const handleReset = () => {
-    // Reset all features to default
-    if (!features.codeAssistant) toggleFeature('codeAssistant' as FeatureKey);
-    if (!features.ragSupport) toggleFeature('ragSupport' as FeatureKey);
-    if (!features.githubSync) toggleFeature('githubSync' as FeatureKey);
-    if (!features.notifications) toggleFeature('notifications' as FeatureKey);
+    // Reset all features to default using proper feature key mapping
+    const codeAssistantKey = convertFeatureKeyToChatFeature(KnownFeatureFlag.CODE_ASSISTANT);
+    const ragSupportKey = convertFeatureKeyToChatFeature(KnownFeatureFlag.RAG_SUPPORT);
+    const githubSyncKey = convertFeatureKeyToChatFeature(KnownFeatureFlag.GITHUB_SYNC);
+    const notificationsKey = convertFeatureKeyToChatFeature(KnownFeatureFlag.NOTIFICATIONS);
+    
+    if (codeAssistantKey && !features.codeAssistant) toggleFeature(codeAssistantKey);
+    if (ragSupportKey && !features.ragSupport) toggleFeature(ragSupportKey);
+    if (githubSyncKey && !features.githubSync) toggleFeature(githubSyncKey);
+    if (notificationsKey && !features.notifications) toggleFeature(notificationsKey);
     
     // Reset styling to defaults
     setChatBg("rgba(0, 0, 0, 0.3)");
@@ -54,6 +60,16 @@ export const ChatFeatureSettings = () => {
     document.documentElement.style.setProperty('--chat-height', `${chatHeight}px`);
     
     toast.success("Chat styling updated successfully");
+  };
+
+  // Helper to toggle feature with proper type mapping
+  const handleToggleFeature = (flag: KnownFeatureFlag) => {
+    const chatFeatureKey = convertFeatureKeyToChatFeature(flag);
+    if (chatFeatureKey) {
+      toggleFeature(chatFeatureKey);
+    } else {
+      toast.error(`Cannot toggle this feature: ${flag}`);
+    }
   };
 
   return (
@@ -126,7 +142,7 @@ export const ChatFeatureSettings = () => {
                     <Switch 
                       id="codeAssistant" 
                       checked={features.codeAssistant} 
-                      onCheckedChange={() => toggleFeature('codeAssistant' as FeatureKey)}
+                      onCheckedChange={() => handleToggleFeature(KnownFeatureFlag.CODE_ASSISTANT)}
                       disabled={isUpdating}
                     />
                   </TooltipTrigger>
@@ -148,7 +164,7 @@ export const ChatFeatureSettings = () => {
                     <Switch 
                       id="ragSupport" 
                       checked={features.ragSupport} 
-                      onCheckedChange={() => toggleFeature('ragSupport' as FeatureKey)}
+                      onCheckedChange={() => handleToggleFeature(KnownFeatureFlag.RAG_SUPPORT)}
                       disabled={isUpdating}
                     />
                   </TooltipTrigger>
@@ -170,7 +186,7 @@ export const ChatFeatureSettings = () => {
                     <Switch 
                       id="githubSync" 
                       checked={features.githubSync} 
-                      onCheckedChange={() => toggleFeature('githubSync' as FeatureKey)}
+                      onCheckedChange={() => handleToggleFeature(KnownFeatureFlag.GITHUB_SYNC)}
                       disabled={isUpdating}
                     />
                   </TooltipTrigger>
@@ -192,7 +208,7 @@ export const ChatFeatureSettings = () => {
                     <Switch 
                       id="notifications" 
                       checked={features.notifications} 
-                      onCheckedChange={() => toggleFeature('notifications' as FeatureKey)}
+                      onCheckedChange={() => handleToggleFeature(KnownFeatureFlag.NOTIFICATIONS)}
                       disabled={isUpdating}
                     />
                   </TooltipTrigger>

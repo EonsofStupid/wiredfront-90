@@ -5,7 +5,7 @@ export type TokenEnforcementMode = 'always' | 'never' | 'role_based' | 'mode_bas
 // Chat modes 
 export type ChatMode = 'chat' | 'chat-only' | 'dev' | 'image' | 'training';
 
-// Define app roles
+// Define app roles - ensuring consistency with feature-flags.ts
 export type AppRole = 'super_admin' | 'admin' | 'developer' | 'subscriber' | 'guest';
 
 // Define validation statuses
@@ -17,17 +17,18 @@ export type MessageType = 'text' | 'command' | 'system';
 // Define setting types
 export type SettingType = 'string' | 'number' | 'boolean' | 'json' | 'array';
 
-// Define feature flag types
-export enum KnownFeatureFlag {
-  DEV_MODE = 'dev_mode',
-  BETA_FEATURES = 'beta_features',
-  AI_FEATURES = 'ai_features',
-  GITHUB_INTEGRATION = 'github_integration',
-  RAG_SUPPORT = 'rag_support',
-  TOKEN_ENFORCEMENT = 'token_enforcement',
-  EXPERIMENTAL = 'experimental',
-  CODE_ASSISTANT = 'code_assistant',
-  GITHUB_SYNC = 'github_sync',
-  NOTIFICATIONS = 'notifications',
-  TOKEN_CONTROL = 'token_control'
-}
+// Using the same enum from feature-flags.ts for consistency
+import { KnownFeatureFlag } from '@/types/admin/settings/feature-flags';
+export { KnownFeatureFlag };
+
+// Export chat feature type to ensure consistency
+export type ChatFeatureKey = 
+  | 'voice'
+  | 'rag'
+  | 'modeSwitch'
+  | 'notifications'
+  | 'github'
+  | 'codeAssistant'
+  | 'ragSupport'
+  | 'githubSync'
+  | 'tokenEnforcement';
