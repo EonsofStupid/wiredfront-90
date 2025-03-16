@@ -99,6 +99,8 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
   const chatContainerClasses = `
     chat-container 
     chat-component
+    chat-glass-card
+    chat-cyber-border
     ${isMinimized ? 'chat-minimized' : 'chat-expanded'} 
     ${docked ? 'chat-docked' : 'chat-floating'}
     ${(mode === 'dev' && isEditorPage) ? 'chat-editor-mode' : ''}
@@ -108,7 +110,6 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
 
   const headerClasses = `
     chat-header 
-    flex items-center justify-between p-3
     ${isDragging ? 'cursor-grabbing' : docked ? 'cursor-default' : 'cursor-grab'}
   `;
 
@@ -165,7 +166,7 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
       
       {/* Chat content area */}
       {!isMinimized && (
-        <div className="chat-content-wrapper flex-1 overflow-auto p-4" ref={scrollRef}>
+        <div className="chat-content-wrapper chat-messages-container" ref={scrollRef}>
           {children || <ChatContent />}
         </div>
       )}

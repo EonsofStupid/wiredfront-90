@@ -53,7 +53,7 @@ export function ChatHeader({
 
   return (
     <motion.div 
-      className="p-4 flex flex-row justify-between items-center chat-header"
+      className="chat-header"
       style={{ position: 'relative', zIndex: 'var(--z-chat)' }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -64,7 +64,7 @@ export function ChatHeader({
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 hover:bg-white/10 transition-colors duration-200"
+          className="chat-control-button h-8 w-8"
           onClick={(e) => handleButtonClick(e, onToggleSidebar)}
           title={showSidebar ? "Hide sidebar" : "Show sidebar"}
           data-testid="toggle-sidebar-button"
@@ -80,23 +80,22 @@ export function ChatHeader({
           <HoverCardTrigger asChild>
             <button 
               onClick={() => setModeDialogOpen(true)}
-              className={`font-mono text-sm md:text-base bg-gradient-to-r from-[#1EAEDB] to-[#33C3F0] bg-clip-text text-transparent 
+              className="chat-neon-glow font-mono text-sm md:text-base bg-gradient-to-r chat-cyber-border
                 font-bold hover:scale-105 transition-transform duration-200 cursor-pointer
-                shadow-[0_0_10px_rgba(30,174,219,0.3)] px-2 py-1 rounded`}
+                px-2 py-1 rounded"
             >
               {getModeLabel()}
             </button>
           </HoverCardTrigger>
           <HoverCardContent 
-            className="w-64 backdrop-blur-md bg-black/80 border border-[#1EAEDB]/20
-            text-[#1EAEDB] shadow-lg shadow-[#1EAEDB]/20">
+            className="chat-glass-card chat-cyber-border w-64 text-chat-knowledge-text">
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-[#33C3F0]">Session Stats</h4>
+              <h4 className="text-sm font-semibold">Session Stats</h4>
               <div className="text-xs space-y-1.5">
                 <p>Messages: {messageCount}</p>
                 <p>AI Responses: {aiResponses}</p>
                 <p>Duration: {sessionDuration} min</p>
-                <p className="italic text-xs text-[#1EAEDB]/70 mt-1">Click for more options</p>
+                <p className="italic text-xs mt-1 opacity-70">Click for more options</p>
               </div>
             </div>
           </HoverCardContent>
@@ -108,13 +107,13 @@ export function ChatHeader({
         />
       </div>
 
-      <div className="flex gap-1">
+      <div className="chat-controls flex gap-1">
         <ChatPositionToggle />
         
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 hover:bg-white/10 transition-colors duration-200"
+          className="chat-control-button h-8 w-8"
           onClick={(e) => handleButtonClick(e, toggleDocked)}
           title={docked ? "Undock chat" : "Dock chat"}
           data-testid="toggle-dock-button"
@@ -129,7 +128,7 @@ export function ChatHeader({
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 hover:bg-white/10 transition-colors duration-200"
+          className="chat-control-button h-8 w-8"
           onClick={(e) => handleButtonClick(e, onMinimize)}
           title={isMinimized ? "Maximize chat" : "Minimize chat"}
           data-testid="minimize-button"
@@ -140,7 +139,7 @@ export function ChatHeader({
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 hover:bg-white/10 transition-colors duration-200"
+          className="chat-control-button h-8 w-8" 
           onClick={(e) => handleButtonClick(e, onClose)}
           title="Close chat"
           data-testid="close-button"

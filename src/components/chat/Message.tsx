@@ -65,9 +65,9 @@ const Message = memo(function Message({
     >
       <Card
         className={cn(
-          "chat-message-bubble max-w-[80%] px-4 py-2 shadow-sm transition-all duration-200",
+          "chat-message-bubble",
           messageClass,
-          status === 'failed' && "chat-message-failed border-destructive hover:border-destructive/70 cursor-pointer"
+          status === 'failed' && "chat-message-failed"
         )}
         onClick={status === 'failed' ? handleRetryClick : undefined}
         tabIndex={status === 'failed' ? 0 : undefined}
@@ -80,7 +80,7 @@ const Message = memo(function Message({
         } : undefined}
       >
         <div className="chat-message-content flex items-start gap-2">
-          <p className="chat-message-text text-sm leading-relaxed break-words whitespace-pre-wrap">{content}</p>
+          <p className="chat-message-text">{content}</p>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -94,7 +94,7 @@ const Message = memo(function Message({
               <TooltipContent side="top" className="chat-tooltip-content text-xs">
                 <p>{tooltip}</p>
                 {timestamp && (
-                  <p className="chat-message-timestamp text-xs text-muted-foreground mt-1">
+                  <p className="chat-message-timestamp">
                     {new Date(timestamp).toLocaleTimeString()}
                   </p>
                 )}

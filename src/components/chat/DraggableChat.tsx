@@ -55,7 +55,7 @@ export function DraggableChat() {
   return (
     <DndContext>
       <motion.div 
-        className={`fixed bottom-4 ${positionClass} flex gap-4 z-[var(--z-chat)]`}
+        className={`fixed bottom-4 ${positionClass} flex gap-4 chat-component`}
         style={{ 
           transformOrigin: position === 'bottom-right' ? 'bottom right' : 'bottom left'
         }}

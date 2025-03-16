@@ -12,7 +12,7 @@ const ChatToggleButton: React.FC<ChatToggleButtonProps> = ({ onClick }) => {
   return (
     <button
       onClick={onClick}
-      className="chat-toggle-button"
+      className="chat-toggle-button chat-cyber-border"
       aria-label="Open chat"
     >
       <MessageCircle className="h-5 w-5 mr-2" />

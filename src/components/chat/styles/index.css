@@ -71,6 +71,24 @@
   border-radius: var(--chat-border-radius);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: var(--chat-box-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.chat-glass-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom right,
+    rgba(0, 255, 255, 0.1),
+    transparent,
+    rgba(255, 0, 127, 0.1)
+  );
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: -1;
+  border-radius: inherit;
 }
 
 /* Chat neon border effect */
@@ -82,10 +100,24 @@
 /* Chat cyber border effect */
 .chat-cyber-border {
   box-shadow: var(--chat-cyber-glow);
-  border: 1px solid rgba(30, 174, 219, 0.3);
+  border: 1px solid var(--chat-knowledge-border);
+}
+
+/* Chat neon glow text effect */
+.chat-neon-glow {
+  text-shadow: 0 0 10px rgba(139, 92, 246, 0.8);
+  color: var(--chat-knowledge-text);
 }
 
 /* Chat messages container with custom scrollbar */
+.chat-messages-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  overflow-y: auto;
+  flex: 1;
+  padding: 1rem;
+}
+
 .chat-messages-container::-webkit-scrollbar {
   width: var(--chat-scrollbar-width);
 }
@@ -102,4 +134,34 @@
 
 .chat-messages-container::-webkit-scrollbar-thumb:hover {
   background: rgba(139, 92, 246, 0.5);
+}
+
+/* Dialog content for chat */
+.chat-dialog-content {
+  background: var(--chat-knowledge-bg);
+  border: 1px solid var(--chat-knowledge-border);
+  color: var(--chat-text);
+}
+
+/* Chat input styling */
+.chat-input {
+  background-color: var(--chat-input-bg);
+  color: var(--chat-input-text);
+  border-color: var(--chat-input-border);
+}
+
+.chat-input::placeholder {
+  color: var(--chat-input-placeholder);
+}
+
+.chat-input:focus {
+  border-color: var(--chat-input-focus-border);
+  box-shadow: var(--chat-input-focus-glow);
+}
+
+/* Chat tooltip styling */
+.chat-tooltip-content {
+  background-color: var(--chat-knowledge-bg);
+  border: 1px solid var(--chat-knowledge-border);
+  color: var(--chat-knowledge-text);
 }
