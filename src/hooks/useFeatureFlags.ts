@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useChatStore } from "@/components/chat/store/chatStore";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +7,7 @@ import { toast } from "sonner";
 import { useFeatureUsage } from "./useFeatureUsage";
 
 export type FeatureKey = 'voice' | 'rag' | 'modeSwitch' | 'notifications' | 'github' | 
-                         'codeAssistant' | 'ragSupport' | 'githubSync';
+                         'codeAssistant' | 'ragSupport' | 'githubSync' | 'tokenEnforcement';
 
 export function useFeatureFlags() {
   const { features, toggleFeature, enableFeature, disableFeature, setFeatureState } = useChatStore();
