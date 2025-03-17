@@ -33,7 +33,7 @@ export class RouteLoggingService {
       };
 
       // Insert into system logs
-      await supabase.from('system_logs').insert([logData] as any);
+      await supabase.from('system_logs' as any).insert([logData]);
 
       // Also log to console
       logger.info(`Navigation: ${from} → ${to}`, { from, to });
@@ -66,10 +66,49 @@ export class RouteLoggingService {
       };
 
       // Log to system logs
-      await supabase.from('system_logs').insert([logData] as any);
+      await supabase.from('system_logs' as any).insert([logData]);
 
     } catch (error) {
       console.error('Error logging feature view:', error);
+    }
+  }
+
+  /**
+   * Get navigation logs for the dashboard
+   * 
+   * @param limit Maximum number of logs to return
+   * @param includeAllUsers Whether to include logs from all users or just the current user
+   * @returns Array of navigation logs
+   */
+  static async getNavigationLogs(limit: number = 50, includeAllUsers: boolean = false) {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id;
+
+      if (!userId) return [];
+
+      let query = supabase
+        .from('system_logs' as any)
+        .select('*')
+        .eq('source', 'navigation')
+        .order('timestamp', { ascending: false })
+        .limit(limit);
+
+      // If we only want the current user's logs, add that constraint
+      if (!includeAllUsers) {
+        query = query.eq('user_id', userId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      logger.error('Error fetching navigation logs:', error);
+      return [];
     }
   }
 }

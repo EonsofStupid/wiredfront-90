@@ -9,8 +9,22 @@ import { RouteLoggingService } from "@/services/navigation/RouteLoggingService";
 import { formatDistanceToNow } from "date-fns";
 import { Loader2, RotateCcw, Download, Filter } from "lucide-react";
 
+interface NavigationLog {
+  id: string;
+  timestamp: string;
+  message: string;
+  metadata: {
+    from?: string;
+    to?: string;
+    previousRoute?: string;
+    currentRoute?: string;
+    [key: string]: any;
+  };
+  user_id?: string;
+}
+
 export function NavigationLogsPanel() {
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<NavigationLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<'all' | 'user'>('all');
@@ -21,7 +35,7 @@ export function NavigationLogsPanel() {
     
     try {
       const data = await RouteLoggingService.getNavigationLogs(50, view === 'all');
-      setLogs(data);
+      setLogs(data as NavigationLog[]);
     } catch (err: any) {
       setError(err.message || 'Failed to load navigation logs');
     } finally {
@@ -102,7 +116,7 @@ export function NavigationLogsPanel() {
 }
 
 interface NavigationLogsListProps {
-  logs: any[];
+  logs: NavigationLog[];
   isLoading: boolean;
   error: string | null;
 }
@@ -141,14 +155,14 @@ function NavigationLogsList({ logs, isLoading, error }: NavigationLogsListProps)
               <div>
                 <p className="font-medium">{log.message}</p>
                 <div className="flex flex-wrap gap-2 mt-1">
-                  {log.metadata.previousRoute && (
+                  {(log.metadata.previousRoute || log.metadata.from) && (
                     <Badge variant="outline" className="text-xs">
-                      From: {log.metadata.previousRoute}
+                      From: {log.metadata.previousRoute || log.metadata.from}
                     </Badge>
                   )}
-                  {log.metadata.currentRoute && (
+                  {(log.metadata.currentRoute || log.metadata.to) && (
                     <Badge variant="secondary" className="text-xs">
-                      To: {log.metadata.currentRoute}
+                      To: {log.metadata.currentRoute || log.metadata.to}
                     </Badge>
                   )}
                 </div>

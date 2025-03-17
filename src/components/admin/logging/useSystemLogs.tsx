@@ -46,11 +46,13 @@ export function useSystemLogs() {
       if (fetchError) throw fetchError;
       
       if (data) {
-        setLogs(data as SystemLog[]);
+        // Safely cast the data to our SystemLog type
+        const typedData = data as SystemLog[];
+        setLogs(typedData);
         
         // Extract unique sources for the filter
-        const sources = [...new Set(data.map((log: SystemLog) => log.source))];
-        setUniqueSources(sources as string[]);
+        const sources = [...new Set(typedData.map(log => log.source))];
+        setUniqueSources(sources);
       }
     } catch (err) {
       console.error("Error fetching logs:", err);
