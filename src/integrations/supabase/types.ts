@@ -69,10 +69,12 @@ export type Database = {
           grpc_endpoint: string | null
           id: string
           index_name: string | null
+          is_active: boolean | null
           is_default: boolean | null
           is_enabled: boolean | null
           last_error_message: string | null
           last_successful_use: string | null
+          last_used: string | null
           last_validated: string | null
           memorable_name: string
           model_preferences: Json | null
@@ -80,6 +82,9 @@ export type Database = {
           priority: number | null
           provider_category: string | null
           provider_settings: Json | null
+          provider_type:
+            | Database["public"]["Enums"]["chat_provider_type"]
+            | null
           read_only_key: string | null
           role_assignments: Json | null
           rotation_priority: number | null
@@ -115,10 +120,12 @@ export type Database = {
           grpc_endpoint?: string | null
           id?: string
           index_name?: string | null
+          is_active?: boolean | null
           is_default?: boolean | null
           is_enabled?: boolean | null
           last_error_message?: string | null
           last_successful_use?: string | null
+          last_used?: string | null
           last_validated?: string | null
           memorable_name: string
           model_preferences?: Json | null
@@ -126,6 +133,9 @@ export type Database = {
           priority?: number | null
           provider_category?: string | null
           provider_settings?: Json | null
+          provider_type?:
+            | Database["public"]["Enums"]["chat_provider_type"]
+            | null
           read_only_key?: string | null
           role_assignments?: Json | null
           rotation_priority?: number | null
@@ -161,10 +171,12 @@ export type Database = {
           grpc_endpoint?: string | null
           id?: string
           index_name?: string | null
+          is_active?: boolean | null
           is_default?: boolean | null
           is_enabled?: boolean | null
           last_error_message?: string | null
           last_successful_use?: string | null
+          last_used?: string | null
           last_validated?: string | null
           memorable_name?: string
           model_preferences?: Json | null
@@ -172,6 +184,9 @@ export type Database = {
           priority?: number | null
           provider_category?: string | null
           provider_settings?: Json | null
+          provider_type?:
+            | Database["public"]["Enums"]["chat_provider_type"]
+            | null
           read_only_key?: string | null
           role_assignments?: Json | null
           rotation_priority?: number | null
@@ -374,45 +389,84 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_providers: {
+        Row: {
+          available_models: string[] | null
+          base_url: string | null
+          config_schema: Json
+          created_at: string | null
+          default_model: string | null
+          description: string | null
+          id: string
+          is_enabled: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          available_models?: string[] | null
+          base_url?: string | null
+          config_schema: Json
+          created_at?: string | null
+          default_model?: string | null
+          description?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          available_models?: string[] | null
+          base_url?: string | null
+          config_schema?: Json
+          created_at?: string | null
+          default_model?: string | null
+          description?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       chat_sessions: {
         Row: {
+          context: Json | null
           created_at: string | null
-          dev_metadata: Json | null
           id: string
           is_active: boolean | null
           last_accessed: string | null
           metadata: Json | null
-          mode: string | null
+          mode: Database["public"]["Enums"]["chat_mode_type"] | null
           project_id: string | null
-          revert_history: Json | null
+          provider_id: string | null
           title: string | null
           tokens_used: number | null
           user_id: string
         }
         Insert: {
+          context?: Json | null
           created_at?: string | null
-          dev_metadata?: Json | null
           id?: string
           is_active?: boolean | null
           last_accessed?: string | null
           metadata?: Json | null
-          mode?: string | null
+          mode?: Database["public"]["Enums"]["chat_mode_type"] | null
           project_id?: string | null
-          revert_history?: Json | null
+          provider_id?: string | null
           title?: string | null
           tokens_used?: number | null
           user_id: string
         }
         Update: {
+          context?: Json | null
           created_at?: string | null
-          dev_metadata?: Json | null
           id?: string
           is_active?: boolean | null
           last_accessed?: string | null
           metadata?: Json | null
-          mode?: string | null
+          mode?: Database["public"]["Enums"]["chat_mode_type"] | null
           project_id?: string | null
-          revert_history?: Json | null
+          provider_id?: string | null
           title?: string | null
           tokens_used?: number | null
           user_id?: string
@@ -426,10 +480,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "chat_sessions_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "chat_sessions_provider_id_fkey"
+            columns: ["provider_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "api_configurations"
             referencedColumns: ["id"]
           },
         ]
@@ -563,15 +617,7 @@ export type Database = {
           revert_status?: string | null
           session_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "dev_session_reverts_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "chat_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       document_categories: {
         Row: {
@@ -644,6 +690,30 @@ export type Database = {
           },
         ]
       }
+      feature_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       feature_flag_categories: {
         Row: {
           created_at: string | null
@@ -675,17 +745,15 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           description: string | null
-          enabled: boolean
-          feature_type: string | null
+          enabled: boolean | null
           id: string
           key: string
           metadata: Json | null
           name: string
           rollout_percentage: number | null
-          supported_modes: Database["public"]["Enums"]["chat_mode"][] | null
-          target_roles: Database["public"]["Enums"]["app_role"][] | null
+          target_roles: string[] | null
+          target_tiers: string[] | null
           updated_at: string | null
-          updated_by: string | null
         }
         Insert: {
           category_id?: string | null
@@ -693,17 +761,15 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           description?: string | null
-          enabled?: boolean
-          feature_type?: string | null
+          enabled?: boolean | null
           id?: string
           key: string
           metadata?: Json | null
           name: string
           rollout_percentage?: number | null
-          supported_modes?: Database["public"]["Enums"]["chat_mode"][] | null
-          target_roles?: Database["public"]["Enums"]["app_role"][] | null
+          target_roles?: string[] | null
+          target_tiers?: string[] | null
           updated_at?: string | null
-          updated_by?: string | null
         }
         Update: {
           category_id?: string | null
@@ -711,24 +777,22 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           description?: string | null
-          enabled?: boolean
-          feature_type?: string | null
+          enabled?: boolean | null
           id?: string
           key?: string
           metadata?: Json | null
           name?: string
           rollout_percentage?: number | null
-          supported_modes?: Database["public"]["Enums"]["chat_mode"][] | null
-          target_roles?: Database["public"]["Enums"]["app_role"][] | null
+          target_roles?: string[] | null
+          target_tiers?: string[] | null
           updated_at?: string | null
-          updated_by?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "feature_flags_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
-            referencedRelation: "feature_flag_categories"
+            referencedRelation: "feature_categories"
             referencedColumns: ["id"]
           },
         ]
@@ -769,69 +833,6 @@ export type Database = {
           old_value?: boolean | null
           session_id?: string | null
           user_id?: string | null
-        }
-        Relationships: []
-      }
-      feature_usage: {
-        Row: {
-          context: Json | null
-          count: number | null
-          feature_name: string
-          id: string
-          used_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          context?: Json | null
-          count?: number | null
-          feature_name: string
-          id?: string
-          used_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          context?: Json | null
-          count?: number | null
-          feature_name?: string
-          id?: string
-          used_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      feature_usage_summary: {
-        Row: {
-          daily_count: number | null
-          feature_name: string
-          id: string
-          monthly_count: number | null
-          period_end: string
-          period_start: string
-          unique_users: number | null
-          updated_at: string | null
-          weekly_count: number | null
-        }
-        Insert: {
-          daily_count?: number | null
-          feature_name: string
-          id?: string
-          monthly_count?: number | null
-          period_end: string
-          period_start: string
-          unique_users?: number | null
-          updated_at?: string | null
-          weekly_count?: number | null
-        }
-        Update: {
-          daily_count?: number | null
-          feature_name?: string
-          id?: string
-          monthly_count?: number | null
-          period_end?: string
-          period_start?: string
-          unique_users?: number | null
-          updated_at?: string | null
-          weekly_count?: number | null
         }
         Relationships: []
       }
@@ -907,6 +908,63 @@ export type Database = {
         }
         Relationships: []
       }
+      github_connections: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          last_used: string | null
+          metadata: Json | null
+          oauth_token: string
+          refresh_token: string | null
+          scopes: string[] | null
+          status:
+            | Database["public"]["Enums"]["github_connection_status_type"]
+            | null
+          token_expires_at: string | null
+          updated_at: string | null
+          user_id: string
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          last_used?: string | null
+          metadata?: Json | null
+          oauth_token: string
+          refresh_token?: string | null
+          scopes?: string[] | null
+          status?:
+            | Database["public"]["Enums"]["github_connection_status_type"]
+            | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id: string
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          last_used?: string | null
+          metadata?: Json | null
+          oauth_token?: string
+          refresh_token?: string | null
+          scopes?: string[] | null
+          status?:
+            | Database["public"]["Enums"]["github_connection_status_type"]
+            | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
       github_metrics: {
         Row: {
           id: string
@@ -970,97 +1028,73 @@ export type Database = {
       github_repositories: {
         Row: {
           auto_sync: boolean | null
-          connection_id: string | null
+          connection_id: string
           created_at: string | null
+          default_branch: string | null
           id: string
+          is_active: boolean | null
           last_synced_at: string | null
-          project_id: string | null
+          metadata: Json | null
           repo_name: string
           repo_owner: string
           repo_url: string
-          sync_schedule: Json | null
-          sync_status: string | null
+          sync_frequency: string | null
+          sync_status:
+            | Database["public"]["Enums"]["github_sync_status_type"]
+            | null
           updated_at: string | null
+          user_id: string
+          webhook_id: string | null
           webhook_secret: string | null
         }
         Insert: {
           auto_sync?: boolean | null
-          connection_id?: string | null
+          connection_id: string
           created_at?: string | null
+          default_branch?: string | null
           id?: string
+          is_active?: boolean | null
           last_synced_at?: string | null
-          project_id?: string | null
+          metadata?: Json | null
           repo_name: string
           repo_owner: string
           repo_url: string
-          sync_schedule?: Json | null
-          sync_status?: string | null
+          sync_frequency?: string | null
+          sync_status?:
+            | Database["public"]["Enums"]["github_sync_status_type"]
+            | null
           updated_at?: string | null
+          user_id: string
+          webhook_id?: string | null
           webhook_secret?: string | null
         }
         Update: {
           auto_sync?: boolean | null
-          connection_id?: string | null
+          connection_id?: string
           created_at?: string | null
+          default_branch?: string | null
           id?: string
+          is_active?: boolean | null
           last_synced_at?: string | null
-          project_id?: string | null
+          metadata?: Json | null
           repo_name?: string
           repo_owner?: string
           repo_url?: string
-          sync_schedule?: Json | null
-          sync_status?: string | null
+          sync_frequency?: string | null
+          sync_status?:
+            | Database["public"]["Enums"]["github_sync_status_type"]
+            | null
           updated_at?: string | null
+          user_id?: string
+          webhook_id?: string | null
           webhook_secret?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "github_repositories_connection_id_fkey"
+            foreignKeyName: "fk_connection"
             columns: ["connection_id"]
             isOneToOne: false
-            referencedRelation: "github_connection_status"
-            referencedColumns: ["connection_id"]
-          },
-          {
-            foreignKeyName: "github_repositories_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      github_sync_logs: {
-        Row: {
-          created_at: string | null
-          details: Json | null
-          id: string
-          repo_id: string | null
-          status: string
-          sync_type: string
-        }
-        Insert: {
-          created_at?: string | null
-          details?: Json | null
-          id?: string
-          repo_id?: string | null
-          status: string
-          sync_type: string
-        }
-        Update: {
-          created_at?: string | null
-          details?: Json | null
-          id?: string
-          repo_id?: string | null
-          status?: string
-          sync_type?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "github_sync_logs_repo_id_fkey"
-            columns: ["repo_id"]
-            isOneToOne: false
-            referencedRelation: "github_repositories"
+            referencedRelation: "github_connections"
             referencedColumns: ["id"]
           },
         ]
@@ -1097,72 +1131,53 @@ export type Database = {
       }
       messages: {
         Row: {
-          chat_session_id: string | null
           content: string
           created_at: string | null
           id: string
-          is_minimized: boolean | null
-          last_accessed: string | null
-          last_retry: string | null
-          message_status: string | null
-          message_type: string | null
           metadata: Json | null
-          position: Json | null
-          rate_limit_window: string | null
-          retry_count: number | null
-          role: string | null
-          schema_version: string | null
-          type: Database["public"]["Enums"]["message_type"] | null
+          position: number | null
+          role: Database["public"]["Enums"]["message_role_type"]
+          session_id: string
+          status: string | null
+          tokens: number | null
           updated_at: string | null
           user_id: string
-          validation_status: string | null
-          window_state: Json | null
         }
         Insert: {
-          chat_session_id?: string | null
           content: string
           created_at?: string | null
           id?: string
-          is_minimized?: boolean | null
-          last_accessed?: string | null
-          last_retry?: string | null
-          message_status?: string | null
-          message_type?: string | null
           metadata?: Json | null
-          position?: Json | null
-          rate_limit_window?: string | null
-          retry_count?: number | null
-          role?: string | null
-          schema_version?: string | null
-          type?: Database["public"]["Enums"]["message_type"] | null
+          position?: number | null
+          role?: Database["public"]["Enums"]["message_role_type"]
+          session_id: string
+          status?: string | null
+          tokens?: number | null
           updated_at?: string | null
           user_id: string
-          validation_status?: string | null
-          window_state?: Json | null
         }
         Update: {
-          chat_session_id?: string | null
           content?: string
           created_at?: string | null
           id?: string
-          is_minimized?: boolean | null
-          last_accessed?: string | null
-          last_retry?: string | null
-          message_status?: string | null
-          message_type?: string | null
           metadata?: Json | null
-          position?: Json | null
-          rate_limit_window?: string | null
-          retry_count?: number | null
-          role?: string | null
-          schema_version?: string | null
-          type?: Database["public"]["Enums"]["message_type"] | null
+          position?: number | null
+          role?: Database["public"]["Enums"]["message_role_type"]
+          session_id?: string
+          status?: string | null
+          tokens?: number | null
           updated_at?: string | null
           user_id?: string
-          validation_status?: string | null
-          window_state?: Json | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       metrics: {
         Row: {
@@ -1941,37 +1956,37 @@ export type Database = {
         }
         Relationships: []
       }
-      system_logs: {
+      token_transaction_log: {
         Row: {
+          amount: number
+          created_at: string | null
+          description: string | null
           id: string
-          level: string
-          message: string
           metadata: Json | null
-          source: string
-          timestamp: string | null
-          user_id: string | null
+          transaction_type: string
+          user_id: string
         }
         Insert: {
+          amount: number
+          created_at?: string | null
+          description?: string | null
           id?: string
-          level: string
-          message: string
           metadata?: Json | null
-          source: string
-          timestamp?: string | null
-          user_id?: string | null
+          transaction_type: string
+          user_id: string
         }
         Update: {
+          amount?: number
+          created_at?: string | null
+          description?: string | null
           id?: string
-          level?: string
-          message?: string
           metadata?: Json | null
-          source?: string
-          timestamp?: string | null
-          user_id?: string | null
+          transaction_type?: string
+          user_id?: string
         }
         Relationships: []
       }
-      token_transaction_log: {
+      token_transactions: {
         Row: {
           amount: number
           created_at: string | null
@@ -2004,29 +2019,62 @@ export type Database = {
       token_usage: {
         Row: {
           context: Json | null
-          feature_name: string
+          cost: number | null
+          feature_key: string | null
           id: string
+          input_tokens: number | null
+          model: string
+          output_tokens: number | null
+          provider: string
+          session_id: string | null
           timestamp: string | null
-          tokens_used: number | null
-          user_id: string | null
+          total_tokens: number | null
+          user_id: string
         }
         Insert: {
           context?: Json | null
-          feature_name: string
+          cost?: number | null
+          feature_key?: string | null
           id?: string
+          input_tokens?: number | null
+          model: string
+          output_tokens?: number | null
+          provider: string
+          session_id?: string | null
           timestamp?: string | null
-          tokens_used?: number | null
-          user_id?: string | null
+          total_tokens?: number | null
+          user_id: string
         }
         Update: {
           context?: Json | null
-          feature_name?: string
+          cost?: number | null
+          feature_key?: string | null
           id?: string
+          input_tokens?: number | null
+          model?: string
+          output_tokens?: number | null
+          provider?: string
+          session_id?: string | null
           timestamp?: string | null
-          tokens_used?: number | null
-          user_id?: string | null
+          total_tokens?: number | null
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "token_usage_feature_key_fkey"
+            columns: ["feature_key"]
+            isOneToOne: false
+            referencedRelation: "feature_flags"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "token_usage_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_analytics: {
         Row: {
@@ -2067,6 +2115,47 @@ export type Database = {
         }
         Relationships: []
       }
+      user_provider_settings: {
+        Row: {
+          config: Json
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          is_enabled: boolean | null
+          provider_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          is_enabled?: boolean | null
+          provider_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          is_enabled?: boolean | null
+          provider_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_provider_settings_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "api_configurations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -2086,6 +2175,51 @@ export type Database = {
           created_at?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_token_balances: {
+        Row: {
+          balance: number | null
+          created_at: string | null
+          enforcement_mode: string | null
+          enforcement_settings: Json | null
+          free_query_limit: number | null
+          id: string
+          last_reset: string | null
+          tier: string | null
+          total_earned: number | null
+          total_spent: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          balance?: number | null
+          created_at?: string | null
+          enforcement_mode?: string | null
+          enforcement_settings?: Json | null
+          free_query_limit?: number | null
+          id?: string
+          last_reset?: string | null
+          tier?: string | null
+          total_earned?: number | null
+          total_spent?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          balance?: number | null
+          created_at?: string | null
+          enforcement_mode?: string | null
+          enforcement_settings?: Json | null
+          free_query_limit?: number | null
+          id?: string
+          last_reset?: string | null
+          tier?: string | null
+          total_earned?: number | null
+          total_spent?: number | null
           updated_at?: string | null
           user_id?: string
         }
@@ -2470,6 +2604,14 @@ export type Database = {
         | "code"
         | "editor"
         | "chat-only"
+      chat_mode_type: "standard" | "dev" | "image" | "planning" | "training"
+      chat_provider_type:
+        | "openai"
+        | "anthropic"
+        | "gemini"
+        | "huggingface"
+        | "ollama"
+        | "local"
       document_import_status: "pending" | "processing" | "completed" | "error"
       document_status: "pending" | "processing" | "completed" | "error"
       extended_validation_status:
@@ -2479,7 +2621,20 @@ export type Database = {
         | "rate_limited"
         | "error"
         | "pending"
+      github_connection_status_type:
+        | "active"
+        | "inactive"
+        | "error"
+        | "pending"
+        | "rate_limited"
+      github_sync_status_type:
+        | "pending"
+        | "in_progress"
+        | "completed"
+        | "failed"
+        | "scheduled"
       message_behavior_type: "enter_send" | "ctrl_enter"
+      message_role_type: "user" | "assistant" | "system" | "tool"
       message_type: "text" | "command" | "system" | "image"
       message_validation_status: "pending" | "valid" | "invalid"
       metric_status: "success" | "warning" | "error"
