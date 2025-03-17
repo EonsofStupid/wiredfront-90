@@ -1,109 +1,63 @@
 
-/* Cyberpunk Theme for Chat UI */
 :root {
-  --cyber-neon-blue: rgba(0, 255, 255, 0.8);
-  --cyber-neon-pink: rgba(255, 0, 127, 0.8);
-  --cyber-neon-purple: rgba(157, 0, 255, 0.8);
-  --cyber-dark: #0a0a0f;
-  --cyber-darker: rgba(0, 0, 0, 0.6);
-  --cyber-glow-blue: 0 0 10px var(--cyber-neon-blue), 0 0 20px rgba(0, 255, 255, 0.5);
-  --cyber-glow-pink: 0 0 10px var(--cyber-neon-pink), 0 0 20px rgba(255, 0, 127, 0.5);
-  --cyber-glow-purple: 0 0 10px var(--cyber-neon-purple), 0 0 20px rgba(157, 0, 255, 0.5);
+  --chat-neon-purple: #ff00d0;
+  --chat-neon-blue: #39ff14;
+  --chat-neon-green: #0aefff;
+  --chat-deep-purple: #1e0122;
 }
 
-/* Background styles */
+/* Cyberpunk chat styling */
+.chat-component {
+  font-family: 'Inter', sans-serif;
+}
+
+.chat-glass-card {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  backdrop-filter: blur(8px);
+}
+
+.chat-neon-border {
+  border: 1px solid rgba(255, 0, 208, 0.3);
+  box-shadow: 0 0 15px rgba(255, 0, 208, 0.3);
+}
+
 .cyber-bg {
-  background-color: var(--cyber-dark);
-  background-image: 
-    radial-gradient(circle at 10% 10%, rgba(0, 255, 255, 0.1), transparent 40%),
-    radial-gradient(circle at 90% 90%, rgba(255, 0, 127, 0.1), transparent 40%),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.8));
-  position: relative;
+  background: linear-gradient(135deg, rgba(30, 1, 34, 0.8) 0%, rgba(0, 0, 0, 0.9) 100%);
 }
 
-.cyber-bg::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--cyber-neon-blue), transparent);
-  opacity: 0.5;
+.cyber-pulse {
+  animation: pulse 3s infinite;
 }
 
-.cyber-bg::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--cyber-neon-pink), transparent);
-  opacity: 0.5;
-}
-
-/* Border styles */
 .cyber-border {
+  border: 1px solid rgba(10, 239, 255, 0.3);
+  border-radius: 4px;
   position: relative;
-  border: 1px solid rgba(0, 255, 255, 0.3);
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
-  overflow: hidden;
+  padding: 12px;
 }
 
 .cyber-border::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--cyber-neon-blue), transparent);
-  animation: cyber-border-glow 2s linear infinite;
-  z-index: 0;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  border-radius: 5px;
+  background: linear-gradient(90deg, 
+    rgba(10, 239, 255, 0), 
+    rgba(10, 239, 255, 0.3), 
+    rgba(10, 239, 255, 0)
+  );
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
 }
 
-.cyber-border-pink {
-  position: relative;
-  border: 1px solid rgba(255, 0, 127, 0.3);
-  box-shadow: 0 0 10px rgba(255, 0, 127, 0.2);
-  overflow: hidden;
-}
-
-.cyber-border-pink::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--cyber-neon-pink), transparent);
-  animation: cyber-border-glow 2s linear infinite;
-  z-index: 0;
-}
-
-/* Pulse effect */
-.cyber-pulse {
-  animation: cyber-pulse 3s infinite;
-}
-
-@keyframes cyber-pulse {
-  0% {
-    text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
-  }
-  50% {
-    text-shadow: 0 0 15px rgba(0, 255, 255, 0.8), 0 0 30px rgba(0, 255, 255, 0.4);
-  }
-  100% {
-    text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
-  }
-}
-
-/* Glitch text effect */
 .cyber-glitch {
   position: relative;
   display: inline-block;
-  color: white;
 }
 
 .cyber-glitch::before,
@@ -114,202 +68,123 @@
   left: 0;
   width: 100%;
   height: 100%;
-  opacity: 0.8;
+  opacity: 0;
 }
 
 .cyber-glitch::before {
-  animation: cyber-glitch-1 2s infinite;
-  color: var(--cyber-neon-blue);
+  color: #0aefff;
   z-index: -1;
+  animation: glitch-animation 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+  animation-play-state: paused;
 }
 
 .cyber-glitch::after {
-  animation: cyber-glitch-2 3s infinite;
-  color: var(--cyber-neon-pink);
+  color: #ff00d0;
   z-index: -2;
+  animation: glitch-animation 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) reverse both infinite;
+  animation-play-state: paused;
 }
 
-@keyframes cyber-glitch-1 {
+.cyber-glitch:hover::before,
+.cyber-glitch:hover::after {
+  animation-play-state: running;
+}
+
+@keyframes glitch-animation {
   0% {
-    clip-path: inset(20% 0 80% 0);
-    transform: translate(-1px, 0);
-  }
-  10% {
-    clip-path: inset(80% 0 20% 0);
-    transform: translate(1px, 0);
+    transform: translate(0);
+    opacity: 0;
   }
   20% {
-    clip-path: inset(40% 0 60% 0);
-    transform: translate(-1px, 0);
-  }
-  30% {
-    clip-path: inset(60% 0 40% 0);
-    transform: translate(1px, 0);
+    transform: translate(-2px, 1px);
+    opacity: 0.2;
   }
   40% {
-    clip-path: inset(20% 0 80% 0);
-    transform: translate(1px, 0);
-  }
-  50% {
-    clip-path: inset(10% 0 90% 0);
-    transform: translate(-1px, 0);
+    transform: translate(-2px, -1px);
+    opacity: 0;
   }
   60% {
-    clip-path: inset(30% 0 70% 0);
-    transform: translate(1px, 0);
-  }
-  70% {
-    clip-path: inset(70% 0 30% 0);
-    transform: translate(-1px, 0);
+    transform: translate(1px, 1px);
+    opacity: 0.2;
   }
   80% {
-    clip-path: inset(50% 0 50% 0);
-    transform: translate(1px, 0);
-  }
-  90% {
-    clip-path: inset(90% 0 10% 0);
-    transform: translate(-1px, 0);
+    transform: translate(1px, -1px);
+    opacity: 0;
   }
   100% {
-    clip-path: inset(20% 0 80% 0);
-    transform: translate(-1px, 0);
+    transform: translate(0);
+    opacity: 0;
   }
 }
 
-@keyframes cyber-glitch-2 {
-  0% {
-    clip-path: inset(80% 0 20% 0);
-    transform: translate(1px, 0);
-  }
-  10% {
-    clip-path: inset(20% 0 80% 0);
-    transform: translate(-1px, 0);
-  }
-  20% {
-    clip-path: inset(60% 0 40% 0);
-    transform: translate(1px, 0);
-  }
-  30% {
-    clip-path: inset(40% 0 60% 0);
-    transform: translate(-1px, 0);
-  }
-  40% {
-    clip-path: inset(80% 0 20% 0);
-    transform: translate(-1px, 0);
-  }
-  50% {
-    clip-path: inset(90% 0 10% 0);
-    transform: translate(1px, 0);
-  }
-  60% {
-    clip-path: inset(70% 0 30% 0);
-    transform: translate(-1px, 0);
-  }
-  70% {
-    clip-path: inset(30% 0 70% 0);
-    transform: translate(1px, 0);
-  }
-  80% {
-    clip-path: inset(50% 0 50% 0);
-    transform: translate(-1px, 0);
-  }
-  90% {
-    clip-path: inset(10% 0 90% 0);
-    transform: translate(1px, 0);
-  }
-  100% {
-    clip-path: inset(80% 0 20% 0);
-    transform: translate(1px, 0);
-  }
+@keyframes pulse {
+  0% { box-shadow: 0 0 5px rgba(10, 239, 255, 0.2); }
+  50% { box-shadow: 0 0 20px rgba(10, 239, 255, 0.4); }
+  100% { box-shadow: 0 0 5px rgba(10, 239, 255, 0.2); }
 }
 
-@keyframes cyber-border-glow {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
+.chat-message {
+  width: fit-content;
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 8px;
 }
 
-/* Command mode styling */
-.cyber-command {
-  font-family: 'Courier New', monospace;
-  color: var(--cyber-neon-blue);
-  background-color: rgba(0, 0, 0, 0.7);
-  border: 1px solid var(--cyber-neon-blue);
+.chat-message-user {
+  background-color: var(--chat-message-user-bg, #8B5CF6);
+  color: white;
+  margin-left: auto;
+  border-bottom-right-radius: 0;
+}
+
+.chat-message-assistant {
+  background-color: var(--chat-message-assistant-bg, #374151);
+  color: white;
+  border-bottom-left-radius: 0;
+}
+
+/* Typing indicator */
+.typing-dots {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+}
+
+.typing-dots::after {
+  content: "...";
+  width: 1.25em;
+  text-align: left;
+  animation: typing 1.4s infinite;
+}
+
+@keyframes typing {
+  0%, 100% { content: ""; }
+  25% { content: "."; }
+  50% { content: ".."; }
+  75% { content: "..."; }
+}
+
+/* Chat sidebar styles */
+.chat-sidebar-container {
+  flex-shrink: 0;
+}
+
+/* Features for the editor page */
+.editor-chat-content pre {
+  background: rgba(0, 0, 0, 0.3);
   border-radius: 4px;
-  padding: 2px 6px;
-  margin: 0 2px;
-  display: inline-block;
+  padding: 8px;
+  font-size: 12px;
+  overflow-x: auto;
+  color: #e9e9e9;
 }
 
-/* Scan line effect for containers */
-.cyber-scanlines {
-  position: relative;
-  overflow: hidden;
+.editor-chat-content code {
+  font-family: 'JetBrains Mono', monospace;
 }
 
-.cyber-scanlines::before {
-  content: "";
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(255, 255, 255, 0.05) 0.5%,
-    transparent 1%
-  );
-  animation: cyber-scanlines 8s linear infinite;
-  opacity: 0.15;
-  pointer-events: none;
-}
-
-@keyframes cyber-scanlines {
-  0% {
-    background-position: 0 0;
-  }
-  100% {
-    background-position: 0 100%;
-  }
-}
-
-/* Status indicators */
-.cyber-status {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 6px;
-}
-
-.cyber-status-online {
-  background-color: #00ff4c;
-  box-shadow: 0 0 8px rgba(0, 255, 76, 0.8);
-  animation: cyber-status-pulse 2s infinite;
-}
-
-.cyber-status-offline {
-  background-color: #ff003c;
-  box-shadow: 0 0 8px rgba(255, 0, 60, 0.8);
-}
-
-.cyber-status-away {
-  background-color: #ffbb00;
-  box-shadow: 0 0 8px rgba(255, 187, 0, 0.8);
-}
-
-@keyframes cyber-status-pulse {
-  0% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.5;
-  }
+/* Z-index variables */
+:root {
+  --z-chat: 999;
 }

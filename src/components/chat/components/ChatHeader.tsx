@@ -1,164 +1,96 @@
 
-import React, { useState } from 'react';
-import { useChatStore } from '../store/chatStore';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { 
-  Minimize2, 
-  Maximize2, 
-  X, 
-  Menu, 
-  Github, 
-  Bell, 
-  Database, 
-  Zap,
-  Code,
-  Image,
-  BookOpen,
-  Pin,
-  PinOff
-} from 'lucide-react';
-import { ChatPositionToggle } from './ChatPositionToggle';
-import { AIProviderStatusDialog } from '../features/status-button/AIProviderStatusDialog';
-import '../styles/cyber-theme.css';
+import { X, Minus, Sidebar, Maximize2, Settings, Wand2 } from 'lucide-react';
+import { useChatStore } from '../store';
+import { useChatMode } from '../providers/ChatModeProvider';
+import { getChatModeDisplayName } from '@/utils/modeConversion';
+import { Badge } from '@/components/ui/badge';
 
 interface ChatHeaderProps {
   onToggleSidebar: () => void;
   onOpenModeSelector: () => void;
 }
 
-export function ChatHeader({ onToggleSidebar, onOpenModeSelector }: ChatHeaderProps) {
+export const ChatHeader: React.FC<ChatHeaderProps> = ({ 
+  onToggleSidebar,
+  onOpenModeSelector
+}) => {
   const { 
-    toggleMinimize, 
     isMinimized, 
-    closeChat, 
-    currentMode, 
-    currentProvider,
-    availableProviders,
-    docked,
-    toggleDocked
+    toggleMinimize, 
+    toggleChat,
+    currentMode,
+    currentProvider
   } = useChatStore();
   
-  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
-  
-  const getModeIcon = () => {
-    switch (currentMode) {
-      case 'dev': return <Code className="h-4 w-4 text-cyan-400" />;
-      case 'image': return <Image className="h-4 w-4 text-pink-400" />;
-      case 'training': return <BookOpen className="h-4 w-4 text-purple-400" />;
-      default: return <Zap className="h-4 w-4 text-cyan-400" />;
-    }
-  };
-  
+  const { isEditorPage } = useChatMode();
+
   return (
-    <div className="chat-header h-12 px-3 flex items-center justify-between cyber-bg cyber-border">
-      <div className="flex items-center">
+    <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between">
+      <div className="flex items-center gap-2">
         <Button
           variant="ghost"
           size="icon"
-          className="chat-control-button h-8 w-8 hover:text-cyan-400 hover:bg-cyan-400/10"
+          className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10"
           onClick={onToggleSidebar}
           aria-label="Toggle sidebar"
-          data-testid="sidebar-toggle"
         >
-          <Menu className="h-4 w-4" />
+          <Sidebar className="h-4 w-4" />
         </Button>
         
-        <Button
-          variant="ghost"
-          size="sm"
-          className="ml-2 h-8 text-xs chat-control-button cyber-pulse"
-          onClick={onOpenModeSelector}
-          aria-label="Select AI mode"
-        >
-          <span className="flex items-center gap-1">
-            {getModeIcon()}
-            <span className="capitalize">{currentMode}</span>
-          </span>
-        </Button>
-        
-        <span className="ml-2 text-xs text-white/40">|</span>
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          className="ml-2 h-8 text-xs chat-control-button"
-          onClick={() => setStatusDialogOpen(true)}
-          aria-label="AI Provider status"
-        >
-          <span className="flex items-center gap-1">
-            <div className="h-2 w-2 rounded-full bg-green-500"></div>
-            <span className="cyber-glitch" data-text={currentProvider?.name || 'AI'}>{currentProvider?.name || 'AI Provider'}</span>
-          </span>
-        </Button>
+        {!isMinimized && (
+          <div className="flex flex-col">
+            <h3 className="text-sm font-medium text-white">
+              {getChatModeDisplayName(currentMode)}
+            </h3>
+            {currentProvider && (
+              <div className="flex items-center">
+                <span className="text-xs text-white/60">{currentProvider.name}</span>
+                {isEditorPage && (
+                  <Badge variant="outline" className="ml-2 h-4 text-[9px] border-green-500/30 text-green-400">
+                    Editor
+                  </Badge>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
       
-      <div className="flex items-center space-x-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="chat-control-button h-8 w-8 hover:text-pink-400 hover:bg-pink-400/10"
-          aria-label="GitHub"
-        >
-          <Github className="h-4 w-4" />
-        </Button>
+      <div className="flex items-center gap-1">
+        {!isMinimized && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-white/70 hover:text-white hover:bg-white/10"
+            onClick={onOpenModeSelector}
+            aria-label="Change mode"
+          >
+            <Wand2 className="h-4 w-4" />
+          </Button>
+        )}
         
         <Button
           variant="ghost"
           size="icon"
-          className="chat-control-button h-8 w-8 hover:text-purple-400 hover:bg-purple-400/10"
-          aria-label="Notifications"
-        >
-          <Bell className="h-4 w-4" />
-        </Button>
-        
-        <Button
-          variant="ghost"
-          size="icon"
-          className="chat-control-button h-8 w-8 hover:text-cyan-400 hover:bg-cyan-400/10"
-          aria-label="Knowledge Base"
-        >
-          <Database className="h-4 w-4" />
-        </Button>
-        
-        <Button
-          variant="ghost"
-          size="icon"
-          className="chat-control-button h-8 w-8 hover:text-blue-400 hover:bg-blue-400/10"
-          onClick={toggleDocked}
-          aria-label={docked ? "Undock chat" : "Dock chat"}
-        >
-          {docked ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
-        </Button>
-        
-        <ChatPositionToggle />
-        
-        <Button
-          variant="ghost"
-          size="icon"
-          className="chat-control-button h-8 w-8 hover:text-yellow-400 hover:bg-yellow-400/10"
+          className="h-7 w-7 text-white/70 hover:text-white hover:bg-white/10"
           onClick={toggleMinimize}
           aria-label={isMinimized ? "Maximize" : "Minimize"}
         >
-          {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+          {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minus className="h-4 w-4" />}
         </Button>
         
         <Button
           variant="ghost"
           size="icon"
-          className="chat-control-button h-8 w-8 hover:bg-red-500/20 hover:text-red-400"
-          onClick={closeChat}
-          aria-label="Close chat"
+          className="h-7 w-7 text-white/70 hover:text-red-500 hover:bg-white/10"
+          onClick={toggleChat}
+          aria-label="Close"
         >
           <X className="h-4 w-4" />
         </Button>
       </div>
-      
-      <AIProviderStatusDialog
-        open={statusDialogOpen}
-        onOpenChange={setStatusDialogOpen}
-        providers={availableProviders}
-        currentProvider={currentProvider}
-      />
     </div>
   );
-}
+};

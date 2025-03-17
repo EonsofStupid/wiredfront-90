@@ -1,102 +1,123 @@
 
 import React from 'react';
-import { useChatStore } from '../store/chatStore';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Command, Mic, FileSearch, Brain, Settings } from 'lucide-react';
-import { useFeatureFlags } from '@/hooks/useFeatureFlags';
+import { 
+  Trash2, 
+  Download, 
+  Share, 
+  Copy, 
+  BrainCircuit 
+} from 'lucide-react';
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from '@/components/ui/tooltip';
+import { useChatStore } from '../store';
 
-export function ChatIconStack() {
-  const { isMinimized } = useChatStore();
-  const { isEnabled } = useFeatureFlags();
-  
-  if (isMinimized) return null;
-  
-  const showVoice = isEnabled('voice');
-  const showRag = isEnabled('ragSupport');
-  
+export const ChatIconStack: React.FC = () => {
+  const { isMinimized, resetChatState } = useChatStore();
+
+  // Don't show when minimized
+  if (isMinimized) {
+    return null;
+  }
+
   return (
-    <div className="absolute bottom-16 right-4 flex flex-col space-y-2">
+    <div className="absolute -left-10 top-1/2 transform -translate-y-1/2 flex flex-col gap-2">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="h-8 w-8 rounded-full bg-black/40 border border-neon-blue/30 text-neon-blue hover:bg-neon-blue/20 hover:text-white shadow-lg shadow-neon-blue/20"
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full bg-black/20 border border-white/10 hover:bg-neon-blue/20 hover:border-neon-blue/40 text-white"
             >
-              <Command className="h-4 w-4" />
+              <BrainCircuit className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="left">
-            <p>Commands</p>
+            <p className="text-xs">Show AI context</p>
           </TooltipContent>
         </Tooltip>
-        
-        {showVoice && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-8 w-8 rounded-full bg-black/40 border border-neon-pink/30 text-neon-pink hover:bg-neon-pink/20 hover:text-white shadow-lg shadow-neon-pink/20"
-              >
-                <Mic className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="left">
-              <p>Voice Input</p>
-            </TooltipContent>
-          </Tooltip>
-        )}
-        
-        {showRag && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-8 w-8 rounded-full bg-black/40 border border-purple-500/30 text-purple-500 hover:bg-purple-500/20 hover:text-white shadow-lg shadow-purple-500/20"
-              >
-                <FileSearch className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="left">
-              <p>Search Knowledge</p>
-            </TooltipContent>
-          </Tooltip>
-        )}
-        
+      </TooltipProvider>
+
+      <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="h-8 w-8 rounded-full bg-black/40 border border-teal-400/30 text-teal-400 hover:bg-teal-400/20 hover:text-white shadow-lg shadow-teal-400/20"
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full bg-black/20 border border-white/10 hover:bg-white/20 hover:border-white/30 text-white"
+              onClick={() => {
+                navigator.clipboard.writeText('Chat content');
+              }}
             >
-              <Brain className="h-4 w-4" />
+              <Copy className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="left">
-            <p>AI Memory</p>
+            <p className="text-xs">Copy conversation</p>
           </TooltipContent>
         </Tooltip>
-        
+      </TooltipProvider>
+
+      <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="h-8 w-8 rounded-full bg-black/40 border border-gray-400/30 text-gray-400 hover:bg-gray-400/20 hover:text-white shadow-lg shadow-gray-400/20"
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full bg-black/20 border border-white/10 hover:bg-white/20 hover:border-white/30 text-white"
             >
-              <Settings className="h-4 w-4" />
+              <Share className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="left">
-            <p>Chat Settings</p>
+            <p className="text-xs">Share conversation</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full bg-black/20 border border-white/10 hover:bg-white/20 hover:border-white/30 text-white"
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left">
+            <p className="text-xs">Save conversation</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full bg-black/20 border border-white/10 hover:bg-red-500/20 hover:border-red-500/30 text-white hover:text-red-400"
+              onClick={() => {
+                if (confirm('Clear all messages? This cannot be undone.')) {
+                  resetChatState();
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left">
+            <p className="text-xs">Clear conversation</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
     </div>
   );
-}
+};
