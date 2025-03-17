@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { ChatProvider, ChatMode, ProviderCategoryType } from '@/components/chat/store/types/chat-store-types';
+import { ChatProvider, ChatMode, ProviderCategory } from '@/components/chat/store/types/chat-store-types';
 import { useChatStore } from '@/components/chat/store';
 import { Badge } from '@/components/ui/badge';
 import { Bot, Image, Code, GraduationCap, CheckCircle2 } from 'lucide-react';
@@ -45,16 +45,15 @@ export function ChatModeDialog({ open, onOpenChange, onModeSelect }: ChatModeDia
 
   // Filter providers by category based on selected mode
   const getFilteredProviders = (): ChatProvider[] => {
-    const categoryMap: Record<ChatMode, ProviderCategoryType[]> = {
+    const categoryMap: Record<ChatMode, string[]> = {
       'chat': ['chat', 'other'],
-      'chat-only': ['chat', 'other'],
       'dev': ['chat', 'other'],
       'image': ['image'],
       'training': ['chat', 'other']
     };
     
     const categories = categoryMap[selectedMode] || ['chat'];
-    return availableProviders.filter(p => categories.includes(p.category));
+    return availableProviders.filter(p => categories.includes(p.type));
   };
 
   const filteredProviders = getFilteredProviders();
