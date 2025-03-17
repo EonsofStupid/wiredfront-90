@@ -4,7 +4,7 @@ import { ChatState, ChatProvider, FeatureState } from "../../types/chat-store-ty
 import { TokenEnforcementMode, KnownFeatureFlag, ChatFeatureKey } from '@/integrations/supabase/types/enums';
 
 // Export feature key types for usage throughout the application
-export type FeatureKey = ChatFeatureKey | KnownFeatureFlag;
+export type FeatureKey = ChatFeatureKey | KnownFeatureFlag | keyof FeatureState;
 
 // Define proper Zustand types for state management
 export type SetState<T> = (
@@ -38,9 +38,9 @@ export type StoreWithDevtools = StateCreator<
   FeatureActions
 >;
 
-// Helper function to convert between KnownFeatureFlag and ChatFeatureKey
+// Enhanced helper function to convert between KnownFeatureFlag and ChatFeatureKey
 export function convertFeatureKeyToChatFeature(key: FeatureKey): keyof FeatureState | null {
-  // If it's already a ChatFeatureKey, return it directly
+  // If it's already a keyof FeatureState, return it directly
   if (typeof key === 'string' && 
       ['voice', 'rag', 'modeSwitch', 'notifications', 'github',
        'codeAssistant', 'ragSupport', 'githubSync', 'tokenEnforcement'].includes(key)) {

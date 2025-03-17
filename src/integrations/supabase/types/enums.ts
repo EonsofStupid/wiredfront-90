@@ -5,6 +5,7 @@ export type SettingType = 'string' | 'number' | 'boolean' | 'json' | 'array';
 // Modified to align with chat store types
 export type ChatMode = 'chat' | 'chat-only' | 'dev' | 'image' | 'training' | 'standard' | 'developer'; 
 
+// Update TokenEnforcementMode to include all possible values
 export type TokenEnforcementMode = 'hard' | 'soft' | 'never' | 'always' | 'role_based' | 'mode_based';
 export type AppRole = 'super_admin' | 'admin' | 'developer' | 'subscriber' | 'guest';
 export type ChatFeatureKey = 'ai_provider' | 'github' | 'rag' | 'voice' | 'notifications' | 'status';

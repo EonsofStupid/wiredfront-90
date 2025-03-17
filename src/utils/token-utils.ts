@@ -2,19 +2,43 @@
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 
 /**
- * Validates if a string is a valid TokenEnforcementMode
+ * Type guard to check if a value is a valid TokenEnforcementMode
  */
-export function isTokenEnforcementMode(mode: string): mode is TokenEnforcementMode {
-  return ['always', 'never', 'role_based', 'mode_based'].includes(mode);
+export function isTokenEnforcementMode(value: any): value is TokenEnforcementMode {
+  return [
+    'hard', 
+    'soft', 
+    'never', 
+    'always', 
+    'role_based', 
+    'mode_based'
+  ].includes(value);
 }
 
 /**
- * Converts a string to a valid TokenEnforcementMode or returns a default
+ * Convert a potential token enforcement mode string to a valid mode or default
  */
-export function ensureValidEnforcementMode(
-  mode: string | undefined | null,
+export function normalizeTokenEnforcementMode(
+  mode: string | undefined | null, 
   defaultMode: TokenEnforcementMode = 'never'
 ): TokenEnforcementMode {
   if (!mode) return defaultMode;
+  
   return isTokenEnforcementMode(mode) ? mode : defaultMode;
+}
+
+/**
+ * Map token enforcement mode to display name
+ */
+export function getTokenEnforcementModeDisplayName(mode: TokenEnforcementMode): string {
+  const modeMap: Record<TokenEnforcementMode, string> = {
+    'hard': 'Strict Enforcement',
+    'soft': 'Warning Only',
+    'never': 'Disabled',
+    'always': 'Always Enabled',
+    'role_based': 'Role-Based',
+    'mode_based': 'Mode-Based'
+  };
+  
+  return modeMap[mode] || 'Unknown';
 }

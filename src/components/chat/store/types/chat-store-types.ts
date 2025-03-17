@@ -1,4 +1,3 @@
-
 export type ChatPosition = 'bottom-right' | 'bottom-left' | { x: number, y: number };
 
 export type SelectedMode = 'chat' | 'dev' | 'image' | 'training';
@@ -25,9 +24,10 @@ export type ProviderType =
   | 'whisper'
   | string;
 
+// Updated TokenControl interface to use the full TokenEnforcementMode type
 export interface TokenControl {
   balance: number;
-  enforcementMode: 'always' | 'never' | 'role_based' | 'mode_based';
+  enforcementMode: 'always' | 'never' | 'role_based' | 'mode_based' | 'hard' | 'soft';
   lastUpdated: string | null;
   tokensPerQuery: number;
   freeQueryLimit: number;

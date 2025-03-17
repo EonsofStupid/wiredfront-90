@@ -12,7 +12,7 @@ export function createTokenActions(
   return {
     setTokenEnforcementMode: (mode: TokenEnforcementMode) => {
       set(
-        state => ({
+        (state) => ({
           tokenControl: {
             ...state.tokenControl,
             enforcementMode: mode
@@ -28,7 +28,7 @@ export function createTokenActions(
         const currentBalance = get().tokenControl.balance;
         
         set(
-          state => ({
+          (state) => ({
             tokenControl: {
               ...state.tokenControl,
               balance: currentBalance + amount,
@@ -71,7 +71,7 @@ export function createTokenActions(
         }
         
         set(
-          state => ({
+          (state) => ({
             tokenControl: {
               ...state.tokenControl,
               balance: currentBalance - amount,
@@ -109,7 +109,7 @@ export function createTokenActions(
     setTokenBalance: async (amount: number): Promise<boolean> => {
       try {
         set(
-          state => ({
+          (state) => ({
             tokenControl: {
               ...state.tokenControl,
               balance: amount,

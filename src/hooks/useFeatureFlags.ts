@@ -21,7 +21,7 @@ export function useFeatureFlags() {
    * Check if a feature is enabled in the local store
    */
   const isEnabled = useCallback(
-    (featureKey: KnownFeatureFlag | ChatFeatureKey) => {
+    (featureKey: KnownFeatureFlag | keyof FeatureState) => {
       // Convert KnownFeatureFlag to ChatFeatureKey if needed
       const chatFeatureKey = convertFeatureKeyToChatFeature(featureKey);
       
@@ -37,7 +37,7 @@ export function useFeatureFlags() {
    * Toggle a feature with database logging
    */
   const handleToggleFeature = useCallback(
-    async (featureKey: KnownFeatureFlag | ChatFeatureKey) => {
+    async (featureKey: KnownFeatureFlag | keyof FeatureState) => {
       if (isUpdating) return;
       
       // Convert to ChatFeatureKey if it's a KnownFeatureFlag
@@ -71,7 +71,7 @@ export function useFeatureFlags() {
    * Enable a feature with database logging
    */
   const handleEnableFeature = useCallback(
-    async (featureKey: KnownFeatureFlag | ChatFeatureKey) => {
+    async (featureKey: KnownFeatureFlag | keyof FeatureState) => {
       if (isUpdating) return;
       
       // Convert to ChatFeatureKey if it's a KnownFeatureFlag
@@ -105,7 +105,7 @@ export function useFeatureFlags() {
    * Disable a feature with database logging
    */
   const handleDisableFeature = useCallback(
-    async (featureKey: KnownFeatureFlag | ChatFeatureKey) => {
+    async (featureKey: KnownFeatureFlag | keyof FeatureState) => {
       if (isUpdating) return;
       
       // Convert to ChatFeatureKey if it's a KnownFeatureFlag
@@ -139,7 +139,7 @@ export function useFeatureFlags() {
    * Set a feature state with database logging
    */
   const handleSetFeatureState = useCallback(
-    async (featureKey: KnownFeatureFlag | ChatFeatureKey, isEnabled: boolean) => {
+    async (featureKey: KnownFeatureFlag | keyof FeatureState, isEnabled: boolean) => {
       if (isUpdating) return;
       
       // Convert to ChatFeatureKey if it's a KnownFeatureFlag

@@ -9,7 +9,7 @@ import { useChatStore } from "@/components/chat/store/chatStore";
 import { ArrowLeftRight, Pin, PinOff, RotateCcw, Palette } from "lucide-react";
 import { toast } from "sonner";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
-import { KnownFeatureFlag, ChatFeatureKey } from "@/types/admin/settings/feature-flags";
+import { KnownFeatureFlag } from "@/types/admin/settings/feature-flags";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { convertFeatureKeyToChatFeature } from "@/components/chat/store/actions/feature/types";

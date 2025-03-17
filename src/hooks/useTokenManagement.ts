@@ -18,7 +18,7 @@ export function useTokenManagement() {
 
   // Expose tokenBalance and enforcementMode directly
   const tokenBalance = tokenControl.balance;
-  const enforcementMode = tokenControl.enforcementMode;
+  const enforcementMode = tokenControl.enforcementMode as TokenEnforcementMode;
 
   // Setters for token enforcement mode with validation
   const setEnforcementMode = (mode: TokenEnforcementMode) => {

@@ -43,7 +43,7 @@ export function useSystemLogs() {
       }
       
       // Ensure result.data exists and safely transform it
-      const responseData = result.data || [];
+      const responseData = Array.isArray(result.data) ? result.data : [];
       
       // Safely transform the data to our SystemLog type
       const typedData = safeDataTransform<SystemLog>(responseData, isSystemLog);

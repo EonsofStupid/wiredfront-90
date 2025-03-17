@@ -121,7 +121,7 @@ export class RouteLoggingService {
       }
 
       // Safely handle data access with null checks
-      const responseData = result.data || [];
+      const responseData = Array.isArray(result.data) ? result.data : [];
       
       // Safely transform the query results to our NavigationLog type
       return safeDataTransform<NavigationLog>(responseData, isNavigationLog);
