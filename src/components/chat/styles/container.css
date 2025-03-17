@@ -45,7 +45,7 @@
 }
 
 /* Glass effect for chat components */
-.chat-glass {
+.chat-glass-card {
   background: var(--chat-bg);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -178,4 +178,56 @@
 
 .chat-only-mode {
   border-left: 3px solid var(--chat-message-assistant-bg);
+}
+
+/* Chat resize handle */
+.chat-container:hover::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 10px;
+  height: 10px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.4);
+  border-right: 2px solid rgba(255, 255, 255, 0.4);
+  cursor: nwse-resize;
+}
+
+/* Command panel */
+.chat-command-panel {
+  background: rgba(0, 0, 0, 0.7);
+  border-top: 1px solid rgba(59, 130, 246, 0.3);
+  padding: 0.5rem;
+}
+
+.chat-command-button {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: rgba(59, 130, 246, 0.8);
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+}
+
+.chat-command-button:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+/* Docking indicators */
+.chat-dock-indicator {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.chat-dock-indicator.active {
+  opacity: 1;
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
 }

@@ -1,13 +1,16 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { useChatStore } from '../store/chatStore';
+import { useMessageAPI } from '@/hooks/chat/useMessageAPI';
 import { ChatHeader } from './ChatHeader';
 import { ChatModeDialog } from '../features/ModeSwitch/ChatModeDialog';
 import { ChatMode as SupabaseChatMode } from '@/integrations/supabase/types/enums';
 import { supabaseModeToStoreMode } from '@/utils/modeConversion';
+import { Message } from '@/types/chat';
 import ChatInputArea from './ChatInputArea';
-import ChatIconStack from './ChatIconStack';
+import { ChatIconStack } from './ChatIconStack';
+import ChatMessage from './ChatMessage';
 import '../styles/index.css';
 import '../styles/cyber-theme.css';
 
@@ -24,8 +27,25 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
     id: 'draggable-chat',
   });
 
-  const { isMinimized, docked, scale } = useChatStore();
+  const { 
+    isMinimized, 
+    docked, 
+    scale, 
+    messages, 
+    addMessage 
+  } = useChatStore();
+  
   const [modeDialogOpen, setModeDialogOpen] = useState(false);
+  const { sendMessage, isLoading } = useMessageAPI();
+  const [typing, setTyping] = useState(false);
+  
+  useEffect(() => {
+    if (isLoading) {
+      setTyping(true);
+      const timeout = setTimeout(() => setTyping(false), 1000);
+      return () => clearTimeout(timeout);
+    }
+  }, [isLoading]);
   
   const handleModeSelect = (mode: SupabaseChatMode, providerId: string) => {
     // Convert Supabase mode to store mode
@@ -43,27 +63,20 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
     useChatStore.getState().toggleSidebar();
   };
 
-  const transformStyle = transform ? {
+  const transformStyle = transform && !docked ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
   } : undefined;
 
   const handleSendMessage = (message: string) => {
-    console.log('Message sent from container:', message);
-    // Add message to chat store
-    useChatStore.getState().addMessage({
-      id: Date.now().toString(),
-      content: message,
-      role: 'user',
-      timestamp: new Date().toISOString()
-    });
+    sendMessage(message);
   };
 
   return (
     <div
       ref={setNodeRef}
-      style={docked ? undefined : transformStyle}
+      style={transformStyle}
       {...(docked ? {} : { ...listeners, ...attributes })}
-      className="chat-container chat-glass-card chat-neon-border overflow-hidden flex flex-col cyber-bg relative"
+      className={`chat-container chat-glass-card chat-neon-border overflow-hidden flex flex-col cyber-bg relative ${!docked && 'cursor-grab active:cursor-grabbing'}`}
     >
       <ChatHeader 
         onToggleSidebar={handleToggleSidebar}
@@ -82,9 +95,21 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
               </p>
             </div>
             
-            <div className="chat-message chat-message-assistant cyber-border cyber-pulse">
-              <span className="cyber-glitch" data-text="How can I help you today?">How can I help you today?</span>
-            </div>
+            {messages.length === 0 ? (
+              <div className="chat-message chat-message-assistant cyber-border cyber-pulse">
+                <span className="cyber-glitch" data-text="How can I help you today?">How can I help you today?</span>
+              </div>
+            ) : (
+              messages.map((msg: Message) => (
+                <ChatMessage key={msg.id} message={msg} />
+              ))
+            )}
+            
+            {typing && (
+              <div className="chat-message chat-message-assistant cyber-border opacity-70">
+                <div className="typing-dots">Assistant is typing</div>
+              </div>
+            )}
           </div>
         </div>
       )}

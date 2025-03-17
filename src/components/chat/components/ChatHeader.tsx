@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useChatStore } from '../store';
+import { useChatStore } from '../store/chatStore';
 import { Button } from '@/components/ui/button';
 import { 
   Minimize2, 
@@ -10,11 +10,12 @@ import {
   Github, 
   Bell, 
   Database, 
-  LayoutGrid,
   Zap,
   Code,
   Image,
-  BookOpen
+  BookOpen,
+  Pin,
+  PinOff
 } from 'lucide-react';
 import { ChatPositionToggle } from './ChatPositionToggle';
 import { AIProviderStatusDialog } from '../features/status-button/AIProviderStatusDialog';
@@ -32,7 +33,9 @@ export function ChatHeader({ onToggleSidebar, onOpenModeSelector }: ChatHeaderPr
     closeChat, 
     currentMode, 
     currentProvider,
-    availableProviders
+    availableProviders,
+    docked,
+    toggleDocked
   } = useChatStore();
   
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
@@ -115,6 +118,16 @@ export function ChatHeader({ onToggleSidebar, onOpenModeSelector }: ChatHeaderPr
           aria-label="Knowledge Base"
         >
           <Database className="h-4 w-4" />
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          className="chat-control-button h-8 w-8 hover:text-blue-400 hover:bg-blue-400/10"
+          onClick={toggleDocked}
+          aria-label={docked ? "Undock chat" : "Dock chat"}
+        >
+          {docked ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
         </Button>
         
         <ChatPositionToggle />

@@ -1,7 +1,7 @@
 
 :root {
   /* Base chat theme variables */
-  --chat-bg: rgba(0, 0, 0, 0.3);
+  --chat-bg: rgba(0, 0, 0, 0.4);
   --chat-border: rgba(139, 92, 246, 0.5);
   --chat-text: #ffffff;
   --chat-text-muted: rgba(255, 255, 255, 0.6);
@@ -37,18 +37,26 @@
   
   /* Sizing */
   --chat-width: 400px;
+  --chat-min-width: 320px;
+  --chat-max-width: 800px;
   --chat-height: 500px;
+  --chat-min-height: 300px;
+  --chat-max-height: 80vh;
   --chat-border-radius: 12px;
   --chat-button-radius: 8px;
   --chat-toggle-size: 3rem;
   --chat-icon-size: 2.5rem;
+  --chat-header-height: 3rem;
+  --chat-scrollbar-width: 4px;
   
   /* Animations */
   --chat-transition-speed: 0.3s;
   
   /* Shadows */
-  --chat-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  --chat-box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
   --chat-inner-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+  --chat-neon-glow: 0 0 10px rgba(139, 92, 246, 0.3), 0 0 20px rgba(139, 92, 246, 0.2);
+  --chat-cyber-glow: 0 0 5px rgba(0, 255, 255, 0.5), 0 0 10px rgba(255, 0, 127, 0.3);
   
   /* Z-index values - match with global z-index for consistency */
   --z-chat-button: 9700;

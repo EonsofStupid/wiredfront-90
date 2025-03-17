@@ -12,6 +12,7 @@ import { logger } from "@/services/chat/LoggingService";
 import { ChatModeDialog } from "./features/ModeSwitch/ChatModeDialog";
 import { ChatMode as SupabaseChatMode } from "@/integrations/supabase/types/enums";
 import { supabaseModeToStoreMode } from "@/utils/modeConversion";
+import { toast } from "sonner";
 import "./styles/index.css";
 import "./styles/cyber-theme.css";
 
@@ -65,6 +66,11 @@ export function DraggableChat() {
     const provider = availableProviders.find(p => p.id === providerId);
     if (provider) {
       updateCurrentProvider(provider);
+      
+      toast.success(`Switched to ${provider.name} in ${storeMode} mode`, {
+        position: "bottom-right",
+        duration: 3000,
+      });
     }
     
     // Ensure chat is open when changing modes

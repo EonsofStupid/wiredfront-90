@@ -1,79 +1,109 @@
 
-/* Core Cyberpunk Theme for Chat Interface */
+/* Cyberpunk Theme for Chat UI */
 :root {
-  /* Neon colors */
-  --cyber-neon-pink: #FF007F;
-  --cyber-neon-blue: #00FFFF;
-  --cyber-neon-purple: #9D00FF;
-  --cyber-neon-yellow: #FFFF00;
-  
-  /* Background colors */
-  --cyber-dark: #1A1A1A;
-  --cyber-dark-lighter: #2B2B2B;
-  
-  /* Accent colors */
-  --cyber-grid-color: rgba(0, 255, 255, 0.3);
-  --cyber-scan-color: rgba(255, 0, 127, 0.3);
-  
-  /* Effects */
-  --cyber-shadow: 0 0 10px rgba(0, 255, 255, 0.7), 0 0 20px rgba(255, 0, 127, 0.4);
-  --cyber-glow: 0 0 10px rgba(157, 0, 255, 0.8), 0 0 20px rgba(0, 255, 255, 0.5);
-  --cyber-border: 1px solid rgba(0, 255, 255, 0.3);
-  
-  /* Animation speeds */
-  --cyber-anim-slow: 8s;
-  --cyber-anim-medium: 4s;
-  --cyber-anim-fast: 2s;
+  --cyber-neon-blue: rgba(0, 255, 255, 0.8);
+  --cyber-neon-pink: rgba(255, 0, 127, 0.8);
+  --cyber-neon-purple: rgba(157, 0, 255, 0.8);
+  --cyber-dark: #0a0a0f;
+  --cyber-darker: rgba(0, 0, 0, 0.6);
+  --cyber-glow-blue: 0 0 10px var(--cyber-neon-blue), 0 0 20px rgba(0, 255, 255, 0.5);
+  --cyber-glow-pink: 0 0 10px var(--cyber-neon-pink), 0 0 20px rgba(255, 0, 127, 0.5);
+  --cyber-glow-purple: 0 0 10px var(--cyber-neon-purple), 0 0 20px rgba(157, 0, 255, 0.5);
 }
 
-/* Cyber background with grid effect */
+/* Background styles */
 .cyber-bg {
-  position: relative;
   background-color: var(--cyber-dark);
-  overflow: hidden;
-  isolation: isolate;
+  background-image: 
+    radial-gradient(circle at 10% 10%, rgba(0, 255, 255, 0.1), transparent 40%),
+    radial-gradient(circle at 90% 90%, rgba(255, 0, 127, 0.1), transparent 40%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.8));
+  position: relative;
 }
 
 .cyber-bg::before {
-  content: "";
+  content: '';
   position: absolute;
-  inset: 0;
-  background: 
-    linear-gradient(90deg, var(--cyber-grid-color) 1px, transparent 1px) 0 0 / 20px 20px,
-    linear-gradient(0deg, var(--cyber-grid-color) 1px, transparent 1px) 0 0 / 20px 20px;
-  opacity: 0.2;
-  z-index: -1;
-  pointer-events: none;
-  animation: gridPulse var(--cyber-anim-slow) infinite linear;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyber-neon-blue), transparent);
+  opacity: 0.5;
 }
 
-/* Scanline effect */
-.cyber-scanline {
+.cyber-bg::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyber-neon-pink), transparent);
+  opacity: 0.5;
+}
+
+/* Border styles */
+.cyber-border {
   position: relative;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
   overflow: hidden;
 }
 
-.cyber-scanline::after {
-  content: "";
+.cyber-border::before {
+  content: '';
   position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    transparent 50%,
-    var(--cyber-scan-color) 50%
-  );
-  background-size: 100% 4px;
-  z-index: 2;
-  pointer-events: none;
-  opacity: 0.15;
-  animation: scanline var(--cyber-anim-fast) linear infinite;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyber-neon-blue), transparent);
+  animation: cyber-border-glow 2s linear infinite;
+  z-index: 0;
+}
+
+.cyber-border-pink {
+  position: relative;
+  border: 1px solid rgba(255, 0, 127, 0.3);
+  box-shadow: 0 0 10px rgba(255, 0, 127, 0.2);
+  overflow: hidden;
+}
+
+.cyber-border-pink::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyber-neon-pink), transparent);
+  animation: cyber-border-glow 2s linear infinite;
+  z-index: 0;
+}
+
+/* Pulse effect */
+.cyber-pulse {
+  animation: cyber-pulse 3s infinite;
+}
+
+@keyframes cyber-pulse {
+  0% {
+    text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 15px rgba(0, 255, 255, 0.8), 0 0 30px rgba(0, 255, 255, 0.4);
+  }
+  100% {
+    text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+  }
 }
 
 /* Glitch text effect */
 .cyber-glitch {
   position: relative;
+  display: inline-block;
   color: white;
-  animation: glitchText 3s infinite;
 }
 
 .cyber-glitch::before,
@@ -88,141 +118,198 @@
 }
 
 .cyber-glitch::before {
+  animation: cyber-glitch-1 2s infinite;
   color: var(--cyber-neon-blue);
-  animation: glitchOffset 3s infinite;
-  clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
-  transform: translate(-2px, 0);
+  z-index: -1;
 }
 
 .cyber-glitch::after {
+  animation: cyber-glitch-2 3s infinite;
   color: var(--cyber-neon-pink);
-  animation: glitchOffset 2s infinite reverse;
-  clip-path: polygon(0 80%, 100% 20%, 100% 100%, 0 100%);
-  transform: translate(2px, 0);
+  z-index: -2;
 }
 
-/* Neon button styles */
-.cyber-button {
-  position: relative;
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
+@keyframes cyber-glitch-1 {
+  0% {
+    clip-path: inset(20% 0 80% 0);
+    transform: translate(-1px, 0);
+  }
+  10% {
+    clip-path: inset(80% 0 20% 0);
+    transform: translate(1px, 0);
+  }
+  20% {
+    clip-path: inset(40% 0 60% 0);
+    transform: translate(-1px, 0);
+  }
+  30% {
+    clip-path: inset(60% 0 40% 0);
+    transform: translate(1px, 0);
+  }
+  40% {
+    clip-path: inset(20% 0 80% 0);
+    transform: translate(1px, 0);
+  }
+  50% {
+    clip-path: inset(10% 0 90% 0);
+    transform: translate(-1px, 0);
+  }
+  60% {
+    clip-path: inset(30% 0 70% 0);
+    transform: translate(1px, 0);
+  }
+  70% {
+    clip-path: inset(70% 0 30% 0);
+    transform: translate(-1px, 0);
+  }
+  80% {
+    clip-path: inset(50% 0 50% 0);
+    transform: translate(1px, 0);
+  }
+  90% {
+    clip-path: inset(90% 0 10% 0);
+    transform: translate(-1px, 0);
+  }
+  100% {
+    clip-path: inset(20% 0 80% 0);
+    transform: translate(-1px, 0);
+  }
+}
+
+@keyframes cyber-glitch-2 {
+  0% {
+    clip-path: inset(80% 0 20% 0);
+    transform: translate(1px, 0);
+  }
+  10% {
+    clip-path: inset(20% 0 80% 0);
+    transform: translate(-1px, 0);
+  }
+  20% {
+    clip-path: inset(60% 0 40% 0);
+    transform: translate(1px, 0);
+  }
+  30% {
+    clip-path: inset(40% 0 60% 0);
+    transform: translate(-1px, 0);
+  }
+  40% {
+    clip-path: inset(80% 0 20% 0);
+    transform: translate(-1px, 0);
+  }
+  50% {
+    clip-path: inset(90% 0 10% 0);
+    transform: translate(1px, 0);
+  }
+  60% {
+    clip-path: inset(70% 0 30% 0);
+    transform: translate(-1px, 0);
+  }
+  70% {
+    clip-path: inset(30% 0 70% 0);
+    transform: translate(1px, 0);
+  }
+  80% {
+    clip-path: inset(50% 0 50% 0);
+    transform: translate(-1px, 0);
+  }
+  90% {
+    clip-path: inset(10% 0 90% 0);
+    transform: translate(1px, 0);
+  }
+  100% {
+    clip-path: inset(80% 0 20% 0);
+    transform: translate(1px, 0);
+  }
+}
+
+@keyframes cyber-border-glow {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Command mode styling */
+.cyber-command {
+  font-family: 'Courier New', monospace;
+  color: var(--cyber-neon-blue);
+  background-color: rgba(0, 0, 0, 0.7);
   border: 1px solid var(--cyber-neon-blue);
   border-radius: 4px;
-  padding: 8px 16px;
-  font-weight: 500;
-  transition: all 0.3s ease;
+  padding: 2px 6px;
+  margin: 0 2px;
+  display: inline-block;
+}
+
+/* Scan line effect for containers */
+.cyber-scanlines {
+  position: relative;
   overflow: hidden;
-  box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
 }
 
-.cyber-button:hover {
-  background: rgba(0, 255, 255, 0.1);
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.8), 0 0 20px rgba(0, 255, 255, 0.4);
-}
-
-.cyber-button::before {
-  content: '';
+.cyber-scanlines::before {
+  content: "";
   position: absolute;
-  top: 0;
-  left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(0, 255, 255, 0.4),
-    transparent
+  top: 0;
+  left: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(255, 255, 255, 0.05) 0.5%,
+    transparent 1%
   );
-  transition: all 0.6s ease;
+  animation: cyber-scanlines 8s linear infinite;
+  opacity: 0.15;
+  pointer-events: none;
 }
 
-.cyber-button:hover::before {
-  left: 100%;
+@keyframes cyber-scanlines {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 100%;
+  }
 }
 
-/* Neon border */
-.cyber-border {
-  position: relative;
-  border: 1px solid transparent;
-  border-image: linear-gradient(
-    45deg,
-    var(--cyber-neon-blue),
-    var(--cyber-neon-pink)
-  );
-  border-image-slice: 1;
-  background-clip: padding-box;
+/* Status indicators */
+.cyber-status {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
 }
 
-.cyber-border::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  margin: -2px;
-  background: linear-gradient(
-    45deg,
-    var(--cyber-neon-blue),
-    var(--cyber-neon-pink)
-  );
-  filter: blur(8px);
-  opacity: 0.4;
-  transition: opacity 0.3s ease;
+.cyber-status-online {
+  background-color: #00ff4c;
+  box-shadow: 0 0 8px rgba(0, 255, 76, 0.8);
+  animation: cyber-status-pulse 2s infinite;
 }
 
-.cyber-border:hover::after {
-  opacity: 0.8;
+.cyber-status-offline {
+  background-color: #ff003c;
+  box-shadow: 0 0 8px rgba(255, 0, 60, 0.8);
 }
 
-/* Cyber input */
-.cyber-input {
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid var(--cyber-neon-blue);
-  border-radius: 4px;
-  color: white;
-  padding: 8px 12px;
-  transition: all 0.3s ease;
-  box-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+.cyber-status-away {
+  background-color: #ffbb00;
+  box-shadow: 0 0 8px rgba(255, 187, 0, 0.8);
 }
 
-.cyber-input:focus {
-  outline: none;
-  border-color: var(--cyber-neon-pink);
-  box-shadow: 0 0 10px rgba(255, 0, 127, 0.5);
-}
-
-/* Pulse glow effect */
-.cyber-pulse {
-  animation: pulseglow var(--cyber-anim-medium) infinite ease-in-out;
-}
-
-/* Animations */
-@keyframes gridPulse {
-  0%, 100% { opacity: 0.15; }
-  50% { opacity: 0.3; }
-}
-
-@keyframes scanline {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100%); }
-}
-
-@keyframes pulseglow {
-  0%, 100% { box-shadow: 0 0 5px rgba(0, 255, 255, 0.5); }
-  50% { box-shadow: 0 0 15px rgba(0, 255, 255, 0.8), 0 0 30px rgba(255, 0, 127, 0.4); }
-}
-
-@keyframes glitchText {
-  0%, 100% { text-shadow: 0 0 0 rgba(0, 0, 0, 0); }
-  20% { text-shadow: -1px 2px 0 rgba(0, 255, 255, 0.7); }
-  40% { text-shadow: 1px -2px 0 rgba(255, 0, 127, 0.7); }
-  60% { text-shadow: 1px 1px 0 rgba(157, 0, 255, 0.7); }
-  80% { text-shadow: -1px -1px 0 rgba(255, 255, 0, 0.7); }
-}
-
-@keyframes glitchOffset {
-  0%, 100% { transform: translate(0); }
-  20% { transform: translate(-2px, 2px); }
-  40% { transform: translate(2px, -2px); }
-  60% { transform: translate(1px, 1px); }
-  80% { transform: translate(-1px, -1px); }
+@keyframes cyber-status-pulse {
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
 }
