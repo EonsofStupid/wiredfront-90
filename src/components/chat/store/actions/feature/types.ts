@@ -1,4 +1,3 @@
-
 import { StateCreator } from 'zustand';
 import { ChatState, ChatProvider, FeatureState } from "../../types/chat-store-types";
 import { TokenEnforcementMode, KnownFeatureFlag, ChatFeatureKey } from '@/integrations/supabase/types/enums';
@@ -38,18 +37,38 @@ export type StoreWithDevtools = StateCreator<
   FeatureActions
 >;
 
-/**
- * Type guard to check if a value is a valid keyof FeatureState
- */
-export function isFeatureStateKey(key: any): key is keyof FeatureState {
-  return typeof key === 'string' && 
-      ['voice', 'rag', 'modeSwitch', 'notifications', 'github',
-       'codeAssistant', 'ragSupport', 'githubSync', 'tokenEnforcement'].includes(key);
+// Type guard to check if a key is a valid FeatureState key
+function isFeatureStateKey(key: FeatureKey): key is keyof FeatureState {
+  const validKeys: (keyof FeatureState)[] = [
+    'voice',
+    'rag',
+    'modeSwitch',
+    'notifications',
+    'github',
+    'codeAssistant',
+    'ragSupport',
+    'githubSync',
+    'tokenEnforcement'
+  ];
+  return validKeys.includes(key as keyof FeatureState);
+}
+
+// Helper function to convert string feature keys
+function convertStringFeatureKey(key: string): keyof FeatureState | null {
+  // Add your string to feature key mapping logic here
+  const featureKeyMap: Record<string, keyof FeatureState> = {
+    'code_assistant': 'codeAssistant',
+    'rag_support': 'ragSupport',
+    'github_sync': 'githubSync',
+    'notifications': 'notifications',
+    // Add more mappings as needed
+  };
+  
+  return featureKeyMap[key] || null;
 }
 
 /**
- * Enhanced helper function to convert between KnownFeatureFlag and ChatFeatureKey
- * with proper type narrowing and null handling
+ * Converts a feature key to a chat feature key with proper type narrowing and null handling
  */
 export function convertFeatureKeyToChatFeature(key: FeatureKey | null | undefined): keyof FeatureState | null {
   // Guard against null or undefined
@@ -63,7 +82,7 @@ export function convertFeatureKeyToChatFeature(key: FeatureKey | null | undefine
   }
   
   // If it's an enum value, convert it properly with type safety
-  if (typeof key === 'object' && key !== null && 'toString' in key) {
+  if (typeof key === 'object' && 'toString' in key) {
     const keyString = key.toString();
     // Continue with the string-based key
     return convertStringFeatureKey(keyString);
@@ -76,48 +95,4 @@ export function convertFeatureKeyToChatFeature(key: FeatureKey | null | undefine
   
   // Default case - return null for unhandled types
   return null;
-}
-
-/**
- * Helper function to convert string-based keys to feature state keys
- */
-function convertStringFeatureKey(key: string): keyof FeatureState | null {
-  // Handle KnownFeatureFlag values with better string conversion
-  switch (key) {
-    case 'voice_input':
-    case 'VOICE':
-      return 'voice';
-    case 'rag_support':
-    case 'RAG':
-      return 'rag';
-    case 'mode_switch':
-    case 'MODE_SWITCH':
-      return 'modeSwitch';
-    case 'notifications':
-    case 'NOTIFICATIONS':
-      return 'notifications';
-    case 'github_integration':
-    case 'GITHUB_INTEGRATION':
-      return 'github';
-    case 'code_assistant':
-    case 'CODE_ASSISTANT':
-      return 'codeAssistant';
-    case 'github_sync':
-    case 'GITHUB_SYNC':
-      return 'githubSync';
-    case 'token_enforcement':
-    case 'token_control':
-    case 'TOKEN_ENFORCEMENT':
-    case 'TOKEN_CONTROL':
-      return 'tokenEnforcement';
-    default:
-      // Handle snake_case to camelCase conversion for any remaining keys
-      if (key.includes('_')) {
-        const camelKey = key.toLowerCase().replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-        if (isFeatureStateKey(camelKey)) {
-          return camelKey;
-        }
-      }
-      return null;
-  }
 }
