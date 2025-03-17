@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { safeDataTransform, isSystemLog } from "@/utils/typeUtils";
 
 export interface SystemLog {
   id: string;
@@ -32,7 +33,7 @@ export function useSystemLogs() {
     try {
       // Type assertion to handle the type issue with system_logs table
       const query = supabase
-        .from('system_logs' as any)
+        .from('system_logs')
         .select('*');
       
       // Sort by timestamp
@@ -46,8 +47,8 @@ export function useSystemLogs() {
       if (fetchError) throw fetchError;
       
       if (data) {
-        // Safely cast the data to our SystemLog type
-        const typedData = data as SystemLog[];
+        // Safely transform the data to our SystemLog type
+        const typedData = safeDataTransform<SystemLog>(data, isSystemLog);
         setLogs(typedData);
         
         // Extract unique sources for the filter
@@ -104,7 +105,7 @@ export function useSystemLogs() {
     try {
       // Type assertion to handle the type issue
       const { error: deleteError } = await supabase
-        .from('system_logs' as any)
+        .from('system_logs')
         .delete()
         .not('id', 'is', null); 
       

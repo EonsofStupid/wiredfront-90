@@ -1,12 +1,27 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
+import { safeDataTransform, isNavigationLog } from '@/utils/typeUtils';
 
 interface RouteChangeData {
   from: string;
   to: string;
   timestamp: string;
   metadata?: Record<string, any>;
+}
+
+export interface NavigationLog {
+  id: string;
+  timestamp: string;
+  message: string;
+  metadata: {
+    from?: string;
+    to?: string;
+    previousRoute?: string;
+    currentRoute?: string;
+    [key: string]: any;
+  };
+  user_id?: string;
 }
 
 export class RouteLoggingService {
@@ -33,7 +48,9 @@ export class RouteLoggingService {
       };
 
       // Insert into system logs
-      await supabase.from('system_logs' as any).insert([logData]);
+      await supabase
+        .from('system_logs')
+        .insert([logData as any]); // Type assertion needed due to Supabase type limitations
 
       // Also log to console
       logger.info(`Navigation: ${from} → ${to}`, { from, to });
@@ -66,7 +83,9 @@ export class RouteLoggingService {
       };
 
       // Log to system logs
-      await supabase.from('system_logs' as any).insert([logData]);
+      await supabase
+        .from('system_logs')
+        .insert([logData as any]); // Type assertion needed due to Supabase type limitations
 
     } catch (error) {
       console.error('Error logging feature view:', error);
@@ -80,7 +99,7 @@ export class RouteLoggingService {
    * @param includeAllUsers Whether to include logs from all users or just the current user
    * @returns Array of navigation logs
    */
-  static async getNavigationLogs(limit: number = 50, includeAllUsers: boolean = false) {
+  static async getNavigationLogs(limit: number = 50, includeAllUsers: boolean = false): Promise<NavigationLog[]> {
     try {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData?.user?.id;
@@ -88,7 +107,7 @@ export class RouteLoggingService {
       if (!userId) return [];
 
       let query = supabase
-        .from('system_logs' as any)
+        .from('system_logs')
         .select('*')
         .eq('source', 'navigation')
         .order('timestamp', { ascending: false })
@@ -105,7 +124,8 @@ export class RouteLoggingService {
         throw error;
       }
 
-      return data || [];
+      // Safely transform the query results to our NavigationLog type
+      return safeDataTransform<NavigationLog>(data, isNavigationLog);
     } catch (error) {
       logger.error('Error fetching navigation logs:', error);
       return [];

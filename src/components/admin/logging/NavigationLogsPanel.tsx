@@ -1,27 +1,12 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { RouteLoggingService } from "@/services/navigation/RouteLoggingService";
+import { RouteLoggingService, NavigationLog } from "@/services/navigation/RouteLoggingService";
 import { formatDistanceToNow } from "date-fns";
 import { Loader2, RotateCcw, Download, Filter } from "lucide-react";
-
-interface NavigationLog {
-  id: string;
-  timestamp: string;
-  message: string;
-  metadata: {
-    from?: string;
-    to?: string;
-    previousRoute?: string;
-    currentRoute?: string;
-    [key: string]: any;
-  };
-  user_id?: string;
-}
 
 export function NavigationLogsPanel() {
   const [logs, setLogs] = useState<NavigationLog[]>([]);
@@ -34,8 +19,8 @@ export function NavigationLogsPanel() {
     setError(null);
     
     try {
-      const data = await RouteLoggingService.getNavigationLogs(50, view === 'all');
-      setLogs(data as NavigationLog[]);
+      const navigationLogs = await RouteLoggingService.getNavigationLogs(50, view === 'all');
+      setLogs(navigationLogs);
     } catch (err: any) {
       setError(err.message || 'Failed to load navigation logs');
     } finally {

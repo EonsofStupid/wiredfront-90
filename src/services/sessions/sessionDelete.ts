@@ -1,13 +1,8 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { SessionOperationResult } from '@/types/sessions';
 import { logger } from '@/services/chat/LoggingService';
 import { clearMiddlewareStorage } from '@/components/chat/store/chatStore';
-
-type SessionDeleteResult = {
-  success: boolean;
-  count?: number;
-  error?: any;
-};
 
 /**
  * Deletes inactive sessions, keeping the current session and recent ones
@@ -78,10 +73,16 @@ export async function cleanupSessions(currentSessionId: string): Promise<number>
   }
 }
 
+type SessionDeleteParams = {
+  currentSessionId: string | null;
+};
+
+type SessionDeleteResult = SessionOperationResult;
+
 /**
  * Clears all sessions for the current user except the specified one
  */
-export async function clearAllSessions(currentSessionId: string | null = null): Promise<SessionOperationResult> {
+export async function clearAllSessions(currentSessionId: string | null = null): Promise<SessionDeleteResult> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -116,7 +117,7 @@ export async function clearAllSessions(currentSessionId: string | null = null): 
       });
       
       logger.info('Cleared sessions except current', { 
-        count: count, 
+        count, 
         preservedSessionId: currentSessionId 
       });
     } else {
