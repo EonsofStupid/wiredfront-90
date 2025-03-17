@@ -44,8 +44,8 @@ export function useSystemLogs() {
         throw result.error;
       }
       
-      // Safely access data with proper type checking
-      const responseData = result && result.data ? 
+      // Safely access data with proper type checking using optional chaining and default empty array
+      const responseData = result?.data ? 
         (Array.isArray(result.data) ? result.data : []) : [];
       
       // Safely transform the data to our SystemLog type
