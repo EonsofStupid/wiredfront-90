@@ -120,8 +120,11 @@ export class RouteLoggingService {
         throw result.error;
       }
 
+      // Safely handle data access with null checks
+      const responseData = result.data || [];
+      
       // Safely transform the query results to our NavigationLog type
-      return safeDataTransform<NavigationLog>(result.data, isNavigationLog);
+      return safeDataTransform<NavigationLog>(responseData, isNavigationLog);
     } catch (error) {
       logger.error('Error fetching navigation logs:', error);
       return [];

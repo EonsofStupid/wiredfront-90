@@ -1,7 +1,10 @@
 
 export type MessageType = 'text' | 'command' | 'system';
 export type SettingType = 'string' | 'number' | 'boolean' | 'json' | 'array';
-export type ChatMode = 'standard' | 'developer' | 'training' | 'image'; 
+
+// Modified to align with chat store types
+export type ChatMode = 'chat' | 'chat-only' | 'dev' | 'image' | 'training' | 'standard' | 'developer'; 
+
 export type TokenEnforcementMode = 'hard' | 'soft' | 'never' | 'always' | 'role_based' | 'mode_based';
 export type AppRole = 'super_admin' | 'admin' | 'developer' | 'subscriber' | 'guest';
 export type ChatFeatureKey = 'ai_provider' | 'github' | 'rag' | 'voice' | 'notifications' | 'status';
@@ -19,9 +22,20 @@ export const isLogSource = (value: any): value is LogSource => {
 };
 
 export const isChatMode = (value: any): value is ChatMode => {
-  return ['standard', 'developer', 'training', 'image'].includes(value);
+  return ['chat', 'chat-only', 'dev', 'image', 'training', 'standard', 'developer'].includes(value);
 };
 
 export const isTokenEnforcementMode = (value: any): value is TokenEnforcementMode => {
   return ['hard', 'soft', 'never', 'always', 'role_based', 'mode_based'].includes(value);
+};
+
+// Add helper function to convert between different ChatMode naming conventions
+export const normalizeChatMode = (mode: ChatMode): ChatMode => {
+  // Map legacy values to new expected values
+  const modeMap: Record<string, ChatMode> = {
+    'standard': 'chat',
+    'developer': 'dev'
+  };
+  
+  return modeMap[mode] || mode;
 };

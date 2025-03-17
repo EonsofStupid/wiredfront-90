@@ -16,10 +16,10 @@ const ChatContent: React.FC<ChatContentProps> = ({ className, ...props }) => {
   return (
     <div className={`chat-content ${className || ''}`} {...props}>
       {/* Render different content based on mode and isEditorPage */}
-      {mode === 'chat' && (
+      {(mode === 'chat' || mode === 'standard') && (
         <div>Chat Mode Content</div>
       )}
-      {mode === 'dev' && (
+      {(mode === 'dev' || mode === 'developer') && (
         <div>Developer Mode Content</div>
       )}
       {mode === 'image' && (

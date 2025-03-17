@@ -24,8 +24,8 @@ export function useSystemLogs() {
     setError(null);
     
     try {
-      // Use type assertion here since system_logs is not in the generated types
-      // This is safe because we know the table exists
+      // Use a properly typed approach to fetch from system_logs
+      // We need to cast 'as any' since system_logs is not in the generated types
       const query = supabase
         .from('system_logs' as any)
         .select();
@@ -42,8 +42,11 @@ export function useSystemLogs() {
         throw result.error;
       }
       
+      // Ensure result.data exists and safely transform it
+      const responseData = result.data || [];
+      
       // Safely transform the data to our SystemLog type
-      const typedData = safeDataTransform<SystemLog>(result.data, isSystemLog);
+      const typedData = safeDataTransform<SystemLog>(responseData, isSystemLog);
       setLogs(typedData);
       
       // Extract unique sources for the filter

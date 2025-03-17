@@ -10,7 +10,8 @@ import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { logger } from "@/services/chat/LoggingService";
 import { ChatModeDialog } from "./features/ModeSwitch/ChatModeDialog";
-import { ChatMode } from "@/integrations/supabase/types/enums";
+import { ChatMode as SupabaseChatMode } from "@/integrations/supabase/types/enums";
+import { supabaseModeToStoreMode } from "@/utils/modeConversion";
 import "./styles/index.css";
 import "./styles/cyber-theme.css";
 
@@ -55,8 +56,10 @@ export function DraggableChat() {
   }, [isOpen, position, isMinimized, showSidebar, scale, isOverflowing, location.pathname]);
 
   // Handle selecting a mode from the dialog
-  const handleModeSelect = (mode: ChatMode, providerId: string) => {
-    setCurrentMode(mode);
+  const handleModeSelect = (mode: SupabaseChatMode, providerId: string) => {
+    // Convert from Supabase mode to store mode
+    const storeMode = supabaseModeToStoreMode(mode);
+    setCurrentMode(storeMode);
     
     // Find and update current provider
     const provider = availableProviders.find(p => p.id === providerId);

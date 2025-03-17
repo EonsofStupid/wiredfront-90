@@ -4,7 +4,8 @@ import { useDraggable } from '@dnd-kit/core';
 import { useChatStore } from '../store/chatStore';
 import { ChatHeader } from './ChatHeader';
 import { ChatModeDialog } from '../features/ModeSwitch/ChatModeDialog';
-import { ChatMode } from '@/integrations/supabase/types/enums';
+import { ChatMode as SupabaseChatMode } from '@/integrations/supabase/types/enums';
+import { supabaseModeToStoreMode } from '@/utils/modeConversion';
 import ChatInputArea from './ChatInputArea';
 import ChatIconStack from './ChatIconStack';
 import '../styles/index.css';
@@ -26,8 +27,10 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
   const { isMinimized, docked, scale } = useChatStore();
   const [modeDialogOpen, setModeDialogOpen] = useState(false);
   
-  const handleModeSelect = (mode: ChatMode, providerId: string) => {
-    useChatStore.getState().setCurrentMode(mode);
+  const handleModeSelect = (mode: SupabaseChatMode, providerId: string) => {
+    // Convert Supabase mode to store mode
+    const storeMode = supabaseModeToStoreMode(mode);
+    useChatStore.getState().setCurrentMode(storeMode);
     
     // Find the provider by ID and set it as current
     const provider = useChatStore.getState().availableProviders.find(p => p.id === providerId);
