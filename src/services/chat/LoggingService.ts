@@ -58,13 +58,14 @@ class Logger {
     
     // Try to log to database
     try {
-      const { error } = await supabase.from('system_logs').insert({
+      // Cast to any to work around type check issues
+      const { error } = await supabase.from('system_logs' as any).insert({
         level,
         source,
         message,
         metadata,
         user_id: userId
-      } as any); // Type assertion since table might not be in types
+      });
       
       if (error) {
         console.error('Failed to write log to database:', error);

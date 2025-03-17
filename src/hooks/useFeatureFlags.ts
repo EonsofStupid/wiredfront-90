@@ -178,7 +178,7 @@ export function useFeatureFlags() {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData?.user) return;
       
-      await supabase.from('feature_usage').insert({
+      await supabase.from('feature_usage' as any).insert({
         user_id: userData.user.id,
         feature_name: featureKey,
         context

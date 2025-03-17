@@ -22,7 +22,7 @@ export function useFeatureUsage() {
       
       setIsLogging(true);
       try {
-        await supabase.from('feature_usage').insert({
+        await supabase.from('feature_usage' as any).insert({
           user_id: user.id,
           feature_name: featureName,
           context

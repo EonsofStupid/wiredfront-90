@@ -30,18 +30,18 @@ export function useSystemLogs() {
     setError(null);
     
     try {
-      // Use any type here since the system_logs table may not be in the types yet
-      let query = supabase
-        .from('system_logs')
-        .select('*') as any;
+      // Type assertion to handle the type issue with system_logs table
+      const query = supabase
+        .from('system_logs' as any)
+        .select('*');
       
       // Sort by timestamp
-      query = query.order('timestamp', { ascending: sortDirection === 'asc' });
+      const sortedQuery = query.order('timestamp', { ascending: sortDirection === 'asc' });
       
       // Limit to the most recent 250 logs
-      query = query.limit(250);
+      const limitedQuery = sortedQuery.limit(250);
       
-      const { data, error: fetchError } = await query;
+      const { data, error: fetchError } = await limitedQuery;
       
       if (fetchError) throw fetchError;
       
@@ -100,10 +100,11 @@ export function useSystemLogs() {
     setError(null);
     
     try {
+      // Type assertion to handle the type issue
       const { error: deleteError } = await supabase
-        .from('system_logs')
+        .from('system_logs' as any)
         .delete()
-        .not('id', 'is', null) as any; // Type assertion to avoid type issues
+        .not('id', 'is', null); 
       
       if (deleteError) throw deleteError;
       

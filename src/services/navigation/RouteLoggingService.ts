@@ -1,80 +1,75 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { logger } from "@/services/chat/LoggingService";
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/services/chat/LoggingService';
 
-/**
- * Service for logging navigation events to the system_logs table
- */
+interface RouteChangeData {
+  from: string;
+  to: string;
+  timestamp: string;
+  metadata?: Record<string, any>;
+}
+
 export class RouteLoggingService {
   /**
-   * Log a route change event
+   * Log a route change in the application
    */
-  static async logRouteChange(from: string, to: string, userId?: string | null): Promise<void> {
+  static async logRouteChange(from: string, to: string, metadata: Record<string, any> = {}) {
     try {
-      // Get user ID if not provided
-      if (!userId) {
-        const { data } = await supabase.auth.getSession();
-        userId = data.session?.user?.id;
-      }
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id;
 
-      // Log to system logs table
-      await supabase.from('system_logs').insert({
+      // Create log data
+      const logData = {
         level: 'info',
         source: 'navigation',
         message: `Route changed from ${from} to ${to}`,
         metadata: {
-          previousRoute: from,
-          currentRoute: to,
-          timestamp: new Date().toISOString()
+          from,
+          to,
+          timestamp: new Date().toISOString(),
+          ...metadata
         },
         user_id: userId
-      });
+      };
 
-      // Also log to console for development
-      logger.info(`Navigation: ${from} → ${to}`, { 
-        source: 'navigation',
-        metadata: { previousRoute: from, currentRoute: to } 
-      });
+      // Insert into system logs
+      await supabase.from('system_logs').insert([logData] as any);
+
+      // Also log to console
+      logger.info(`Navigation: ${from} → ${to}`, { from, to });
     } catch (error) {
-      logger.error(`Failed to log route change: ${error}`, { 
-        source: 'navigation', 
-        metadata: { error, from, to } 
-      });
+      console.error('Error logging route change:', error);
     }
   }
 
   /**
-   * Get recent navigation logs for the current user or all users (admin only)
+   * Log a feature viewed event
    */
-  static async getNavigationLogs(limit = 50, allUsers = false): Promise<any[]> {
+  static async logFeatureViewed(featureName: string, route: string) {
     try {
-      let query = supabase
-        .from('system_logs')
-        .select('*')
-        .eq('source', 'navigation')
-        .order('timestamp', { ascending: false })
-        .limit(limit);
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id;
 
-      // If not requesting all users, filter to current user only
-      if (!allUsers) {
-        const { data } = await supabase.auth.getSession();
-        const userId = data.session?.user?.id;
-        
-        if (userId) {
-          query = query.eq('user_id', userId);
-        }
-      }
+      if (!userId) return;
 
-      const { data, error } = await query;
+      // Log data
+      const logData = {
+        level: 'info',
+        source: 'feature_access',
+        message: `Feature ${featureName} viewed`,
+        metadata: {
+          feature: featureName,
+          route,
+          timestamp: new Date().toISOString()
+        },
+        user_id: userId
+      };
 
-      if (error) throw error;
-      return data || [];
+      // Log to system logs
+      await supabase.from('system_logs').insert([logData] as any);
+
     } catch (error) {
-      logger.error(`Failed to fetch navigation logs: ${error}`, { 
-        source: 'navigation', 
-        metadata: { error } 
-      });
-      return [];
+      console.error('Error logging feature view:', error);
     }
   }
 }
