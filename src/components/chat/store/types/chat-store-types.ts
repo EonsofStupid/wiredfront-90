@@ -14,7 +14,7 @@ export type MessageActions = {
   delete: boolean;
 };
 
-export type ProviderType = 'openai' | 'anthropic' | 'gemini' | 'huggingface' | 'pinecone' | 'weaviate' | 'openrouter' | 'github';
+export type ProviderType = 'openai' | 'anthropic' | 'gemini' | 'huggingface' | 'pinecone' | 'weaviate' | 'openrouter' | 'github' | 'replicate' | 'stabilityai';
 
 export type ProviderCategoryType = 'chat' | 'image' | 'other';
 

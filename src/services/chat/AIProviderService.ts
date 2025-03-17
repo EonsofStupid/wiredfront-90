@@ -1,7 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/services/chat/LoggingService";
-import { ChatProvider, ProviderCategoryType } from "@/components/chat/store/types/chat-store-types";
+import { ChatProvider, ProviderCategoryType, ProviderType } from "@/components/chat/store/types/chat-store-types";
 
 interface ProviderUsageMetrics {
   tokensUsed?: number;
@@ -29,8 +28,9 @@ export class AIProviderService {
         name: config.memorable_name || `${config.api_type} Provider`,
         description: `${config.api_type} integration`,
         models: ['default'],
+        type: config.api_type as ProviderType,
+        enabled: config.is_enabled,
         supportsStreaming: true,
-        type: config.api_type,
         isDefault: config.is_default || false,
         isEnabled: config.is_enabled,
         category: this.getCategoryForProvider(config.api_type)
@@ -47,16 +47,7 @@ export class AIProviderService {
   static async getDefaultProvider(category: ProviderCategoryType): Promise<ChatProvider | null> {
     try {
       const providers = await this.getAllProviders();
-      
-      const categoryProviders = providers.filter(p => p.category === category);
-      
-      // First try to find a default provider for the category
-      const defaultProvider = categoryProviders.find(p => p.isDefault);
-      if (defaultProvider) return defaultProvider;
-      
-      // If no default, return the first enabled provider in this category
-      const firstEnabled = categoryProviders.find(p => p.isEnabled);
-      return firstEnabled || null;
+      return providers.find(p => p.isDefault && p.category === category) || null;
     } catch (error) {
       logger.error("Error getting default provider", error);
       return null;
@@ -158,15 +149,19 @@ export class AIProviderService {
    * Determine the category for a provider type
    */
   private static getCategoryForProvider(type: string): ProviderCategoryType {
-    if (['openai', 'anthropic', 'gemini', 'perplexity', 'openrouter'].includes(type)) {
-      return 'chat';
-    } else if (['dalle', 'stabilityai', 'replicate'].includes(type)) {
-      return 'image';
-    } else if (['pinecone', 'weaviate', 'qdrant'].includes(type)) {
-      return 'vector';
-    } else if (['elevenlabs', 'whisper', 'sonnet'].includes(type)) {
-      return 'voice';
+    switch (type.toLowerCase()) {
+      case 'openai':
+      case 'anthropic':
+      case 'gemini':
+        return 'chat';
+      case 'stabilityai':
+      case 'replicate':
+        return 'image';
+      case 'pinecone':
+      case 'weaviate':
+        return 'other';
+      default:
+        return 'chat';
     }
-    return 'other';
   }
 }

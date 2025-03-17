@@ -1,21 +1,25 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
-import { LLMProvider } from '../index';
+import { ProviderType } from '@/components/chat/store/types/chat-store-types';
+import { BaseProvider, ProviderOptions, ProviderContext, ProviderDocument } from '../index';
 
-export class StabilityAIProvider implements LLMProvider {
-  id = 'stabilityai-default';
-  name = 'Stability AI';
-  type = 'stabilityai';
-  apiKey: string | null = null;
+export class StabilityAIProvider extends BaseProvider {
+  readonly id = 'stabilityai';
+  readonly name = 'Stability AI';
+  readonly type: ProviderType = 'stabilityai';
+  private _apiKey: string | null = null;
+  
+  get apiKey(): string | null {
+    return this._apiKey;
+  }
   
   constructor() {
+    super();
     this.initializeApiKey();
   }
   
   private async initializeApiKey() {
     try {
-      // Try to get the API key from Supabase edge function
       const { data, error } = await supabase.functions.invoke('get-provider-key', {
         body: { provider: 'stabilityai', keyType: 'chat' }
       });
@@ -26,7 +30,7 @@ export class StabilityAIProvider implements LLMProvider {
       }
       
       if (data?.apiKey) {
-        this.apiKey = data.apiKey;
+        this._apiKey = data.apiKey;
         logger.info('Stability AI API key initialized');
       } else {
         logger.warn('No Stability AI API key found');
@@ -36,15 +40,15 @@ export class StabilityAIProvider implements LLMProvider {
     }
   }
   
-  async generateText(prompt: string, options: any = {}): Promise<string> {
+  async generateText(prompt: string, options?: ProviderOptions): Promise<string> {
     // Stability AI is primarily for image generation, but we'll include a basic text response
     return "Stability AI is primarily an image generation service. Please use the generateImage method instead.";
   }
   
-  async enhancePrompt(prompt: string, context: any = {}): Promise<string> {
-    // For image generation, enhance the prompt with more details
-    const style = context.style || "";
-    const modifiers = context.modifiers || [];
+  async enhancePrompt(prompt: string, context?: ProviderContext): Promise<string> {
+    const validatedContext = this.validateContext(context);
+    const style = validatedContext.style || "";
+    const modifiers = validatedContext.modifiers || [];
     
     let enhancedPrompt = prompt;
     
@@ -59,45 +63,44 @@ export class StabilityAIProvider implements LLMProvider {
     return enhancedPrompt;
   }
   
-  async prepareRAGContext(documents: any[], query: string): Promise<string> {
+  async prepareRAGContext(documents: ProviderDocument[], query: string): Promise<string> {
     // Not applicable for image generation
     return query;
   }
   
-  async generateImage(prompt: string, options: any = {}): Promise<string> {
+  async generateImage(prompt: string, options: ProviderOptions = {}): Promise<string> {
     try {
-      if (!this.apiKey) {
+      if (!this.hasApiKey()) {
         await this.initializeApiKey();
-        if (!this.apiKey) {
-          return "Error: Stability AI API key not configured. Please set STABILITYAI_CHAT_APIKEY.";
+        if (!this.hasApiKey()) {
+          throw new Error('Stability AI API key not configured. Please set STABILITYAI_CHAT_APIKEY.');
         }
       }
       
-      // Use the edge function to proxy the request to Stability AI
+      const validatedOptions = this.validateOptions(options);
+      
       const { data, error } = await supabase.functions.invoke('llm-generate-image', {
         body: {
           provider: 'stabilityai',
           prompt,
           options: {
-            engine: options.engine || 'stable-diffusion-xl-1024-v1-0',
-            width: options.width || 1024,
-            height: options.height || 1024,
-            cfg_scale: options.cfgScale || 7,
-            steps: options.steps || 30,
-            ...options
+            engine: validatedOptions.engine || 'stable-diffusion-xl-1024-v1-0',
+            width: validatedOptions.width || 1024,
+            height: validatedOptions.height || 1024,
+            cfg_scale: validatedOptions.cfgScale || 7,
+            steps: validatedOptions.steps || 30,
+            ...validatedOptions
           }
         }
       });
       
       if (error) {
-        logger.error('Error generating image with Stability AI', error);
-        return `Error generating image: ${error.message}`;
+        throw this.handleError(error);
       }
       
       return data?.imageUrl || 'No image generated';
     } catch (error) {
-      logger.error('Failed to generate image with Stability AI', error);
-      return `Error: ${error.message}`;
+      throw this.handleError(error);
     }
   }
 }

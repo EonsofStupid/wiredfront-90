@@ -1,10 +1,10 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { useChatStore } from '@/components/chat/store';
 import { logger } from '@/services/chat/LoggingService';
 import { toast } from 'sonner';
+import { Json } from '@/types/supabase';
 
 export interface Session {
   id: string;
@@ -16,6 +16,13 @@ export interface Session {
     providerId?: string;
     pageContext?: string;
   };
+  context?: Json;
+  created_at?: string;
+  project_id?: string;
+  provider_id?: string;
+  title?: string;
+  tokens_used?: number;
+  user_id?: string;
 }
 
 export interface SessionCreateOptions {
@@ -23,6 +30,24 @@ export interface SessionCreateOptions {
     mode?: string;
     providerId?: string;
     pageContext?: string;
+  };
+}
+
+// Helper function to transform Supabase data to Session type
+function transformSupabaseSession(data: any): Session {
+  return {
+    id: data.id,
+    name: data.title,
+    last_accessed: data.last_accessed,
+    is_active: data.is_active,
+    metadata: typeof data.metadata === 'object' ? data.metadata : {},
+    context: data.context,
+    created_at: data.created_at,
+    project_id: data.project_id,
+    provider_id: data.provider_id,
+    title: data.title,
+    tokens_used: data.tokens_used,
+    user_id: data.user_id
   };
 }
 
@@ -52,30 +77,18 @@ export function useSessionManager() {
         }
         
         if (data && data.length) {
-          setSessions(data);
+          const transformedSessions = data.map(transformSupabaseSession);
+          setSessions(transformedSessions);
           
           // Set current session if none is set
-          if (!currentSessionId && data.length > 0) {
-            setCurrentSessionId(data[0].id);
+          if (!currentSessionId && transformedSessions.length > 0) {
+            setCurrentSessionId(transformedSessions[0].id);
           }
-          
-          return;
-        }
-      }
-      
-      // Fallback to localStorage if no Supabase data
-      const storedSessions = localStorage.getItem('chat_sessions');
-      if (storedSessions) {
-        const parsedSessions = JSON.parse(storedSessions);
-        setSessions(parsedSessions);
-        
-        if (!currentSessionId && parsedSessions.length > 0) {
-          setCurrentSessionId(parsedSessions[0].id);
         }
       }
     } catch (error) {
-      console.error('Error fetching sessions:', error);
-      toast.error('Failed to load chat sessions');
+      logger.error('Error fetching sessions:', error);
+      toast.error('Failed to load sessions');
     } finally {
       setIsLoading(false);
       setSessionLoading(false);

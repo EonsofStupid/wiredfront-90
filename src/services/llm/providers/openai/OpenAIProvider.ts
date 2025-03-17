@@ -1,21 +1,25 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
-import { LLMProvider } from '../index';
+import { ProviderType } from '@/components/chat/store/types/chat-store-types';
+import { BaseProvider, ProviderOptions, ProviderContext, ProviderDocument } from '../index';
 
-export class OpenAIProvider implements LLMProvider {
-  id = 'openai-default';
-  name = 'OpenAI';
-  type = 'openai';
-  apiKey: string | null = null;
+export class OpenAIProvider extends BaseProvider {
+  readonly id = 'openai';
+  readonly name = 'OpenAI';
+  readonly type: ProviderType = 'openai';
+  private _apiKey: string | null = null;
+  
+  get apiKey(): string | null {
+    return this._apiKey;
+  }
   
   constructor() {
+    super();
     this.initializeApiKey();
   }
   
   private async initializeApiKey() {
     try {
-      // Try to get the API key from Supabase edge function
       const { data, error } = await supabase.functions.invoke('get-provider-key', {
         body: { provider: 'openai', keyType: 'chat' }
       });
@@ -26,7 +30,7 @@ export class OpenAIProvider implements LLMProvider {
       }
       
       if (data?.apiKey) {
-        this.apiKey = data.apiKey;
+        this._apiKey = data.apiKey;
         logger.info('OpenAI API key initialized');
       } else {
         logger.warn('No OpenAI API key found');
@@ -36,55 +40,54 @@ export class OpenAIProvider implements LLMProvider {
     }
   }
   
-  async generateText(prompt: string, options: any = {}): Promise<string> {
+  async generateText(prompt: string, options?: ProviderOptions): Promise<string> {
     try {
-      if (!this.apiKey) {
+      if (!this.hasApiKey()) {
         await this.initializeApiKey();
-        if (!this.apiKey) {
-          return "Error: OpenAI API key not configured. Please set OPENAI_CHAT_APIKEY.";
+        if (!this.hasApiKey()) {
+          throw new Error('OpenAI API key not configured. Please set OPENAI_CHAT_APIKEY.');
         }
       }
       
-      // Use the edge function to proxy the request to OpenAI
+      const validatedOptions = this.validateOptions(options);
+      
       const { data, error } = await supabase.functions.invoke('llm-generate-text', {
         body: {
           provider: 'openai',
           prompt,
           options: {
-            model: options.model || 'gpt-4o', // Default to GPT-4o if not specified
-            temperature: options.temperature || 0.7,
-            max_tokens: options.maxTokens || 1000,
-            ...options
+            model: validatedOptions.model || 'gpt-4',
+            temperature: validatedOptions.temperature,
+            max_tokens: validatedOptions.maxTokens,
+            ...validatedOptions
           }
         }
       });
       
       if (error) {
-        logger.error('Error generating text with OpenAI', error);
-        return `Error generating text: ${error.message}`;
+        throw this.handleError(error);
       }
       
       return data?.text || 'No response generated';
     } catch (error) {
-      logger.error('Failed to generate text with OpenAI', error);
-      return `Error: ${error.message}`;
+      throw this.handleError(error);
     }
   }
   
-  async enhancePrompt(prompt: string, context: any = {}): Promise<string> {
-    // OpenAI-specific prompt enhancement
-    const system = context.system || "You are a helpful assistant.";
-    const enhancedPrompt = `${system}\n\n${prompt}`;
-    return enhancedPrompt;
+  async enhancePrompt(prompt: string, context?: ProviderContext): Promise<string> {
+    const validatedContext = this.validateContext(context);
+    const system = validatedContext.system || "You are a helpful assistant.";
+    return `${system}\n\n${prompt}`;
   }
   
-  async prepareRAGContext(documents: any[], query: string): Promise<string> {
-    // OpenAI-specific RAG context preparation
-    if (!documents || documents.length === 0) {
+  async prepareRAGContext(documents: ProviderDocument[], query: string): Promise<string> {
+    const validatedDocuments = this.validateDocuments(documents);
+    
+    if (validatedDocuments.length === 0) {
       return query;
     }
     
-    const contextChunks = documents.map((doc, index) => 
+    const contextChunks = validatedDocuments.map((doc, index) => 
       `[Document ${index + 1}]: ${doc.content}`
     );
     
@@ -98,38 +101,37 @@ Based on the above context, please help with the query.
 `;
   }
   
-  async generateImage(prompt: string, options: any = {}): Promise<string> {
+  async generateImage(prompt: string, options: ProviderOptions = {}): Promise<string> {
     try {
-      if (!this.apiKey) {
+      if (!this.hasApiKey()) {
         await this.initializeApiKey();
-        if (!this.apiKey) {
-          return "Error: OpenAI API key not configured. Please set OPENAI_CHAT_APIKEY.";
+        if (!this.hasApiKey()) {
+          throw new Error('OpenAI API key not configured. Please set OPENAI_CHAT_APIKEY.');
         }
       }
       
-      // Use the edge function to proxy the request to OpenAI's DALL-E
+      const validatedOptions = this.validateOptions(options);
+      
       const { data, error } = await supabase.functions.invoke('llm-generate-image', {
         body: {
           provider: 'openai',
           prompt,
           options: {
-            model: options.model || 'dall-e-3',
-            size: options.size || '1024x1024',
-            quality: options.quality || 'standard',
-            ...options
+            model: validatedOptions.model || 'dall-e-3',
+            size: validatedOptions.size || '1024x1024',
+            quality: validatedOptions.quality || 'standard',
+            ...validatedOptions
           }
         }
       });
       
       if (error) {
-        logger.error('Error generating image with OpenAI', error);
-        return `Error generating image: ${error.message}`;
+        throw this.handleError(error);
       }
       
       return data?.imageUrl || 'No image generated';
     } catch (error) {
-      logger.error('Failed to generate image with OpenAI', error);
-      return `Error: ${error.message}`;
+      throw this.handleError(error);
     }
   }
 }

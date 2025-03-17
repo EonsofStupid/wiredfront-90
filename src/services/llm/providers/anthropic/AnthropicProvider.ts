@@ -1,21 +1,25 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
-import { LLMProvider } from '../index';
+import { ProviderType } from '@/components/chat/store/types/chat-store-types';
+import { BaseProvider, ProviderOptions, ProviderContext, ProviderDocument } from '../index';
 
-export class AnthropicProvider implements LLMProvider {
-  id = 'anthropic-default';
-  name = 'Anthropic Claude';
-  type = 'anthropic';
-  apiKey: string | null = null;
+export class AnthropicProvider extends BaseProvider {
+  readonly id = 'anthropic';
+  readonly name = 'Anthropic';
+  readonly type: ProviderType = 'anthropic';
+  private _apiKey: string | null = null;
+  
+  get apiKey(): string | null {
+    return this._apiKey;
+  }
   
   constructor() {
+    super();
     this.initializeApiKey();
   }
   
   private async initializeApiKey() {
     try {
-      // Try to get the API key from Supabase edge function
       const { data, error } = await supabase.functions.invoke('get-provider-key', {
         body: { provider: 'anthropic', keyType: 'chat' }
       });
@@ -26,7 +30,7 @@ export class AnthropicProvider implements LLMProvider {
       }
       
       if (data?.apiKey) {
-        this.apiKey = data.apiKey;
+        this._apiKey = data.apiKey;
         logger.info('Anthropic API key initialized');
       } else {
         logger.warn('No Anthropic API key found');
@@ -36,64 +40,59 @@ export class AnthropicProvider implements LLMProvider {
     }
   }
   
-  async generateText(prompt: string, options: any = {}): Promise<string> {
+  async generateText(prompt: string, options?: ProviderOptions): Promise<string> {
     try {
-      if (!this.apiKey) {
+      if (!this.hasApiKey()) {
         await this.initializeApiKey();
-        if (!this.apiKey) {
-          return "Error: Anthropic API key not configured. Please set ANTHROPIC_CHAT_APIKEY.";
+        if (!this.hasApiKey()) {
+          throw new Error('Anthropic API key not configured. Please set ANTHROPIC_CHAT_APIKEY.');
         }
       }
       
-      // Use the edge function to proxy the request to Anthropic
+      const validatedOptions = this.validateOptions(options);
+      
       const { data, error } = await supabase.functions.invoke('llm-generate-text', {
         body: {
           provider: 'anthropic',
           prompt,
           options: {
-            model: options.model || 'claude-3-opus-20240229', // Default to Claude 3 Opus
-            temperature: options.temperature || 0.7,
-            max_tokens: options.maxTokens || 1000,
-            ...options
+            model: validatedOptions.model || 'claude-3-opus-20240229',
+            temperature: validatedOptions.temperature,
+            max_tokens: validatedOptions.maxTokens,
+            ...validatedOptions
           }
         }
       });
       
       if (error) {
-        logger.error('Error generating text with Anthropic', error);
-        return `Error generating text: ${error.message}`;
+        throw this.handleError(error);
       }
       
       return data?.text || 'No response generated';
     } catch (error) {
-      logger.error('Failed to generate text with Anthropic', error);
-      return `Error: ${error.message}`;
+      throw this.handleError(error);
     }
   }
   
-  async enhancePrompt(prompt: string, context: any = {}): Promise<string> {
-    // Claude-specific prompt enhancement
-    const systemInstruction = context.system || "";
-    
-    // Claude has specific formatting for system prompts
-    let enhancedPrompt = prompt;
+  async enhancePrompt(prompt: string, context?: ProviderContext): Promise<string> {
+    const validatedContext = this.validateContext(context);
+    const systemInstruction = validatedContext.system || "";
     
     if (systemInstruction) {
-      enhancedPrompt = `<system>\n${systemInstruction}\n</system>\n\n<human>\n${prompt}\n</human>\n\n<assistant>`;
-    } else {
-      enhancedPrompt = `<human>\n${prompt}\n</human>\n\n<assistant>`;
+      return `<system>\n${systemInstruction}\n</system>\n\n<human>\n${prompt}\n</human>\n\n<assistant>`;
     }
     
-    return enhancedPrompt;
+    return `<human>\n${prompt}\n</human>\n\n<assistant>`;
   }
   
-  async prepareRAGContext(documents: any[], query: string): Promise<string> {
-    // Claude-specific RAG context preparation
-    if (!documents || documents.length === 0) {
+  async prepareRAGContext(documents: ProviderDocument[], query: string): Promise<string> {
+    const validatedDocuments = this.validateDocuments(documents);
+    
+    if (validatedDocuments.length === 0) {
       return query;
     }
     
-    const contextChunks = documents.map((doc, index) => 
+    const contextChunks = validatedDocuments.map((doc, index) => 
       `<document id="${index+1}">\n${doc.content}\n</document>`
     );
     

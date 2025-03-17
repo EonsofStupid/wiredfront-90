@@ -1,21 +1,25 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
-import { LLMProvider } from '../index';
+import { ProviderType } from '@/components/chat/store/types/chat-store-types';
+import { BaseProvider, ProviderOptions, ProviderContext, ProviderDocument } from '../index';
 
-export class ReplicateProvider implements LLMProvider {
-  id = 'replicate-default';
-  name = 'Replicate';
-  type = 'replicate';
-  apiKey: string | null = null;
+export class ReplicateProvider extends BaseProvider {
+  readonly id = 'replicate';
+  readonly name = 'Replicate';
+  readonly type: ProviderType = 'replicate';
+  private _apiKey: string | null = null;
+  
+  get apiKey(): string | null {
+    return this._apiKey;
+  }
   
   constructor() {
+    super();
     this.initializeApiKey();
   }
   
   private async initializeApiKey() {
     try {
-      // Try to get the API key from Supabase edge function
       const { data, error } = await supabase.functions.invoke('get-provider-key', {
         body: { provider: 'replicate', keyType: 'chat' }
       });
@@ -26,7 +30,7 @@ export class ReplicateProvider implements LLMProvider {
       }
       
       if (data?.apiKey) {
-        this.apiKey = data.apiKey;
+        this._apiKey = data.apiKey;
         logger.info('Replicate API key initialized');
       } else {
         logger.warn('No Replicate API key found');
@@ -36,60 +40,59 @@ export class ReplicateProvider implements LLMProvider {
     }
   }
   
-  async generateText(prompt: string, options: any = {}): Promise<string> {
+  async generateText(prompt: string, options?: ProviderOptions): Promise<string> {
     try {
-      if (!this.apiKey) {
+      if (!this.hasApiKey()) {
         await this.initializeApiKey();
-        if (!this.apiKey) {
-          return "Error: Replicate API key not configured. Please set REPLICATE_CHAT_APIKEY.";
+        if (!this.hasApiKey()) {
+          throw new Error('Replicate API key not configured. Please set REPLICATE_CHAT_APIKEY.');
         }
       }
       
-      // Use the edge function to proxy the request to Replicate
+      const validatedOptions = this.validateOptions(options);
+      
       const { data, error } = await supabase.functions.invoke('llm-generate-text', {
         body: {
           provider: 'replicate',
           prompt,
           options: {
-            model: options.model || 'meta/llama-3-70b-instruct:bbca6163e425c027989097967d5e491dd7eb46fddc0c2ab20bbb7c8873f62ea3',
-            temperature: options.temperature || 0.7,
-            max_tokens: options.maxTokens || 1000,
-            ...options
+            model: validatedOptions.model || 'meta/llama-3-70b-instruct:bbca6163e425c027989097967d5e491dd7eb46fddc0c2ab20bbb7c8873f62ea3',
+            temperature: validatedOptions.temperature,
+            max_tokens: validatedOptions.maxTokens,
+            ...validatedOptions
           }
         }
       });
       
       if (error) {
-        logger.error('Error generating text with Replicate', error);
-        return `Error generating text: ${error.message}`;
+        throw this.handleError(error);
       }
       
       return data?.text || 'No response generated';
     } catch (error) {
-      logger.error('Failed to generate text with Replicate', error);
-      return `Error: ${error.message}`;
+      throw this.handleError(error);
     }
   }
   
-  async enhancePrompt(prompt: string, context: any = {}): Promise<string> {
-    // Replicate-specific prompt enhancement
-    const systemInstruction = context.system || "";
+  async enhancePrompt(prompt: string, context?: ProviderContext): Promise<string> {
+    const validatedContext = this.validateContext(context);
+    const systemInstruction = validatedContext.system || "";
     
     if (systemInstruction) {
-      // Format depends on the model, but this works for many Replicate LLM models
       return `${systemInstruction}\n\nUser: ${prompt}\nAssistant:`;
     }
     
     return `User: ${prompt}\nAssistant:`;
   }
   
-  async prepareRAGContext(documents: any[], query: string): Promise<string> {
-    // Replicate-specific RAG context preparation
-    if (!documents || documents.length === 0) {
+  async prepareRAGContext(documents: ProviderDocument[], query: string): Promise<string> {
+    const validatedDocuments = this.validateDocuments(documents);
+    
+    if (validatedDocuments.length === 0) {
       return query;
     }
     
-    const contextChunks = documents.map((doc, index) => 
+    const contextChunks = validatedDocuments.map((doc, index) => 
       `Document ${index + 1}:\n${doc.content}`
     );
     
@@ -104,39 +107,38 @@ Answer (using only information from the documents):
 `;
   }
   
-  async generateImage(prompt: string, options: any = {}): Promise<string> {
+  async generateImage(prompt: string, options: ProviderOptions = {}): Promise<string> {
     try {
-      if (!this.apiKey) {
+      if (!this.hasApiKey()) {
         await this.initializeApiKey();
-        if (!this.apiKey) {
-          return "Error: Replicate API key not configured. Please set REPLICATE_CHAT_APIKEY.";
+        if (!this.hasApiKey()) {
+          throw new Error('Replicate API key not configured. Please set REPLICATE_CHAT_APIKEY.');
         }
       }
       
-      // Use the edge function to proxy the request to Replicate
+      const validatedOptions = this.validateOptions(options);
+      
       const { data, error } = await supabase.functions.invoke('llm-generate-image', {
         body: {
           provider: 'replicate',
           prompt,
           options: {
-            model: options.model || 'stability-ai/sdxl:c221b2b8ef527988fb59bf24a8b97c4561f1c671f73bd389f866bfb27c061316',
-            width: options.width || 1024,
-            height: options.height || 1024,
-            num_outputs: options.num_outputs || 1,
-            ...options
+            model: validatedOptions.model || 'stability-ai/sdxl:c221b2b8ef527988fb59bf24a8b97c4561f1c671f73bd389f866bfb27c061316',
+            width: validatedOptions.width || 1024,
+            height: validatedOptions.height || 1024,
+            num_outputs: validatedOptions.num_outputs || 1,
+            ...validatedOptions
           }
         }
       });
       
       if (error) {
-        logger.error('Error generating image with Replicate', error);
-        return `Error generating image: ${error.message}`;
+        throw this.handleError(error);
       }
       
       return data?.imageUrl || 'No image generated';
     } catch (error) {
-      logger.error('Failed to generate image with Replicate', error);
-      return `Error: ${error.message}`;
+      throw this.handleError(error);
     }
   }
 }
