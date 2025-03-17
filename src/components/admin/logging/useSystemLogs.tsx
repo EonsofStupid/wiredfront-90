@@ -44,8 +44,9 @@ export function useSystemLogs() {
         throw result.error;
       }
       
-      // Ensure result.data exists and safely transform it
-      const responseData = Array.isArray(result.data) ? result.data : [];
+      // Safely access data with proper type checking
+      const responseData = result && result.data ? 
+        (Array.isArray(result.data) ? result.data : []) : [];
       
       // Safely transform the data to our SystemLog type
       const typedData = safeDataTransform<SystemLog>(responseData, isSystemLog);
