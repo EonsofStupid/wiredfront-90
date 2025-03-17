@@ -51,7 +51,6 @@ export const normalizeChatMode = (mode: ChatMode | string): ChatMode => {
 export const mapFeatureFlagToChat = (flagKey: string): string => {
   const mapping: Record<string, string> = {
     'voice_input': 'voice',
-    'rag_support': 'rag',
     'mode_switch': 'modeSwitch',
     'github_integration': 'github',
     'code_assistant': 'codeAssistant',

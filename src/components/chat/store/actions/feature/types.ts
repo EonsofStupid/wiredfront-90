@@ -47,8 +47,8 @@ export function convertFeatureKeyToChatFeature(key: FeatureKey): keyof FeatureSt
     return key as keyof FeatureState;
   }
   
-  // If it's an enum value, convert it properly
-  if (typeof key !== 'string' && 'toString' in key) {
+  // If it's an enum value, convert it properly with type safety
+  if (key !== null && key !== undefined && typeof key === 'object' && 'toString' in key) {
     key = key.toString();
   }
   
