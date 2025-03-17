@@ -1,5 +1,6 @@
+
 import { ChatState } from '../../../types/chat-store-types';
-import { FeatureKey, SetState, GetState } from '../types';
+import { FeatureKey, SetState, GetState, isFeatureStateKey, convertFeatureKeyToChatFeature } from '../types';
 import { logger } from '@/services/chat/LoggingService';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -9,7 +10,16 @@ export function createFeatureToggleActions(
 ) {
   return {
     toggleFeature: async (feature: FeatureKey) => {
-      const currentState = get().features[feature];
+      // Convert to a valid feature state key
+      const featureStateKey = convertFeatureKeyToChatFeature(feature);
+      
+      // Skip if feature can't be mapped to a valid key
+      if (!featureStateKey) {
+        logger.warn(`Feature ${String(feature)} cannot be toggled: invalid feature key`);
+        return;
+      }
+      
+      const currentState = get().features[featureStateKey];
       
       try {
         // Update state optimistically
@@ -17,22 +27,22 @@ export function createFeatureToggleActions(
           state => ({
             features: {
               ...state.features,
-              [feature]: !currentState
+              [featureStateKey]: !currentState
             }
           }),
           false,
-          { type: 'toggleFeature', feature }
+          { type: 'toggleFeature', feature: featureStateKey }
         );
 
         // Log the toggle
         await supabase.from('feature_toggle_history').insert({
-          feature_name: feature,
+          feature_name: String(feature),
           old_value: currentState,
           new_value: !currentState,
           metadata: { source: 'client' }
         });
 
-        logger.info(`Feature ${feature} toggled to ${!currentState}`);
+        logger.info(`Feature ${String(feature)} toggled to ${!currentState}`);
       } catch (error) {
         // Revert on error
         logger.error('Failed to toggle feature:', error);
@@ -40,18 +50,27 @@ export function createFeatureToggleActions(
           state => ({
             features: {
               ...state.features,
-              [feature]: currentState
+              [featureStateKey]: currentState
             }
           }),
           false,
-          { type: 'toggleFeature', feature }
+          { type: 'toggleFeature', feature: featureStateKey }
         );
       }
     },
     
     enableFeature: (feature: FeatureKey) => {
-      if (!(feature in get().features)) {
-        console.warn(`Feature '${feature}' does not exist in the store`);
+      // Convert to a valid feature state key
+      const featureStateKey = convertFeatureKeyToChatFeature(feature);
+      
+      // Skip if feature can't be mapped to a valid key
+      if (!featureStateKey) {
+        logger.warn(`Feature ${String(feature)} cannot be enabled: invalid feature key`);
+        return;
+      }
+      
+      if (!(featureStateKey in get().features)) {
+        logger.warn(`Feature '${String(featureStateKey)}' does not exist in the store`);
         return;
       }
       
@@ -59,17 +78,26 @@ export function createFeatureToggleActions(
         state => ({
           features: {
             ...state.features,
-            [feature]: true
+            [featureStateKey]: true
           }
         }),
         false,
-        { type: 'enableFeature', feature }
+        { type: 'enableFeature', feature: featureStateKey }
       );
     },
     
     disableFeature: (feature: FeatureKey) => {
-      if (!(feature in get().features)) {
-        console.warn(`Feature '${feature}' does not exist in the store`);
+      // Convert to a valid feature state key
+      const featureStateKey = convertFeatureKeyToChatFeature(feature);
+      
+      // Skip if feature can't be mapped to a valid key
+      if (!featureStateKey) {
+        logger.warn(`Feature ${String(feature)} cannot be disabled: invalid feature key`);
+        return;
+      }
+      
+      if (!(featureStateKey in get().features)) {
+        logger.warn(`Feature '${String(featureStateKey)}' does not exist in the store`);
         return;
       }
       
@@ -77,17 +105,26 @@ export function createFeatureToggleActions(
         state => ({
           features: {
             ...state.features,
-            [feature]: false
+            [featureStateKey]: false
           }
         }),
         false,
-        { type: 'disableFeature', feature }
+        { type: 'disableFeature', feature: featureStateKey }
       );
     },
     
     setFeatureState: (feature: FeatureKey, isEnabled: boolean) => {
-      if (!(feature in get().features)) {
-        console.warn(`Feature '${feature}' does not exist in the store`);
+      // Convert to a valid feature state key
+      const featureStateKey = convertFeatureKeyToChatFeature(feature);
+      
+      // Skip if feature can't be mapped to a valid key
+      if (!featureStateKey) {
+        logger.warn(`Feature ${String(feature)} state cannot be set: invalid feature key`);
+        return;
+      }
+      
+      if (!(featureStateKey in get().features)) {
+        logger.warn(`Feature '${String(featureStateKey)}' does not exist in the store`);
         return;
       }
       
@@ -95,11 +132,11 @@ export function createFeatureToggleActions(
         state => ({
           features: {
             ...state.features,
-            [feature]: isEnabled
+            [featureStateKey]: isEnabled
           }
         }),
         false,
-        { type: 'setFeatureState', feature, isEnabled }
+        { type: 'setFeatureState', feature: featureStateKey, isEnabled }
       );
     }
   };
