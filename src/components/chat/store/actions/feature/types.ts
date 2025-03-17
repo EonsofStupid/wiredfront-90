@@ -39,7 +39,7 @@ export type StoreWithDevtools = StateCreator<
 >;
 
 // Enhanced helper function to convert between KnownFeatureFlag and ChatFeatureKey
-export function convertFeatureKeyToChatFeature(key: FeatureKey): keyof FeatureState | null {
+export function convertFeatureKeyToChatFeature(key: FeatureKey | null): keyof FeatureState | null {
   // Guard against null or undefined
   if (key === null || key === undefined) {
     return null;
