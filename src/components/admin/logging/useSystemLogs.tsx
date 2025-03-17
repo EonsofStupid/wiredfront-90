@@ -2,9 +2,9 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { safeDataTransform, isSystemLog, isQueryError, SystemLog } from "@/utils/typeUtils";
+import { safeDataTransform, isSystemLog, isQueryError, SystemLog, safeArrayAccess } from "@/utils/typeUtils";
 import { LogLevel, LogSource, isLogLevel, isLogSource } from "@/integrations/supabase/types/enums";
-import { PostgrestResponse, PostgrestSingleResponse } from "@supabase/supabase-js";
+import { PostgrestResponse } from "@supabase/supabase-js";
 
 export { type SystemLog };
 
@@ -25,34 +25,26 @@ export function useSystemLogs() {
     setError(null);
     
     try {
-      // Use a properly typed approach to fetch from system_logs
-      // We need to cast 'as any' since system_logs is not in the generated types
-      const query = supabase
+      // Use properly typed PostgrestResponse for the query
+      const result = await supabase
         .from('system_logs' as any)
-        .select();
+        .select()
+        .order('timestamp', { ascending: sortDirection === 'asc' })
+        .limit(250) as PostgrestResponse<any>;
       
-      // Sort by timestamp
-      const sortedQuery = query.order('timestamp', { ascending: sortDirection === 'asc' });
-      
-      // Limit to the most recent 250 logs
-      const limitedQuery = sortedQuery.limit(250);
-      
-      const result = await limitedQuery;
-      
-      // Properly type-check the response
-      if (isQueryError(result)) {
+      // Properly handle errors and null data
+      if (result.error) {
         throw result.error;
       }
       
-      // Ensure result.data exists and safely transform it
-      const responseData = Array.isArray(result.data) ? result.data : [];
-      
-      // Safely transform the data to our SystemLog type
+      // Safely transform data with proper type handling
+      const responseData = safeArrayAccess(result.data);
       const typedData = safeDataTransform<SystemLog>(responseData, isSystemLog);
+      
       setLogs(typedData);
       
       // Extract unique sources for the filter
-      const sources = [...new Set(typedData.map(log => log.source))];
+      const sources = [...new Set(typedData.map(log => log.source))].filter(Boolean);
       setUniqueSources(sources);
     } catch (err: any) {
       console.error("Error fetching logs:", err);
@@ -106,9 +98,9 @@ export function useSystemLogs() {
       const result = await supabase
         .from('system_logs' as any)
         .delete()
-        .not('id', 'is', null);
+        .not('id', 'is', null) as PostgrestResponse<any>;
       
-      if (isQueryError(result)) {
+      if (result.error) {
         throw result.error;
       }
       

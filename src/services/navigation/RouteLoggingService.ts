@@ -1,150 +1,161 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
-import { NavigationLog, safeDataTransform, isNavigationLog, isQueryError } from '@/utils/typeUtils';
-import { PostgrestError } from '@supabase/supabase-js';
+import { NavigationLog, isNavigationLog, safeArrayAccess } from '@/utils/typeUtils';
+import { PostgrestResponse } from '@supabase/supabase-js';
 
-interface RouteChangeData {
-  from: string;
-  to: string;
-  timestamp: string;
-  metadata?: Record<string, any>;
-}
-
-export { type NavigationLog };
-
+/**
+ * Service for logging and retrieving route navigation data
+ */
 export class RouteLoggingService {
   /**
-   * Log a route change in the application
+   * Log a page navigation event
    */
-  static async logRouteChange(from: string, to: string, metadata: Record<string, any> = {}) {
+  static async logNavigation(from: string, to: string, metadata: Record<string, any> = {}) {
     try {
-      // Get the current user
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError) {
-        logger.error("Error fetching user for route logging:", userError);
-      }
-      const userId = userData?.user?.id;
-
-      // Create log data
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const logData = {
         level: 'info',
         source: 'navigation',
-        message: `Route changed from ${from} to ${to}`,
+        message: `Navigation from ${from} to ${to}`,
         metadata: {
           from,
           to,
           timestamp: new Date().toISOString(),
           ...metadata
         },
-        user_id: userId
+        user_id: user?.id || null
       };
-
-      // Insert into system logs with type assertion
-      const { data, error } = await supabase
-        .from('system_logs' as any)
-        .insert([logData]);
-
+      
+      const { error } = await supabase
+        .from('system_logs')
+        .insert(logData);
+      
       if (error) {
-        throw error;
+        console.error('Failed to log navigation:', error);
       }
-
-      // Also log to console
-      logger.info(`Navigation: ${from} → ${to}`, { from, to });
-      return true;
     } catch (error) {
-      console.error('Error logging route change:', error);
-      return false;
+      console.error('Error in navigation logging:', error);
     }
   }
-
+  
   /**
-   * Log a feature viewed event
+   * Get navigation logs for a user
    */
-  static async logFeatureViewed(featureName: string, route: string) {
+  static async getUserNavigationLogs(userId: string, limit = 50) {
     try {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError) {
-        logger.error("Error fetching user for feature view logging:", userError);
-        return false;
-      }
-      
-      const userId = userData?.user?.id;
-      if (!userId) return false;
-
-      // Log data
-      const logData = {
-        level: 'info',
-        source: 'feature_access',
-        message: `Feature ${featureName} viewed`,
-        metadata: {
-          feature: featureName,
-          route,
-          timestamp: new Date().toISOString()
-        },
-        user_id: userId
-      };
-
-      // Log to system logs with type assertion
       const { data, error } = await supabase
-        .from('system_logs' as any)
-        .insert([logData]);
-
-      if (error) {
-        throw error;
-      }
+        .from('system_logs')
+        .select('*')
+        .eq('source', 'navigation')
+        .eq('user_id', userId)
+        .order('timestamp', { ascending: false })
+        .limit(limit);
       
-      return true;
+      if (error) throw error;
+      
+      return safeArrayAccess(data).filter(isNavigationLog);
     } catch (error) {
-      console.error('Error logging feature view:', error);
-      return false;
+      console.error('Failed to fetch user navigation logs:', error);
+      return [];
     }
   }
-
+  
   /**
-   * Get navigation logs for the dashboard
-   * 
-   * @param limit Maximum number of logs to return
-   * @param includeAllUsers Whether to include logs from all users or just the current user
-   * @returns Array of navigation logs
+   * Get page view counts for analytics
    */
-  static async getNavigationLogs(limit: number = 50, includeAllUsers: boolean = false): Promise<NavigationLog[]> {
+  static async getPageViewCounts(days = 7): Promise<Record<string, number>> {
     try {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError) {
-        logger.error("Error fetching user for navigation logs:", userError);
-        return [];
-      }
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
       
-      const userId = userData?.user?.id;
-      if (!userId && !includeAllUsers) return [];
-
-      // Use type assertion for system_logs table
+      const { data, error } = await supabase
+        .from('system_logs')
+        .select('*')
+        .eq('source', 'navigation')
+        .gte('timestamp', startDate.toISOString())
+        .order('timestamp', { ascending: false });
+      
+      if (error) throw error;
+      
+      const pageViewMap: Record<string, number> = {};
+      
+      safeArrayAccess(data)
+        .filter(isNavigationLog)
+        .forEach(log => {
+          const page = log.metadata.to;
+          pageViewMap[page] = (pageViewMap[page] || 0) + 1;
+        });
+      
+      return pageViewMap;
+    } catch (error) {
+      console.error('Failed to fetch page view counts:', error);
+      return {};
+    }
+  }
+  
+  /**
+   * Get navigation paths for a specific user
+   * This returns the sequence of pages a user navigated through
+   */
+  static async getUserNavigationPath(userId: string, limit = 20): Promise<{from: string, to: string, timestamp: string}[]> {
+    try {
+      const { data, error } = await supabase
+        .from('system_logs')
+        .select('*')
+        .eq('source', 'navigation')
+        .eq('user_id', userId)
+        .order('timestamp', { ascending: false })
+        .limit(limit);
+      
+      if (error) throw error;
+      
+      return safeArrayAccess(data)
+        .filter(isNavigationLog)
+        .map(log => ({
+          from: log.metadata.from,
+          to: log.metadata.to,
+          timestamp: log.metadata.timestamp
+        }));
+    } catch (error) {
+      console.error('Failed to fetch user navigation path:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Get all navigation logs with optional filtering
+   */
+  static async getAllNavigationLogs(
+    filters: { startDate?: Date; endDate?: Date; limit?: number } = {}
+  ): Promise<NavigationLog[]> {
+    try {
+      const { startDate, endDate, limit = 100 } = filters;
+      
       let query = supabase
-        .from('system_logs' as any)
+        .from('system_logs')
         .select('*')
         .eq('source', 'navigation')
         .order('timestamp', { ascending: false })
         .limit(limit);
-
-      // If we only want the current user's logs, add that constraint
-      if (!includeAllUsers) {
-        query = query.eq('user_id', userId);
-      }
-
-      const { data, error } = await query;
       
-      if (error) {
-        throw error;
+      if (startDate) {
+        query = query.gte('timestamp', startDate.toISOString());
       }
-
-      // Safely handle data access with null checks
-      const responseData = Array.isArray(data) ? data : [];
       
-      // Safely transform the query results to our NavigationLog type
-      return safeDataTransform<NavigationLog>(responseData, isNavigationLog);
+      if (endDate) {
+        query = query.lte('timestamp', endDate.toISOString());
+      }
+      
+      const result = await query as PostgrestResponse<any>;
+      
+      if (result.error) throw result.error;
+      
+      // Safely handle data access with proper error handling
+      return safeArrayAccess(result.data).filter(isNavigationLog);
     } catch (error) {
-      logger.error('Error fetching navigation logs:', error);
+      logger.error('Failed to fetch navigation logs', { error });
       return [];
     }
   }
