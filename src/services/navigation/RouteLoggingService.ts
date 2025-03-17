@@ -35,9 +35,9 @@ export class RouteLoggingService {
         user_id: userId
       };
 
-      // Insert into system logs
+      // Insert into system logs with type assertion
       const { error } = await supabase
-        .from('system_logs')
+        .from('system_logs' as any)
         .insert([logData]);
 
       if (error) {
@@ -74,9 +74,9 @@ export class RouteLoggingService {
         user_id: userId
       };
 
-      // Log to system logs
+      // Log to system logs with type assertion
       const { error } = await supabase
-        .from('system_logs')
+        .from('system_logs' as any)
         .insert([logData]);
 
       if (error) {
@@ -101,8 +101,9 @@ export class RouteLoggingService {
 
       if (!userId) return [];
 
+      // Use type assertion for system_logs table
       let query = supabase
-        .from('system_logs')
+        .from('system_logs' as any)
         .select('*')
         .eq('source', 'navigation')
         .order('timestamp', { ascending: false })

@@ -24,8 +24,10 @@ export function useSystemLogs() {
     setError(null);
     
     try {
+      // Use type assertion here since system_logs is not in the generated types
+      // This is safe because we know the table exists
       const query = supabase
-        .from('system_logs')
+        .from('system_logs' as any)
         .select();
       
       // Sort by timestamp
@@ -95,8 +97,9 @@ export function useSystemLogs() {
     setError(null);
     
     try {
+      // Same type assertion approach for consistency
       const result = await supabase
-        .from('system_logs')
+        .from('system_logs' as any)
         .delete()
         .not('id', 'is', null);
       

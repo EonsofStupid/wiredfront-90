@@ -66,7 +66,7 @@ export function isSystemLog(item: unknown): item is SystemLog {
   if (!isObject(item)) return false;
   
   const hasRequired = hasRequiredKeys<SystemLog>(item, [
-    'id', 'timestamp', 'level', 'source', 'message', 'metadata'
+    'id', 'timestamp', 'level', 'source', 'message'
   ]);
   
   if (!hasRequired) return false;

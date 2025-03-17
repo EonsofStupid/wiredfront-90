@@ -1,15 +1,16 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { LogLevel, LogSource } from "@/integrations/supabase/types/enums";
 
 export interface LogOptions {
-  source?: string;
+  source?: LogSource;
   metadata?: Record<string, any>;
   userId?: string;
   [key: string]: any; // Allow any additional properties
 }
 
 class Logger {
-  private defaultSource: string = 'application';
+  private defaultSource: LogSource = 'system';
 
   /**
    * Logs an informational message
@@ -48,7 +49,7 @@ class Logger {
   /**
    * Logs a message to console and Supabase system_logs table
    */
-  private async log(level: 'info' | 'warn' | 'error' | 'debug', message: string, options?: LogOptions) {
+  private async log(level: LogLevel, message: string, options?: LogOptions) {
     const source = options?.source || this.defaultSource;
     const metadata = options?.metadata || {};
     const userId = options?.userId || await this.getCurrentUserId();
@@ -58,14 +59,16 @@ class Logger {
     
     // Try to log to database
     try {
-      // Cast to any to work around type check issues
-      const { error } = await supabase.from('system_logs' as any).insert({
-        level,
-        source,
-        message,
-        metadata,
-        user_id: userId
-      });
+      // Use type assertion for system_logs table
+      const { error } = await supabase
+        .from('system_logs' as any)
+        .insert({
+          level,
+          source,
+          message,
+          metadata,
+          user_id: userId
+        });
       
       if (error) {
         console.error('Failed to write log to database:', error);
@@ -78,7 +81,7 @@ class Logger {
   /**
    * Logs a message to the console with appropriate formatting
    */
-  private logToConsole(level: 'info' | 'warn' | 'error' | 'debug', message: string, source: string, metadata: any) {
+  private logToConsole(level: LogLevel, message: string, source: LogSource, metadata: any) {
     const timestamp = new Date().toISOString();
     const logPrefix = `[${timestamp}] [${level.toUpperCase()}] [${source}]`;
     
