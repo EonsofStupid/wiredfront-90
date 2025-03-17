@@ -28,10 +28,10 @@ export const ChatFeatureSettings = () => {
   
   const handleReset = () => {
     // Reset all features to default using proper feature key mapping
-    const codeAssistantKey = convertFeatureKeyToChatFeature(KnownFeatureFlag.CODE_ASSISTANT);
-    const ragSupportKey = convertFeatureKeyToChatFeature(KnownFeatureFlag.RAG_SUPPORT);
-    const githubSyncKey = convertFeatureKeyToChatFeature(KnownFeatureFlag.GITHUB_SYNC);
-    const notificationsKey = convertFeatureKeyToChatFeature(KnownFeatureFlag.NOTIFICATIONS);
+    const codeAssistantKey = convertFeatureKeyToChatFeature('code_assistant');
+    const ragSupportKey = convertFeatureKeyToChatFeature('rag_support');
+    const githubSyncKey = convertFeatureKeyToChatFeature('github_sync');
+    const notificationsKey = convertFeatureKeyToChatFeature('notifications');
     
     if (codeAssistantKey && !features.codeAssistant) toggleFeature(codeAssistantKey);
     if (ragSupportKey && !features.ragSupport) toggleFeature(ragSupportKey);
@@ -63,7 +63,8 @@ export const ChatFeatureSettings = () => {
   };
 
   // Helper to toggle feature with proper type mapping
-  const handleToggleFeature = (flag: KnownFeatureFlag) => {
+  const handleToggleFeature = (flag: string) => {
+    // Use string value instead of enum to avoid type issues
     const chatFeatureKey = convertFeatureKeyToChatFeature(flag);
     if (chatFeatureKey) {
       toggleFeature(chatFeatureKey);

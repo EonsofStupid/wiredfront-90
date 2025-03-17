@@ -4,7 +4,7 @@ import { ChatState, ChatProvider, FeatureState } from "../../types/chat-store-ty
 import { TokenEnforcementMode, KnownFeatureFlag, ChatFeatureKey } from '@/integrations/supabase/types/enums';
 
 // Export feature key types for usage throughout the application
-export type FeatureKey = ChatFeatureKey | KnownFeatureFlag | keyof FeatureState;
+export type FeatureKey = ChatFeatureKey | KnownFeatureFlag | keyof FeatureState | string;
 
 // Define proper Zustand types for state management
 export type SetState<T> = (
@@ -47,26 +47,48 @@ export function convertFeatureKeyToChatFeature(key: FeatureKey): keyof FeatureSt
     return key as keyof FeatureState;
   }
   
-  // Handle KnownFeatureFlag values
+  // If it's an enum value, convert it properly
+  if (typeof key !== 'string' && 'toString' in key) {
+    key = key.toString();
+  }
+  
+  // Handle KnownFeatureFlag values with better string conversion
   switch (key) {
     case 'voice_input':
+    case 'VOICE':
       return 'voice';
     case 'rag_support':
+    case 'RAG':
       return 'rag';
     case 'mode_switch':
+    case 'MODE_SWITCH':
       return 'modeSwitch';
     case 'notifications':
+    case 'NOTIFICATIONS':
       return 'notifications';
     case 'github_integration':
+    case 'GITHUB_INTEGRATION':
       return 'github';
     case 'code_assistant':
+    case 'CODE_ASSISTANT':
       return 'codeAssistant';
     case 'github_sync':
+    case 'GITHUB_SYNC':
       return 'githubSync';
     case 'token_enforcement':
     case 'token_control':
+    case 'TOKEN_ENFORCEMENT':
+    case 'TOKEN_CONTROL':
       return 'tokenEnforcement';
     default:
+      // Handle snake_case to camelCase conversion for any remaining keys
+      if (typeof key === 'string' && key.includes('_')) {
+        const camelKey = key.toLowerCase().replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+        if (camelKey in ['voice', 'rag', 'modeSwitch', 'notifications', 'github',
+                        'codeAssistant', 'ragSupport', 'githubSync', 'tokenEnforcement']) {
+          return camelKey as keyof FeatureState;
+        }
+      }
       return null;
   }
 }

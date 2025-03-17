@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { NavigationLog, safeDataTransform, isNavigationLog, isQueryError } from '@/utils/typeUtils';
+import { PostgrestError } from '@supabase/supabase-js';
 
 interface RouteChangeData {
   from: string;
@@ -18,7 +19,11 @@ export class RouteLoggingService {
    */
   static async logRouteChange(from: string, to: string, metadata: Record<string, any> = {}) {
     try {
-      const { data: userData } = await supabase.auth.getUser();
+      // Get the current user
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        logger.error("Error fetching user for route logging:", userError);
+      }
       const userId = userData?.user?.id;
 
       // Create log data
@@ -36,7 +41,7 @@ export class RouteLoggingService {
       };
 
       // Insert into system logs with type assertion
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('system_logs' as any)
         .insert([logData]);
 
@@ -46,8 +51,10 @@ export class RouteLoggingService {
 
       // Also log to console
       logger.info(`Navigation: ${from} → ${to}`, { from, to });
+      return true;
     } catch (error) {
       console.error('Error logging route change:', error);
+      return false;
     }
   }
 
@@ -56,10 +63,14 @@ export class RouteLoggingService {
    */
   static async logFeatureViewed(featureName: string, route: string) {
     try {
-      const { data: userData } = await supabase.auth.getUser();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        logger.error("Error fetching user for feature view logging:", userError);
+        return false;
+      }
+      
       const userId = userData?.user?.id;
-
-      if (!userId) return;
+      if (!userId) return false;
 
       // Log data
       const logData = {
@@ -75,15 +86,18 @@ export class RouteLoggingService {
       };
 
       // Log to system logs with type assertion
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('system_logs' as any)
         .insert([logData]);
 
       if (error) {
         throw error;
       }
+      
+      return true;
     } catch (error) {
       console.error('Error logging feature view:', error);
+      return false;
     }
   }
 
@@ -96,10 +110,14 @@ export class RouteLoggingService {
    */
   static async getNavigationLogs(limit: number = 50, includeAllUsers: boolean = false): Promise<NavigationLog[]> {
     try {
-      const { data: userData } = await supabase.auth.getUser();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        logger.error("Error fetching user for navigation logs:", userError);
+        return [];
+      }
+      
       const userId = userData?.user?.id;
-
-      if (!userId) return [];
+      if (!userId && !includeAllUsers) return [];
 
       // Use type assertion for system_logs table
       let query = supabase
@@ -114,14 +132,14 @@ export class RouteLoggingService {
         query = query.eq('user_id', userId);
       }
 
-      const result = await query;
+      const { data, error } = await query;
       
-      if (isQueryError(result)) {
-        throw result.error;
+      if (error) {
+        throw error;
       }
 
       // Safely handle data access with null checks
-      const responseData = Array.isArray(result.data) ? result.data : [];
+      const responseData = Array.isArray(data) ? data : [];
       
       // Safely transform the query results to our NavigationLog type
       return safeDataTransform<NavigationLog>(responseData, isNavigationLog);

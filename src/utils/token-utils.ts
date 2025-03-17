@@ -42,3 +42,29 @@ export function getTokenEnforcementModeDisplayName(mode: TokenEnforcementMode): 
   
   return modeMap[mode] || 'Unknown';
 }
+
+/**
+ * Convert between chat store TokenControl enforcementMode and TokenEnforcementMode enum
+ * This helps unify the types across the application
+ */
+export function mapTokenEnforcementMode(mode: any): TokenEnforcementMode {
+  if (isTokenEnforcementMode(mode)) {
+    return mode;
+  }
+  
+  // Handle possible string conversions
+  if (typeof mode === 'string') {
+    if (isTokenEnforcementMode(mode)) {
+      return mode as TokenEnforcementMode;
+    }
+    
+    // Try some common conversions
+    const normalized = mode.toLowerCase().replace(/[_\s]/g, '_');
+    if (isTokenEnforcementMode(normalized)) {
+      return normalized as TokenEnforcementMode;
+    }
+  }
+  
+  // Default fallback
+  return 'never';
+}

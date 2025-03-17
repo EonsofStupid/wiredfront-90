@@ -1,3 +1,4 @@
+
 export type ChatPosition = 'bottom-right' | 'bottom-left' | { x: number, y: number };
 
 export type SelectedMode = 'chat' | 'dev' | 'image' | 'training';
@@ -24,10 +25,12 @@ export type ProviderType =
   | 'whisper'
   | string;
 
-// Updated TokenControl interface to use the full TokenEnforcementMode type
+// Updated TokenControl interface to use the imported TokenEnforcementMode type from enums
+import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
+
 export interface TokenControl {
   balance: number;
-  enforcementMode: 'always' | 'never' | 'role_based' | 'mode_based' | 'hard' | 'soft';
+  enforcementMode: TokenEnforcementMode;
   lastUpdated: string | null;
   tokensPerQuery: number;
   freeQueryLimit: number;

@@ -59,6 +59,11 @@ export function isQueryError(result: any): result is QueryErrorResult {
   return result && result.error instanceof Object;
 }
 
+// Type guard to check if a Supabase response is successful
+export function isQuerySuccess<T>(result: any): result is QuerySuccessResult<T> {
+  return result && Array.isArray(result.data);
+}
+
 // Safely transform data with type checking
 export function safeDataTransform<T>(data: any[], typeGuard: (item: any) => item is T): T[] {
   if (!Array.isArray(data)) return [];
@@ -82,4 +87,13 @@ export function safeJsonParse<T>(jsonString: string | null, fallback: T): T {
     console.error('Failed to parse JSON:', e);
     return fallback;
   }
+}
+
+// Safely extract data from a Supabase response
+export function safeExtractData<T>(response: { data: T | null; error: PostgrestError | null }): T | null {
+  if (response?.error) {
+    console.error('Error in Supabase response:', response.error);
+    return null;
+  }
+  return response?.data || null;
 }

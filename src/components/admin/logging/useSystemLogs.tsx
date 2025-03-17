@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { safeDataTransform, isSystemLog, isQueryError, SystemLog } from "@/utils/typeUtils";
-import { LogLevel, LogSource } from "@/integrations/supabase/types/enums";
+import { LogLevel, LogSource, isLogLevel, isLogSource } from "@/integrations/supabase/types/enums";
+import { PostgrestResponse, PostgrestSingleResponse } from "@supabase/supabase-js";
 
 export { type SystemLog };
 
@@ -38,6 +39,7 @@ export function useSystemLogs() {
       
       const result = await limitedQuery;
       
+      // Properly type-check the response
       if (isQueryError(result)) {
         throw result.error;
       }

@@ -7,10 +7,9 @@ import { useFeatureFlag } from "./useFeatureFlag";
 import { toast } from "sonner";
 import { 
   KnownFeatureFlag, 
-  mapFeatureFlagToChat, 
   ChatFeatureKey 
-} from "@/types/admin/settings/feature-flags";
-import { convertFeatureKeyToChatFeature } from "@/components/chat/store/actions/feature/types";
+} from "@/integrations/supabase/types/enums";
+import { convertFeatureKeyToChatFeature, FeatureKey } from "@/components/chat/store/actions/feature/types";
 import { FeatureState } from "@/components/chat/store/types/chat-store-types";
 
 export function useFeatureFlags() {
@@ -21,7 +20,7 @@ export function useFeatureFlags() {
    * Check if a feature is enabled in the local store
    */
   const isEnabled = useCallback(
-    (featureKey: KnownFeatureFlag | keyof FeatureState) => {
+    (featureKey: keyof FeatureState | KnownFeatureFlag | string) => {
       // Convert KnownFeatureFlag to ChatFeatureKey if needed
       const chatFeatureKey = convertFeatureKeyToChatFeature(featureKey);
       
@@ -35,9 +34,10 @@ export function useFeatureFlags() {
 
   /**
    * Toggle a feature with database logging
+   * Safely converts any feature key format to the expected chat feature key
    */
   const handleToggleFeature = useCallback(
-    async (featureKey: KnownFeatureFlag | keyof FeatureState) => {
+    async (featureKey: keyof FeatureState | string) => {
       if (isUpdating) return;
       
       // Convert to ChatFeatureKey if it's a KnownFeatureFlag
@@ -69,9 +69,10 @@ export function useFeatureFlags() {
 
   /**
    * Enable a feature with database logging
+   * Safely converts any feature key format to the expected chat feature key
    */
   const handleEnableFeature = useCallback(
-    async (featureKey: KnownFeatureFlag | keyof FeatureState) => {
+    async (featureKey: keyof FeatureState | string) => {
       if (isUpdating) return;
       
       // Convert to ChatFeatureKey if it's a KnownFeatureFlag
@@ -103,9 +104,10 @@ export function useFeatureFlags() {
 
   /**
    * Disable a feature with database logging
+   * Safely converts any feature key format to the expected chat feature key
    */
   const handleDisableFeature = useCallback(
-    async (featureKey: KnownFeatureFlag | keyof FeatureState) => {
+    async (featureKey: keyof FeatureState | string) => {
       if (isUpdating) return;
       
       // Convert to ChatFeatureKey if it's a KnownFeatureFlag
@@ -137,9 +139,10 @@ export function useFeatureFlags() {
 
   /**
    * Set a feature state with database logging
+   * Safely converts any feature key format to the expected chat feature key
    */
   const handleSetFeatureState = useCallback(
-    async (featureKey: KnownFeatureFlag | keyof FeatureState, isEnabled: boolean) => {
+    async (featureKey: keyof FeatureState | string, isEnabled: boolean) => {
       if (isUpdating) return;
       
       // Convert to ChatFeatureKey if it's a KnownFeatureFlag
