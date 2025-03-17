@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
-import { safeDataTransform, isNavigationLog } from '@/utils/typeUtils';
+import { NavigationLog, safeDataTransform, isNavigationLog, isQueryError } from '@/utils/typeUtils';
 
 interface RouteChangeData {
   from: string;
@@ -10,19 +10,7 @@ interface RouteChangeData {
   metadata?: Record<string, any>;
 }
 
-export interface NavigationLog {
-  id: string;
-  timestamp: string;
-  message: string;
-  metadata: {
-    from?: string;
-    to?: string;
-    previousRoute?: string;
-    currentRoute?: string;
-    [key: string]: any;
-  };
-  user_id?: string;
-}
+export { type NavigationLog };
 
 export class RouteLoggingService {
   /**
@@ -48,9 +36,13 @@ export class RouteLoggingService {
       };
 
       // Insert into system logs
-      await supabase
+      const { error } = await supabase
         .from('system_logs')
-        .insert([logData as any]); // Type assertion needed due to Supabase type limitations
+        .insert([logData]);
+
+      if (error) {
+        throw error;
+      }
 
       // Also log to console
       logger.info(`Navigation: ${from} → ${to}`, { from, to });
@@ -83,10 +75,13 @@ export class RouteLoggingService {
       };
 
       // Log to system logs
-      await supabase
+      const { error } = await supabase
         .from('system_logs')
-        .insert([logData as any]); // Type assertion needed due to Supabase type limitations
+        .insert([logData]);
 
+      if (error) {
+        throw error;
+      }
     } catch (error) {
       console.error('Error logging feature view:', error);
     }
@@ -118,14 +113,14 @@ export class RouteLoggingService {
         query = query.eq('user_id', userId);
       }
 
-      const { data, error } = await query;
-
-      if (error) {
-        throw error;
+      const result = await query;
+      
+      if (isQueryError(result)) {
+        throw result.error;
       }
 
       // Safely transform the query results to our NavigationLog type
-      return safeDataTransform<NavigationLog>(data, isNavigationLog);
+      return safeDataTransform<NavigationLog>(result.data, isNavigationLog);
     } catch (error) {
       logger.error('Error fetching navigation logs:', error);
       return [];

@@ -5,6 +5,7 @@
 
 import { PostgrestError } from "@supabase/supabase-js";
 import { Database } from "@/integrations/supabase/types";
+import { LogLevel, LogSource } from "@/integrations/supabase/types/enums";
 
 /**
  * Type guard to check if a Supabase query resulted in an error
@@ -61,13 +62,59 @@ export function hasRequiredKeys<T>(
 /**
  * Type guard for system log entries
  */
-export function isSystemLog(item: unknown): boolean {
-  return hasRequiredKeys(item, ['id', 'timestamp', 'level', 'source', 'message', 'metadata']);
+export function isSystemLog(item: unknown): item is SystemLog {
+  if (!isObject(item)) return false;
+  
+  const hasRequired = hasRequiredKeys<SystemLog>(item, [
+    'id', 'timestamp', 'level', 'source', 'message', 'metadata'
+  ]);
+  
+  if (!hasRequired) return false;
+  
+  // Additional validation for level and source if needed
+  const log = item as SystemLog;
+  return typeof log.message === 'string' && 
+         typeof log.level === 'string' && 
+         typeof log.source === 'string';
 }
 
 /**
  * Type guard for navigation log entries
  */
-export function isNavigationLog(item: unknown): boolean {
-  return hasRequiredKeys(item, ['id', 'timestamp', 'message', 'metadata']);
+export function isNavigationLog(item: unknown): item is NavigationLog {
+  if (!isObject(item)) return false;
+  
+  return hasRequiredKeys<NavigationLog>(item, [
+    'id', 'timestamp', 'message', 'metadata'
+  ]);
+}
+
+/**
+ * SystemLog interface matching the database schema
+ */
+export interface SystemLog {
+  id: string;
+  timestamp: string;
+  level: LogLevel | string;
+  source: LogSource | string;
+  message: string;
+  metadata: any | null;
+  user_id?: string | null;
+}
+
+/**
+ * NavigationLog interface
+ */
+export interface NavigationLog {
+  id: string;
+  timestamp: string;
+  message: string;
+  metadata: {
+    from?: string;
+    to?: string;
+    previousRoute?: string;
+    currentRoute?: string;
+    [key: string]: any;
+  };
+  user_id?: string | null;
 }

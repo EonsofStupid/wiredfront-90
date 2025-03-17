@@ -2,17 +2,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { safeDataTransform, isSystemLog } from "@/utils/typeUtils";
+import { safeDataTransform, isSystemLog, isQueryError, SystemLog } from "@/utils/typeUtils";
+import { LogLevel, LogSource } from "@/integrations/supabase/types/enums";
 
-export interface SystemLog {
-  id: string;
-  timestamp: string;
-  level: string;
-  source: string;
-  message: string;
-  metadata: any | null;
-  user_id: string | null;
-}
+export { type SystemLog };
 
 export function useSystemLogs() {
   const [logs, setLogs] = useState<SystemLog[]>([]);
@@ -31,10 +24,9 @@ export function useSystemLogs() {
     setError(null);
     
     try {
-      // Type assertion to handle the type issue with system_logs table
       const query = supabase
         .from('system_logs')
-        .select('*');
+        .select();
       
       // Sort by timestamp
       const sortedQuery = query.order('timestamp', { ascending: sortDirection === 'asc' });
@@ -42,20 +34,20 @@ export function useSystemLogs() {
       // Limit to the most recent 250 logs
       const limitedQuery = sortedQuery.limit(250);
       
-      const { data, error: fetchError } = await limitedQuery;
+      const result = await limitedQuery;
       
-      if (fetchError) throw fetchError;
-      
-      if (data) {
-        // Safely transform the data to our SystemLog type
-        const typedData = safeDataTransform<SystemLog>(data, isSystemLog);
-        setLogs(typedData);
-        
-        // Extract unique sources for the filter
-        const sources = [...new Set(typedData.map(log => log.source))];
-        setUniqueSources(sources);
+      if (isQueryError(result)) {
+        throw result.error;
       }
-    } catch (err) {
+      
+      // Safely transform the data to our SystemLog type
+      const typedData = safeDataTransform<SystemLog>(result.data, isSystemLog);
+      setLogs(typedData);
+      
+      // Extract unique sources for the filter
+      const sources = [...new Set(typedData.map(log => log.source))];
+      setUniqueSources(sources);
+    } catch (err: any) {
       console.error("Error fetching logs:", err);
       setError("Failed to fetch system logs. Please try again.");
     } finally {
@@ -103,17 +95,18 @@ export function useSystemLogs() {
     setError(null);
     
     try {
-      // Type assertion to handle the type issue
-      const { error: deleteError } = await supabase
+      const result = await supabase
         .from('system_logs')
         .delete()
-        .not('id', 'is', null); 
+        .not('id', 'is', null);
       
-      if (deleteError) throw deleteError;
+      if (isQueryError(result)) {
+        throw result.error;
+      }
       
       setLogs([]);
       setFilteredLogs([]);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error clearing logs:", err);
       setError("Failed to clear logs. Please try again.");
     } finally {

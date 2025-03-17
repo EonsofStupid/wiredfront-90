@@ -1,8 +1,10 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { SessionOperationResult } from '@/types/sessions';
 import { logger } from '@/services/chat/LoggingService';
 import { clearMiddlewareStorage } from '@/components/chat/store/chatStore';
+
+// Import type from the main types file to avoid circular references
+import type { SessionOperationResult } from '@/types/sessions';
 
 /**
  * Deletes inactive sessions, keeping the current session and recent ones
@@ -77,12 +79,10 @@ type SessionDeleteParams = {
   currentSessionId: string | null;
 };
 
-type SessionDeleteResult = SessionOperationResult;
-
 /**
  * Clears all sessions for the current user except the specified one
  */
-export async function clearAllSessions(currentSessionId: string | null = null): Promise<SessionDeleteResult> {
+export async function clearAllSessions(currentSessionId: string | null = null): Promise<SessionOperationResult> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {

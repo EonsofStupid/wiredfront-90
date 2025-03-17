@@ -19,11 +19,11 @@ interface ChatModeProviderProps {
 
 export function ChatModeProvider({ children, isEditorPage = false }: ChatModeProviderProps) {
   const { currentMode, setCurrentMode } = useChatStore();
-  const [mode, setModeState] = useState<ChatMode>(currentMode);
+  const [mode, setModeState] = useState<ChatMode>(currentMode as ChatMode);
 
   useEffect(() => {
     // When the store's mode changes, update our local state
-    setModeState(currentMode);
+    setModeState(currentMode as ChatMode);
   }, [currentMode]);
 
   // When local state changes, update the store

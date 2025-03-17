@@ -1,8 +1,7 @@
 
 import { StateCreator } from 'zustand';
 import { ChatState, ChatProvider, FeatureState } from "../../types/chat-store-types";
-import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
-import { KnownFeatureFlag, ChatFeatureKey } from '@/types/admin/settings/feature-flags';
+import { TokenEnforcementMode, KnownFeatureFlag, ChatFeatureKey } from '@/integrations/supabase/types/enums';
 
 // Export feature key types for usage throughout the application
 export type FeatureKey = ChatFeatureKey | KnownFeatureFlag;
@@ -50,24 +49,22 @@ export function convertFeatureKeyToChatFeature(key: FeatureKey): keyof FeatureSt
   
   // Handle KnownFeatureFlag values
   switch (key) {
-    case KnownFeatureFlag.VOICE:
+    case 'voice_input':
       return 'voice';
-    case KnownFeatureFlag.RAG:
+    case 'rag_support':
       return 'rag';
-    case KnownFeatureFlag.MODE_SWITCH:
+    case 'mode_switch':
       return 'modeSwitch';
-    case KnownFeatureFlag.NOTIFICATIONS:
+    case 'notifications':
       return 'notifications';
-    case KnownFeatureFlag.GITHUB_INTEGRATION:
+    case 'github_integration':
       return 'github';
-    case KnownFeatureFlag.CODE_ASSISTANT:
+    case 'code_assistant':
       return 'codeAssistant';
-    case KnownFeatureFlag.RAG_SUPPORT:
-      return 'ragSupport';
-    case KnownFeatureFlag.GITHUB_SYNC:
+    case 'github_sync':
       return 'githubSync';
-    case KnownFeatureFlag.TOKEN_ENFORCEMENT:
-    case KnownFeatureFlag.TOKEN_CONTROL:
+    case 'token_enforcement':
+    case 'token_control':
       return 'tokenEnforcement';
     default:
       return null;

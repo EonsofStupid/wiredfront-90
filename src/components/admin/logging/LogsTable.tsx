@@ -1,18 +1,10 @@
 
 import React from "react";
 import { LogItem } from "./LogItem";
-import { Json } from "@/integrations/supabase/types";
+import { SystemLog } from "@/utils/typeUtils";
 
 interface LogsTableProps {
-  logs: Array<{
-    id: string;
-    timestamp: string;
-    level: string;
-    source: string;
-    message: string;
-    metadata: Json | null;
-    user_id: string | null;
-  }>;
+  logs: SystemLog[];
   expandedLogId: string | null;
   toggleExpandLog: (id: string) => void;
 }
