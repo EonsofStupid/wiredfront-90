@@ -1,4 +1,3 @@
-
 import React, { Suspense, lazy, useState } from "react";
 import { SessionControls } from "./SessionControls";
 import { useSessionManager } from "@/hooks/sessions"; // Updated import
@@ -6,7 +5,8 @@ import { SessionHeader } from "./SessionHeader";
 import { useChatStore } from "../store/chatStore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useErrorBoundary } from "../hooks/useErrorBoundary";
-import { ChatMode, ModeSelectionDialog } from "../SessionManagement/ModeSelectionDialog";
+import { ChatMode } from "../store/types/chat-store-types";
+import { ModeSelectionDialog } from "../SessionManagement/ModeSelectionDialog";
 
 // Lazy load SessionList for performance
 const SessionList = lazy(() => import("./SessionList").then(mod => ({ default: mod.SessionList })));

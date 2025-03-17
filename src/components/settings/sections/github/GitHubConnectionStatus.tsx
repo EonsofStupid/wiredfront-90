@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { X, Github, AlertCircle } from "lucide-react";
 import { Spinner } from "@/components/chat/components/Spinner";
@@ -47,7 +46,10 @@ export function GitHubConnectionStatus({
               className="text-destructive hover:text-destructive hover:bg-destructive/10"
             >
               {connectionStatus === 'connecting' ? (
-                <Spinner size="sm" className="mr-2" label="Disconnecting..." />
+                <>
+                  <Spinner size="sm" className="mr-2" />
+                  Disconnecting...
+                </>
               ) : (
                 <X className="mr-2 h-4 w-4" />
               )}
@@ -63,7 +65,7 @@ export function GitHubConnectionStatus({
           >
             {connectionStatus === 'connecting' ? (
               <>
-                <Spinner size="sm" className="mr-2" label="Connecting..." />
+                <Spinner size="sm" className="mr-2" />
                 Connecting...
               </>
             ) : (

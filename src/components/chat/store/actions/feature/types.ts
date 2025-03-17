@@ -38,7 +38,7 @@ export type StoreWithDevtools = StateCreator<
 >;
 
 // Type guard to check if a key is a valid FeatureState key
-function isFeatureStateKey(key: FeatureKey): key is keyof FeatureState {
+export function isFeatureStateKey(key: FeatureKey): key is keyof FeatureState {
   const validKeys: (keyof FeatureState)[] = [
     'voice',
     'rag',
