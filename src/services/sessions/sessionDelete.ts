@@ -3,12 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { clearMiddlewareStorage } from '@/components/chat/store/chatStore';
 
-// Simplified interface to avoid circular dependencies
-export interface SessionOperationResult {
-  success: boolean;
-  error?: any;
-  count?: number;
-}
+// Import type from the main types file to avoid circular references
+import type { SessionOperationResult } from '@/types/sessions';
 
 /**
  * Deletes inactive sessions, keeping the current session and recent ones
@@ -124,8 +120,6 @@ export async function clearAllSessions(currentSessionId: string | null = null): 
         count, 
         preservedSessionId: currentSessionId 
       });
-
-      return { success: true, count: count };
     } else {
       // Delete all messages for the user
       await supabase
@@ -146,9 +140,9 @@ export async function clearAllSessions(currentSessionId: string | null = null): 
       clearMiddlewareStorage();
       
       logger.info('Cleared all sessions', { count });
-
-      return { success: true, count: count };
     }
+    
+    return { success: true };
   } catch (error) {
     logger.error('Failed to clear sessions', { error });
     return { success: false, error };

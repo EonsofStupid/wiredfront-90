@@ -55,6 +55,7 @@ export const mapFeatureFlagToChat = (flagKey: string): string => {
     'mode_switch': 'modeSwitch',
     'github_integration': 'github',
     'code_assistant': 'codeAssistant',
+    'rag_support': 'ragSupport',
     'github_sync': 'githubSync',
     'token_enforcement': 'tokenEnforcement',
     'token_control': 'tokenEnforcement'

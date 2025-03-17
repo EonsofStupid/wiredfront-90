@@ -47,12 +47,9 @@ export function convertFeatureKeyToChatFeature(key: FeatureKey): keyof FeatureSt
     return key as keyof FeatureState;
   }
   
-  // Safely handle potential 'never' type with a type guard
-  if (typeof key === 'object' && key !== null && 'toString' in key) {
+  // If it's an enum value, convert it properly
+  if (typeof key !== 'string' && 'toString' in key) {
     key = key.toString();
-  } else if (typeof key !== 'string') {
-    // Convert non-string values to string safely
-    key = String(key);
   }
   
   // Handle KnownFeatureFlag values with better string conversion
@@ -87,8 +84,8 @@ export function convertFeatureKeyToChatFeature(key: FeatureKey): keyof FeatureSt
       // Handle snake_case to camelCase conversion for any remaining keys
       if (typeof key === 'string' && key.includes('_')) {
         const camelKey = key.toLowerCase().replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-        if (['voice', 'rag', 'modeSwitch', 'notifications', 'github',
-             'codeAssistant', 'ragSupport', 'githubSync', 'tokenEnforcement'].includes(camelKey)) {
+        if (camelKey in ['voice', 'rag', 'modeSwitch', 'notifications', 'github',
+                        'codeAssistant', 'ragSupport', 'githubSync', 'tokenEnforcement']) {
           return camelKey as keyof FeatureState;
         }
       }
