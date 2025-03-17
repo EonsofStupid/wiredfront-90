@@ -91,7 +91,7 @@ export function convertFeatureKeyToChatFeature(key: FeatureKey): keyof FeatureSt
         return 'tokenEnforcement';
       default:
         // Handle snake_case to camelCase conversion for any remaining keys
-        if (key && key.includes('_')) {
+        if (key.includes('_')) {
           const camelKey = key.toLowerCase().replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
           if (['voice', 'rag', 'modeSwitch', 'notifications', 'github',
               'codeAssistant', 'ragSupport', 'githubSync', 'tokenEnforcement'].includes(camelKey)) {

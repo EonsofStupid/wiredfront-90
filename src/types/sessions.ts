@@ -1,6 +1,5 @@
 
 import { Json } from '@/integrations/supabase/types';
-import { IdOperationResult } from './core/operation-results';
 
 // Core session interface
 export interface Session {
@@ -17,9 +16,11 @@ export interface Session {
 // Session status for UI representation
 export type SessionStatus = 'active' | 'archived' | 'pending';
 
-// Session operation result interface - now extends IdOperationResult
-export interface SessionOperationResult extends IdOperationResult<string> {
+// Session operation result interface
+export interface SessionOperationResult {
+  success: boolean;
   sessionId?: string;
+  error?: Error | unknown;
 }
 
 // Session creation parameters

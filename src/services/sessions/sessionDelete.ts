@@ -2,8 +2,13 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { clearMiddlewareStorage } from '@/components/chat/store/chatStore';
-import { CountOperationResult } from '@/types/core/operation-results';
-import { SessionOperationResult } from '@/types/sessions';
+
+// Define a simple operation result interface to avoid circular dependencies
+interface OperationResult {
+  success: boolean;
+  error?: any;
+  count?: number;
+}
 
 /**
  * Deletes inactive sessions, keeping the current session and recent ones
@@ -81,7 +86,7 @@ type SessionDeleteParams = {
 /**
  * Clears all sessions for the current user except the specified one
  */
-export async function clearAllSessions(currentSessionId: string | null = null): Promise<CountOperationResult> {
+export async function clearAllSessions(currentSessionId: string | null = null): Promise<OperationResult> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -119,11 +124,6 @@ export async function clearAllSessions(currentSessionId: string | null = null): 
         count, 
         preservedSessionId: currentSessionId 
       });
-
-      return { 
-        success: true,
-        count: count as number 
-      };
     } else {
       // Delete all messages for the user
       await supabase
@@ -144,12 +144,9 @@ export async function clearAllSessions(currentSessionId: string | null = null): 
       clearMiddlewareStorage();
       
       logger.info('Cleared all sessions', { count });
-
-      return { 
-        success: true,
-        count: count as number 
-      };
     }
+    
+    return { success: true };
   } catch (error) {
     logger.error('Failed to clear sessions', { error });
     return { success: false, error };
