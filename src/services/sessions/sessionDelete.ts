@@ -1,14 +1,7 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { clearMiddlewareStorage } from '@/components/chat/store/chatStore';
-
-// Define a simple operation result interface to avoid circular dependencies
-interface OperationResult {
-  success: boolean;
-  error?: any;
-  count?: number;
-}
+import { SessionOperationResult } from '@/types/sessions';
 
 /**
  * Deletes inactive sessions, keeping the current session and recent ones
@@ -79,14 +72,10 @@ export async function cleanupSessions(currentSessionId: string): Promise<number>
   }
 }
 
-type SessionDeleteParams = {
-  currentSessionId: string | null;
-};
-
 /**
  * Clears all sessions for the current user except the specified one
  */
-export async function clearAllSessions(currentSessionId: string | null = null): Promise<OperationResult> {
+export async function clearAllSessions(currentSessionId: string | null = null): Promise<SessionOperationResult> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {

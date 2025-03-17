@@ -21,6 +21,7 @@ export interface SessionOperationResult {
   success: boolean;
   sessionId?: string;
   error?: Error | unknown;
+  count?: number;
 }
 
 // Session creation parameters
