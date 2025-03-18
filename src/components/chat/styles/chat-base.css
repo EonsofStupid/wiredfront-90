@@ -1,4 +1,3 @@
-
 /* Import chat variables */
 @import './chat-variables.css';
 
@@ -157,24 +156,6 @@
 .chat-button:hover {
   background-color: var(--chat-button-hover);
   transform: translateY(-1px);
-}
-
-.chat-toggle-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  background-color: var(--chat-bg);
-  color: var(--chat-text);
-  border-radius: var(--chat-button-radius);
-  font-weight: 500;
-  transition: all var(--chat-transition-speed) ease;
-  box-shadow: var(--chat-shadow);
-}
-
-.chat-toggle-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5);
 }
 
 .chat-control-button {
