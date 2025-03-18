@@ -6,7 +6,7 @@ import { useProviderRegistry } from '@/services/providers/providerRegistryStore'
 import { useMessageQueue } from '@/services/messages/messageQueueStore';
 import { useMessageStorage } from '@/services/messages/messageStorageStore';
 import { useSessionManager } from '@/services/sessions/sessionManagerStore';
-import { ChatMode, ProviderCategory } from '@/components/chat/store/types/chat-store-types';
+import { ChatMode, ProviderCategory, ProviderCategoryType, ChatProvider } from '@/components/chat/store/types/chat-store-types';
 import { Message, MessageRole } from '@/types/chat';
 import { persistenceManager } from '@/services/persistence/persistenceManager';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
@@ -109,7 +109,7 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
       // 4. Set default provider if needed
       if (!currentProvider) {
         const category = currentMode === 'image' ? 'image' : 'chat';
-        const defaultProvider = getDefaultProvider(category);
+        const defaultProvider = getDefaultProvider(category as ProviderCategoryType);
         
         if (defaultProvider) {
           updateCurrentProvider(defaultProvider);
@@ -212,7 +212,7 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
       
       // Get appropriate provider for this mode
       const category = mode === 'image' ? 'image' : 'chat';
-      const modeProviders = getProvidersByCategory(category);
+      const modeProviders = getProvidersByCategory(category as ProviderCategoryType);
       
       // If we don't have a suitable provider for this mode, or current provider is wrong category
       if (
@@ -220,7 +220,7 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
         currentProvider.category !== category || 
         !modeProviders.some(p => p.id === currentProvider.id)
       ) {
-        const defaultProvider = getDefaultProvider(category);
+        const defaultProvider = getDefaultProvider(category as ProviderCategoryType);
         if (defaultProvider) {
           updateCurrentProvider(defaultProvider);
           await testConnection(defaultProvider.id);
@@ -237,7 +237,7 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
         // Update session metadata with the new mode
         await useSessionManager.getState().updateSession(currentSession.id, {
           metadata: {
-            ...currentSession.metadata,
+            ...currentSession.metadata || {},
             mode
           }
         });

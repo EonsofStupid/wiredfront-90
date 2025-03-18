@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { clearMiddlewareStorage } from '@/components/chat/store/chatStore';
@@ -49,14 +50,16 @@ export async function cleanupSessions(currentSessionId: string): Promise<number>
 
     if (deleteError) throw deleteError;
 
-    // Delete associated messages
-    const { error: messagesError } = await supabase
-      .from('messages')
-      .delete()
-      .in('chat_session_id', sessionsToDelete);
+    // Delete associated messages - using a more direct approach to avoid type recursion
+    if (sessionsToDelete.length > 0) {
+      const { error: messagesError } = await supabase
+        .from('messages')
+        .delete()
+        .filter('chat_session_id', 'in', `(${sessionsToDelete.map(id => `'${id}'`).join(',')})`);
 
-    if (messagesError) {
-      logger.warn('Failed to delete some associated messages', { error: messagesError });
+      if (messagesError) {
+        logger.warn('Failed to delete some associated messages', { error: messagesError });
+      }
     }
 
     // Clear Zustand persistence for deleted sessions

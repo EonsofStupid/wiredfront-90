@@ -33,7 +33,8 @@ export class AIProviderService {
         type: config.api_type,
         isDefault: config.is_default || false,
         isEnabled: config.is_enabled,
-        category: this.getCategoryForProvider(config.api_type)
+        category: this.getCategoryForProvider(config.api_type),
+        enabled: config.is_enabled // Add the enabled field required by the type
       })) || [];
     } catch (error) {
       logger.error("Error fetching AI providers", error);
