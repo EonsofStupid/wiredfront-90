@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -28,10 +27,10 @@ export const ChatFeatureSettings = () => {
   
   const handleReset = () => {
     // Reset all features to default using proper feature key mapping
-    const codeAssistantKey = convertFeatureKeyToChatFeature('code_assistant');
-    const ragSupportKey = convertFeatureKeyToChatFeature('rag_support');
-    const githubSyncKey = convertFeatureKeyToChatFeature('github_sync');
-    const notificationsKey = convertFeatureKeyToChatFeature('notifications');
+    const codeAssistantKey = convertFeatureKeyToChatFeature(KnownFeatureFlag.CODE_ASSISTANT);
+    const ragSupportKey = convertFeatureKeyToChatFeature(KnownFeatureFlag.RAG_SUPPORT);
+    const githubSyncKey = convertFeatureKeyToChatFeature(KnownFeatureFlag.GITHUB_SYNC);
+    const notificationsKey = convertFeatureKeyToChatFeature(KnownFeatureFlag.NOTIFICATIONS);
     
     if (codeAssistantKey && !features.codeAssistant) toggleFeature(codeAssistantKey);
     if (ragSupportKey && !features.ragSupport) toggleFeature(ragSupportKey);
@@ -62,9 +61,8 @@ export const ChatFeatureSettings = () => {
     toast.success("Chat styling updated successfully");
   };
 
-  // Helper to toggle feature with proper type mapping
-  const handleToggleFeature = (flag: string) => {
-    // Use string value instead of enum to avoid type issues
+  // Helper to toggle feature with proper type handling
+  const handleToggleFeature = (flag: KnownFeatureFlag) => {
     const chatFeatureKey = convertFeatureKeyToChatFeature(flag);
     if (chatFeatureKey) {
       toggleFeature(chatFeatureKey);

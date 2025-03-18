@@ -42,15 +42,21 @@ export function useSystemLogs() {
       }
       
       // Safely access data with proper type checking
-      const responseData = result?.data || [];
+      if (result && result.data) {
+        const responseData = result.data;
       
-      // Safely transform the data to our SystemLog type
-      const typedData = safeDataTransform<SystemLog>(responseData, isSystemLog);
-      setLogs(typedData);
-      
-      // Extract unique sources for the filter
-      const sources = [...new Set(typedData.map(log => log.source))];
-      setUniqueSources(sources);
+        // Safely transform the data to our SystemLog type
+        const typedData = safeDataTransform<SystemLog>(responseData, isSystemLog);
+        setLogs(typedData);
+        
+        // Extract unique sources for the filter
+        const sources = [...new Set(typedData.map(log => log.source))];
+        setUniqueSources(sources);
+      } else {
+        // Handle case where data might be undefined
+        setLogs([]);
+        setUniqueSources([]);
+      }
     } catch (err: any) {
       console.error("Error fetching logs:", err);
       setError("Failed to fetch system logs. Please try again.");
