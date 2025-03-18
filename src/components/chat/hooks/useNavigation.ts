@@ -1,68 +1,66 @@
 
-import { useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChatMode } from '@/integrations/supabase/types/enums';
+import { ChatMode as SupabaseChatMode } from '@/integrations/supabase/types/enums';
+import { ChatMode as StoreChatMode } from '@/components/chat/store/types/chat-store-types';
+import { supabaseModeToStoreMode, storeModeToSupabaseMode } from '@/utils/modeConversion';
+import { useChatStore } from '../store/chatStore';
 
-interface NavigationMap {
-  [key: string]: string;
-}
+type ModeRoute = {
+  mode: SupabaseChatMode;
+  route: string;
+};
 
-/**
- * Hook to handle chat mode based navigation
- */
+// Map modes to their respective routes
+const MODE_ROUTES: ModeRoute[] = [
+  { mode: 'dev', route: '/editor' },
+  { mode: 'image', route: '/gallery' },
+  { mode: 'training', route: '/training' },
+  { mode: 'chat', route: '/' }, // Default route for chat mode
+];
+
 export const useNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { currentMode, setCurrentMode } = useChatStore();
   
-  // Map modes to their respective routes
-  const modeRoutes: NavigationMap = {
-    'standard': '/', // Standard chat stays on current page
-    'chat': '/', // Chat mode stays on current page
-    'dev': '/editor', // Developer mode goes to editor
-    'developer': '/editor',
-    'training': '/training',
-    'image': '/gallery',
+  /**
+   * Navigate to the appropriate page based on the selected mode
+   */
+  const navigateByMode = (mode: SupabaseChatMode) => {
+    const modeRoute = MODE_ROUTES.find(mr => mr.mode === mode);
+    if (modeRoute && location.pathname !== modeRoute.route) {
+      navigate(modeRoute.route);
+    }
   };
   
   /**
-   * Navigate based on selected chat mode
+   * Sync the current location with the appropriate mode
    */
-  const navigateByMode = useCallback((mode: ChatMode) => {
-    // If mode is chat/standard, don't navigate away from current page
-    if (mode === 'standard' || mode === 'chat') {
-      return false;
+  const syncLocationWithMode = () => {
+    const currentPath = location.pathname;
+    const matchedRoute = MODE_ROUTES.find(mr => mr.route === currentPath);
+    
+    if (matchedRoute) {
+      const storeMode = supabaseModeToStoreMode(matchedRoute.mode);
+      if (storeMode !== currentMode) {
+        setCurrentMode(storeMode);
+      }
     }
-    
-    const targetRoute = modeRoutes[mode];
-    
-    // Only navigate if we're not already on the target route
-    if (targetRoute && location.pathname !== targetRoute) {
-      navigate(targetRoute);
-      return true;
-    }
-    
-    return false;
-  }, [navigate, location.pathname]);
+  };
   
   /**
-   * Get current page type based on route
+   * Get the route path for a given mode
    */
-  const getCurrentPageMode = useCallback((): ChatMode => {
-    switch (location.pathname) {
-      case '/editor':
-        return 'dev';
-      case '/training':
-        return 'training';
-      case '/gallery':
-        return 'image';
-      default:
-        return 'chat';
-    }
-  }, [location.pathname]);
+  const getRouteForMode = (mode: StoreChatMode): string => {
+    const supabaseMode = storeModeToSupabaseMode(mode);
+    const modeRoute = MODE_ROUTES.find(mr => mr.mode === supabaseMode);
+    return modeRoute?.route || '/';
+  };
   
   return {
     navigateByMode,
-    getCurrentPageMode,
-    currentRoute: location.pathname
+    syncLocationWithMode,
+    getRouteForMode,
+    currentRoute: location.pathname,
   };
 };
