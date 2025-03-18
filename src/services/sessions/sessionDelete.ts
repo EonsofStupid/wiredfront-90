@@ -52,10 +52,12 @@ export async function cleanupSessions(currentSessionId: string): Promise<number>
 
     // Delete associated messages - using a more direct approach to avoid type recursion
     if (sessionsToDelete.length > 0) {
+      // Use raw SQL filter instead of .in() to avoid type recursion
+      const sessionIds = sessionsToDelete.map(id => `'${id}'`).join(',');
       const { error: messagesError } = await supabase
         .from('messages')
         .delete()
-        .filter('chat_session_id', 'in', `(${sessionsToDelete.map(id => `'${id}'`).join(',')})`);
+        .filter('chat_session_id', 'in', `(${sessionIds})`);
 
       if (messagesError) {
         logger.warn('Failed to delete some associated messages', { error: messagesError });

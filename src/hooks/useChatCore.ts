@@ -6,7 +6,7 @@ import { useProviderRegistry } from '@/services/providers/providerRegistryStore'
 import { useMessageQueue } from '@/services/messages/messageQueueStore';
 import { useMessageStorage } from '@/services/messages/messageStorageStore';
 import { useSessionManager } from '@/services/sessions/sessionManagerStore';
-import { ChatMode, ProviderCategory, ProviderCategoryType, ChatProvider } from '@/components/chat/store/types/chat-store-types';
+import { ChatMode, ProviderCategoryType, ChatProvider } from '@/components/chat/store/types/chat-store-types';
 import { Message, MessageRole } from '@/types/chat';
 import { persistenceManager } from '@/services/persistence/persistenceManager';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
@@ -237,7 +237,7 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
         // Update session metadata with the new mode
         await useSessionManager.getState().updateSession(currentSession.id, {
           metadata: {
-            ...currentSession.metadata || {},
+            ...(currentSession.metadata || {}),
             mode
           }
         });
