@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useChatStore } from '@/components/chat/store/chatStore';
@@ -6,18 +5,39 @@ import { useProviderRegistry } from '@/services/providers/providerRegistryStore'
 import { useMessageQueue } from '@/services/messages/messageQueueStore';
 import { useMessageStorage } from '@/services/messages/messageStorageStore';
 import { useSessionManager } from '@/services/sessions/sessionManagerStore';
-import { ChatMode, ProviderCategoryType, ChatProvider } from '@/components/chat/store/types/chat-store-types';
+import { ChatMode, ProviderCategoryType, ProviderCategory } from '@/components/chat/store/types/chat-store-types';
 import { Message, MessageRole } from '@/types/chat';
 import { persistenceManager } from '@/services/persistence/persistenceManager';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { logger } from '@/services/chat/LoggingService';
 import { toast } from 'sonner';
+import { Provider } from '@/services/providers/types';
 
 interface UseChatCoreOptions {
   autoInit?: boolean;
   defaultMode?: ChatMode;
   persistPosition?: boolean;
   enableAnalytics?: boolean;
+}
+
+/**
+ * Adapts a Provider to ProviderCategory format
+ */
+function adaptProviderToCategory(provider: Provider): ProviderCategory {
+  return {
+    id: provider.id,
+    name: provider.name,
+    models: Object.keys(provider.modeConfigs).map(mode => provider.modeConfigs[mode].modelName),
+    type: provider.type,
+    enabled: provider.isEnabled,
+    icon: undefined, // Provider doesn't have this field
+    description: undefined, // Provider doesn't have this field
+    supportsStreaming: provider.capabilities.streaming,
+    costPerToken: undefined, // Provider doesn't have this field
+    category: provider.category,
+    isDefault: provider.isDefault,
+    isEnabled: provider.isEnabled
+  };
 }
 
 export function useChatCore(options: UseChatCoreOptions = {}) {
@@ -112,7 +132,7 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
         const defaultProvider = getDefaultProvider(category as ProviderCategoryType);
         
         if (defaultProvider) {
-          updateCurrentProvider(defaultProvider);
+          updateCurrentProvider(adaptProviderToCategory(defaultProvider));
         }
       }
       
@@ -222,10 +242,10 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
       ) {
         const defaultProvider = getDefaultProvider(category as ProviderCategoryType);
         if (defaultProvider) {
-          updateCurrentProvider(defaultProvider);
+          updateCurrentProvider(adaptProviderToCategory(defaultProvider));
           await testConnection(defaultProvider.id);
         } else if (modeProviders.length > 0) {
-          updateCurrentProvider(modeProviders[0]);
+          updateCurrentProvider(adaptProviderToCategory(modeProviders[0]));
           await testConnection(modeProviders[0].id);
         } else {
           toast.warning(`No providers available for ${mode} mode`);
@@ -261,17 +281,17 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
       return false;
     }
   }, [
-    setCurrentMode, 
-    getProvidersByCategory, 
-    currentProvider, 
-    getDefaultProvider, 
-    updateCurrentProvider, 
+    setCurrentMode,
+    currentProvider,
+    getProvidersByCategory,
+    getDefaultProvider,
+    updateCurrentProvider,
     testConnection,
-    getCurrentSession, 
-    currentMode, 
-    currentSessionId, 
-    sendMessage, 
-    enableAnalytics, 
+    getCurrentSession,
+    currentMode,
+    currentSessionId,
+    sendMessage,
+    enableAnalytics,
     handleError
   ]);
 
