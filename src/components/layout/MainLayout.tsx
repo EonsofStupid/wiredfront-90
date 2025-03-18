@@ -13,7 +13,7 @@ interface MainLayoutProps {
 export const MainLayout = ({ children }: MainLayoutProps) => {
   return (
     <AppLayout>
-      <div className="container mx-auto px-0 relative z-[500]">
+      <div className="container mx-auto px-0 relative" style={{ zIndex: 500 }}>
         {children}
       </div>
     </AppLayout>

@@ -12,7 +12,6 @@ import ChatInputArea from './ChatInputArea';
 import { ChatIconStack } from './ChatIconStack';
 import ChatMessage from './ChatMessage';
 import '../styles/index.css';
-import '../styles/cyber-theme.css';
 
 interface DraggableChatContainerProps {
   scrollRef: React.RefObject<HTMLDivElement>;
@@ -76,7 +75,7 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
       ref={setNodeRef}
       style={transformStyle}
       {...(docked ? {} : { ...listeners, ...attributes })}
-      className={`chat-container chat-glass-card chat-neon-border overflow-hidden flex flex-col cyber-bg relative ${!docked && 'cursor-grab active:cursor-grabbing'}`}
+      className="chat-container chat-glass-card chat-neon-border overflow-hidden flex flex-col cyber-bg relative"
     >
       <ChatHeader 
         onToggleSidebar={handleToggleSidebar}

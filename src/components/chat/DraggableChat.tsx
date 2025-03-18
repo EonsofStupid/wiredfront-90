@@ -14,7 +14,6 @@ import { ChatMode as SupabaseChatMode } from "@/integrations/supabase/types/enum
 import { supabaseModeToStoreMode } from "@/utils/modeConversion";
 import { toast } from "sonner";
 import "./styles/index.css";
-import "./styles/cyber-theme.css";
 
 export function DraggableChat() {
   const { 
@@ -94,7 +93,7 @@ export function DraggableChat() {
       {isOpen && (
         <DndContext>
           <motion.div 
-            className="fixed bottom-4 right-4 flex gap-4 chat-component z-[9700]"
+            className={`chat-component ${position === 'bottom-right' ? 'chat-position-right' : 'chat-position-left'}`}
             style={{ 
               transformOrigin: position === 'bottom-right' ? 'bottom right' : 'bottom left'
             }}

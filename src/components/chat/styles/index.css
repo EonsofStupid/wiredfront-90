@@ -5,6 +5,7 @@
 @import './ChatButtonStyle.css';
 @import './animations.css';
 @import './cyber-theme.css';
+@import './container.css';
 
 /* Any global chat styles that don't fit elsewhere */
 .chat-container {
