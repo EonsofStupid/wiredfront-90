@@ -1,15 +1,9 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ActionItem } from "@/types/chat"; // Ensure this type is defined as below or adjust accordingly:
-// export interface ActionItem {
-//   id: string;
-//   icon: React.ForwardRefExoticComponent<any>;
-//   label: string;
-//   onClick: () => void;
-//   variant: "success" | "warning" | "secondary" | "ghost" | "primary" | "danger";
-//   glow?: boolean;
-// }
+import { ActionItem } from "@/types/chat";
 import { Check, X } from "lucide-react";
+import { ActionIconStack } from "./ui/action-stack/ActionIconStack";
 
 interface DraggableChatContainerProps {
   scrollRef: React.RefObject<HTMLDivElement>;
@@ -26,7 +20,7 @@ export function DraggableChatContainer({ scrollRef, isEditorPage }: DraggableCha
       onClick: () => {
         console.log("Confirmed");
       },
-      variant: "primary", // must be one of the allowed literal types
+      variant: "primary",
       glow: true,
     },
     {
@@ -42,17 +36,18 @@ export function DraggableChatContainer({ scrollRef, isEditorPage }: DraggableCha
   ];
 
   return (
-    <div ref={scrollRef} className="draggable-chat-container p-4 border rounded shadow">
-      {/* Render action items */}
-      <div className="flex gap-2 mb-4">
-        {actionItems.map(item => (
-          <Button key={item.id} variant={item.variant} onClick={item.onClick}>
-            {item.label}
-          </Button>
-        ))}
-      </div>
+    <div ref={scrollRef} className="draggable-chat-container p-4 border rounded shadow relative">
+      {/* Render action items using ActionIconStack */}
+      <ActionIconStack 
+        actions={actionItems}
+        position="right"
+        orientation="vertical"
+        className="right-0 -translate-x-8 space-y-2"
+        showLabels={true}
+      />
+      
       {/* Chat container content */}
-      <div>
+      <div className="mt-4">
         <p>Chat content goes here...</p>
       </div>
     </div>

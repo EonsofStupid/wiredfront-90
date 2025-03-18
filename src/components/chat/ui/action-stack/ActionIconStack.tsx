@@ -1,15 +1,8 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { ActionButton, ActionButtonProps } from './ActionButton';
-import { LucideIcon } from 'lucide-react';
-
-export interface ActionItem extends Omit<ActionButtonProps, 'icon' | 'label' | 'onClick'> {
-  id: string;
-  icon: LucideIcon;
-  label: string;
-  onClick: () => void;
-}
+import { ActionButton } from './ActionButton';
+import { ActionItem } from '@/types/chat';
 
 interface ActionIconStackProps {
   actions: ActionItem[];
@@ -64,7 +57,7 @@ export const ActionIconStack: React.FC<ActionIconStackProps> = ({
             icon={action.icon}
             label={action.label}
             onClick={action.onClick}
-            variant={action.variant || 'ghost'}
+            variant={action.variant}
             size={action.size || 'sm'}
             disabled={action.disabled}
             active={action.active}

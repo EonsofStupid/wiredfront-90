@@ -1,5 +1,6 @@
 
 import { Json } from '@/integrations/supabase/types';
+import { LucideIcon } from 'lucide-react';
 
 export type MessageStatus = 'pending' | 'sent' | 'failed' | 'error' | 'cached';
 export type MessageRole = 'user' | 'assistant' | 'system';
@@ -27,4 +28,18 @@ export interface Message {
   last_retry?: string;
   rate_limit_window?: string;
   timestamp?: string; // Added for compatibility
+}
+
+export interface ActionItem {
+  id: string;
+  icon: LucideIcon;
+  label: string;
+  onClick: () => void;
+  variant: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'warning';
+  active?: boolean;
+  disabled?: boolean;
+  color?: string;
+  glow?: boolean;
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
 }

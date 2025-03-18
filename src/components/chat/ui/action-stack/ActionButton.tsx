@@ -3,7 +3,6 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { coreColors } from '@/styles/theme/core-variables';
 
 export interface ActionButtonProps {
   icon: LucideIcon;
