@@ -1,6 +1,7 @@
 import React from 'react';
 import { MessageSquare, MessageCircle, Bot } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useChatButtonStore } from '../store/chatButtonStore';
 import styles from './ChatToggleButton.module.css';
 
 interface ChatToggleButtonProps {
@@ -14,6 +15,8 @@ const ChatToggleButton: React.FC<ChatToggleButtonProps> = ({
   variant = 'default',
   size = 'default'
 }) => {
+  const { scale } = useChatButtonStore();
+
   const getIcon = () => {
     switch (variant) {
       case 'circle':
@@ -45,6 +48,10 @@ const ChatToggleButton: React.FC<ChatToggleButtonProps> = ({
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
+      style={{
+        transform: `scale(${scale})`,
+        transformOrigin: 'center'
+      }}
     >
       <div className={styles.iconContainer}>
         {getIcon()}

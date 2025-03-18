@@ -1,7 +1,7 @@
 import { Message } from '@/types/chat';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
-
-export type ChatMode = 'chat' | 'dev' | 'image' | 'training';
+import { ChatMode } from '@/types/chat';
+import { ProviderCategory } from '@/types/provider';
 
 export type ChatPosition = {
   x: number;
@@ -76,10 +76,24 @@ export interface FeatureState {
   ragSupport: boolean;
   githubSync: boolean;
   tokenEnforcement: boolean;
+  startMinimized: boolean;
+  showTimestamps: boolean;
+  saveHistory: boolean;
 }
 
-export interface ProviderState {
+export interface TokenControl {
+  balance: number;
+  enforcementMode: 'never' | 'warning' | 'strict';
+  lastUpdated: string | null;
+  tokensPerQuery: number;
+  freeQueryLimit: number;
+  queriesUsed: number;
+}
+
+export interface Providers {
   availableProviders: ProviderCategory[];
+  currentProvider: ProviderCategory | null;
+  error?: string | null;
 }
 
 export interface UIState {
@@ -88,36 +102,27 @@ export interface UIState {
   providerLoading: boolean;
 }
 
-export interface TokenControlState {
-  balance: number;
-  enforcementMode: TokenEnforcementMode;
-  lastUpdated: string | null;
-  tokensPerQuery: number;
-  freeQueryLimit: number;
-  queriesUsed: number;
-}
-
 export interface ChatState {
   initialized: boolean;
   messages: Message[];
   userInput: string;
   isWaitingForResponse: boolean;
   selectedModel: string;
-  selectedMode: string;
+  selectedMode: ChatMode;
   modelFetchStatus: 'idle' | 'loading' | 'success' | 'error';
-  error: Error | null;
+  error?: string | null;
   chatId: string | null;
   docked: boolean;
   isOpen: boolean;
   isHidden: boolean;
-  position: 'bottom-right' | 'bottom-left' | { x: number; y: number };
+  position: 'bottom-right' | 'bottom-left';
   startTime: number;
   features: FeatureState;
   currentMode: ChatMode;
   availableProviders: ProviderCategory[];
   currentProvider: ProviderCategory | null;
-  tokenControl: TokenControlState;
-  providers: ProviderState;
+  tokenControl: TokenControl;
+  providers: Providers;
   isMinimized: boolean;
   showSidebar: boolean;
   scale: number;
@@ -131,6 +136,7 @@ export interface ChatState {
   togglePosition: () => void;
   toggleDocked: () => void;
   setScale: (scale: number) => void;
+  setPosition: (position: 'bottom-right' | 'bottom-left') => void;
   setPosition: (position: 'bottom-right' | 'bottom-left' | { x: number; y: number }) => void;
   
   // Mode actions
