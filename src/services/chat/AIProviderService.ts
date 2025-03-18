@@ -1,13 +1,22 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/services/chat/LoggingService";
-import { ChatProvider, ProviderCategoryType } from "@/components/chat/store/types/chat-store-types";
+import { ChatProvider, ProviderCategoryType, ProviderType } from "@/components/chat/store/types/chat-store-types";
 
 interface ProviderUsageMetrics {
   tokensUsed?: number;
   latencyMs?: number;
   vectorsAdded?: number;
   [key: string]: any;
+}
+
+// Type guard to validate provider type
+function isValidProviderType(type: string): type is ProviderType {
+  const validTypes: ProviderType[] = [
+    'openai', 'anthropic', 'gemini', 'huggingface', 'pinecone', 'weaviate',
+    'openrouter', 'github', 'replicate', 'stabilityai', 'vector', 'voice',
+    'dalle', 'perplexity', 'qdrant', 'elevenlabs', 'whisper', 'sonnet'
+  ];
+  return validTypes.includes(type as ProviderType);
 }
 
 export class AIProviderService {
@@ -24,18 +33,33 @@ export class AIProviderService {
         
       if (error) throw error;
       
-      return data?.map(config => ({
-        id: config.id,
-        name: config.memorable_name || `${config.api_type} Provider`,
-        description: `${config.api_type} integration`,
-        models: ['default'],
-        supportsStreaming: true,
-        type: config.api_type,
-        isDefault: config.is_default || false,
-        isEnabled: config.is_enabled,
-        category: this.getCategoryForProvider(config.api_type),
-        enabled: config.is_enabled // Add the enabled field required by the type
-      })) || [];
+      if (!data) return [];
+
+      const providers = data
+        .map(config => {
+          if (!isValidProviderType(config.api_type)) {
+            logger.warn(`Invalid provider type: ${config.api_type}`);
+            return null;
+          }
+
+          const provider: ChatProvider = {
+            id: config.id,
+            name: config.memorable_name || `${config.api_type} Provider`,
+            description: `${config.api_type} integration`,
+            models: ['default'],
+            supportsStreaming: true,
+            type: config.api_type,
+            isDefault: config.is_default || false,
+            isEnabled: config.is_enabled,
+            category: this.getCategoryForProvider(config.api_type),
+            enabled: config.is_enabled
+          };
+
+          return provider;
+        })
+        .filter((provider): provider is ChatProvider => provider !== null);
+
+      return providers;
     } catch (error) {
       logger.error("Error fetching AI providers", error);
       return [];
@@ -159,13 +183,18 @@ export class AIProviderService {
    * Determine the category for a provider type
    */
   private static getCategoryForProvider(type: string): ProviderCategoryType {
-    if (['openai', 'anthropic', 'gemini', 'perplexity', 'openrouter'].includes(type)) {
+    const chatProviders = ['openai', 'anthropic', 'gemini', 'perplexity', 'openrouter', 'github'];
+    const imageProviders = ['dalle', 'stabilityai', 'replicate'];
+    const vectorProviders = ['pinecone', 'weaviate', 'qdrant'];
+    const voiceProviders = ['elevenlabs', 'whisper', 'sonnet'];
+
+    if (chatProviders.includes(type)) {
       return 'chat';
-    } else if (['dalle', 'stabilityai', 'replicate'].includes(type)) {
+    } else if (imageProviders.includes(type)) {
       return 'image';
-    } else if (['pinecone', 'weaviate', 'qdrant'].includes(type)) {
+    } else if (vectorProviders.includes(type)) {
       return 'vector';
-    } else if (['elevenlabs', 'whisper', 'sonnet'].includes(type)) {
+    } else if (voiceProviders.includes(type)) {
       return 'voice';
     }
     return 'other';

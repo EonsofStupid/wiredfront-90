@@ -1,4 +1,3 @@
-
 import { Message } from '@/types/chat';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 
@@ -15,7 +14,25 @@ export type MessageActions = {
   delete: boolean;
 };
 
-export type ProviderType = 'openai' | 'anthropic' | 'gemini' | 'huggingface' | 'pinecone' | 'weaviate' | 'openrouter' | 'github' | 'replicate' | 'stabilityai' | 'vector' | 'voice';
+export type ProviderType = 
+  | 'openai' 
+  | 'anthropic' 
+  | 'gemini' 
+  | 'huggingface' 
+  | 'pinecone' 
+  | 'weaviate' 
+  | 'openrouter' 
+  | 'github' 
+  | 'replicate' 
+  | 'stabilityai' 
+  | 'vector' 
+  | 'voice'
+  | 'dalle'
+  | 'perplexity'
+  | 'qdrant'
+  | 'elevenlabs'
+  | 'whisper'
+  | 'sonnet';
 
 export type ProviderCategoryType = 'chat' | 'image' | 'other' | 'vector' | 'voice';
 
