@@ -1,4 +1,3 @@
-
 .settingsContainer {
   display: flex;
   flex-direction: column;
@@ -178,4 +177,77 @@
   color: white;
   border: 2px solid rgba(0, 255, 255, 0.7);
   box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+}
+
+.styleOptions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.styleOption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.styleOption:hover {
+  background: rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.styleOptionSelected {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: var(--chat-neon-purple);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
+}
+
+.stylePreview {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.styleOption:hover .stylePreview {
+  transform: scale(1.1);
+}
+
+.sizeOptions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.sizeOption {
+  flex: 1;
+  padding: 0.75rem;
+  text-align: center;
+  border-radius: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sizeOption:hover {
+  background: rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.sizeOptionSelected {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: var(--chat-neon-purple);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
 }

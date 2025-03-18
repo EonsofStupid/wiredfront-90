@@ -11,36 +11,95 @@
 /* Base Button */
 .toggleButton {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 3.5rem;
-  height: 3.5rem;
+  bottom: var(--button-offset-y);
+  right: var(--button-offset-x);
+  width: var(--button-size);
+  height: var(--button-size);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--wfpulse-bg);
-  color: var(--wfpulse-primary);
-  border: var(--wfpulse-border);
+  background: var(--button-bg);
+  color: var(--button-primary);
+  border: var(--button-border);
   cursor: pointer;
   outline: none;
-  z-index: 9700;
-  box-shadow: var(--wfpulse-glow);
+  z-index: var(--z-chat-button);
+  box-shadow: var(--button-glow);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Hover State */
-.toggleButton:hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 20px rgba(0, 255, 0, 0.7);
-  border-color: var(--wfpulse-primary);
-  background: rgba(0, 0, 0, 0.9);
+/* Style variants */
+.wfpulse {
+  --button-primary: #00ff00;
+  --button-secondary: #00ccff;
+  --button-accent: #ff00ff;
+  --button-bg: rgba(0, 0, 0, 0.8);
+  --button-glow: 0 0 10px rgba(0, 255, 0, 0.5);
+  --button-border: 1px solid rgba(0, 255, 0, 0.3);
 }
 
-/* Active State */
-.toggleButton:active {
-  transform: scale(0.95);
-  box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+.cyberpunk {
+  --button-primary: #ff00ff;
+  --button-secondary: #00ffff;
+  --button-accent: #ff0000;
+  --button-bg: rgba(0, 0, 0, 0.9);
+  --button-glow: 0 0 15px rgba(255, 0, 255, 0.5);
+  --button-border: 1px solid rgba(255, 0, 255, 0.3);
+}
+
+.neon {
+  --button-primary: #00ffff;
+  --button-secondary: #ff00ff;
+  --button-accent: #ffff00;
+  --button-bg: rgba(0, 0, 0, 0.85);
+  --button-glow: 0 0 20px rgba(0, 255, 255, 0.5);
+  --button-border: 1px solid rgba(0, 255, 255, 0.3);
+}
+
+.matrix {
+  --button-primary: #00ff00;
+  --button-secondary: #00cc00;
+  --button-accent: #009900;
+  --button-bg: rgba(0, 0, 0, 0.95);
+  --button-glow: 0 0 15px rgba(0, 255, 0, 0.3);
+  --button-border: 1px solid rgba(0, 255, 0, 0.2);
+}
+
+.plasma {
+  --button-primary: #ff00ff;
+  --button-secondary: #00ffff;
+  --button-accent: #ffff00;
+  --button-bg: rgba(0, 0, 0, 0.9);
+  --button-glow: 0 0 25px rgba(255, 0, 255, 0.4);
+  --button-border: 1px solid rgba(255, 0, 255, 0.2);
+}
+
+/* Size variants */
+.small {
+  --button-size: 2.5rem;
+  --icon-size: 1.5rem;
+}
+
+.medium {
+  --button-size: 3.5rem;
+  --icon-size: 2rem;
+}
+
+.large {
+  --button-size: 4.5rem;
+  --icon-size: 2.5rem;
+}
+
+/* Position variants */
+.bottomLeft {
+  --button-offset-x: 20px;
+  --button-offset-y: 20px;
+}
+
+.bottomRight {
+  --button-offset-x: 20px;
+  --button-offset-y: 20px;
 }
 
 /* Icon Container */
@@ -61,23 +120,12 @@
   right: 0;
   bottom: 0;
   border-radius: 50%;
-  background: var(--wfpulse-primary);
+  background: var(--button-primary);
   opacity: 0;
   animation: pulse 2s infinite;
 }
 
-/* Size Variants */
-.small {
-  width: 2.5rem;
-  height: 2.5rem;
-}
-
-.large {
-  width: 4.5rem;
-  height: 4.5rem;
-}
-
-/* Animation Keyframes */
+/* Animations */
 @keyframes pulse {
   0% {
     transform: scale(1);
@@ -93,22 +141,85 @@
   }
 }
 
+@keyframes cyber-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+}
+
+@keyframes neon-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+}
+
+@keyframes matrix-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+}
+
+@keyframes plasma-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.6);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+}
+
 /* Mobile Responsive */
 @media (max-width: 640px) {
   .toggleButton {
     bottom: 16px;
     right: 16px;
-    width: 3rem;
-    height: 3rem;
   }
   
   .small {
-    width: 2rem;
-    height: 2rem;
+    --button-size: 2rem;
+    --icon-size: 1.25rem;
+  }
+  
+  .medium {
+    --button-size: 3rem;
+    --icon-size: 1.75rem;
   }
   
   .large {
-    width: 4rem;
-    height: 4rem;
+    --button-size: 4rem;
+    --icon-size: 2.25rem;
   }
 } 

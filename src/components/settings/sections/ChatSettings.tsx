@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,8 @@ import { useSettingsStore } from "@/stores/settings";
 import { Check, MessageCircle, Zap, ArrowLeftRight } from "lucide-react";
 import { toast } from "sonner";
 import styles from "../styles/ChatSettings.module.css";
+import { buttonStyles } from "@/constants/chat/button-styles";
+import { ButtonStyle } from "@/types/chat/button-styles";
 
 export function ChatSettings() {
   const { 
@@ -27,8 +28,9 @@ export function ChatSettings() {
   const [settings, setSettings] = useState({
     appearance: {
       position: typeof position === 'string' ? position : 'bottom-right',
-      buttonColor: '#0EA5E9',
+      buttonStyle: 'wfpulse',
       buttonSize: 'medium',
+      buttonColor: '#0EA5E9',
       chatWidth: 400,
       chatHeight: 500,
     },
@@ -102,8 +104,9 @@ export function ChatSettings() {
     setSettings({
       appearance: {
         position: 'bottom-right',
-        buttonColor: '#0EA5E9',
+        buttonStyle: 'wfpulse',
         buttonSize: 'medium',
+        buttonColor: '#0EA5E9',
         chatWidth: 400,
         chatHeight: 500,
       },
@@ -166,6 +169,62 @@ export function ChatSettings() {
                 <div className={`${styles.positionOptionIndicator} ${styles.positionOptionRight}`}></div>
                 Bottom Right
               </div>
+            </div>
+          </div>
+
+          <div className={styles.formGroup}>
+            <Label>Button Style</Label>
+            <div className={styles.styleOptions}>
+              {Object.entries(buttonStyles).map(([key, style]) => {
+                const buttonStyle = style as ButtonStyle;
+                return (
+                  <div
+                    key={key}
+                    className={`${styles.styleOption} ${settings.appearance.buttonStyle === key ? styles.styleOptionSelected : ''}`}
+                    onClick={() => setSettings(prev => ({
+                      ...prev,
+                      appearance: {
+                        ...prev.appearance,
+                        buttonStyle: key
+                      }
+                    }))}
+                  >
+                    <div 
+                      className={styles.stylePreview} 
+                      style={{
+                        background: buttonStyle.theme.background,
+                        border: buttonStyle.theme.border,
+                        boxShadow: buttonStyle.theme.glow,
+                        color: buttonStyle.theme.primary
+                      }}
+                    >
+                      {buttonStyle.icon.default}
+                    </div>
+                    <span>{buttonStyle.name}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className={styles.formGroup}>
+            <Label>Button Size</Label>
+            <div className={styles.sizeOptions}>
+              {['small', 'medium', 'large'].map(size => (
+                <div
+                  key={size}
+                  className={`${styles.sizeOption} ${settings.appearance.buttonSize === size ? styles.sizeOptionSelected : ''}`}
+                  onClick={() => setSettings(prev => ({
+                    ...prev,
+                    appearance: {
+                      ...prev.appearance,
+                      buttonSize: size
+                    }
+                  }))}
+                >
+                  {size.charAt(0).toUpperCase() + size.slice(1)}
+                </div>
+              ))}
             </div>
           </div>
 
