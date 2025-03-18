@@ -1,11 +1,10 @@
 
-import { useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { clearChatSessions, cleanupInactiveChatSessions } from '@/services/sessions';
 import { logger } from '@/services/chat/LoggingService';
-import { SESSION_QUERY_KEYS } from './useSessionCore';
 import { CreateSessionParams } from '@/types/sessions';
+import { SESSION_QUERY_KEYS } from './useSessionCore';
 
 /**
  * Hook for session cleanup functionality
@@ -14,82 +13,68 @@ export function useSessionCleanup(
   currentSessionId: string | null,
   clearMessages: () => void,
   createSession: (params?: CreateSessionParams) => Promise<string>,
-  refreshSessions: () => Promise<void>
+  refreshSessions: () => Promise<unknown>
 ) {
   const queryClient = useQueryClient();
 
-  /**
-   * Clear all sessions (optionally preserving current)
-   */
-  const clearSessions = useCallback(async (preserveCurrent: boolean = false) => {
-    try {
-      const sessionIdToPreserve = preserveCurrent ? currentSessionId : null;
+  const { mutateAsync: clearSessions } = useMutation({
+    mutationFn: async (preserveCurrent: boolean = true) => {
+      // Make sure we have a valid current session if we need to preserve it
+      if (preserveCurrent && !currentSessionId) {
+        throw new Error('No current session to preserve');
+      }
       
-      logger.info('Clearing sessions', { 
-        preserveCurrent, 
-        currentSessionId,
-        sessionIdToPreserve 
-      });
-      
-      const result = await clearChatSessions(sessionIdToPreserve);
-      
+      const result = await clearChatSessions(preserveCurrent ? currentSessionId : null);
       if (!result.success) {
-        throw new Error('Failed to clear sessions');
+        throw new Error('Failed to clear chat sessions');
       }
       
-      // If we didn't preserve any sessions, we need to create a new one
-      if (!preserveCurrent || !currentSessionId) {
-        logger.info('Creating new session after clearing all');
-        await createSession();
-      } else {
-        // Just refresh the sessions list
-        await refreshSessions();
+      return result;
+    },
+    onMutate: async (preserveCurrent) => {
+      // If we're clearing all sessions including current, clear messages
+      if (!preserveCurrent) {
+        clearMessages();
+      }
+    },
+    onSuccess: async (result, preserveCurrent) => {
+      // If we cleared all sessions, create a new one
+      if (!preserveCurrent) {
+        try {
+          await createSession();
+        } catch (err) {
+          logger.error('Error creating new session after clearing all:', err);
+        }
       }
       
-      const count = result.count || 0;
-      const message = preserveCurrent 
-        ? `Cleared ${count} inactive sessions` 
-        : 'Cleared all sessions';
-      
-      toast.success(message);
-      
-      // Invalidate sessions query to refresh the list
       queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEYS.SESSIONS });
-      
-      return true;
-    } catch (error) {
-      logger.error('Failed to clear sessions', { error });
+      toast.success(preserveCurrent 
+        ? 'Other sessions cleared successfully' 
+        : 'All sessions cleared successfully');
+    },
+    onError: (err) => {
       toast.error('Failed to clear sessions');
-      return false;
-    }
-  }, [currentSessionId, createSession, queryClient, refreshSessions]);
+      logger.error('Error clearing sessions:', err);
+    },
+  });
 
-  /**
-   * Clean up inactive sessions (older than 30 days)
-   */
-  const cleanupInactiveSessions = useCallback(async () => {
-    try {
-      logger.info('Cleaning up inactive sessions');
-      
+  const { mutateAsync: cleanupInactiveSessions } = useMutation({
+    mutationFn: async () => {
       const result = await cleanupInactiveChatSessions();
-      
       if (!result.success) {
-        throw new Error('Failed to clean up inactive sessions');
+        throw new Error('Failed to cleanup inactive sessions');
       }
-      
-      const count = result.count || 0;
-      toast.success(`Cleaned up ${count} inactive sessions`);
-      
-      // Invalidate sessions query to refresh the list
-      queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEYS.SESSIONS });
-      
-      return true;
-    } catch (error) {
-      logger.error('Failed to clean up inactive sessions', { error });
-      toast.error('Failed to clean up inactive sessions');
-      return false;
-    }
-  }, [queryClient]);
+      return result;
+    },
+    onSuccess: async (result) => {
+      await refreshSessions();
+      toast.success(`Cleaned up ${result.count || 0} inactive sessions`);
+    },
+    onError: (err) => {
+      toast.error('Failed to cleanup inactive sessions');
+      logger.error('Error cleaning up sessions:', err);
+    },
+  });
 
   return {
     clearSessions,

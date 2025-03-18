@@ -10,63 +10,46 @@ export const createUIActions = (
   ) => void,
   get: () => ChatState
 ) => ({
-  toggleChat: () => {
+  setSessionLoading: (loading: boolean) => {
     set((state) => ({
-      isOpen: !state.isOpen,
-      // Reset minimized state when opening
-      ...(state.isOpen ? {} : { isMinimized: false }),
-    }), false, { type: 'chat/toggleChat' });
+      ui: {
+        ...state.ui,
+        sessionLoading: loading,
+      },
+    }), false, { type: 'chat/setSessionLoading', loading });
   },
   
-  closeChat: () => {
-    set({
-      isOpen: false,
-    }, false, { type: 'chat/closeChat' });
+  setMessageLoading: (loading: boolean) => {
+    set((state) => ({
+      ui: {
+        ...state.ui,
+        messageLoading: loading,
+      },
+    }), false, { type: 'chat/setMessageLoading', loading });
+  },
+  
+  setProviderLoading: (loading: boolean) => {
+    set((state) => ({
+      ui: {
+        ...state.ui,
+        providerLoading: loading,
+      },
+    }), false, { type: 'chat/setProviderLoading', loading });
+  },
+  
+  setWaitingForResponse: (isWaiting: boolean) => {
+    set({ isWaitingForResponse: isWaiting }, false, { type: 'chat/setWaitingForResponse', isWaiting });
+  },
+  
+  toggleChat: () => {
+    set((state) => ({ isOpen: !state.isOpen }), false, { type: 'chat/toggleChat' });
   },
   
   openChat: () => {
-    set({
-      isOpen: true,
-      isMinimized: false,
-    }, false, { type: 'chat/openChat' });
+    set({ isOpen: true }, false, { type: 'chat/openChat' });
   },
   
-  toggleMinimize: () => {
-    set((state) => ({
-      isMinimized: !state.isMinimized,
-    }), false, { type: 'chat/toggleMinimize' });
-  },
-  
-  toggleSidebar: () => {
-    set((state) => ({
-      showSidebar: !state.showSidebar,
-    }), false, { type: 'chat/toggleSidebar' });
-  },
-  
-  setSessionLoading: (isLoading: boolean) => {
-    set((state) => ({
-      ui: {
-        ...state.ui,
-        sessionLoading: isLoading,
-      },
-    }), false, { type: 'chat/setSessionLoading', isLoading });
-  },
-  
-  setMessageLoading: (isLoading: boolean) => {
-    set((state) => ({
-      ui: {
-        ...state.ui,
-        messageLoading: isLoading,
-      },
-    }), false, { type: 'chat/setMessageLoading', isLoading });
-  },
-  
-  setProviderLoading: (isLoading: boolean) => {
-    set((state) => ({
-      ui: {
-        ...state.ui,
-        providerLoading: isLoading,
-      },
-    }), false, { type: 'chat/setProviderLoading', isLoading });
-  },
+  closeChat: () => {
+    set({ isOpen: false }, false, { type: 'chat/closeChat' });
+  }
 });

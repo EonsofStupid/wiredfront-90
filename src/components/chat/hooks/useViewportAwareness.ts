@@ -1,71 +1,88 @@
-
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useChatStore } from '../store/chatStore';
 import { logger } from '@/services/chat/LoggingService';
 
-/**
- * Hook to detect when a component is overflowing the viewport and manage scaling
- */
-export const useViewportAwareness = () => {
+export function useViewportAwareness() {
+  const { position, scale, setScale, docked } = useChatStore();
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  
+  const [viewportDimensions, setViewportDimensions] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight
+  });
+
+  // Update viewport dimensions on resize
   useEffect(() => {
-    const checkViewportOverflow = () => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        const isOffScreen = 
-          rect.left < 0 ||
-          rect.right > window.innerWidth ||
-          rect.top < 0 ||
-          rect.bottom > window.innerHeight;
-          
-        setIsOverflowing(isOffScreen);
+    const handleResize = () => {
+      setViewportDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Keep chat in viewport
+  useEffect(() => {
+    if (!containerRef.current || !docked) return;
+    
+    const updatePosition = () => {
+      const container = containerRef.current;
+      if (!container) return;
+      
+      const rect = container.getBoundingClientRect();
+      const { width: viewportWidth, height: viewportHeight } = viewportDimensions;
+      
+      // Check if overflowing horizontally
+      const isOverflowingX = (position === 'bottom-right' && rect.right > viewportWidth) || 
+                            (position === 'bottom-left' && rect.left < 0);
+                            
+      // Check if overflowing vertically
+      const isOverflowingY = rect.bottom > viewportHeight;
+      
+      const currentlyOverflowing = isOverflowingX || isOverflowingY;
+      
+      // Only update state and log if the overflow state has changed
+      if (currentlyOverflowing !== isOverflowing) {
+        setIsOverflowing(currentlyOverflowing);
         
-        if (isOffScreen !== isOverflowing) {
-          logger.debug('Viewport awareness changed', { 
-            isOffscreen: isOffScreen,
-            rect: {
-              left: rect.left,
-              top: rect.top,
-              right: rect.right,
-              bottom: rect.bottom
-            },
-            viewport: {
-              width: window.innerWidth,
-              height: window.innerHeight
-            }
+        if (currentlyOverflowing) {
+          logger.info('Chat is overflowing viewport', { 
+            containerWidth: rect.width,
+            containerHeight: rect.height,
+            viewportWidth,
+            viewportHeight,
+            overflowX: isOverflowingX,
+            overflowY: isOverflowingY
           });
         }
       }
-    };
-    
-    // Run the check immediately
-    checkViewportOverflow();
-    
-    // Run check on resize
-    window.addEventListener('resize', checkViewportOverflow);
-    
-    // Run check whenever container moves (after drag & drop)
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-          checkViewportOverflow();
+      
+      // If we need to auto-scale
+      if (currentlyOverflowing) {
+        // Calculate scale to fit viewport
+        const scaleX = viewportWidth / rect.width;
+        const scaleY = viewportHeight / rect.height;
+        const newScale = Math.min(scaleX, scaleY, 1) * 0.9; // 90% of max possible scale
+        
+        if (Math.abs(newScale - scale) > 0.05) { // Only update if change is significant
+          logger.info('Adjusting chat scale to fit viewport', { 
+            oldScale: scale,
+            newScale,
+            scaleX,
+            scaleY
+          });
+          setScale(newScale);
         }
-      });
-    });
-    
-    if (containerRef.current) {
-      observer.observe(containerRef.current, { attributes: true });
-    }
-    
-    return () => {
-      window.removeEventListener('resize', checkViewportOverflow);
-      observer.disconnect();
+      }
     };
-  }, [isOverflowing]);
-  
-  return {
-    containerRef,
-    isOverflowing
-  };
-};
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    return () => window.removeEventListener('resize', updatePosition);
+  }, [position, scale, setScale, docked, viewportDimensions, isOverflowing]);
+
+  return { containerRef, isOverflowing, viewportDimensions };
+}

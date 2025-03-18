@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Card, CardContent, CardFooter, CardDescription } from "@/components/ui/card";
@@ -29,10 +30,8 @@ export function ModeSelectionDialog({
   const handleCreateSession = async () => {
     setIsCreating(true);
     try {
-      // Updated: Use a property that exists on provider objects (e.g. "mode") 
-      // instead of "category" which does not exist on type ProviderCategory.
       const provider = currentProvider?.id || 
-        availableProviders.find(p => (p as any).mode === selectedMode)?.id || 
+        availableProviders.find(p => p.category === selectedMode)?.id || 
         availableProviders[0]?.id;
       
       await onCreateSession(selectedMode, provider);

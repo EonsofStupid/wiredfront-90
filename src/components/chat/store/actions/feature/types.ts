@@ -1,89 +1,98 @@
+import { StateCreator } from 'zustand';
+import { ChatState, ChatProvider, FeatureState } from "../../types/chat-store-types";
+import { TokenEnforcementMode, KnownFeatureFlag, ChatFeatureKey } from '@/integrations/supabase/types/enums';
 
-import { TokenEnforcementMode } from "@/integrations/supabase/types/enums";
-import { KnownFeatureFlag } from "@/types/admin/settings/feature-flags";
+// Define feature key type based on valid enum types only (removing string)
+export type FeatureKey = KnownFeatureFlag | ChatFeatureKey | keyof FeatureState;
 
-// Feature keys that can be toggled
-export type FeatureKey = 
-  | 'voice'
-  | 'rag'
-  | 'modeSwitch'
-  | 'notifications'
-  | 'github'
-  | 'codeAssistant'
-  | 'ragSupport'
-  | 'githubSync'
-  | 'tokenEnforcement';
+// Define proper Zustand types for state management
+export type SetState<T> = (
+  partial: T | Partial<T> | ((state: T) => T | Partial<T>),
+  replace?: boolean,
+  action?: { type: string; [key: string]: any }
+) => void;
 
-// Feature states 
-export interface FeatureState {
-  voice: boolean;
-  rag: boolean;
-  modeSwitch: boolean;
-  notifications: boolean;
-  github: boolean;
-  codeAssistant: boolean;
-  ragSupport: boolean;
-  githubSync: boolean;
-  tokenEnforcement: boolean;
-}
+export type GetState<T> = () => T;
 
-// Actions that can be performed on features
 export interface FeatureActions {
-  toggleFeature: (feature: FeatureKey) => void;
-  enableFeature: (feature: FeatureKey) => void;
-  disableFeature: (feature: FeatureKey) => void;
-  setFeatureState: (feature: FeatureKey, isEnabled: boolean) => void;
+  toggleFeature: (feature: keyof FeatureState) => void;
+  enableFeature: (feature: keyof FeatureState) => void;
+  disableFeature: (feature: keyof FeatureState) => void;
+  setFeatureState: (feature: keyof FeatureState, isEnabled: boolean) => void;
+  updateChatProvider: (providers: ChatProvider[]) => void;
+  updateCurrentProvider: (provider: ChatProvider) => void;
+  updateAvailableProviders: (providers: ChatProvider[]) => void;
+  
+  // Token management actions
   setTokenEnforcementMode: (mode: TokenEnforcementMode) => void;
-}
-
-// Token control specific state
-export interface TokenControlState {
-  balance: number;
-  enforcementMode: TokenEnforcementMode;
-  lastUpdated: string | null;
-  tokensPerQuery: number;
-  freeQueryLimit: number;
-  queriesUsed: number;
-}
-
-// Token management actions
-export interface TokenActions {
   addTokens: (amount: number) => Promise<boolean>;
   spendTokens: (amount: number) => Promise<boolean>;
   setTokenBalance: (amount: number) => Promise<boolean>;
 }
 
-// Provider-specific actions
-export interface ProviderActions {
-  updateCurrentProvider: (provider: any) => void;
-  updateAvailableProviders: (providers: any[]) => void;
-  updateChatProvider: (providers: any[]) => void;
+export type StoreWithDevtools = StateCreator<
+  ChatState,
+  [["zustand/devtools", never]],
+  [],
+  FeatureActions
+>;
+
+// Type guard to check if a key is a valid FeatureState key
+function isFeatureStateKey(key: FeatureKey): key is keyof FeatureState {
+  const validKeys: (keyof FeatureState)[] = [
+    'voice',
+    'rag',
+    'modeSwitch',
+    'notifications',
+    'github',
+    'codeAssistant',
+    'ragSupport',
+    'githubSync',
+    'tokenEnforcement'
+  ];
+  return validKeys.includes(key as keyof FeatureState);
 }
 
-// Combined feature actions
-export type CombinedFeatureActions = FeatureActions & TokenActions & ProviderActions;
-
-/**
- * Converts an admin feature flag to a chat store feature key
- */
-export function convertFeatureKeyToChatFeature(flag: KnownFeatureFlag): FeatureKey | null {
-  const mapping: Record<string, FeatureKey> = {
+// Helper function to convert string feature keys
+function convertStringFeatureKey(key: string): keyof FeatureState | null {
+  // Add your string to feature key mapping logic here
+  const featureKeyMap: Record<string, keyof FeatureState> = {
     'code_assistant': 'codeAssistant',
     'rag_support': 'ragSupport',
     'github_sync': 'githubSync',
     'notifications': 'notifications',
-    'voice_input': 'voice',
-    'rag_indexing': 'rag',
-    'mode_switching': 'modeSwitch',
-    'github_integration': 'github',
-    'token_enforcement': 'tokenEnforcement'
+    // Add more mappings as needed
   };
   
-  const key = mapping[flag];
-  if (key) {
+  return featureKeyMap[key] || null;
+}
+
+/**
+ * Converts a feature key to a chat feature key with proper type narrowing and null handling
+ */
+export function convertFeatureKeyToChatFeature(key: FeatureKey | null | undefined): keyof FeatureState | null {
+  // Guard against null or undefined
+  if (key === null || key === undefined) {
+    return null;
+  }
+  
+  // If it's already a keyof FeatureState, return it directly
+  if (isFeatureStateKey(key)) {
     return key;
   }
   
-  console.warn(`No matching chat feature found for feature flag: ${flag}`);
+  // If it's an enum value, convert it properly with type safety
+  if (typeof key === 'object' && 'toString' in key) {
+    const keyString = key.toString();
+    // Continue with the string-based key
+    return convertStringFeatureKey(keyString);
+  }
+  
+  // Handle string enum values
+  if (typeof key === 'string') {
+    return convertStringFeatureKey(key);
+  }
+  
+  // Default case - return null for unhandled types
   return null;
 }

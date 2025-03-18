@@ -11,7 +11,7 @@ import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { KnownFeatureFlag } from "@/types/admin/settings/feature-flags";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { convertFeatureKeyToChatFeature } from "@/components/chat/store/actions/feature/types";
+import { convertFeatureKeyToChatFeature, FeatureKey } from "@/components/chat/store/actions/feature/types";
 
 export const ChatFeatureSettings = () => {
   const { position, togglePosition, docked, toggleDocked, scale, setScale } = useChatStore();
@@ -27,10 +27,10 @@ export const ChatFeatureSettings = () => {
   
   const handleReset = () => {
     // Reset all features to default using proper feature key mapping
-    const codeAssistantKey = convertFeatureKeyToChatFeature(KnownFeatureFlag.CODE_ASSISTANT);
-    const ragSupportKey = convertFeatureKeyToChatFeature(KnownFeatureFlag.RAG_SUPPORT);
-    const githubSyncKey = convertFeatureKeyToChatFeature(KnownFeatureFlag.GITHUB_SYNC);
-    const notificationsKey = convertFeatureKeyToChatFeature(KnownFeatureFlag.NOTIFICATIONS);
+    const codeAssistantKey = convertFeatureKeyToChatFeature('code_assistant');
+    const ragSupportKey = convertFeatureKeyToChatFeature('rag_support');
+    const githubSyncKey = convertFeatureKeyToChatFeature('github_sync');
+    const notificationsKey = convertFeatureKeyToChatFeature('notifications');
     
     if (codeAssistantKey && !features.codeAssistant) toggleFeature(codeAssistantKey);
     if (ragSupportKey && !features.ragSupport) toggleFeature(ragSupportKey);
@@ -61,13 +61,11 @@ export const ChatFeatureSettings = () => {
     toast.success("Chat styling updated successfully");
   };
 
-  // Helper to toggle feature with proper type handling
-  const handleToggleFeature = (flag: KnownFeatureFlag) => {
+  // Helper to toggle feature with proper type mapping
+  const handleToggleFeature = (flag: FeatureKey) => {
     const chatFeatureKey = convertFeatureKeyToChatFeature(flag);
     if (chatFeatureKey) {
       toggleFeature(chatFeatureKey);
-    } else {
-      toast.error(`Cannot toggle this feature: ${flag}`);
     }
   };
 

@@ -1,7 +1,5 @@
-
 import type { Config } from "tailwindcss";
 import { colors } from "./src/styles/theme/colors";
-import { shadows } from "./src/styles/theme/shadows";
 
 export default {
   darkMode: ["class"],
@@ -22,10 +20,6 @@ export default {
     },
     extend: {
       colors,
-      boxShadow: {
-        ...shadows,
-        glow: '0 0 10px rgba(0, 255, 255, 0.7), 0 0 20px rgba(255, 0, 127, 0.4)'
-      },
       scale: {
         '115': '1.15',
       },
@@ -37,7 +31,6 @@ export default {
         glow: "glow 2s ease-in-out infinite",
         "button-float": "button-float 2s ease-in-out infinite",
         "letter-gradient": "letter-gradient 3s ease infinite",
-        pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
       keyframes: {
         "gradient-y": {
@@ -81,10 +74,6 @@ export default {
         "button-float": {
           "0%, 100%": { transform: "translateY(-8px) scale(1.15)" },
           "50%": { transform: "translateY(-12px) scale(1.15)" },
-        },
-        pulse: {
-          "0%, 100%": { opacity: "1" },
-          "50%": { opacity: "0.5" },
         },
       },
     },

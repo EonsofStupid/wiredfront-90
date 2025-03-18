@@ -1,58 +1,50 @@
 
 import React from 'react';
-import { cn } from '@/lib/utils';
 import { Message } from '@/types/chat';
+import { User, Bot } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import '../styles/cyber-theme.css';
 
 interface ChatMessageProps {
   message: Message;
-  className?: string;
-  showTimestamp?: boolean;
-  isCompact?: boolean;
-  isHighlighted?: boolean;
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ 
-  message, 
-  className = '',
-  showTimestamp = true,
-  isCompact = false,
-  isHighlighted = false
-}) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const isUser = message.role === 'user';
-  const isError = message.message_status === 'error';
-  const isSystem = message.role === 'system';
   
   return (
-    <div
+    <div 
       className={cn(
-        'chat-message mb-3 max-w-[85%]',
-        isUser ? 'chat-message-user ml-auto' : 'chat-message-assistant',
-        isSystem && 'chat-message-system mx-auto max-w-[95%] italic text-center',
-        isError && 'border-destructive/40',
-        isCompact && 'py-1.5 px-2.5',
-        isHighlighted && 'ring-2 ring-neon-blue/50 shadow-[0_0_10px_rgba(0,255,255,0.3)]',
-        className
+        "chat-message flex items-start gap-2 mb-4",
+        isUser ? "flex-row-reverse" : "flex-row"
       )}
     >
       <div className={cn(
-        "message-content",
-        isUser ? 'bg-neon-blue/20 text-white' : 'bg-dark-lighter text-white',
-        isSystem && 'bg-black/40 text-white/70',
-        'p-3 rounded-lg',
-        isUser ? 'rounded-br-sm' : 'rounded-bl-sm',
-        'border border-white/10'
+        "flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center",
+        isUser ? "bg-neon-pink/20" : "bg-neon-blue/20",
+        "cyber-border"
       )}>
-        {message.content}
+        {isUser ? (
+          <User className="h-4 w-4 text-neon-pink" />
+        ) : (
+          <Bot className="h-4 w-4 text-neon-blue" />
+        )}
       </div>
       
-      {showTimestamp && message.timestamp && (
-        <div className="text-[10px] opacity-50 mt-1 text-right">
-          {new Date(message.timestamp).toLocaleTimeString([], { 
-            hour: '2-digit', 
-            minute: '2-digit'
-          })}
+      <div className={cn(
+        "max-w-[80%] px-4 py-2 rounded-lg",
+        isUser ? 
+          "chat-message-user cyber-border-pink text-right ml-auto" : 
+          "chat-message-assistant cyber-border text-left mr-auto"
+      )}>
+        <div className="text-sm">
+          {message.content}
         </div>
-      )}
+        
+        <div className="text-xs opacity-50 mt-1">
+          {new Date(message.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </div>
+      </div>
     </div>
   );
 };
