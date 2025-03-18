@@ -85,7 +85,7 @@ export function convertFeatureKeyToChatFeature(key: FeatureKey | null | undefine
   // If it's an enum value, convert it properly with type safety
   if (typeof key === 'object' && 'toString' in key) {
     const keyString = key.toString();
-    // Continue with the string-based key
+    // Continue with the string-based key conversion
     return convertStringFeatureKey(keyString);
   }
   
