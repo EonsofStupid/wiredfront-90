@@ -1,8 +1,8 @@
 import { Message } from '@/types/chat';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 import { ChatSettings } from '@/utils/storage/chat-settings';
-
-export type ChatMode = 'chat' | 'dev' | 'image' | 'training';
+import { ChatMode } from '@/types/chat';
+import { ProviderCategory } from '@/types/providers';
 
 export type ChatPosition = {
   x: number;
@@ -50,23 +50,6 @@ export type SidebarItem = {
   type: 'session' | 'setting' | 'feature';
 };
 
-export type ProviderCategory = {
-  id: string;
-  name: string;
-  models: string[];
-  type: ProviderType;
-  enabled: boolean;
-  icon?: string;
-  description?: string;
-  supportsStreaming?: boolean;
-  costPerToken?: number;
-  category: ProviderCategoryType;
-  isDefault?: boolean;
-  isEnabled?: boolean;
-};
-
-export type ChatProvider = ProviderCategory;
-
 export interface FeatureState {
   voice: boolean;
   rag: boolean;
@@ -79,40 +62,60 @@ export interface FeatureState {
   tokenEnforcement: boolean;
 }
 
-export interface ProviderState {
-  availableProviders: ProviderCategory[];
+export interface TokenControl {
+  mode: 'NONE' | 'ENFORCE' | 'WARN';
+  balance: number;
 }
 
-export interface UIState {
+export interface Providers {
+  loading: boolean;
+  error?: string | null;
+}
+
+export interface ChatState {
+  initialized: boolean;
   isOpen: boolean;
   isMinimized: boolean;
+  isHidden: boolean;
   position: 'bottom-right' | 'bottom-left';
   currentMode: ChatMode;
-  features: {
-    voice: boolean;
-    rag: boolean;
-    modeSwitch: boolean;
-    github: boolean;
-  };
+  features: FeatureState;
   settings: ChatSettings;
-}
+  docked: boolean;
+  scale: number;
+  showSidebar: boolean;
+  messages: Message[];
+  userInput: string;
+  isWaitingForResponse: boolean;
+  selectedModel: string;
+  selectedMode: string;
+  modelFetchStatus: 'idle' | 'loading' | 'success' | 'error';
+  error?: string | null;
+  chatId: string | null;
+  startTime: number;
+  availableProviders: ProviderCategory[];
+  currentProvider: ProviderCategory | null;
+  tokenControl: TokenControl;
+  providers: Providers;
 
-export interface TokenControlState {
-  balance: number;
-  enforcementMode: TokenEnforcementMode;
-  lastUpdated: string | null;
-  tokensPerQuery: number;
-  freeQueryLimit: number;
-  queriesUsed: number;
-}
-
-export interface ChatState extends UIState {
-  // Action placeholders
+  // Actions
   toggleChat: () => void;
   toggleMinimize: () => void;
   togglePosition: () => void;
   setCurrentMode: (mode: ChatMode) => void;
-  toggleFeature: (feature: keyof UIState['features']) => void;
+  toggleFeature: (feature: keyof FeatureState) => void;
   updateSettings: (newSettings: Partial<ChatSettings>) => void;
   resetSettings: () => void;
+  toggleDocked: () => void;
+  setScale: (scale: number) => void;
+  setUserInput: (input: string) => void;
+  addMessage: (message: Message) => void;
+  updateMessage: (id: string, updates: Partial<Message>) => void;
+  resetChatState: () => void;
+  setAvailableProviders: (providers: ProviderCategory[]) => void;
+  setCurrentProvider: (provider: ProviderCategory | null) => void;
+  setTokenEnforcementMode: (mode: TokenControl['mode']) => void;
+  addTokens: (amount: number) => Promise<boolean>;
+  spendTokens: (amount: number) => Promise<boolean>;
+  setTokenBalance: (amount: number) => Promise<boolean>;
 }

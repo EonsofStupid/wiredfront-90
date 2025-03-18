@@ -12,6 +12,7 @@ import { KnownFeatureFlag } from "@/types/admin/settings/feature-flags";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { convertFeatureKeyToChatFeature, FeatureKey } from "@/components/chat/store/actions/feature/types";
+import { buttonStyles } from "@/constants/chat/button-styles";
 
 export const ChatFeatureSettings = () => {
   const { position, togglePosition, docked, toggleDocked, scale, setScale } = useChatStore();
@@ -24,6 +25,7 @@ export const ChatFeatureSettings = () => {
   const [assistantMessageColor, setAssistantMessageColor] = useState("#374151");
   const [chatWidth, setChatWidth] = useState("400");
   const [chatHeight, setChatHeight] = useState("500");
+  const [selectedButtonStyle, setSelectedButtonStyle] = useState("wfpulse");
   
   const handleReset = () => {
     // Reset all features to default using proper feature key mapping
@@ -52,13 +54,25 @@ export const ChatFeatureSettings = () => {
   };
   
   const applyChatStyles = () => {
+    // Apply existing styles
     document.documentElement.style.setProperty('--chat-bg', chatBg);
     document.documentElement.style.setProperty('--chat-message-user-bg', userMessageColor);
     document.documentElement.style.setProperty('--chat-message-assistant-bg', assistantMessageColor);
     document.documentElement.style.setProperty('--chat-width', `${chatWidth}px`);
     document.documentElement.style.setProperty('--chat-height', `${chatHeight}px`);
     
-    toast.success("Chat styling updated successfully");
+    // Apply button style
+    const style = buttonStyles[selectedButtonStyle];
+    if (style) {
+      document.documentElement.style.setProperty('--button-primary', style.theme.primary);
+      document.documentElement.style.setProperty('--button-secondary', style.theme.secondary);
+      document.documentElement.style.setProperty('--button-accent', style.theme.accent);
+      document.documentElement.style.setProperty('--button-background', style.theme.background);
+      document.documentElement.style.setProperty('--button-glow', style.theme.glow);
+      document.documentElement.style.setProperty('--button-border', style.theme.border);
+    }
+    
+    toast.success("Chat styles applied successfully");
   };
 
   // Helper to toggle feature with proper type mapping
@@ -217,7 +231,33 @@ export const ChatFeatureSettings = () => {
             </TabsContent>
             
             <TabsContent value="appearance" className="space-y-4">
-              <h3 className="text-sm font-medium">Styling & Colors</h3>
+              <h3 className="text-sm font-medium">Button Style</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {Object.entries(buttonStyles).map(([key, style]) => (
+                  <div
+                    key={key}
+                    className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                      selectedButtonStyle === key ? 'border-primary ring-2 ring-primary' : 'hover:border-primary/50'
+                    }`}
+                    onClick={() => setSelectedButtonStyle(key)}
+                  >
+                    <div 
+                      className="w-full h-12 rounded-md mb-2 flex items-center justify-center"
+                      style={{
+                        background: style.theme.background,
+                        border: style.theme.border,
+                        boxShadow: style.theme.glow,
+                        color: style.theme.primary
+                      }}
+                    >
+                      {style.icon.default}
+                    </div>
+                    <div className="text-sm font-medium text-center">{style.name}</div>
+                  </div>
+                ))}
+              </div>
+
+              <h3 className="text-sm font-medium mt-6">Styling & Colors</h3>
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
