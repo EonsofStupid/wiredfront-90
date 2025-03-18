@@ -1,109 +1,87 @@
 
-/* Cyberpunk Theme for Chat UI */
+/* Base cyberpunk theme styling */
 :root {
-  --cyber-neon-blue: rgba(0, 255, 255, 0.8);
-  --cyber-neon-pink: rgba(255, 0, 127, 0.8);
-  --cyber-neon-purple: rgba(157, 0, 255, 0.8);
-  --cyber-dark: #0a0a0f;
-  --cyber-darker: rgba(0, 0, 0, 0.6);
-  --cyber-glow-blue: 0 0 10px var(--cyber-neon-blue), 0 0 20px rgba(0, 255, 255, 0.5);
-  --cyber-glow-pink: 0 0 10px var(--cyber-neon-pink), 0 0 20px rgba(255, 0, 127, 0.5);
-  --cyber-glow-purple: 0 0 10px var(--cyber-neon-purple), 0 0 20px rgba(157, 0, 255, 0.5);
+  --neon-blue: #00ffff;
+  --neon-pink: #ff00ff;
+  --neon-green: #00ff00;
+  --dark-blue: #000033;
+  --dark-purple: #330033;
+  --dark-bg: #0a0a1a;
+  --cyber-glow: 0 0 10px var(--neon-blue), 0 0 20px rgba(0, 255, 255, 0.5);
+  --cyber-glow-pink: 0 0 10px var(--neon-pink), 0 0 20px rgba(255, 0, 255, 0.5);
+  --cyber-glow-green: 0 0 10px var(--neon-green), 0 0 20px rgba(0, 255, 0, 0.5);
 }
 
-/* Background styles */
+/* Cyber background & cards */
 .cyber-bg {
-  background-color: var(--cyber-dark);
+  background-color: var(--dark-bg);
   background-image: 
-    radial-gradient(circle at 10% 10%, rgba(0, 255, 255, 0.1), transparent 40%),
-    radial-gradient(circle at 90% 90%, rgba(255, 0, 127, 0.1), transparent 40%),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.8));
-  position: relative;
+    linear-gradient(0deg, rgba(0, 0, 0, 0.8) 0%, rgba(10, 10, 26, 0.8) 100%),
+    repeating-linear-gradient(45deg, rgba(0, 255, 255, 0.05) 0px, rgba(0, 255, 255, 0.05) 1px, transparent 1px, transparent 10px);
 }
 
-.cyber-bg::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--cyber-neon-blue), transparent);
-  opacity: 0.5;
-}
-
-.cyber-bg::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--cyber-neon-pink), transparent);
-  opacity: 0.5;
-}
-
-/* Border styles */
 .cyber-border {
-  position: relative;
   border: 1px solid rgba(0, 255, 255, 0.3);
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
-  overflow: hidden;
+  box-shadow: var(--cyber-glow);
+  position: relative;
 }
 
 .cyber-border::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--cyber-neon-blue), transparent);
-  animation: cyber-border-glow 2s linear infinite;
-  z-index: 0;
+  inset: 0;
+  border: 1px solid rgba(0, 255, 255, 0.7);
+  clip-path: polygon(0 0, 10px 0, 0 10px);
+}
+
+.cyber-border::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(0, 255, 255, 0.7);
+  clip-path: polygon(100% 100%, calc(100% - 10px) 100%, 100% calc(100% - 10px));
 }
 
 .cyber-border-pink {
+  border: 1px solid rgba(255, 0, 255, 0.3);
+  box-shadow: var(--cyber-glow-pink);
   position: relative;
-  border: 1px solid rgba(255, 0, 127, 0.3);
-  box-shadow: 0 0 10px rgba(255, 0, 127, 0.2);
-  overflow: hidden;
 }
 
 .cyber-border-pink::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--cyber-neon-pink), transparent);
-  animation: cyber-border-glow 2s linear infinite;
-  z-index: 0;
+  inset: 0;
+  border: 1px solid rgba(255, 0, 255, 0.7);
+  clip-path: polygon(0 0, 10px 0, 0 10px);
 }
 
-/* Pulse effect */
-.cyber-pulse {
-  animation: cyber-pulse 3s infinite;
+.cyber-border-pink::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(255, 0, 255, 0.7);
+  clip-path: polygon(100% 100%, calc(100% - 10px) 100%, 100% calc(100% - 10px));
 }
 
-@keyframes cyber-pulse {
-  0% {
-    text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
-  }
-  50% {
-    text-shadow: 0 0 15px rgba(0, 255, 255, 0.8), 0 0 30px rgba(0, 255, 255, 0.4);
-  }
-  100% {
-    text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
-  }
+.cyber-border-green {
+  border: 1px solid rgba(0, 255, 0, 0.3);
+  box-shadow: var(--cyber-glow-green);
+  position: relative;
 }
 
-/* Glitch text effect */
+.cyber-glass-card {
+  background: rgba(10, 10, 26, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 0.5rem;
+}
+
+/* Cyber text and effects */
 .cyber-glitch {
   position: relative;
   display: inline-block;
-  color: white;
+  color: var(--neon-blue);
+  text-shadow: 0 0 2px var(--neon-blue);
 }
 
 .cyber-glitch::before,
@@ -118,198 +96,79 @@
 }
 
 .cyber-glitch::before {
-  animation: cyber-glitch-1 2s infinite;
-  color: var(--cyber-neon-blue);
+  color: var(--neon-pink);
   z-index: -1;
+  animation: cyber-glitch-1 2s infinite;
 }
 
 .cyber-glitch::after {
-  animation: cyber-glitch-2 3s infinite;
-  color: var(--cyber-neon-pink);
+  color: var(--neon-green);
   z-index: -2;
+  animation: cyber-glitch-2 3s infinite;
 }
 
 @keyframes cyber-glitch-1 {
-  0% {
-    clip-path: inset(20% 0 80% 0);
-    transform: translate(-1px, 0);
-  }
-  10% {
-    clip-path: inset(80% 0 20% 0);
-    transform: translate(1px, 0);
-  }
-  20% {
-    clip-path: inset(40% 0 60% 0);
-    transform: translate(-1px, 0);
-  }
-  30% {
-    clip-path: inset(60% 0 40% 0);
-    transform: translate(1px, 0);
-  }
-  40% {
-    clip-path: inset(20% 0 80% 0);
-    transform: translate(1px, 0);
-  }
-  50% {
-    clip-path: inset(10% 0 90% 0);
-    transform: translate(-1px, 0);
-  }
-  60% {
-    clip-path: inset(30% 0 70% 0);
-    transform: translate(1px, 0);
-  }
-  70% {
-    clip-path: inset(70% 0 30% 0);
-    transform: translate(-1px, 0);
-  }
-  80% {
-    clip-path: inset(50% 0 50% 0);
-    transform: translate(1px, 0);
-  }
-  90% {
-    clip-path: inset(90% 0 10% 0);
-    transform: translate(-1px, 0);
-  }
-  100% {
-    clip-path: inset(20% 0 80% 0);
-    transform: translate(-1px, 0);
-  }
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 1px); }
+  40% { transform: translate(2px, -1px); }
+  60% { transform: translate(-1px, -1px); }
+  80% { transform: translate(1px, 1px); }
+  100% { transform: translate(0); }
 }
 
 @keyframes cyber-glitch-2 {
-  0% {
-    clip-path: inset(80% 0 20% 0);
-    transform: translate(1px, 0);
-  }
-  10% {
-    clip-path: inset(20% 0 80% 0);
-    transform: translate(-1px, 0);
-  }
-  20% {
-    clip-path: inset(60% 0 40% 0);
-    transform: translate(1px, 0);
-  }
-  30% {
-    clip-path: inset(40% 0 60% 0);
-    transform: translate(-1px, 0);
-  }
-  40% {
-    clip-path: inset(80% 0 20% 0);
-    transform: translate(-1px, 0);
-  }
-  50% {
-    clip-path: inset(90% 0 10% 0);
-    transform: translate(1px, 0);
-  }
-  60% {
-    clip-path: inset(70% 0 30% 0);
-    transform: translate(-1px, 0);
-  }
-  70% {
-    clip-path: inset(30% 0 70% 0);
-    transform: translate(1px, 0);
-  }
-  80% {
-    clip-path: inset(50% 0 50% 0);
-    transform: translate(-1px, 0);
-  }
-  90% {
-    clip-path: inset(10% 0 90% 0);
-    transform: translate(1px, 0);
-  }
-  100% {
-    clip-path: inset(80% 0 20% 0);
-    transform: translate(1px, 0);
-  }
+  0% { transform: translate(0); }
+  25% { transform: translate(1px, -1px); }
+  50% { transform: translate(-1px, 1px); }
+  75% { transform: translate(1px, 1px); }
+  100% { transform: translate(0); }
 }
 
-@keyframes cyber-border-glow {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
+/* Cyber Animations */
+.cyber-pulse {
+  animation: cyber-pulse 3s infinite;
 }
 
-/* Command mode styling */
-.cyber-command {
-  font-family: 'Courier New', monospace;
-  color: var(--cyber-neon-blue);
-  background-color: rgba(0, 0, 0, 0.7);
-  border: 1px solid var(--cyber-neon-blue);
-  border-radius: 4px;
-  padding: 2px 6px;
-  margin: 0 2px;
-  display: inline-block;
+@keyframes cyber-pulse {
+  0% { box-shadow: 0 0 5px var(--neon-blue), 0 0 10px rgba(0, 255, 255, 0.3); }
+  50% { box-shadow: 0 0 15px var(--neon-blue), 0 0 30px rgba(0, 255, 255, 0.6); }
+  100% { box-shadow: 0 0 5px var(--neon-blue), 0 0 10px rgba(0, 255, 255, 0.3); }
 }
 
-/* Scan line effect for containers */
-.cyber-scanlines {
+/* Chat specific styling */
+.chat-message-user {
+  background: rgba(51, 0, 51, 0.6);
+  border-top-right-radius: 0.5rem;
+  border-top-left-radius: 0.5rem;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.25rem;
+}
+
+.chat-message-assistant {
+  background: rgba(0, 0, 51, 0.6);
+  border-top-right-radius: 0.5rem;
+  border-top-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  border-bottom-left-radius: 0.25rem;
+}
+
+/* Typing dots animation */
+.typing-dots::after {
+  content: '';
+  animation: typing-dots 1.5s infinite;
+}
+
+@keyframes typing-dots {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+  100% { content: ''; }
+}
+
+/* Neon borders for different elements */
+.chat-neon-border {
   position: relative;
-  overflow: hidden;
-}
-
-.cyber-scanlines::before {
-  content: "";
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(255, 255, 255, 0.05) 0.5%,
-    transparent 1%
-  );
-  animation: cyber-scanlines 8s linear infinite;
-  opacity: 0.15;
-  pointer-events: none;
-}
-
-@keyframes cyber-scanlines {
-  0% {
-    background-position: 0 0;
-  }
-  100% {
-    background-position: 0 100%;
-  }
-}
-
-/* Status indicators */
-.cyber-status {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 6px;
-}
-
-.cyber-status-online {
-  background-color: #00ff4c;
-  box-shadow: 0 0 8px rgba(0, 255, 76, 0.8);
-  animation: cyber-status-pulse 2s infinite;
-}
-
-.cyber-status-offline {
-  background-color: #ff003c;
-  box-shadow: 0 0 8px rgba(255, 0, 60, 0.8);
-}
-
-.cyber-status-away {
-  background-color: #ffbb00;
-  box-shadow: 0 0 8px rgba(255, 187, 0, 0.8);
-}
-
-@keyframes cyber-status-pulse {
-  0% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.5;
-  }
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  box-shadow: var(--cyber-glow);
 }

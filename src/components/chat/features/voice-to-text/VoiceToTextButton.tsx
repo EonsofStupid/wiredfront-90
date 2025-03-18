@@ -16,7 +16,11 @@ export const VoiceToTextButton: React.FC<VoiceToTextButtonProps> = ({
   return (
     <button
       onClick={onClick}
-      className={`p-2 rounded-full ${isListening ? 'bg-red-500/20 text-red-500' : 'text-muted-foreground hover:text-primary'} ${className}`}
+      className={`p-2 rounded-full transition-all duration-300 ${
+        isListening 
+          ? 'bg-red-500/20 text-red-500 animate-pulse border border-red-500/30' 
+          : 'text-muted-foreground hover:text-neon-blue hover:bg-neon-blue/10 hover:border-neon-blue/30 border border-transparent'
+      } ${className}`}
       aria-label={isListening ? "Stop recording" : "Start voice input"}
     >
       {isListening ? (
@@ -27,3 +31,5 @@ export const VoiceToTextButton: React.FC<VoiceToTextButtonProps> = ({
     </button>
   );
 };
+
+export default VoiceToTextButton;
