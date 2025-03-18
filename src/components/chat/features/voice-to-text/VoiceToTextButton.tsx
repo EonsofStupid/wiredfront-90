@@ -1,9 +1,6 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Mic, MicOff } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
+import { Mic, StopCircle } from 'lucide-react';
 
 export interface VoiceToTextButtonProps {
   isListening: boolean;
@@ -12,39 +9,21 @@ export interface VoiceToTextButtonProps {
 }
 
 export const VoiceToTextButton: React.FC<VoiceToTextButtonProps> = ({ 
-  isListening, 
+  isListening,
   onClick,
-  className
+  className = ''
 }) => {
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onClick}
-            className={cn(
-              "rounded-full transition-all duration-300",
-              isListening ? "text-red-500 bg-red-500/10" : "text-white/60 hover:text-neon-pink",
-              className
-            )}
-            aria-label={isListening ? "Stop recording" : "Start recording"}
-          >
-            {isListening ? (
-              <MicOff className={cn("h-4 w-4", isListening && "animate-pulse")} />
-            ) : (
-              <Mic className="h-4 w-4" />
-            )}
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="top">
-          <p>Convert speech to text (Built-in)</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <button
+      onClick={onClick}
+      className={`p-2 rounded-full ${isListening ? 'bg-red-500/20 text-red-500' : 'text-muted-foreground hover:text-primary'} ${className}`}
+      aria-label={isListening ? "Stop recording" : "Start voice input"}
+    >
+      {isListening ? (
+        <StopCircle className="h-5 w-5" />
+      ) : (
+        <Mic className="h-5 w-5" />
+      )}
+    </button>
   );
 };
-
-export default VoiceToTextButton;
