@@ -10,6 +10,7 @@ import { supabaseModeToStoreMode } from '@/utils/modeConversion';
 import ChatContent from './ChatContent';
 import ChatInputArea from './ChatInputArea';
 import { ActionIconStack } from '../ui/action-stack';
+import { ActionItem } from '@/types/chat';
 import { ActionIcons, ModeIcons } from '../icons';
 import { useNavigation } from '../hooks/useNavigation';
 import { DockPanel } from '../ui/dock-panel';
@@ -77,13 +78,13 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
   };
   
   // Define quick action buttons
-  const modeActionItems = [
+  const modeActionItems: ActionItem[] = [
     {
       id: 'chat-mode',
       icon: ModeIcons.chat,
       label: 'Chat Mode',
       onClick: () => handleModeSelect('chat', availableProviders[0]?.id || ''),
-      variant: 'ghost',
+      variant: 'ghost' as const,
       active: currentMode === 'chat',
       color: 'rgba(0, 255, 255, 0.8)',
       glow: currentMode === 'chat'
@@ -93,7 +94,7 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
       icon: ModeIcons.dev,
       label: 'Developer Mode',
       onClick: () => handleModeSelect('dev', availableProviders[0]?.id || ''),
-      variant: 'ghost',
+      variant: 'ghost' as const,
       active: currentMode === 'dev',
       color: 'rgba(255, 105, 180, 0.8)',
       glow: currentMode === 'dev'
@@ -103,7 +104,7 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
       icon: ModeIcons.image,
       label: 'Image Mode',
       onClick: () => handleModeSelect('image', availableProviders[0]?.id || ''),
-      variant: 'ghost',
+      variant: 'ghost' as const,
       active: currentMode === 'image',
       color: 'rgba(138, 43, 226, 0.8)',
       glow: currentMode === 'image'
@@ -113,7 +114,7 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
       icon: ModeIcons.training,
       label: 'Training Mode',
       onClick: () => handleModeSelect('training', availableProviders[0]?.id || ''),
-      variant: 'ghost',
+      variant: 'ghost' as const,
       active: currentMode === 'training',
       color: 'rgba(64, 224, 208, 0.8)',
       glow: currentMode === 'training'
@@ -121,13 +122,13 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
   ];
   
   // Tool action items
-  const toolActionItems = [
+  const toolActionItems: ActionItem[] = [
     {
       id: 'command',
       icon: ActionIcons.command,
       label: 'Command Palette',
       onClick: () => console.log('Command palette clicked'),
-      variant: 'ghost',
+      variant: 'ghost' as const,
       color: 'rgba(255, 255, 255, 0.8)'
     },
     {
@@ -135,7 +136,7 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
       icon: ActionIcons.memory,
       label: 'AI Memory',
       onClick: () => setShowMemoryPanel(!showMemoryPanel),
-      variant: 'ghost',
+      variant: 'ghost' as const,
       active: showMemoryPanel,
       color: 'rgba(0, 255, 255, 0.8)',
       glow: showMemoryPanel
@@ -145,7 +146,7 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
       icon: ActionIcons.search,
       label: 'Knowledge Search',
       onClick: () => console.log('Search clicked'),
-      variant: 'ghost',
+      variant: 'ghost' as const,
       color: 'rgba(255, 105, 180, 0.8)'
     },
     {
@@ -153,7 +154,7 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
       icon: ActionIcons.settings,
       label: 'Chat Settings',
       onClick: () => console.log('Settings clicked'),
-      variant: 'ghost',
+      variant: 'ghost' as const,
       color: 'rgba(255, 255, 255, 0.7)'
     },
   ];
