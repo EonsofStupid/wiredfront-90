@@ -1,4 +1,3 @@
-
 import { Json } from '@/integrations/supabase/types';
 
 // Core session interface
@@ -9,13 +8,13 @@ export interface Session {
   last_accessed: string;
   message_count: number;
   is_active?: boolean;
-  metadata?: Json;
+  metadata?: Record<string, any>;
   user_id?: string;
   mode?: string;
   provider_id?: string;
   project_id?: string;
   tokens_used?: number;
-  context?: Json;
+  context?: Record<string, any>;
 }
 
 // Session status for UI representation
@@ -32,12 +31,12 @@ export interface SessionOperationResult {
 // Session creation parameters
 export interface CreateSessionParams {
   title?: string;
-  metadata?: Json;
+  metadata?: Record<string, any>;
 }
 
 // Session update parameters
 export interface UpdateSessionParams {
   title?: string;
   is_active?: boolean;
-  metadata?: Json;
+  metadata?: Record<string, any>;
 }
