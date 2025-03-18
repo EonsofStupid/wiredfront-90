@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import { DndContext } from "@dnd-kit/core";
 import { ChatSidebar } from "./ChatSidebar";
