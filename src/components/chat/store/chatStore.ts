@@ -74,6 +74,7 @@ const initialState: ChatState = {
   togglePosition: noop,
   toggleDocked: noop,
   setScale: noop,
+  setPosition: noop,
   setCurrentMode: noop,
   updateCurrentProvider: noop,
   updateAvailableProviders: noop,

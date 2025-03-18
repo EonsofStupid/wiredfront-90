@@ -89,7 +89,7 @@ export function convertFeatureKeyToChatFeature(key: FeatureKey | null | undefine
     return convertStringFeatureKey(keyString);
   }
   
-  // Handle string enum values
+  // Handle string enum values - null safety added here
   if (typeof key === 'string') {
     return convertStringFeatureKey(key);
   }

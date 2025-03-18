@@ -2,11 +2,12 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { LLMProvider } from '../index';
+import { ProviderType } from '@/components/chat/store/types/chat-store-types';
 
 export class GeminiProvider implements LLMProvider {
   id = 'gemini-default';
   name = 'Google Gemini';
-  type = 'gemini';
+  type: ProviderType = 'gemini';
   apiKey: string | null = null;
   
   constructor() {

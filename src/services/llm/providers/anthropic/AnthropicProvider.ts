@@ -2,11 +2,12 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { LLMProvider } from '../index';
+import { ProviderType } from '@/components/chat/store/types/chat-store-types';
 
 export class AnthropicProvider implements LLMProvider {
   id = 'anthropic-default';
   name = 'Anthropic Claude';
-  type = 'anthropic';
+  type: ProviderType = 'anthropic';
   apiKey: string | null = null;
   
   constructor() {

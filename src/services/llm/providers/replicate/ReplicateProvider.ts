@@ -2,11 +2,12 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { LLMProvider } from '../index';
+import { ProviderType } from '@/components/chat/store/types/chat-store-types';
 
 export class ReplicateProvider implements LLMProvider {
   id = 'replicate-default';
   name = 'Replicate';
-  type = 'replicate';
+  type: ProviderType = 'replicate';
   apiKey: string | null = null;
   
   constructor() {

@@ -2,11 +2,12 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { LLMProvider } from '../index';
+import { ProviderType } from '@/components/chat/store/types/chat-store-types';
 
 export class OpenRouterProvider implements LLMProvider {
   id = 'openrouter-default';
   name = 'OpenRouter';
-  type = 'openrouter';
+  type: ProviderType = 'openrouter';
   apiKey: string | null = null;
   
   constructor() {

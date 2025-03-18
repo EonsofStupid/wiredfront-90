@@ -2,11 +2,12 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { LLMProvider } from '../index';
+import { ProviderType } from '@/components/chat/store/types/chat-store-types';
 
 export class StabilityAIProvider implements LLMProvider {
   id = 'stabilityai-default';
   name = 'Stability AI';
-  type = 'stabilityai';
+  type: ProviderType = 'stabilityai';
   apiKey: string | null = null;
   
   constructor() {
