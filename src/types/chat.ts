@@ -1,8 +1,8 @@
+
 import { Json } from '@/integrations/supabase/types';
 
 export type MessageStatus = 'pending' | 'sent' | 'failed' | 'error' | 'cached';
 export type MessageRole = 'user' | 'assistant' | 'system';
-export type ChatMode = 'chat' | 'dev' | 'image' | 'training';
 
 export interface Message {
   id: string;

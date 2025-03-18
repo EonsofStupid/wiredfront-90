@@ -1,8 +1,7 @@
 import { Message } from '@/types/chat';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
-import { ChatSettings } from '@/utils/storage/chat-settings';
-import { ChatMode } from '@/types/chat';
-import { ProviderCategory } from '@/types/providers';
+
+export type ChatMode = 'chat' | 'dev' | 'image' | 'training';
 
 export type ChatPosition = {
   x: number;
@@ -50,6 +49,23 @@ export type SidebarItem = {
   type: 'session' | 'setting' | 'feature';
 };
 
+export type ProviderCategory = {
+  id: string;
+  name: string;
+  models: string[];
+  type: ProviderType;
+  enabled: boolean;
+  icon?: string;
+  description?: string;
+  supportsStreaming?: boolean;
+  costPerToken?: number;
+  category: ProviderCategoryType;
+  isDefault?: boolean;
+  isEnabled?: boolean;
+};
+
+export type ChatProvider = ProviderCategory;
+
 export interface FeatureState {
   voice: boolean;
   rag: boolean;
@@ -62,59 +78,77 @@ export interface FeatureState {
   tokenEnforcement: boolean;
 }
 
-export interface TokenControl {
-  mode: 'NONE' | 'ENFORCE' | 'WARN';
-  balance: number;
+export interface ProviderState {
+  availableProviders: ProviderCategory[];
 }
 
-export interface Providers {
-  loading: boolean;
-  error?: string | null;
+export interface UIState {
+  sessionLoading: boolean;
+  messageLoading: boolean;
+  providerLoading: boolean;
+}
+
+export interface TokenControlState {
+  balance: number;
+  enforcementMode: TokenEnforcementMode;
+  lastUpdated: string | null;
+  tokensPerQuery: number;
+  freeQueryLimit: number;
+  queriesUsed: number;
 }
 
 export interface ChatState {
   initialized: boolean;
-  isOpen: boolean;
-  isMinimized: boolean;
-  isHidden: boolean;
-  position: 'bottom-right' | 'bottom-left';
-  currentMode: ChatMode;
-  features: FeatureState;
-  settings: ChatSettings;
-  docked: boolean;
-  scale: number;
-  showSidebar: boolean;
   messages: Message[];
   userInput: string;
   isWaitingForResponse: boolean;
   selectedModel: string;
   selectedMode: string;
   modelFetchStatus: 'idle' | 'loading' | 'success' | 'error';
-  error?: string | null;
+  error: Error | null;
   chatId: string | null;
+  docked: boolean;
+  isOpen: boolean;
+  isHidden: boolean;
+  position: 'bottom-right' | 'bottom-left' | { x: number; y: number };
   startTime: number;
+  features: FeatureState;
+  currentMode: ChatMode;
   availableProviders: ProviderCategory[];
   currentProvider: ProviderCategory | null;
-  tokenControl: TokenControl;
-  providers: Providers;
-
-  // Actions
-  toggleChat: () => void;
-  toggleMinimize: () => void;
-  togglePosition: () => void;
-  setCurrentMode: (mode: ChatMode) => void;
-  toggleFeature: (feature: keyof FeatureState) => void;
-  updateSettings: (newSettings: Partial<ChatSettings>) => void;
-  resetSettings: () => void;
-  toggleDocked: () => void;
-  setScale: (scale: number) => void;
-  setUserInput: (input: string) => void;
+  tokenControl: TokenControlState;
+  providers: ProviderState;
+  isMinimized: boolean;
+  showSidebar: boolean;
+  scale: number;
+  ui: UIState;
+  
+  // Action placeholders
   addMessage: (message: Message) => void;
   updateMessage: (id: string, updates: Partial<Message>) => void;
   resetChatState: () => void;
-  setAvailableProviders: (providers: ProviderCategory[]) => void;
-  setCurrentProvider: (provider: ProviderCategory | null) => void;
-  setTokenEnforcementMode: (mode: TokenControl['mode']) => void;
+  setUserInput: (input: string) => void;
+  togglePosition: () => void;
+  toggleDocked: () => void;
+  setScale: (scale: number) => void;
+  setPosition: (position: 'bottom-right' | 'bottom-left' | { x: number; y: number }) => void;
+  
+  // Mode actions
+  setCurrentMode: (mode: ChatMode) => void;
+  
+  // Provider actions
+  updateCurrentProvider: (provider: ProviderCategory) => void;
+  updateAvailableProviders: (providers: ProviderCategory[]) => void;
+  updateChatProvider: (providers: ProviderCategory[]) => void;
+  
+  // Feature actions
+  toggleFeature: (feature: keyof FeatureState) => void;
+  enableFeature: (feature: keyof FeatureState) => void;
+  disableFeature: (feature: keyof FeatureState) => void;
+  setFeatureState: (feature: keyof FeatureState, isEnabled: boolean) => void;
+  
+  // Token actions
+  setTokenEnforcementMode: (mode: TokenEnforcementMode) => void;
   addTokens: (amount: number) => Promise<boolean>;
   spendTokens: (amount: number) => Promise<boolean>;
   setTokenBalance: (amount: number) => Promise<boolean>;

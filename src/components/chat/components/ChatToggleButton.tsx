@@ -1,27 +1,45 @@
 import React from 'react';
+import { MessageSquare, MessageCircle, Bot } from 'lucide-react';
 import { motion } from 'framer-motion';
 import styles from './ChatToggleButton.module.css';
-import { buttonStyles } from '@/constants/chat/button-styles';
-import { ChatButtonSettings } from '@/types/chat/button-styles';
 
 interface ChatToggleButtonProps {
   onClick: () => void;
-  settings: ChatButtonSettings;
+  variant?: 'default' | 'circle' | 'ai';
+  size?: 'default' | 'sm' | 'lg';
 }
 
 const ChatToggleButton: React.FC<ChatToggleButtonProps> = ({ 
-  onClick,
-  settings
+  onClick, 
+  variant = 'default',
+  size = 'default'
 }) => {
-  const buttonStyle = buttonStyles[settings.style];
-  const positionClass = settings.position.position === 'bottom-left' ? styles.bottomLeft : styles.bottomRight;
-  const sizeClass = styles[settings.size.base === 2.5 ? 'small' : settings.size.base === 4.5 ? 'large' : 'medium'];
-  const styleClass = styles[settings.style];
-
+  const getIcon = () => {
+    switch (variant) {
+      case 'circle':
+        return <MessageCircle className="h-5 w-5" />;
+      case 'ai':
+        return <Bot className="h-5 w-5" />;
+      default:
+        return <MessageSquare className="h-5 w-5" />;
+    }
+  };
+  
+  const getSizeClass = () => {
+    switch (size) {
+      case 'sm':
+        return styles.small;
+      case 'lg':
+        return styles.large;
+      default:
+        return '';
+    }
+  };
+  
   return (
     <motion.button
       onClick={onClick}
-      className={`${styles.toggleButton} ${positionClass} ${sizeClass} ${styleClass}`}
+      className={`${styles.toggleButton} ${getSizeClass()}`}
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.95 }}
       initial={{ opacity: 0, scale: 0.8 }}
@@ -29,7 +47,7 @@ const ChatToggleButton: React.FC<ChatToggleButtonProps> = ({
       transition={{ duration: 0.3 }}
     >
       <div className={styles.iconContainer}>
-        {buttonStyle.icon.default}
+        {getIcon()}
         <span className="sr-only">Open Chat</span>
         <div className={styles.pulseEffect} />
       </div>

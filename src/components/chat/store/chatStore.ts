@@ -4,11 +4,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { createInitializationActions } from './actions/initialization-actions';
 import { createFeatureActions } from './actions/feature';
 import { createUIActions } from './actions/ui-actions';
-import { ChatState, FeatureState, Providers, TokenControl } from './types/chat-store-types';
+import { ChatState, ProviderCategory, ChatMode, FeatureState } from './types/chat-store-types';
 import { Message } from '@/types/chat';
-import { getChatSettings, saveChatSettings, ChatSettings } from '@/utils/storage/chat-settings';
-import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
-import { ProviderCategory } from '@/types/providers';
 
 type FullChatStore = ChatState & 
   ReturnType<typeof createInitializationActions> & 
@@ -18,47 +15,78 @@ type FullChatStore = ChatState &
 const noop = () => {};
 const asyncNoop = async () => false;
 
-const initialState: Omit<ChatState, keyof FeatureState | keyof Providers | keyof TokenControl> = {
+const initialState: ChatState = {
   initialized: false,
-  isOpen: false,
-  isMinimized: false,
-  isHidden: false,
-  position: 'bottom-right',
-  currentMode: 'chat',
-  features: {
-    voice: false,
-    rag: false,
-    modeSwitch: false,
-    github: false,
-    codeAssistant: false,
-    ragSupport: false,
-    githubSync: false,
-    notifications: false,
-    tokenEnforcement: false,
-  },
-  settings: getChatSettings(),
-  docked: false,
-  scale: 1,
-  showSidebar: false,
   messages: [],
   userInput: '',
   isWaitingForResponse: false,
-  selectedModel: '',
-  selectedMode: '',
+  selectedModel: 'gpt-4',
+  selectedMode: 'chat',
   modelFetchStatus: 'idle',
   error: null,
   chatId: null,
+  docked: true,
+  isOpen: false,
+  isHidden: false,
+  position: 'bottom-right',
   startTime: Date.now(),
+  features: {
+    voice: true,
+    rag: true,
+    modeSwitch: true,
+    notifications: true,
+    github: true,
+    codeAssistant: true,
+    ragSupport: true,
+    githubSync: true,
+    tokenEnforcement: false,
+  },
+  currentMode: 'chat',
   availableProviders: [],
   currentProvider: null,
+  
   tokenControl: {
-    mode: 'NONE',
     balance: 0,
+    enforcementMode: 'never',
+    lastUpdated: null,
+    tokensPerQuery: 1,
+    freeQueryLimit: 5,
+    queriesUsed: 0
   },
+  
   providers: {
-    loading: false,
-    error: null,
+    availableProviders: [],
   },
+  
+  isMinimized: false,
+  showSidebar: false,
+  scale: 1,
+  ui: {
+    sessionLoading: false,
+    messageLoading: false,
+    providerLoading: false,
+  },
+  
+  addMessage: noop,
+  updateMessage: noop,
+  resetChatState: noop,
+  setUserInput: noop,
+  togglePosition: noop,
+  toggleDocked: noop,
+  setScale: noop,
+  setPosition: noop,
+  setCurrentMode: noop,
+  updateCurrentProvider: noop,
+  updateAvailableProviders: noop,
+  updateChatProvider: noop,
+  toggleFeature: noop,
+  enableFeature: noop,
+  disableFeature: noop,
+  setFeatureState: noop,
+  setTokenEnforcementMode: noop,
+  addTokens: asyncNoop,
+  spendTokens: asyncNoop,
+  setTokenBalance: asyncNoop,
 };
 
 export const clearMiddlewareStorage = () => {
@@ -121,72 +149,194 @@ export const clearMiddlewareStorage = () => {
   }
 };
 
-export const useChatStore = create<ChatState>((set) => ({
-  ...initialState,
-  toggleChat: () => set((state) => ({ isOpen: !state.isOpen })),
-  toggleMinimize: () => set((state) => ({ isMinimized: !state.isMinimized })),
-  togglePosition: () => set((state) => {
-    const newPosition = state.position === 'bottom-right' ? 'bottom-left' : 'bottom-right';
-    return { position: newPosition };
-  }),
-  setCurrentMode: (mode) => set({ currentMode: mode }),
-  toggleFeature: (feature) => set((state) => ({
-    features: {
-      ...state.features,
-      [feature]: !state.features[feature],
-    },
-  })),
-  updateSettings: (newSettings) => set((state) => {
-    const updatedSettings = {
-      ...state.settings,
-      ...newSettings,
-    };
-    saveChatSettings(updatedSettings);
-    return { settings: updatedSettings };
-  }),
-  resetSettings: () => {
-    const defaultSettings = getChatSettings();
-    saveChatSettings(defaultSettings);
-    set({ settings: defaultSettings });
-  },
-  toggleDocked: () => set((state) => ({ docked: !state.docked })),
-  setScale: (scale) => set({ scale }),
-  setUserInput: (input) => set({ userInput: input }),
-  addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
-  updateMessage: (id, updates) => set((state) => ({
-    messages: state.messages.map((msg) => (msg.id === id ? { ...msg, ...updates } : msg)),
-  })),
-  resetChatState: () => set((state) => ({ messages: [] })),
-  setAvailableProviders: (providers) => set({ availableProviders: providers }),
-  setCurrentProvider: (provider) => set({ currentProvider: provider }),
-  setTokenEnforcementMode: (mode) => set((state) => ({
-    tokenControl: { ...state.tokenControl, mode },
-  })),
-  addTokens: async (amount) => {
-    set((state) => ({
-      tokenControl: {
-        ...state.tokenControl,
-        balance: state.tokenControl.balance + amount,
+export const useChatStore = create<FullChatStore>()(
+  devtools(
+    (set, get) => ({
+      ...initialState,
+      
+      resetChatState: () => {
+        clearMiddlewareStorage();
+        
+        set({
+          ...initialState,
+          initialized: true,
+          availableProviders: get().availableProviders,
+          currentProvider: get().currentProvider,
+          features: get().features,
+        }, false, { type: 'chat/resetState' });
       },
-    }));
-    return true;
-  },
-  spendTokens: async (amount) => {
-    set((state) => ({
-      tokenControl: {
-        ...state.tokenControl,
-        balance: state.tokenControl.balance - amount,
+      
+      setUserInput: (input: string) => {
+        set({ userInput: input }, false, { type: 'chat/setUserInput' });
       },
-    }));
-    return true;
-  },
-  setTokenBalance: async (amount) => {
-    set((state) => ({
-      tokenControl: {
-        ...state.tokenControl,
-        balance: amount,
+      
+      addMessage: (message: Message) => {
+        set(state => ({
+          messages: [...state.messages, {
+            id: message.id || uuidv4(),
+            timestamp: new Date().toISOString(),
+            ...message,
+          }]
+        }), false, { type: 'chat/addMessage' });
       },
-    }));
-    return true;
-  },
-}));
+      
+      updateMessage: (id: string, updates: Partial<Message>) => {
+        set(state => ({
+          messages: state.messages.map(msg => 
+            msg.id === id ? { ...msg, ...updates } : msg
+          )
+        }), false, { type: 'chat/updateMessage' });
+      },
+      
+      togglePosition: () => {
+        set(state => {
+          const newPosition = state.position === 'bottom-right' ? 'bottom-left' : 'bottom-right';
+          return { position: newPosition };
+        }, false, { type: 'chat/togglePosition' });
+      },
+      
+      toggleDocked: () => {
+        set(state => ({
+          docked: !state.docked
+        }), false, { type: 'chat/toggleDocked' });
+      },
+      
+      setPosition: (position) => {
+        set({ position }, false, { type: 'chat/setPosition', position });
+      },
+      
+      setScale: (scale: number) => {
+        set({ scale }, false, { type: 'chat/setScale' });
+      },
+      
+      setCurrentMode: (mode: ChatMode) => {
+        set({ currentMode: mode }, false, { type: 'chat/setCurrentMode', mode });
+      },
+      
+      updateCurrentProvider: (provider: ProviderCategory) => {
+        set({ currentProvider: provider }, false, { type: 'chat/updateCurrentProvider', provider });
+      },
+      
+      updateAvailableProviders: (providers: ProviderCategory[]) => {
+        set({ availableProviders: providers }, false, { type: 'chat/updateAvailableProviders', providers });
+      },
+      
+      updateChatProvider: (providers: ProviderCategory[]) => {
+        set({ availableProviders: providers }, false, { type: 'chat/updateChatProvider', providers });
+      },
+      
+      toggleFeature: (featureName: keyof FeatureState) => {
+        set(state => ({
+          features: {
+            ...state.features,
+            [featureName]: !state.features[featureName],
+          },
+        }), false, { type: 'chat/toggleFeature', feature: featureName });
+      },
+      
+      enableFeature: (featureName: keyof FeatureState) => {
+        set(state => ({
+          features: {
+            ...state.features,
+            [featureName]: true,
+          },
+        }), false, { type: 'chat/enableFeature', feature: featureName });
+      },
+      
+      disableFeature: (featureName: keyof FeatureState) => {
+        set(state => ({
+          features: {
+            ...state.features,
+            [featureName]: false,
+          },
+        }), false, { type: 'chat/disableFeature', feature: featureName });
+      },
+      
+      setFeatureState: (featureName: keyof FeatureState, isEnabled: boolean) => {
+        set(state => ({
+          features: {
+            ...state.features,
+            [featureName]: isEnabled,
+          },
+        }), false, { type: 'chat/setFeatureState', feature: featureName, isEnabled });
+      },
+      
+      setTokenEnforcementMode: (mode: ChatState['tokenControl']['enforcementMode']) => {
+        set(state => ({
+          tokenControl: {
+            ...state.tokenControl,
+            enforcementMode: mode
+          }
+        }), false, { type: 'chat/setTokenEnforcementMode', mode });
+      },
+      
+      addTokens: async (amount: number): Promise<boolean> => {
+        try {
+          const currentBalance = get().tokenControl.balance;
+          
+          set(state => ({
+            tokenControl: {
+              ...state.tokenControl,
+              balance: currentBalance + amount,
+              lastUpdated: new Date().toISOString()
+            }
+          }), false, { type: 'chat/addTokens', amount });
+          
+          return true;
+        } catch (error) {
+          console.error('Error adding tokens:', error);
+          return false;
+        }
+      },
+      
+      spendTokens: async (amount: number): Promise<boolean> => {
+        try {
+          const currentBalance = get().tokenControl.balance;
+          
+          if (currentBalance < amount) {
+            return false;
+          }
+          
+          set(state => ({
+            tokenControl: {
+              ...state.tokenControl,
+              balance: currentBalance - amount,
+              queriesUsed: state.tokenControl.queriesUsed + 1,
+              lastUpdated: new Date().toISOString()
+            }
+          }), false, { type: 'chat/spendTokens', amount });
+          
+          return true;
+        } catch (error) {
+          console.error('Error spending tokens:', error);
+          return false;
+        }
+      },
+      
+      setTokenBalance: async (amount: number): Promise<boolean> => {
+        try {
+          set(state => ({
+            tokenControl: {
+              ...state.tokenControl,
+              balance: amount,
+              lastUpdated: new Date().toISOString()
+            }
+          }), false, { type: 'chat/setTokenBalance', amount });
+          
+          return true;
+        } catch (error) {
+          console.error('Error setting token balance:', error);
+          return false;
+        }
+      },
+      
+      ...createInitializationActions(set, get),
+      ...createFeatureActions(set, get),
+      ...createUIActions(set, get),
+    }),
+    {
+      name: 'ChatStore',
+      enabled: process.env.NODE_ENV !== 'production',
+    }
+  )
+);
