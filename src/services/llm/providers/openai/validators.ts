@@ -2,13 +2,14 @@ import {
   OpenAIOptions,
   OpenAIContext,
   OpenAIImageOptions,
-  OpenAIImageResponse
+  OpenAIImageResponse,
+  OpenAIModelType
 } from './types';
 import { OPENAI_MODELS, OPENAI_IMAGE_SIZES, OPENAI_IMAGE_QUALITIES, OPENAI_IMAGE_STYLES } from './constants';
 import { OPENAI_VALIDATION_MESSAGES } from './constants';
 import { OPENAI_DEFAULT_OPTIONS, OPENAI_DEFAULT_IMAGE_OPTIONS } from './constants';
 
-export function isValidOpenAIModel(model: string): boolean {
+export function isValidOpenAIModel(model: string): model is OpenAIModelType {
   return model in OPENAI_MODELS;
 }
 
@@ -141,7 +142,7 @@ export function isOpenAIImageResponse(response: unknown): response is OpenAIImag
   
   const metadata = resp.metadata as Record<string, unknown>;
   
-  if (typeof metadata.model !== 'string') return false;
+  if (!isValidOpenAIModel(metadata.model as string)) return false;
   if (typeof metadata.size !== 'string') return false;
   if (typeof metadata.quality !== 'string') return false;
   if (typeof metadata.style !== 'string') return false;

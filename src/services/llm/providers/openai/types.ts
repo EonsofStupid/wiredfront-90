@@ -1,7 +1,9 @@
 import { BaseProviderOptions, ProviderContext, ProviderResponse } from '../base/types';
 
+export type OpenAIModelType = 'gpt-4' | 'gpt-4-turbo-preview' | 'gpt-3.5-turbo' | 'dall-e-3' | 'dall-e-2';
+
 export interface OpenAIModel {
-  id: string;
+  id: OpenAIModelType;
   name: string;
   contextWindow: number;
   maxTokens: number;
@@ -10,7 +12,7 @@ export interface OpenAIModel {
 }
 
 export interface OpenAIOptions extends BaseProviderOptions {
-  model: string;
+  model: OpenAIModelType;
   presencePenalty?: number;
   frequencyPenalty?: number;
   topP?: number;
@@ -34,7 +36,8 @@ export interface OpenAIContext extends ProviderContext {
   functionCall?: 'none' | 'auto' | { name: string };
 }
 
-export interface OpenAIImageOptions extends OpenAIOptions {
+export interface OpenAIImageOptions extends Omit<OpenAIOptions, 'model'> {
+  model?: 'dall-e-3' | 'dall-e-2';
   size?: '256x256' | '512x512' | '1024x1024';
   quality?: 'standard' | 'hd';
   style?: 'natural' | 'vivid';
@@ -43,7 +46,7 @@ export interface OpenAIImageOptions extends OpenAIOptions {
 
 export interface OpenAIImageResponse extends ProviderResponse {
   metadata: {
-    model: string;
+    model: 'dall-e-3' | 'dall-e-2';
     size: string;
     quality: string;
     style: string;

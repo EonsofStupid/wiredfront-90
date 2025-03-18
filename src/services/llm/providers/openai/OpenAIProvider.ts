@@ -105,22 +105,6 @@ export class OpenAIProvider extends BaseProvider {
     this.lastRequestTime = Date.now();
   }
   
-  private async retryWithBackoff<T>(
-    operation: () => Promise<T>,
-    retries: number = MAX_RETRIES
-  ): Promise<T> {
-    try {
-      await this.enforceRateLimit();
-      return await operation();
-    } catch (error) {
-      if (retries === 0) throw error;
-      
-      logger.warn(`Operation failed, retrying... (${retries} attempts left)`);
-      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-      return this.retryWithBackoff(operation, retries - 1);
-    }
-  }
-  
   public async generateText(
     prompt: string,
     options?: BaseProviderOptions,

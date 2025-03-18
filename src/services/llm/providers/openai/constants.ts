@@ -1,10 +1,10 @@
-import { OpenAIModel } from './types';
+import { OpenAIModel, OpenAIModelType } from './types';
 import { ERROR_CODES, ERROR_MESSAGES, VALIDATION_MESSAGES } from '../base/constants';
 
 export const OPENAI_API_BASE = 'https://api.openai.com/v1';
 export const OPENAI_API_VERSION = '2024-02-15';
 
-export const OPENAI_MODELS: Record<string, OpenAIModel> = {
+export const OPENAI_MODELS: Record<OpenAIModelType, OpenAIModel> = {
   'gpt-4-turbo-preview': {
     id: 'gpt-4-turbo-preview',
     name: 'GPT-4 Turbo',
@@ -28,6 +28,22 @@ export const OPENAI_MODELS: Record<string, OpenAIModel> = {
     maxTokens: 4096,
     supportsImages: false,
     supportsFunctions: true
+  },
+  'dall-e-3': {
+    id: 'dall-e-3',
+    name: 'DALL-E 3',
+    contextWindow: 0,
+    maxTokens: 0,
+    supportsImages: true,
+    supportsFunctions: false
+  },
+  'dall-e-2': {
+    id: 'dall-e-2',
+    name: 'DALL-E 2',
+    contextWindow: 0,
+    maxTokens: 0,
+    supportsImages: true,
+    supportsFunctions: false
   }
 } as const;
 
@@ -67,7 +83,7 @@ export const OPENAI_VALIDATION_MESSAGES = {
 } as const;
 
 export const OPENAI_DEFAULT_OPTIONS = {
-  model: 'gpt-4-turbo-preview',
+  model: 'gpt-4-turbo-preview' as OpenAIModelType,
   temperature: 0.7,
   maxTokens: 1000,
   presencePenalty: 0,
@@ -78,9 +94,9 @@ export const OPENAI_DEFAULT_OPTIONS = {
 } as const;
 
 export const OPENAI_DEFAULT_IMAGE_OPTIONS = {
-  model: 'gpt-4-turbo-preview',
-  size: '1024x1024',
-  quality: 'standard',
-  style: 'natural',
+  model: 'dall-e-3' as const,
+  size: '1024x1024' as const,
+  quality: 'standard' as const,
+  style: 'natural' as const,
   n: 1
 } as const; 
