@@ -9,7 +9,7 @@ import { useSettingsStore } from "@/stores/settings";
 import { Check, MessageCircle, Zap, ArrowLeftRight } from "lucide-react";
 import { toast } from "sonner";
 import styles from "../styles/ChatSettings.module.css";
-import { buttonStyles } from "@/constants/chat/button-styles";
+import { buttonStyles } from "@/constants/chat/button-styles.tsx";
 import { ButtonStyle } from "@/types/chat/button-styles";
 
 export function ChatSettings() {
