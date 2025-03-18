@@ -2,7 +2,13 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { ProviderType } from '@/components/chat/store/types/chat-store-types';
-import { BaseProvider, ProviderOptions, ProviderContext, ProviderDocument } from '../index';
+import { BaseProvider } from '../base/BaseProvider';
+import { 
+  BaseProviderOptions, 
+  ProviderContext, 
+  ProviderDocument 
+} from '../types/common-types';
+import { StabilityAIProviderOptions } from '../types/provider-options';
 
 export class StabilityAIProvider extends BaseProvider {
   readonly id = 'stabilityai';
@@ -15,7 +21,7 @@ export class StabilityAIProvider extends BaseProvider {
   }
   
   constructor() {
-    super();
+    super('stabilityai', 'Stability AI', 'stabilityai');
     this.initializeApiKey();
   }
   
@@ -41,15 +47,18 @@ export class StabilityAIProvider extends BaseProvider {
     }
   }
   
-  async generateText(prompt: string, options?: ProviderOptions): Promise<string> {
+  async generateText(
+    prompt: string, 
+    options?: BaseProviderOptions,
+    context?: ProviderContext
+  ): Promise<string> {
     // Stability AI is primarily for image generation, but we'll include a basic text response
     return "Stability AI is primarily an image generation service. Please use the generateImage method instead.";
   }
   
   async enhancePrompt(prompt: string, context?: ProviderContext): Promise<string> {
-    const validatedContext = this.validateContext(context);
-    const style = validatedContext.style || "";
-    const modifiers = validatedContext.modifiers || [];
+    const style = context?.style || "";
+    const modifiers = context?.modifiers || [];
     
     let enhancedPrompt = prompt;
     
@@ -81,7 +90,7 @@ export class StabilityAIProvider extends BaseProvider {
     return true;
   }
   
-  async generateImage(prompt: string, options: ProviderOptions = {}): Promise<string> {
+  async generateImage(prompt: string, options?: BaseProviderOptions): Promise<string> {
     try {
       if (!this.hasApiKey()) {
         await this.initializeApiKey();
@@ -90,7 +99,7 @@ export class StabilityAIProvider extends BaseProvider {
         }
       }
       
-      const validatedOptions = this.validateOptions(options);
+      const validatedOptions = options || {};
       const stabilityOptions = validatedOptions as StabilityAIProviderOptions;
       
       const { data, error } = await supabase.functions.invoke('llm-generate-image', {
@@ -118,6 +127,15 @@ export class StabilityAIProvider extends BaseProvider {
     }
   }
   
+  async searchDocuments(
+    query: string,
+    options?: BaseProviderOptions
+  ): Promise<ProviderDocument[]> {
+    // StabilityAI doesn't support document search
+    // This is a placeholder implementation
+    return [];
+  }
+  
   private handleError(error: unknown): never {
     logger.error('Stability AI provider error:', error);
     
@@ -128,6 +146,3 @@ export class StabilityAIProvider extends BaseProvider {
     throw new Error('Unknown Stability AI error occurred');
   }
 }
-
-// Add the imported type to fix the reference error
-import { StabilityAIProviderOptions } from '../index';

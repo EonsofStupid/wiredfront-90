@@ -2,7 +2,13 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { ProviderType } from '@/components/chat/store/types/chat-store-types';
-import { BaseProvider, ProviderOptions, ProviderContext, ProviderDocument } from '../index';
+import { BaseProvider } from '../base/BaseProvider';
+import { 
+  BaseProviderOptions,
+  ProviderContext, 
+  ProviderDocument 
+} from '../types/common-types';
+import { ReplicateProviderOptions } from '../types/provider-options';
 
 export class ReplicateProvider extends BaseProvider {
   readonly id = 'replicate';
@@ -15,7 +21,7 @@ export class ReplicateProvider extends BaseProvider {
   }
   
   constructor() {
-    super();
+    super('replicate', 'Replicate', 'replicate');
     this.initializeApiKey();
   }
   
@@ -41,7 +47,11 @@ export class ReplicateProvider extends BaseProvider {
     }
   }
   
-  async generateText(prompt: string, options?: ProviderOptions): Promise<string> {
+  async generateText(
+    prompt: string, 
+    options?: BaseProviderOptions,
+    context?: ProviderContext
+  ): Promise<string> {
     try {
       if (!this.hasApiKey()) {
         await this.initializeApiKey();
@@ -50,7 +60,7 @@ export class ReplicateProvider extends BaseProvider {
         }
       }
       
-      const validatedOptions = this.validateOptions(options);
+      const validatedOptions = options || {};
       
       const { data, error } = await supabase.functions.invoke('llm-generate-text', {
         body: {
@@ -76,8 +86,7 @@ export class ReplicateProvider extends BaseProvider {
   }
   
   async enhancePrompt(prompt: string, context?: ProviderContext): Promise<string> {
-    const validatedContext = this.validateContext(context);
-    const systemInstruction = validatedContext.system || "";
+    const systemInstruction = context?.system || "";
     
     if (systemInstruction) {
       return `${systemInstruction}\n\nUser: ${prompt}\nAssistant:`;
@@ -87,13 +96,11 @@ export class ReplicateProvider extends BaseProvider {
   }
   
   async prepareRAGContext(documents: ProviderDocument[], query: string): Promise<string> {
-    const validatedDocuments = this.validateDocuments(documents);
-    
-    if (validatedDocuments.length === 0) {
+    if (documents.length === 0) {
       return query;
     }
     
-    const contextChunks = validatedDocuments.map((doc, index) => 
+    const contextChunks = documents.map((doc, index) => 
       `Document ${index + 1}:\n${doc.content}`
     );
     
@@ -120,7 +127,7 @@ Answer (using only information from the documents):
     return true;
   }
   
-  async generateImage(prompt: string, options: ProviderOptions = {}): Promise<string> {
+  async generateImage(prompt: string, options?: BaseProviderOptions): Promise<string> {
     try {
       if (!this.hasApiKey()) {
         await this.initializeApiKey();
@@ -129,7 +136,7 @@ Answer (using only information from the documents):
         }
       }
       
-      const validatedOptions = this.validateOptions(options);
+      const validatedOptions = options || {};
       const replicateOptions = validatedOptions as ReplicateProviderOptions;
       
       const { data, error } = await supabase.functions.invoke('llm-generate-image', {
@@ -156,6 +163,15 @@ Answer (using only information from the documents):
     }
   }
   
+  async searchDocuments(
+    query: string,
+    options?: BaseProviderOptions
+  ): Promise<ProviderDocument[]> {
+    // Replicate doesn't support document search directly
+    // This is a placeholder implementation
+    return [];
+  }
+  
   private handleError(error: unknown): never {
     logger.error('Replicate provider error:', error);
     
@@ -166,6 +182,3 @@ Answer (using only information from the documents):
     throw new Error('Unknown Replicate error occurred');
   }
 }
-
-// Add the imported type to fix the reference error
-import { ReplicateProviderOptions } from '../index';
