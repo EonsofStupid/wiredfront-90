@@ -60,7 +60,6 @@
   
   /* Z-index values - match with global z-index for consistency */
   --z-chat-button: 9700;
-  --z-chat: 9700;
   --z-chat-container: 9650;
   --z-chat-icons: 9600;
   --z-chat-popover: 9550;

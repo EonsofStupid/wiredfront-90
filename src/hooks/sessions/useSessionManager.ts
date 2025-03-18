@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -131,8 +130,7 @@ export function useSessionManager() {
         }
         
         if (data) {
-          const transformedSession = transformSupabaseSession(data);
-          setSessions(prevSessions => [transformedSession, ...prevSessions]);
+          setSessions(prevSessions => [data, ...prevSessions]);
           setCurrentSessionId(data.id);
           return data.id;
         }
