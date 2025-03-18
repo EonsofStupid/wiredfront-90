@@ -1,274 +1,146 @@
+
 import { useState, useEffect, useCallback } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
-import { useChatStore } from '@/components/chat/store';
-import { logger } from '@/services/chat/LoggingService';
+import { useAuth } from '@/stores/auth';
+import { Session } from '@/types/sessions';
+import { useChatStore } from '@/components/chat/store/chatStore';
 import { toast } from 'sonner';
-import { Json } from '@/types/supabase';
-
-export interface Session {
-  id: string;
-  name?: string;
-  last_accessed: string; 
-  is_active: boolean;
-  metadata?: {
-    mode?: string;
-    providerId?: string;
-    pageContext?: string;
-  };
-  context?: Json;
-  created_at?: string;
-  project_id?: string;
-  provider_id?: string;
-  title?: string;
-  tokens_used?: number;
-  user_id?: string;
-}
-
-export interface SessionCreateOptions {
-  metadata?: {
-    mode?: string;
-    providerId?: string;
-    pageContext?: string;
-  };
-}
-
-// Helper function to transform Supabase data to Session type
-function transformSupabaseSession(data: any): Session {
-  return {
-    id: data.id,
-    name: data.title,
-    last_accessed: data.last_accessed,
-    is_active: data.is_active,
-    metadata: typeof data.metadata === 'object' ? data.metadata : {},
-    context: data.context,
-    created_at: data.created_at,
-    project_id: data.project_id,
-    provider_id: data.provider_id,
-    title: data.title,
-    tokens_used: data.tokens_used,
-    user_id: data.user_id
-  };
-}
+import { cleanupSessions } from '@/services/sessions/sessionDelete';
 
 export function useSessionManager() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
   const { setSessionLoading } = useChatStore();
-
-  // Fetch all sessions
-  const refreshSessions = useCallback(async () => {
+  
+  // Fetch sessions from Supabase
+  const fetchSessions = useCallback(async () => {
+    if (!user) return [];
+    
     try {
       setIsLoading(true);
-      setSessionLoading(true);
       
-      // Attempt to load from Supabase if authenticated
-      const { data: user } = await supabase.auth.getUser();
+      const { data, error } = await supabase
+        .from('chat_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('last_accessed', { ascending: false });
       
-      if (user?.user?.id) {
-        const { data, error } = await supabase
-          .from('chat_sessions')
-          .select('*')
-          .order('last_accessed', { ascending: false });
-          
-        if (error) {
-          throw error;
-        }
-        
-        if (data && data.length) {
-          const transformedSessions = data.map(transformSupabaseSession);
-          setSessions(transformedSessions);
-          
-          // Set current session if none is set
-          if (!currentSessionId && transformedSessions.length > 0) {
-            setCurrentSessionId(transformedSessions[0].id);
-          }
-        }
+      if (error) {
+        console.error('Error fetching sessions:', error);
+        toast.error('Failed to load chat sessions');
+        return [];
       }
+      
+      return data || [];
     } catch (error) {
-      logger.error('Error fetching sessions:', error);
-      toast.error('Failed to load sessions');
+      console.error('Error in fetchSessions:', error);
+      toast.error('Failed to load chat sessions');
+      return [];
     } finally {
       setIsLoading(false);
+    }
+  }, [user]);
+  
+  // Refresh sessions list
+  const refreshSessions = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      setSessionLoading(true);
+      const data = await fetchSessions();
+      setSessions(data as Session[]);
+      
+      // Set current session to the most recent one if none is selected
+      if (data.length > 0 && !currentSessionId) {
+        setCurrentSessionId(data[0].id);
+      }
+    } catch (error) {
+      console.error('Error refreshing sessions:', error);
+    } finally {
       setSessionLoading(false);
     }
-  }, [currentSessionId, setSessionLoading]);
-
-  // Initialize sessions
-  useEffect(() => {
-    refreshSessions();
-  }, [refreshSessions]);
-
+  }, [fetchSessions, user, currentSessionId, setSessionLoading]);
+  
   // Create a new session
-  const createSession = useCallback(async (options?: SessionCreateOptions) => {
+  const createSession = useCallback(async (mode = 'chat', title = 'New Chat') => {
+    if (!user) {
+      toast.error('You must be logged in to create a session');
+      return null;
+    }
+    
     try {
-      setIsLoading(true);
+      setSessionLoading(true);
       
-      const newSession: Session = {
-        id: uuidv4(),
-        last_accessed: new Date().toISOString(),
-        is_active: true,
-        metadata: options?.metadata || {}
-      };
+      const { data, error } = await supabase
+        .from('chat_sessions')
+        .insert({
+          user_id: user.id,
+          title: title,
+          mode: mode,
+          is_active: true,
+          last_accessed: new Date().toISOString(),
+        })
+        .select()
+        .single();
       
-      // Try to save to Supabase first
-      const { data: user } = await supabase.auth.getUser();
-      
-      if (user?.user?.id) {
-        const { data, error } = await supabase
-          .from('chat_sessions')
-          .insert({
-            ...newSession,
-            user_id: user.user.id
-          })
-          .select()
-          .single();
-          
-        if (error) {
-          throw error;
-        }
-        
-        if (data) {
-          setSessions(prevSessions => [data, ...prevSessions]);
-          setCurrentSessionId(data.id);
-          return data.id;
-        }
+      if (error) {
+        console.error('Error creating session:', error);
+        toast.error('Failed to create new chat session');
+        return null;
       }
       
-      // Fallback to localStorage
-      setSessions(prevSessions => [newSession, ...prevSessions]);
-      setCurrentSessionId(newSession.id);
+      // Update sessions list
+      setSessions(prevSessions => [data, ...prevSessions] as Session[]);
+      setCurrentSessionId(data.id);
       
-      // Update localStorage
-      const updatedSessions = [newSession, ...sessions];
-      localStorage.setItem('chat_sessions', JSON.stringify(updatedSessions));
-      
-      return newSession.id;
+      toast.success('Created new chat session');
+      return data.id;
     } catch (error) {
-      console.error('Error creating session:', error);
+      console.error('Error in createSession:', error);
       toast.error('Failed to create new chat session');
       return null;
     } finally {
-      setIsLoading(false);
+      setSessionLoading(false);
     }
-  }, [sessions]);
-
-  // Switch session
+  }, [user, setSessionLoading]);
+  
+  // Switch to a different session
   const switchSession = useCallback((sessionId: string) => {
-    if (sessions.find(s => s.id === sessionId)) {
-      setCurrentSessionId(sessionId);
-      
-      // Update last accessed
-      const updatedSessions = sessions.map(session => 
-        session.id === sessionId 
-          ? { ...session, last_accessed: new Date().toISOString() }
-          : session
-      );
-      
-      setSessions(updatedSessions);
-      localStorage.setItem('chat_sessions', JSON.stringify(updatedSessions));
-      
-      // If logged in, update in Supabase too
-      (async () => {
-        const { data: user } = await supabase.auth.getUser();
-        if (user?.user?.id) {
-          await supabase
-            .from('chat_sessions')
-            .update({ last_accessed: new Date().toISOString() })
-            .eq('id', sessionId);
+    setCurrentSessionId(sessionId);
+    
+    // Update last_accessed timestamp
+    supabase
+      .from('chat_sessions')
+      .update({ last_accessed: new Date().toISOString() })
+      .eq('id', sessionId)
+      .then(({ error }) => {
+        if (error) {
+          console.error('Error updating session last_accessed:', error);
         }
-      })();
-    }
-  }, [sessions]);
-
-  // Clean up inactive sessions (older than 30 days)
-  const cleanupInactiveSessions = useCallback(async () => {
+      });
+  }, []);
+  
+  // Clean up old sessions
+  const performCleanup = useCallback(async () => {
+    if (!currentSessionId) return;
+    
     try {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
-      const activeSessions = sessions.filter(session => 
-        new Date(session.last_accessed) > thirtyDaysAgo
-      );
-      
-      if (activeSessions.length === sessions.length) {
-        toast.info('No inactive sessions to clean up');
-        return;
-      }
-      
-      setSessions(activeSessions);
-      localStorage.setItem('chat_sessions', JSON.stringify(activeSessions));
-      
-      // If current session was deleted, switch to the most recent one
-      if (currentSessionId && !activeSessions.find(s => s.id === currentSessionId)) {
-        if (activeSessions.length > 0) {
-          setCurrentSessionId(activeSessions[0].id);
-        } else {
-          setCurrentSessionId(null);
-        }
-      }
-      
-      // If logged in, delete from Supabase too
-      const { data: user } = await supabase.auth.getUser();
-      if (user?.user?.id) {
-        await supabase
-          .from('chat_sessions')
-          .delete()
-          .lt('last_accessed', thirtyDaysAgo.toISOString());
-      }
-      
-      toast.success('Inactive sessions cleaned up');
+      await cleanupSessions(currentSessionId);
+      refreshSessions();
     } catch (error) {
       console.error('Error cleaning up sessions:', error);
-      toast.error('Failed to clean up inactive sessions');
     }
-  }, [sessions, currentSessionId]);
-
-  // Clear all sessions
-  const clearSessions = useCallback(async (preserveCurrent: boolean = false) => {
-    try {
-      if (preserveCurrent && !currentSessionId) {
-        toast.error('No current session to preserve');
-        return;
-      }
-      
-      let newSessions: Session[] = [];
-      
-      if (preserveCurrent && currentSessionId) {
-        newSessions = sessions.filter(s => s.id === currentSessionId);
-      }
-      
-      setSessions(newSessions);
-      localStorage.setItem('chat_sessions', JSON.stringify(newSessions));
-      
-      if (!preserveCurrent) {
-        setCurrentSessionId(null);
-      }
-      
-      // If logged in, delete from Supabase too
-      const { data: user } = await supabase.auth.getUser();
-      if (user?.user?.id) {
-        if (preserveCurrent && currentSessionId) {
-          await supabase
-            .from('chat_sessions')
-            .delete()
-            .neq('id', currentSessionId);
-        } else {
-          await supabase
-            .from('chat_sessions')
-            .delete()
-            .gte('id', ''); // Delete all
-        }
-      }
-      
-      toast.success(preserveCurrent ? 'All other sessions cleared' : 'All sessions cleared');
-    } catch (error) {
-      console.error('Error clearing sessions:', error);
-      toast.error('Failed to clear sessions');
+  }, [currentSessionId, refreshSessions]);
+  
+  // Initialize
+  useEffect(() => {
+    if (user) {
+      refreshSessions();
     }
-  }, [sessions, currentSessionId]);
-
+  }, [user, refreshSessions]);
+  
   return {
     sessions,
     currentSessionId,
@@ -276,7 +148,6 @@ export function useSessionManager() {
     refreshSessions,
     createSession,
     switchSession,
-    cleanupInactiveSessions,
-    clearSessions
+    performCleanup,
   };
 }

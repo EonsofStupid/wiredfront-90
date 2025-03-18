@@ -26,6 +26,14 @@ export const createInitializationActions = (
       
       // Continue with other initializations...
       set({ initialized: true }, false, { type: 'chat/initialize' });
+    },
+    
+    initializeSettings: () => {
+      const { initialized } = get();
+      if (initialized) return;
+      
+      // Initialize chat settings logic
+      set({ initialized: true }, false, { type: 'chat/initializeSettings' });
     }
   };
 };
