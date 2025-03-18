@@ -8,7 +8,7 @@ import { useChatButtonStore } from "@/components/chat/store/chatButtonStore";
 import { MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import styles from "../styles/ChatSettings.module.css";
-import ChatToggleButton from "@/components/chat/components/ChatToggleButton";
+import { ChatButton } from "@/components/chat/components/ChatButton";
 
 export function ChatSettings() {
   const { 
@@ -34,9 +34,7 @@ export function ChatSettings() {
   } = useChatButtonStore();
 
   const handlePositionChange = (newPosition: string) => {
-    if (newPosition !== position) {
-      setPosition(newPosition as "bottom-right" | "bottom-left");
-    }
+    setPosition(newPosition as "bottom-right" | "bottom-left");
   };
 
   const handleScaleChange = (newScale: number) => {
@@ -117,20 +115,12 @@ export function ChatSettings() {
 
           <div className={styles.previewContainer}>
             <span className={styles.previewLabel}>Preview</span>
-            <div 
-              style={{
-                position: 'relative',
-                [position === 'bottom-left' ? 'left' : 'right']: '0',
-                transform: `scale(${scale})`,
-                transformOrigin: position === 'bottom-left' ? 'left center' : 'right center'
-              }}
-            >
-              <ChatToggleButton 
-                onClick={() => {}} 
-                variant="default"
-                size={scale < 0.75 ? 'sm' : scale > 1.25 ? 'lg' : 'default'}
-              />
-            </div>
+            <ChatButton
+              position={position}
+              scale={scale}
+              onClick={() => {}}
+              isPreview={true}
+            />
           </div>
         </div>
 

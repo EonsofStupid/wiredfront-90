@@ -1,67 +1,47 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { ChatButtonState } from './types/chat-button-store-types';
 
-const initialState = {
-  position: 'bottom-right' as const,
-  scale: 1,
-  docked: true,
-  features: {
-    startMinimized: false,
-    showTimestamps: true,
-    saveHistory: true,
-  }
-};
+interface ChatButtonFeatures {
+  startMinimized: boolean;
+  showTimestamps: boolean;
+  saveHistory: boolean;
+}
+
+interface ChatButtonState {
+  position: 'bottom-left' | 'bottom-right';
+  scale: number;
+  docked: boolean;
+  features: ChatButtonFeatures;
+  setPosition: (position: 'bottom-left' | 'bottom-right') => void;
+  setScale: (scale: number) => void;
+  toggleDocked: () => void;
+  toggleFeature: (feature: keyof ChatButtonFeatures) => void;
+}
 
 export const useChatButtonStore = create<ChatButtonState>()(
   persist(
     (set) => ({
-      ...initialState,
-
-      setPosition: (position) => {
-        set({ position });
+      position: 'bottom-right',
+      scale: 1,
+      docked: false,
+      features: {
+        startMinimized: false,
+        showTimestamps: true,
+        saveHistory: true,
       },
-
-      togglePosition: () => {
-        set((state) => ({
-          position: state.position === 'bottom-right' ? 'bottom-left' : 'bottom-right'
-        }));
-      },
-
-      setScale: (scale) => {
-        set({ scale: Math.max(0.5, Math.min(2, scale)) });
-      },
-
-      toggleDocked: () => {
-        set((state) => ({ docked: !state.docked }));
-      },
-
-      toggleFeature: (feature) => {
+      setPosition: (position) => set({ position }),
+      setScale: (scale) => set({ scale }),
+      toggleDocked: () => set((state) => ({ docked: !state.docked })),
+      toggleFeature: (feature) =>
         set((state) => ({
           features: {
             ...state.features,
-            [feature]: !state.features[feature]
-          }
-        }));
-      },
-
-      setFeature: (feature, enabled) => {
-        set((state) => ({
-          features: {
-            ...state.features,
-            [feature]: enabled
-          }
-        }));
-      }
+            [feature]: !state.features[feature],
+          },
+        })),
     }),
     {
-      name: 'chat-button-settings',
-      partialize: (state) => ({
-        position: state.position,
-        scale: state.scale,
-        docked: state.docked,
-        features: state.features
-      })
+      name: 'chat-button-storage',
     }
   )
 ); 

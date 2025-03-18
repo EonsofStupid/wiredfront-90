@@ -1,100 +1,136 @@
-
 .settingsContainer {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.sectionTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.sectionDescription {
+  color: var(--muted-foreground);
+  margin-bottom: 2rem;
+}
+
+.settingsForm {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
-.sectionTitle {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: var(--foreground);
-  background: linear-gradient(to right, #00FFFF, #FF007F);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+.settingsCard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
 }
 
-.sectionDescription {
-  font-size: 0.875rem;
-  color: var(--muted-foreground);
-  margin-bottom: 1rem;
+.settingsCardHeader {
+  margin-bottom: 1.5rem;
+}
+
+.settingsCardTitle {
+  font-size: 1.1rem;
+  font-weight: 500;
 }
 
 .formGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .formRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.formRowLabel {
-  display: flex;
-  flex-direction: column;
-}
-
-.label {
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.description {
-  font-size: 0.75rem;
-  color: var(--muted-foreground);
+  margin-bottom: 1rem;
 }
 
 .positionOptions {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
+  display: flex;
+  gap: 1rem;
   margin-top: 0.5rem;
 }
 
 .positionOption {
-  position: relative;
+  flex: 1;
   padding: 1rem;
-  border-radius: 0.5rem;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .positionOption:hover {
-  background: rgba(0, 0, 0, 0.3);
-  border-color: rgba(0, 255, 255, 0.3);
+  background: var(--accent);
 }
 
 .positionOptionSelected {
-  border-color: rgba(0, 255, 255, 0.7);
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+  border-color: var(--primary);
+  background: var(--accent);
 }
 
 .positionOptionIndicator {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary);
+  position: relative;
+}
+
+.positionOptionLeft::after {
+  content: '';
   position: absolute;
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 9999px;
-  background: #00FFFF;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  background: var(--background);
+  border-radius: 50%;
 }
 
-.positionOptionLeft {
+.positionOptionRight::after {
+  content: '';
+  position: absolute;
+  right: 50%;
+  top: 50%;
+  transform: translate(50%, -50%);
+  width: 8px;
+  height: 8px;
+  background: var(--background);
+  border-radius: 50%;
+}
+
+.previewContainer {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  margin-top: 1rem;
+  overflow: hidden;
+  background: var(--background);
+}
+
+.previewLabel {
+  position: absolute;
+  top: 0.5rem;
   left: 0.5rem;
-  bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
 }
 
-.positionOptionRight {
-  right: 0.5rem;
-  bottom: 0.5rem;
+.actionButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
 }
 
 .colorPicker {
@@ -115,67 +151,4 @@
 .colorOptionSelected {
   transform: scale(1.1);
   border-color: white;
-}
-
-.settingsForm {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.settingsCard {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 1rem;
-  margin-bottom: 1rem;
-}
-
-.settingsCardHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
-
-.settingsCardTitle {
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.actionButtons {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 1.5rem;
-}
-
-.previewContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  margin-top: 1rem;
-}
-
-.previewLabel {
-  font-size: 0.75rem;
-  color: var(--muted-foreground);
-  margin-bottom: 0.5rem;
-}
-
-.previewButton {
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 9999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(14, 165, 233, 0.9);
-  color: white;
-  border: 2px solid rgba(0, 255, 255, 0.7);
-  box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
 }
