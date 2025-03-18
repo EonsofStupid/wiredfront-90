@@ -1,7 +1,8 @@
-import React, { useRef, useEffect, useState } from "react";
+
+import React, { useRef, useEffect } from "react";
 import { DndContext } from "@dnd-kit/core";
 import { ChatSidebar } from "./ChatSidebar";
-import ChatToggleButton from "./components/ChatToggleButton";
+import { FloatingChatButton } from "./floating-button/FloatingChatButton";
 import DraggableChatContainer from "./components/DraggableChatContainer";
 import { useViewportAwareness } from "./hooks/useViewportAwareness";
 import { useChatStore } from "./store/chatStore";
@@ -81,7 +82,7 @@ export function DraggableChat() {
   if (!isOpen) {
     return (
       <>
-        <ChatToggleButton onClick={toggleChat} />
+        <FloatingChatButton />
         <ChatModeDialog
           open={modeDialogOpen}
           onOpenChange={setModeDialogOpen}

@@ -1,0 +1,80 @@
+
+/* Floating Chat Button - Isolated CSS */
+.floating-chat-button {
+  --button-size: 3rem;
+  --button-border-radius: 50%;
+  --button-background: var(--cyber-neon-purple, #9d00ff);
+  --button-hover-background: rgba(157, 0, 255, 0.8);
+  --button-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --button-z-index: var(--z-chat, 900);
+  --button-icon-size: 1.5rem;
+  --button-transition: all 0.2s ease-in-out;
+  
+  position: fixed;
+  bottom: 1rem;
+  height: var(--button-size);
+  width: var(--button-size);
+  border-radius: var(--button-border-radius);
+  background-color: var(--button-background);
+  box-shadow: var(--button-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--button-transition);
+  z-index: var(--button-z-index);
+  border: none;
+  outline: none;
+}
+
+.floating-chat-button:hover {
+  background-color: var(--button-hover-background);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.floating-chat-button:active {
+  transform: translateY(1px);
+}
+
+/* Position variants */
+.floating-chat-button--right {
+  right: 1rem;
+}
+
+.floating-chat-button--left {
+  left: 1rem;
+}
+
+/* Icon styling */
+.floating-chat-button__icon {
+  height: var(--button-icon-size);
+  width: var(--button-icon-size);
+  color: white;
+}
+
+/* Animation for the button */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(157, 0, 255, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(157, 0, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(157, 0, 255, 0);
+  }
+}
+
+.floating-chat-button--pulse {
+  animation: pulse 2s infinite;
+}
+
+/* Make sure the floating button is visible on mobile */
+@media (max-width: 640px) {
+  .floating-chat-button {
+    --button-size: 2.75rem;
+    --button-icon-size: 1.25rem;
+    bottom: 5rem; /* Give space for mobile navigation */
+  }
+}
