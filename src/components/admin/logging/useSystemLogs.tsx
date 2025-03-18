@@ -1,10 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { safeDataTransform, isSystemLog, isQueryError, SystemLog } from "@/utils/typeUtils";
-import { LogLevel, LogSource, isLogLevel, isLogSource } from "@/integrations/supabase/types/enums";
-import { PostgrestResponse, PostgrestSingleResponse } from "@supabase/supabase-js";
 
 export { type SystemLog };
 
@@ -26,9 +23,8 @@ export function useSystemLogs() {
     
     try {
       // Use a properly typed approach to fetch from system_logs
-      // We need to cast 'as any' since system_logs is not in the generated types
       const query = supabase
-        .from('system_logs' as any)
+        .from<SystemLog>('system_logs')
         .select();
       
       // Sort by timestamp
@@ -103,9 +99,9 @@ export function useSystemLogs() {
     setError(null);
     
     try {
-      // Same type assertion approach for consistency
+      // Use the same generic approach for the delete query
       const result = await supabase
-        .from('system_logs' as any)
+        .from<SystemLog>('system_logs')
         .delete()
         .not('id', 'is', null);
       
