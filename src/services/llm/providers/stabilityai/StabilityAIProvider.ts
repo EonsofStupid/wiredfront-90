@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { ProviderType } from '@/components/chat/store/types/chat-store-types';
@@ -68,6 +69,18 @@ export class StabilityAIProvider extends BaseProvider {
     return query;
   }
   
+  isProviderType(type: string): type is ProviderType {
+    return type === 'stabilityai';
+  }
+  
+  hasApiKey(): boolean {
+    return this._apiKey !== null;
+  }
+  
+  isImageCapable(): boolean {
+    return true;
+  }
+  
   async generateImage(prompt: string, options: ProviderOptions = {}): Promise<string> {
     try {
       if (!this.hasApiKey()) {
@@ -78,17 +91,18 @@ export class StabilityAIProvider extends BaseProvider {
       }
       
       const validatedOptions = this.validateOptions(options);
+      const stabilityOptions = validatedOptions as StabilityAIProviderOptions;
       
       const { data, error } = await supabase.functions.invoke('llm-generate-image', {
         body: {
           provider: 'stabilityai',
           prompt,
           options: {
-            engine: validatedOptions.engine || 'stable-diffusion-xl-1024-v1-0',
-            width: validatedOptions.width || 1024,
-            height: validatedOptions.height || 1024,
-            cfg_scale: validatedOptions.cfgScale || 7,
-            steps: validatedOptions.steps || 30,
+            engine: stabilityOptions.engine || 'stable-diffusion-xl-1024-v1-0',
+            width: stabilityOptions.width || 1024,
+            height: stabilityOptions.height || 1024,
+            cfg_scale: stabilityOptions.cfg_scale || stabilityOptions.cfgScale || 7,
+            steps: stabilityOptions.steps || 30,
             ...validatedOptions
           }
         }
@@ -103,4 +117,17 @@ export class StabilityAIProvider extends BaseProvider {
       throw this.handleError(error);
     }
   }
+  
+  private handleError(error: unknown): never {
+    logger.error('Stability AI provider error:', error);
+    
+    if (error instanceof Error) {
+      throw new Error(`Stability AI error: ${error.message}`);
+    }
+    
+    throw new Error('Unknown Stability AI error occurred');
+  }
 }
+
+// Add the imported type to fix the reference error
+import { StabilityAIProviderOptions } from '../index';

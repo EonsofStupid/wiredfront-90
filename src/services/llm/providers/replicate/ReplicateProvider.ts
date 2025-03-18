@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { ProviderType } from '@/components/chat/store/types/chat-store-types';
@@ -107,6 +108,18 @@ Answer (using only information from the documents):
 `;
   }
   
+  isProviderType(type: string): type is ProviderType {
+    return type === 'replicate';
+  }
+  
+  hasApiKey(): boolean {
+    return this._apiKey !== null;
+  }
+  
+  isImageCapable(): boolean {
+    return true;
+  }
+  
   async generateImage(prompt: string, options: ProviderOptions = {}): Promise<string> {
     try {
       if (!this.hasApiKey()) {
@@ -117,6 +130,7 @@ Answer (using only information from the documents):
       }
       
       const validatedOptions = this.validateOptions(options);
+      const replicateOptions = validatedOptions as ReplicateProviderOptions;
       
       const { data, error } = await supabase.functions.invoke('llm-generate-image', {
         body: {
@@ -124,9 +138,9 @@ Answer (using only information from the documents):
           prompt,
           options: {
             model: validatedOptions.model || 'stability-ai/sdxl:c221b2b8ef527988fb59bf24a8b97c4561f1c671f73bd389f866bfb27c061316',
-            width: validatedOptions.width || 1024,
-            height: validatedOptions.height || 1024,
-            num_outputs: validatedOptions.num_outputs || 1,
+            width: replicateOptions.width || 1024,
+            height: replicateOptions.height || 1024,
+            num_outputs: replicateOptions.num_outputs || 1,
             ...validatedOptions
           }
         }
@@ -141,4 +155,17 @@ Answer (using only information from the documents):
       throw this.handleError(error);
     }
   }
+  
+  private handleError(error: unknown): never {
+    logger.error('Replicate provider error:', error);
+    
+    if (error instanceof Error) {
+      throw new Error(`Replicate error: ${error.message}`);
+    }
+    
+    throw new Error('Unknown Replicate error occurred');
+  }
 }
+
+// Add the imported type to fix the reference error
+import { ReplicateProviderOptions } from '../index';

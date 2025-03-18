@@ -1,3 +1,4 @@
+
 import { ChatProvider, ProviderType } from '@/components/chat/store/types/chat-store-types';
 import { OpenAIProvider } from './openai/OpenAIProvider';
 import { GeminiProvider } from './gemini/GeminiProvider';
@@ -5,6 +6,7 @@ import { AnthropicProvider } from './anthropic/AnthropicProvider';
 import { ReplicateProvider } from './replicate/ReplicateProvider';
 import { StabilityAIProvider } from './stabilityai/StabilityAIProvider';
 import { logger } from '@/services/chat/LoggingService';
+import { LLMProvider, BaseProviderOptions, ProviderDocument, ProviderResponse, ProviderError } from './base/types';
 
 // Common provider options
 export interface BaseProviderOptions {
@@ -41,6 +43,7 @@ export interface StabilityAIProviderOptions extends BaseProviderOptions {
   width?: number;
   height?: number;
   cfg_scale?: number;
+  cfgScale?: number;
   steps?: number;
 }
 
@@ -60,47 +63,12 @@ export interface ProviderContext {
   stopSequences?: string[];
 }
 
-export interface ProviderDocument {
-  content: string;
-  metadata?: {
-    source?: string;
-    author?: string;
-    timestamp?: string;
-    relevance?: number;
-    [key: string]: string | number | undefined;
-  };
-}
-
-export interface ProviderResponse {
-  text: string;
-  metadata?: {
-    tokensUsed?: number;
-    latency?: number;
-    model?: string;
-    finishReason?: string;
-    promptTokens?: number;
-    completionTokens?: number;
-    totalTokens?: number;
-  };
-}
-
-export interface ProviderError {
-  code: string;
-  message: string;
-  details?: {
-    status?: number;
-    type?: string;
-    param?: string;
-    stack?: string;
-    [key: string]: unknown;
-  };
-}
+export { ProviderDocument, ProviderResponse, ProviderError } from './base/types';
 
 export interface LLMProvider {
   readonly id: string;
   readonly name: string;
   readonly type: ProviderType;
-  readonly apiKey: string | null;
   
   generateText(prompt: string, options?: ProviderOptions): Promise<string>;
   enhancePrompt(prompt: string, context?: ProviderContext): Promise<string>;
@@ -152,7 +120,9 @@ export function isProviderOptions(options: unknown): options is ProviderOptions 
   if ('height' in opts && typeof opts.height !== 'number') return false;
   if ('num_outputs' in opts && typeof opts.num_outputs !== 'number') return false;
   if ('cfg_scale' in opts && typeof opts.cfg_scale !== 'number') return false;
+  if ('cfgScale' in opts && typeof opts.cfgScale !== 'number') return false;
   if ('steps' in opts && typeof opts.steps !== 'number') return false;
+  if ('engine' in opts && typeof opts.engine !== 'string') return false;
   
   return true;
 }
@@ -234,96 +204,6 @@ export function isProviderError(error: unknown): error is ProviderError {
   }
   
   return true;
-}
-
-// Base provider class with common functionality
-export abstract class BaseProvider implements LLMProvider {
-  abstract readonly id: string;
-  abstract readonly name: string;
-  abstract readonly type: ProviderType;
-  abstract readonly apiKey: string | null;
-  
-  abstract generateText(prompt: string, options?: ProviderOptions): Promise<string>;
-  abstract enhancePrompt(prompt: string, context?: ProviderContext): Promise<string>;
-  abstract prepareRAGContext(documents: ProviderDocument[], query: string): Promise<string>;
-  
-  generateImage?(prompt: string, options?: ProviderOptions): Promise<string> {
-    throw new Error('Image generation not supported by this provider');
-  }
-  
-  isProviderType(type: string): type is ProviderType {
-    return isProviderType(type);
-  }
-  
-  hasApiKey(): boolean {
-    return this.apiKey !== null;
-  }
-  
-  isImageCapable(): boolean {
-    return typeof this.generateImage === 'function';
-  }
-  
-  protected validateOptions(options?: ProviderOptions): ProviderOptions {
-    if (!options) return {};
-    
-    if (!isProviderOptions(options)) {
-      throw new Error('Invalid provider options');
-    }
-    
-    return {
-      temperature: Math.max(0, Math.min(1, options.temperature ?? 0.7)),
-      maxTokens: Math.max(1, options.maxTokens ?? 1000),
-      ...options
-    };
-  }
-  
-  protected validateContext(context?: ProviderContext): ProviderContext {
-    if (!context) return {};
-    
-    if (!isProviderContext(context)) {
-      throw new Error('Invalid provider context');
-    }
-    
-    return {
-      system: context.system || '',
-      style: context.style || '',
-      modifiers: context.modifiers || [],
-      ...context
-    };
-  }
-  
-  protected validateDocuments(documents: ProviderDocument[]): ProviderDocument[] {
-    if (!Array.isArray(documents)) {
-      throw new Error('Documents must be an array');
-    }
-    
-    return documents.map(doc => {
-      if (!isProviderDocument(doc)) {
-        throw new Error('Invalid document format');
-      }
-      return doc;
-    });
-  }
-  
-  protected handleError(error: unknown): never {
-    if (isProviderError(error)) {
-      throw error;
-    }
-    
-    if (error instanceof Error) {
-      throw {
-        code: 'PROVIDER_ERROR',
-        message: error.message,
-        details: error
-      };
-    }
-    
-    throw {
-      code: 'UNKNOWN_ERROR',
-      message: 'An unknown error occurred',
-      details: error
-    };
-  }
 }
 
 // Provider factory to get the appropriate provider implementation
