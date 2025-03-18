@@ -15,19 +15,24 @@ export const getProviderImplementation = (provider: ChatProvider | null): LLMPro
     return new OpenAIProvider();
   }
 
-  switch (provider.type) {
-    case 'openai':
-      return new OpenAIProvider();
-    case 'gemini':
-      return new GeminiProvider();
-    case 'anthropic':
-      return new AnthropicProvider();
-    case 'replicate':
-      return new ReplicateProvider();
-    case 'stabilityai':
-      return new StabilityAIProvider();
-    default:
-      logger.warn(`Unknown provider type: ${provider.type}, defaulting to OpenAI`);
-      return new OpenAIProvider();
+  try {
+    switch (provider.type) {
+      case 'openai':
+        return new OpenAIProvider();
+      case 'gemini':
+        return new GeminiProvider();
+      case 'anthropic':
+        return new AnthropicProvider();
+      case 'replicate':
+        return new ReplicateProvider();
+      case 'stabilityai':
+        return new StabilityAIProvider();
+      default:
+        logger.warn(`Unknown provider type: ${provider.type}, defaulting to OpenAI`);
+        return new OpenAIProvider();
+    }
+  } catch (error) {
+    logger.error('Error creating provider', { error, providerType: provider.type });
+    return new OpenAIProvider(); // Fallback to OpenAI
   }
 };

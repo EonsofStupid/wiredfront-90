@@ -1,6 +1,7 @@
+
 import { ProviderType } from '@/components/chat/store/types/chat-store-types';
 
-export type ChatFeature = 'token' | 'openai' | 'github' | 'anthropic' | 'gemini';
+export type ChatFeature = 'token' | 'openai' | 'github' | 'anthropic' | 'gemini' | 'stabilityai' | 'replicate';
 
 export function convertFeatureKeyToChatFeature(key: string | null): ChatFeature | null {
   if (!key) return null;
@@ -11,6 +12,8 @@ export function convertFeatureKeyToChatFeature(key: string | null): ChatFeature 
   if (featureKey === 'github') return 'github';
   if (featureKey === 'anthropic') return 'anthropic';
   if (featureKey === 'gemini') return 'gemini';
+  if (featureKey === 'stabilityai') return 'stabilityai';
+  if (featureKey === 'replicate') return 'replicate';
   return null;
 }
 
