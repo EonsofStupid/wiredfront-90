@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -24,7 +25,7 @@ export function useSystemLogs() {
     try {
       // Use a properly typed approach to fetch from system_logs
       const query = supabase
-        .from<SystemLog>('system_logs')
+        .from('system_logs')
         .select();
       
       // Sort by timestamp
@@ -41,8 +42,7 @@ export function useSystemLogs() {
       }
       
       // Safely access data with proper type checking
-      const responseData = result && result.data ? 
-        (Array.isArray(result.data) ? result.data : []) : [];
+      const responseData = result?.data || [];
       
       // Safely transform the data to our SystemLog type
       const typedData = safeDataTransform<SystemLog>(responseData, isSystemLog);
@@ -99,9 +99,9 @@ export function useSystemLogs() {
     setError(null);
     
     try {
-      // Use the same generic approach for the delete query
+      // Use a generic approach for the delete query
       const result = await supabase
-        .from<SystemLog>('system_logs')
+        .from('system_logs')
         .delete()
         .not('id', 'is', null);
       
