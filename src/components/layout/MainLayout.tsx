@@ -1,6 +1,6 @@
 
 import React from "react";
-import { CoreLayout } from "@/core/layout/CoreLayout";
+import { AppLayout } from "./AppLayout";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -8,8 +8,14 @@ interface MainLayoutProps {
 
 /**
  * @name MainLayout
- * @description A wrapper around CoreLayout to maintain backward compatibility
+ * @description A simplified layout for the index page that ensures proper chat button visibility
  */
 export const MainLayout = ({ children }: MainLayoutProps) => {
-  return <CoreLayout>{children}</CoreLayout>;
+  return (
+    <AppLayout>
+      <div className="container mx-auto px-0">
+        {children}
+      </div>
+    </AppLayout>
+  );
 };

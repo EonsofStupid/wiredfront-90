@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from "react";
 import { DndContext } from "@dnd-kit/core";
 import { ChatSidebar } from "./ChatSidebar";
@@ -78,55 +79,54 @@ export function DraggableChat() {
     }
   };
 
-  if (!isOpen) {
-    return (
-      <>
-        <ChatToggleButton onClick={toggleChat} />
-        <ChatModeDialog
-          open={modeDialogOpen}
-          onOpenChange={setModeDialogOpen}
-          onModeSelect={handleModeSelect}
-        />
-      </>
-    );
-  }
-
-  // Determine position class based on position state
-  const positionClass = typeof position === 'string' && position === 'bottom-right' ? 'right-4' : 'left-4';
-
+  // Always render the ChatToggleButton, regardless of isOpen state
   return (
-    <DndContext>
-      <motion.div 
-        className={`fixed bottom-4 ${positionClass} flex gap-4 chat-component z-[var(--z-chat)]`}
-        style={{ 
-          transformOrigin: position === 'bottom-right' ? 'bottom right' : 'bottom left'
-        }}
-        animate={{ 
-          scale: isOverflowing ? scale : 1,
-          transition: { duration: 0.3, ease: "easeOut" }
-        }}
-        ref={containerRef}
-      >
-        <AnimatePresence>
-          {showSidebar && (
-            <motion.div
-              initial={{ opacity: 0, x: position === 'bottom-right' ? 20 : -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: position === 'bottom-right' ? 20 : -20 }}
-              transition={{ duration: 0.2 }}
-              className="chat-sidebar-container"
-            >
-              <ChatSidebar />
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
-        <DraggableChatContainer
-          scrollRef={scrollRef}
-          isEditorPage={isEditorPage}
-        />
-      </motion.div>
-    </DndContext>
+    <>
+      {!isOpen && (
+        <ChatToggleButton onClick={toggleChat} />
+      )}
+
+      <ChatModeDialog
+        open={modeDialogOpen}
+        onOpenChange={setModeDialogOpen}
+        onModeSelect={handleModeSelect}
+      />
+
+      {isOpen && (
+        <DndContext>
+          <motion.div 
+            className={`fixed bottom-4 ${position === 'bottom-right' ? 'right-4' : 'left-4'} flex gap-4 chat-component z-[var(--z-chat)]`}
+            style={{ 
+              transformOrigin: position === 'bottom-right' ? 'bottom right' : 'bottom left'
+            }}
+            animate={{ 
+              scale: isOverflowing ? scale : 1,
+              transition: { duration: 0.3, ease: "easeOut" }
+            }}
+            ref={containerRef}
+          >
+            <AnimatePresence>
+              {showSidebar && (
+                <motion.div
+                  initial={{ opacity: 0, x: position === 'bottom-right' ? 20 : -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: position === 'bottom-right' ? 20 : -20 }}
+                  transition={{ duration: 0.2 }}
+                  className="chat-sidebar-container"
+                >
+                  <ChatSidebar />
+                </motion.div>
+              )}
+            </AnimatePresence>
+            
+            <DraggableChatContainer
+              scrollRef={scrollRef}
+              isEditorPage={isEditorPage}
+            />
+          </motion.div>
+        </DndContext>
+      )}
+    </>
   );
 }
 

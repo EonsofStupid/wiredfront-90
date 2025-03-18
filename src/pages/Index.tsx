@@ -9,10 +9,8 @@ export default function Index() {
   
   return (
     <MainLayout>
-      <div className="container mx-auto px-0">
-        <HeroSection />
-        <FeaturesSection />
-      </div>
+      <HeroSection />
+      <FeaturesSection />
     </MainLayout>
   );
 }

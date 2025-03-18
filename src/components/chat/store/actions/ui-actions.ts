@@ -42,7 +42,16 @@ export const createUIActions = (
   },
   
   toggleChat: () => {
-    set((state) => ({ isOpen: !state.isOpen }), false, { type: 'chat/toggleChat' });
+    set(
+      (state) => ({ 
+        isOpen: !state.isOpen,
+        isMinimized: false // Reset minimized state when toggling
+      }), 
+      false, 
+      { type: 'chat/toggleChat' }
+    );
+    // Log the action for debugging
+    console.log('Chat toggled', { now: new Date().toISOString() });
   },
   
   openChat: () => {
