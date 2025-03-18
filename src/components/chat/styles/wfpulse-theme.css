@@ -1,0 +1,176 @@
+
+/* WFPULSE Theme Variables */
+:root {
+  /* Core Colors */
+  --wf-purple: #8B5CF6;
+  --wf-magenta: #D946EF;
+  --wf-blue: #0EA5E9;
+  --wf-dark: #1A1F2C;
+  
+  /* Neon Variants */
+  --wf-neon-blue: rgba(14, 165, 233, 0.8);
+  --wf-neon-pink: rgba(217, 70, 239, 0.8);
+  --wf-neon-purple: rgba(139, 92, 246, 0.8);
+  
+  /* Gradients */
+  --wf-gradient-primary: linear-gradient(135deg, var(--wf-purple), var(--wf-magenta));
+  --wf-gradient-secondary: linear-gradient(135deg, var(--wf-blue), var(--wf-purple));
+  --wf-gradient-button: linear-gradient(to right, var(--wf-blue), var(--wf-blue)/70);
+  
+  /* Glow Effects */
+  --wf-glow-blue: 0 0 15px rgba(14, 165, 233, 0.7), 0 0 30px rgba(14, 165, 233, 0.4);
+  --wf-glow-pink: 0 0 15px rgba(217, 70, 239, 0.7), 0 0 30px rgba(217, 70, 239, 0.4);
+  --wf-glow-purple: 0 0 15px rgba(139, 92, 246, 0.7), 0 0 30px rgba(139, 92, 246, 0.4);
+  
+  /* Mode Colors */
+  --wf-mode-chat: var(--wf-purple);
+  --wf-mode-dev: var(--wf-blue);
+  --wf-mode-image: var(--wf-magenta);
+  --wf-mode-training: #10B981; /* Emerald 500 */
+  
+  /* Animations */
+  --wf-transition-speed: 0.3s;
+  --wf-transition-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* WFPULSE UI Components */
+.wf-button {
+  background: var(--wf-gradient-primary);
+  color: white;
+  border: none;
+  border-radius: 9999px;
+  transition: all var(--wf-transition-speed) var(--wf-transition-function);
+  position: relative;
+  overflow: hidden;
+}
+
+.wf-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--wf-glow-purple);
+}
+
+.wf-button:active {
+  transform: translateY(0px);
+}
+
+.wf-button::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transform: rotate(30deg);
+  transition: transform 0.3s ease;
+}
+
+.wf-button:hover::after {
+  transform: rotate(30deg) translate(10%, 10%);
+}
+
+.wf-card {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all var(--wf-transition-speed) var(--wf-transition-function);
+}
+
+.wf-card:hover {
+  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+}
+
+.wf-input {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: white;
+  transition: all var(--wf-transition-speed) var(--wf-transition-function);
+}
+
+.wf-input:focus {
+  border-color: var(--wf-blue);
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+  outline: none;
+}
+
+/* Mode-specific styles */
+.wf-mode-chat {
+  --wf-current-color: var(--wf-mode-chat);
+  --wf-current-glow: var(--wf-glow-purple);
+}
+
+.wf-mode-dev {
+  --wf-current-color: var(--wf-mode-dev);
+  --wf-current-glow: var(--wf-glow-blue);
+}
+
+.wf-mode-image {
+  --wf-current-color: var(--wf-mode-image);
+  --wf-current-glow: var(--wf-glow-pink);
+}
+
+.wf-mode-training {
+  --wf-current-color: var(--wf-mode-training);
+  --wf-current-glow: 0 0 15px rgba(16, 185, 129, 0.7), 0 0 30px rgba(16, 185, 129, 0.4);
+}
+
+.wf-border {
+  position: relative;
+  border: 1px solid var(--wf-current-color);
+  transition: border-color var(--wf-transition-speed) var(--wf-transition-function);
+}
+
+.wf-border::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--wf-current-glow);
+  opacity: 0;
+  transition: opacity var(--wf-transition-speed) var(--wf-transition-function);
+}
+
+.wf-border:hover::after {
+  opacity: 1;
+}
+
+/* Accessibility overrides */
+@media (prefers-reduced-motion) {
+  .wf-button,
+  .wf-card,
+  .wf-input,
+  .wf-border,
+  .wf-border::after,
+  .wf-button::after {
+    transition: none !important;
+  }
+  
+  .wf-button:hover {
+    transform: none !important;
+  }
+  
+  .wf-button:hover::after {
+    transform: none !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: more) {
+  :root {
+    --wf-purple: #9B5CF6;
+    --wf-magenta: #E946EF;
+    --wf-blue: #1EA5E9;
+  }
+  
+  .wf-border {
+    border-width: 2px;
+  }
+}

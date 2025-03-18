@@ -1,7 +1,6 @@
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useChatMode } from '../providers/ChatModeProvider';
-import { ChatMode } from '@/integrations/supabase/types/enums';
 import { useChatStore } from '../store';
 import { Message } from '@/types/chat';
 import ChatMessage from './ChatMessage';
@@ -14,6 +13,14 @@ interface ChatContentProps {
 const ChatContent: React.FC<ChatContentProps> = ({ className }) => {
   const { mode, isEditorPage } = useChatMode();
   const { messages, isWaitingForResponse } = useChatStore();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
   
   // Render welcome message based on current mode
   const getWelcomeMessage = (): string => {
@@ -30,10 +37,25 @@ const ChatContent: React.FC<ChatContentProps> = ({ className }) => {
     }
   };
   
+  // Get mode color based on current mode
+  const getModeColor = (): string => {
+    switch (mode) {
+      case 'dev':
+      case 'developer':
+        return 'neon-blue';
+      case 'image':
+        return 'neon-pink';
+      case 'training':
+        return 'green-400';
+      default:
+        return 'purple-400';
+    }
+  };
+  
   return (
-    <div className={`chat-content overflow-y-auto p-4 space-y-4 ${className || ''}`}>
+    <div className={`chat-content overflow-y-auto p-4 space-y-4 ${className || ''} transition-all duration-300 scan-lines`}>
       <div className="text-center opacity-60">
-        <p className="text-xs text-white/60">
+        <p className={`text-xs text-${getModeColor()} transition-colors duration-500`}>
           {new Date().toLocaleDateString()} • {mode.charAt(0).toUpperCase() + mode.slice(1)} Mode
         </p>
       </div>
@@ -45,17 +67,20 @@ const ChatContent: React.FC<ChatContentProps> = ({ className }) => {
           </span>
         </div>
       ) : (
-        messages.map((msg: Message) => (
+        messages.map((msg: Message, index) => (
           <ChatMessage key={msg.id} message={msg} />
         ))
       )}
       
       {isWaitingForResponse && (
-        <div className="chat-message chat-message-assistant cyber-border opacity-70 flex items-center space-x-2">
+        <div className="chat-message chat-message-assistant cyber-border opacity-70 flex items-center space-x-2 neon-pulse">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span>Thinking...</span>
         </div>
       )}
+      
+      {/* Invisible div for auto-scrolling */}
+      <div ref={messagesEndRef} />
     </div>
   );
 };
