@@ -1,4 +1,3 @@
-
 import { StateCreator } from 'zustand';
 import { ChatState, ChatProvider, FeatureState } from "../../types/chat-store-types";
 import { TokenEnforcementMode, KnownFeatureFlag, ChatFeatureKey } from '@/integrations/supabase/types/enums';
@@ -38,34 +37,11 @@ export type StoreWithDevtools = StateCreator<
   FeatureActions
 >;
 
-// Type guard to check if a key is a valid FeatureState key
-export function isFeatureStateKey(key: FeatureKey): key is keyof FeatureState {
-  const validKeys: (keyof FeatureState)[] = [
-    'voice',
-    'rag',
-    'modeSwitch',
-    'notifications',
-    'github',
-    'codeAssistant',
-    'ragSupport',
-    'githubSync',
-    'tokenEnforcement'
-  ];
-  return validKeys.includes(key as keyof FeatureState);
-}
-
-// Helper function to convert string feature keys
-function convertStringFeatureKey(key: string): keyof FeatureState | null {
-  // Add your string to feature key mapping logic here
-  const featureKeyMap: Record<string, keyof FeatureState> = {
-    'code_assistant': 'codeAssistant',
-    'rag_support': 'ragSupport',
-    'github_sync': 'githubSync',
-    'notifications': 'notifications',
-    // Add more mappings as needed
-  };
-  
-  return featureKeyMap[key] || null;
+/**
+ * Type guard to check if a value is a non-null object with toString method
+ */
+function isObjectWithToString(value: unknown): value is { toString(): string } {
+  return typeof value === 'object' && value !== null && 'toString' in value;
 }
 
 /**
@@ -83,17 +59,56 @@ export function convertFeatureKeyToChatFeature(key: FeatureKey | null | undefine
   }
   
   // If it's an enum value, convert it properly with type safety
-  if (typeof key === 'object' && key !== null && 'toString' in key) {
+  if (isObjectWithToString(key)) {
     const keyString = key.toString();
-    // Continue with the string-based key conversion
-    return convertStringFeatureKey(keyString);
+    const convertedKey = convertStringFeatureKey(keyString);
+    return convertedKey;
   }
   
-  // Handle string enum values - null safety added here
+  // Handle string enum values with null safety
   if (typeof key === 'string') {
-    return convertStringFeatureKey(key);
+    const convertedKey = convertStringFeatureKey(key);
+    return convertedKey;
   }
   
   // Default case - return null for unhandled types
   return null;
+}
+
+// Type guard to check if a key is a valid FeatureState key
+export function isFeatureStateKey(key: FeatureKey | null | undefined): key is keyof FeatureState {
+  if (key === null || key === undefined) {
+    return false;
+  }
+
+  const validKeys: (keyof FeatureState)[] = [
+    'voice',
+    'rag',
+    'modeSwitch',
+    'notifications',
+    'github',
+    'codeAssistant',
+    'ragSupport',
+    'githubSync',
+    'tokenEnforcement'
+  ];
+  return validKeys.includes(key as keyof FeatureState);
+}
+
+// Helper function to convert string feature keys
+function convertStringFeatureKey(key: string | null | undefined): keyof FeatureState | null {
+  if (key === null || key === undefined) {
+    return null;
+  }
+
+  // Add your string to feature key mapping logic here
+  const featureKeyMap: Record<string, keyof FeatureState> = {
+    'code_assistant': 'codeAssistant',
+    'rag_support': 'ragSupport',
+    'github_sync': 'githubSync',
+    'notifications': 'notifications',
+    // Add more mappings as needed
+  };
+  
+  return featureKeyMap[key] || null;
 }
