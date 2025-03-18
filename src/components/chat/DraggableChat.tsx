@@ -79,7 +79,6 @@ export function DraggableChat() {
     }
   };
 
-  // Always render the ChatToggleButton, regardless of isOpen state
   return (
     <>
       {!isOpen && (
@@ -95,7 +94,7 @@ export function DraggableChat() {
       {isOpen && (
         <DndContext>
           <motion.div 
-            className={`fixed bottom-4 ${position === 'bottom-right' ? 'right-4' : 'left-4'} flex gap-4 chat-component z-[var(--z-chat)]`}
+            className="fixed bottom-4 right-4 flex gap-4 chat-component z-[9700]"
             style={{ 
               transformOrigin: position === 'bottom-right' ? 'bottom right' : 'bottom left'
             }}

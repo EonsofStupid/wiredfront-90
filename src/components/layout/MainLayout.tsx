@@ -13,7 +13,7 @@ interface MainLayoutProps {
 export const MainLayout = ({ children }: MainLayoutProps) => {
   return (
     <AppLayout>
-      <div className="container mx-auto px-0">
+      <div className="container mx-auto px-0 relative z-[500]">
         {children}
       </div>
     </AppLayout>
