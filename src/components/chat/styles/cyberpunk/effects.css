@@ -1,0 +1,200 @@
+
+/* Cyberpunk effects */
+.chat-cyberpunk-glitch {
+  position: relative;
+  display: inline-block;
+}
+
+.chat-cyberpunk-glitch::before,
+.chat-cyberpunk-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.8;
+}
+
+.chat-cyberpunk-glitch::before {
+  color: var(--chat-cyber-neon-pink);
+  z-index: -2;
+  animation: glitch 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+  animation-play-state: paused;
+}
+
+.chat-cyberpunk-glitch::after {
+  color: var(--chat-cyber-neon-blue);
+  z-index: -1;
+  animation: glitch 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) reverse both infinite;
+  animation-play-state: paused;
+}
+
+.chat-cyberpunk-glitch:hover::before,
+.chat-cyberpunk-glitch:hover::after {
+  animation-play-state: running;
+}
+
+.chat-cyberpunk-message.chat-cyberpunk-message-user .chat-cyberpunk-glitch::before {
+  color: var(--chat-cyber-neon-blue);
+}
+
+.chat-cyberpunk-message.chat-cyberpunk-message-user .chat-cyberpunk-glitch::after {
+  color: var(--chat-cyber-neon-green);
+}
+
+.chat-cyberpunk-message.chat-cyberpunk-message-system .chat-cyberpunk-glitch::before {
+  color: var(--chat-cyber-neon-pink);
+}
+
+.chat-cyberpunk-message.chat-cyberpunk-message-system .chat-cyberpunk-glitch::after {
+  color: var(--chat-cyber-neon-blue);
+}
+
+/* Scanline effect */
+.chat-cyberpunk-scanlines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(0, 0, 0, 0.05) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+}
+
+/* Neon text effect */
+.chat-cyberpunk-neon-text {
+  text-shadow: 0 0 5px var(--chat-cyber-neon-blue),
+               0 0 10px var(--chat-cyber-neon-blue),
+               0 0 20px var(--chat-cyber-neon-blue);
+}
+
+.chat-cyberpunk-neon-text-pink {
+  text-shadow: 0 0 5px var(--chat-cyber-neon-pink),
+               0 0 10px var(--chat-cyber-neon-pink),
+               0 0 20px var(--chat-cyber-neon-pink);
+}
+
+.chat-cyberpunk-neon-text-green {
+  text-shadow: 0 0 5px var(--chat-cyber-neon-green),
+               0 0 10px var(--chat-cyber-neon-green),
+               0 0 20px var(--chat-cyber-neon-green);
+}
+
+/* CRT screen effect */
+.chat-cyberpunk-crt-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.chat-cyberpunk-crt-effect::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(18, 16, 16, 0) 50%,
+    rgba(0, 0, 0, 0.1) 50%
+  );
+  background-size: 100% 4px;
+  z-index: 2;
+  pointer-events: none;
+  animation: scanlines 1s linear infinite;
+}
+
+.chat-cyberpunk-crt-effect::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: rgba(18, 16, 16, 0.1);
+  opacity: 0;
+  z-index: 2;
+  pointer-events: none;
+  animation: flicker 0.15s infinite;
+}
+
+@keyframes scanlines {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 4px;
+  }
+}
+
+/* Cyber border effect */
+.chat-cyberpunk-border {
+  position: relative;
+  border: 1px solid var(--chat-cyber-border);
+}
+
+.chat-cyberpunk-border::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    var(--chat-cyber-neon-blue),
+    transparent
+  );
+  z-index: -1;
+  opacity: 0.3;
+  animation: border-scan 3s linear infinite;
+}
+
+@keyframes border-scan {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Cyberpunk button effect */
+.chat-cyberpunk-button {
+  position: relative;
+  color: var(--chat-cyber-text);
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--chat-cyber-border);
+  overflow: hidden;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.chat-cyberpunk-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  background-color: rgba(10, 239, 255, 0.1);
+  transition: width 0.3s ease;
+  z-index: -1;
+}
+
+.chat-cyberpunk-button:hover::before {
+  width: 100%;
+}
+
+.chat-cyberpunk-button:hover {
+  border-color: var(--chat-cyber-neon-blue);
+  box-shadow: 0 0 10px rgba(10, 239, 255, 0.5);
+}
