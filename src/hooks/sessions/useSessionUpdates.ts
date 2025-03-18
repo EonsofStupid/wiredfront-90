@@ -2,8 +2,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { updateChatSession, archiveChatSession } from '@/services/sessions';
-import { logger } from '@/services/chat/LoggingService';
 import { UpdateSessionParams } from '@/types/sessions';
+import { logger } from '@/services/chat/LoggingService';
 import { SESSION_QUERY_KEYS } from './useSessionCore';
 
 /**
@@ -13,13 +13,13 @@ export function useSessionUpdates() {
   const queryClient = useQueryClient();
 
   const { mutateAsync: updateSession } = useMutation({
-    mutationFn: async ({ 
-      sessionId, 
-      params 
-    }: { sessionId: string; params: UpdateSessionParams }) => {
+    mutationFn: async ({ sessionId, params }: { 
+      sessionId: string, 
+      params: UpdateSessionParams 
+    }) => {
       const result = await updateChatSession(sessionId, params);
       if (!result.success) {
-        throw new Error('Failed to update chat session');
+        throw new Error('Failed to update session');
       }
       return result;
     },
@@ -27,27 +27,27 @@ export function useSessionUpdates() {
       queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEYS.SESSIONS });
     },
     onError: (err) => {
-      toast.error('Failed to update chat session');
+      toast.error('Failed to update session');
       logger.error('Error updating session:', err);
-    },
+    }
   });
 
   const { mutateAsync: archiveSession } = useMutation({
     mutationFn: async (sessionId: string) => {
       const result = await archiveChatSession(sessionId);
       if (!result.success) {
-        throw new Error('Failed to archive chat session');
+        throw new Error('Failed to archive session');
       }
       return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEYS.SESSIONS });
-      toast.success('Chat session archived');
+      toast.success('Session archived');
     },
     onError: (err) => {
-      toast.error('Failed to archive chat session');
+      toast.error('Failed to archive session');
       logger.error('Error archiving session:', err);
-    },
+    }
   });
 
   return {

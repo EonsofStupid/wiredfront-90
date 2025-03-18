@@ -1,74 +1,72 @@
 
-/* Import all chat stylesheets */
-@import './chat-variables.css';
-@import './chat-base.css';
-@import './ChatButtonStyle.css';
-@import './animations.css';
+/* Import all chat styles */
 @import './cyber-theme.css';
 
-/* Any global chat styles that don't fit elsewhere */
+/* Core layout styles */
 .chat-container {
   width: var(--chat-width);
   height: var(--chat-height);
   display: flex;
   flex-direction: column;
+  z-index: var(--chat-z-index);
   position: relative;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.chat-minimized {
+  height: 48px;
   overflow: hidden;
 }
 
-/* Cyber theme overrides */
-.chat-message {
+.chat-messages-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(57, 196, 255, 0.3) transparent;
+}
+
+.chat-messages-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-messages-container::-webkit-scrollbar-thumb {
+  background-color: rgba(57, 196, 255, 0.3);
+  border-radius: 20px;
+}
+
+.chat-toggle-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(10, 10, 15, 0.8);
+  border: 1px solid rgba(57, 196, 255, 0.3);
+  color: var(--neon-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: var(--chat-z-index);
+  box-shadow: 0 0 10px rgba(57, 196, 255, 0.4);
+  transition: all 0.2s ease;
+}
+
+.chat-toggle-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(57, 196, 255, 0.6);
+}
+
+.chat-sidebar-container {
   position: relative;
-  border-radius: 8px;
-  padding: 10px 14px;
-  margin-bottom: 8px;
-  word-break: break-word;
+  margin-right: 12px;
 }
 
-.chat-message-assistant {
-  background-color: rgba(0, 0, 0, 0.4);
-  color: white;
-  border: 1px solid var(--cyber-neon-blue);
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-  margin-right: auto;
-  max-width: 85%;
-}
-
-.chat-message-user {
-  background-color: rgba(157, 0, 255, 0.2);
-  color: white;
-  border: 1px solid var(--cyber-neon-purple);
-  box-shadow: 0 0 10px rgba(157, 0, 255, 0.3);
-  margin-left: auto;
-  max-width: 85%;
-}
-
-/* Typing dots animation */
-.typing-dots {
-  display: inline-block;
-}
-
-.typing-dots::after {
-  display: inline-block;
-  animation: typing 1.5s infinite;
-  content: '';
-}
-
-@keyframes typing {
-  0% { content: ''; }
-  25% { content: '.'; }
-  50% { content: '..'; }
-  75% { content: '...'; }
-  100% { content: ''; }
-}
-
-/* Make sure the chat is responsive */
-@media (max-width: 640px) {
-  .chat-container {
-    width: calc(100vw - 32px);
-  }
-  
-  .chat-glass-card {
-    max-width: calc(100vw - 32px);
-  }
+/* Set some CSS variables */
+:root {
+  --z-chat: 1000;
+  --z-chat-modal: 1010;
 }

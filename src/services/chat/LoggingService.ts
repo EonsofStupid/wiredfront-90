@@ -1,117 +1,80 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { LogLevel, LogSource } from "@/integrations/supabase/types/enums";
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
-export interface LogOptions {
-  source?: LogSource;
-  metadata?: Record<string, any>;
-  userId?: string;
-  [key: string]: any; // Allow any additional properties
+interface LogOptions {
+  level: LogLevel;
+  enableConsole: boolean;
+  enableRemote: boolean;
 }
 
-class Logger {
-  private defaultSource: LogSource = 'system';
-
-  /**
-   * Logs an informational message
-   */
-  async info(message: string, options?: LogOptions) {
-    return this.log('info', message, options);
+class LoggingService {
+  private options: LogOptions = {
+    level: 'info',
+    enableConsole: true,
+    enableRemote: false,
+  };
+  
+  // Configure logger settings
+  configure(options: Partial<LogOptions>) {
+    this.options = { ...this.options, ...options };
   }
-
-  /**
-   * Logs a warning message
-   */
-  async warn(message: string, options?: LogOptions) {
-    return this.log('warn', message, options);
-  }
-
-  /**
-   * Logs an error message
-   */
-  async error(message: string, options?: LogOptions) {
-    return this.log('error', message, options);
-  }
-
-  /**
-   * Logs a debug message (only recorded in development environment or when debug mode is enabled)
-   */
-  async debug(message: string, options?: LogOptions) {
-    // Check if we're in development mode or if debug is enabled
-    const isDev = import.meta.env.DEV;
-    if (isDev) {
-      console.debug(`[DEBUG] ${message}`, options?.metadata || {});
-    }
-    
-    return this.log('debug', message, options);
-  }
-
-  /**
-   * Logs a message to console and Supabase system_logs table
-   */
-  private async log(level: LogLevel, message: string, options?: LogOptions) {
-    const source = options?.source || this.defaultSource;
-    const metadata = options?.metadata || {};
-    const userId = options?.userId || await this.getCurrentUserId();
-    
-    // Always log to console
-    this.logToConsole(level, message, source, metadata);
-    
-    // Try to log to database
-    try {
-      // Use type assertion for system_logs table
-      const { error } = await supabase
-        .from('system_logs' as any)
-        .insert({
-          level,
-          source,
-          message,
-          metadata,
-          user_id: userId
-        });
-      
-      if (error) {
-        console.error('Failed to write log to database:', error);
-      }
-    } catch (err) {
-      console.error('Error logging to database:', err);
+  
+  // Debug level logs
+  debug(message: string, data?: any) {
+    if (['debug'].includes(this.options.level)) {
+      this.log('debug', message, data);
     }
   }
-
-  /**
-   * Logs a message to the console with appropriate formatting
-   */
-  private logToConsole(level: LogLevel, message: string, source: LogSource, metadata: any) {
+  
+  // Info level logs
+  info(message: string, data?: any) {
+    if (['debug', 'info'].includes(this.options.level)) {
+      this.log('info', message, data);
+    }
+  }
+  
+  // Warning level logs
+  warn(message: string, data?: any) {
+    if (['debug', 'info', 'warn'].includes(this.options.level)) {
+      this.log('warn', message, data);
+    }
+  }
+  
+  // Error level logs
+  error(message: string, data?: any) {
+    if (['debug', 'info', 'warn', 'error'].includes(this.options.level)) {
+      this.log('error', message, data);
+    }
+  }
+  
+  // Main log function
+  private log(level: LogLevel, message: string, data?: any) {
     const timestamp = new Date().toISOString();
-    const logPrefix = `[${timestamp}] [${level.toUpperCase()}] [${source}]`;
+    const logData = { timestamp, message, ...(data || {}) };
     
-    switch (level) {
-      case 'info':
-        console.info(`${logPrefix} ${message}`, metadata);
-        break;
-      case 'warn':
-        console.warn(`${logPrefix} ${message}`, metadata);
-        break;
-      case 'error':
-        console.error(`${logPrefix} ${message}`, metadata);
-        break;
-      case 'debug':
-        console.debug(`${logPrefix} ${message}`, metadata);
-        break;
+    if (this.options.enableConsole) {
+      switch (level) {
+        case 'debug':
+          console.debug(`[${timestamp}] 🔍 DEBUG:`, message, data || '');
+          break;
+        case 'info':
+          console.info(`[${timestamp}] ℹ️ INFO:`, message, data || '');
+          break;
+        case 'warn':
+          console.warn(`[${timestamp}] ⚠️ WARNING:`, message, data || '');
+          break;
+        case 'error':
+          console.error(`[${timestamp}] 🔴 ERROR:`, message, data || '');
+          break;
+      }
     }
-  }
-
-  /**
-   * Gets the current user ID if available
-   */
-  private async getCurrentUserId(): Promise<string | null> {
-    try {
-      const { data } = await supabase.auth.getSession();
-      return data?.session?.user?.id || null;
-    } catch {
-      return null;
+    
+    // Future implementation: send logs to a remote service
+    if (this.options.enableRemote) {
+      // TODO: Implement remote logging
     }
   }
 }
 
-export const logger = new Logger();
+// Create and export a singleton instance
+export const logger = new LoggingService();

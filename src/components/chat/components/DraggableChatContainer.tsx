@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { useChatStore } from '../store/chatStore';
 import { useMessageAPI } from '@/hooks/chat/useMessageAPI';
@@ -7,10 +7,11 @@ import { ChatHeader } from './ChatHeader';
 import { ChatModeDialog } from '../features/ModeSwitch/ChatModeDialog';
 import { ChatMode as SupabaseChatMode } from '@/integrations/supabase/types/enums';
 import { supabaseModeToStoreMode } from '@/utils/modeConversion';
-import { Message } from '@/types/chat';
+import ChatContent from './ChatContent';
 import ChatInputArea from './ChatInputArea';
-import { ChatIconStack } from './ChatIconStack';
-import ChatMessage from './ChatMessage';
+import { ActionIconStack, ActionItem } from '../ui/ActionIconStack';
+import { MessageSquare, Code, Image, BookOpen } from 'lucide-react';
+import { useNavigation } from '../hooks/useNavigation';
 import '../styles/index.css';
 import '../styles/cyber-theme.css';
 
@@ -32,31 +33,31 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
     docked, 
     scale, 
     messages, 
-    addMessage 
+    addMessage,
+    setCurrentMode,
+    updateCurrentProvider,
+    availableProviders
   } = useChatStore();
   
+  const { navigateByMode } = useNavigation();
   const [modeDialogOpen, setModeDialogOpen] = useState(false);
   const { sendMessage, isLoading } = useMessageAPI();
   const [typing, setTyping] = useState(false);
   
-  useEffect(() => {
-    if (isLoading) {
-      setTyping(true);
-      const timeout = setTimeout(() => setTyping(false), 1000);
-      return () => clearTimeout(timeout);
-    }
-  }, [isLoading]);
-  
+  // Mode selection actions
   const handleModeSelect = (mode: SupabaseChatMode, providerId: string) => {
     // Convert Supabase mode to store mode
     const storeMode = supabaseModeToStoreMode(mode);
-    useChatStore.getState().setCurrentMode(storeMode);
+    setCurrentMode(storeMode);
     
     // Find the provider by ID and set it as current
-    const provider = useChatStore.getState().availableProviders.find(p => p.id === providerId);
+    const provider = availableProviders.find(p => p.id === providerId);
     if (provider) {
-      useChatStore.getState().updateCurrentProvider(provider);
+      updateCurrentProvider(provider);
     }
+    
+    // Navigate to the appropriate page based on the selected mode
+    navigateByMode(mode);
   };
 
   const handleToggleSidebar = () => {
@@ -70,6 +71,38 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
   const handleSendMessage = (message: string) => {
     sendMessage(message);
   };
+  
+  // Define quick action buttons
+  const actionItems: ActionItem[] = [
+    {
+      id: 'chat-mode',
+      icon: MessageSquare,
+      label: 'Chat Mode',
+      onClick: () => handleModeSelect('chat', availableProviders[0]?.id || ''),
+      variant: 'ghost'
+    },
+    {
+      id: 'developer-mode',
+      icon: Code,
+      label: 'Developer Mode',
+      onClick: () => handleModeSelect('dev', availableProviders[0]?.id || ''),
+      variant: 'ghost'
+    },
+    {
+      id: 'image-mode',
+      icon: Image,
+      label: 'Image Mode',
+      onClick: () => handleModeSelect('image', availableProviders[0]?.id || ''),
+      variant: 'ghost'
+    },
+    {
+      id: 'training-mode',
+      icon: BookOpen,
+      label: 'Training Mode',
+      onClick: () => handleModeSelect('training', availableProviders[0]?.id || ''),
+      variant: 'ghost'
+    },
+  ];
 
   return (
     <div
@@ -85,32 +118,10 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
       
       {!isMinimized && (
         <div 
-          className="flex-1 overflow-y-auto p-4 chat-messages-container cyber-bg" 
+          className="flex-1 overflow-y-auto chat-messages-container cyber-bg" 
           ref={scrollRef}
         >
-          <div className="space-y-4">
-            <div className="text-center opacity-60">
-              <p className="text-xs text-white/60">
-                {new Date().toLocaleDateString()} • {isEditorPage ? 'Editor' : 'Dashboard'} Mode
-              </p>
-            </div>
-            
-            {messages.length === 0 ? (
-              <div className="chat-message chat-message-assistant cyber-border cyber-pulse">
-                <span className="cyber-glitch" data-text="How can I help you today?">How can I help you today?</span>
-              </div>
-            ) : (
-              messages.map((msg: Message) => (
-                <ChatMessage key={msg.id} message={msg} />
-              ))
-            )}
-            
-            {typing && (
-              <div className="chat-message chat-message-assistant cyber-border opacity-70">
-                <div className="typing-dots">Assistant is typing</div>
-              </div>
-            )}
-          </div>
+          <ChatContent isTyping={typing} />
         </div>
       )}
       
@@ -124,7 +135,14 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
         onModeSelect={handleModeSelect}
       />
       
-      <ChatIconStack />
+      {!isMinimized && (
+        <ActionIconStack 
+          actions={actionItems}
+          position="right"
+          orientation="vertical"
+          className="-right-12 space-y-2 opacity-70 hover:opacity-100"
+        />
+      )}
     </div>
   );
 };
