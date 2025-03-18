@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useChatStore } from "@/components/chat/store/chatStore";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,8 +10,7 @@ import {
 } from "@/integrations/supabase/types/enums";
 import { 
   convertFeatureKeyToChatFeature, 
-  FeatureKey,
-  isFeatureStateKey
+  FeatureKey
 } from "@/components/chat/store/actions/feature/types";
 import { FeatureState } from "@/components/chat/store/types/chat-store-types";
 

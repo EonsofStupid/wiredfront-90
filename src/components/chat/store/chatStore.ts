@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
@@ -8,13 +7,11 @@ import { createUIActions } from './actions/ui-actions';
 import { ChatState, ProviderCategory, ChatMode, FeatureState } from './types/chat-store-types';
 import { Message } from '@/types/chat';
 
-// Define the full store type with all action slices
 type FullChatStore = ChatState & 
   ReturnType<typeof createInitializationActions> & 
   ReturnType<typeof createFeatureActions> & 
   ReturnType<typeof createUIActions>;
 
-// Create empty function implementations for initial state
 const noop = () => {};
 const asyncNoop = async () => false;
 
@@ -70,7 +67,6 @@ const initialState: ChatState = {
     providerLoading: false,
   },
   
-  // Initialize actions with no-op placeholders for initialState
   addMessage: noop,
   updateMessage: noop,
   resetChatState: noop,
@@ -78,34 +74,24 @@ const initialState: ChatState = {
   togglePosition: noop,
   toggleDocked: noop,
   setScale: noop,
-  
-  // Mode actions
   setCurrentMode: noop,
-  
-  // Provider actions
   updateCurrentProvider: noop,
   updateAvailableProviders: noop,
   updateChatProvider: noop,
-  
-  // Feature actions
   toggleFeature: noop,
   enableFeature: noop,
   disableFeature: noop,
   setFeatureState: noop,
-  
-  // Token actions
   setTokenEnforcementMode: noop,
   addTokens: asyncNoop,
   spendTokens: asyncNoop,
   setTokenBalance: asyncNoop,
 };
 
-// Enhanced function to clear all Zustand middleware storage
 export const clearMiddlewareStorage = () => {
   try {
     console.log("🧹 Starting complete middleware storage cleanup");
     
-    // 1. Clear localStorage items
     const allKeys = Object.keys(localStorage);
     const zustandKeys = allKeys.filter(key => 
       key.includes('zustand') || 
@@ -121,7 +107,6 @@ export const clearMiddlewareStorage = () => {
       console.log(`Removed storage key: ${key}`);
     });
     
-    // 2. Clear sessionStorage items
     const sessionKeys = Object.keys(sessionStorage);
     const zustandSessionKeys = sessionKeys.filter(key => 
       key.includes('zustand') || 
@@ -135,7 +120,6 @@ export const clearMiddlewareStorage = () => {
       console.log(`Removed session storage key: ${key}`);
     });
     
-    // 3. Attempt to clear IndexedDB if available
     if (window.indexedDB) {
       try {
         const dbNames = [
@@ -169,7 +153,6 @@ export const useChatStore = create<FullChatStore>()(
     (set, get) => ({
       ...initialState,
       
-      // Properly implement the resetChatState function
       resetChatState: () => {
         clearMiddlewareStorage();
         
@@ -182,12 +165,10 @@ export const useChatStore = create<FullChatStore>()(
         }, false, { type: 'chat/resetState' });
       },
       
-      // Implement setUserInput function
       setUserInput: (input: string) => {
         set({ userInput: input }, false, { type: 'chat/setUserInput' });
       },
       
-      // Add methods to add, update, and retrieve messages
       addMessage: (message: Message) => {
         set(state => ({
           messages: [...state.messages, {
@@ -206,10 +187,8 @@ export const useChatStore = create<FullChatStore>()(
         }), false, { type: 'chat/updateMessage' });
       },
       
-      // Implement toggle functions for position and docked state
       togglePosition: () => {
         set(state => {
-          // Toggle between bottom-right and bottom-left
           const newPosition = state.position === 'bottom-right' ? 'bottom-left' : 'bottom-right';
           return { position: newPosition };
         }, false, { type: 'chat/togglePosition' });
@@ -221,17 +200,18 @@ export const useChatStore = create<FullChatStore>()(
         }), false, { type: 'chat/toggleDocked' });
       },
       
-      // Implement setScale for adjusting chat size
+      setPosition: (position) => {
+        set({ position }, false, { type: 'chat/setPosition', position });
+      },
+      
       setScale: (scale: number) => {
         set({ scale }, false, { type: 'chat/setScale' });
       },
       
-      // Implement setCurrentMode
       setCurrentMode: (mode: ChatMode) => {
         set({ currentMode: mode }, false, { type: 'chat/setCurrentMode', mode });
       },
       
-      // Implement provider update functions
       updateCurrentProvider: (provider: ProviderCategory) => {
         set({ currentProvider: provider }, false, { type: 'chat/updateCurrentProvider', provider });
       },
@@ -244,7 +224,6 @@ export const useChatStore = create<FullChatStore>()(
         set({ availableProviders: providers }, false, { type: 'chat/updateChatProvider', providers });
       },
       
-      // Implement feature toggle functions
       toggleFeature: (featureName: keyof FeatureState) => {
         set(state => ({
           features: {
@@ -281,7 +260,6 @@ export const useChatStore = create<FullChatStore>()(
         }), false, { type: 'chat/setFeatureState', feature: featureName, isEnabled });
       },
       
-      // Implement token control functions
       setTokenEnforcementMode: (mode: ChatState['tokenControl']['enforcementMode']) => {
         set(state => ({
           tokenControl: {

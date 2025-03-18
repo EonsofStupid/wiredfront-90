@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import { DndContext } from "@dnd-kit/core";
 import { ChatSidebar } from "./ChatSidebar";
@@ -27,7 +26,8 @@ export function DraggableChat() {
     docked,
     setCurrentMode,
     updateCurrentProvider,
-    availableProviders
+    availableProviders,
+    setPosition
   } = useChatStore();
   
   const { containerRef, isOverflowing } = useViewportAwareness();
@@ -43,13 +43,13 @@ export function DraggableChat() {
       try {
         const positionData = JSON.parse(savedPosition);
         if (positionData && (positionData === 'bottom-right' || positionData === 'bottom-left')) {
-          useChatStore.getState().setPosition(positionData);
+          setPosition(positionData);
         }
       } catch (error) {
         logger.error('Failed to parse saved chat position', error);
       }
     }
-  }, []);
+  }, [setPosition]);
 
   // Save position to localStorage when it changes
   useEffect(() => {

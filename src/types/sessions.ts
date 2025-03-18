@@ -11,6 +11,11 @@ export interface Session {
   is_active?: boolean;
   metadata?: Json;
   user_id?: string;
+  mode?: string;
+  provider_id?: string;
+  project_id?: string;
+  tokens_used?: number;
+  context?: Json;
 }
 
 // Session status for UI representation

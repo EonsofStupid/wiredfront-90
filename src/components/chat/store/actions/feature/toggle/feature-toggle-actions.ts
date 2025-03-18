@@ -1,6 +1,5 @@
-
 import { ChatState } from '../../../types/chat-store-types';
-import { FeatureKey, SetState, GetState, isFeatureStateKey, convertFeatureKeyToChatFeature } from '../types';
+import { FeatureKey, SetState, GetState, convertFeatureKeyToChatFeature } from '../types';
 import { logger } from '@/services/chat/LoggingService';
 import { supabase } from '@/integrations/supabase/client';
 

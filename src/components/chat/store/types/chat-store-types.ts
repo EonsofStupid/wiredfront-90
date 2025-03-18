@@ -1,3 +1,4 @@
+
 import { Message } from '@/types/chat';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 
@@ -14,9 +15,9 @@ export type MessageActions = {
   delete: boolean;
 };
 
-export type ProviderType = 'openai' | 'anthropic' | 'gemini' | 'huggingface' | 'pinecone' | 'weaviate' | 'openrouter' | 'github';
+export type ProviderType = 'openai' | 'anthropic' | 'gemini' | 'huggingface' | 'pinecone' | 'weaviate' | 'openrouter' | 'github' | 'replicate' | 'stabilityai' | 'vector' | 'voice';
 
-export type ProviderCategoryType = 'chat' | 'image' | 'other';
+export type ProviderCategoryType = 'chat' | 'image' | 'other' | 'vector' | 'voice';
 
 export type SidebarState = {
   isOpen: boolean;
@@ -113,6 +114,7 @@ export interface ChatState {
   togglePosition: () => void;
   toggleDocked: () => void;
   setScale: (scale: number) => void;
+  setPosition: (position: 'bottom-right' | 'bottom-left' | { x: number; y: number }) => void;
   
   // Mode actions
   setCurrentMode: (mode: ChatMode) => void;

@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { devtools } from 'zustand/middleware';
@@ -16,7 +15,6 @@ import {
   switchToSession,
   updateChatSession,
   archiveChatSession,
-  deleteChatSession,
   clearChatSessions
 } from '@/services/sessions';
 import { useMessageStorage } from '../messages/messageStorageStore';
@@ -159,7 +157,8 @@ export const useSessionManager = create<SessionManager>()(
             
             logger.info(`Deleting session: ${sessionId}`);
             
-            const result = await deleteChatSession(sessionId);
+            // Since we don't have deleteChatSession, we'll use archiveChatSession and handle delete client-side
+            const result = await archiveChatSession(sessionId);
             
             if (!result.success) {
               throw new Error('Failed to delete session');
@@ -168,16 +167,17 @@ export const useSessionManager = create<SessionManager>()(
             // Clear the messages for this session
             useMessageStorage.getState().clearSessionMessages(sessionId);
             
-            // Update the sessions list
-            await get().fetchSessions();
+            // Update the sessions list to remove the deleted session
+            set(state => ({
+              sessions: state.sessions.filter(session => session.id !== sessionId),
+              isLoading: false
+            }));
             
             // If this was the current session, create a new one
             if (sessionId === get().currentSessionId) {
               const newSessionId = await get().createSession();
               set({ currentSessionId: newSessionId });
             }
-            
-            set({ isLoading: false });
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
             logger.error('Error deleting session:', { error });
@@ -223,7 +223,24 @@ export const useSessionManager = create<SessionManager>()(
             
             logger.info('Fetching sessions');
             
-            const sessions = await fetchUserSessions();
+            const fetchedSessions = await fetchUserSessions();
+            
+            // Transform the sessions to match the Session interface
+            const sessions: SessionType[] = fetchedSessions.map(session => ({
+              id: session.id,
+              title: session.title,
+              created_at: session.created_at,
+              last_accessed: session.last_accessed,
+              message_count: 0, // Set default value since it might be missing
+              is_active: session.is_active,
+              metadata: session.metadata,
+              user_id: session.user_id,
+              mode: session.mode,
+              provider_id: session.provider_id,
+              project_id: session.project_id,
+              tokens_used: session.tokens_used,
+              context: session.context
+            }));
             
             set({ 
               sessions,
