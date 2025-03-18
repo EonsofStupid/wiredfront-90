@@ -2,7 +2,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { DndContext } from "@dnd-kit/core";
 import { ChatSidebar } from "./ChatSidebar";
-import { FloatingChatButton } from "./floating-button/FloatingChatButton";
+import ChatToggleButton from "./components/ChatToggleButton";
 import DraggableChatContainer from "./components/DraggableChatContainer";
 import { useViewportAwareness } from "./hooks/useViewportAwareness";
 import { useChatStore } from "./store/chatStore";
@@ -82,7 +82,7 @@ export function DraggableChat() {
   if (!isOpen) {
     return (
       <>
-        <FloatingChatButton />
+        <ChatToggleButton onClick={toggleChat} />
         <ChatModeDialog
           open={modeDialogOpen}
           onOpenChange={setModeDialogOpen}

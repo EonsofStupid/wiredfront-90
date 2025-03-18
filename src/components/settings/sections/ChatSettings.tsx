@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ export function ChatSettings() {
     }
   });
 
+  // Update settings when chat store changes
   useEffect(() => {
     setSettings(prev => ({
       ...prev,
@@ -68,6 +70,7 @@ export function ChatSettings() {
         }
       }));
       
+      // If current position is different, toggle it
       if ((typeof position === 'string' && position !== newPosition) ||
           (typeof position !== 'string')) {
         togglePosition();
@@ -76,10 +79,15 @@ export function ChatSettings() {
   };
 
   const handleSaveSettings = () => {
+    // Here we would typically save settings to a backend or local storage
+    // For now, we'll just update the chat store and show a toast
+    
+    // Apply position settings if needed
     if (typeof position === 'string' && position !== settings.appearance.position) {
       togglePosition();
     }
     
+    // Update CSS variables for chat appearance
     document.documentElement.style.setProperty('--chat-width', `${settings.appearance.chatWidth}px`);
     document.documentElement.style.setProperty('--chat-height', `${settings.appearance.chatHeight}px`);
     
@@ -121,6 +129,7 @@ export function ChatSettings() {
 
   const handleClearHistory = () => {
     if (window.confirm("Are you sure you want to clear all chat history? This cannot be undone.")) {
+      // Here we would clear chat history
       toast.success("Chat history cleared successfully");
     }
   };

@@ -51,31 +51,5 @@ export const createUIActions = (
   
   closeChat: () => {
     set({ isOpen: false }, false, { type: 'chat/closeChat' });
-  },
-  
-  // Enhanced position toggling with localStorage persistence
-  togglePosition: () => {
-    const newPosition = get().position === 'bottom-right' ? 'bottom-left' : 'bottom-right';
-    
-    // Save to localStorage to persist between sessions
-    try {
-      localStorage.setItem('chat-position', newPosition);
-    } catch (e) {
-      console.error('Failed to save chat position to localStorage', e);
-    }
-    
-    set({ position: newPosition }, false, { type: 'chat/togglePosition', position: newPosition });
-  },
-  
-  // Load saved position from localStorage
-  loadSavedPosition: () => {
-    try {
-      const savedPosition = localStorage.getItem('chat-position');
-      if (savedPosition === 'bottom-left' || savedPosition === 'bottom-right') {
-        set({ position: savedPosition }, false, { type: 'chat/loadSavedPosition', position: savedPosition });
-      }
-    } catch (e) {
-      console.error('Failed to load chat position from localStorage', e);
-    }
   }
 });

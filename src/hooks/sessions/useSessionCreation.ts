@@ -1,7 +1,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { createNewSession } from '@/services/sessions/sessionCreate';
+import { createChatSession } from '@/services/sessions';
 import { logger } from '@/services/chat/LoggingService';
 import { CreateSessionParams } from '@/types/sessions';
 import { SESSION_QUERY_KEYS } from './useSessionCore';
@@ -17,7 +17,7 @@ export function useSessionCreation(
 
   const { mutateAsync: createSession } = useMutation({
     mutationFn: async (params: CreateSessionParams = {}) => {
-      const result = await createNewSession(params);
+      const result = await createChatSession(params);
       if (!result.success || !result.sessionId) {
         throw new Error('Failed to create chat session');
       }

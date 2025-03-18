@@ -1,392 +1,104 @@
-import { ProviderType } from '@/components/chat/store/types/chat-store-types';
-import { BaseProvider } from '../base/BaseProvider';
-import {
-  BaseProviderOptions,
-  ProviderContext,
-  ProviderDocument,
-  ProviderResponse,
-  ProviderError,
-  ProviderConfig,
-  RateLimitConfig
-} from '../base/types';
-import {
-  GeminiOptions,
-  GeminiContext,
-  GeminiImageOptions,
-  GeminiImageResponse
-} from './types';
-import {
-  GEMINI_API_BASE,
-  GEMINI_API_VERSION,
-  GEMINI_MODELS,
-  GEMINI_ERROR_CODES,
-  GEMINI_ERROR_MESSAGES,
-  GEMINI_DEFAULT_OPTIONS,
-  GEMINI_DEFAULT_IMAGE_OPTIONS
-} from './constants';
-import {
-  validateGeminiOptions,
-  validateGeminiContext,
-  validateGeminiImageOptions,
-  isGeminiImageResponse
-} from './validators';
 
-export class GeminiProvider extends BaseProvider {
-  readonly id = 'gemini';
-  readonly name = 'Gemini';
-  readonly type: ProviderType = 'gemini';
-  private apiKey: string | null = null;
-  private requestQueue: Array<() => Promise<unknown>> = [];
-  private processingQueue = false;
-  private lastRequestTime = 0;
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/services/chat/LoggingService';
+import { LLMProvider } from '../index';
+
+export class GeminiProvider implements LLMProvider {
+  id = 'gemini-default';
+  name = 'Google Gemini';
+  type = 'gemini';
+  apiKey: string | null = null;
   
-  constructor(
-    apiKey?: string,
-    config?: Partial<ProviderConfig>,
-    rateLimit?: Partial<RateLimitConfig>
-  ) {
-    super('gemini', 'Gemini', 'gemini', config, rateLimit);
-    if (apiKey) {
-      this.setApiKey(apiKey);
-    }
+  constructor() {
+    this.initializeApiKey();
   }
   
-  public setApiKey(apiKey: string): void {
-    if (!apiKey) {
-      throw this.createError(
-        GEMINI_ERROR_CODES.API_KEY_MISSING,
-        GEMINI_ERROR_MESSAGES.API_KEY_MISSING
-      );
-    }
-    this.apiKey = apiKey;
-  }
-  
-  public async generateText(
-    prompt: string,
-    options?: BaseProviderOptions,
-    context?: ProviderContext
-  ): Promise<ProviderResponse> {
-    return this.withRateLimit(async () => {
-      const validatedOptions = validateGeminiOptions(options as GeminiOptions);
-      const validatedContext = validateGeminiContext(context as GeminiContext);
-      
-      if (!this.apiKey) {
-        throw this.createError(
-          GEMINI_ERROR_CODES.API_KEY_MISSING,
-          GEMINI_ERROR_MESSAGES.API_KEY_MISSING
-        );
-      }
-      
-      const model = validatedOptions.model || GEMINI_DEFAULT_OPTIONS.model;
-      if (!GEMINI_MODELS[model]) {
-        throw this.createError(
-          GEMINI_ERROR_CODES.MODEL_NOT_FOUND,
-          GEMINI_ERROR_MESSAGES.MODEL_NOT_FOUND
-        );
-      }
-      
-      const contents = [];
-      if (validatedContext.system) {
-        contents.push({ role: 'user', parts: [{ text: validatedContext.system }] });
-      }
-      contents.push({ role: 'user', parts: [{ text: prompt }] });
-      
-      const requestBody = {
-        contents,
-        generationConfig: {
-          temperature: validatedOptions.temperature,
-          topP: validatedOptions.topP,
-          topK: validatedOptions.topK,
-          maxOutputTokens: validatedOptions.maxTokens,
-          candidateCount: 1
-        },
-        safetySettings: validatedOptions.safetySettings,
-        stream: validatedOptions.stream
-      };
-      
-      try {
-        const response = await this.withRetry(async () => {
-          const startTime = Date.now();
-          const res = await fetch(`${GEMINI_API_BASE}/models/${model}:generateContent?key=${this.apiKey}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestBody)
-          });
-          
-          if (!res.ok) {
-            const error = await res.json();
-            throw this.createError(
-              GEMINI_ERROR_CODES.INVALID_REQUEST,
-              error.error?.message || GEMINI_ERROR_MESSAGES.INVALID_REQUEST,
-              { status: res.status, type: error.error?.type }
-            );
-          }
-          
-          const data = await res.json();
-          const endTime = Date.now();
-          
-          return {
-            text: data.candidates[0].content.parts[0].text,
-            metadata: {
-              tokensUsed: data.usage?.promptTokenCount + data.usage?.completionTokenCount,
-              latency: endTime - startTime,
-              model: data.model,
-              promptTokens: data.usage?.promptTokenCount,
-              completionTokens: data.usage?.completionTokenCount,
-              totalTokens: data.usage?.promptTokenCount + data.usage?.completionTokenCount,
-              safetyRatings: data.candidates[0].safetyRatings
-            }
-          };
-        });
-        
-        return response;
-      } catch (error) {
-        if (this.validateError(error)) {
-          throw error;
-        }
-        throw this.createError(
-          GEMINI_ERROR_CODES.UNKNOWN,
-          GEMINI_ERROR_MESSAGES.UNKNOWN,
-          { error }
-        );
-      }
-    });
-  }
-  
-  public async generateImage(
-    prompt: string,
-    options?: BaseProviderOptions,
-    context?: ProviderContext
-  ): Promise<ProviderResponse> {
-    return this.withRateLimit(async () => {
-      const validatedOptions = validateGeminiImageOptions(options as GeminiImageOptions);
-      
-      if (!this.apiKey) {
-        throw this.createError(
-          GEMINI_ERROR_CODES.API_KEY_MISSING,
-          GEMINI_ERROR_MESSAGES.API_KEY_MISSING
-        );
-      }
-      
-      const model = validatedOptions.model || GEMINI_DEFAULT_IMAGE_OPTIONS.model;
-      if (!GEMINI_MODELS[model]?.supportsImages) {
-        throw this.createError(
-          GEMINI_ERROR_CODES.MODEL_NOT_FOUND,
-          GEMINI_ERROR_MESSAGES.MODEL_NOT_FOUND
-        );
-      }
-      
-      const requestBody = {
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              {
-                text: prompt
-              }
-            ]
-          }
-        ],
-        generationConfig: {
-          temperature: validatedOptions.temperature,
-          topP: validatedOptions.topP,
-          topK: validatedOptions.topK,
-          maxOutputTokens: validatedOptions.maxOutputTokens,
-          candidateCount: 1
-        },
-        safetySettings: validatedOptions.safetySettings
-      };
-      
-      try {
-        const response = await this.withRetry(async () => {
-          const startTime = Date.now();
-          const res = await fetch(`${GEMINI_API_BASE}/models/${model}:generateContent?key=${this.apiKey}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestBody)
-          });
-          
-          if (!res.ok) {
-            const error = await res.json();
-            throw this.createError(
-              GEMINI_ERROR_CODES.INVALID_REQUEST,
-              error.error?.message || GEMINI_ERROR_MESSAGES.INVALID_REQUEST,
-              { status: res.status, type: error.error?.type }
-            );
-          }
-          
-          const data = await res.json();
-          const endTime = Date.now();
-          
-          return {
-            text: prompt,
-            metadata: {
-              model,
-              quality: validatedOptions.quality || 'standard',
-              url: data.candidates[0].content.parts[0].imageUrl,
-              latency: endTime - startTime,
-              safetyRatings: data.candidates[0].safetyRatings
-            }
-          };
-        });
-        
-        if (!isGeminiImageResponse(response)) {
-          throw this.createError(
-            GEMINI_ERROR_CODES.INVALID_REQUEST,
-            GEMINI_ERROR_MESSAGES.INVALID_REQUEST
-          );
-        }
-        
-        return response;
-      } catch (error) {
-        if (this.validateError(error)) {
-          throw error;
-        }
-        throw this.createError(
-          GEMINI_ERROR_CODES.UNKNOWN,
-          GEMINI_ERROR_MESSAGES.UNKNOWN,
-          { error }
-        );
-      }
-    });
-  }
-  
-  public async enhancePrompt(
-    prompt: string,
-    context?: ProviderContext
-  ): Promise<string> {
-    return this.withRateLimit(async () => {
-      const validatedContext = validateGeminiContext(context as GeminiContext);
-      
-      if (!this.apiKey) {
-        throw this.createError(
-          GEMINI_ERROR_CODES.API_KEY_MISSING,
-          GEMINI_ERROR_MESSAGES.API_KEY_MISSING
-        );
-      }
-      
-      const contents = [
-        {
-          role: 'user',
-          parts: [
-            {
-              text: 'You are a prompt engineering expert. Your task is to enhance the given prompt to be more specific, clear, and effective. Return only the enhanced prompt without any explanations.'
-            }
-          ]
-        },
-        {
-          role: 'user',
-          parts: [
-            {
-              text: `Original prompt: ${prompt}\n\nContext: ${JSON.stringify(validatedContext)}\n\nEnhanced prompt:`
-            }
-          ]
-        }
-      ];
-      
-      try {
-        const response = await this.withRetry(async () => {
-          const res = await fetch(`${GEMINI_API_BASE}/models/${GEMINI_DEFAULT_OPTIONS.model}:generateContent?key=${this.apiKey}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              contents,
-              generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 500
-              }
-            })
-          });
-          
-          if (!res.ok) {
-            const error = await res.json();
-            throw this.createError(
-              GEMINI_ERROR_CODES.INVALID_REQUEST,
-              error.error?.message || GEMINI_ERROR_MESSAGES.INVALID_REQUEST,
-              { status: res.status, type: error.error?.type }
-            );
-          }
-          
-          const data = await res.json();
-          return data.candidates[0].content.parts[0].text.trim();
-        });
-        
-        return response;
-      } catch (error) {
-        if (this.validateError(error)) {
-          throw error;
-        }
-        throw this.createError(
-          GEMINI_ERROR_CODES.UNKNOWN,
-          GEMINI_ERROR_MESSAGES.UNKNOWN,
-          { error }
-        );
-      }
-    });
-  }
-  
-  public async searchDocuments(
-    query: string,
-    options?: BaseProviderOptions
-  ): Promise<ProviderDocument[]> {
-    // Gemini doesn't support document search directly
-    // This is a placeholder that could be implemented with embeddings
-    throw this.createError(
-      GEMINI_ERROR_CODES.INVALID_REQUEST,
-      'Document search is not supported by Gemini'
-    );
-  }
-  
-  private async processQueue(): Promise<void> {
-    if (this.processingQueue || this.requestQueue.length === 0) {
-      return;
-    }
-    
-    this.processingQueue = true;
-    
+  private async initializeApiKey() {
     try {
-      while (this.requestQueue.length > 0) {
-        const now = Date.now();
-        const timeSinceLastRequest = now - this.lastRequestTime;
-        const minTimeBetweenRequests = (60 * 1000) / this.rateLimit.requestsPerMinute;
-        
-        if (timeSinceLastRequest < minTimeBetweenRequests) {
-          await new Promise(resolve => 
-            setTimeout(resolve, minTimeBetweenRequests - timeSinceLastRequest)
-          );
-        }
-        
-        const operation = this.requestQueue.shift();
-        if (operation) {
-          await operation();
-          this.lastRequestTime = Date.now();
-        }
+      // Try to get the API key from Supabase edge function
+      const { data, error } = await supabase.functions.invoke('get-provider-key', {
+        body: { provider: 'gemini', keyType: 'chat' }
+      });
+      
+      if (error) {
+        logger.error('Error getting Gemini API key', error);
+        return;
       }
-    } finally {
-      this.processingQueue = false;
+      
+      if (data?.apiKey) {
+        this.apiKey = data.apiKey;
+        logger.info('Gemini API key initialized');
+      } else {
+        logger.warn('No Gemini API key found');
+      }
+    } catch (error) {
+      logger.error('Failed to initialize Gemini API key', error);
     }
   }
   
-  private async enqueueOperation<T>(
-    operation: () => Promise<T>
-  ): Promise<T> {
-    return new Promise((resolve, reject) => {
-      this.requestQueue.push(async () => {
-        try {
-          const result = await operation();
-          resolve(result);
-        } catch (error) {
-          reject(error);
+  async generateText(prompt: string, options: any = {}): Promise<string> {
+    try {
+      if (!this.apiKey) {
+        await this.initializeApiKey();
+        if (!this.apiKey) {
+          return "Error: Gemini API key not configured. Please set GEMINI_CHAT_APIKEY.";
+        }
+      }
+      
+      // Use the edge function to proxy the request to Gemini
+      const { data, error } = await supabase.functions.invoke('llm-generate-text', {
+        body: {
+          provider: 'gemini',
+          prompt,
+          options: {
+            model: options.model || 'gemini-1.5-flash', // Default to Gemini 1.5 Flash
+            temperature: options.temperature || 0.7,
+            maxOutputTokens: options.maxTokens || 1000,
+            ...options
+          }
         }
       });
       
-      this.processQueue();
-    });
+      if (error) {
+        logger.error('Error generating text with Gemini', error);
+        return `Error generating text: ${error.message}`;
+      }
+      
+      return data?.text || 'No response generated';
+    } catch (error) {
+      logger.error('Failed to generate text with Gemini', error);
+      return `Error: ${error.message}`;
+    }
+  }
+  
+  async enhancePrompt(prompt: string, context: any = {}): Promise<string> {
+    // Gemini-specific prompt enhancement
+    const systemInstruction = context.system || "";
+    
+    // Gemini works better with this format
+    if (systemInstruction) {
+      return `${systemInstruction}\n\nUser request: ${prompt}`;
+    }
+    
+    return prompt;
+  }
+  
+  async prepareRAGContext(documents: any[], query: string): Promise<string> {
+    // Gemini-specific RAG context preparation
+    if (!documents || documents.length === 0) {
+      return query;
+    }
+    
+    const contextChunks = documents.map((doc, index) => 
+      `Context ${index + 1}:\n${doc.content}\n`
+    );
+    
+    return `
+Here are some relevant documents:
+
+${contextChunks.join('\n')}
+
+Based on the above information, please answer this question: ${query}
+`;
   }
 }

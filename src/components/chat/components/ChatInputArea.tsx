@@ -1,128 +1,115 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Textarea } from '@/components/ui/textarea';
+import { Mic, Send, Paperclip, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { SendHorizonal, Mic, MicOff, Sparkles, Image as ImageIcon, Code } from 'lucide-react';
-import { useChatStore } from '../store';
-import { toast } from 'sonner';
+import { Textarea } from '@/components/ui/textarea';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 interface ChatInputAreaProps {
   onSendMessage: (message: string) => void;
 }
 
 const ChatInputArea: React.FC<ChatInputAreaProps> = ({ onSendMessage }) => {
-  const [message, setMessage] = useState('');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { features } = useChatStore();
-  const [isRecording, setIsRecording] = useState(false);
+  const [input, setInput] = useState('');
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const { isEnabled } = useFeatureFlags();
   
-  // Auto-resize textarea
+  const showVoice = isEnabled('voice');
+  
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    // Focus input when component mounts
+    if (inputRef.current) {
+      inputRef.current.focus();
     }
-  }, [message]);
-
-  const handleSend = () => {
-    if (message.trim()) {
-      onSendMessage(message.trim());
-      setMessage('');
+  }, []);
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+  };
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!input.trim()) return;
+    
+    onSendMessage(input.trim());
+    setInput('');
+    
+    // Focus input after sending
+    if (inputRef.current) {
+      inputRef.current.focus();
     }
   };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Send on Enter (without shift)
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      handleSubmit(e);
     }
   };
-
-  const handleVoiceToggle = () => {
-    if (!features.voice) {
-      toast.error('Voice feature is not enabled');
-      return;
-    }
-    
-    setIsRecording(!isRecording);
-    if (!isRecording) {
-      toast.info('Voice recording started');
-      // In a real implementation, this would start recording
-    } else {
-      toast.info('Voice recording stopped');
-      // In a real implementation, this would stop recording and process the audio
-    }
-  };
-
+  
   return (
-    <div className="p-3 border-t border-white/10 relative">
+    <form onSubmit={handleSubmit} className="p-3 border-t border-white/10 bg-black/20">
       <div className="flex items-end gap-2">
         <div className="flex-1 relative">
-          <Textarea 
-            ref={textareaRef}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
+          <Textarea
+            ref={inputRef}
+            value={input}
+            onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder="Type a message..."
-            className="min-h-[40px] max-h-[120px] bg-black/20 border-white/10 text-white placeholder:text-white/40 pr-12"
+            placeholder="Message AI..."
+            className="w-full bg-black/30 border-white/10 focus:border-neon-blue/30 resize-none py-2 pr-12 max-h-24 text-sm"
             rows={1}
           />
           
-          <Button
-            className="absolute right-1 bottom-1 h-8 w-8 p-0 bg-chat-neon-purple"
-            onClick={handleSend}
-            disabled={!message.trim()}
-            aria-label="Send message"
-          >
-            <SendHorizonal className="h-4 w-4" />
-          </Button>
+          <div className="absolute right-2 bottom-2">
+            <Button 
+              type="button" 
+              size="icon" 
+              variant="ghost" 
+              className="h-7 w-7 text-white/40 hover:text-neon-pink"
+            >
+              <Paperclip className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         
-        {features.voice && (
+        <div className="flex items-center space-x-2">
+          {showVoice && (
+            <Button 
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 rounded-full bg-black/20 border-neon-pink/30 text-neon-pink hover:bg-neon-pink/20 hover:text-white"
+            >
+              <Mic className="h-4 w-4" />
+            </Button>
+          )}
+          
           <Button 
-            variant="outline" 
-            size="icon" 
-            className={`h-10 w-10 border-white/10 bg-black/20 ${isRecording ? 'text-red-500' : 'text-white/70'}`}
-            onClick={handleVoiceToggle}
-            aria-label={isRecording ? 'Stop recording' : 'Start voice recording'}
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 rounded-full bg-black/20 border-indigo-400/30 text-indigo-400 hover:bg-indigo-400/20 hover:text-white"
           >
-            {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+            <Sparkles className="h-4 w-4" />
           </Button>
-        )}
+          
+          <Button 
+            type="submit"
+            disabled={!input.trim()}
+            className="h-9 w-9 rounded-full p-0 bg-gradient-to-r from-neon-blue to-neon-blue/70 hover:opacity-90"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
       
-      <div className="flex justify-center mt-2 space-x-2">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="text-xs flex items-center gap-1 text-white/60 hover:text-white hover:bg-white/10"
-          onClick={() => setMessage(prev => prev + " Generate creative ideas for...")}
-        >
-          <Sparkles className="h-3 w-3" />
-          <span>Ideas</span>
-        </Button>
-        
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="text-xs flex items-center gap-1 text-white/60 hover:text-white hover:bg-white/10"
-          onClick={() => setMessage(prev => prev + " Generate an image of...")}
-        >
-          <ImageIcon className="h-3 w-3" />
-          <span>Image</span>
-        </Button>
-        
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="text-xs flex items-center gap-1 text-white/60 hover:text-white hover:bg-white/10"
-          onClick={() => setMessage(prev => prev + " Write code for...")}
-        >
-          <Code className="h-3 w-3" />
-          <span>Code</span>
-        </Button>
+      <div className="text-[10px] text-right mt-1 text-white/30">
+        Press Enter to send, Shift+Enter for new line
       </div>
-    </div>
+    </form>
   );
 };
 

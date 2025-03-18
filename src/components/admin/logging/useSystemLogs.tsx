@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { safeDataTransform, isSystemLog, isQueryError, SystemLog, QuerySuccessResult } from "@/utils/typeUtils";
+import { safeDataTransform, isSystemLog, isQueryError, SystemLog } from "@/utils/typeUtils";
 import { LogLevel, LogSource, isLogLevel, isLogSource } from "@/integrations/supabase/types/enums";
 import { PostgrestResponse, PostgrestSingleResponse } from "@supabase/supabase-js";
 
@@ -24,22 +25,28 @@ export function useSystemLogs() {
     setError(null);
     
     try {
+      // Use a properly typed approach to fetch from system_logs
+      // We need to cast 'as any' since system_logs is not in the generated types
       const query = supabase
         .from('system_logs' as any)
         .select();
       
+      // Sort by timestamp
       const sortedQuery = query.order('timestamp', { ascending: sortDirection === 'asc' });
+      
+      // Limit to the most recent 250 logs
       const limitedQuery = sortedQuery.limit(250);
       
       const result = await limitedQuery;
       
+      // Properly type-check the response
       if (isQueryError(result)) {
         throw result.error;
       }
       
-      // Type assertion for the response
-      const typedResult = result as QuerySuccessResult<SystemLog>;
-      const responseData = typedResult.data || [];
+      // Safely access data with proper type checking
+      const responseData = result && result.data ? 
+        (Array.isArray(result.data) ? result.data : []) : [];
       
       // Safely transform the data to our SystemLog type
       const typedData = safeDataTransform<SystemLog>(responseData, isSystemLog);

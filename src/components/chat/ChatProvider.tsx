@@ -25,7 +25,7 @@ interface ChatProviderProps {
 export function ChatProvider({ children }: ChatProviderProps) {
   const location = useLocation();
   const isEditorPage = location.pathname === '/editor';
-  const { isOpen, initialize, setSessionLoading } = useChatStore();
+  const { isOpen, initializeChatSettings, setSessionLoading } = useChatStore();
   const { currentSessionId, refreshSessions } = useSessionManager();
   const messageStore = useMessageStore();
   const [isInitialized, setIsInitialized] = useState(false);
@@ -55,11 +55,11 @@ export function ChatProvider({ children }: ChatProviderProps) {
   }, []);
 
   useEffect(() => {
-    const initializeChat = async () => {
+    const initialize = async () => {
       try {
         setIsInitializing(true);
         
-        initialize();
+        initializeChatSettings();
         logger.info('Chat settings initialized');
         
         if (isEditorPage || location.pathname === '/') {
@@ -77,8 +77,8 @@ export function ChatProvider({ children }: ChatProviderProps) {
       }
     };
     
-    initializeChat();
-  }, [initialize, isEditorPage, location.pathname, refreshSessions, setSessionLoading]);
+    initialize();
+  }, [initializeChatSettings, isEditorPage, location.pathname, refreshSessions, setSessionLoading]);
 
   useEffect(() => {
     logger.info('Chat context updated', { 

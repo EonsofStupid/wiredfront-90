@@ -1,68 +1,64 @@
 
-import { ChatMode as StoreChatMode } from '@/components/chat/store/types/chat-store-types';
-import { ChatMode as SupabaseChatMode } from '@/integrations/supabase/types/enums';
+import { ChatMode as SupabaseChatMode, normalizeChatMode } from "@/integrations/supabase/types/enums";
+import { ChatMode as StoreChatMode } from "@/components/chat/store/types/chat-store-types";
 
 /**
- * Convert Supabase chat mode to store chat mode
+ * Convert a Supabase ChatMode to a Store ChatMode
  */
 export function supabaseModeToStoreMode(mode: SupabaseChatMode): StoreChatMode {
-  const modeMap: Record<SupabaseChatMode, StoreChatMode> = {
-    'chat': 'chat',
-    'chat-only': 'chat',
+  // Normalize the supabase mode first
+  const normalizedMode = normalizeChatMode(mode);
+  
+  // Handle special case mapping
+  const modeMap: Record<string, StoreChatMode> = {
     'standard': 'chat',
-    'dev': 'dev',
+    'chat': 'chat',
     'developer': 'dev',
-    'image': 'image',
-    'training': 'training'
+    'dev': 'dev',
+    'training': 'training',
+    'image': 'image'
   };
   
-  return modeMap[mode] || 'chat';
+  const storeMode = modeMap[normalizedMode] as StoreChatMode;
+  if (!storeMode) {
+    console.warn(`Unknown mode conversion: ${mode} -> defaulting to 'chat'`);
+    return 'chat';
+  }
+  
+  return storeMode;
 }
 
 /**
- * Convert store chat mode to Supabase chat mode
+ * Convert a Store ChatMode to a Supabase ChatMode
  */
 export function storeModeToSupabaseMode(mode: StoreChatMode): SupabaseChatMode {
-  const modeMap: Record<StoreChatMode, SupabaseChatMode> = {
+  const modeMap: Record<string, SupabaseChatMode> = {
     'chat': 'chat',
+    'chat-only': 'chat',
     'dev': 'dev',
-    'image': 'image',
-    'training': 'training'
+    'training': 'training',
+    'image': 'image'
   };
   
-  return modeMap[mode] || 'chat';
+  const supabaseMode = modeMap[mode] as SupabaseChatMode;
+  if (!supabaseMode) {
+    console.warn(`Unknown mode conversion: ${mode} -> defaulting to 'chat'`);
+    return 'chat';
+  }
+  
+  return supabaseMode;
 }
 
 /**
- * Get the display name for a chat mode
+ * Type guard to check if a value is a valid StoreChatMode
  */
-export function getChatModeDisplayName(mode: StoreChatMode | SupabaseChatMode): string {
-  const displayNames: Record<string, string> = {
-    'chat': 'Chat',
-    'chat-only': 'Chat',
-    'standard': 'Standard Chat',
-    'dev': 'Developer Mode',
-    'developer': 'Developer Mode',
-    'image': 'Image Generation',
-    'training': 'Training Mode'
-  };
-  
-  return displayNames[mode] || 'Chat';
+export function isStoreChatMode(value: any): value is StoreChatMode {
+  return ['chat', 'chat-only', 'dev', 'image', 'training'].includes(value);
 }
 
 /**
- * Get the icon name for a chat mode
+ * Type guard to check if a value is a valid SupabaseChatMode
  */
-export function getChatModeIcon(mode: StoreChatMode | SupabaseChatMode): string {
-  const icons: Record<string, string> = {
-    'chat': 'message-circle',
-    'chat-only': 'message-circle',
-    'standard': 'message-circle',
-    'dev': 'code',
-    'developer': 'code',
-    'image': 'image',
-    'training': 'graduation-cap'
-  };
-  
-  return icons[mode] || 'message-circle';
+export function isSupabaseChatMode(value: any): value is SupabaseChatMode {
+  return ['chat', 'chat-only', 'dev', 'image', 'training', 'standard', 'developer'].includes(value);
 }

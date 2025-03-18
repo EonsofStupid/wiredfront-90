@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -11,7 +12,7 @@ import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { KnownFeatureFlag } from "@/types/admin/settings/feature-flags";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { convertFeatureKeyToChatFeature, FeatureKey } from "@/components/chat/store/actions/feature/types";
+import { convertFeatureKeyToChatFeature } from "@/components/chat/store/actions/feature/types";
 
 export const ChatFeatureSettings = () => {
   const { position, togglePosition, docked, toggleDocked, scale, setScale } = useChatStore();
@@ -62,10 +63,13 @@ export const ChatFeatureSettings = () => {
   };
 
   // Helper to toggle feature with proper type mapping
-  const handleToggleFeature = (flag: FeatureKey) => {
+  const handleToggleFeature = (flag: string) => {
+    // Use string value instead of enum to avoid type issues
     const chatFeatureKey = convertFeatureKeyToChatFeature(flag);
     if (chatFeatureKey) {
       toggleFeature(chatFeatureKey);
+    } else {
+      toast.error(`Cannot toggle this feature: ${flag}`);
     }
   };
 

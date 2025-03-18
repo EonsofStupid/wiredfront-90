@@ -1,22 +1,8 @@
+
 import { Message } from '@/types/chat';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 
 export type ChatMode = 'chat' | 'dev' | 'image' | 'training';
-
-export type ChatPosition = {
-  x: number;
-  y: number;
-};
-
-export type MessageActions = {
-  copy: boolean;
-  edit: boolean;
-  delete: boolean;
-};
-
-export type ProviderType = 'openai' | 'anthropic' | 'gemini' | 'huggingface' | 'pinecone' | 'weaviate' | 'openrouter' | 'github' | 'replicate' | 'stabilityai';
-
-export type ProviderCategoryType = 'chat' | 'image' | 'other';
 
 export type SidebarState = {
   isOpen: boolean;
@@ -35,15 +21,10 @@ export type ProviderCategory = {
   id: string;
   name: string;
   models: string[];
-  type: ProviderType;
+  type: string;
   enabled: boolean;
   icon?: string;
   description?: string;
-  supportsStreaming?: boolean;
-  costPerToken?: number;
-  category: ProviderCategoryType;
-  isDefault?: boolean;
-  isEnabled?: boolean;
 };
 
 export type ChatProvider = ProviderCategory;

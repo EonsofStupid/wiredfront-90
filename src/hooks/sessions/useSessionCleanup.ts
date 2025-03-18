@@ -1,7 +1,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { clearAllSessions, cleanupSessions } from '@/services/sessions/sessionDelete';
+import { clearChatSessions, cleanupInactiveChatSessions } from '@/services/sessions';
 import { logger } from '@/services/chat/LoggingService';
 import { CreateSessionParams } from '@/types/sessions';
 import { SESSION_QUERY_KEYS } from './useSessionCore';
@@ -24,7 +24,7 @@ export function useSessionCleanup(
         throw new Error('No current session to preserve');
       }
       
-      const result = await clearAllSessions(preserveCurrent ? currentSessionId : null);
+      const result = await clearChatSessions(preserveCurrent ? currentSessionId : null);
       if (!result.success) {
         throw new Error('Failed to clear chat sessions');
       }
@@ -60,12 +60,11 @@ export function useSessionCleanup(
 
   const { mutateAsync: cleanupInactiveSessions } = useMutation({
     mutationFn: async () => {
-      if (!currentSessionId) {
-        throw new Error('No current session');
+      const result = await cleanupInactiveChatSessions();
+      if (!result.success) {
+        throw new Error('Failed to cleanup inactive sessions');
       }
-      
-      const count = await cleanupSessions(currentSessionId);
-      return { success: true, count };
+      return result;
     },
     onSuccess: async (result) => {
       await refreshSessions();
