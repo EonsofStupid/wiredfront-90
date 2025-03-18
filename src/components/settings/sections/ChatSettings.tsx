@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -14,78 +14,33 @@ import { ButtonStyle } from "@/types/chat/button-styles";
 
 export function ChatSettings() {
   const { 
-    position, 
-    togglePosition, 
-    isOpen, 
-    isMinimized,
-    toggleChat,
-    currentMode,
-    setCurrentMode,
+    settings,
+    updateSettings,
+    resetSettings,
+    position,
+    togglePosition,
     features,
     toggleFeature
   } = useChatStore();
-  
-  const [settings, setSettings] = useState({
-    appearance: {
-      position: typeof position === 'string' ? position : 'bottom-right',
-      buttonStyle: 'wfpulse',
-      buttonSize: 'medium',
-      buttonColor: '#0EA5E9',
-      chatWidth: 400,
-      chatHeight: 500,
-    },
-    behavior: {
-      startMinimized: false,
-      showTimestamps: true,
-      saveHistory: true,
-      autoComplete: true,
-      darkMode: true,
-    },
-    notifications: {
-      soundEnabled: true,
-      desktopNotifications: false,
-    },
-    providers: {
-      defaultProvider: 'openai',
-      defaultModel: 'gpt-3.5-turbo',
-    }
-  });
-
-  // Update settings when chat store changes
-  useEffect(() => {
-    setSettings(prev => ({
-      ...prev,
-      appearance: {
-        ...prev.appearance,
-        position: typeof position === 'string' ? position : 'bottom-right',
-      }
-    }));
-  }, [position]);
 
   const handlePositionChange = (newPosition: string) => {
     if (newPosition !== settings.appearance.position) {
-      setSettings(prev => ({
-        ...prev,
+      updateSettings({
         appearance: {
-          ...prev.appearance,
+          ...settings.appearance,
           position: newPosition as "bottom-right" | "bottom-left",
         }
-      }));
+      });
       
-      // If current position is different, toggle it
-      if ((typeof position === 'string' && position !== newPosition) ||
-          (typeof position !== 'string')) {
+      if (position !== newPosition) {
         togglePosition();
       }
     }
   };
 
   const handleSaveSettings = () => {
-    // Here we would typically save settings to a backend or local storage
-    // For now, we'll just update the chat store and show a toast
-    
     // Apply position settings if needed
-    if (typeof position === 'string' && position !== settings.appearance.position) {
+    if (position !== settings.appearance.position) {
       togglePosition();
     }
     
@@ -97,36 +52,11 @@ export function ChatSettings() {
   };
 
   const handleFeatureToggle = (feature: string) => {
-    toggleFeature(feature as any);
+    toggleFeature(feature as keyof typeof features);
   };
 
   const handleResetDefaults = () => {
-    setSettings({
-      appearance: {
-        position: 'bottom-right',
-        buttonStyle: 'wfpulse',
-        buttonSize: 'medium',
-        buttonColor: '#0EA5E9',
-        chatWidth: 400,
-        chatHeight: 500,
-      },
-      behavior: {
-        startMinimized: false,
-        showTimestamps: true,
-        saveHistory: true,
-        autoComplete: true,
-        darkMode: true,
-      },
-      notifications: {
-        soundEnabled: true,
-        desktopNotifications: false,
-      },
-      providers: {
-        defaultProvider: 'openai',
-        defaultModel: 'gpt-3.5-turbo',
-      }
-    });
-    
+    resetSettings();
     toast.info("Settings reset to defaults");
   };
 
@@ -181,13 +111,12 @@ export function ChatSettings() {
                   <div
                     key={key}
                     className={`${styles.styleOption} ${settings.appearance.buttonStyle === key ? styles.styleOptionSelected : ''}`}
-                    onClick={() => setSettings(prev => ({
-                      ...prev,
+                    onClick={() => updateSettings({
                       appearance: {
-                        ...prev.appearance,
+                        ...settings.appearance,
                         buttonStyle: key
                       }
-                    }))}
+                    })}
                   >
                     <div 
                       className={styles.stylePreview} 
@@ -214,13 +143,12 @@ export function ChatSettings() {
                 <div
                   key={size}
                   className={`${styles.sizeOption} ${settings.appearance.buttonSize === size ? styles.sizeOptionSelected : ''}`}
-                  onClick={() => setSettings(prev => ({
-                    ...prev,
+                  onClick={() => updateSettings({
                     appearance: {
-                      ...prev.appearance,
-                      buttonSize: size
+                      ...settings.appearance,
+                      buttonSize: size as 'small' | 'medium' | 'large'
                     }
-                  }))}
+                  })}
                 >
                   {size.charAt(0).toUpperCase() + size.slice(1)}
                 </div>
@@ -238,13 +166,12 @@ export function ChatSettings() {
                   min="300"
                   max="600"
                   value={settings.appearance.chatWidth}
-                  onChange={(e) => setSettings(prev => ({
-                    ...prev,
+                  onChange={(e) => updateSettings({
                     appearance: {
-                      ...prev.appearance,
+                      ...settings.appearance,
                       chatWidth: parseInt(e.target.value),
                     }
-                  }))}
+                  })}
                   className="w-32 mr-2"
                 />
                 <span>{settings.appearance.chatWidth}px</span>
@@ -259,13 +186,12 @@ export function ChatSettings() {
                   min="400"
                   max="800"
                   value={settings.appearance.chatHeight}
-                  onChange={(e) => setSettings(prev => ({
-                    ...prev,
+                  onChange={(e) => updateSettings({
                     appearance: {
-                      ...prev.appearance,
+                      ...settings.appearance,
                       chatHeight: parseInt(e.target.value),
                     }
-                  }))}
+                  })}
                   className="w-32 mr-2"
                 />
                 <span>{settings.appearance.chatHeight}px</span>
@@ -299,13 +225,12 @@ export function ChatSettings() {
             </div>
             <Switch 
               checked={settings.behavior.startMinimized} 
-              onCheckedChange={(checked) => setSettings(prev => ({
-                ...prev,
+              onCheckedChange={(checked) => updateSettings({
                 behavior: {
-                  ...prev.behavior,
+                  ...settings.behavior,
                   startMinimized: checked,
                 }
-              }))}
+              })}
             />
           </div>
           
@@ -316,13 +241,12 @@ export function ChatSettings() {
             </div>
             <Switch 
               checked={settings.behavior.showTimestamps} 
-              onCheckedChange={(checked) => setSettings(prev => ({
-                ...prev,
+              onCheckedChange={(checked) => updateSettings({
                 behavior: {
-                  ...prev.behavior,
+                  ...settings.behavior,
                   showTimestamps: checked,
                 }
-              }))}
+              })}
             />
           </div>
           
@@ -333,13 +257,12 @@ export function ChatSettings() {
             </div>
             <Switch 
               checked={settings.behavior.saveHistory} 
-              onCheckedChange={(checked) => setSettings(prev => ({
-                ...prev,
+              onCheckedChange={(checked) => updateSettings({
                 behavior: {
-                  ...prev.behavior,
+                  ...settings.behavior,
                   saveHistory: checked,
                 }
-              }))}
+              })}
             />
           </div>
         </div>
@@ -353,13 +276,12 @@ export function ChatSettings() {
             <Label>Default Provider</Label>
             <Select 
               value={settings.providers.defaultProvider}
-              onValueChange={(value) => setSettings(prev => ({
-                ...prev,
+              onValueChange={(value) => updateSettings({
                 providers: {
-                  ...prev.providers,
+                  ...settings.providers,
                   defaultProvider: value,
                 }
-              }))}
+              })}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select provider" />
@@ -376,13 +298,12 @@ export function ChatSettings() {
             <Label>Default Model</Label>
             <Select 
               value={settings.providers.defaultModel}
-              onValueChange={(value) => setSettings(prev => ({
-                ...prev,
+              onValueChange={(value) => updateSettings({
                 providers: {
-                  ...prev.providers,
+                  ...settings.providers,
                   defaultModel: value,
                 }
-              }))}
+              })}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select model" />

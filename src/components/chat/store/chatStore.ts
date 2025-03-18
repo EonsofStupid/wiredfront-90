@@ -6,6 +6,7 @@ import { createFeatureActions } from './actions/feature';
 import { createUIActions } from './actions/ui-actions';
 import { ChatState, ProviderCategory, ChatMode, FeatureState } from './types/chat-store-types';
 import { Message } from '@/types/chat';
+import { getChatSettings, saveChatSettings, ChatSettings } from '@/utils/storage/chat-settings';
 
 type FullChatStore = ChatState & 
   ReturnType<typeof createInitializationActions> & 
@@ -87,6 +88,11 @@ const initialState: ChatState = {
   addTokens: asyncNoop,
   spendTokens: asyncNoop,
   setTokenBalance: asyncNoop,
+  settings: getChatSettings(),
+  toggleChat: noop,
+  toggleMinimize: noop,
+  updateSettings: noop,
+  resetSettings: noop,
 };
 
 export const clearMiddlewareStorage = () => {
@@ -328,6 +334,22 @@ export const useChatStore = create<FullChatStore>()(
           console.error('Error setting token balance:', error);
           return false;
         }
+      },
+      
+      toggleChat: () => set((state) => ({ isOpen: !state.isOpen })),
+      toggleMinimize: () => set((state) => ({ isMinimized: !state.isMinimized })),
+      updateSettings: (newSettings) => set((state) => {
+        const updatedSettings = {
+          ...state.settings,
+          ...newSettings,
+        };
+        saveChatSettings(updatedSettings);
+        return { settings: updatedSettings };
+      }),
+      resetSettings: () => {
+        const defaultSettings = getChatSettings();
+        saveChatSettings(defaultSettings);
+        set({ settings: defaultSettings });
       },
       
       ...createInitializationActions(set, get),
