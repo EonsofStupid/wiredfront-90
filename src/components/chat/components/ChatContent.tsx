@@ -2,37 +2,58 @@
 import React from 'react';
 import { useChatMode } from '../providers/ChatModeProvider';
 import { ChatMode } from '@/integrations/supabase/types/enums';
+import { useChatStore } from '../store';
+import { Message } from '@/types/chat';
+import ChatMessage from './ChatMessage';
+import { Loader2 } from 'lucide-react';
 
 interface ChatContentProps {
   className?: string;
-  // Additional props as needed
 }
 
-const ChatContent: React.FC<ChatContentProps> = ({ className, ...props }) => {
+const ChatContent: React.FC<ChatContentProps> = ({ className }) => {
   const { mode, isEditorPage } = useChatMode();
+  const { messages, isWaitingForResponse } = useChatStore();
   
-  // Use the mode and isEditorPage to determine what content to show
+  // Render welcome message based on current mode
+  const getWelcomeMessage = (): string => {
+    switch (mode) {
+      case 'dev':
+      case 'developer':
+        return 'I can help you with your code. Ask me anything about development!';
+      case 'image':
+        return 'Describe the image you want to generate, and I\'ll create it for you.';
+      case 'training':
+        return 'I\'m here to help you learn. What would you like to practice today?';
+      default:
+        return 'How can I help you today?';
+    }
+  };
   
   return (
-    <div className={`chat-content ${className || ''}`} {...props}>
-      {/* Render different content based on mode and isEditorPage */}
-      {(mode === 'chat' || mode === 'standard') && (
-        <div>Chat Mode Content</div>
-      )}
-      {(mode === 'dev' || mode === 'developer') && (
-        <div>Developer Mode Content</div>
-      )}
-      {mode === 'image' && (
-        <div>Image Mode Content</div>
-      )}
-      {mode === 'training' && (
-        <div>Training Mode Content</div>
+    <div className={`chat-content overflow-y-auto p-4 space-y-4 ${className || ''}`}>
+      <div className="text-center opacity-60">
+        <p className="text-xs text-white/60">
+          {new Date().toLocaleDateString()} • {mode.charAt(0).toUpperCase() + mode.slice(1)} Mode
+        </p>
+      </div>
+      
+      {messages.length === 0 ? (
+        <div className="chat-message chat-message-assistant cyber-border cyber-pulse">
+          <span className="cyber-glitch" data-text={getWelcomeMessage()}>
+            {getWelcomeMessage()}
+          </span>
+        </div>
+      ) : (
+        messages.map((msg: Message) => (
+          <ChatMessage key={msg.id} message={msg} />
+        ))
       )}
       
-      {/* Use isEditorPage to conditionally render editor-specific UI */}
-      {isEditorPage && (
-        <div className="editor-specific-content">
-          Editor-specific UI elements
+      {isWaitingForResponse && (
+        <div className="chat-message chat-message-assistant cyber-border opacity-70 flex items-center space-x-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Thinking...</span>
         </div>
       )}
     </div>

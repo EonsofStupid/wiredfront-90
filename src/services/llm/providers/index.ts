@@ -5,6 +5,7 @@ import { GeminiProvider } from './gemini/GeminiProvider';
 import { AnthropicProvider } from './anthropic/AnthropicProvider';
 import { ReplicateProvider } from './replicate/ReplicateProvider';
 import { StabilityAIProvider } from './stabilityai/StabilityAIProvider';
+import { OpenRouterProvider } from './openrouter/OpenRouterProvider';
 import { logger } from '@/services/chat/LoggingService';
 
 // LLM Provider interface
@@ -36,8 +37,56 @@ export const getProviderImplementation = (provider: ChatProvider | null): LLMPro
       return new ReplicateProvider();
     case 'stabilityai':
       return new StabilityAIProvider();
+    case 'openrouter':
+      return new OpenRouterProvider();
     default:
       logger.warn(`Unknown provider type: ${provider.type}, defaulting to OpenAI`);
       return new OpenAIProvider();
+  }
+};
+
+// Get default provider configuration based on mode
+export const getDefaultProviderForMode = (mode: string): ChatProvider => {
+  switch (mode) {
+    case 'image':
+      return {
+        id: 'stabilityai-default',
+        name: 'Stability AI',
+        type: 'stabilityai',
+        models: ['stable-diffusion-xl'],
+        enabled: true,
+        category: 'image',
+        isDefault: true
+      };
+    case 'dev':
+      return {
+        id: 'openai-default',
+        name: 'OpenAI',
+        type: 'openai',
+        models: ['gpt-4o'],
+        enabled: true,
+        category: 'chat',
+        isDefault: true
+      };
+    case 'training':
+      return {
+        id: 'openai-default',
+        name: 'OpenAI',
+        type: 'openai',
+        models: ['gpt-4o'],
+        enabled: true,
+        category: 'chat',
+        isDefault: true
+      };
+    default: // chat mode
+      return {
+        id: 'openai-default',
+        name: 'OpenAI',
+        type: 'openai',
+        models: ['gpt-4o'],
+        enabled: true,
+        category: 'chat',
+        isDefault: true
+      };
   }
 };

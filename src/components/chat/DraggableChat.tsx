@@ -5,7 +5,7 @@ import { ChatSidebar } from "./ChatSidebar";
 import ChatToggleButton from "./components/ChatToggleButton";
 import DraggableChatContainer from "./components/DraggableChatContainer";
 import { useViewportAwareness } from "./hooks/useViewportAwareness";
-import { useChatStore } from "./store/chatStore";
+import { useChatStore } from "./store";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { logger } from "@/services/chat/LoggingService";
@@ -35,6 +35,28 @@ export function DraggableChat() {
   const location = useLocation();
   const isEditorPage = location.pathname === '/editor';
   const [modeDialogOpen, setModeDialogOpen] = useState(false);
+
+  // Load position from localStorage on mount
+  useEffect(() => {
+    const savedPosition = localStorage.getItem('chatPosition');
+    if (savedPosition) {
+      try {
+        const positionData = JSON.parse(savedPosition);
+        if (positionData && (positionData === 'bottom-right' || positionData === 'bottom-left')) {
+          useChatStore.getState().setPosition(positionData);
+        }
+      } catch (error) {
+        logger.error('Failed to parse saved chat position', error);
+      }
+    }
+  }, []);
+
+  // Save position to localStorage when it changes
+  useEffect(() => {
+    if (position) {
+      localStorage.setItem('chatPosition', JSON.stringify(position));
+    }
+  }, [position]);
 
   // Scroll to bottom of messages when new message is added
   useEffect(() => {
@@ -67,7 +89,7 @@ export function DraggableChat() {
     if (provider) {
       updateCurrentProvider(provider);
       
-      toast.success(`Switched to ${provider.name} in ${storeMode} mode`, {
+      toast.success(`Switched to ${provider.name} in ${mode} mode`, {
         position: "bottom-right",
         duration: 3000,
       });
