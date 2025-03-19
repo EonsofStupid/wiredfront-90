@@ -1,9 +1,10 @@
+
 import { StateCreator } from 'zustand';
-import { ChatState, ChatProvider, FeatureState } from "../../types/chat-store-types";
-import { TokenEnforcementMode, KnownFeatureFlag, ChatFeatureKey } from '@/integrations/supabase/types/enums';
+import { ChatState, ProviderCategory, FeatureState } from "../../types/chat-store-types";
+import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 
 // Define feature key type based on valid enum types only (removing string)
-export type FeatureKey = KnownFeatureFlag | ChatFeatureKey | keyof FeatureState;
+export type FeatureKey = string | keyof FeatureState;
 
 // Define proper Zustand types for state management
 export type SetState<T> = (
@@ -19,9 +20,9 @@ export interface FeatureActions {
   enableFeature: (feature: keyof FeatureState) => void;
   disableFeature: (feature: keyof FeatureState) => void;
   setFeatureState: (feature: keyof FeatureState, isEnabled: boolean) => void;
-  updateChatProvider: (providers: ChatProvider[]) => void;
-  updateCurrentProvider: (provider: ChatProvider) => void;
-  updateAvailableProviders: (providers: ChatProvider[]) => void;
+  updateChatProvider: (providers: ProviderCategory[]) => void;
+  updateCurrentProvider: (provider: ProviderCategory) => void;
+  updateAvailableProviders: (providers: ProviderCategory[]) => void;
   
   // Token management actions
   setTokenEnforcementMode: (mode: TokenEnforcementMode) => void;
@@ -38,13 +39,6 @@ export type StoreWithDevtools = StateCreator<
 >;
 
 /**
- * Type guard to check if a value is a non-null object with toString method
- */
-function isObjectWithToString(value: unknown): value is { toString(): string } {
-  return typeof value === 'object' && value !== null && 'toString' in value;
-}
-
-/**
  * Converts a feature key to a chat feature key with proper type narrowing and null handling
  */
 export function convertFeatureKeyToChatFeature(key: FeatureKey | null | undefined): keyof FeatureState | null {
@@ -58,17 +52,9 @@ export function convertFeatureKeyToChatFeature(key: FeatureKey | null | undefine
     return key;
   }
   
-  // If it's an enum value, convert it properly with type safety
-  if (isObjectWithToString(key)) {
-    const keyString = key.toString();
-    const convertedKey = convertStringFeatureKey(keyString);
-    return convertedKey;
-  }
-  
-  // Handle string enum values with null safety
+  // Handle string mappings safely
   if (typeof key === 'string') {
-    const convertedKey = convertStringFeatureKey(key);
-    return convertedKey;
+    return mapStringToFeatureKey(key);
   }
   
   // Default case - return null for unhandled types
@@ -76,7 +62,7 @@ export function convertFeatureKeyToChatFeature(key: FeatureKey | null | undefine
 }
 
 // Type guard to check if a key is a valid FeatureState key
-export function isFeatureStateKey(key: FeatureKey | null | undefined): key is keyof FeatureState {
+export function isFeatureStateKey(key: any): key is keyof FeatureState {
   if (key === null || key === undefined) {
     return false;
   }
@@ -90,24 +76,30 @@ export function isFeatureStateKey(key: FeatureKey | null | undefined): key is ke
     'codeAssistant',
     'ragSupport',
     'githubSync',
-    'tokenEnforcement'
+    'tokenEnforcement',
+    'startMinimized',
+    'showTimestamps',
+    'saveHistory'
   ];
+  
   return validKeys.includes(key as keyof FeatureState);
 }
 
 // Helper function to convert string feature keys
-function convertStringFeatureKey(key: string | null | undefined): keyof FeatureState | null {
-  if (key === null || key === undefined) {
-    return null;
-  }
-
-  // Add your string to feature key mapping logic here
+function mapStringToFeatureKey(key: string): keyof FeatureState | null {
   const featureKeyMap: Record<string, keyof FeatureState> = {
     'code_assistant': 'codeAssistant',
     'rag_support': 'ragSupport',
     'github_sync': 'githubSync',
     'notifications': 'notifications',
-    // Add more mappings as needed
+    'voice': 'voice',
+    'rag': 'rag',
+    'mode_switch': 'modeSwitch',
+    'github': 'github',
+    'token_enforcement': 'tokenEnforcement',
+    'start_minimized': 'startMinimized',
+    'show_timestamps': 'showTimestamps',
+    'save_history': 'saveHistory'
   };
   
   return featureKeyMap[key] || null;

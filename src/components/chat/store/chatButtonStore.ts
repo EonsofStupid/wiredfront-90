@@ -1,22 +1,7 @@
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-interface ChatButtonFeatures {
-  startMinimized: boolean;
-  showTimestamps: boolean;
-  saveHistory: boolean;
-}
-
-interface ChatButtonState {
-  position: 'bottom-left' | 'bottom-right';
-  scale: number;
-  docked: boolean;
-  features: ChatButtonFeatures;
-  setPosition: (position: 'bottom-left' | 'bottom-right') => void;
-  setScale: (scale: number) => void;
-  toggleDocked: () => void;
-  toggleFeature: (feature: keyof ChatButtonFeatures) => void;
-}
+import { ChatButtonPosition, ChatButtonFeatures, ChatButtonState } from './types/chat-button-store-types';
 
 export const useChatButtonStore = create<ChatButtonState>()(
   persist(
@@ -29,7 +14,10 @@ export const useChatButtonStore = create<ChatButtonState>()(
         showTimestamps: true,
         saveHistory: true,
       },
-      setPosition: (position) => set({ position }),
+      setPosition: (position: ChatButtonPosition) => set({ position }),
+      togglePosition: () => set((state) => ({ 
+        position: state.position === 'bottom-right' ? 'bottom-left' : 'bottom-right' 
+      })),
       setScale: (scale) => set({ scale }),
       toggleDocked: () => set((state) => ({ docked: !state.docked })),
       toggleFeature: (feature) =>
@@ -39,9 +27,16 @@ export const useChatButtonStore = create<ChatButtonState>()(
             [feature]: !state.features[feature],
           },
         })),
+      setFeature: (feature, enabled) =>
+        set((state) => ({
+          features: {
+            ...state.features,
+            [feature]: enabled,
+          },
+        })),
     }),
     {
       name: 'chat-button-storage',
     }
   )
-); 
+);

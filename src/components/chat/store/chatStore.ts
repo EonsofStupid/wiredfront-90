@@ -28,7 +28,6 @@ const initialState: ChatState = {
   docked: true,
   isOpen: false,
   isHidden: false,
-  position: 'bottom-right',
   startTime: Date.now(),
   features: {
     voice: true,
@@ -40,6 +39,9 @@ const initialState: ChatState = {
     ragSupport: true,
     githubSync: true,
     tokenEnforcement: false,
+    startMinimized: false,
+    showTimestamps: true,
+    saveHistory: true,
   },
   currentMode: 'chat',
   availableProviders: [],
@@ -56,6 +58,8 @@ const initialState: ChatState = {
   
   providers: {
     availableProviders: [],
+    currentProvider: null,
+    error: null
   },
   
   isMinimized: false,
@@ -71,10 +75,8 @@ const initialState: ChatState = {
   updateMessage: noop,
   resetChatState: noop,
   setUserInput: noop,
-  togglePosition: noop,
   toggleDocked: noop,
   setScale: noop,
-  setPosition: noop,
   setCurrentMode: noop,
   updateCurrentProvider: noop,
   updateAvailableProviders: noop,
@@ -188,21 +190,10 @@ export const useChatStore = create<FullChatStore>()(
         }), false, { type: 'chat/updateMessage' });
       },
       
-      togglePosition: () => {
-        set(state => {
-          const newPosition = state.position === 'bottom-right' ? 'bottom-left' : 'bottom-right';
-          return { position: newPosition };
-        }, false, { type: 'chat/togglePosition' });
-      },
-      
       toggleDocked: () => {
         set(state => ({
           docked: !state.docked
         }), false, { type: 'chat/toggleDocked' });
-      },
-      
-      setPosition: (position) => {
-        set({ position }, false, { type: 'chat/setPosition', position });
       },
       
       setScale: (scale: number) => {

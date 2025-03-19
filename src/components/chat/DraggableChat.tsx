@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from "react";
 import { DndContext } from "@dnd-kit/core";
 import { ChatSidebar } from "./ChatSidebar";
@@ -5,6 +6,7 @@ import ChatToggleButton from "./components/ChatToggleButton";
 import DraggableChatContainer from "./components/DraggableChatContainer";
 import { useViewportAwareness } from "./hooks/useViewportAwareness";
 import { useChatStore } from "./store";
+import { useChatButtonStore } from "./store/chatButtonStore";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { logger } from "@/services/chat/LoggingService";
@@ -19,16 +21,16 @@ export function DraggableChat() {
   const { 
     isOpen, 
     toggleChat, 
-    position, 
     isMinimized, 
     showSidebar, 
     scale,
     docked,
     setCurrentMode,
     updateCurrentProvider,
-    availableProviders,
-    setPosition
+    availableProviders
   } = useChatStore();
+  
+  const { position, setPosition } = useChatButtonStore();
   
   const { containerRef, isOverflowing } = useViewportAwareness();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -115,7 +117,7 @@ export function DraggableChat() {
   }
 
   // Determine position class based on position state
-  const positionClass = typeof position === 'string' && position === 'bottom-right' ? 'right-4' : 'left-4';
+  const positionClass = position === 'bottom-right' ? 'right-4' : 'left-4';
 
   return (
     <DndContext>

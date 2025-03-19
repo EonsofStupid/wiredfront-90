@@ -1,18 +1,10 @@
+
 import { Message } from '@/types/chat';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 import { ChatMode } from '@/types/chat';
-import { ProviderCategory } from '@/types/provider';
 
-export type ChatPosition = {
-  x: number;
-  y: number;
-};
-
-export type MessageActions = {
-  copy: boolean;
-  edit: boolean;
-  delete: boolean;
-};
+// Remove ChatPosition type and use string literals for position
+// This ensures we're not duplicating position management
 
 export type ProviderType = 
   | 'openai' 
@@ -115,7 +107,6 @@ export interface ChatState {
   docked: boolean;
   isOpen: boolean;
   isHidden: boolean;
-  position: 'bottom-right' | 'bottom-left';
   startTime: number;
   features: FeatureState;
   currentMode: ChatMode;
@@ -128,16 +119,13 @@ export interface ChatState {
   scale: number;
   ui: UIState;
   
-  // Action placeholders
+  // Action placeholders - removing the position-related ones
   addMessage: (message: Message) => void;
   updateMessage: (id: string, updates: Partial<Message>) => void;
   resetChatState: () => void;
   setUserInput: (input: string) => void;
-  togglePosition: () => void;
   toggleDocked: () => void;
   setScale: (scale: number) => void;
-  setPosition: (position: 'bottom-right' | 'bottom-left') => void;
-  setPosition: (position: 'bottom-right' | 'bottom-left' | { x: number; y: number }) => void;
   
   // Mode actions
   setCurrentMode: (mode: ChatMode) => void;

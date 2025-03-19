@@ -2,21 +2,15 @@
 import React from 'react';
 import { ArrowLeftRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useChatStore } from '../store/chatStore';
+import { useChatButtonStore } from '../store/chatButtonStore';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function ChatPositionToggle() {
-  const { position, togglePosition } = useChatStore();
+  const { position, togglePosition } = useChatButtonStore();
   
-  const currentPosition = typeof position === 'string' 
-    ? position 
-    : 'custom';
-  
-  const positionText = currentPosition === 'bottom-right' 
+  const positionText = position === 'bottom-right' 
     ? 'Move to left' 
-    : currentPosition === 'bottom-left' 
-      ? 'Move to right' 
-      : 'Toggle position';
+    : 'Move to right';
   
   return (
     <TooltipProvider>

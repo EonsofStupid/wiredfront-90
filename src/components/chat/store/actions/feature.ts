@@ -1,5 +1,6 @@
 
 import { ChatState, FeatureState } from '../types/chat-store-types';
+import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 
 export const createFeatureActions = (
   set: (
@@ -34,10 +35,6 @@ export const createFeatureActions = (
         [featureName]: false,
       },
     }), false, { type: 'chat/disableFeature', feature: featureName });
-  },
-  
-  setMode: (mode: ChatState['currentMode']) => {
-    set({ currentMode: mode }, false, { type: 'chat/setMode', mode });
   },
   
   setCurrentMode: (mode: ChatState['currentMode']) => {
@@ -78,7 +75,7 @@ export const createFeatureActions = (
   },
   
   // Token related actions
-  setTokenEnforcementMode: (mode: ChatState['tokenControl']['enforcementMode']) => {
+  setTokenEnforcementMode: (mode: TokenEnforcementMode) => {
     set((state) => ({
       tokenControl: {
         ...state.tokenControl,

@@ -1,11 +1,13 @@
+
 import React from 'react';
 import { MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import styles from '../styles/ChatButton.module.css';
 import { cn } from '@/lib/utils';
+import { ChatButtonPosition } from '../store/types/chat-button-store-types';
 
 interface ChatButtonProps {
-  position: 'bottom-left' | 'bottom-right';
+  position: ChatButtonPosition;
   scale: number;
   onClick: () => void;
   isPreview?: boolean;
@@ -41,4 +43,4 @@ export const ChatButton: React.FC<ChatButtonProps> = ({
       </Button>
     </div>
   );
-}; 
+};

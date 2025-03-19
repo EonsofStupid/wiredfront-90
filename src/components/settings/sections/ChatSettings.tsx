@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useChatStore } from "@/components/chat/store/chatStore";
 import { useChatButtonStore } from "@/components/chat/store/chatButtonStore";
-import { MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import styles from "../styles/ChatSettings.module.css";
 import { ChatButton } from "@/components/chat/components/ChatButton";
@@ -130,9 +130,9 @@ export function ChatSettings() {
           </div>
           
           <div className={styles.formRow}>
-            <div className={styles.formRowLabel}>
-              <span className={styles.label}>Start Minimized</span>
-              <span className={styles.description}>Open chat in minimized state</span>
+            <div>
+              <span>Start Minimized</span>
+              <p className="text-sm text-muted-foreground">Open chat in minimized state</p>
             </div>
             <Switch 
               checked={buttonFeatures.startMinimized} 
@@ -141,9 +141,9 @@ export function ChatSettings() {
           </div>
           
           <div className={styles.formRow}>
-            <div className={styles.formRowLabel}>
-              <span className={styles.label}>Show Timestamps</span>
-              <span className={styles.description}>Display time for each message</span>
+            <div>
+              <span>Show Timestamps</span>
+              <p className="text-sm text-muted-foreground">Display time for each message</p>
             </div>
             <Switch 
               checked={buttonFeatures.showTimestamps} 
@@ -152,9 +152,9 @@ export function ChatSettings() {
           </div>
           
           <div className={styles.formRow}>
-            <div className={styles.formRowLabel}>
-              <span className={styles.label}>Save History</span>
-              <span className={styles.description}>Persist chat history between sessions</span>
+            <div>
+              <span>Save History</span>
+              <p className="text-sm text-muted-foreground">Persist chat history between sessions</p>
             </div>
             <Switch 
               checked={buttonFeatures.saveHistory} 
@@ -217,8 +217,8 @@ export function ChatSettings() {
           
           {Object.entries(features).map(([feature, enabled]) => (
             <div key={feature} className={styles.formRow}>
-              <div className={styles.formRowLabel}>
-                <span className={styles.label}>{feature.replace(/([A-Z])/g, ' $1').trim()}</span>
+              <div>
+                <span>{feature.replace(/([A-Z])/g, ' $1').trim()}</span>
               </div>
               <Switch 
                 checked={enabled} 
