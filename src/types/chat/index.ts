@@ -16,15 +16,15 @@ export type ChatMode =
   | 'planning'; // Planning/architectural mode
 
 // Type guard for chat modes
-export function isChatMode(value: any): value is ChatMode {
-  return [
+export function isChatMode(value: unknown): value is ChatMode {
+  return typeof value === 'string' && [
     'chat',
     'dev',
     'image',
     'training',
     'code',
     'planning'
-  ].includes(value);
+  ].includes(value as string);
 }
 
 // User message structure

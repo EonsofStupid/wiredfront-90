@@ -3,13 +3,13 @@ import React, { createContext, useContext, ReactNode, useState, useEffect } from
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useChatStore } from '../store/chatStore';
 import { logger } from '@/services/chat/LoggingService';
-import { supabaseModeToStoreMode, storeModeToSupabaseMode } from '@/utils/modeConversion';
-import { ChatMode } from '@/types/chat';
+import { ChatMode, isChatMode } from '@/types/chat';
+import { validateChatMode } from '@/utils/validation/chatTypes';
 
 interface ChatModeContextType {
   currentMode: ChatMode;
   setMode: (mode: ChatMode) => void;
-  isModeSupported: (mode: ChatMode) => boolean;
+  isModeSupported: (mode: unknown) => boolean;
   isEditorPage: boolean;
 }
 
@@ -27,20 +27,30 @@ export function ChatModeProvider({ children, isEditorPage }: ChatModeProviderPro
   const navigate = useNavigate();
 
   useEffect(() => {
-    const mode = location.state?.mode as ChatMode;
-    if (mode && isModeSupported(mode)) {
-      setCurrentMode(mode);
-      setStoreMode(supabaseModeToStoreMode(mode));
+    // Get mode from location state if available
+    const locationMode = location.state?.mode;
+    
+    if (locationMode) {
+      // Validate and normalize the mode
+      const validMode = validateChatMode(locationMode, { silent: true, fallback: 'chat' });
       
-      logger.info('Mode set from location state', { mode });
+      if (validMode !== currentMode) {
+        setCurrentMode(validMode);
+        setStoreMode(validMode);
+        logger.info('Mode set from location state', { mode: validMode });
+      }
     }
-  }, [location.state?.mode, setStoreMode]);
+  }, [location.state?.mode, setStoreMode, currentMode]);
 
   const setMode = (mode: ChatMode) => {
     if (isModeSupported(mode)) {
       setCurrentMode(mode);
-      setStoreMode(supabaseModeToStoreMode(mode));
-      navigate(location.pathname, { state: { mode } });
+      setStoreMode(mode);
+      
+      // Update the location state
+      navigate(location.pathname, { 
+        state: { ...location.state, mode } 
+      });
       
       logger.info('Mode updated', { mode });
     } else {
@@ -48,12 +58,17 @@ export function ChatModeProvider({ children, isEditorPage }: ChatModeProviderPro
     }
   };
 
-  const isModeSupported = (mode: ChatMode): boolean => {
-    return ['chat', 'dev', 'image', 'training', 'code', 'planning'].includes(mode);
+  const isModeSupported = (mode: unknown): boolean => {
+    return isChatMode(mode);
   };
 
   return (
-    <ChatModeContext.Provider value={{ currentMode, setMode, isModeSupported, isEditorPage }}>
+    <ChatModeContext.Provider value={{ 
+      currentMode, 
+      setMode, 
+      isModeSupported, 
+      isEditorPage 
+    }}>
       {children}
     </ChatModeContext.Provider>
   );

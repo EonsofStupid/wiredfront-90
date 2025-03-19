@@ -1,12 +1,11 @@
+
 import { Message, ChatMode, Session } from '@/types/chat';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 
 // Export all types that are used externally
 export type { ChatMode, Message, Session };
 
-// Remove ChatPosition type and use string literals for position
-// This ensures we're not duplicating position management
-
+// Export provider types
 export type ProviderType = 
   | 'openai' 
   | 'anthropic' 

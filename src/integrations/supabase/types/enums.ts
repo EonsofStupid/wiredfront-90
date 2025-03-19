@@ -26,7 +26,9 @@ export const isTokenEnforcementMode = (value: any): value is TokenEnforcementMod
 };
 
 // Add helper function to convert between different ChatMode naming conventions
-export const normalizeChatMode = (mode: ChatMode | string): ChatMode => {
+export const normalizeChatMode = (mode: string | null | undefined): ChatMode => {
+  if (!mode) return 'chat';
+  
   // Map legacy values to new expected values
   const modeMap: Record<string, ChatMode> = {
     'standard': 'chat',
@@ -34,8 +36,9 @@ export const normalizeChatMode = (mode: ChatMode | string): ChatMode => {
   };
   
   // If it's a valid mode, return it or its mapped value
-  if (isChatMode(mode)) {
-    return modeMap[mode] || mode as ChatMode;
+  const normalizedMode = modeMap[mode] || mode;
+  if (isChatMode(normalizedMode)) {
+    return normalizedMode;
   }
   
   // Default fallback

@@ -389,13 +389,47 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_message_history: {
+        Row: {
+          created_at: string | null
+          id: string
+          message_id: string
+          old_content: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message_id: string
+          old_content: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message_id?: string
+          old_content?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_message_history_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           content: string
           created_at: string | null
           id: string
+          last_edited: string | null
           last_retry: string | null
           metadata: Json | null
+          parent_message_id: string | null
           retry_count: number | null
           role: string
           session_id: string | null
@@ -407,8 +441,10 @@ export type Database = {
           content: string
           created_at?: string | null
           id?: string
+          last_edited?: string | null
           last_retry?: string | null
           metadata?: Json | null
+          parent_message_id?: string | null
           retry_count?: number | null
           role: string
           session_id?: string | null
@@ -420,8 +456,10 @@ export type Database = {
           content?: string
           created_at?: string | null
           id?: string
+          last_edited?: string | null
           last_retry?: string | null
           metadata?: Json | null
+          parent_message_id?: string | null
           retry_count?: number | null
           role?: string
           session_id?: string | null
@@ -430,6 +468,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "chat_messages_parent_message_id_fkey"
+            columns: ["parent_message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "chat_messages_session_id_fkey"
             columns: ["session_id"]

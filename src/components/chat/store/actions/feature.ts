@@ -22,9 +22,66 @@ export const createFeatureActions = <T extends ChatState>(
     logger.info('Chat features updated', { features });
   },
   
-  resetFeatures: () => {
+  toggleFeature: (feature: keyof FeatureState) => {
+    const currentState = get().features[feature];
     set(
       state => ({
+        features: {
+          ...state.features,
+          [feature]: !currentState
+        }
+      }),
+      false,
+      { type: 'chat/toggleFeature', feature, value: !currentState }
+    );
+    logger.info(`Feature ${feature} toggled to ${!currentState}`);
+  },
+  
+  enableFeature: (feature: keyof FeatureState) => {
+    set(
+      state => ({
+        features: {
+          ...state.features,
+          [feature]: true
+        }
+      }),
+      false,
+      { type: 'chat/enableFeature', feature }
+    );
+    logger.info(`Feature ${feature} enabled`);
+  },
+  
+  disableFeature: (feature: keyof FeatureState) => {
+    set(
+      state => ({
+        features: {
+          ...state.features,
+          [feature]: false
+        }
+      }),
+      false,
+      { type: 'chat/disableFeature', feature }
+    );
+    logger.info(`Feature ${feature} disabled`);
+  },
+  
+  setFeatureState: (feature: keyof FeatureState, isEnabled: boolean) => {
+    set(
+      state => ({
+        features: {
+          ...state.features,
+          [feature]: isEnabled
+        }
+      }),
+      false,
+      { type: 'chat/setFeatureState', feature, isEnabled }
+    );
+    logger.info(`Feature ${feature} set to ${isEnabled}`);
+  },
+  
+  resetFeatures: () => {
+    set(
+      () => ({
         features: {
           voice: true,
           rag: true,
