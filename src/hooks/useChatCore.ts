@@ -46,7 +46,7 @@ function adaptProviderToCategory(provider: Provider): ProviderCategory {
 export function useChatCore(options: UseChatCoreOptions = {}) {
   const {
     autoInit = true,
-    defaultMode = 'chat',
+    defaultMode = 'chat' as ChatMode,
     persistPosition = true,
     enableAnalytics = true,
     onError,
@@ -97,10 +97,10 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
   } = useMessageStorage();
   
   const {
-    currentSessionId,
+    currentSession,
     createSession,
-    switchSession,
-    getCurrentSession
+    setCurrentSession,
+    fetchSessions
   } = useSessionManager();
   
   // Error handling
@@ -120,14 +120,17 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
       logger.info('Initializing chat core systems');
       
       // 1. Load the session
-      await wrapPromise(useSessionManager.getState().fetchSessions());
-      const sessionId = currentSessionId || await createSession();
+      await wrapPromise(fetchSessions());
+      const session = currentSession || await createSession();
 
       // 2. Load chat state
       if (persistPosition) {
         const savedPosition = persistenceManager.getItem<string>('chat_position');
-        if (savedPosition && (savedPosition === 'bottom-right' || savedPosition === 'bottom-left')) {
-          useChatStore.getState().setPosition(savedPosition);
+        if (savedPosition) {
+          const [x, y] = savedPosition.split(',').map(Number);
+          if (!isNaN(x) && !isNaN(y)) {
+            useChatStore.getState().setPosition({ x, y });
+          }
         }
       }
       
@@ -160,7 +163,7 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
       setIsLoading(false);
     }
   }, [
-    currentSessionId, 
+    currentSession, 
     createSession, 
     persistPosition, 
     currentMode, 
@@ -171,7 +174,8 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
     updateCurrentProvider, 
     wrapPromise, 
     handleError,
-    onSuccess
+    onSuccess,
+    fetchSessions
   ]);
 
   // Auto-initialize when component mounts
@@ -183,9 +187,9 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
 
   // Load messages when session changes
   useEffect(() => {
-    if (currentSessionId) {
+    if (currentSession?.id) {
       try {
-        const sessionMessages = getMessages(currentSessionId);
+        const sessionMessages = getMessages(currentSession.id);
         
         if (sessionMessages.length === 0) {
           // If there are no messages, add a system welcome message
@@ -194,7 +198,7 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
             role: 'assistant',
             content: 'How can I assist you today?',
             timestamp: new Date().toISOString(),
-            chat_session_id: currentSessionId
+            chat_session_id: currentSession.id
           };
           
           addMessage(welcomeMessage);
@@ -203,7 +207,7 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
         handleError(error, 'Error loading session messages');
       }
     }
-  }, [currentSessionId, getMessages, addMessage, handleError]);
+  }, [currentSession?.id, getMessages, addMessage, handleError]);
 
   // Helper function to send a message
   const sendMessage = useCallback(async (content: string, role: MessageRole = 'user') => {
@@ -212,7 +216,7 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
         return;
       }
       
-      if (!currentSessionId) {
+      if (!currentSession?.id) {
         throw new Error('No active session');
       }
       
@@ -223,7 +227,7 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
         role,
         content,
         timestamp: new Date().toISOString(),
-        chat_session_id: currentSessionId,
+        chat_session_id: currentSession.id,
         message_status: 'pending'
       };
       
@@ -239,7 +243,7 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
       handleError(error, 'Error sending message');
       return null;
     }
-  }, [currentSessionId, addMessage, enqueueMessage, handleError]);
+  }, [currentSession?.id, addMessage, enqueueMessage, handleError]);
 
   // Helper to switch modes
   const switchMode = useCallback(async (mode: ChatMode) => {
@@ -249,105 +253,47 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
       
       // Get appropriate provider for this mode
       const category = mode === 'image' ? 'image' : 'chat';
-      const modeProviders = getProvidersByCategory(category as ProviderCategoryType);
+      const defaultProvider = getDefaultProvider(category as ProviderCategoryType);
       
-      // If we don't have a suitable provider for this mode, or current provider is wrong category
-      if (
-        !currentProvider || 
-        currentProvider.category !== category || 
-        !modeProviders.some(p => p.id === currentProvider.id)
-      ) {
-        const defaultProvider = getDefaultProvider(category as ProviderCategoryType);
-        if (defaultProvider) {
-          updateCurrentProvider(adaptProviderToCategory(defaultProvider));
-          await testConnection(defaultProvider.id);
-        } else if (modeProviders.length > 0) {
-          updateCurrentProvider(adaptProviderToCategory(modeProviders[0]));
-          await testConnection(modeProviders[0].id);
-        } else {
-          toast.warning(`No providers available for ${mode} mode`);
-        }
-      }
-      
-      const currentSession = getCurrentSession();
-      if (currentSession) {
-        // Update session metadata with the new mode
-        await useSessionManager.getState().updateSession(currentSession.id, {
-          metadata: {
-            ...(currentSession.metadata || {}),
-            mode
-          }
-        });
-      }
-      
-      // Add system message about mode switch
-      await sendMessage(`Mode switched to ${mode}`, 'system');
-      
-      // Log analytics if enabled
-      if (enableAnalytics) {
-        logger.info(`Mode switched to ${mode}`, { 
-          previousMode: currentMode,
-          newMode: mode,
-          sessionId: currentSessionId
-        });
+      if (defaultProvider) {
+        updateCurrentProvider(adaptProviderToCategory(defaultProvider));
       }
       
       return true;
     } catch (error) {
-      handleError(error, `Error switching to ${mode} mode`);
+      handleError(error, 'Error switching mode');
       return false;
     }
-  }, [
-    setCurrentMode,
-    currentProvider,
-    getProvidersByCategory,
-    getDefaultProvider,
-    updateCurrentProvider,
-    testConnection,
-    getCurrentSession,
-    currentMode,
-    currentSessionId,
-    sendMessage,
-    enableAnalytics,
-    handleError
-  ]);
-
+  }, [setCurrentMode, getDefaultProvider, updateCurrentProvider, handleError]);
+  
   return {
     // State
     isInitialized,
     isLoading,
     error,
+    
+    // Chat state
+    messages,
     currentMode,
     currentProvider,
-    currentSessionId,
     position,
     docked,
     isOpen,
     isMinimized,
-    isProcessing,
-    messages,
     userInput,
     isWaitingForResponse,
     
     // Actions
-    initialize,
     sendMessage,
     switchMode,
-    selectProvider,
-    togglePosition,
+    setUserInput,
     toggleDocked,
-    
-    // Session actions
-    createSession,
-    switchSession,
-    getCurrentSession,
-    
-    // Message actions
+    togglePosition,
     updateMessage,
-    
-    // Provider helpers
-    getProvidersByCategory,
-    providers,
-    providersInitialized
+    getMessages,
+    storageUpdateMessage,
+    testConnection,
+    selectProvider,
+    getProvidersByCategory
   };
 }

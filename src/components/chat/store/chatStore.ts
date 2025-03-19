@@ -4,8 +4,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { createInitializationActions } from './actions/initialization-actions';
 import { createFeatureActions } from './actions/feature';
 import { createUIActions } from './actions/ui-actions';
-import { ChatState, ProviderCategory, ChatMode, FeatureState, TokenEnforcementMode } from './types/chat-store-types';
+import { ChatState, ProviderCategory, ChatMode, FeatureState } from './types/chat-store-types';
 import { Message } from '@/types/chat';
+import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 
 type FullChatStore = ChatState & 
   ReturnType<typeof createInitializationActions> & 
@@ -21,7 +22,7 @@ const initialState: ChatState = {
   userInput: '',
   isWaitingForResponse: false,
   selectedModel: 'gpt-4',
-  selectedMode: 'chat',
+  selectedMode: 'chat' as ChatMode,
   modelFetchStatus: 'idle',
   error: null,
   chatId: null,
@@ -43,7 +44,7 @@ const initialState: ChatState = {
     showTimestamps: true,
     saveHistory: true,
   },
-  currentMode: 'chat',
+  currentMode: 'chat' as ChatMode,
   availableProviders: [],
   currentProvider: null,
   position: { x: 0, y: 0 },
