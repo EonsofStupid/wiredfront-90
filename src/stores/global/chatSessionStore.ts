@@ -2,10 +2,18 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import { Session, SessionCreateOptions } from '@/types/chat';
+import { Session, ChatMode } from '@/types/chat';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { toast } from 'sonner';
+
+// Add the missing type
+export interface SessionCreateOptions {
+  title?: string;
+  mode?: ChatMode;
+  metadata?: Record<string, any>;
+  provider_id?: string;
+}
 
 interface SessionState {
   // State
@@ -78,11 +86,11 @@ export const useChatSessionStore = create<SessionStore>()(
                 title: rawSession.title,
                 created_at: rawSession.created_at,
                 last_accessed: rawSession.last_accessed,
-                message_count: rawSession.message_count,
+                message_count: rawSession.message_count || 0,
                 is_active: rawSession.is_active,
                 metadata,
                 user_id: rawSession.user_id,
-                mode: rawSession.mode,
+                mode: normalizeChatMode(rawSession.mode),
                 provider_id: rawSession.provider_id,
                 project_id: rawSession.project_id,
                 tokens_used: rawSession.tokens_used,
@@ -143,7 +151,21 @@ export const useChatSessionStore = create<SessionStore>()(
 
             const { data, error } = await supabase
               .from('chat_sessions')
-              .insert(newSession)
+              .insert({
+                id: newSession.id,
+                title: newSession.title,
+                user_id: newSession.user_id,
+                created_at: newSession.created_at,
+                last_accessed: newSession.last_accessed,
+                is_active: newSession.is_active,
+                metadata: newSession.metadata,
+                mode: newSession.mode,
+                provider_id: newSession.provider_id,
+                project_id: newSession.project_id,
+                tokens_used: newSession.tokens_used,
+                context: newSession.context,
+                message_count: newSession.message_count,
+              })
               .select()
               .single();
 
@@ -174,12 +196,15 @@ export const useChatSessionStore = create<SessionStore>()(
 
         updateSession: async (sessionId: string, updates: Partial<Session>) => {
           try {
+            const normalizedUpdates = {
+              ...updates,
+              last_accessed: new Date().toISOString(),
+              mode: updates.mode ? normalizeChatMode(updates.mode) : undefined
+            };
+            
             const { data, error } = await supabase
               .from('chat_sessions')
-              .update({
-                ...updates,
-                last_accessed: new Date().toISOString()
-              })
+              .update(normalizedUpdates)
               .eq('id', sessionId)
               .select()
               .single();
@@ -258,6 +283,26 @@ export const useChatSessionStore = create<SessionStore>()(
     }
   )
 );
+
+// Helper function to normalize chat modes that we should import
+function normalizeChatMode(mode: string | null | undefined): ChatMode {
+  if (!mode) return 'chat';
+  
+  // Map legacy values to new expected values
+  const modeMap: Record<string, ChatMode> = {
+    'standard': 'chat',
+    'developer': 'dev'
+  };
+  
+  // If it's a valid mode, return it or its mapped value
+  const normalizedMode = modeMap[mode as string] || mode;
+  if (['chat', 'dev', 'image', 'training', 'code', 'planning'].includes(normalizedMode)) {
+    return normalizedMode as ChatMode;
+  }
+  
+  // Default fallback
+  return 'chat';
+}
 
 // Selector hooks for more granular access
 export const useCurrentSession = () => useChatSessionStore(state => state.currentSession);
