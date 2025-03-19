@@ -649,6 +649,36 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_ui_docking: {
+        Row: {
+          created_at: string | null
+          docked: boolean | null
+          docked_items: Json | null
+          id: string
+          position: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          docked?: boolean | null
+          docked_items?: Json | null
+          id?: string
+          position?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          docked?: boolean | null
+          docked_items?: Json | null
+          id?: string
+          position?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       chat_ui_layout: {
         Row: {
           created_at: string | null
@@ -2659,6 +2689,15 @@ export type Database = {
           "": unknown
         }
         Returns: unknown
+      }
+      increment_count: {
+        Args: {
+          table_name: string
+          id_value: string
+          column_name: string
+          increment_by?: number
+        }
+        Returns: undefined
       }
       is_super_admin: {
         Args: {

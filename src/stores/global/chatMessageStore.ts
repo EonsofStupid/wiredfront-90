@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Message, MessageRole, MessageStatus } from '@/types/chat/messages';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
+import { toast } from 'sonner';
 
 interface MessageState {
   messages: Message[];
@@ -78,30 +79,32 @@ export const useChatMessageStore = create<MessageStore>()(
             // Clear existing messages before adding new ones
             set({ messages: [] });
             
-            // Add each message to the store
-            data.forEach((msg) => {
-              get().addMessage({
-                id: msg.id,
-                session_id: msg.session_id,
-                user_id: msg.user_id,
-                role: msg.role as MessageRole,
-                content: msg.content,
-                message_status: msg.status as MessageStatus,
-                metadata: typeof msg.metadata === 'object' ? msg.metadata : {},
-                created_at: msg.created_at,
-                updated_at: msg.updated_at,
-                timestamp: msg.created_at,
-                position_order: msg.position_order,
-                retry_count: msg.retry_count,
-                last_retry: msg.last_retry,
-              });
+            // Transform and add messages
+            const parsedMessages = (data || []).map(msg => ({
+              id: msg.id,
+              session_id: msg.session_id,
+              user_id: msg.user_id,
+              role: msg.role,
+              content: msg.content,
+              metadata: typeof msg.metadata === 'string' ? JSON.parse(msg.metadata) : msg.metadata,
+              message_status: msg.status || 'sent',
+              retry_count: msg.retry_count,
+              last_retry: msg.last_retry,
+              created_at: msg.created_at,
+              updated_at: msg.updated_at,
+              timestamp: msg.created_at,
+              position_order: msg.position_order
+            }));
+            
+            parsedMessages.forEach(msg => {
+              get().addMessage(msg);
             });
             
-            logger.info(`Fetched ${data.length} messages for session ${sessionId}`);
             set({ isLoading: false });
+            logger.info('Messages fetched successfully', { sessionId, count: parsedMessages.length });
           } catch (error) {
-            logger.error('Error fetching messages:', error);
             set({ error: error as Error, isLoading: false });
+            logger.error('Failed to fetch messages', { error, sessionId });
           }
         },
 
@@ -111,101 +114,90 @@ export const useChatMessageStore = create<MessageStore>()(
 
         sendMessage: async (content, sessionId, role = 'user') => {
           try {
-            if (!content.trim() || !sessionId) {
-              throw new Error('Cannot send empty message or missing session ID');
-            }
-            
-            // Create a temporary message ID
-            const tempId = uuidv4();
-            const timestamp = new Date().toISOString();
-            
-            // Add pending message to store
-            get().addMessage({
-              id: tempId,
+            // Create a new message locally first
+            const message: Message = {
+              id: uuidv4(),
               session_id: sessionId,
               role,
               content,
               message_status: 'pending',
-              timestamp,
-            });
+              created_at: new Date().toISOString(),
+              timestamp: new Date().toISOString()
+            };
             
-            // Get current user
+            const messageId = get().addMessage(message);
+            
+            // Get current user information
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('User not authenticated');
             
-            // Send to database
+            // Save to the database
             const { data, error } = await supabase
               .from('chat_messages')
               .insert({
+                id: messageId,
                 session_id: sessionId,
                 user_id: user.id,
                 role,
                 content,
                 status: 'sent',
-                created_at: timestamp,
-                type: 'text'
+                created_at: message.created_at,
+                updated_at: message.created_at,
+                metadata: {},
+                position_order: get().messages.length
               })
               .select()
               .single();
-            
+              
             if (error) throw error;
             
-            // Update message in store with DB id and status
-            get().updateMessage(tempId, {
-              id: data.id,
+            // Update local message status
+            get().updateMessage(messageId, { 
               message_status: 'sent',
-              user_id: user.id,
+              user_id: user.id
             });
             
-            // Update session using a custom function call
-            await supabase.rpc('increment_count', { 
-              table_name: 'chat_sessions',
-              id_value: sessionId,
-              column_name: 'message_count' 
-            });
+            // Update message count for the session
+            try {
+              await supabase.rpc('increment_count', {
+                table_name: 'chat_sessions',
+                id_value: sessionId,
+                column_name: 'message_count',
+                increment_by: 1
+              });
+            } catch (countError) {
+              logger.warn('Failed to increment message count', { countError, sessionId });
+            }
             
-            // Also update the last accessed time
-            await supabase
-              .from('chat_sessions')
-              .update({ last_accessed: timestamp })
-              .eq('id', sessionId);
-            
-            return data.id;
+            return messageId;
           } catch (error) {
-            logger.error('Error sending message:', error);
-            set((state) => ({
-              error: error as Error,
-              messages: state.messages.map(msg => 
-                msg.content === content && msg.message_status === 'pending'
-                  ? { ...msg, message_status: 'failed' }
-                  : msg
-              )
-            }));
+            logger.error('Failed to send message', { error, sessionId });
+            toast.error('Failed to send message');
             throw error;
           }
         }
       }),
       {
-        name: 'chat-messages',
+        name: 'chat-message-storage',
         partialize: (state) => ({
-          messages: state.messages.slice(-50), // Only persist last 50 messages
-        }),
+          messages: state.messages.slice(-20), // Only persist the last 20 messages
+        })
       }
     ),
     {
       name: 'ChatMessageStore',
-      enabled: process.env.NODE_ENV !== 'production',
+      enabled: process.env.NODE_ENV !== 'production'
     }
   )
 );
 
-// Selector hooks
+// Selector hooks for more granular access
 export const useMessages = () => useChatMessageStore(state => state.messages);
 export const useMessageActions = () => ({
   addMessage: useChatMessageStore(state => state.addMessage),
   updateMessage: useChatMessageStore(state => state.updateMessage),
   removeMessage: useChatMessageStore(state => state.removeMessage),
-  sendMessage: useChatMessageStore(state => state.sendMessage),
   fetchMessages: useChatMessageStore(state => state.fetchMessages),
   clearMessages: useChatMessageStore(state => state.clearMessages),
+  sendMessage: useChatMessageStore(state => state.sendMessage),
 });

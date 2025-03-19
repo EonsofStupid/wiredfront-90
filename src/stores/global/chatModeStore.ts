@@ -1,98 +1,126 @@
 
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { ChatMode, isChatMode } from '@/types/chat/modes';
+import { ChatMode } from '@/types/chat/modes';
 import { logger } from '@/services/chat/LoggingService';
-import { supabase } from '@/integrations/supabase/client';
 
-interface ChatModeState {
+interface ModeState {
   currentMode: ChatMode;
-  providerId?: string;
-  supportedModes: ChatMode[];
+  previousMode: ChatMode | null;
+  isTransitioning: boolean;
+  transitionProgress: number;
 }
 
-interface ChatModeActions {
-  setCurrentMode: (mode: ChatMode, providerId?: string) => void;
+interface ModeActions {
+  setMode: (mode: ChatMode) => void;
+  switchMode: (mode: ChatMode) => Promise<void>;
+  cancelTransition: () => void;
   resetMode: () => void;
-  isModeSupported: (mode: unknown) => boolean;
-  updateSessionMode: (sessionId: string, mode: ChatMode, providerId?: string) => Promise<boolean>;
 }
 
-export type ChatModeStore = ChatModeState & ChatModeActions;
+export type ModeStore = ModeState & ModeActions;
 
-export const useChatModeStore = create<ChatModeStore>()(
+export const useChatModeStore = create<ModeStore>()(
   devtools(
     persist(
       (set, get) => ({
-        // Default state
         currentMode: 'chat',
-        providerId: undefined,
-        supportedModes: ['chat', 'dev', 'image', 'training', 'code', 'planning'],
-        
-        // Actions
-        setCurrentMode: (mode, providerId) => {
-          if (!get().isModeSupported(mode)) {
-            logger.warn('Attempted to set unsupported chat mode', { mode });
+        previousMode: null,
+        isTransitioning: false,
+        transitionProgress: 0,
+
+        setMode: (mode) => {
+          set({
+            currentMode: mode,
+            previousMode: get().currentMode !== mode ? get().currentMode : get().previousMode,
+            isTransitioning: false,
+            transitionProgress: 0
+          });
+          logger.info('Chat mode set', { mode });
+        },
+
+        switchMode: async (mode) => {
+          if (get().isTransitioning) {
+            // Cancel current transition first
+            get().cancelTransition();
+          }
+
+          if (get().currentMode === mode) {
             return;
           }
-          
-          logger.info('Setting chat mode', { mode, providerId });
-          set({ currentMode: mode, providerId });
+
+          set({
+            isTransitioning: true,
+            transitionProgress: 0,
+            previousMode: get().currentMode
+          });
+
+          // Simulate transition progress updates
+          const progressInterval = setInterval(() => {
+            const currentProgress = get().transitionProgress;
+            if (currentProgress >= 100) {
+              clearInterval(progressInterval);
+              return;
+            }
+            set({ transitionProgress: Math.min(currentProgress + 10, 100) });
+          }, 50);
+
+          // After "transition" completes, update the current mode
+          setTimeout(() => {
+            clearInterval(progressInterval);
+            set({
+              currentMode: mode,
+              isTransitioning: false,
+              transitionProgress: 100
+            });
+            
+            // After a short delay, reset the progress
+            setTimeout(() => {
+              set({ transitionProgress: 0 });
+            }, 300);
+            
+            logger.info('Chat mode switched', { mode, previousMode: get().previousMode });
+          }, 500);
         },
-        
+
+        cancelTransition: () => {
+          set({
+            isTransitioning: false,
+            transitionProgress: 0
+          });
+          logger.info('Mode transition cancelled');
+        },
+
         resetMode: () => {
-          set({ currentMode: 'chat', providerId: undefined });
-        },
-        
-        // Helpers
-        isModeSupported: (mode) => {
-          return isChatMode(mode) && get().supportedModes.includes(mode as ChatMode);
-        },
-        
-        updateSessionMode: async (sessionId, mode, providerId) => {
-          try {
-            // Set in local state first for immediate feedback
-            get().setCurrentMode(mode, providerId);
-            
-            // Then update the database
-            const { error } = await supabase
-              .from('chat_sessions')
-              .update({ 
-                mode,
-                metadata: { mode, providerId }
-              })
-              .eq('id', sessionId);
-            
-            if (error) throw error;
-            
-            logger.info('Updated session mode in database', { sessionId, mode });
-            return true;
-          } catch (error) {
-            logger.error('Failed to update session mode', { error, sessionId, mode });
-            return false;
-          }
+          set({
+            currentMode: 'chat',
+            previousMode: null,
+            isTransitioning: false,
+            transitionProgress: 0
+          });
+          logger.info('Chat mode reset to default');
         }
       }),
       {
-        name: 'chat-mode',
+        name: 'chat-mode-storage',
         partialize: (state) => ({
           currentMode: state.currentMode,
-          providerId: state.providerId,
-        }),
+          previousMode: state.previousMode
+        })
       }
     ),
     {
       name: 'ChatModeStore',
-      enabled: process.env.NODE_ENV !== 'production',
+      enabled: process.env.NODE_ENV !== 'production'
     }
   )
 );
 
-// Selector hooks
+// Selector hooks for more granular access
 export const useCurrentMode = () => useChatModeStore(state => state.currentMode);
 export const useModeActions = () => ({
-  setCurrentMode: useChatModeStore(state => state.setCurrentMode),
-  updateSessionMode: useChatModeStore(state => state.updateSessionMode),
-  resetMode: useChatModeStore(state => state.resetMode),
-  isModeSupported: useChatModeStore(state => state.isModeSupported),
+  setMode: useChatModeStore(state => state.setMode),
+  switchMode: useChatModeStore(state => state.switchMode),
+  cancelTransition: useChatModeStore(state => state.cancelTransition),
+  resetMode: useChatModeStore(state => state.resetMode)
 });
