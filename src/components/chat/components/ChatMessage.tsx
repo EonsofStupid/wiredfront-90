@@ -15,7 +15,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast, onRetry }) =
   const [isVisible, setIsVisible] = useState(false);
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
-  const isStreaming = message.status === 'pending';
+  
+  // Get message status, handle both property names for backward compatibility
+  const messageStatus = message.message_status || message.status || 'sent';
+  const isStreaming = messageStatus === 'pending';
   
   // Get timestamp from any of the possible timestamp fields
   const timestamp = message.timestamp || message.created_at || new Date().toISOString();
@@ -76,7 +79,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast, onRetry }) =
         
         <div className="text-xs opacity-50 mt-1 flex items-center justify-end gap-1">
           {isUser && <ArrowRight className="h-3 w-3" />}
-          {message.status === 'pending' && <Clock className="h-3 w-3 animate-spin" />}
+          {messageStatus === 'pending' && <Clock className="h-3 w-3 animate-spin" />}
           {new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           {!isUser && !isSystem && <Sparkles className="h-3 w-3 ml-1" />}
         </div>
