@@ -41,16 +41,6 @@ export const ChatSidebar = () => {
     setModeDialogOpen(true);
   };
 
-  const handleCreateWithMode = async (mode: ChatMode, providerId: string) => {
-    // Create session with metadata for the selected mode
-    await createSession({
-      metadata: {
-        mode,
-        providerId
-      }
-    });
-  };
-
   // Explicit handlers for different deletion operations
   const handleClearOtherSessions = async () => {
     await clearSessions(true); // Preserve current session
