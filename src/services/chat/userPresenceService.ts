@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { ChatUserStatus } from '@/types/chat-preferences';
-import { logger } from '@/services/chat/LoggingService';
+import { ChatUserStatus } from '@/types/chat/preferences';
+import { logger } from './chatSessionsService';
 
 export const userPresenceService = {
   /**

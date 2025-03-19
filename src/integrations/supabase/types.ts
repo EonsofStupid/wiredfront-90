@@ -389,6 +389,56 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          last_retry: string | null
+          metadata: Json | null
+          retry_count: number | null
+          role: string
+          session_id: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          last_retry?: string | null
+          metadata?: Json | null
+          retry_count?: number | null
+          role: string
+          session_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          last_retry?: string | null
+          metadata?: Json | null
+          retry_count?: number | null
+          role?: string
+          session_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_providers: {
         Row: {
           available_models: string[] | null
@@ -550,6 +600,71 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      chat_ui_layout: {
+        Row: {
+          created_at: string | null
+          id: string
+          layout: Json | null
+          metadata: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          layout?: Json | null
+          metadata?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          layout?: Json | null
+          metadata?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      chat_user_status: {
+        Row: {
+          created_at: string | null
+          last_active: string | null
+          metadata: Json | null
+          session_id: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          last_active?: string | null
+          metadata?: Json | null
+          session_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          last_active?: string | null
+          metadata?: Json | null
+          session_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_user_status_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       command_executions: {
         Row: {
@@ -2142,6 +2257,39 @@ export type Database = {
           session_id?: string | null
           timestamp?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_chat_preferences: {
+        Row: {
+          created_at: string | null
+          custom_css: string | null
+          docked_icons: Json | null
+          docked_sections: Json | null
+          metadata: Json | null
+          theme: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          custom_css?: string | null
+          docked_icons?: Json | null
+          docked_sections?: Json | null
+          metadata?: Json | null
+          theme?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          custom_css?: string | null
+          docked_icons?: Json | null
+          docked_sections?: Json | null
+          metadata?: Json | null
+          theme?: string | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }

@@ -1,7 +1,16 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { EnhancedChatSession } from '@/types/chat-preferences';
-import { logger } from '@/services/chat/LoggingService';
+import { EnhancedChatSession } from '@/types/chat/preferences';
+
+// Simple logger for error tracking
+export const logger = {
+  error: (message: string, error?: any) => {
+    console.error(message, error);
+  },
+  info: (message: string, data?: any) => {
+    console.info(message, data);
+  }
+};
 
 export const chatSessionsService = {
   /**
