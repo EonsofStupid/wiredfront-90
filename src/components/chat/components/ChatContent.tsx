@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { useChatMode } from '../providers/ChatModeProvider';
-import { ChatMode } from '@/integrations/supabase/types/enums';
+import { ChatMode } from '@/types/chat';
 import { useChatStore } from '../store';
 import { Message } from '@/types/chat';
 import ChatMessage from './ChatMessage';

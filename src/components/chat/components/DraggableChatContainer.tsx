@@ -1,15 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { useDraggable } from '@dnd-kit/core';
-import { useChatStore } from '../store/chatStore';
+import { cn } from '@/lib/utils';
+import { useChatStore } from '../store';
+import { supabaseModeToStoreMode } from '@/utils/modeConversion';
+import { Message, ChatMode } from '@/types/chat';
+import ChatInputArea from './ChatInputArea';
+import { ChatIconStack } from './ChatIconStack';
 import { useMessageAPI } from '@/hooks/chat/useMessageAPI';
 import { ChatHeader } from './ChatHeader';
 import { ChatModeDialog } from '../features/ModeSwitch/ChatModeDialog';
-import { ChatMode as SupabaseChatMode } from '@/integrations/supabase/types/enums';
-import { supabaseModeToStoreMode } from '@/utils/modeConversion';
-import { Message } from '@/types/chat';
-import ChatInputArea from './ChatInputArea';
-import { ChatIconStack } from './ChatIconStack';
 import ChatMessage from './ChatMessage';
 import '../styles/index.css';
 import '../styles/cyber-theme.css';
@@ -47,7 +46,7 @@ const DraggableChatContainer: React.FC<DraggableChatContainerProps> = ({
     }
   }, [isLoading]);
   
-  const handleModeSelect = (mode: SupabaseChatMode, providerId: string) => {
+  const handleModeSelect = (mode: ChatMode, providerId: string) => {
     // Convert Supabase mode to store mode
     const storeMode = supabaseModeToStoreMode(mode);
     useChatStore.getState().setCurrentMode(storeMode);

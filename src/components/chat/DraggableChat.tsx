@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import { DndContext } from "@dnd-kit/core";
 import { ChatSidebar } from "./ChatSidebar";
@@ -11,7 +10,7 @@ import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { logger } from "@/services/chat/LoggingService";
 import { ChatModeDialog } from "./features/ModeSwitch/ChatModeDialog";
-import { ChatMode as SupabaseChatMode } from "@/integrations/supabase/types/enums";
+import { ChatMode } from '@/types/chat';
 import { supabaseModeToStoreMode } from "@/utils/modeConversion";
 import { toast } from "sonner";
 import "./styles/index.css";
@@ -81,7 +80,7 @@ export function DraggableChat() {
   }, [isOpen, position, isMinimized, showSidebar, scale, isOverflowing, location.pathname]);
 
   // Handle selecting a mode from the dialog
-  const handleModeSelect = (mode: SupabaseChatMode, providerId: string) => {
+  const handleModeSelect = (mode: ChatMode, providerId: string) => {
     // Convert from Supabase mode to store mode
     const storeMode = supabaseModeToStoreMode(mode);
     setCurrentMode(storeMode);

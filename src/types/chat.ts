@@ -4,11 +4,26 @@ export type MessageStatus = 'pending' | 'sent' | 'failed' | 'error' | 'cached';
 export type MessageRole = 'user' | 'assistant' | 'system';
 
 // Database modes from Supabase
-export type ChatMode = 'dev' | 'image' | 'training' | 'standard' | 'planning';
+export type ChatMode = 
+  | 'dev' 
+  | 'image' 
+  | 'training' 
+  | 'standard' 
+  | 'planning'
+  | 'chat'
+  | 'code';
 
 // Type guard for ChatMode
 export const isChatMode = (value: any): value is ChatMode => {
-  return ['dev', 'image', 'training', 'standard', 'planning'].includes(value);
+  return [
+    'dev',
+    'image',
+    'training',
+    'standard',
+    'planning',
+    'chat',
+    'code'
+  ].includes(value);
 };
 
 // Base types for shared properties
