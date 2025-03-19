@@ -1,63 +1,32 @@
+
 import React from 'react';
-import { MessageSquare, MessageCircle, Bot } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useChatButtonStore } from '../store/chatButtonStore';
-import styles from './ChatToggleButton.module.css';
+import { MessageSquare } from 'lucide-react';
+import { useChatStore } from '../store/chatStore';
 
 interface ChatToggleButtonProps {
   onClick: () => void;
-  variant?: 'default' | 'circle' | 'ai';
-  size?: 'default' | 'sm' | 'lg';
 }
 
-const ChatToggleButton: React.FC<ChatToggleButtonProps> = ({ 
-  onClick, 
-  variant = 'default',
-  size = 'default'
-}) => {
-  const { scale } = useChatButtonStore();
-
-  const getIcon = () => {
-    switch (variant) {
-      case 'circle':
-        return <MessageCircle className="h-5 w-5" />;
-      case 'ai':
-        return <Bot className="h-5 w-5" />;
-      default:
-        return <MessageSquare className="h-5 w-5" />;
-    }
-  };
+const ChatToggleButton: React.FC<ChatToggleButtonProps> = ({ onClick }) => {
+  const { position } = useChatStore();
   
-  const getSizeClass = () => {
-    switch (size) {
-      case 'sm':
-        return styles.small;
-      case 'lg':
-        return styles.large;
-      default:
-        return '';
-    }
-  };
+  const positionClass = position?.x > window.innerWidth / 2 
+    ? 'right-4' 
+    : 'left-4';
   
   return (
     <motion.button
-      onClick={onClick}
-      className={`${styles.toggleButton} ${getSizeClass()}`}
+      className={`fixed bottom-4 ${positionClass} bg-gradient-to-r from-neon-blue to-neon-blue/70 text-white p-3 rounded-full shadow-lg z-[var(--z-chat-button)]`}
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.95 }}
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
+      onClick={onClick}
+      aria-label="Open chat"
+      initial={{ scale: 0.8, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
       transition={{ duration: 0.3 }}
-      style={{
-        transform: `scale(${scale})`,
-        transformOrigin: 'center'
-      }}
     >
-      <div className={styles.iconContainer}>
-        {getIcon()}
-        <span className="sr-only">Open Chat</span>
-        <div className={styles.pulseEffect} />
-      </div>
+      <MessageSquare className="h-6 w-6" />
     </motion.button>
   );
 };

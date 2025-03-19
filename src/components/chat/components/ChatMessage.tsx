@@ -1,20 +1,24 @@
 
 import React, { useState, useEffect } from 'react';
-import { Message } from '@/types/chat';
+import { Message, MessageStatus } from '@/types/chat';
 import { User, Bot, ArrowRight, Sparkles, Terminal, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import '../styles/cyber-theme.css';
-import '../styles/animations.css';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface ChatMessageProps {
   message: Message;
+  isLast?: boolean;
+  onRetry?: () => void;
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast, onRetry }) => {
   const [isVisible, setIsVisible] = useState(false);
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
-  const isStreaming = message.message_status === 'pending';
+  const isStreaming = message.status === 'pending';
+  
+  // Get timestamp from any of the possible timestamp fields
+  const timestamp = message.timestamp || message.created_at || new Date().toISOString();
   
   // Determine icon based on role and type
   const getIcon = () => {
@@ -33,10 +37,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   }, []);
   
   return (
-    <div 
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
       className={cn(
-        "chat-message flex items-start gap-2 mb-4 opacity-0",
-        isVisible && "opacity-100 transition-opacity duration-300",
+        "chat-message flex items-start gap-2 mb-4",
         isUser ? "flex-row-reverse" : "flex-row"
       )}
     >
@@ -70,12 +76,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         
         <div className="text-xs opacity-50 mt-1 flex items-center justify-end gap-1">
           {isUser && <ArrowRight className="h-3 w-3" />}
-          {message.message_status === 'pending' && <Clock className="h-3 w-3 animate-spin" />}
-          {new Date(message.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {message.status === 'pending' && <Clock className="h-3 w-3 animate-spin" />}
+          {new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           {!isUser && !isSystem && <Sparkles className="h-3 w-3 ml-1" />}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

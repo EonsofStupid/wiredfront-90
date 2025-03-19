@@ -1,64 +1,65 @@
 
-import { ChatMode as SupabaseChatMode, normalizeChatMode } from "@/integrations/supabase/types/enums";
-import { ChatMode as StoreChatMode } from "@/components/chat/store/types/chat-store-types";
+import { ChatMode } from '@/types/chat';
 
 /**
- * Convert a Supabase ChatMode to a Store ChatMode
+ * Converts a Supabase chat mode to our internal store mode format
  */
-export function supabaseModeToStoreMode(mode: SupabaseChatMode): StoreChatMode {
-  // Normalize the supabase mode first
-  const normalizedMode = normalizeChatMode(mode);
-  
-  // Handle special case mapping
-  const modeMap: Record<string, StoreChatMode> = {
+export const supabaseModeToStoreMode = (mode: ChatMode | string): ChatMode => {
+  // Handle legacy or alternative spellings of modes
+  const modeMap: Record<string, ChatMode> = {
     'standard': 'chat',
-    'chat': 'chat',
     'developer': 'dev',
-    'dev': 'dev',
-    'training': 'training',
-    'image': 'image'
-  };
-  
-  const storeMode = modeMap[normalizedMode] as StoreChatMode;
-  if (!storeMode) {
-    console.warn(`Unknown mode conversion: ${mode} -> defaulting to 'chat'`);
-    return 'chat';
-  }
-  
-  return storeMode;
-}
-
-/**
- * Convert a Store ChatMode to a Supabase ChatMode
- */
-export function storeModeToSupabaseMode(mode: StoreChatMode): SupabaseChatMode {
-  const modeMap: Record<string, SupabaseChatMode> = {
     'chat': 'chat',
-    'chat-only': 'chat',
     'dev': 'dev',
+    'image': 'image',
     'training': 'training',
-    'image': 'image'
+    'planning': 'planning',
+    'code': 'code'
   };
   
-  const supabaseMode = modeMap[mode] as SupabaseChatMode;
-  if (!supabaseMode) {
-    console.warn(`Unknown mode conversion: ${mode} -> defaulting to 'chat'`);
+  // Return the mapped value if it exists, otherwise return the original mode or fallback
+  const normalizedMode = (modeMap[mode] || mode) as ChatMode;
+  
+  // Validate that the result is a valid ChatMode
+  if (!isValidChatMode(normalizedMode)) {
+    console.warn(`Invalid chat mode: ${mode}, falling back to 'chat'`);
     return 'chat';
   }
   
-  return supabaseMode;
-}
+  return normalizedMode;
+};
 
 /**
- * Type guard to check if a value is a valid StoreChatMode
+ * Converts our internal store mode to the Supabase format
  */
-export function isStoreChatMode(value: any): value is StoreChatMode {
-  return ['chat', 'chat-only', 'dev', 'image', 'training'].includes(value);
-}
+export const storeModeToSupabaseMode = (mode: ChatMode | string): ChatMode => {
+  // Normalize any store-specific formats to the Supabase format
+  const modeMap: Record<string, ChatMode> = {
+    'chat': 'chat',
+    'dev': 'dev',
+    'developer': 'dev',
+    'standard': 'chat',
+    'image': 'image',
+    'training': 'training',
+    'planning': 'planning',
+    'code': 'code'
+  };
+  
+  // Return the mapped value if it exists, otherwise return the original mode or fallback
+  const normalizedMode = (modeMap[mode] || mode) as ChatMode;
+  
+  // Validate that the result is a valid ChatMode
+  if (!isValidChatMode(normalizedMode)) {
+    console.warn(`Invalid chat mode: ${mode}, falling back to 'chat'`);
+    return 'chat';
+  }
+  
+  return normalizedMode;
+};
 
 /**
- * Type guard to check if a value is a valid SupabaseChatMode
+ * Validates that a string is a valid ChatMode
  */
-export function isSupabaseChatMode(value: any): value is SupabaseChatMode {
-  return ['chat', 'chat-only', 'dev', 'image', 'training', 'standard', 'developer'].includes(value);
-}
+export const isValidChatMode = (mode: string): mode is ChatMode => {
+  return ['chat', 'dev', 'image', 'training', 'planning', 'code'].includes(mode as ChatMode);
+};
