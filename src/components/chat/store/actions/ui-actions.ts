@@ -3,13 +3,19 @@ import { StateCreator } from 'zustand';
 import { ChatState } from '../types/chat-store-types';
 import { logger } from '@/services/chat/LoggingService';
 
+type SetState<T> = (
+  partial: T | Partial<T> | ((state: T) => T | Partial<T>),
+  replace?: boolean,
+  action?: { type: string; [key: string]: any }
+) => void;
+
 export const createUIActions = <T extends ChatState>(
-  set: StateCreator<T>['setState'],
+  set: SetState<T>,
   get: () => T
 ) => ({
   toggleMinimize: () => {
     const isMinimized = !get().isMinimized;
-    set({ isMinimized }, false, { 
+    set({ isMinimized } as Partial<T>, false, { 
       type: 'chat/toggleMinimize',
       isMinimized
     });
@@ -18,7 +24,7 @@ export const createUIActions = <T extends ChatState>(
   
   toggleChat: () => {
     const isOpen = !get().isOpen;
-    set({ isOpen }, false, { 
+    set({ isOpen } as Partial<T>, false, { 
       type: 'chat/toggleChat',
       isOpen
     });
@@ -26,18 +32,18 @@ export const createUIActions = <T extends ChatState>(
   },
   
   closeChat: () => {
-    set({ isOpen: false }, false, { type: 'chat/closeChat' });
+    set({ isOpen: false } as Partial<T>, false, { type: 'chat/closeChat' });
     logger.info('Chat closed');
   },
   
   openChat: () => {
-    set({ isOpen: true }, false, { type: 'chat/openChat' });
+    set({ isOpen: true } as Partial<T>, false, { type: 'chat/openChat' });
     logger.info('Chat opened');
   },
   
   toggleSidebar: () => {
     const showSidebar = !get().showSidebar;
-    set({ showSidebar }, false, { 
+    set({ showSidebar } as Partial<T>, false, { 
       type: 'chat/toggleSidebar',
       showSidebar
     });
@@ -50,7 +56,7 @@ export const createUIActions = <T extends ChatState>(
         ...state.ui,
         sessionLoading: loading
       }
-    }), false, { type: 'chat/setSessionLoading', loading });
+    }) as Partial<T>, false, { type: 'chat/setSessionLoading', loading });
     logger.info(`Session loading state set to ${loading}`);
   },
   
@@ -60,7 +66,7 @@ export const createUIActions = <T extends ChatState>(
         ...state.ui,
         messageLoading: loading
       }
-    }), false, { type: 'chat/setMessageLoading', loading });
+    }) as Partial<T>, false, { type: 'chat/setMessageLoading', loading });
     logger.info(`Message loading state set to ${loading}`);
   },
   
@@ -70,12 +76,12 @@ export const createUIActions = <T extends ChatState>(
         ...state.ui,
         providerLoading: loading
       }
-    }), false, { type: 'chat/setProviderLoading', loading });
+    }) as Partial<T>, false, { type: 'chat/setProviderLoading', loading });
     logger.info(`Provider loading state set to ${loading}`);
   },
   
   setWaitingForResponse: (waiting: boolean) => {
-    set({ isWaitingForResponse: waiting }, false, { 
+    set({ isWaitingForResponse: waiting } as Partial<T>, false, { 
       type: 'chat/setWaitingForResponse', 
       waiting 
     });

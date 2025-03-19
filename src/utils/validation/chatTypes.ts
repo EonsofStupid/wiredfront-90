@@ -13,10 +13,10 @@ export const chatModeSchema = z.custom<ChatMode>(
 // Message role validation schema
 export const messageRoleSchema = z.enum(['user', 'assistant', 'system'] as [MessageRole, ...MessageRole[]]);
 
-// Message status validation schema
+// Message status validation schema - ensure the array matches the type
 export const messageStatusSchema = z.enum([
-  'pending', 'sent', 'delivered', 'read', 'error'
-] as [MessageStatus, ...MessageStatus[]]);
+  'pending', 'sent', 'delivered', 'read', 'error', 'failed', 'cached'
+] as const);
 
 // Error types for validation failures
 export type ChatTypeError = {
