@@ -1,38 +1,43 @@
 
-import { ChatMode, isChatMode, normalizeChatMode } from '@/types/chat';
+import { ChatMode, isChatMode } from '@/types/chat/modes';
 
 /**
- * Converts a Supabase chat mode to our internal store mode format
+ * Convert a Supabase mode to a store-compatible mode
  */
-export const supabaseModeToStoreMode = (mode: string | null | undefined): ChatMode => {
-  return normalizeChatMode(mode);
-};
-
-/**
- * Converts our internal store mode to the Supabase format
- */
-export const storeModeToSupabaseMode = (mode: string | null | undefined): string => {
-  if (!mode) return 'chat';
-  
-  // Normalize any store-specific formats to the Supabase format
-  const modeMap: Record<string, string> = {
-    'chat': 'chat',
-    'dev': 'dev',
-    'developer': 'dev',
+export function supabaseModeToStoreMode(mode: string): ChatMode {
+  // Map database mode values to store mode values
+  const modeMap: Record<string, ChatMode> = {
     'standard': 'chat',
-    'image': 'image',
-    'training': 'training',
-    'planning': 'planning',
-    'code': 'code'
+    'developer': 'dev'
   };
   
-  // Return the mapped value if it exists, otherwise return the original mode
-  return modeMap[mode] || mode;
-};
+  // If it's already a valid mode, return it or its mapped value
+  if (isChatMode(mode)) {
+    return mode;
+  }
+  
+  // Check if there's a mapping
+  if (mode in modeMap) {
+    return modeMap[mode];
+  }
+  
+  // Default fallback
+  return 'chat';
+}
 
 /**
- * Validates that a string is a valid ChatMode
+ * Convert a store mode to a Supabase-compatible mode
  */
-export const isValidChatMode = (mode: unknown): mode is ChatMode => {
-  return isChatMode(mode);
-};
+export function storeModeToSupabaseMode(mode: ChatMode): string {
+  // Map store mode values to database mode values
+  const modeMap: Record<ChatMode, string> = {
+    'chat': 'chat',
+    'dev': 'dev',
+    'image': 'image',
+    'training': 'training',
+    'code': 'code',
+    'planning': 'planning'
+  };
+  
+  return modeMap[mode] || 'chat';
+}

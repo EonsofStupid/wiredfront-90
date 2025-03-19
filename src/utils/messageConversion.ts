@@ -1,3 +1,4 @@
+
 import { DBMessage, Message, MessageRole, MessageStatus } from '@/types/chat/messages';
 import { Json } from '@/integrations/supabase/types';
 
@@ -26,6 +27,21 @@ export function dbMessageToMessage(dbMessage: any): Message {
  * Convert application message to database format
  */
 export function messageToDbMessage(message: Message): Partial<DBMessage> {
+  // Ensure metadata is JSON-compatible
+  let safeMetadata = message.metadata;
+  
+  // Convert metadata to a safe format for database
+  if (typeof message.metadata === 'object' && message.metadata !== null) {
+    try {
+      // Test if it's valid by stringifying
+      JSON.stringify(message.metadata);
+      safeMetadata = message.metadata;
+    } catch (e) {
+      // If not valid JSON, provide a default
+      safeMetadata = {};
+    }
+  }
+  
   return {
     id: message.id,
     session_id: message.session_id,
@@ -33,7 +49,7 @@ export function messageToDbMessage(message: Message): Partial<DBMessage> {
     role: message.role,
     content: message.content,
     status: message.message_status || message.status,
-    metadata: message.metadata as unknown as Json,
+    metadata: safeMetadata as unknown as Json,
     created_at: message.created_at,
     updated_at: message.updated_at,
     position_order: message.position_order,

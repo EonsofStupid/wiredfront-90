@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Message, MessageRole, MessageStatus } from '@/types/chat/messages';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
+import { messageToDbMessage } from '@/utils/messageConversion';
 
 interface MessageState {
   messages: Message[];
@@ -157,13 +158,17 @@ export const useChatMessageStore = create<MessageStore>()(
               user_id: user.id,
             });
             
-            // Update session last_accessed timestamp
+            // Update session last_accessed timestamp using a parameterized RPC call
+            await supabase.rpc('increment_count', { 
+              table_name: 'chat_sessions',
+              id_value: sessionId,
+              column_name: 'message_count' 
+            });
+            
+            // Also update the last accessed time
             await supabase
               .from('chat_sessions')
-              .update({ 
-                last_accessed: timestamp,
-                message_count: supabase.rpc('increment_count', { table_name: 'chat_sessions', id_value: sessionId, column_name: 'message_count' })
-              })
+              .update({ last_accessed: timestamp })
               .eq('id', sessionId);
             
             return data.id;
