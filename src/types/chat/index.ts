@@ -8,6 +8,12 @@ export * from './core';
 export * from './database';
 export * from './ui';
 export * from './store';
+export * from './messages';
+export * from './modes';
+export * from './sessions';
+export * from './preferences';
+export * from './layout';
+export * from './docking';
 
 // Additional helper types
 export type ConnectionState = 'connected' | 'connecting' | 'disconnected' | 'error';
