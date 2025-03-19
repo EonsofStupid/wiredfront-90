@@ -1,13 +1,13 @@
 
 import React, { Suspense, lazy, useState } from "react";
 import { SessionControls } from "./SessionControls";
-import { useSessionManager } from "@/hooks/sessions"; // Updated import
+import { useSessionManager } from "@/hooks/sessions/useSessionManager";
 import { SessionHeader } from "./SessionHeader";
 import { useChatStore } from "../store/chatStore";
 import { useChatModeStore } from "../store/chatModeStore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useErrorBoundary } from "../hooks/useErrorBoundary";
-import { ChatMode } from "@/types/chat";
+import { ChatMode } from "@/types/chat/modes";
 import { ModeSelectionDialog } from "../SessionManagement/ModeSelectionDialog";
 
 // Lazy load SessionList for performance
@@ -51,6 +51,7 @@ export const ChatSidebar = () => {
     
     // Create a new session with the selected mode
     await createSession({
+      title: `New ${mode.charAt(0).toUpperCase() + mode.slice(1)} Chat`,
       metadata: {
         mode,
         providerId

@@ -40,7 +40,7 @@ export const useChatMessageStore = create<MessageStore>()(
             ...message,
             id,
             timestamp,
-            message_status: message.message_status || message.status || 'sent',
+            message_status: message.message_status || 'sent',
           };
           
           set((state) => ({
@@ -88,7 +88,7 @@ export const useChatMessageStore = create<MessageStore>()(
                 role: msg.role as MessageRole,
                 content: msg.content,
                 message_status: msg.status as MessageStatus,
-                metadata: msg.metadata || {},
+                metadata: typeof msg.metadata === 'object' ? msg.metadata : {},
                 created_at: msg.created_at,
                 updated_at: msg.updated_at,
                 timestamp: msg.created_at,
@@ -158,7 +158,7 @@ export const useChatMessageStore = create<MessageStore>()(
               user_id: user.id,
             });
             
-            // Update session last_accessed timestamp using a parameterized RPC call
+            // Update session using a custom function call
             await supabase.rpc('increment_count', { 
               table_name: 'chat_sessions',
               id_value: sessionId,

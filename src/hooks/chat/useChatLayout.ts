@@ -1,11 +1,10 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useChatLayoutStore } from '@/components/chat/store/chatLayoutStore';
-import { ChatPosition, ChatUIPreferences } from '@/types/chat/ui';
-import { logger } from '@/services/chat/LoggingService';
+import { toast } from 'sonner';
 
 /**
- * Hook for managing chat layout preferences with persistence
+ * Hook for accessing and managing chat layout state
  */
 export function useChatLayout() {
   const {
@@ -14,6 +13,7 @@ export function useChatLayout() {
     position,
     scale,
     showSidebar,
+    dockedItems,
     uiPreferences,
     setMinimized,
     toggleMinimized,
@@ -23,97 +23,100 @@ export function useChatLayout() {
     setScale,
     toggleSidebar,
     setSidebar,
+    setDockedItem,
     updateUIPreferences,
     saveLayoutToStorage,
-    loadLayoutFromStorage
+    loadLayoutFromStorage,
+    resetLayout
   } = useChatLayoutStore();
-  
-  const [isLoaded, setIsLoaded] = useState(false);
-  
-  // Load saved layout on mount
+
+  // Save layout changes to storage
   useEffect(() => {
-    if (!isLoaded) {
-      loadLayoutFromStorage()
-        .then(success => {
-          setIsLoaded(true);
-          if (!success) {
-            logger.info('No saved layout found, using defaults');
-          }
-        })
-        .catch(error => {
-          logger.error('Error loading layout', { error });
-          setIsLoaded(true);
-        });
+    const saveTimeout = setTimeout(() => {
+      saveLayoutToStorage().catch(error => {
+        console.error('Failed to save layout:', error);
+      });
+    }, 1000);
+
+    return () => clearTimeout(saveTimeout);
+  }, [isMinimized, docked, position, scale, showSidebar, dockedItems, uiPreferences, saveLayoutToStorage]);
+
+  /**
+   * Save current layout with custom logic
+   */
+  const saveCurrentLayout = async () => {
+    try {
+      await saveLayoutToStorage();
+      toast.success('Layout saved');
+      return true;
+    } catch (error) {
+      toast.error('Failed to save layout');
+      console.error('Error saving layout:', error);
+      return false;
     }
-  }, [isLoaded, loadLayoutFromStorage]);
-  
-  // Save layout changes
-  const saveLayout = async () => {
-    const success = await saveLayoutToStorage();
-    return success;
   };
-  
-  // Save on important changes
-  useEffect(() => {
-    if (isLoaded) {
-      const saveTimer = setTimeout(() => {
-        saveLayout();
-      }, 1000);
-      
-      return () => clearTimeout(saveTimer);
-    }
-  }, [isLoaded, docked, isMinimized, position, uiPreferences]);
-  
-  // Handle window resizing
-  useEffect(() => {
-    const handleResize = () => {
-      // If window is smaller than 768px, ensure proper mobile layout
-      if (window.innerWidth < 768 && !docked) {
-        setDocked(true);
-      }
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [docked, setDocked]);
-  
+
+  /**
+   * Reset layout with custom logic
+   */
+  const resetLayoutWithConfirmation = async () => {
+    resetLayout();
+    await saveLayoutToStorage();
+    toast.success('Layout reset to defaults');
+    return true;
+  };
+
+  /**
+   * Update theme
+   */
+  const setTheme = (theme: string) => {
+    updateUIPreferences({ theme });
+  };
+
+  /**
+   * Update font size
+   */
+  const setFontSize = (fontSize: string) => {
+    updateUIPreferences({ fontSize });
+  };
+
+  /**
+   * Change UI preference
+   */
+  const setUIPreference = <K extends keyof typeof uiPreferences>(
+    key: K,
+    value: typeof uiPreferences[K]
+  ) => {
+    updateUIPreferences({ [key]: value } as any);
+  };
+
   return {
-    // State values
+    // State
     isMinimized,
     docked,
     position,
     scale,
     showSidebar,
+    dockedItems,
     uiPreferences,
     
-    // Simple actions
+    // Basic actions
     setMinimized,
     toggleMinimized,
     setDocked,
     toggleDocked,
-    setSidebar,
-    toggleSidebar,
-    
-    // Complex setters
     setPosition,
     setScale,
-    updateUIPreferences,
+    toggleSidebar,
+    setSidebar,
+    setDockedItem,
     
-    // Wrapper for safer position setting
-    updatePosition: (newPosition: Partial<ChatPosition>) => {
-      setPosition({
-        x: newPosition.x !== undefined ? newPosition.x : position.x,
-        y: newPosition.y !== undefined ? newPosition.y : position.y
-      });
-    },
-    
-    // Theme helpers
-    setTheme: (theme: ChatUIPreferences['theme']) => {
-      updateUIPreferences({ theme });
-    },
-    
-    // Save manually
-    saveLayout
+    // Enhanced actions
+    saveCurrentLayout,
+    resetLayoutWithConfirmation,
+    setTheme,
+    setFontSize,
+    setUIPreference
   };
 }
 

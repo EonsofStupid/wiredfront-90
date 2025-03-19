@@ -4,7 +4,6 @@ export type { Tables } from './tables';
 export type { 
   MessageType, 
   SettingType, 
-  ChatMode, 
   TokenEnforcementMode, 
   AppRole,
   ChatFeatureKey,

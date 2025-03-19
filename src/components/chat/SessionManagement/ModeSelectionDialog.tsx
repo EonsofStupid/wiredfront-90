@@ -3,7 +3,7 @@ import React from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Brain, Code, ImageIcon, Zap, MessageSquare } from "lucide-react";
-import { ChatMode } from "@/types/chat";
+import { ChatMode } from "@/types/chat/modes";
 import { useChatModeStore } from "../store/chatModeStore";
 
 type ModeOption = {
@@ -134,3 +134,5 @@ export function ModeSelectionDialog({
     </Dialog>
   );
 }
+
+export { type ChatMode };

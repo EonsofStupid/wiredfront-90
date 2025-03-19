@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { Message, MessageStatus } from '@/types/chat';
+import { Message, MessageStatus } from '@/types/chat/messages';
 import { User, Bot, ArrowRight, Sparkles, Terminal, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
+import { formatMessageTimestamp } from '@/utils/messageConversion';
 
 interface ChatMessageProps {
   message: Message;
@@ -17,7 +18,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast, onRetry }) =
   const isSystem = message.role === 'system';
   
   // Get message status, handle both property names for backward compatibility
-  const messageStatus = message.message_status || message.status || 'sent';
+  const messageStatus = message.message_status || 'sent';
   const isStreaming = messageStatus === 'pending';
   
   // Get timestamp from any of the possible timestamp fields
@@ -80,7 +81,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isLast, onRetry }) =
         <div className="text-xs opacity-50 mt-1 flex items-center justify-end gap-1">
           {isUser && <ArrowRight className="h-3 w-3" />}
           {messageStatus === 'pending' && <Clock className="h-3 w-3 animate-spin" />}
-          {new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {formatMessageTimestamp(timestamp)}
           {!isUser && !isSystem && <Sparkles className="h-3 w-3 ml-1" />}
         </div>
       </div>

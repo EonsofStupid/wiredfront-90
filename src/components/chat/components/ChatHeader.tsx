@@ -1,6 +1,8 @@
 
 import React, { useState } from 'react';
 import { useChatStore } from '../store/chatStore';
+import { useChatMode } from '@/hooks/chat/useChatMode';
+import { useChatLayoutStore } from '@/components/chat/store/chatLayoutStore';
 import { Button } from '@/components/ui/button';
 import { 
   Minimize2, 
@@ -17,8 +19,6 @@ import {
   Pin,
   PinOff
 } from 'lucide-react';
-import { ChatPositionToggle } from './ChatPositionToggle';
-import { AIProviderStatusDialog } from '../features/status-button/AIProviderStatusDialog';
 import '../styles/cyber-theme.css';
 
 interface ChatHeaderProps {
@@ -28,15 +28,17 @@ interface ChatHeaderProps {
 
 export function ChatHeader({ onToggleSidebar, onOpenModeSelector }: ChatHeaderProps) {
   const { 
-    toggleMinimize, 
-    isMinimized, 
-    closeChat, 
-    currentMode, 
-    currentProvider,
-    availableProviders,
-    docked,
-    toggleDocked
+    isWaitingForResponse,
+    currentProvider 
   } = useChatStore();
+  
+  const { currentMode } = useChatMode();
+  const { 
+    isMinimized, 
+    toggleMinimized, 
+    docked, 
+    toggleDocked
+  } = useChatLayoutStore();
   
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   
@@ -47,6 +49,10 @@ export function ChatHeader({ onToggleSidebar, onOpenModeSelector }: ChatHeaderPr
       case 'training': return <BookOpen className="h-4 w-4 text-purple-400" />;
       default: return <Zap className="h-4 w-4 text-cyan-400" />;
     }
+  };
+  
+  const handleCloseChat = () => {
+    // Close chat functionality
   };
   
   return (
@@ -83,61 +89,32 @@ export function ChatHeader({ onToggleSidebar, onOpenModeSelector }: ChatHeaderPr
           size="sm"
           className="ml-2 h-8 text-xs chat-control-button"
           onClick={() => setStatusDialogOpen(true)}
-          aria-label="AI Provider status"
+          aria-label="AI Provider Status"
         >
           <span className="flex items-center gap-1">
-            <div className="h-2 w-2 rounded-full bg-green-500"></div>
-            <span className="cyber-glitch" data-text={currentProvider?.name || 'AI'}>{currentProvider?.name || 'AI Provider'}</span>
+            <Database className="h-3 w-3 text-green-400" />
+            <span>{currentProvider?.name || 'Default'}</span>
           </span>
         </Button>
       </div>
       
-      <div className="flex items-center space-x-1">
+      <div className="flex items-center">
         <Button
           variant="ghost"
           size="icon"
-          className="chat-control-button h-8 w-8 hover:text-pink-400 hover:bg-pink-400/10"
-          aria-label="GitHub"
-        >
-          <Github className="h-4 w-4" />
-        </Button>
-        
-        <Button
-          variant="ghost"
-          size="icon"
-          className="chat-control-button h-8 w-8 hover:text-purple-400 hover:bg-purple-400/10"
-          aria-label="Notifications"
-        >
-          <Bell className="h-4 w-4" />
-        </Button>
-        
-        <Button
-          variant="ghost"
-          size="icon"
-          className="chat-control-button h-8 w-8 hover:text-cyan-400 hover:bg-cyan-400/10"
-          aria-label="Knowledge Base"
-        >
-          <Database className="h-4 w-4" />
-        </Button>
-        
-        <Button
-          variant="ghost"
-          size="icon"
-          className="chat-control-button h-8 w-8 hover:text-blue-400 hover:bg-blue-400/10"
+          className="chat-control-button h-8 w-8"
           onClick={toggleDocked}
           aria-label={docked ? "Undock chat" : "Dock chat"}
         >
           {docked ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
         </Button>
         
-        <ChatPositionToggle />
-        
         <Button
           variant="ghost"
           size="icon"
-          className="chat-control-button h-8 w-8 hover:text-yellow-400 hover:bg-yellow-400/10"
-          onClick={toggleMinimize}
-          aria-label={isMinimized ? "Maximize" : "Minimize"}
+          className="chat-control-button h-8 w-8"
+          onClick={toggleMinimized}
+          aria-label={isMinimized ? "Maximize chat" : "Minimize chat"}
         >
           {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
         </Button>
@@ -145,20 +122,13 @@ export function ChatHeader({ onToggleSidebar, onOpenModeSelector }: ChatHeaderPr
         <Button
           variant="ghost"
           size="icon"
-          className="chat-control-button h-8 w-8 hover:bg-red-500/20 hover:text-red-400"
-          onClick={closeChat}
+          className="chat-control-button h-8 w-8 text-red-400 hover:bg-red-400/10"
+          onClick={handleCloseChat}
           aria-label="Close chat"
         >
           <X className="h-4 w-4" />
         </Button>
       </div>
-      
-      <AIProviderStatusDialog
-        open={statusDialogOpen}
-        onOpenChange={setStatusDialogOpen}
-        providers={availableProviders}
-        currentProvider={currentProvider}
-      />
     </div>
   );
 }
