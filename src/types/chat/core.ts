@@ -3,13 +3,13 @@
  * Core type definitions for the chat system
  */
 
-// Base message role type
+// Base message role type - must match database enum
 export type MessageRole = 'user' | 'assistant' | 'system';
 
-// Message status for tracking delivery state
+// Message status for tracking delivery state - must match database enum
 export type MessageStatus = 'pending' | 'sent' | 'delivered' | 'read' | 'error' | 'failed' | 'cached';
 
-// Chat mode types - these must match the database enum
+// Chat mode types - these must match the database enum exactly
 export type ChatMode = 
   | 'chat'     // Standard chat mode
   | 'dev'      // Developer assistance mode
