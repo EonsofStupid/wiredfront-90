@@ -11,6 +11,10 @@
     "type-check": "tsc --noEmit",
     "generate-barrels": "tsx scripts/generate-barrels.ts",
     "test": "vitest"
+    "build:dev": "vite build --mode development"
+  }
+}
+
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
