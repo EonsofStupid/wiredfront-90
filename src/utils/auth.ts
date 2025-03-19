@@ -28,3 +28,21 @@ export const getLoginRedirectUrl = () => {
   }
   return currentPath;
 };
+
+export const checkAuth = () => {
+  // Add your auth check logic here
+  return true;
+};
+
+export const getAuthToken = () => {
+  // Add your token retrieval logic here
+  return null;
+};
+
+export const setAuthToken = (token: string) => {
+  // Add your token setting logic here
+};
+
+export const removeAuthToken = () => {
+  // Add your token removal logic here
+};
