@@ -1,4 +1,3 @@
-
 /**
  * Central export file for all store-related types
  */
@@ -15,3 +14,6 @@ export * from './ui';
 
 // Re-export chat store types
 export * from './chat/types';
+
+// Re-export vector store types
+export * from './features/vector/types';

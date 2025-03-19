@@ -8,7 +8,7 @@ export * from './auth';
 export * from './data';
 export * from './settings';
 export * from './ui';
-export * from './vectordb';
+export * from './features/vector'; // Updated path
 export * from './session';
 export * from './core';
 
