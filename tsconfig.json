@@ -1,12 +1,11 @@
 {
- {
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
-<<<<<<< HEAD
+    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
@@ -16,7 +15,6 @@
     "noImplicitAny": true,
     "noImplicitThis": true,
     "noImplicitReturns": true,
-    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
@@ -25,13 +23,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@/components/*": ["src/components/*"],
-      "@/hooks/*": ["src/hooks/*"],
       "@/stores/*": ["src/stores/*"],
-      "@/types/*": ["src/types/*"],
-      "@/services/*": ["src/services/*"],
-      "@/utils/*": ["src/utils/*"],
-      "@/lib/*": ["src/lib/*"],
-      "@/integrations/*": ["src/integrations/*"]
+      "@/hooks/*": ["src/hooks/*"]
     },
     "types": ["vite/client", "node"],
     "typeRoots": [
@@ -57,31 +50,4 @@
     "**/*.test.ts"
   ],
   "references": [{ "path": "./tsconfig.node.json" }]
-=======
-    "moduleResolution": "node",
-    "allowJs": true,
-    "jsx": "react-jsx",
-    "strict": true,
-    "noImplicitAny": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "strictNullChecks": false,
-    "forceConsistentCasingInFileNames": true,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"],
-      "@components/*": ["src/components/*"],
-      "@utils/*": ["src/utils/*"],
-      "@hooks/*": ["src/hooks/*"],
-      "@styles/*": ["src/styles/*"],
-      "@assets/*": ["src/assets/*"],
-      "@stores/*": ["src/stores/*"],
-      "@core/*": ["src/core/*"]
-    }
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
->>>>>>> parent of 1800c79 (tsconfig)
 }

@@ -1,20 +1,18 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "composite": true,
     "target": "ES2022",
     "lib": ["ES2023"],
     "module": "ESNext",
-<<<<<<< HEAD
     "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true
-=======
-    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
->>>>>>> parent of 1800c79 (tsconfig)
+    "skipLibCheck": true,
+    "types": ["node"]
   },
   "include": ["vite.config.ts"]
 }
