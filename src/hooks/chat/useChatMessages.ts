@@ -1,9 +1,9 @@
 
 import { useCallback, useEffect, useState } from 'react';
-import { useChatMessageStore } from '@/components/chat/store/chatMessageStore';
+import { useMessages, useMessageActions } from '@/stores';
 import { Message, MessageRole } from '@/types/chat/messages';
-import { useToast } from '@/components/ui/use-toast';
-import { useChatModeStore } from '@/components/chat/store/chatModeStore';
+import { toast } from 'sonner';
+import { useCurrentMode } from '@/stores';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 
@@ -17,14 +17,16 @@ interface UseChatMessagesProps {
  */
 export function useChatMessages({ sessionId, autoSubscribe = true }: UseChatMessagesProps = {}) {
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const { messages, addMessage, updateMessage, removeMessage, sendMessage, fetchMessages, clearMessages, isLoading, error } = useChatMessageStore();
-  const { currentMode } = useChatModeStore();
-  const { toast } = useToast();
+  const allMessages = useMessages();
+  const { addMessage, updateMessage, removeMessage, sendMessage, fetchMessages, clearMessages } = useMessageActions();
+  const currentMode = useCurrentMode();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   
   // Filter messages to current session if sessionId is provided
-  const sessionMessages = sessionId 
-    ? messages.filter(msg => msg.session_id === sessionId)
-    : messages;
+  const messages = sessionId 
+    ? allMessages.filter(msg => msg.session_id === sessionId)
+    : allMessages;
   
   // Subscribe to real-time updates
   useEffect(() => {
@@ -45,7 +47,7 @@ export function useChatMessages({ sessionId, autoSubscribe = true }: UseChatMess
           const newMessage = payload.new as Message;
           
           // Don't add messages we already have (could happen when we're the sender)
-          if (!messages.some(msg => msg.id === newMessage.id)) {
+          if (!allMessages.some(msg => msg.id === newMessage.id)) {
             addMessage(newMessage);
           }
         }
@@ -65,20 +67,25 @@ export function useChatMessages({ sessionId, autoSubscribe = true }: UseChatMess
       setIsSubscribed(false);
       logger.info(`Unsubscribed from messages for session ${sessionId}`);
     };
-  }, [sessionId, autoSubscribe, addMessage, messages]);
+  }, [sessionId, autoSubscribe, addMessage, allMessages]);
   
   // Load messages on session change
   useEffect(() => {
     if (sessionId) {
-      fetchMessages(sessionId).catch(err => {
-        toast({
-          title: 'Error loading messages',
-          description: err.message,
-          variant: 'destructive',
+      setIsLoading(true);
+      fetchMessages(sessionId)
+        .then(() => setIsLoading(false))
+        .catch(err => {
+          setError(err as Error);
+          setIsLoading(false);
+          toast({
+            title: 'Error loading messages',
+            description: err.message,
+            variant: 'destructive',
+          });
         });
-      });
     }
-  }, [sessionId, fetchMessages, toast]);
+  }, [sessionId, fetchMessages]);
   
   // Send a message with the current session
   const sendMessageToCurrentSession = useCallback(async (
@@ -86,29 +93,33 @@ export function useChatMessages({ sessionId, autoSubscribe = true }: UseChatMess
     role: MessageRole = 'user'
   ) => {
     if (!sessionId) {
+      const error = new Error('No active session');
       toast({
         title: 'No active session',
         description: 'Cannot send message without an active chat session',
         variant: 'destructive',
       });
-      throw new Error('No active session');
+      setError(error);
+      throw error;
     }
     
     try {
       return await sendMessage(content, sessionId, role);
     } catch (err) {
+      const error = err as Error;
+      setError(error);
       toast({
         title: 'Failed to send message',
-        description: err.message,
+        description: error.message,
         variant: 'destructive',
       });
       throw err;
     }
-  }, [sessionId, sendMessage, toast]);
+  }, [sessionId, sendMessage]);
   
   // Retry sending a failed message
   const retryMessage = useCallback(async (messageId: string) => {
-    const message = messages.find(msg => msg.id === messageId);
+    const message = allMessages.find(msg => msg.id === messageId);
     if (!message || message.message_status !== 'failed') return;
     
     // Update status to pending
@@ -133,10 +144,10 @@ export function useChatMessages({ sessionId, autoSubscribe = true }: UseChatMess
       updateMessage(messageId, { message_status: 'failed' });
       throw err;
     }
-  }, [messages, updateMessage, sendMessage, removeMessage, sessionId]);
+  }, [allMessages, updateMessage, sendMessage, removeMessage, sessionId]);
   
   return {
-    messages: sessionMessages,
+    messages,
     sendMessage: sendMessageToCurrentSession,
     retryMessage,
     clearMessages,

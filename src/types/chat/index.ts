@@ -8,6 +8,8 @@ export * from './modes';
 export * from './messages';
 export * from './sessions';
 export * from './ui';
+export * from './layout';
+export * from './docking';
 
 // Additional helper types
 export type ConnectionState = 'connected' | 'connecting' | 'disconnected' | 'error';

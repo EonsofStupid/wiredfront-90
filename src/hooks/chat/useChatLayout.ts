@@ -1,122 +1,59 @@
 
-import { useEffect } from 'react';
-import { useChatLayoutStore } from '@/components/chat/store/chatLayoutStore';
-import { toast } from 'sonner';
+import { useJotaiChatLayout } from './useJotaiChatLayout';
+import { useJotaiChatDocking } from './useJotaiChatDocking';
 
 /**
- * Hook for accessing and managing chat layout state
+ * Combined hook for accessing and managing all chat layout state
+ * This provides backward compatibility with the existing useChatLayout API
  */
 export function useChatLayout() {
-  const {
-    isMinimized,
-    docked,
-    position,
-    scale,
-    showSidebar,
-    dockedItems,
-    uiPreferences,
-    setMinimized,
-    toggleMinimized,
-    setDocked,
-    toggleDocked,
-    setPosition,
-    setScale,
-    toggleSidebar,
-    setSidebar,
-    setDockedItem,
-    updateUIPreferences,
-    saveLayoutToStorage,
-    loadLayoutFromStorage,
-    resetLayout
-  } = useChatLayoutStore();
-
-  // Save layout changes to storage
-  useEffect(() => {
-    const saveTimeout = setTimeout(() => {
-      saveLayoutToStorage().catch(error => {
-        console.error('Failed to save layout:', error);
-      });
-    }, 1000);
-
-    return () => clearTimeout(saveTimeout);
-  }, [isMinimized, docked, position, scale, showSidebar, dockedItems, uiPreferences, saveLayoutToStorage]);
-
-  /**
-   * Save current layout with custom logic
-   */
-  const saveCurrentLayout = async () => {
-    try {
-      await saveLayoutToStorage();
-      toast.success('Layout saved');
-      return true;
-    } catch (error) {
-      toast.error('Failed to save layout');
-      console.error('Error saving layout:', error);
-      return false;
-    }
-  };
-
-  /**
-   * Reset layout with custom logic
-   */
-  const resetLayoutWithConfirmation = async () => {
-    resetLayout();
-    await saveLayoutToStorage();
-    toast.success('Layout reset to defaults');
-    return true;
-  };
-
-  /**
-   * Update theme
-   */
-  const setTheme = (theme: string) => {
-    updateUIPreferences({ theme });
-  };
-
-  /**
-   * Update font size
-   */
-  const setFontSize = (fontSize: string) => {
-    updateUIPreferences({ fontSize });
-  };
-
-  /**
-   * Change UI preference
-   */
-  const setUIPreference = <K extends keyof typeof uiPreferences>(
-    key: K,
-    value: typeof uiPreferences[K]
-  ) => {
-    updateUIPreferences({ [key]: value } as any);
-  };
+  const layout = useJotaiChatLayout();
+  const docking = useJotaiChatDocking();
 
   return {
-    // State
-    isMinimized,
-    docked,
-    position,
-    scale,
-    showSidebar,
-    dockedItems,
-    uiPreferences,
+    // Layout state
+    isMinimized: layout.isMinimized,
+    scale: layout.scale,
+    showSidebar: layout.showSidebar,
+    uiPreferences: layout.uiPreferences,
     
-    // Basic actions
-    setMinimized,
-    toggleMinimized,
-    setDocked,
-    toggleDocked,
-    setPosition,
-    setScale,
-    toggleSidebar,
-    setSidebar,
-    setDockedItem,
+    // Docking state
+    docked: docking.docked,
+    position: docking.position,
+    dockedItems: docking.dockedItems,
+    
+    // Layout actions
+    setMinimized: layout.setMinimized,
+    toggleMinimized: layout.toggleMinimized,
+    setScale: layout.setScale,
+    toggleSidebar: layout.toggleSidebar,
+    setSidebar: layout.setSidebar,
+    
+    // Docking actions
+    setDocked: docking.setDocked,
+    toggleDocked: docking.toggleDocked,
+    setPosition: docking.setPosition,
+    setDockedItem: docking.setDockedItem,
     
     // Enhanced actions
-    saveCurrentLayout,
-    resetLayoutWithConfirmation,
-    setTheme,
-    setFontSize,
-    setUIPreference
+    saveCurrentLayout: layout.saveCurrentLayout,
+    resetLayoutWithConfirmation: layout.resetLayoutWithConfirmation,
+    setTheme: layout.setTheme,
+    setFontSize: layout.setFontSize,
+    setUIPreference: layout.setUIPreference,
+    saveLayoutToStorage: () => Promise.all([
+      layout.saveCurrentLayout(),
+      docking.saveCurrentDocking()
+    ]).then(() => true).catch(() => false),
+    loadLayoutFromStorage: () => Promise.all([
+      Promise.resolve(true), // This is already handled in the individual hooks
+      Promise.resolve(true)
+    ]).then(() => true).catch(() => false),
+    resetLayout: async () => {
+      await layout.resetLayoutWithConfirmation();
+      await docking.resetDockingWithConfirmation();
+      return true;
+    }
   };
 }
 

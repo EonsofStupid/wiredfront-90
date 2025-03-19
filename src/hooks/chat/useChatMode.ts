@@ -1,6 +1,6 @@
 
 import { useEffect } from 'react';
-import { useChatModeStore } from '@/components/chat/store/chatModeStore';
+import { useCurrentMode, useModeActions } from '@/stores';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChatMode } from '@/types/chat/modes';
 import { logger } from '@/services/chat/LoggingService';
@@ -9,7 +9,8 @@ import { logger } from '@/services/chat/LoggingService';
  * Hook for accessing and managing chat mode with routing integration
  */
 export function useChatMode() {
-  const { currentMode, setCurrentMode, isModeSupported } = useChatModeStore();
+  const currentMode = useCurrentMode();
+  const { setCurrentMode, isModeSupported, updateSessionMode } = useModeActions();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -64,7 +65,8 @@ export function useChatMode() {
     currentMode,
     setMode,
     getModeLabel,
-    isModeSupported
+    isModeSupported,
+    updateSessionMode
   };
 }
 
