@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
     "generate-barrels": "tsx scripts/generate-barrels.ts",
+<<<<<<< HEAD
 <<<<<<< Updated upstream
     "test": "vitest"
     "build:dev": "vite build --mode development"
@@ -20,6 +21,10 @@
     "test": "vitest",
     "test:coverage": "vitest run --coverage"
 >>>>>>> Stashed changes
+=======
+    "test": "vitest",
+    "test:coverage": "vitest run --coverage"
+>>>>>>> parent of af41370 (packages)
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
