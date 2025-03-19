@@ -4,9 +4,11 @@ import { SessionControls } from "./SessionControls";
 import { useSessionManager } from "@/hooks/sessions"; // Updated import
 import { SessionHeader } from "./SessionHeader";
 import { useChatStore } from "../store/chatStore";
+import { useChatModeStore } from "../store/chatModeStore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useErrorBoundary } from "../hooks/useErrorBoundary";
-import { ChatMode, ModeSelectionDialog } from "../SessionManagement/ModeSelectionDialog";
+import { ChatMode } from "@/types/chat";
+import { ModeSelectionDialog } from "../SessionManagement/ModeSelectionDialog";
 
 // Lazy load SessionList for performance
 const SessionList = lazy(() => import("./SessionList").then(mod => ({ default: mod.SessionList })));
@@ -23,6 +25,7 @@ export const ChatSidebar = () => {
     isLoading,
   } = useSessionManager();
   const { ui } = useChatStore();
+  const { currentMode, setCurrentMode } = useChatModeStore();
   const { ErrorBoundary } = useErrorBoundary();
   const [modeDialogOpen, setModeDialogOpen] = useState(false);
 
@@ -39,6 +42,20 @@ export const ChatSidebar = () => {
   const handleCreateSession = async () => {
     // Open mode selection dialog instead of directly creating a session
     setModeDialogOpen(true);
+  };
+
+  // Handler for mode selection and session creation
+  const handleCreateWithMode = async (mode: ChatMode, providerId: string) => {
+    // Set the current mode in our global store
+    setCurrentMode(mode, providerId);
+    
+    // Create a new session with the selected mode
+    await createSession({
+      metadata: {
+        mode,
+        providerId
+      }
+    });
   };
 
   // Explicit handlers for different deletion operations
