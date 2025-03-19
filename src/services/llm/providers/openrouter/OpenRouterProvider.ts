@@ -1,47 +1,39 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
-import { LLMProvider } from '../index';
-import { ProviderType } from '@/components/chat/store/types/chat-store-types';
+import { BaseProvider } from '../base/BaseProvider';
+import { ChatOptions } from '@/types/providers/provider-types';
 
-export class OpenRouterProvider implements LLMProvider {
-  id = 'openrouter-default';
-  name = 'OpenRouter';
-  type: ProviderType = 'openrouter';
-  apiKey: string | null = null;
-  
+export class OpenRouterProvider extends BaseProvider {
   constructor() {
-    this.initializeApiKey();
+    super('openrouter-default', 'OpenRouter', 'openrouter', 'chat');
+    
+    // Set OpenRouter specific capabilities
+    this.capabilities = {
+      chat: true,
+      image: false,
+      dev: true,
+      voice: false,
+      streaming: true,
+      rag: true
+    };
+    
+    // Set default model and configuration
+    this.config = {
+      apiKey: null,
+      modelName: 'openai/gpt-4o',
+      options: {
+        temperature: 0.7,
+        maxTokens: 1000
+      }
+    };
   }
   
-  private async initializeApiKey() {
+  async generateText(prompt: string, options: ChatOptions = {}): Promise<string> {
     try {
-      // Try to get the API key from Supabase edge function
-      const { data, error } = await supabase.functions.invoke('get-provider-key', {
-        body: { provider: 'openrouter', keyType: 'chat' }
-      });
-      
-      if (error) {
-        logger.error('Error getting OpenRouter API key', error);
-        return;
-      }
-      
-      if (data?.apiKey) {
-        this.apiKey = data.apiKey;
-        logger.info('OpenRouter API key initialized');
-      } else {
-        logger.warn('No OpenRouter API key found');
-      }
-    } catch (error) {
-      logger.error('Failed to initialize OpenRouter API key', error);
-    }
-  }
-  
-  async generateText(prompt: string, options: any = {}): Promise<string> {
-    try {
-      if (!this.apiKey) {
-        await this.initializeApiKey();
-        if (!this.apiKey) {
+      if (!this.config.apiKey) {
+        await this.initialize();
+        if (!this.config.apiKey) {
           return "Error: OpenRouter API key not configured. Please set OPENROUTER_CHAT_APIKEY.";
         }
       }
@@ -52,9 +44,10 @@ export class OpenRouterProvider implements LLMProvider {
           provider: 'openrouter',
           prompt,
           options: {
-            model: options.model || 'openai/gpt-4o', // Default to GPT-4o through OpenRouter
-            temperature: options.temperature || 0.7,
-            max_tokens: options.maxTokens || 1000,
+            model: options.modelName || this.config.modelName,
+            temperature: options.temperature || this.config.options.temperature,
+            max_tokens: options.maxTokens || this.config.options.maxTokens,
+            systemPrompt: options.systemPrompt || 'You are a helpful assistant.',
             ...options
           }
         }
@@ -65,10 +58,19 @@ export class OpenRouterProvider implements LLMProvider {
         return `Error generating text: ${error.message}`;
       }
       
+      // Track the usage
+      if (data?.usage) {
+        this.trackUsage(
+          'text_generation', 
+          data.usage.total_tokens || 0, 
+          (data.usage.total_tokens || 0) * 0.00001 // Approximate cost calculation
+        );
+      }
+      
       return data?.text || 'No response generated';
     } catch (error) {
       logger.error('Failed to generate text with OpenRouter', error);
-      return `Error: ${error.message}`;
+      return `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
     }
   }
   
@@ -102,5 +104,23 @@ ${contextChunks.join('\n\n')}
 
 Based on the above context, please help with the query.
 `;
+  }
+  
+  async generateCode(prompt: string, options: any = {}): Promise<string> {
+    // For code generation, we use the same API but add code-specific instructions
+    const codePrompt = `Generate code for: ${prompt}
+
+Please follow these guidelines:
+- Write clean, well-commented code
+- Follow best practices for the language
+- Include any necessary imports or setup
+- Explain any complex logic
+`;
+
+    return this.generateText(codePrompt, {
+      systemPrompt: "You are an expert software developer. Provide only code implementations with minimal explanations. Focus on writing clean, efficient, and well-documented code.",
+      temperature: 0.3, // Lower temperature for more deterministic code generation
+      ...options
+    });
   }
 }

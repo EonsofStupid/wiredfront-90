@@ -1,47 +1,39 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
-import { LLMProvider } from '../index';
-import { ProviderType } from '@/components/chat/store/types/chat-store-types';
+import { BaseProvider } from '../base/BaseProvider';
+import { ChatOptions } from '@/types/providers/provider-types';
 
-export class GeminiProvider implements LLMProvider {
-  id = 'gemini-default';
-  name = 'Google Gemini';
-  type: ProviderType = 'gemini';
-  apiKey: string | null = null;
-  
+export class GeminiProvider extends BaseProvider {
   constructor() {
-    this.initializeApiKey();
+    super('gemini-default', 'Google Gemini', 'gemini', 'chat');
+    
+    // Set Gemini specific capabilities
+    this.capabilities = {
+      chat: true,
+      image: false,  // No native image generation yet
+      dev: true,     // Good for code tasks
+      voice: false,  // No native voice support
+      streaming: true,
+      rag: true
+    };
+    
+    // Set default model and configuration
+    this.config = {
+      apiKey: null,
+      modelName: 'gemini-1.5-flash',
+      options: {
+        temperature: 0.7,
+        maxTokens: 1000
+      }
+    };
   }
   
-  private async initializeApiKey() {
+  async generateText(prompt: string, options: ChatOptions = {}): Promise<string> {
     try {
-      // Try to get the API key from Supabase edge function
-      const { data, error } = await supabase.functions.invoke('get-provider-key', {
-        body: { provider: 'gemini', keyType: 'chat' }
-      });
-      
-      if (error) {
-        logger.error('Error getting Gemini API key', error);
-        return;
-      }
-      
-      if (data?.apiKey) {
-        this.apiKey = data.apiKey;
-        logger.info('Gemini API key initialized');
-      } else {
-        logger.warn('No Gemini API key found');
-      }
-    } catch (error) {
-      logger.error('Failed to initialize Gemini API key', error);
-    }
-  }
-  
-  async generateText(prompt: string, options: any = {}): Promise<string> {
-    try {
-      if (!this.apiKey) {
-        await this.initializeApiKey();
-        if (!this.apiKey) {
+      if (!this.config.apiKey) {
+        await this.initialize();
+        if (!this.config.apiKey) {
           return "Error: Gemini API key not configured. Please set GEMINI_CHAT_APIKEY.";
         }
       }
@@ -52,9 +44,10 @@ export class GeminiProvider implements LLMProvider {
           provider: 'gemini',
           prompt,
           options: {
-            model: options.model || 'gemini-1.5-flash', // Default to Gemini 1.5 Flash
-            temperature: options.temperature || 0.7,
-            maxOutputTokens: options.maxTokens || 1000,
+            model: options.modelName || this.config.modelName,
+            temperature: options.temperature || this.config.options.temperature,
+            maxOutputTokens: options.maxTokens || this.config.options.maxTokens,
+            systemPrompt: options.systemPrompt || '',
             ...options
           }
         }
@@ -65,10 +58,13 @@ export class GeminiProvider implements LLMProvider {
         return `Error generating text: ${error.message}`;
       }
       
+      // Track the usage (Gemini doesn't provide detailed token info yet)
+      this.trackUsage('text_generation', 1000, 0.0001); // Approximate usage tracking
+      
       return data?.text || 'No response generated';
     } catch (error) {
       logger.error('Failed to generate text with Gemini', error);
-      return `Error: ${error.message}`;
+      return `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
     }
   }
   
@@ -101,5 +97,23 @@ ${contextChunks.join('\n')}
 
 Based on the above information, please answer this question: ${query}
 `;
+  }
+  
+  async generateCode(prompt: string, options: any = {}): Promise<string> {
+    // For code generation, we use the same API but add code-specific instructions
+    const codePrompt = `Generate code for: ${prompt}
+
+Please follow these guidelines:
+- Write clean, well-commented code
+- Follow best practices for the language
+- Include any necessary imports or setup
+- Explain any complex logic
+`;
+
+    return this.generateText(codePrompt, {
+      systemPrompt: "You are an expert programmer. Focus on writing clean, efficient, and well-documented code that solves the user's problem.",
+      temperature: 0.2, // Lower temperature for more deterministic code generation
+      ...options
+    });
   }
 }

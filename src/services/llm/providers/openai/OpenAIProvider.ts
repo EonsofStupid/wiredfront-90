@@ -1,46 +1,43 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
-import { LLMProvider } from '../index';
-import { ProviderType } from '@/components/chat/store/types/chat-store-types';
+import { BaseProvider } from '../base/BaseProvider';
+import { ChatOptions, ImageOptions } from '@/types/providers/provider-types';
 
-export class OpenAIProvider implements LLMProvider {
-  id = 'openai-default';
-  name = 'OpenAI';
-  type: ProviderType = 'openai';
-  apiKey: string | null = null;
-  
+export class OpenAIProvider extends BaseProvider {
   constructor() {
-    this.initializeApiKey();
+    super('openai-default', 'OpenAI', 'openai', 'chat');
+    
+    // Set OpenAI specific capabilities
+    this.capabilities = {
+      chat: true,
+      image: true,  // DALL-E support
+      dev: true,    // Code completion support
+      voice: false, // No native voice support
+      streaming: true,
+      rag: true
+    };
+    
+    // Set default model and configuration
+    this.config = {
+      apiKey: null,
+      modelName: 'gpt-4o',
+      baseUrl: 'https://api.openai.com/v1',
+      options: {
+        temperature: 0.7,
+        maxTokens: 1000,
+        topP: 1,
+        frequencyPenalty: 0,
+        presencePenalty: 0
+      }
+    };
   }
   
-  private async initializeApiKey() {
+  async generateText(prompt: string, options: ChatOptions = {}): Promise<string> {
     try {
-      // Try to get the API key from Supabase edge function
-      const { data, error } = await supabase.functions.invoke('get-provider-key', {
-        body: { provider: 'openai', keyType: 'chat' }
-      });
-      
-      if (error) {
-        logger.error('Error getting OpenAI API key', error);
-        return;
-      }
-      
-      if (data?.apiKey) {
-        this.apiKey = data.apiKey;
-        logger.info('OpenAI API key initialized');
-      } else {
-        logger.warn('No OpenAI API key found');
-      }
-    } catch (error) {
-      logger.error('Failed to initialize OpenAI API key', error);
-    }
-  }
-  
-  async generateText(prompt: string, options: any = {}): Promise<string> {
-    try {
-      if (!this.apiKey) {
-        await this.initializeApiKey();
-        if (!this.apiKey) {
+      if (!this.config.apiKey) {
+        await this.initialize();
+        if (!this.config.apiKey) {
           return "Error: OpenAI API key not configured. Please set OPENAI_CHAT_APIKEY.";
         }
       }
@@ -51,9 +48,10 @@ export class OpenAIProvider implements LLMProvider {
           provider: 'openai',
           prompt,
           options: {
-            model: options.model || 'gpt-4o', // Default to GPT-4o if not specified
-            temperature: options.temperature || 0.7,
-            max_tokens: options.maxTokens || 1000,
+            model: options.modelName || this.config.modelName,
+            temperature: options.temperature || this.config.options.temperature,
+            max_tokens: options.maxTokens || this.config.options.maxTokens,
+            systemPrompt: options.systemPrompt || 'You are a helpful assistant.',
             ...options
           }
         }
@@ -64,10 +62,19 @@ export class OpenAIProvider implements LLMProvider {
         return `Error generating text: ${error.message}`;
       }
       
+      // Track the usage
+      if (data?.usage) {
+        this.trackUsage(
+          'text_generation', 
+          data.usage.total_tokens || 0, 
+          (data.usage.total_tokens || 0) * 0.00001 // Approximate cost calculation
+        );
+      }
+      
       return data?.text || 'No response generated';
     } catch (error) {
       logger.error('Failed to generate text with OpenAI', error);
-      return `Error: ${error.message}`;
+      return `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
     }
   }
   
@@ -98,11 +105,11 @@ Based on the above context, please help with the query.
 `;
   }
   
-  async generateImage(prompt: string, options: any = {}): Promise<string> {
+  async generateImage(prompt: string, options: ImageOptions = {}): Promise<string> {
     try {
-      if (!this.apiKey) {
-        await this.initializeApiKey();
-        if (!this.apiKey) {
+      if (!this.config.apiKey) {
+        await this.initialize();
+        if (!this.config.apiKey) {
           return "Error: OpenAI API key not configured. Please set OPENAI_CHAT_APIKEY.";
         }
       }
@@ -113,9 +120,10 @@ Based on the above context, please help with the query.
           provider: 'openai',
           prompt,
           options: {
-            model: options.model || 'dall-e-3',
-            size: options.size || '1024x1024',
-            quality: options.quality || 'standard',
+            model: 'dall-e-3',
+            size: `${options.width || 1024}x${options.height || 1024}`,
+            quality: options.style || 'standard',
+            n: options.numImages || 1,
             ...options
           }
         }
@@ -126,10 +134,31 @@ Based on the above context, please help with the query.
         return `Error generating image: ${error.message}`;
       }
       
+      // Track image generation usage (approximate cost)
+      this.trackUsage('image_generation', 0, 0.04); // ~$0.04 per DALL-E 3 image
+      
       return data?.imageUrl || 'No image generated';
     } catch (error) {
       logger.error('Failed to generate image with OpenAI', error);
-      return `Error: ${error.message}`;
+      return `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
     }
+  }
+  
+  async generateCode(prompt: string, options: any = {}): Promise<string> {
+    // For code generation, we use the same API but add code-specific instructions
+    const codePrompt = `Generate code for: ${prompt}
+
+Please follow these guidelines:
+- Write clean, well-commented code
+- Follow best practices for the language
+- Include any necessary imports or setup
+- Explain any complex logic
+`;
+
+    return this.generateText(codePrompt, {
+      systemPrompt: "You are an expert software developer. Provide only code implementations with minimal explanations. Focus on writing clean, efficient, and well-documented code.",
+      temperature: 0.3, // Lower temperature for more deterministic code generation
+      ...options
+    });
   }
 }

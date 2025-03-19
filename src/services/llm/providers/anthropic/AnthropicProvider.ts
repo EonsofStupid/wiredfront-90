@@ -1,47 +1,39 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
-import { LLMProvider } from '../index';
-import { ProviderType } from '@/components/chat/store/types/chat-store-types';
+import { BaseProvider } from '../base/BaseProvider';
+import { ChatOptions } from '@/types/providers/provider-types';
 
-export class AnthropicProvider implements LLMProvider {
-  id = 'anthropic-default';
-  name = 'Anthropic Claude';
-  type: ProviderType = 'anthropic';
-  apiKey: string | null = null;
-  
+export class AnthropicProvider extends BaseProvider {
   constructor() {
-    this.initializeApiKey();
+    super('anthropic-default', 'Anthropic Claude', 'anthropic', 'chat');
+    
+    // Set Anthropic specific capabilities
+    this.capabilities = {
+      chat: true,
+      image: false,  // No native image generation
+      dev: true,     // Good for code tasks
+      voice: false,  // No native voice support
+      streaming: true,
+      rag: true
+    };
+    
+    // Set default model and configuration
+    this.config = {
+      apiKey: null,
+      modelName: 'claude-3-opus-20240229',
+      options: {
+        temperature: 0.7,
+        maxTokens: 1000
+      }
+    };
   }
   
-  private async initializeApiKey() {
+  async generateText(prompt: string, options: ChatOptions = {}): Promise<string> {
     try {
-      // Try to get the API key from Supabase edge function
-      const { data, error } = await supabase.functions.invoke('get-provider-key', {
-        body: { provider: 'anthropic', keyType: 'chat' }
-      });
-      
-      if (error) {
-        logger.error('Error getting Anthropic API key', error);
-        return;
-      }
-      
-      if (data?.apiKey) {
-        this.apiKey = data.apiKey;
-        logger.info('Anthropic API key initialized');
-      } else {
-        logger.warn('No Anthropic API key found');
-      }
-    } catch (error) {
-      logger.error('Failed to initialize Anthropic API key', error);
-    }
-  }
-  
-  async generateText(prompt: string, options: any = {}): Promise<string> {
-    try {
-      if (!this.apiKey) {
-        await this.initializeApiKey();
-        if (!this.apiKey) {
+      if (!this.config.apiKey) {
+        await this.initialize();
+        if (!this.config.apiKey) {
           return "Error: Anthropic API key not configured. Please set ANTHROPIC_CHAT_APIKEY.";
         }
       }
@@ -52,9 +44,10 @@ export class AnthropicProvider implements LLMProvider {
           provider: 'anthropic',
           prompt,
           options: {
-            model: options.model || 'claude-3-opus-20240229', // Default to Claude 3 Opus
-            temperature: options.temperature || 0.7,
-            max_tokens: options.maxTokens || 1000,
+            model: options.modelName || this.config.modelName,
+            temperature: options.temperature || this.config.options.temperature,
+            max_tokens: options.maxTokens || this.config.options.maxTokens,
+            systemPrompt: options.systemPrompt || '',
             ...options
           }
         }
@@ -65,10 +58,19 @@ export class AnthropicProvider implements LLMProvider {
         return `Error generating text: ${error.message}`;
       }
       
+      // Track the usage
+      if (data?.usage) {
+        this.trackUsage(
+          'text_generation', 
+          data.usage.total_tokens || 0, 
+          (data.usage.total_tokens || 0) * 0.00002 // Approximate cost calculation
+        );
+      }
+      
       return data?.text || 'No response generated';
     } catch (error) {
       logger.error('Failed to generate text with Anthropic', error);
-      return `Error: ${error.message}`;
+      return `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
     }
   }
   
@@ -111,5 +113,23 @@ Based on the documents provided, ${query}
 
 <assistant>
 `;
+  }
+  
+  async generateCode(prompt: string, options: any = {}): Promise<string> {
+    // For code generation, we use the same API but add code-specific instructions
+    const codePrompt = `Generate code for: ${prompt}
+
+Please follow these guidelines:
+- Write clean, well-commented code
+- Follow best practices for the language
+- Include any necessary imports or setup
+- Explain any complex logic
+`;
+
+    return this.generateText(codePrompt, {
+      systemPrompt: "You are an expert software developer. Provide only code implementations with minimal explanations. Focus on writing clean, efficient, and well-documented code.",
+      temperature: 0.3, // Lower temperature for more deterministic code generation
+      ...options
+    });
   }
 }
