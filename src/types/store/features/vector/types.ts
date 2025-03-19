@@ -36,11 +36,8 @@ export interface NewVectorConfig {
   storeType: VectorStoreType;
   config: VectorConfig;
   isActive?: boolean;
-  endpointUrl?: string;
-  grpcEndpoint?: string;
-  readOnlyKey?: string;
-  environment?: string; 
-  indexName?: string;
+  name: string;
+  description?: string;
 }
 
 /**

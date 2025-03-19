@@ -3,12 +3,12 @@
  * Central export file for all stores
  */
 
-// Domain stores
+// Domain stores with namespaced exports
 export * from './auth';
 export * from './data';
 export * from './settings';
 export * from './ui';
-export * from './features/vector'; // Updated path
+export * from './features';
 export * from './session';
 export * from './core';
 
