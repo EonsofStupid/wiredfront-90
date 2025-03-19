@@ -1,6 +1,8 @@
-import { Message } from '@/types/chat';
+import { Message, ChatMode, Session } from '@/types/chat';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
-import { ChatMode } from '@/types/chat';
+
+// Export all types that are used externally
+export type { ChatMode, Message, Session };
 
 // Remove ChatPosition type and use string literals for position
 // This ensures we're not duplicating position management

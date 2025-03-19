@@ -13,11 +13,14 @@ import { logger } from '@/services/chat/LoggingService';
 import { toast } from 'sonner';
 import { Provider } from '@/services/providers/types';
 
-interface UseChatCoreOptions {
+export interface UseChatCoreOptions {
   autoInit?: boolean;
   defaultMode?: ChatMode;
   persistPosition?: boolean;
   enableAnalytics?: boolean;
+  onError?: (error: Error) => void;
+  onSuccess?: () => void;
+  autoScroll?: boolean;
 }
 
 /**
@@ -45,7 +48,10 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
     autoInit = true,
     defaultMode = 'chat',
     persistPosition = true,
-    enableAnalytics = true
+    enableAnalytics = true,
+    onError,
+    onSuccess,
+    autoScroll = true
   } = options;
 
   const [isInitialized, setIsInitialized] = useState(false);
@@ -63,7 +69,12 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
     docked,
     toggleDocked,
     isOpen,
-    isMinimized
+    isMinimized,
+    addMessage,
+    updateMessage,
+    setUserInput,
+    userInput,
+    isWaitingForResponse
   } = useChatStore();
   
   const { 
@@ -81,9 +92,8 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
   } = useMessageQueue();
   
   const {
-    addMessage,
     getMessages,
-    updateMessage
+    updateMessage: storageUpdateMessage
   } = useMessageStorage();
   
   const {
@@ -138,8 +148,14 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
       
       setIsInitialized(true);
       logger.info('Chat core systems initialized');
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       handleError(error, 'Failed to initialize chat core systems');
+      if (onError) {
+        onError(error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -154,7 +170,8 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
     getDefaultProvider, 
     updateCurrentProvider, 
     wrapPromise, 
-    handleError
+    handleError,
+    onSuccess
   ]);
 
   // Auto-initialize when component mounts
@@ -309,6 +326,8 @@ export function useChatCore(options: UseChatCoreOptions = {}) {
     isMinimized,
     isProcessing,
     messages,
+    userInput,
+    isWaitingForResponse,
     
     // Actions
     initialize,

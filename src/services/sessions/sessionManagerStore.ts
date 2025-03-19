@@ -2,289 +2,224 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import { 
-  SessionManager, 
-  SessionState,
-  SessionMetadata
-} from './types';
-import { Session as SessionType, CreateSessionParams } from '@/types/sessions';
+import { Session, SupabaseSession, fromSupabaseSession, ChatMode } from '@/types/chat';
 import { logger } from '@/services/chat/LoggingService';
-import { 
-  fetchUserSessions, 
-  createChatSession,
-  switchToSession,
-  updateChatSession,
-  archiveChatSession,
-  clearChatSessions
-} from '@/services/sessions';
-import { useMessageStorage } from '../messages/messageStorageStore';
+import { supabase } from '@/integrations/supabase/client';
 
-const initialState: SessionState = {
-  sessions: [],
-  currentSessionId: null,
-  isLoading: false,
-  error: null
+interface SessionManagerState {
+  // State
+  sessions: Session[];
+  currentSession: Session | null;
+  isLoading: boolean;
+  error: Error | null;
+  
+  // Actions
+  fetchSessions: () => Promise<void>;
+  setCurrentSession: (session: Session) => void;
+  clearSessions: () => void;
+  createSession: (title?: string) => Promise<Session>;
+  updateSession: (sessionId: string, updates: Partial<Session>) => Promise<void>;
+  deleteSession: (sessionId: string) => Promise<void>;
+}
+
+const parseJsonField = (field: any): Record<string, any> => {
+  if (field === null) return {};
+  if (typeof field === 'string') {
+    try {
+      return JSON.parse(field);
+    } catch (error) {
+      logger.warn('Failed to parse JSON field', { error });
+      return {};
+    }
+  }
+  if (typeof field === 'object' && !Array.isArray(field) && field !== null) {
+    return field as Record<string, any>;
+  }
+  return {};
 };
 
-export const useSessionManager = create<SessionManager>()(
+const transformDBSession = (rawSession: SupabaseSession): Session => {
+  const metadata = parseJsonField(rawSession.metadata);
+  const context = parseJsonField(rawSession.context);
+
+  return {
+    id: rawSession.id,
+    title: rawSession.title,
+    created_at: rawSession.created_at,
+    last_accessed: rawSession.last_accessed,
+    message_count: rawSession.message_count,
+    is_active: rawSession.is_active,
+    metadata,
+    user_id: rawSession.user_id,
+    mode: rawSession.mode,
+    provider_id: rawSession.provider_id,
+    project_id: rawSession.project_id,
+    tokens_used: rawSession.tokens_used,
+    context
+  };
+};
+
+export const useSessionManager = create<SessionManagerState>()(
   devtools(
-    persist(
-      (set, get, api) => ({
-        ...initialState,
+    (set, get) => ({
+      // Initial state
+      sessions: [],
+      currentSession: null,
+      isLoading: false,
+      error: null,
 
-        createSession: async (title?: string, metadata?: any) => {
-          try {
-            set({ isLoading: true, error: null });
-            
-            logger.info('Creating new session', { title, metadata });
-            
-            const params: CreateSessionParams = {
-              title: title || `New Chat ${new Date().toLocaleString()}`,
-              metadata: metadata || {}
-            };
-            
-            const result = await createChatSession(params);
-            
-            if (!result.success || !result.sessionId) {
-              throw new Error('Failed to create session');
-            }
-            
-            const sessionId = result.sessionId;
-            
-            // Fetch sessions to get the newly created session
-            await get().fetchSessions();
-            
-            // Set as current session
-            set({ currentSessionId: sessionId, isLoading: false });
-            
-            return sessionId;
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            logger.error('Error creating session:', { error });
-            set({ error: errorMessage, isLoading: false });
-            throw error;
-          }
-        },
+      // Actions
+      fetchSessions: async () => {
+        set({ isLoading: true, error: null });
+        try {
+          const { data: { user }, error: authError } = await supabase.auth.getUser();
+          if (authError) throw authError;
+          if (!user) throw new Error('User not authenticated');
 
-        switchSession: async (sessionId: string) => {
-          try {
-            set({ isLoading: true, error: null });
-            
-            logger.info(`Switching to session: ${sessionId}`);
-            
-            if (sessionId === get().currentSessionId) {
-              logger.info('Already in requested session');
-              set({ isLoading: false });
-              return;
-            }
-            
-            const result = await switchToSession(sessionId);
-            
-            if (!result.success) {
-              throw new Error('Failed to switch session');
-            }
-            
-            // Set current session ID
-            set({ currentSessionId: sessionId, isLoading: false });
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            logger.error('Error switching session:', { error });
-            set({ error: errorMessage, isLoading: false });
-            throw error;
-          }
-        },
+          const { data, error } = await supabase
+            .from('chat_sessions')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('last_accessed', { ascending: false });
 
-        updateSession: async (sessionId: string, updates: Partial<SessionType>) => {
-          try {
-            set({ isLoading: true, error: null });
-            
-            logger.info(`Updating session: ${sessionId}`, { updates });
-            
-            const result = await updateChatSession(sessionId, updates);
-            
-            if (!result.success) {
-              throw new Error('Failed to update session');
-            }
-            
-            // Update the session in the local state
-            set(state => ({
-              sessions: state.sessions.map(session => 
-                session.id === sessionId ? { ...session, ...updates } : session
-              ),
-              isLoading: false
-            }));
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            logger.error('Error updating session:', { error });
-            set({ error: errorMessage, isLoading: false });
-            throw error;
-          }
-        },
+          if (error) throw error;
 
-        archiveSession: async (sessionId: string) => {
-          try {
-            set({ isLoading: true, error: null });
-            
-            logger.info(`Archiving session: ${sessionId}`);
-            
-            const result = await archiveChatSession(sessionId);
-            
-            if (!result.success) {
-              throw new Error('Failed to archive session');
-            }
-            
-            // Update the sessions list to reflect archived status
-            await get().fetchSessions();
-            
-            // If this was the current session, create a new one
-            if (sessionId === get().currentSessionId) {
-              const newSessionId = await get().createSession();
-              set({ currentSessionId: newSessionId });
-            }
-            
-            set({ isLoading: false });
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            logger.error('Error archiving session:', { error });
-            set({ error: errorMessage, isLoading: false });
-            throw error;
-          }
-        },
+          const sessions = (data || [])
+            .map(fromSupabaseSession)
+            .map(transformDBSession);
 
-        deleteSession: async (sessionId: string) => {
-          try {
-            set({ isLoading: true, error: null });
-            
-            logger.info(`Deleting session: ${sessionId}`);
-            
-            // Since we don't have deleteChatSession, we'll use archiveChatSession and handle delete client-side
-            const result = await archiveChatSession(sessionId);
-            
-            if (!result.success) {
-              throw new Error('Failed to delete session');
-            }
-            
-            // Clear the messages for this session
-            useMessageStorage.getState().clearSessionMessages(sessionId);
-            
-            // Update the sessions list to remove the deleted session
-            set(state => ({
-              sessions: state.sessions.filter(session => session.id !== sessionId),
-              isLoading: false
-            }));
-            
-            // If this was the current session, create a new one
-            if (sessionId === get().currentSessionId) {
-              const newSessionId = await get().createSession();
-              set({ currentSessionId: newSessionId });
-            }
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            logger.error('Error deleting session:', { error });
-            set({ error: errorMessage, isLoading: false });
-            throw error;
-          }
-        },
+          set({ 
+            sessions,
+            error: null,
+            isLoading: false 
+          });
 
-        clearAllSessions: async () => {
-          try {
-            set({ isLoading: true, error: null });
-            
-            logger.info('Clearing all sessions');
-            
-            const result = await clearChatSessions(null);
-            
-            if (!result.success) {
-              throw new Error('Failed to clear sessions');
-            }
-            
-            // Clear all messages
-            useMessageStorage.getState().clearAllMessages();
-            
-            // Create a new session
-            const newSessionId = await get().createSession();
-            
-            set({ 
-              sessions: [get().findSessionById(newSessionId)].filter(Boolean) as SessionType[],
-              currentSessionId: newSessionId,
-              isLoading: false
-            });
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            logger.error('Error clearing sessions:', { error });
-            set({ error: errorMessage, isLoading: false });
-            throw error;
-          }
-        },
-
-        fetchSessions: async () => {
-          try {
-            set({ isLoading: true, error: null });
-            
-            logger.info('Fetching sessions');
-            
-            const fetchedSessions = await fetchUserSessions();
-            
-            // Transform the sessions to match the Session interface
-            const sessions: SessionType[] = fetchedSessions.map(session => ({
-              id: session.id,
-              title: session.title,
-              created_at: session.created_at,
-              last_accessed: session.last_accessed,
-              message_count: 0, // Set default value since it might be missing
-              is_active: session.is_active,
-              metadata: session.metadata,
-              user_id: session.user_id,
-              mode: session.mode,
-              provider_id: session.provider_id,
-              project_id: session.project_id,
-              tokens_used: session.tokens_used,
-              context: session.context
-            }));
-            
-            set({ 
-              sessions,
-              isLoading: false
-            });
-            
-            // If we don't have a current session but have sessions, use the first one
-            if (!get().currentSessionId && sessions.length > 0) {
-              set({ currentSessionId: sessions[0].id });
-            }
-            // If we don't have any sessions, create a new one
-            else if (sessions.length === 0) {
-              const newSessionId = await get().createSession();
-              set({ currentSessionId: newSessionId });
-            }
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            logger.error('Error fetching sessions:', { error });
-            set({ error: errorMessage, isLoading: false });
-            throw error;
-          }
-        },
-
-        findSessionById: (id: string) => {
-          return get().sessions.find(session => session.id === id) || null;
-        },
-
-        getCurrentSession: () => {
-          const { currentSessionId, sessions } = get();
-          if (!currentSessionId) return null;
-          
-          return sessions.find(session => session.id === currentSessionId) || null;
+          logger.info('Sessions fetched successfully', { 
+            count: sessions.length,
+            userId: user.id 
+          });
+        } catch (error) {
+          set({ 
+            error: error as Error,
+            isLoading: false 
+          });
+          logger.error('Failed to fetch sessions', { error });
         }
-      }),
-      {
-        name: 'session-manager',
-        partialize: (state) => ({
-          currentSessionId: state.currentSessionId
-        }),
+      },
+
+      setCurrentSession: (session: Session) => {
+        set({ currentSession: session });
+        logger.info('Current session set', { sessionId: session.id });
+      },
+
+      clearSessions: () => {
+        set({ sessions: [], currentSession: null });
+        logger.info('Sessions cleared');
+      },
+
+      createSession: async (title = 'New Chat') => {
+        try {
+          const { data: { user }, error: authError } = await supabase.auth.getUser();
+          if (authError) throw authError;
+          if (!user) throw new Error('User not authenticated');
+
+          const newSession = {
+            id: uuidv4(),
+            title,
+            user_id: user.id,
+            created_at: new Date().toISOString(),
+            last_accessed: new Date().toISOString(),
+            is_active: true,
+            metadata: {},
+            mode: 'standard' as ChatMode,
+            provider_id: '',
+            project_id: '',
+            tokens_used: 0,
+            context: {},
+            message_count: 0
+          };
+
+          const { data, error } = await supabase
+            .from('chat_sessions')
+            .insert(newSession)
+            .select()
+            .single();
+
+          if (error) throw error;
+          if (!data) throw new Error('Failed to create session');
+
+          const session = transformDBSession(fromSupabaseSession(data));
+          set(state => ({
+            sessions: [session, ...state.sessions],
+            currentSession: session
+          }));
+
+          logger.info('Session created successfully', { sessionId: session.id });
+          return session;
+        } catch (error) {
+          logger.error('Failed to create session', { error });
+          throw error;
+        }
+      },
+
+      updateSession: async (sessionId: string, updates: Partial<Session>) => {
+        try {
+          const { data, error } = await supabase
+            .from('chat_sessions')
+            .update({
+              ...updates,
+              last_accessed: new Date().toISOString()
+            })
+            .eq('id', sessionId)
+            .select()
+            .single();
+
+          if (error) throw error;
+          if (!data) throw new Error('Session not found');
+
+          const updatedSession = transformDBSession(fromSupabaseSession(data));
+          set(state => ({
+            sessions: state.sessions.map(s => 
+              s.id === sessionId ? updatedSession : s
+            ),
+            currentSession: state.currentSession?.id === sessionId 
+              ? updatedSession 
+              : state.currentSession
+          }));
+
+          logger.info('Session updated successfully', { sessionId });
+        } catch (error) {
+          logger.error('Failed to update session', { error, sessionId });
+          throw error;
+        }
+      },
+
+      deleteSession: async (sessionId: string) => {
+        try {
+          const { error } = await supabase
+            .from('chat_sessions')
+            .delete()
+            .eq('id', sessionId);
+
+          if (error) throw error;
+
+          set(state => ({
+            sessions: state.sessions.filter(s => s.id !== sessionId),
+            currentSession: state.currentSession?.id === sessionId 
+              ? null 
+              : state.currentSession
+          }));
+
+          logger.info('Session deleted successfully', { sessionId });
+        } catch (error) {
+          logger.error('Failed to delete session', { error, sessionId });
+          throw error;
+        }
       }
-    ),
+    }),
     {
-      name: 'Session Manager',
-      enabled: process.env.NODE_ENV === 'development',
+      name: 'SessionManager',
+      enabled: process.env.NODE_ENV !== 'production'
     }
   )
 );
