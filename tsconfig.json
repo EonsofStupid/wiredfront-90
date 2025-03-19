@@ -1,57 +1,59 @@
 {
+ {
   "compilerOptions": {
     "target": "ES2020",
+    "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
-    "moduleResolution": "bundler",
-    "allowJs": true,
-    "jsx": "react-jsx",
-    "strict": true,
-    "noImplicitAny": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "strictNullChecks": false,
-    "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "incremental": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@components/*": ["src/components/*"],
-      "@utils/*": ["src/utils/*"],
-      "@hooks/*": ["src/hooks/*"],
-      "@styles/*": ["src/styles/*"],
-      "@assets/*": ["src/assets/*"],
-      "@stores/*": ["src/stores/*"],
-      "@core/*": ["src/core/*"],
-      "@types/*": ["src/types/*"],
-      "@config/*": ["src/config/*"],
-      "@constants/*": ["src/constants/*"],
-      "@services/*": ["src/services/*"],
-      "@features/*": ["src/features/*"],
-      "@layouts/*": ["src/layouts/*"],
-      "@providers/*": ["src/providers/*"]
-    }
+      "@/*": ["./src/*"],
+      "@/components/*": ["src/components/*"],
+      "@/hooks/*": ["src/hooks/*"],
+      "@/stores/*": ["src/stores/*"],
+      "@/types/*": ["src/types/*"],
+      "@/services/*": ["src/services/*"],
+      "@/utils/*": ["src/utils/*"],
+      "@/lib/*": ["src/lib/*"],
+      "@/integrations/*": ["src/integrations/*"]
+    },
+    "types": ["vite/client", "node"],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ]
   },
   "include": [
-    "src/**/*",
-    "vite.config.ts",
-    "scripts/**/*"
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",
-    "dist",
     "build",
-    "coverage",
-    ".vscode",
-    "**/*.test.ts",
-    "**/*.test.tsx"
+    "dist",
+    "scripts",
+    "acceptance-tests",
+    "webpack",
+    "jest",
+    "src/setupTests.ts",
+    "**/*.spec.ts",
+    "**/*.test.ts"
   ],
-  "references": [
-    { "path": "./tsconfig.node.json" }
-  ]
+  "references": [{ "path": "./tsconfig.node.json" }]
 }
