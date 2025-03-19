@@ -1,9 +1,7 @@
+import { ChatMode, isChatMode } from '@/types/chat';
 
 export type MessageType = 'text' | 'command' | 'system';
 export type SettingType = 'string' | 'number' | 'boolean' | 'json' | 'array';
-
-// Modified to align with chat store types
-export type ChatMode = 'chat' | 'chat-only' | 'dev' | 'image' | 'training' | 'standard' | 'developer'; 
 
 // Comprehensive TokenEnforcementMode to include all possible values
 export type TokenEnforcementMode = 'hard' | 'soft' | 'never' | 'always' | 'role_based' | 'mode_based';
@@ -20,10 +18,6 @@ export const isLogLevel = (value: any): value is LogLevel => {
 
 export const isLogSource = (value: any): value is LogSource => {
   return typeof value === 'string';
-};
-
-export const isChatMode = (value: any): value is ChatMode => {
-  return ['chat', 'chat-only', 'dev', 'image', 'training', 'standard', 'developer'].includes(value);
 };
 
 export const isTokenEnforcementMode = (value: any): value is TokenEnforcementMode => {

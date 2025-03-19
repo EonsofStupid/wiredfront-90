@@ -1,12 +1,10 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Card, CardContent, CardFooter, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessagesSquare, Code, Image, Bot } from "lucide-react";
 import { useChatStore } from '../store/chatStore';
-
-export type ChatMode = 'chat' | 'code' | 'image';
+import { ChatMode } from '@/types/chat';
 
 interface ModeSelectionDialogProps {
   open: boolean;

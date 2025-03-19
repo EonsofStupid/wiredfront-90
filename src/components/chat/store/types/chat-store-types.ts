@@ -1,4 +1,3 @@
-
 import { Message } from '@/types/chat';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 import { ChatMode } from '@/types/chat';
@@ -75,7 +74,7 @@ export interface FeatureState {
 
 export interface TokenControl {
   balance: number;
-  enforcementMode: 'never' | 'warning' | 'strict';
+  enforcementMode: TokenEnforcementMode;
   lastUpdated: string | null;
   tokensPerQuery: number;
   freeQueryLimit: number;
@@ -118,14 +117,17 @@ export interface ChatState {
   showSidebar: boolean;
   scale: number;
   ui: UIState;
+  position: { x: number; y: number };
   
-  // Action placeholders - removing the position-related ones
+  // Action placeholders
   addMessage: (message: Message) => void;
   updateMessage: (id: string, updates: Partial<Message>) => void;
   resetChatState: () => void;
   setUserInput: (input: string) => void;
   toggleDocked: () => void;
   setScale: (scale: number) => void;
+  setPosition: (position: { x: number; y: number }) => void;
+  togglePosition: () => void;
   
   // Mode actions
   setCurrentMode: (mode: ChatMode) => void;

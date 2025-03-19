@@ -46,6 +46,7 @@ const initialState: ChatState = {
   currentMode: 'chat',
   availableProviders: [],
   currentProvider: null,
+  position: { x: 0, y: 0 },
   
   tokenControl: {
     balance: 0,
@@ -77,6 +78,8 @@ const initialState: ChatState = {
   setUserInput: noop,
   toggleDocked: noop,
   setScale: noop,
+  setPosition: noop,
+  togglePosition: noop,
   setCurrentMode: noop,
   updateCurrentProvider: noop,
   updateAvailableProviders: noop,
@@ -319,6 +322,16 @@ export const useChatStore = create<FullChatStore>()(
           console.error('Error setting token balance:', error);
           return false;
         }
+      },
+      
+      setPosition: (position: { x: number; y: number }) => {
+        set({ position }, false, { type: 'chat/setPosition', position });
+      },
+      
+      togglePosition: () => {
+        set(state => ({
+          position: state.docked ? { x: 0, y: 0 } : { x: 20, y: 20 }
+        }), false, { type: 'chat/togglePosition' });
       },
       
       ...createInitializationActions(set, get),

@@ -1,8 +1,12 @@
-
 import { Json } from '@/integrations/supabase/types';
 
 export type MessageStatus = 'pending' | 'sent' | 'failed' | 'error' | 'cached';
 export type MessageRole = 'user' | 'assistant' | 'system';
+export type ChatMode = 'chat' | 'chat-only' | 'dev' | 'image' | 'training' | 'standard' | 'developer';
+
+export const isChatMode = (value: any): value is ChatMode => {
+  return ['chat', 'chat-only', 'dev', 'image', 'training', 'standard', 'developer'].includes(value);
+};
 
 export interface Message {
   id: string;
