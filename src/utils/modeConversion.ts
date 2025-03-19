@@ -1,5 +1,5 @@
 
-import { ChatMode, isChatMode } from '@/types/chat/modes';
+import { ChatMode, isChatMode } from '@/types/chat/core';
 
 /**
  * Convert a Supabase mode to a store-compatible mode

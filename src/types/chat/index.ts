@@ -4,11 +4,10 @@
  */
 
 // Re-export all type modules
-export * from './modes';
-export * from './messages';
-export * from './sessions';
+export * from './core';
+export * from './database';
 export * from './ui';
-export * from './docking';
+export * from './store';
 
 // Additional helper types
 export type ConnectionState = 'connected' | 'connecting' | 'disconnected' | 'error';

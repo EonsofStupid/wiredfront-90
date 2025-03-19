@@ -2,55 +2,14 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import { Session, ChatMode } from '@/types/chat';
+import { ChatMode, Session, SessionCreateOptions, SessionStore } from '@/types/chat';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { toast } from 'sonner';
+import { jsonToRecord, toJson } from '@/types/supabase';
+import { normalizeChatMode } from '@/types/chat/core';
 
-// Add the missing type
-export interface SessionCreateOptions {
-  title?: string;
-  mode?: ChatMode;
-  metadata?: Record<string, any>;
-  provider_id?: string;
-}
-
-interface SessionState {
-  // State
-  sessions: Session[];
-  currentSession: Session | null;
-  isLoading: boolean;
-  error: Error | null;
-}
-
-interface SessionActions {
-  // Actions
-  fetchSessions: () => Promise<void>;
-  setCurrentSession: (session: Session) => void;
-  clearSessions: () => void;
-  createSession: (options?: SessionCreateOptions) => Promise<Session>;
-  updateSession: (sessionId: string, updates: Partial<Session>) => Promise<void>;
-  deleteSession: (sessionId: string) => Promise<void>;
-}
-
-export type SessionStore = SessionState & SessionActions;
-
-const parseJsonField = (field: any): Record<string, any> => {
-  if (field === null) return {};
-  if (typeof field === 'string') {
-    try {
-      return JSON.parse(field);
-    } catch (error) {
-      logger.warn('Failed to parse JSON field', { error });
-      return {};
-    }
-  }
-  if (typeof field === 'object' && !Array.isArray(field) && field !== null) {
-    return field as Record<string, any>;
-  }
-  return {};
-};
-
+// Create the store
 export const useChatSessionStore = create<SessionStore>()(
   devtools(
     persist(
@@ -78,12 +37,12 @@ export const useChatSessionStore = create<SessionStore>()(
             if (error) throw error;
 
             const sessions = (data || []).map(rawSession => {
-              const metadata = parseJsonField(rawSession.metadata);
-              const context = parseJsonField(rawSession.context);
+              const metadata = jsonToRecord(rawSession.metadata);
+              const context = jsonToRecord(rawSession.context);
 
               return {
                 id: rawSession.id,
-                title: rawSession.title,
+                title: rawSession.title || 'New Chat',
                 created_at: rawSession.created_at,
                 last_accessed: rawSession.last_accessed,
                 message_count: rawSession.message_count || 0,
@@ -91,9 +50,9 @@ export const useChatSessionStore = create<SessionStore>()(
                 metadata,
                 user_id: rawSession.user_id,
                 mode: normalizeChatMode(rawSession.mode),
-                provider_id: rawSession.provider_id,
-                project_id: rawSession.project_id,
-                tokens_used: rawSession.tokens_used,
+                provider_id: rawSession.provider_id || '',
+                project_id: rawSession.project_id || '',
+                tokens_used: rawSession.tokens_used || 0,
                 context
               };
             });
@@ -133,6 +92,8 @@ export const useChatSessionStore = create<SessionStore>()(
             if (authError) throw authError;
             if (!user) throw new Error('User not authenticated');
 
+            const mode = options.mode || 'chat';
+            
             const newSession = {
               id: uuidv4(),
               title: options.title || 'New Chat',
@@ -141,7 +102,7 @@ export const useChatSessionStore = create<SessionStore>()(
               last_accessed: new Date().toISOString(),
               is_active: true,
               metadata: options.metadata || {},
-              mode: options.mode || 'chat',
+              mode,
               provider_id: options.provider_id || '',
               project_id: '',
               tokens_used: 0,
@@ -158,12 +119,12 @@ export const useChatSessionStore = create<SessionStore>()(
                 created_at: newSession.created_at,
                 last_accessed: newSession.last_accessed,
                 is_active: newSession.is_active,
-                metadata: newSession.metadata,
-                mode: newSession.mode,
+                metadata: toJson(newSession.metadata),
+                mode,
                 provider_id: newSession.provider_id,
                 project_id: newSession.project_id,
                 tokens_used: newSession.tokens_used,
-                context: newSession.context,
+                context: toJson(newSession.context),
                 message_count: newSession.message_count,
               })
               .select()
@@ -172,13 +133,14 @@ export const useChatSessionStore = create<SessionStore>()(
             if (error) throw error;
             if (!data) throw new Error('Failed to create session');
 
-            const metadata = parseJsonField(data.metadata);
-            const context = parseJsonField(data.context);
+            const metadata = jsonToRecord(data.metadata);
+            const context = jsonToRecord(data.context);
 
             const session: Session = {
               ...data,
               metadata,
-              context
+              context,
+              mode: normalizeChatMode(data.mode)
             };
 
             set(state => ({
@@ -196,15 +158,19 @@ export const useChatSessionStore = create<SessionStore>()(
 
         updateSession: async (sessionId: string, updates: Partial<Session>) => {
           try {
-            const normalizedUpdates = {
+            const normalizedMode = updates.mode ? normalizeChatMode(updates.mode) : undefined;
+            
+            const dbUpdates = {
               ...updates,
               last_accessed: new Date().toISOString(),
-              mode: updates.mode ? normalizeChatMode(updates.mode) : undefined
+              mode: normalizedMode,
+              metadata: updates.metadata ? toJson(updates.metadata) : undefined,
+              context: updates.context ? toJson(updates.context) : undefined
             };
             
             const { data, error } = await supabase
               .from('chat_sessions')
-              .update(normalizedUpdates)
+              .update(dbUpdates)
               .eq('id', sessionId)
               .select()
               .single();
@@ -212,13 +178,14 @@ export const useChatSessionStore = create<SessionStore>()(
             if (error) throw error;
             if (!data) throw new Error('Session not found');
 
-            const metadata = parseJsonField(data.metadata);
-            const context = parseJsonField(data.context);
+            const metadata = jsonToRecord(data.metadata);
+            const context = jsonToRecord(data.context);
 
             const updatedSession: Session = {
               ...data,
               metadata,
-              context
+              context,
+              mode: normalizeChatMode(data.mode)
             };
 
             set(state => ({
@@ -283,26 +250,6 @@ export const useChatSessionStore = create<SessionStore>()(
     }
   )
 );
-
-// Helper function to normalize chat modes that we should import
-function normalizeChatMode(mode: string | null | undefined): ChatMode {
-  if (!mode) return 'chat';
-  
-  // Map legacy values to new expected values
-  const modeMap: Record<string, ChatMode> = {
-    'standard': 'chat',
-    'developer': 'dev'
-  };
-  
-  // If it's a valid mode, return it or its mapped value
-  const normalizedMode = modeMap[mode as string] || mode;
-  if (['chat', 'dev', 'image', 'training', 'code', 'planning'].includes(normalizedMode)) {
-    return normalizedMode as ChatMode;
-  }
-  
-  // Default fallback
-  return 'chat';
-}
 
 // Selector hooks for more granular access
 export const useCurrentSession = () => useChatSessionStore(state => state.currentSession);

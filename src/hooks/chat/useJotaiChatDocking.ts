@@ -15,8 +15,8 @@ import {
   loadDockingFromStorageAtom,
   initializeDockingAtom,
   dockingStateAtom
-} from '@/stores/ui/chatDockingStore';
-import { DockPosition } from '@/types/chat/docking';
+} from '@/stores';
+import { DockPosition } from '@/types/chat/ui';
 import { ChatPosition } from '@/types/chat/ui';
 
 /**

@@ -1,15 +1,12 @@
 
-/**
- * Central export file for all stores
- */
+// Export all stores from a central location
 
 // Global Zustand stores
-export { 
-  useChatSessionStore,
-  useCurrentSession,
-  useSessions,
-  useSessionActions
-} from './global/chatSessionStore';
+export {
+  useChatModeStore,
+  useCurrentMode,
+  useModeActions
+} from './global/chatModeStore';
 
 export {
   useChatMessageStore,
@@ -18,11 +15,52 @@ export {
 } from './global/chatMessageStore';
 
 export {
-  useChatModeStore,
-  useCurrentMode,
-  useModeActions
-} from './global/chatModeStore';
+  useChatSessionStore,
+  useCurrentSession,
+  useSessions,
+  useSessionActions
+} from './global/chatSessionStore';
 
 // UI Jotai stores
-export * from './ui/chatLayoutStore';
-export * from './ui/chatDockingStore';
+export {
+  // Atoms
+  isMinimizedAtom,
+  scaleAtom,
+  showSidebarAtom,
+  uiPreferencesAtom,
+  layoutStateAtom,
+  
+  // Actions
+  toggleMinimizedAtom,
+  setMinimizedAtom,
+  setScaleAtom,
+  toggleSidebarAtom,
+  setSidebarAtom,
+  updateUIPreferencesAtom,
+  resetLayoutAtom,
+  
+  // Persistence
+  saveLayoutToStorageAtom,
+  loadLayoutFromStorageAtom,
+  initializeLayoutAtom
+} from './ui/chatLayoutStore';
+
+export {
+  // Atoms
+  dockedAtom,
+  positionAtom,
+  dockedItemsAtom,
+  dockingStateAtom,
+  
+  // Actions
+  setDockedAtom,
+  toggleDockedAtom,
+  setPositionAtom,
+  setDockedItemAtom,
+  resetDockingAtom,
+  
+  // Persistence
+  saveDockingToStorageAtom,
+  loadDockingFromStorageAtom,
+  initializeDockingAtom
+} from './ui/chatDockingStore';

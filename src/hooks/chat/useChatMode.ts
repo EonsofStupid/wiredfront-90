@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { useCurrentMode, useModeActions } from '@/stores';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChatMode } from '@/types/chat/modes';
+import { ChatMode } from '@/types/chat/core';
 import { logger } from '@/services/chat/LoggingService';
 
 /**
@@ -10,7 +10,7 @@ import { logger } from '@/services/chat/LoggingService';
  */
 export function useChatMode() {
   const currentMode = useCurrentMode();
-  const { setCurrentMode, isModeSupported, updateSessionMode } = useModeActions();
+  const { setMode, switchMode, cancelTransition, resetMode } = useModeActions();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -19,31 +19,25 @@ export function useChatMode() {
     // Get mode from location state if available
     const locationMode = location.state?.mode;
     
-    if (locationMode && isModeSupported(locationMode) && locationMode !== currentMode) {
-      setCurrentMode(locationMode as ChatMode);
+    if (locationMode && currentMode !== locationMode) {
+      setMode(locationMode as ChatMode);
       logger.info('Mode set from location state', { mode: locationMode });
     }
-  }, [location.state?.mode, currentMode, setCurrentMode, isModeSupported]);
+  }, [location.state?.mode, currentMode, setMode]);
 
   /**
    * Set mode and update navigation state
    */
-  const setMode = (mode: ChatMode, providerId?: string) => {
-    if (isModeSupported(mode)) {
-      // Update the store
-      setCurrentMode(mode, providerId);
-      
-      // Update the location state (for persistence across page navigation)
-      navigate(location.pathname, { 
-        state: { ...location.state, mode } 
-      });
-      
-      logger.info('Mode updated', { mode, providerId });
-      return true;
-    } else {
-      logger.warn('Attempted to set unsupported mode', { mode });
-      return false;
-    }
+  const setModeWithRouting = (mode: ChatMode) => {
+    setMode(mode);
+    
+    // Update the location state (for persistence across page navigation)
+    navigate(location.pathname, { 
+      state: { ...location.state, mode } 
+    });
+    
+    logger.info('Mode updated with routing', { mode });
+    return true;
   };
 
   /**
@@ -63,10 +57,11 @@ export function useChatMode() {
 
   return {
     currentMode,
-    setMode,
-    getModeLabel,
-    isModeSupported,
-    updateSessionMode
+    setMode: setModeWithRouting,
+    switchMode,
+    cancelTransition,
+    resetMode,
+    getModeLabel
   };
 }
 

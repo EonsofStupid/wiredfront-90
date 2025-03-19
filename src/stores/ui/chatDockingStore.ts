@@ -1,10 +1,11 @@
 
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-import { DockPosition } from '@/types/chat/docking';
+import { DockPosition } from '@/types/chat/ui';
 import { ChatPosition } from '@/types/chat/ui';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
+import { toJson } from '@/types/supabase';
 
 // Default values
 const defaultPosition: ChatPosition = { x: 0, y: 0 };
@@ -70,8 +71,8 @@ export const saveDockingToStorageAtom = atom(
       
       const docking = {
         docked: get(dockedAtom),
-        position: get(positionAtom),
-        docked_items: get(dockedItemsAtom)
+        position: toJson(get(positionAtom)),
+        docked_items: toJson(get(dockedItemsAtom))
       };
       
       // First check if a record already exists
@@ -126,8 +127,36 @@ export const loadDockingFromStorageAtom = atom(
           
         if (!error && data) {
           set(dockedAtom, data.docked);
-          set(positionAtom, data.position);
-          set(dockedItemsAtom, data.docked_items || {});
+          
+          // Parse position or use default
+          let position = defaultPosition;
+          if (data.position) {
+            try {
+              if (typeof data.position === 'string') {
+                position = JSON.parse(data.position);
+              } else if (typeof data.position === 'object') {
+                position = data.position as ChatPosition;
+              }
+            } catch (e) {
+              logger.warn('Failed to parse position', { error: e });
+            }
+          }
+          set(positionAtom, position);
+          
+          // Parse docked_items or use empty object
+          let dockedItems = {};
+          if (data.docked_items) {
+            try {
+              if (typeof data.docked_items === 'string') {
+                dockedItems = JSON.parse(data.docked_items);
+              } else if (typeof data.docked_items === 'object') {
+                dockedItems = data.docked_items;
+              }
+            } catch (e) {
+              logger.warn('Failed to parse docked items', { error: e });
+            }
+          }
+          set(dockedItemsAtom, dockedItems as Record<string, DockPosition>);
           
           logger.info('Loaded chat docking from database');
           return true;

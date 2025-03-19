@@ -2,27 +2,11 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import { Message, MessageRole, MessageStatus } from '@/types/chat/messages';
+import { Message, MessageRole, MessageStatus, MessageStore } from '@/types/chat';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { toast } from 'sonner';
-
-interface MessageState {
-  messages: Message[];
-  isLoading: boolean;
-  error: Error | null;
-}
-
-interface MessageActions {
-  addMessage: (message: Message) => string;
-  updateMessage: (id: string, updates: Partial<Message>) => void;
-  removeMessage: (id: string) => void;
-  fetchMessages: (sessionId: string) => Promise<void>;
-  clearMessages: () => void;
-  sendMessage: (content: string, sessionId: string, role?: MessageRole) => Promise<string>;
-}
-
-export type MessageStore = MessageState & MessageActions;
+import { toJson } from '@/types/supabase';
 
 export const useChatMessageStore = create<MessageStore>()(
   devtools(
@@ -84,10 +68,10 @@ export const useChatMessageStore = create<MessageStore>()(
               id: msg.id,
               session_id: msg.session_id,
               user_id: msg.user_id,
-              role: msg.role,
+              role: msg.role as MessageRole,
               content: msg.content,
               metadata: typeof msg.metadata === 'string' ? JSON.parse(msg.metadata) : msg.metadata,
-              message_status: msg.status || 'sent',
+              message_status: msg.status as MessageStatus || 'sent',
               retry_count: msg.retry_count,
               last_retry: msg.last_retry,
               created_at: msg.created_at,
@@ -143,7 +127,7 @@ export const useChatMessageStore = create<MessageStore>()(
                 status: 'sent',
                 created_at: message.created_at,
                 updated_at: message.created_at,
-                metadata: {},
+                metadata: toJson({}),
                 position_order: get().messages.length
               })
               .select()

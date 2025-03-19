@@ -1,25 +1,10 @@
 
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { ChatMode } from '@/types/chat/modes';
+import { ChatMode, ModeStore } from '@/types/chat';
 import { logger } from '@/services/chat/LoggingService';
 
-interface ModeState {
-  currentMode: ChatMode;
-  previousMode: ChatMode | null;
-  isTransitioning: boolean;
-  transitionProgress: number;
-}
-
-interface ModeActions {
-  setMode: (mode: ChatMode) => void;
-  switchMode: (mode: ChatMode) => Promise<void>;
-  cancelTransition: () => void;
-  resetMode: () => void;
-}
-
-export type ModeStore = ModeState & ModeActions;
-
+// Create the store
 export const useChatModeStore = create<ModeStore>()(
   devtools(
     persist(

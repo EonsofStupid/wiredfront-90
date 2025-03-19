@@ -18,7 +18,8 @@ import {
   loadLayoutFromStorageAtom,
   initializeLayoutAtom,
   layoutStateAtom
-} from '@/stores/ui/chatLayoutStore';
+} from '@/stores';
+import { ChatTheme } from '@/types/chat/ui';
 
 /**
  * Hook for accessing and managing chat layout state using Jotai
@@ -82,14 +83,14 @@ export function useJotaiChatLayout() {
   /**
    * Update theme
    */
-  const setTheme = (theme: string) => {
+  const setTheme = (theme: ChatTheme) => {
     updateUIPreferences({ theme });
   };
 
   /**
    * Update font size
    */
-  const setFontSize = (fontSize: string) => {
+  const setFontSize = (fontSize: 'small' | 'medium' | 'large') => {
     updateUIPreferences({ fontSize });
   };
 
@@ -108,7 +109,7 @@ export function useJotaiChatLayout() {
     ...layoutState,
     
     // Basic actions
-    setMinimized,
+    setMinimized: setIsMinimized,
     toggleMinimized,
     setScale,
     toggleSidebar,

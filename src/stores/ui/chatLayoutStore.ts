@@ -4,6 +4,7 @@ import { atomWithStorage } from 'jotai/utils';
 import { ChatUIPreferences } from '@/types/chat/ui';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
+import { toJson } from '@/types/supabase';
 
 // Default UI preferences
 const defaultUIPreferences: ChatUIPreferences = {
@@ -93,7 +94,7 @@ export const saveLayoutToStorageAtom = atom(
         is_minimized: get(isMinimizedAtom),
         scale: get(scaleAtom),
         show_sidebar: get(showSidebarAtom),
-        ui_preferences: get(uiPreferencesAtom)
+        ui_preferences: toJson(get(uiPreferencesAtom))
       };
       
       // First check if a record already exists
@@ -150,7 +151,22 @@ export const loadLayoutFromStorageAtom = atom(
           set(isMinimizedAtom, data.is_minimized || false);
           set(scaleAtom, data.scale || 1);
           set(showSidebarAtom, data.show_sidebar || false);
-          set(uiPreferencesAtom, data.ui_preferences || defaultUIPreferences);
+          
+          // Parse ui_preferences or use defaults
+          let uiPrefs = defaultUIPreferences;
+          if (data.ui_preferences) {
+            try {
+              if (typeof data.ui_preferences === 'string') {
+                uiPrefs = { ...uiPrefs, ...JSON.parse(data.ui_preferences) };
+              } else if (typeof data.ui_preferences === 'object') {
+                uiPrefs = { ...uiPrefs, ...data.ui_preferences };
+              }
+            } catch (e) {
+              logger.warn('Failed to parse UI preferences', { error: e });
+            }
+          }
+          
+          set(uiPreferencesAtom, uiPrefs);
           
           logger.info('Loaded chat layout from database');
           return true;

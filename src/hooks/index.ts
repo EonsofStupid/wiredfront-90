@@ -1,14 +1,7 @@
 
-/**
- * Central export file for all hooks
- */
+// Export all hooks from a central location
+export * from './chat';
 
-// Session hooks
-export { useSessionManager } from './sessions/useSessionManager';
-
-// Chat hooks
-export { useChatMessages } from './chat/useChatMessages';
-export { useChatMode } from './chat/useChatMode';
-export { useChatLayout } from './chat/useChatLayout';
-export { useJotaiChatLayout } from './chat/useJotaiChatLayout';
-export { useJotaiChatDocking } from './chat/useJotaiChatDocking';
+// Legacy re-exports
+export { useChatLayout } from './chat';
+export { useChatMode } from './chat';

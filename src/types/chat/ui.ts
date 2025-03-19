@@ -1,6 +1,6 @@
 
 /**
- * UI and layout types for the chat client
+ * UI-specific type definitions for the chat system
  */
 
 // Dock positions for UI elements
