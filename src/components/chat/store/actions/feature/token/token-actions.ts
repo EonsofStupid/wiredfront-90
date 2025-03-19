@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 import { ChatState } from '../../../types/chat-store-types';
@@ -11,33 +10,27 @@ export function createTokenActions(
 ) {
   return {
     setTokenEnforcementMode: (mode: TokenEnforcementMode) => {
-      set(
-        (state) => ({
-          tokenControl: {
-            ...state.tokenControl,
-            enforcementMode: mode
-          }
-        }),
-        false,
-        { type: 'setTokenEnforcementMode', mode }
-      );
+      set((state) => ({
+        ...state,
+        tokenControl: {
+          ...state.tokenControl,
+          enforcementMode: mode
+        }
+      }), false, { type: 'setTokenEnforcementMode', mode });
     },
 
     addTokens: async (amount: number): Promise<boolean> => {
       try {
         const currentBalance = get().tokenControl.balance;
         
-        set(
-          (state) => ({
-            tokenControl: {
-              ...state.tokenControl,
-              balance: currentBalance + amount,
-              lastUpdated: new Date().toISOString()
-            }
-          }),
-          false,
-          { type: 'addTokens', amount, newBalance: currentBalance + amount }
-        );
+        set((state) => ({
+          ...state,
+          tokenControl: {
+            ...state.tokenControl,
+            balance: currentBalance + amount,
+            lastUpdated: new Date().toISOString()
+          }
+        }), false, { type: 'addTokens', amount, newBalance: currentBalance + amount });
         
         const { data: userData } = await supabase.auth.getUser();
         if (userData?.user) {
@@ -70,18 +63,15 @@ export function createTokenActions(
           return false;
         }
         
-        set(
-          (state) => ({
-            tokenControl: {
-              ...state.tokenControl,
-              balance: currentBalance - amount,
-              queriesUsed: state.tokenControl.queriesUsed + 1,
-              lastUpdated: new Date().toISOString()
-            }
-          }),
-          false,
-          { type: 'spendTokens', amount, newBalance: currentBalance - amount }
-        );
+        set((state) => ({
+          ...state,
+          tokenControl: {
+            ...state.tokenControl,
+            balance: currentBalance - amount,
+            queriesUsed: state.tokenControl.queriesUsed + 1,
+            lastUpdated: new Date().toISOString()
+          }
+        }), false, { type: 'spendTokens', amount, newBalance: currentBalance - amount });
         
         const { data: userData } = await supabase.auth.getUser();
         if (userData?.user) {
@@ -108,17 +98,14 @@ export function createTokenActions(
 
     setTokenBalance: async (amount: number): Promise<boolean> => {
       try {
-        set(
-          (state) => ({
-            tokenControl: {
-              ...state.tokenControl,
-              balance: amount,
-              lastUpdated: new Date().toISOString()
-            }
-          }),
-          false,
-          { type: 'setTokenBalance', amount }
-        );
+        set((state) => ({
+          ...state,
+          tokenControl: {
+            ...state.tokenControl,
+            balance: amount,
+            lastUpdated: new Date().toISOString()
+          }
+        }), false, { type: 'setTokenBalance', amount });
         
         const { data: userData } = await supabase.auth.getUser();
         if (userData?.user) {

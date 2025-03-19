@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { createInitializationActions } from './actions/initialization-actions';
 import { createFeatureActions } from './actions/feature';
 import { createUIActions } from './actions/ui-actions';
-import { ChatState, ProviderCategory, ChatMode, FeatureState } from './types/chat-store-types';
+import { ChatState, ProviderCategory, ChatMode, FeatureState, TokenEnforcementMode } from './types/chat-store-types';
 import { Message } from '@/types/chat';
 
 type FullChatStore = ChatState & 
@@ -50,7 +50,7 @@ const initialState: ChatState = {
   
   tokenControl: {
     balance: 0,
-    enforcementMode: 'never',
+    enforcementMode: 'never' as TokenEnforcementMode,
     lastUpdated: null,
     tokensPerQuery: 1,
     freeQueryLimit: 5,
