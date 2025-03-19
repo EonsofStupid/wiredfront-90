@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { useChatModeStore } from '@/components/chat/store/chatModeStore';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChatMode } from '@/types/chat';
+import { ChatMode } from '@/types/chat/modes';
 import { logger } from '@/services/chat/LoggingService';
 
 /**
@@ -45,9 +45,27 @@ export function useChatMode() {
     }
   };
 
+  /**
+   * Get a user-friendly label for the mode
+   */
+  const getModeLabel = (mode: ChatMode): string => {
+    switch (mode) {
+      case 'chat': return 'Chat';
+      case 'dev': return 'Developer';
+      case 'image': return 'Image Generation';
+      case 'training': return 'Training';
+      case 'planning': return 'Planning';
+      case 'code': return 'Code Assistant';
+      default: return mode;
+    }
+  };
+
   return {
     currentMode,
     setMode,
+    getModeLabel,
     isModeSupported
   };
 }
+
+export default useChatMode;

@@ -430,6 +430,7 @@ export type Database = {
           last_retry: string | null
           metadata: Json | null
           parent_message_id: string | null
+          position_order: number | null
           retry_count: number | null
           role: string
           session_id: string | null
@@ -445,6 +446,7 @@ export type Database = {
           last_retry?: string | null
           metadata?: Json | null
           parent_message_id?: string | null
+          position_order?: number | null
           retry_count?: number | null
           role: string
           session_id?: string | null
@@ -460,6 +462,7 @@ export type Database = {
           last_retry?: string | null
           metadata?: Json | null
           parent_message_id?: string | null
+          position_order?: number | null
           retry_count?: number | null
           role?: string
           session_id?: string | null
@@ -649,25 +652,31 @@ export type Database = {
       chat_ui_layout: {
         Row: {
           created_at: string | null
+          docked_items: Json | null
           id: string
           layout: Json | null
           metadata: Json | null
+          ui_preferences: Json | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           created_at?: string | null
+          docked_items?: Json | null
           id?: string
           layout?: Json | null
           metadata?: Json | null
+          ui_preferences?: Json | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           created_at?: string | null
+          docked_items?: Json | null
           id?: string
           layout?: Json | null
           metadata?: Json | null
+          ui_preferences?: Json | null
           updated_at?: string | null
           user_id?: string
         }
@@ -2827,7 +2836,14 @@ export type Database = {
         | "code"
         | "editor"
         | "chat-only"
-      chat_mode_type: "standard" | "dev" | "image" | "planning" | "training"
+      chat_mode_type:
+        | "chat"
+        | "dev"
+        | "image"
+        | "training"
+        | "planning"
+        | "code"
+      chat_mode_type_old: "standard" | "dev" | "image" | "planning" | "training"
       chat_provider_type:
         | "openai"
         | "anthropic"

@@ -1,9 +1,8 @@
 
 import { create } from 'zustand';
-import { ChatMode, isChatMode } from '@/types/chat';
+import { ChatMode, isChatMode } from '@/types/chat/modes';
 import { logger } from '@/services/chat/LoggingService';
 import { supabase } from '@/integrations/supabase/client';
-import { storeModeToSupabaseMode } from '@/utils/modeConversion';
 
 interface ChatModeState {
   // Core state
@@ -93,14 +92,11 @@ export const useChatModeActions = () => {
       setCurrentMode(mode, providerId);
       
       // Then update the database
-      const dbMode = storeModeToSupabaseMode(mode);
-      const metadata = { mode, providerId };
-      
       const { error } = await supabase
         .from('chat_sessions')
         .update({ 
-          mode: dbMode,
-          metadata
+          mode,
+          metadata: { mode, providerId }
         })
         .eq('id', sessionId);
       

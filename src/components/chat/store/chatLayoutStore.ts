@@ -1,228 +1,213 @@
 
 import { create } from 'zustand';
+import { ChatPosition, ChatLayoutState, DockPosition, ChatUIPreferences } from '@/types/chat/ui';
 import { logger } from '@/services/chat/LoggingService';
 import { supabase } from '@/integrations/supabase/client';
 
-export type DockPosition = 'left' | 'right' | 'bottom' | 'floating' | 'hidden';
-
-interface DockedItem {
-  position: DockPosition;
-  order: number;
-}
-
-interface UIPreferences {
-  theme: 'light' | 'dark' | 'system';
-  fontSize: 'small' | 'medium' | 'large';
-  messageBehavior: 'enter_send' | 'ctrl_enter';
-  notifications: boolean;
-  soundEnabled: boolean;
-}
-
-interface ChatLayoutState {
-  // Core state
-  dockedItems: Record<string, DockedItem>;
-  dockedSections: Record<string, DockedItem>;
-  uiPreferences: UIPreferences;
-  
-  // Loading state
-  isLoading: boolean;
-  
-  // Actions
-  setDockedItem: (itemId: string, position: DockPosition, order?: number) => void;
-  setDockedSection: (sectionId: string, position: DockPosition, order?: number) => void;
-  updateUIPreferences: (updates: Partial<UIPreferences>) => void;
-  
-  // Database integration
-  saveLayoutToDatabase: () => Promise<boolean>;
-  loadLayoutFromDatabase: () => Promise<boolean>;
-  resetLayout: () => void;
-}
-
-const DEFAULT_UI_PREFERENCES: UIPreferences = {
+// Default UI preferences
+const defaultUIPreferences: ChatUIPreferences = {
   theme: 'dark',
   fontSize: 'medium',
   messageBehavior: 'enter_send',
   notifications: true,
-  soundEnabled: true,
+  showTimestamps: true
 };
 
-/**
- * Central store for chat layout and UI preferences
- */
-export const useChatLayoutStore = create<ChatLayoutState>((set, get) => ({
-  // Default state
+// Initial layout state
+const initialState: ChatLayoutState = {
+  isMinimized: false,
+  docked: true,
+  position: { x: 0, y: 0 },
+  scale: 1,
+  showSidebar: false,
   dockedItems: {},
-  dockedSections: {},
-  uiPreferences: { ...DEFAULT_UI_PREFERENCES },
-  isLoading: false,
+  uiPreferences: defaultUIPreferences
+};
+
+interface ChatLayoutStore extends ChatLayoutState {
+  // Action methods
+  setMinimized: (isMinimized: boolean) => void;
+  toggleMinimized: () => void;
+  setDocked: (docked: boolean) => void;
+  toggleDocked: () => void;
+  setPosition: (position: ChatPosition) => void;
+  setScale: (scale: number) => void;
+  toggleSidebar: () => void;
+  setSidebar: (visible: boolean) => void;
+  setDockedItem: (id: string, position: DockPosition) => void;
+  updateUIPreferences: (preferences: Partial<ChatUIPreferences>) => void;
+  resetLayout: () => void;
   
-  // Actions
-  setDockedItem: (itemId, position, order = 0) => {
-    set(state => ({
-      dockedItems: {
-        ...state.dockedItems,
-        [itemId]: { position, order }
-      }
-    }));
-  },
+  // Persistence methods
+  saveLayoutToStorage: () => Promise<boolean>;
+  loadLayoutFromStorage: () => Promise<boolean>;
+}
+
+/**
+ * Store for managing chat UI layout and docking
+ */
+export const useChatLayoutStore = create<ChatLayoutStore>((set, get) => ({
+  ...initialState,
+
+  // UI state setters
+  setMinimized: (isMinimized) => set({ isMinimized }),
   
-  setDockedSection: (sectionId, position, order = 0) => {
-    set(state => ({
-      dockedSections: {
-        ...state.dockedSections,
-        [sectionId]: { position, order }
-      }
-    }));
-  },
+  toggleMinimized: () => set(state => ({ isMinimized: !state.isMinimized })),
   
-  updateUIPreferences: (updates) => {
-    set(state => ({
-      uiPreferences: {
-        ...state.uiPreferences,
-        ...updates
-      }
-    }));
-  },
+  setDocked: (docked) => set({ docked }),
   
-  // Database integration
-  saveLayoutToDatabase: async () => {
-    const state = get();
-    const { dockedItems, dockedSections, uiPreferences } = state;
-    
+  toggleDocked: () => set(state => ({ docked: !state.docked })),
+  
+  setPosition: (position) => set({ position }),
+  
+  setScale: (scale) => set({ scale }),
+  
+  toggleSidebar: () => set(state => ({ showSidebar: !state.showSidebar })),
+  
+  setSidebar: (visible) => set({ showSidebar: visible }),
+  
+  setDockedItem: (id, position) => set(state => ({
+    dockedItems: {
+      ...state.dockedItems,
+      [id]: position
+    }
+  })),
+  
+  updateUIPreferences: (preferences) => set(state => ({
+    uiPreferences: {
+      ...state.uiPreferences,
+      ...preferences
+    }
+  })),
+  
+  resetLayout: () => set({ ...initialState }),
+  
+  // Persistence methods
+  saveLayoutToStorage: async () => {
     try {
-      // First, get the current user
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) {
-        throw new Error('User not authenticated');
-      }
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) return false;
       
-      // Get existing layout or create new one
-      const { data: existingLayout, error: fetchError } = await supabase
-        .from('chat_ui_layout')
-        .select('*')
-        .eq('user_id', userData.user.id)
-        .single();
-      
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        // PGRST116 means "no rows found" which is fine for new users
-        throw fetchError;
-      }
-      
-      // Prepare layout data
-      const layoutData = {
-        user_id: userData.user.id,
-        docked_items: dockedItems,
-        metadata: {
-          sections: dockedSections
-        },
-        ui_preferences: uiPreferences
+      const layout = {
+        is_minimized: get().isMinimized,
+        docked: get().docked,
+        position: get().position,
+        scale: get().scale,
+        docked_items: get().dockedItems || {},
+        ui_preferences: get().uiPreferences
       };
       
-      // Save to database
-      let saveError;
+      // First check if a record already exists
+      const { data: existingLayout } = await supabase
+        .from('chat_ui_layout')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+        
       if (existingLayout) {
+        // Update existing record
         const { error } = await supabase
           .from('chat_ui_layout')
-          .update(layoutData)
+          .update(layout)
           .eq('id', existingLayout.id);
-        saveError = error;
+          
+        if (error) throw error;
       } else {
+        // Insert new record
         const { error } = await supabase
           .from('chat_ui_layout')
-          .insert([layoutData]);
-        saveError = error;
+          .insert({
+            ...layout,
+            user_id: userId
+          });
+          
+        if (error) throw error;
       }
       
-      if (saveError) throw saveError;
-      logger.info('Saved chat layout to database');
+      // Also save to localStorage as fallback
+      localStorage.setItem('chat_layout', JSON.stringify({
+        ...layout,
+        user_id: userId
+      }));
+      
+      logger.info('Saved chat layout to storage');
       return true;
     } catch (error) {
-      logger.error('Failed to save chat layout', { error });
+      logger.error('Failed to save layout to storage', { error });
       return false;
     }
   },
   
-  loadLayoutFromDatabase: async () => {
-    set({ isLoading: true });
-    
+  loadLayoutFromStorage: async () => {
     try {
-      // Get the current user
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) {
-        throw new Error('User not authenticated');
-      }
+      const userId = (await supabase.auth.getUser()).data.user?.id;
       
-      // Fetch user's layout
-      const { data, error } = await supabase
-        .from('chat_ui_layout')
-        .select('*')
-        .eq('user_id', userData.user.id)
-        .single();
-      
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // No layout found, use defaults
+      // Try to load from Supabase if user is logged in
+      if (userId) {
+        const { data, error } = await supabase
+          .from('chat_ui_layout')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+          
+        if (error) {
+          // If no record found, try localStorage
+          const localLayout = localStorage.getItem('chat_layout');
+          if (localLayout) {
+            const parsedLayout = JSON.parse(localLayout);
+            set({
+              isMinimized: parsedLayout.is_minimized || false,
+              docked: parsedLayout.docked || true,
+              position: parsedLayout.position || { x: 0, y: 0 },
+              scale: parsedLayout.scale || 1,
+              dockedItems: parsedLayout.docked_items || {},
+              uiPreferences: parsedLayout.ui_preferences || defaultUIPreferences
+            });
+            return true;
+          }
+          return false;
+        }
+        
+        if (data) {
+          set({
+            isMinimized: data.is_minimized || false,
+            docked: data.docked || true,
+            position: data.position || { x: 0, y: 0 },
+            scale: data.scale || 1,
+            dockedItems: data.docked_items || {},
+            uiPreferences: data.ui_preferences || defaultUIPreferences
+          });
+          logger.info('Loaded chat layout from database');
           return true;
         }
-        throw error;
+      } else {
+        // Try localStorage for non-logged in users
+        const localLayout = localStorage.getItem('chat_layout');
+        if (localLayout) {
+          const parsedLayout = JSON.parse(localLayout);
+          set({
+            isMinimized: parsedLayout.is_minimized || false,
+            docked: parsedLayout.docked || true,
+            position: parsedLayout.position || { x: 0, y: 0 },
+            scale: parsedLayout.scale || 1,
+            dockedItems: parsedLayout.docked_items || {},
+            uiPreferences: parsedLayout.ui_preferences || defaultUIPreferences
+          });
+          return true;
+        }
       }
       
-      // Update state with fetched layout
-      set({
-        dockedItems: data.docked_items || {},
-        dockedSections: data.metadata?.sections || {},
-        uiPreferences: data.ui_preferences || DEFAULT_UI_PREFERENCES
-      });
-      
-      logger.info('Loaded chat layout from database');
-      return true;
-    } catch (error) {
-      logger.error('Failed to load chat layout', { error });
       return false;
-    } finally {
-      set({ isLoading: false });
+    } catch (error) {
+      logger.error('Failed to load layout from storage', { error });
+      return false;
     }
-  },
-  
-  resetLayout: () => {
-    set({
-      dockedItems: {},
-      dockedSections: {},
-      uiPreferences: { ...DEFAULT_UI_PREFERENCES }
-    });
   }
 }));
 
-// Initialize layout from localStorage as fallback if available
+// Initialize on mount if in browser context
 if (typeof window !== 'undefined') {
-  try {
-    const savedLayout = localStorage.getItem('wired_front_chat_layout');
-    
-    if (savedLayout) {
-      const parsedLayout = JSON.parse(savedLayout);
-      useChatLayoutStore.setState({
-        dockedItems: parsedLayout.dockedItems || {},
-        dockedSections: parsedLayout.dockedSections || {},
-        uiPreferences: parsedLayout.uiPreferences || DEFAULT_UI_PREFERENCES
-      });
-    }
-  } catch (error) {
-    logger.error('Failed to initialize chat layout from localStorage', { error });
-  }
-}
-
-// Setup autosave to localStorage
-if (typeof window !== 'undefined') {
-  useChatLayoutStore.subscribe((state) => {
-    try {
-      const { dockedItems, dockedSections, uiPreferences } = state;
-      localStorage.setItem('wired_front_chat_layout', JSON.stringify({
-        dockedItems, 
-        dockedSections,
-        uiPreferences
-      }));
-    } catch (error) {
-      logger.error('Failed to save chat layout to localStorage', { error });
-    }
+  useChatLayoutStore.getState().loadLayoutFromStorage().catch(() => {
+    logger.warn('Failed to load layout, using defaults');
   });
 }
