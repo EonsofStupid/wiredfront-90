@@ -1,7 +1,6 @@
-
 import { useState, useCallback } from 'react';
 import { useChatStore } from '@/components/chat/store';
-import { ChatMode } from '@/components/chat/store/types/chat-store-types';
+import { ChatMode } from '@/types/chat';
 import { toast } from 'sonner';
 import { useChatCore } from '@/hooks/useChatCore';
 import { logger } from '@/services/chat/LoggingService';
@@ -11,7 +10,7 @@ export function useModeSwitch() {
   const { currentMode, setCurrentMode } = useChatStore();
   const { switchMode, providers, getProvidersByCategory } = useChatCore();
   
-  const availableModes = ['chat', 'dev', 'image', 'training'] as const;
+  const availableModes: ChatMode[] = ['chat', 'dev', 'image', 'training'];
   
   const getModeLabel = useCallback((mode: ChatMode): string => {
     switch (mode) {

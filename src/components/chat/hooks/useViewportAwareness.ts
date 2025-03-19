@@ -36,11 +36,11 @@ export function useViewportAwareness() {
       const { width: viewportWidth, height: viewportHeight } = viewportDimensions;
       
       // Check if overflowing horizontally
-      const isOverflowingX = (position === 'bottom-right' && rect.right > viewportWidth) || 
-                            (position === 'bottom-left' && rect.left < 0);
+      const isOverflowingX = (position.x + rect.width > viewportWidth) || 
+                            (position.x < 0);
                             
       // Check if overflowing vertically
-      const isOverflowingY = rect.bottom > viewportHeight;
+      const isOverflowingY = position.y + rect.height > viewportHeight;
       
       const currentlyOverflowing = isOverflowingX || isOverflowingY;
       

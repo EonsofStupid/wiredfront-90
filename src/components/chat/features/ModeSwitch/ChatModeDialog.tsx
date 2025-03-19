@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ChatMode } from '@/integrations/supabase/types/enums';
+import { ChatMode } from '@/types/chat';
 import { useChatMode } from '../../providers/ChatModeProvider';
 import { ModeCard } from './ModeCard';
 import { Code, Image, MessageSquare, GraduationCap } from 'lucide-react';
@@ -14,15 +13,15 @@ interface ChatModeDialogProps {
 }
 
 export function ChatModeDialog({ open, onOpenChange, onModeSelect }: ChatModeDialogProps) {
-  const { mode, setMode } = useChatMode();
+  const { currentMode, setMode } = useChatMode();
   const { availableProviders } = useChatStore();
   
   const handleModeSelect = (newMode: ChatMode, providerId: string) => {
     // Close the dialog
     onOpenChange(false);
     
-    // Update the mode in the provider (with navigation)
-    setMode(newMode, true);
+    // Update the mode in the provider
+    setMode(newMode);
     
     // Call the onModeSelect callback to update related state
     onModeSelect(newMode, providerId);
@@ -40,7 +39,7 @@ export function ChatModeDialog({ open, onOpenChange, onModeSelect }: ChatModeDia
             title="Chat"
             description="General assistance"
             icon={<MessageSquare className="h-8 w-8 text-neon-blue" />}
-            isActive={mode === 'chat'}
+            isActive={currentMode === 'chat'}
             providerId={availableProviders.find(p => p.category === 'chat')?.id || ''}
             onSelect={() => handleModeSelect('chat', availableProviders.find(p => p.category === 'chat')?.id || '')}
           />
@@ -49,7 +48,7 @@ export function ChatModeDialog({ open, onOpenChange, onModeSelect }: ChatModeDia
             title="Developer"
             description="Code assistance"
             icon={<Code className="h-8 w-8 text-neon-green" />}
-            isActive={mode === 'dev'}
+            isActive={currentMode === 'dev'}
             providerId={availableProviders.find(p => p.category === 'chat')?.id || ''}
             onSelect={() => handleModeSelect('dev', availableProviders.find(p => p.category === 'chat')?.id || '')}
           />
@@ -58,7 +57,7 @@ export function ChatModeDialog({ open, onOpenChange, onModeSelect }: ChatModeDia
             title="Image"
             description="Generate images"
             icon={<Image className="h-8 w-8 text-neon-pink" />}
-            isActive={mode === 'image'}
+            isActive={currentMode === 'image'}
             providerId={availableProviders.find(p => p.category === 'image')?.id || ''}
             onSelect={() => handleModeSelect('image', availableProviders.find(p => p.category === 'image')?.id || '')}
           />
@@ -67,7 +66,7 @@ export function ChatModeDialog({ open, onOpenChange, onModeSelect }: ChatModeDia
             title="Training"
             description="Learn and practice"
             icon={<GraduationCap className="h-8 w-8 text-orange-400" />}
-            isActive={mode === 'training'}
+            isActive={currentMode === 'training'}
             providerId={availableProviders.find(p => p.category === 'chat')?.id || ''}
             onSelect={() => handleModeSelect('training', availableProviders.find(p => p.category === 'chat')?.id || '')}
           />
