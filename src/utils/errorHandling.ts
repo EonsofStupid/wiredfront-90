@@ -1,5 +1,5 @@
 
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 export class AppError extends Error {
   constructor(
@@ -29,27 +29,21 @@ export const handleError = (error: unknown) => {
   console.error('Error caught:', error);
   
   if (error instanceof AppError) {
-    toast({
-      title: error.severity === 'error' ? 'Error' : 'Warning',
+    toast.error(error.severity === 'error' ? 'Error' : 'Warning', {
       description: error.message,
-      variant: error.severity === 'error' ? 'destructive' : 'default',
     });
     return;
   }
 
   if (error instanceof Error) {
-    toast({
-      title: 'Error',
+    toast.error('Error', {
       description: error.message,
-      variant: 'destructive',
     });
     return;
   }
 
-  toast({
-    title: 'Error',
+  toast.error('Error', {
     description: 'An unexpected error occurred',
-    variant: 'destructive',
   });
 };
 

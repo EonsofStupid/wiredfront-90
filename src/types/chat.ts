@@ -1,3 +1,4 @@
+
 import { Json } from '@/integrations/supabase/types';
 
 export type MessageStatus = 'pending' | 'sent' | 'failed' | 'error' | 'cached';

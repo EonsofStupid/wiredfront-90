@@ -1,3 +1,4 @@
+
 import { ChatMode, isChatMode } from '@/types/chat';
 
 export type MessageType = 'text' | 'command' | 'system';
