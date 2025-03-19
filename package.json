@@ -1,7 +1,7 @@
 {
-  "name": "wiredfront-90",
+  "name": "lovable-app",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,26 +10,8 @@
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
     "generate-barrels": "tsx scripts/generate-barrels.ts",
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-    "test": "vitest"
-    "build:dev": "vite build --mode development"
-  }
-}
-
-=======
     "test": "vitest",
     "test:coverage": "vitest run --coverage"
->>>>>>> Stashed changes
-=======
-    "test": "vitest",
-    "test:coverage": "vitest run --coverage"
->>>>>>> parent of af41370 (packages)
-=======
-    "test": "vitest",
-    "test:coverage": "vitest run --coverage"
->>>>>>> parent of af41370 (packages)
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
@@ -43,13 +25,15 @@
     "@tanstack/react-query": "^5.18.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "jotai": "^2.6.4",
     "lucide-react": "^0.323.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.50.1",
     "tailwind-merge": "^2.2.1",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "zustand": "^4.5.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.19",
