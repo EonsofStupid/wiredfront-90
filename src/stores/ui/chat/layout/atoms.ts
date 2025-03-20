@@ -3,18 +3,17 @@ import { logger } from '@/services/chat/LoggingService';
 import { toJson } from '@/types/supabase';
 import { atom, Getter, Setter } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-import { ChatLayoutState, ChatUIPreferences } from './types';
+import type { ChatLayoutState, ChatUIPreferences } from './types';
 
 // Storage key constants
 const STORAGE_KEYS = {
-  IS_MINIMIZED: 'chat-is-minimized',
+  LAYOUT_PREFERENCES: 'chat-layout-preferences',
   SCALE: 'chat-scale',
-  SHOW_SIDEBAR: 'chat-show-sidebar',
-  UI_PREFERENCES: 'chat-ui-preferences'
+  SIDEBAR: 'chat-sidebar'
 } as const;
 
-// Default UI preferences
-const defaultUIPreferences: ChatUIPreferences = {
+// Default preferences
+const DEFAULT_PREFERENCES: ChatUIPreferences = {
   theme: 'dark',
   fontSize: 'medium',
   messageBehavior: 'enter_send',
@@ -23,37 +22,41 @@ const defaultUIPreferences: ChatUIPreferences = {
 };
 
 // Base atoms
-export const isMinimizedAtom = atomWithStorage<boolean>(STORAGE_KEYS.IS_MINIMIZED, false);
+export const isMinimizedAtom = atom<boolean>(false);
 export const scaleAtom = atomWithStorage<number>(STORAGE_KEYS.SCALE, 1);
-export const showSidebarAtom = atomWithStorage<boolean>(STORAGE_KEYS.SHOW_SIDEBAR, false);
-export const uiPreferencesAtom = atomWithStorage<ChatUIPreferences>(STORAGE_KEYS.UI_PREFERENCES, defaultUIPreferences);
+export const showSidebarAtom = atomWithStorage<boolean>(STORAGE_KEYS.SIDEBAR, false);
+export const preferencesAtom = atomWithStorage<ChatUIPreferences>(
+  STORAGE_KEYS.LAYOUT_PREFERENCES,
+  DEFAULT_PREFERENCES
+);
 
 // Derived atom for the entire layout state
 export const layoutStateAtom = atom((get: Getter): ChatLayoutState => ({
   isMinimized: get(isMinimizedAtom),
   scale: get(scaleAtom),
   showSidebar: get(showSidebarAtom),
-  uiPreferences: get(uiPreferencesAtom)
+  uiPreferences: get(preferencesAtom)
 }));
 
 // Action atoms
 export const toggleMinimizedAtom = atom(
   null,
   (get: Getter, set: Setter) => {
-    set(isMinimizedAtom, !get(isMinimizedAtom));
+    const current = get(isMinimizedAtom);
+    set(isMinimizedAtom, !current);
   }
 );
 
 export const setMinimizedAtom = atom(
   null,
-  (get: Getter, set: Setter, isMinimized: boolean) => {
+  (_: Getter, set: Setter, isMinimized: boolean) => {
     set(isMinimizedAtom, isMinimized);
   }
 );
 
 export const setScaleAtom = atom(
   null,
-  (get: Getter, set: Setter, scale: number) => {
+  (_: Getter, set: Setter, scale: number) => {
     set(scaleAtom, scale);
   }
 );
@@ -61,31 +64,34 @@ export const setScaleAtom = atom(
 export const toggleSidebarAtom = atom(
   null,
   (get: Getter, set: Setter) => {
-    set(showSidebarAtom, !get(showSidebarAtom));
+    const current = get(showSidebarAtom);
+    set(showSidebarAtom, !current);
   }
 );
 
 export const setSidebarAtom = atom(
   null,
-  (get: Getter, set: Setter, visible: boolean) => {
-    set(showSidebarAtom, visible);
+  (_: Getter, set: Setter, show: boolean) => {
+    set(showSidebarAtom, show);
   }
 );
 
-export const updateUIPreferencesAtom = atom(
+export const updatePreferencesAtom = atom(
   null,
   (get: Getter, set: Setter, preferences: Partial<ChatUIPreferences>) => {
-    set(uiPreferencesAtom, { ...get(uiPreferencesAtom), ...preferences });
+    const current = get(preferencesAtom);
+    set(preferencesAtom, { ...current, ...preferences });
   }
 );
 
+// Reset atom
 export const resetLayoutAtom = atom(
   null,
   (get: Getter, set: Setter) => {
     set(isMinimizedAtom, false);
     set(scaleAtom, 1);
     set(showSidebarAtom, false);
-    set(uiPreferencesAtom, defaultUIPreferences);
+    set(preferencesAtom, DEFAULT_PREFERENCES);
   }
 );
 
@@ -101,7 +107,7 @@ export const saveLayoutToStorageAtom = atom(
         is_minimized: get(isMinimizedAtom),
         scale: get(scaleAtom),
         show_sidebar: get(showSidebarAtom),
-        ui_preferences: toJson(get(uiPreferencesAtom))
+        ui_preferences: toJson(get(preferencesAtom))
       };
 
       // First check if a record already exists
@@ -160,7 +166,7 @@ export const loadLayoutFromStorageAtom = atom(
           set(showSidebarAtom, data.show_sidebar || false);
 
           // Parse ui_preferences or use defaults
-          let uiPrefs = defaultUIPreferences;
+          let uiPrefs = DEFAULT_PREFERENCES;
           if (data.ui_preferences) {
             try {
               if (typeof data.ui_preferences === 'string') {
@@ -173,7 +179,7 @@ export const loadLayoutFromStorageAtom = atom(
             }
           }
 
-          set(uiPreferencesAtom, uiPrefs);
+          set(preferencesAtom, uiPrefs);
 
           logger.info('Loaded chat layout from database');
           return true;

@@ -8,7 +8,7 @@ export interface ChatLayoutState {
 export interface ChatUIPreferences {
   theme: 'light' | 'dark' | 'system';
   fontSize: 'small' | 'medium' | 'large';
-  messageBehavior: 'enter_send' | 'ctrl_enter_send';
+  messageBehavior: 'enter_send' | 'shift_enter_send';
   notifications: boolean;
   showTimestamps: boolean;
 }
@@ -18,7 +18,7 @@ export interface ChatLayoutActions {
   setMinimized: (isMinimized: boolean) => void;
   setScale: (scale: number) => void;
   toggleSidebar: () => void;
-  setSidebar: (visible: boolean) => void;
+  setSidebar: (show: boolean) => void;
   updatePreferences: (preferences: Partial<ChatUIPreferences>) => void;
   reset: () => void;
   saveToStorage: () => Promise<boolean>;
