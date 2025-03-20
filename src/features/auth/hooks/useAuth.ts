@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store';
 import type { LoginCredentials } from '../types';
+import { clearLastVisitedPath, getLastVisitedPath } from '../utils';
 
 export const useAuth = () => {
   const navigate = useNavigate();
@@ -18,9 +19,9 @@ export const useAuth = () => {
     try {
       const result = await login(credentials);
       if (result.success) {
-        // Get the stored path or default to dashboard
-        const redirectTo = sessionStorage.getItem('lastVisitedPath') || '/dashboard';
-        sessionStorage.removeItem('lastVisitedPath');
+        // Get the stored path and clear it
+        const redirectTo = getLastVisitedPath();
+        clearLastVisitedPath();
         navigate(redirectTo);
       }
       return result;
