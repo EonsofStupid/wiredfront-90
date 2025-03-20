@@ -28,3 +28,18 @@ export * from './hooks/useChatUI';
 
 // Styles
 import './styles/chat.css';
+
+export { ChatManagerWithErrorBoundary as ChatManager } from './ChatManager';
+export { ChatProvider } from './ChatProvider';
+export { ChatErrorBoundary } from './components/ChatErrorBoundary';
+export { DraggableChatWithErrorBoundary as DraggableChat } from './DraggableChat';
+export { Message } from './Message';
+
+// Re-export other components and utilities
+export * from './ChatSidebar';
+export * from './components';
+export * from './features';
+export * from './hooks';
+export * from './messages';
+export * from './messaging';
+export * from './SessionManagement';

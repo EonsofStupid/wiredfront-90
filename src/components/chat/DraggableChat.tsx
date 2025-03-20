@@ -1,36 +1,37 @@
-import React, { useRef, useEffect, useState } from "react";
+import { logger } from "@/services/chat/LoggingService";
+import { ChatMode } from '@/types/chat';
+import { supabaseModeToStoreMode } from "@/utils/modeConversion";
 import { DndContext } from "@dnd-kit/core";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { toast } from "sonner";
 import { ChatSidebar } from "./ChatSidebar";
+import { ChatErrorBoundary } from './components/ChatErrorBoundary';
 import ChatToggleButton from "./components/ChatToggleButton";
 import DraggableChatContainer from "./components/DraggableChatContainer";
+import { ChatModeDialog } from "./features/ModeSwitch/ChatModeDialog";
 import { useViewportAwareness } from "./hooks/useViewportAwareness";
 import { useChatStore } from "./store";
 import { useChatButtonStore } from "./store/chatButtonStore";
-import { useLocation } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
-import { logger } from "@/services/chat/LoggingService";
-import { ChatModeDialog } from "./features/ModeSwitch/ChatModeDialog";
-import { ChatMode } from '@/types/chat';
-import { supabaseModeToStoreMode } from "@/utils/modeConversion";
-import { toast } from "sonner";
-import "./styles/index.css";
 import "./styles/cyber-theme.css";
+import "./styles/index.css";
 
 export function DraggableChat() {
-  const { 
-    isOpen, 
-    toggleChat, 
-    isMinimized, 
-    showSidebar, 
+  const {
+    isOpen,
+    toggleChat,
+    isMinimized,
+    showSidebar,
     scale,
     docked,
     setCurrentMode,
     updateCurrentProvider,
     availableProviders
   } = useChatStore();
-  
+
   const { position, setPosition } = useChatButtonStore();
-  
+
   const { containerRef, isOverflowing } = useViewportAwareness();
   const scrollRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
@@ -68,10 +69,10 @@ export function DraggableChat() {
 
   // Log significant chat state changes
   useEffect(() => {
-    logger.info('Chat state updated', { 
-      isOpen, 
-      position, 
-      isMinimized, 
+    logger.info('Chat state updated', {
+      isOpen,
+      position,
+      isMinimized,
       showSidebar,
       scale,
       isOverflowing,
@@ -84,18 +85,18 @@ export function DraggableChat() {
     // Convert from Supabase mode to store mode
     const storeMode = supabaseModeToStoreMode(mode);
     setCurrentMode(storeMode);
-    
+
     // Find and update current provider
     const provider = availableProviders.find(p => p.id === providerId);
     if (provider) {
       updateCurrentProvider(provider);
-      
+
       toast.success(`Switched to ${provider.name} in ${mode} mode`, {
         position: "bottom-right",
         duration: 3000,
       });
     }
-    
+
     // Ensure chat is open when changing modes
     if (!isOpen) {
       toggleChat();
@@ -120,12 +121,12 @@ export function DraggableChat() {
 
   return (
     <DndContext>
-      <motion.div 
+      <motion.div
         className={`fixed bottom-4 ${positionClass} flex gap-4 chat-component z-[var(--z-chat)]`}
-        style={{ 
+        style={{
           transformOrigin: position === 'bottom-right' ? 'bottom right' : 'bottom left'
         }}
-        animate={{ 
+        animate={{
           scale: isOverflowing ? scale : 1,
           transition: { duration: 0.3, ease: "easeOut" }
         }}
@@ -144,7 +145,7 @@ export function DraggableChat() {
             </motion.div>
           )}
         </AnimatePresence>
-        
+
         <DraggableChatContainer
           scrollRef={scrollRef}
           isEditorPage={isEditorPage}
@@ -154,4 +155,9 @@ export function DraggableChat() {
   );
 }
 
-export default DraggableChat;
+// Wrap the component with error boundary
+export const DraggableChatWithErrorBoundary = () => (
+  <ChatErrorBoundary>
+    <DraggableChat />
+  </ChatErrorBoundary>
+);

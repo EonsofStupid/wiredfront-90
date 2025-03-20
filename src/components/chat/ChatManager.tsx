@@ -1,8 +1,8 @@
-
-import React, { useState, useEffect } from 'react';
 import { chatSessionsService } from '@/services/chat/chatSessionsService';
 import { EnhancedChatSession } from '@/types/chat/preferences';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { ChatErrorBoundary } from './components/ChatErrorBoundary';
 
 export function ChatManager() {
   const [sessions, setSessions] = useState<EnhancedChatSession[]>([]);
@@ -46,7 +46,7 @@ export function ChatManager() {
         <p className="text-muted-foreground">
           Start a new chat to begin your conversation
         </p>
-        <button 
+        <button
           className="mt-4 px-4 py-2 bg-primary text-white rounded"
           onClick={async () => {
             try {
@@ -75,8 +75,8 @@ export function ChatManager() {
       <h2 className="text-xl font-medium mb-4">Your Chat Sessions</h2>
       <div className="space-y-2">
         {sessions.map(session => (
-          <div 
-            key={session.id} 
+          <div
+            key={session.id}
             className="p-3 border rounded hover:bg-accent cursor-pointer"
           >
             <h3 className="font-medium">{session.title}</h3>
@@ -89,7 +89,7 @@ export function ChatManager() {
           </div>
         ))}
       </div>
-      <button 
+      <button
         className="mt-4 px-4 py-2 bg-primary text-white rounded"
         onClick={async () => {
           try {
@@ -112,3 +112,10 @@ export function ChatManager() {
     </div>
   );
 }
+
+// Wrap the component with error boundary
+export const ChatManagerWithErrorBoundary = () => (
+  <ChatErrorBoundary>
+    <ChatManager />
+  </ChatErrorBoundary>
+);

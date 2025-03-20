@@ -1,8 +1,8 @@
-
+import { logger } from '@/services/chat/LoggingService';
+import { ChatMode } from '@/types/chat';
+import { ModeStore } from '@/types/chat/store';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { ChatMode, ModeStore } from '@/types/chat';
-import { logger } from '@/services/chat/LoggingService';
 
 // Create the store
 export const useChatModeStore = create<ModeStore>()(
@@ -14,7 +14,7 @@ export const useChatModeStore = create<ModeStore>()(
         isTransitioning: false,
         transitionProgress: 0,
 
-        setMode: (mode) => {
+        setMode: (mode: ChatMode) => {
           set({
             currentMode: mode,
             previousMode: get().currentMode !== mode ? get().currentMode : get().previousMode,
@@ -24,7 +24,7 @@ export const useChatModeStore = create<ModeStore>()(
           logger.info('Chat mode set', { mode });
         },
 
-        switchMode: async (mode) => {
+        switchMode: async (mode: ChatMode) => {
           if (get().isTransitioning) {
             // Cancel current transition first
             get().cancelTransition();
@@ -58,12 +58,12 @@ export const useChatModeStore = create<ModeStore>()(
               isTransitioning: false,
               transitionProgress: 100
             });
-            
+
             // After a short delay, reset the progress
             setTimeout(() => {
               set({ transitionProgress: 0 });
             }, 300);
-            
+
             logger.info('Chat mode switched', { mode, previousMode: get().previousMode });
           }, 500);
         },
