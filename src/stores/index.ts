@@ -1,125 +1,84 @@
-
 /**
  * Central export file for all stores
  */
 
 // Domain stores with namespaced exports
 export * from './auth';
+export * from './core';
 export * from './data';
-export * from './settings';
-export * from './ui';
 export * from './features';
 export * from './session';
-export * from './core';
+export * from './settings';
+export * from './ui';
 
 // Global Zustand stores
 export {
-  useAuthStore,
-  useUser,
-  useIsAuthenticated,
-  useAuthToken,
-  useAuthActions
+    useAuthActions, useAuthStore, useAuthToken, useIsAuthenticated, useUser
 } from './global/auth/store';
 
 export {
-  useSettingsStore,
-  usePreferences,
-  useTheme as useGlobalTheme,
-  useSettingsActions
+    useTheme as useGlobalTheme, usePreferences, useSettingsActions, useSettingsStore
 } from './global/settings/store';
 
 export {
-  useCoreStore,
-  useAppVersion,
-  useIsInitialized,
-  useIsOnline,
-  useLastActive,
-  useCoreActions
+    useAppVersion, useCoreActions, useCoreStore, useIsInitialized,
+    useIsOnline,
+    useLastActive
 } from './global/core/store';
 
 // Feature-specific Zustand stores
 export {
-  useChatModeStore,
-  useCurrentMode,
-  useModeActions
+    useChatModeStore,
+    useCurrentMode,
+    useModeActions
 } from './features/chat/modeStore';
 
 export {
-  useChatMessageStore,
-  useMessages,
-  useMessageActions
+    useChatMessageStore, useMessageActions, useMessages
 } from './features/chat/messageStore';
 
 export {
-  useChatSessionStore,
-  useCurrentSession,
-  useSessions,
-  useSessionActions
+    useChatSessionStore,
+    useCurrentSession, useSessionActions, useSessions
 } from './features/chat/sessionStore';
 
 export {
-  useTokenStore,
-  useTokenBalance,
-  useTokenEnforcementMode,
-  useTokenUsage
+    useTokenBalance,
+    useTokenEnforcementMode, useTokenStore, useTokenUsage
 } from './features/tokens/store';
 
 export {
-  useVectorStore,
-  useVectorConfigurations,
-  useSelectedVectorConfig,
-  useVectorLoadingState,
-  useVectorError
+    useSelectedVectorConfig, useVectorConfigurations, useVectorError, useVectorLoadingState, useVectorStore
 } from './features/vector/store';
 
 // Jotai UI stores
 export {
-  // Atoms
-  isMinimizedAtom,
-  scaleAtom,
-  showSidebarAtom,
-  uiPreferencesAtom,
-  layoutStateAtom,
-  
-  // Actions
-  toggleMinimizedAtom,
-  setMinimizedAtom,
-  setScaleAtom,
-  toggleSidebarAtom,
-  setSidebarAtom,
-  updateUIPreferencesAtom,
-  resetLayoutAtom,
-  
-  // Persistence
-  saveLayoutToStorageAtom,
-  loadLayoutFromStorageAtom,
-  initializeLayoutAtom
+    initializeLayoutAtom,
+    // Atoms
+    isMinimizedAtom, layoutStateAtom, loadLayoutFromStorageAtom, resetLayoutAtom,
+
+    // Persistence
+    saveLayoutToStorageAtom, scaleAtom, setMinimizedAtom,
+    setScaleAtom, setSidebarAtom, showSidebarAtom,
+    // Actions
+    toggleMinimizedAtom, toggleSidebarAtom, uiPreferencesAtom, updateUIPreferencesAtom
 } from './ui/chatLayoutStore';
 
 export {
-  // Atoms
-  dockedAtom,
-  positionAtom,
-  dockedItemsAtom,
-  dockingStateAtom,
-  
-  // Actions
-  setDockedAtom,
-  toggleDockedAtom,
-  setPositionAtom,
-  setDockedItemAtom,
-  resetDockingAtom,
-  
-  // Persistence
-  saveDockingToStorageAtom,
-  loadDockingFromStorageAtom,
-  initializeDockingAtom
+    // Atoms
+    dockedAtom, dockedItemsAtom,
+    dockingStateAtom, initializeDockingAtom, loadDockingFromStorageAtom, positionAtom, resetDockingAtom,
+
+    // Persistence
+    saveDockingToStorageAtom,
+    // Actions
+    setDockedAtom, setDockedItemAtom, setPositionAtom, toggleDockedAtom
 } from './ui/chatDockingStore';
 
 export {
-  // UI Store
-  useUIStore,
-  useTheme,
-  useSidebarState,
-  useActivePanel
+    useActivePanel, useSidebarState, useTheme,
+    // UI Store
+    useUIStore
 } from './ui/store';
+
+export * from './global';
