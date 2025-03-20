@@ -1,8 +1,7 @@
-
-import React from "react";
 import { AlertTriangle } from "lucide-react";
-import { ErrorBoundary as BaseErrorBoundary } from "@/components/error/ErrorBoundary";
-import { Button } from "@/components/ui/button";
+import React from "react";
+import { ErrorBoundary as BaseErrorBoundary } from "../../../components/error/ErrorBoundary";
+import { Button } from "../../../components/ui/button";
 
 interface MobileErrorFallbackProps {
   error: Error;
@@ -20,13 +19,13 @@ const MobileErrorFallback = ({ error, resetErrorBoundary }: MobileErrorFallbackP
             {error.message || "An unexpected error occurred in the mobile app"}
           </p>
           <div className="flex gap-2 mt-4">
-            <Button 
+            <Button
               onClick={resetErrorBoundary}
               className="mobile-button"
             >
               Try again
             </Button>
-            <Button 
+            <Button
               onClick={() => window.location.reload()}
               className="mobile-button-outline"
             >
