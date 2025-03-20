@@ -18,7 +18,7 @@ import {
   loadLayoutFromStorageAtom,
   initializeLayoutAtom,
   layoutStateAtom
-} from '@/stores';
+} from '@/stores/ui/chatLayoutStore';
 import { ChatTheme } from '@/types/chat/ui';
 
 /**

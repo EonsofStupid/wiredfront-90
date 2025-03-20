@@ -17,20 +17,20 @@ export {
   useChatModeStore,
   useCurrentMode,
   useModeActions
-} from './global/chatModeStore';
+} from './features/chat/modeStore';
 
 export {
   useChatMessageStore,
   useMessages,
   useMessageActions
-} from './global/chatMessageStore';
+} from './features/chat/messageStore';
 
 export {
   useChatSessionStore,
   useCurrentSession,
   useSessions,
   useSessionActions
-} from './global/chatSessionStore';
+} from './features/chat/sessionStore';
 
 // Jotai UI stores
 export {
