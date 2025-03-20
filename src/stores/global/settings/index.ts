@@ -1,4 +1,3 @@
-
 /**
  * Settings store exports
  */
@@ -8,3 +7,5 @@ export * from './store';
 
 // Export types
 export * from './types';
+
+export * from './settingsStore';
