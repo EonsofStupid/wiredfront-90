@@ -1,4 +1,4 @@
-import { atom } from 'jotai';
+import { atom, Getter, Setter } from 'jotai';
 import type { ModalStack } from './types';
 
 // Base atoms
@@ -6,8 +6,8 @@ const modalStackAtom = atom<ModalStack>({});
 
 // Derived atoms
 const modalStateAtom = atom(
-  (get) => get(modalStackAtom),
-  (get, set, update: Partial<ModalStack>) => {
+  (get: Getter) => get(modalStackAtom),
+  (get: Getter, set: Setter, update: Partial<ModalStack>) => {
     set(modalStackAtom, { ...get(modalStackAtom), ...update });
   }
 );
@@ -15,7 +15,7 @@ const modalStateAtom = atom(
 // Action atoms
 export const openModalAtom = atom(
   null,
-  (get, set, { id, props = {} }: { id: string; props?: Record<string, unknown> }) => {
+  (get: Getter, set: Setter, { id, props = {} }: { id: string; props?: Record<string, unknown> }) => {
     const currentStack = get(modalStackAtom);
     set(modalStackAtom, {
       ...currentStack,
@@ -26,7 +26,7 @@ export const openModalAtom = atom(
 
 export const closeModalAtom = atom(
   null,
-  (get, set, id: string) => {
+  (get: Getter, set: Setter, id: string) => {
     const currentStack = get(modalStackAtom);
     if (currentStack[id]) {
       set(modalStackAtom, {
@@ -39,7 +39,7 @@ export const closeModalAtom = atom(
 
 export const updateModalPropsAtom = atom(
   null,
-  (get, set, { id, props }: { id: string; props: Record<string, unknown> }) => {
+  (get: Getter, set: Setter, { id, props }: { id: string; props: Record<string, unknown> }) => {
     const currentStack = get(modalStackAtom);
     if (currentStack[id]) {
       set(modalStackAtom, {
@@ -52,7 +52,7 @@ export const updateModalPropsAtom = atom(
 
 export const removeModalAtom = atom(
   null,
-  (get, set, id: string) => {
+  (get: Getter, set: Setter, id: string) => {
     const currentStack = get(modalStackAtom);
     const { [id]: removed, ...rest } = currentStack;
     set(modalStackAtom, rest);
@@ -61,16 +61,16 @@ export const removeModalAtom = atom(
 
 export const resetModalsAtom = atom(
   null,
-  (_, set) => {
+  (_: Getter, set: Setter) => {
     set(modalStackAtom, {});
   }
 );
 
 // Utility atoms
 export const isModalOpenAtom = atom(
-  (get) => (id: string) => get(modalStackAtom)[id]?.isOpen ?? false
+  (get: Getter) => (id: string) => get(modalStackAtom)[id]?.isOpen ?? false
 );
 
 export const getModalPropsAtom = atom(
-  (get) => (id: string) => get(modalStackAtom)[id]?.props ?? {}
+  (get: Getter) => (id: string) => get(modalStackAtom)[id]?.props ?? {}
 );
