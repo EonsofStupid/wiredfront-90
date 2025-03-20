@@ -1,72 +1,16 @@
 import { logger } from '@/services/chat/LoggingService';
+import type { UserPreferences } from '@/types/store/common/types';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
+import type {
+    SettingsStore
+} from './types';
+import {
+    defaultCacheSettings,
+    defaultSettings
+} from './types';
 
-export interface AppSettings {
-  locale: string;
-  prefersReducedMotion: boolean;
-  developerMode: boolean;
-  defaultView: string;
-  refreshInterval: number;
-  notifications: boolean;
-  timezone: string;
-  highContrast: boolean;
-  reduceMotion: boolean;
-  largeText: boolean;
-  username: string;
-  language: string;
-  livePreview: {
-    enabled: boolean;
-    autoStart: boolean;
-    logLevel: string;
-  };
-}
-
-export interface DashboardLayout {
-  panels: any[];
-}
-
-export interface NotificationSettings {
-  email: boolean;
-  push: boolean;
-  frequency: string;
-  types: string[];
-  marketing: boolean;
-}
-
-export interface CacheSettings {
-  enabled: boolean;
-  ttl: number;
-  maxSize: number;
-  redis: {
-    host: string;
-    port: number;
-    tls: boolean;
-    database: number;
-  };
-}
-
-export interface SettingsState {
-  settings: AppSettings;
-  dashboardLayout: DashboardLayout;
-  notifications: NotificationSettings;
-  cache: CacheSettings;
-}
-
-export interface SettingsActions {
-  updateSettings: (updates: Partial<AppSettings>) => void;
-  resetSettings: () => void;
-  saveDashboardLayout: (layout: DashboardLayout) => void;
-  updateNotifications: (settings: Partial<NotificationSettings>) => void;
-  updateCacheSettings: (settings: Partial<CacheSettings>) => void;
-}
-
-type SettingsStore = SettingsState & SettingsActions;
-
-const defaultSettings: AppSettings = {
-  locale: 'en-US',
-  prefersReducedMotion: false,
-  developerMode: false,
+const defaultPreferences: UserPreferences = {
   defaultView: 'dashboard',
   refreshInterval: 30000,
   notifications: true,
@@ -83,18 +27,6 @@ const defaultSettings: AppSettings = {
   }
 };
 
-const defaultCacheSettings: CacheSettings = {
-  enabled: false,
-  ttl: 3600,
-  maxSize: 100,
-  redis: {
-    host: 'localhost',
-    port: 6379,
-    tls: false,
-    database: 0,
-  },
-};
-
 export const useSettingsStore = create<SettingsStore>()(
   devtools(
     persist(
@@ -109,6 +41,10 @@ export const useSettingsStore = create<SettingsStore>()(
           marketing: false,
         },
         cache: defaultCacheSettings,
+        preferences: defaultPreferences,
+        theme: 'system',
+        isLoading: false,
+        error: null,
 
         updateSettings: (updates) => {
           set(state => ({
@@ -128,7 +64,11 @@ export const useSettingsStore = create<SettingsStore>()(
               types: ['alerts', 'updates'],
               marketing: false,
             },
-            cache: defaultCacheSettings
+            cache: defaultCacheSettings,
+            preferences: defaultPreferences,
+            theme: 'system',
+            isLoading: false,
+            error: null
           });
           logger.info('Settings reset to defaults');
         },
@@ -150,6 +90,18 @@ export const useSettingsStore = create<SettingsStore>()(
             cache: { ...state.cache, ...settings }
           }));
           logger.info('Cache settings updated', { settings });
+        },
+
+        updatePreferences: (preferences) => {
+          set(state => ({
+            preferences: { ...state.preferences, ...preferences }
+          }));
+          logger.info('Preferences updated', { preferences });
+        },
+
+        setTheme: (theme) => {
+          set({ theme });
+          logger.info('Theme updated', { theme });
         }
       }),
       {
@@ -159,6 +111,8 @@ export const useSettingsStore = create<SettingsStore>()(
           dashboardLayout: state.dashboardLayout,
           notifications: state.notifications,
           cache: state.cache,
+          preferences: state.preferences,
+          theme: state.theme
         })
       }
     ),
@@ -174,3 +128,5 @@ export const useAppSettings = () => useSettingsStore(state => state.settings);
 export const useDashboardLayout = () => useSettingsStore(state => state.dashboardLayout);
 export const useNotificationSettings = () => useSettingsStore(state => state.notifications);
 export const useCacheSettings = () => useSettingsStore(state => state.cache);
+export const usePreferences = () => useSettingsStore(state => state.preferences);
+export const useTheme = () => useSettingsStore(state => state.theme);

@@ -1,51 +1,38 @@
-
 /**
- * Message-related types
+ * Message-related types and utilities
  */
 
-// Base message role type
-export type MessageRole = 'user' | 'assistant' | 'system';
+import type {
+    DBMessage,
+    Message,
+    MessageInput,
+    MessageRole,
+    MessageStatus,
+    MessageWithTyping
+} from './core';
 
-// Message status for tracking delivery state
-export type MessageStatus = 'pending' | 'sent' | 'delivered' | 'read' | 'error' | 'failed' | 'cached';
+export type {
+    DBMessage, Message, MessageInput, MessageRole,
+    MessageStatus, MessageWithTyping
+};
 
-// Core message interface
-export interface Message {
+// Additional message-specific types and utilities can be added here
+export interface MessageGroup {
+  messages: Message[];
+  timestamp: string;
+  isCollapsed?: boolean;
+}
+
+export interface MessageThread {
   id: string;
-  session_id?: string;
-  user_id?: string;
-  role: MessageRole;
-  content: string;
-  metadata?: Record<string, any>;
-  message_status?: MessageStatus;
-  status?: MessageStatus; // Legacy support
-  retry_count?: number;
-  last_retry?: string;
-  created_at?: string;
-  updated_at?: string;
-  timestamp?: string; // For UI formatting
-  position_order?: number; // For ordering messages
+  messages: Message[];
+  parentMessageId?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-// Database specific message type
-export interface DBMessage extends Message {
-  type?: 'text' | 'command' | 'system';
-  is_minimized?: boolean;
-  position?: Record<string, any>;
-  window_state?: Record<string, any>;
-  processing_status?: string;
-  provider?: string;
-  rate_limit_window?: string;
-}
-
-// Message input for sending
-export interface MessageInput {
-  content: string;
-  role?: MessageRole;
-  metadata?: Record<string, any>;
-}
-
-// Message with typing status
-export interface MessageWithTyping extends Message {
-  isTyping?: boolean;
+export interface MessageSearchResult {
+  message: Message;
+  context: string;
+  relevance: number;
 }
