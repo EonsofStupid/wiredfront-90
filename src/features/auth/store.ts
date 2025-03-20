@@ -1,7 +1,7 @@
-import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { AuthService } from './service';
 import type { AuthState, AuthStore, LoginCredentials, LoginResponse } from './types';
 
 const initialState: AuthState = {
@@ -36,15 +36,7 @@ export const useAuthStore = create<AuthStore>()(
         set({ status: 'loading', loading: true, error: null });
 
         try {
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email: credentials.email,
-            password: credentials.password,
-          });
-
-          if (error) throw error;
-
-          const { session, user } = data;
-          if (!session) throw new Error('No session returned after login');
+          const { user, session } = await AuthService.login(credentials);
 
           set({
             user,
@@ -74,8 +66,7 @@ export const useAuthStore = create<AuthStore>()(
 
       logout: async () => {
         try {
-          const { error } = await supabase.auth.signOut();
-          if (error) throw error;
+          await AuthService.logout();
 
           set({
             ...initialState,
@@ -94,10 +85,7 @@ export const useAuthStore = create<AuthStore>()(
 
       refreshToken: async () => {
         try {
-          const { data, error } = await supabase.auth.refreshSession();
-          if (error) throw error;
-
-          const { session } = data;
+          const session = await AuthService.refreshSession();
           if (session) {
             set({
               token: session.access_token,
@@ -118,8 +106,7 @@ export const useAuthStore = create<AuthStore>()(
         set({ loading: true });
 
         try {
-          const { data: { session }, error } = await supabase.auth.getSession();
-          if (error) throw error;
+          const session = await AuthService.getCurrentSession();
 
           if (session?.user) {
             set({
@@ -135,45 +122,25 @@ export const useAuthStore = create<AuthStore>()(
           }
 
           // Set up auth state change listener
-          const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            (event, session) => {
-              switch (event) {
-                case 'SIGNED_IN':
-                case 'TOKEN_REFRESHED':
-                  set({
-                    user: session?.user ?? null,
-                    isAuthenticated: !!session?.user,
-                    token: session?.access_token ?? null,
-                    status: 'success',
-                    loading: false,
-                    lastUpdated: Date.now()
-                  });
-                  break;
-
-                case 'SIGNED_OUT':
-                  set({
-                    ...initialState,
-                    loading: false,
-                    status: 'idle',
-                    lastUpdated: Date.now()
-                  });
-                  break;
-
-                case 'USER_UPDATED':
-                  if (session?.user) {
-                    set({
-                      user: session.user,
-                      lastUpdated: Date.now()
-                    });
-                  }
-                  break;
-              }
+          return AuthService.onAuthStateChange((session) => {
+            if (session?.user) {
+              set({
+                user: session.user,
+                isAuthenticated: true,
+                token: session.access_token,
+                status: 'success',
+                loading: false,
+                lastUpdated: Date.now()
+              });
+            } else {
+              set({
+                ...initialState,
+                loading: false,
+                status: 'idle',
+                lastUpdated: Date.now()
+              });
             }
-          );
-
-          return () => {
-            subscription.unsubscribe();
-          };
+          });
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
           console.error('Auth initialization error:', errorMessage);
