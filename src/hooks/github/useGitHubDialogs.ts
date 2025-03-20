@@ -1,20 +1,32 @@
-
-import { useState } from "react";
+import { useGitHubStore } from '@/stores/features/github';
 
 /**
  * Hook for managing GitHub connection dialog states
  */
 export function useGitHubDialogs() {
-  const [isConnectDialogOpen, setIsConnectDialogOpen] = useState(false);
-  const [isDisconnectDialogOpen, setIsDisconnectDialogOpen] = useState(false);
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  
+  const {
+    showImportModal,
+    showProfileDialog,
+    showConnectDialog,
+    showDisconnectDialog,
+    showAccountSwitcher,
+    setShowImportModal,
+    setShowProfileDialog,
+    setShowConnectDialog,
+    setShowDisconnectDialog,
+    setShowAccountSwitcher
+  } = useGitHubStore();
+
   return {
-    isConnectDialogOpen,
-    setIsConnectDialogOpen,
-    isDisconnectDialogOpen, 
-    setIsDisconnectDialogOpen,
-    isImportModalOpen,
-    setIsImportModalOpen
+    showImportModal,
+    showProfileDialog,
+    showConnectDialog,
+    showDisconnectDialog,
+    showAccountSwitcher,
+    setShowImportModal,
+    setShowProfileDialog,
+    setShowConnectDialog,
+    setShowDisconnectDialog,
+    setShowAccountSwitcher
   };
 }

@@ -223,6 +223,10 @@ export interface GitHubActions {
   fetchIssues: (repoId: string) => Promise<void>;
   fetchPullRequests: (repoId: string) => Promise<void>;
 
+  // OAuth Actions
+  handleOAuthMessage: (event: MessageEvent) => Promise<void>;
+  setupOAuthListener: () => () => void;
+
   // UI Actions
   setShowImportModal: (show: boolean) => void;
   setShowProfileDialog: (show: boolean) => void;
