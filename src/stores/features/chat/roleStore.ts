@@ -1,13 +1,12 @@
-
-import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';
+import { toast } from 'sonner';
+import { create } from 'zustand';
 
 // Valid app roles based on the database enum type
-type AppRole = "super_admin" | "admin" | "developer" | "subscriber" | "guest";
+export type AppRole = "super_admin" | "admin" | "developer" | "subscriber" | "guest";
 
-interface RoleState {
+export interface RoleState {
   roles: AppRole[];
   isLoading: boolean;
   error: string | null;
@@ -33,7 +32,7 @@ export const useRoleStore = create<RoleState>((set, get) => ({
       if (roleError) {
         console.error('Error fetching user role:', roleError);
         logger.error('Error fetching user role:', roleError);
-        
+
         // Set as guest for failed queries
         set({ roles: ['guest'], isLoading: false });
         return;
@@ -42,10 +41,10 @@ export const useRoleStore = create<RoleState>((set, get) => ({
       if (roleData?.role) {
         // Validate that the role is a valid AppRole
         const role = roleData.role.toLowerCase() as AppRole;
-        
+
         // Check if the role is valid against our AppRole type
         const validRoles: AppRole[] = ['super_admin', 'admin', 'developer', 'subscriber', 'guest'];
-        
+
         if (validRoles.includes(role)) {
           set({ roles: [role], isLoading: false });
         } else {
@@ -54,7 +53,7 @@ export const useRoleStore = create<RoleState>((set, get) => ({
         }
         return;
       }
-      
+
       // If no role found, set as guest
       set({ roles: ['guest'], isLoading: false });
     } catch (error) {

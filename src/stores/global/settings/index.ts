@@ -2,10 +2,8 @@
  * Settings store exports
  */
 
-// Export the settings store
-export * from './store';
-
 // Export types
 export * from './types';
 
+// Export store implementation
 export * from './settingsStore';

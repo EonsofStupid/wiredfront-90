@@ -2,10 +2,8 @@
  * Auth store exports
  */
 
-// Export the auth store
-export * from './store';
-
 // Export types
 export * from './types';
 
+// Export store implementation
 export * from './authStore';

@@ -31,7 +31,7 @@ export const preferencesAtom = atomWithStorage<ChatUIPreferences>(
 );
 
 // Derived atom for the entire layout state
-export const layoutStateAtom = atom((get: Getter): ChatLayoutState => ({
+export const chatLayoutStateAtom = atom((get: Getter): ChatLayoutState => ({
   isMinimized: get(isMinimizedAtom),
   scale: get(scaleAtom),
   showSidebar: get(showSidebarAtom),

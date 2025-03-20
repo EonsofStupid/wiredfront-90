@@ -2,83 +2,23 @@
  * Central export file for all stores
  */
 
-// Domain stores with namespaced exports
-export * from './auth';
-export * from './core';
-export * from './data';
-export * from './features';
-export * from './session';
-export * from './settings';
-export * from './ui';
+// Global stores
+export * from './global/auth';
+export * from './global/core';
+export * from './global/settings';
 
-// Global Zustand stores
-export {
-    useAuthActions, useAuthStore, useAuthToken, useIsAuthenticated, useUser
-} from './global/auth/store';
+// UI stores - Common
+export * from './ui/common/animations';
+export * from './ui/common/layout';
+export * from './ui/common/notifications';
+export * from './ui/common/sidebar';
 
-export {
-    useTheme as useGlobalTheme, usePreferences, useSettingsActions, useSettingsStore
-} from './global/settings/store';
+// UI stores - Chat
+export * from './ui/chat/input';
+export * from './ui/chat/layout';
+export * from './ui/chat/messages';
 
-export {
-    useAppVersion, useCoreActions, useCoreStore, useIsInitialized,
-    useIsOnline,
-    useLastActive
-} from './global/core/store';
-
-// Feature-specific Zustand stores
-export {
-    useChatModeStore,
-    useCurrentMode,
-    useModeActions
-} from './features/chat/modeStore';
-
-export {
-    useChatMessageStore, useMessageActions, useMessages
-} from './features/chat/messageStore';
-
-export {
-    useChatSessionStore,
-    useCurrentSession, useSessionActions, useSessions
-} from './features/chat/sessionStore';
-
-export {
-    useTokenBalance,
-    useTokenEnforcementMode, useTokenStore, useTokenUsage
-} from './features/tokens/store';
-
-export {
-    useSelectedVectorConfig, useVectorConfigurations, useVectorError, useVectorLoadingState, useVectorStore
-} from './features/vector/store';
-
-// Jotai UI stores
-export {
-    initializeLayoutAtom,
-    // Atoms
-    isMinimizedAtom, layoutStateAtom, loadLayoutFromStorageAtom, resetLayoutAtom,
-
-    // Persistence
-    saveLayoutToStorageAtom, scaleAtom, setMinimizedAtom,
-    setScaleAtom, setSidebarAtom, showSidebarAtom,
-    // Actions
-    toggleMinimizedAtom, toggleSidebarAtom, uiPreferencesAtom, updateUIPreferencesAtom
-} from './ui/chatLayoutStore';
-
-export {
-    // Atoms
-    dockedAtom, dockedItemsAtom,
-    dockingStateAtom, initializeDockingAtom, loadDockingFromStorageAtom, positionAtom, resetDockingAtom,
-
-    // Persistence
-    saveDockingToStorageAtom,
-    // Actions
-    setDockedAtom, setDockedItemAtom, setPositionAtom, toggleDockedAtom
-} from './ui/chatDockingStore';
-
-export {
-    useActivePanel, useSidebarState, useTheme,
-    // UI Store
-    useUIStore
-} from './ui/store';
-
-export * from './global';
+// Feature stores
+export * from './features/chat';
+export * from './features/tokens';
+export * from './features/vector';

@@ -2,23 +2,26 @@ import { logger } from '@/services/chat/LoggingService';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
-interface User {
+export interface User {
   id: string;
-  email?: string;
-  role?: string;
+  email: string;
+  role: string;
+  preferences?: Record<string, any>;
 }
 
-interface AuthState {
+export interface AuthState {
+  isAuthenticated: boolean;
   user: User | null;
   isLoading: boolean;
-  error: Error | null;
+  error: string | null;
 }
 
-interface AuthActions {
+export interface AuthActions {
+  setAuth: (isAuthenticated: boolean, user: User | null) => void;
   login: (user: User) => void;
   logout: () => void;
   setLoading: (isLoading: boolean) => void;
-  setError: (error: Error | null) => void;
+  setError: (error: string | null) => void;
 }
 
 type AuthStore = AuthState & AuthActions;
@@ -27,17 +30,23 @@ export const useAuthStore = create<AuthStore>()(
   devtools(
     persist(
       (set) => ({
+        isAuthenticated: false,
         user: null,
         isLoading: false,
         error: null,
 
+        setAuth: (isAuthenticated, user) => {
+          set({ isAuthenticated, user });
+          logger.info('Auth state updated', { isAuthenticated, userId: user?.id });
+        },
+
         login: (user) => {
-          set({ user, error: null });
+          set({ isAuthenticated: true, user, error: null });
           logger.info('User logged in', { userId: user.id });
         },
 
         logout: () => {
-          set({ user: null, error: null });
+          set({ isAuthenticated: false, user: null, error: null });
           logger.info('User logged out');
         },
 
@@ -47,12 +56,13 @@ export const useAuthStore = create<AuthStore>()(
 
         setError: (error) => {
           set({ error });
-          logger.error('Auth error', { error });
+          if (error) {
+            logger.error('Auth error occurred', { error });
+          }
         }
       }),
       {
-        name: 'auth-storage',
-        partialize: (state) => ({ user: state.user })
+        name: 'auth-storage'
       }
     ),
     {
@@ -63,6 +73,7 @@ export const useAuthStore = create<AuthStore>()(
 );
 
 // Selector hooks
-export const useCurrentUser = () => useAuthStore(state => state.user);
-export const useIsAuthenticated = () => useAuthStore(state => !!state.user);
+export const useIsAuthenticated = () => useAuthStore(state => state.isAuthenticated);
+export const useUser = () => useAuthStore(state => state.user);
 export const useAuthError = () => useAuthStore(state => state.error);
+export const useAuthLoading = () => useAuthStore(state => state.isLoading);
