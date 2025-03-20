@@ -1,15 +1,13 @@
 
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { TokenStore, TokenState, TokenActions } from '@/types/store/features/tokens/types';
+import { TokenState, TokenStore } from './types';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
-import { logger } from '@/services/chat/LoggingService';
 import { supabase } from '@/integrations/supabase/client';
 
-// Initial state
 const initialState: TokenState = {
   balance: 0,
-  enforcementMode: 'never' as TokenEnforcementMode,
+  enforcementMode: 'never',
   lastUpdated: null,
   tokensPerQuery: 1,
   freeQueryLimit: 5,
@@ -18,147 +16,126 @@ const initialState: TokenState = {
   error: null
 };
 
-// Create store
 export const useTokenStore = create<TokenStore>()(
   devtools(
     persist(
       (set, get) => ({
         ...initialState,
 
-        // Basic setters
-        setBalance: (balance) => set({ balance }),
-        
-        setEnforcementMode: (mode) => set({ 
-          enforcementMode: mode,
-          lastUpdated: new Date().toISOString()
-        }),
-        
-        // Async token actions
+        setBalance: (balance) => {
+          set({ 
+            balance,
+            lastUpdated: new Date().toISOString()
+          });
+        },
+
+        setEnforcementMode: (mode) => {
+          set({ enforcementMode: mode });
+        },
+
         addTokens: async (amount) => {
           try {
             set({ isLoading: true, error: null });
             
-            // Get current user
+            const currentBalance = get().balance;
+            const newBalance = currentBalance + amount;
+            
+            // Update in database if user is logged in
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-              set({ 
-                isLoading: false, 
-                error: new Error('User not authenticated') 
-              });
-              return false;
+            if (user) {
+              const { error } = await supabase
+                .from('user_tokens')
+                .upsert({ 
+                  user_id: user.id,
+                  balance: newBalance,
+                  last_updated: new Date().toISOString()
+                });
+                
+              if (error) throw error;
             }
             
-            // Call Supabase RPC function to add tokens
-            const { data, error } = await supabase.rpc('add_tokens', {
-              user_id_input: user.id,
-              amount_input: amount
+            set({ 
+              balance: newBalance,
+              lastUpdated: new Date().toISOString(),
+              isLoading: false
             });
             
-            if (error) throw error;
-            
-            // Update local state with new balance
-            if (data) {
-              set({ 
-                balance: data.new_balance,
-                lastUpdated: new Date().toISOString(),
-                isLoading: false
-              });
-              logger.info('Tokens added', { amount, newBalance: data.new_balance });
-              return true;
-            }
-            
-            set({ isLoading: false });
-            return false;
+            return true;
           } catch (error) {
-            logger.error('Error adding tokens', { error, amount });
             set({ 
-              isLoading: false, 
-              error: error as Error
+              error: error as Error,
+              isLoading: false
             });
             return false;
           }
         },
-        
+
         spendTokens: async (amount) => {
           try {
             set({ isLoading: true, error: null });
             
-            // Don't allow spending more tokens than available
             const currentBalance = get().balance;
             if (currentBalance < amount) {
-              set({ 
-                isLoading: false, 
-                error: new Error('Insufficient token balance') 
-              });
+              set({ isLoading: false });
               return false;
             }
             
-            // Get current user
+            const newBalance = currentBalance - amount;
+            const queriesUsed = get().queriesUsed + 1;
+            
+            // Update in database if user is logged in
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-              set({ 
-                isLoading: false, 
-                error: new Error('User not authenticated') 
-              });
-              return false;
+            if (user) {
+              const { error } = await supabase
+                .from('user_tokens')
+                .upsert({ 
+                  user_id: user.id,
+                  balance: newBalance,
+                  queries_used: queriesUsed,
+                  last_updated: new Date().toISOString()
+                });
+                
+              if (error) throw error;
             }
             
-            // Call Supabase RPC function to spend tokens
-            const { data, error } = await supabase.rpc('spend_tokens', {
-              user_id_input: user.id,
-              amount_input: amount
+            set({ 
+              balance: newBalance,
+              queriesUsed,
+              lastUpdated: new Date().toISOString(),
+              isLoading: false
             });
             
-            if (error) throw error;
-            
-            // Update local state with new balance
-            if (data) {
-              set({ 
-                balance: data.new_balance,
-                queriesUsed: get().queriesUsed + 1,
-                lastUpdated: new Date().toISOString(),
-                isLoading: false
-              });
-              logger.info('Tokens spent', { 
-                amount, 
-                newBalance: data.new_balance,
-                queriesUsed: get().queriesUsed
-              });
-              return true;
-            }
-            
-            set({ isLoading: false });
-            return false;
+            return true;
           } catch (error) {
-            logger.error('Error spending tokens', { error, amount });
             set({ 
-              isLoading: false, 
-              error: error as Error
+              error: error as Error,
+              isLoading: false
             });
             return false;
           }
         },
-        
+
         resetUsage: () => {
           set({ 
             queriesUsed: 0,
             lastUpdated: new Date().toISOString()
           });
-          logger.info('Token usage reset');
         },
-        
-        setLoading: (isLoading) => set({ isLoading }),
-        
-        setError: (error) => set({ error })
+
+        setLoading: (isLoading) => {
+          set({ isLoading });
+        },
+
+        setError: (error) => {
+          set({ error });
+        }
       }),
       {
         name: 'token-storage',
         partialize: (state) => ({
           balance: state.balance,
           enforcementMode: state.enforcementMode,
-          queriesUsed: state.queriesUsed,
-          tokensPerQuery: state.tokensPerQuery,
-          freeQueryLimit: state.freeQueryLimit,
+          queriesUsed: state.queriesUsed
         })
       }
     ),
@@ -169,17 +146,11 @@ export const useTokenStore = create<TokenStore>()(
   )
 );
 
-// Selector hooks for more focused state access
+// Selector hooks
 export const useTokenBalance = () => useTokenStore(state => state.balance);
 export const useTokenEnforcementMode = () => useTokenStore(state => state.enforcementMode);
-export const useTokenUsage = () => {
-  const { queriesUsed, freeQueryLimit, tokensPerQuery, balance } = useTokenStore();
-  return {
-    queriesUsed,
-    freeQueryLimit,
-    tokensPerQuery,
-    balance,
-    hasReachedFreeLimit: queriesUsed >= freeQueryLimit,
-    hasSufficientTokens: balance >= tokensPerQuery
-  };
-};
+export const useTokenUsage = () => ({
+  queriesUsed: useTokenStore(state => state.queriesUsed),
+  freeQueryLimit: useTokenStore(state => state.freeQueryLimit),
+  tokensPerQuery: useTokenStore(state => state.tokensPerQuery)
+});

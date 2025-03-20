@@ -14,6 +14,31 @@ export * from './core';
 
 // Global Zustand stores
 export {
+  useAuthStore,
+  useUser,
+  useIsAuthenticated,
+  useAuthToken,
+  useAuthActions
+} from './global/auth/store';
+
+export {
+  useSettingsStore,
+  usePreferences,
+  useTheme as useGlobalTheme,
+  useSettingsActions
+} from './global/settings/store';
+
+export {
+  useCoreStore,
+  useAppVersion,
+  useIsInitialized,
+  useIsOnline,
+  useLastActive,
+  useCoreActions
+} from './global/core/store';
+
+// Feature-specific Zustand stores
+export {
   useChatModeStore,
   useCurrentMode,
   useModeActions
@@ -31,6 +56,21 @@ export {
   useSessions,
   useSessionActions
 } from './features/chat/sessionStore';
+
+export {
+  useTokenStore,
+  useTokenBalance,
+  useTokenEnforcementMode,
+  useTokenUsage
+} from './features/tokens/store';
+
+export {
+  useVectorStore,
+  useVectorConfigurations,
+  useSelectedVectorConfig,
+  useVectorLoadingState,
+  useVectorError
+} from './features/vector/store';
 
 // Jotai UI stores
 export {
@@ -75,3 +115,11 @@ export {
   loadDockingFromStorageAtom,
   initializeDockingAtom
 } from './ui/chatDockingStore';
+
+export {
+  // UI Store
+  useUIStore,
+  useTheme,
+  useSidebarState,
+  useActivePanel
+} from './ui/store';

@@ -1,71 +1,36 @@
 
-/**
- * Utility functions for vector store operations
- */
-
-import { VectorConfiguration, VectorConfigId, createVectorConfigId, VectorStoreType } from '@/types/domain/vector/types';
-import { NewVectorConfig } from '@/types/store/features/vector/types';
+import { VectorConfiguration, VectorStoreType } from '@/types/domain/vector/types';
 import { useVectorStore } from './store';
-import { toJson } from '@/types/supabase';
 
 /**
- * Format a new vector configuration from user input
+ * Determines if a vector configuration is properly configured for use
  */
-export function formatNewVectorConfig(input: NewVectorConfig): VectorConfiguration {
-  return {
-    id: createVectorConfigId(),
-    name: input.name,
-    description: input.description || '',
-    storeType: input.storeType,
-    config: input.config,
-    isActive: input.isActive ?? false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
+export function isConfigurationValid(config: VectorConfiguration): boolean {
+  switch (config.storeType) {
+    case 'pinecone':
+      return !!config.config.apiKey && !!config.config.environment;
+    case 'weaviate':
+      return !!config.config.endpoint && (!!config.config.apiKey || !!config.config.adminKey);
+    case 'qdrant':
+      return !!config.config.endpoint;
+    case 'supabase':
+      return true; // Supabase config is already valid if we're using the app
+    default:
+      return false;
+  }
 }
 
 /**
- * Add a new vector configuration
+ * Returns supported vector store types
  */
-export function addVectorConfiguration(input: NewVectorConfig): VectorConfigId {
-  const config = formatNewVectorConfig(input);
-  useVectorStore.getState().addConfiguration(config);
-  return config.id;
+export function getSupportedVectorStores(): VectorStoreType[] {
+  return ['pinecone', 'weaviate', 'qdrant', 'supabase'];
 }
 
 /**
- * Get the proper display name for a vector store type
+ * Finds the default (active) vector configuration
  */
-export function getVectorStoreDisplayName(type: VectorStoreType): string {
-  const displayNames: Record<VectorStoreType, string> = {
-    pinecone: 'Pinecone',
-    weaviate: 'Weaviate',
-    qdrant: 'Qdrant',
-    chroma: 'Chroma',
-    milvus: 'Milvus',
-    redis: 'Redis Vector DB',
-    supabase: 'Supabase Vector'
-  };
-  
-  return displayNames[type] || type;
-}
-
-/**
- * Prepare a vector configuration for storage in Supabase
- */
-export function prepareVectorConfigForStorage(config: VectorConfiguration) {
-  return {
-    id: config.id,
-    name: config.name,
-    description: config.description,
-    store_type: config.storeType,
-    config: toJson(config.config),
-    is_active: config.isActive,
-    cluster_info: toJson(config.clusterInfo),
-    created_at: config.createdAt,
-    updated_at: new Date().toISOString(),
-    endpoint_url: config.endpointUrl,
-    grpc_endpoint: config.grpcEndpoint,
-    read_only_key: config.readOnlyKey
-  };
+export function getDefaultConfiguration(): VectorConfiguration | null {
+  const configurations = useVectorStore.getState().configurations;
+  return configurations.find(config => config.isActive) || configurations[0] || null;
 }
