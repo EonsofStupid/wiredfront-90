@@ -4,7 +4,7 @@ import {
   VectorConfigId, 
   VectorConfig,
   VectorStoreType 
-} from '@/types/domain/vector';
+} from '@/types/domain/vector/types';
 
 /**
  * Store state for vector configurations

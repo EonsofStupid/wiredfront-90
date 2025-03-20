@@ -12,5 +12,6 @@ export {
   useVectorError
 } from './store';
 
-// Export types via types file
-export * from './types';
+// Export any utility functions for working with vector configurations
+export * from './utils';
+

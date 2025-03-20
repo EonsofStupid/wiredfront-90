@@ -10,7 +10,7 @@ import {
   VectorConfiguration, 
   VectorConfigId,
   createVectorConfigId
-} from '@/types/domain/vector';
+} from '@/types/domain/vector/types';
 
 const initialState: VectorState = {
   configurations: [],
@@ -55,12 +55,12 @@ export const useVectorStore = create<VectorStore>()(
       setError: (error) => set({ error })
     }),
     {
-      name: 'Vector Store'
+      name: 'Vector-Store'
     }
   )
 );
 
-// Selectors
+// Selectors as custom hooks for better type safety and easier usage
 export const useVectorConfigurations = () => useVectorStore((state) => state.configurations);
 export const useSelectedVectorConfig = () => useVectorStore((state) => state.selectedConfig);
 export const useVectorLoadingState = () => useVectorStore((state) => state.isLoading);

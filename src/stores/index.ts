@@ -32,7 +32,7 @@ export {
   useSessionActions
 } from './global/chatSessionStore';
 
-// UI Jotai stores
+// Jotai UI stores
 export {
   // Atoms
   isMinimizedAtom,
