@@ -7,7 +7,6 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { ChatSidebar } from "./ChatSidebar";
-import { ChatErrorBoundary } from './components/ChatErrorBoundary';
 import ChatToggleButton from "./components/ChatToggleButton";
 import DraggableChatContainer from "./components/DraggableChatContainer";
 import { ChatModeDialog } from "./features/ModeSwitch/ChatModeDialog";
@@ -155,9 +154,4 @@ export function DraggableChat() {
   );
 }
 
-// Wrap the component with error boundary
-export const DraggableChatWithErrorBoundary = () => (
-  <ChatErrorBoundary>
-    <DraggableChat />
-  </ChatErrorBoundary>
-);
+export default DraggableChat;

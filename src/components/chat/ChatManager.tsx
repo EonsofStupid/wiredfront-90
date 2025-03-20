@@ -1,8 +1,8 @@
+
 import { chatSessionsService } from '@/services/chat/chatSessionsService';
 import { EnhancedChatSession } from '@/types/chat/preferences';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { ChatErrorBoundary } from './components/ChatErrorBoundary';
 
 export function ChatManager() {
   const [sessions, setSessions] = useState<EnhancedChatSession[]>([]);
@@ -112,10 +112,3 @@ export function ChatManager() {
     </div>
   );
 }
-
-// Wrap the component with error boundary
-export const ChatManagerWithErrorBoundary = () => (
-  <ChatErrorBoundary>
-    <ChatManager />
-  </ChatErrorBoundary>
-);
