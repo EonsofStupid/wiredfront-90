@@ -1,5 +1,0 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { LogItem } from "./LogItem";
-export function LogsTable({ logs, expandedLogId, toggleExpandLog }) {
-    return (_jsx("div", { className: "border rounded-md overflow-hidden", children: _jsx("div", { className: "overflow-x-auto", children: _jsxs("table", { className: "w-full table-auto", children: [_jsx("thead", { children: _jsxs("tr", { className: "bg-muted", children: [_jsx("th", { className: "px-4 py-2 text-left text-xs font-medium text-muted-foreground tracking-wider", children: "Time" }), _jsx("th", { className: "px-4 py-2 text-left text-xs font-medium text-muted-foreground tracking-wider", children: "Level" }), _jsx("th", { className: "px-4 py-2 text-left text-xs font-medium text-muted-foreground tracking-wider", children: "Source" }), _jsx("th", { className: "px-4 py-2 text-left text-xs font-medium text-muted-foreground tracking-wider", children: "Message" })] }) }), _jsx("tbody", { className: "divide-y divide-border", children: logs.map((log) => (_jsx(LogItem, { log: log, isExpanded: expandedLogId === log.id, onToggleExpand: () => toggleExpandLog(log.id) }, log.id))) })] }) }) }));
-}

@@ -8,10 +8,12 @@ export * from './features';
 export * from './ui';
 
 // Type exports
-export * from './types';
+export type {
+    AuthState, LayoutState,
+    ModalState, Notification, NotificationState, StoreState, ThemeState, UIState, User
+} from './types';
 
 // Global stores
-export * from './global/auth';
 export * from './global/core';
 export * from './global/settings';
 

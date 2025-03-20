@@ -1,4 +1,0 @@
-/**
- * Message-related types
- */
-export {};

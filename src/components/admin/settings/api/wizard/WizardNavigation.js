@@ -1,6 +1,0 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
-export function WizardNavigation({ currentStep, totalSteps, onNext, onPrevious, onCancel, isSubmitting, isLastStep }) {
-    return (_jsxs("div", { className: "flex justify-between pt-4 border-t border-gray-800", children: [_jsxs("div", { children: [currentStep > 1 && (_jsxs(Button, { variant: "outline", onClick: onPrevious, disabled: isSubmitting, className: "mr-2 border-gray-700 hover:bg-slate-800", children: [_jsx(ArrowLeft, { className: "h-4 w-4 mr-2" }), "Back"] })), _jsx(Button, { variant: "ghost", onClick: onCancel, disabled: isSubmitting, className: "text-gray-400 hover:text-gray-300 hover:bg-slate-800", children: "Cancel" })] }), _jsxs(Button, { onClick: onNext, disabled: isSubmitting, className: "bg-gradient-to-r from-purple-500 to-indigo-500 hover:opacity-90 transition-opacity", children: [isSubmitting ? (_jsx(Loader2, { className: "h-4 w-4 mr-2 animate-spin" })) : isLastStep ? (_jsx(Check, { className: "h-4 w-4 mr-2" })) : (_jsx(ArrowRight, { className: "h-4 w-4 mr-2" })), isSubmitting ? 'Saving...' : isLastStep ? 'Save API Key' : 'Next Step'] })] }));
-}

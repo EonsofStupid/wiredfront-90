@@ -1,8 +1,0 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-export function Navbar() {
-    const { user, signOut } = useSupabaseAuth();
-    return (_jsx("nav", { className: "bg-background border-b py-3", children: _jsxs("div", { className: "container flex justify-between items-center", children: [_jsxs("div", { className: "flex gap-6 items-center", children: [_jsx(Link, { href: "/", className: "text-xl font-bold", children: "WiredFront" }), _jsxs("div", { className: "hidden md:flex gap-4 items-center", children: [_jsx(Link, { href: "/", className: "text-sm font-medium hover:text-primary", children: "Home" }), _jsx(Link, { href: "/chat", className: "text-sm font-medium hover:text-primary", children: "Chat" }), user && (_jsx(Link, { href: "/projects", className: "text-sm font-medium hover:text-primary", children: "Projects" }))] })] }), _jsx("div", { className: "flex items-center gap-4", children: user ? (_jsxs("div", { className: "flex items-center gap-4", children: [_jsx("span", { className: "text-sm hidden md:inline-block", children: user.email }), _jsx(Button, { variant: "outline", size: "sm", onClick: () => signOut(), children: "Sign Out" })] })) : (_jsxs("div", { className: "flex items-center gap-2", children: [_jsx(Link, { href: "/login", children: _jsx(Button, { variant: "outline", size: "sm", children: "Log In" }) }), _jsx(Link, { href: "/signup", children: _jsx(Button, { size: "sm", children: "Sign Up" }) })] })) })] }) }));
-}
