@@ -1,0 +1,64 @@
+.message {
+  display: flex;
+  gap: var(--chat-layout-gap);
+  padding: var(--chat-layout-message-spacing);
+  font-family: var(--chat-font-message);
+  line-height: var(--chat-line-height-message);
+  transition: background-color var(--chat-transition-duration) var(--chat-transition-timing);
+}
+
+.messageUser {
+  background-color: var(--chat-color-message-user);
+}
+
+.messageAssistant {
+  background-color: var(--chat-color-message-assistant);
+}
+
+.messageSystem {
+  background-color: var(--chat-color-message-system);
+  font-size: var(--chat-font-size-small);
+  color: var(--chat-color-muted-foreground);
+}
+
+.messageContent {
+  flex: 1;
+  min-width: 0; /* Enable text truncation */
+}
+
+.messageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--chat-layout-gap);
+  margin-bottom: 0.5rem;
+}
+
+.messageSender {
+  font-size: var(--chat-font-size-small);
+  font-weight: 500;
+  color: var(--chat-color-foreground);
+}
+
+.messageActions {
+  display: flex;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity var(--chat-transition-duration) var(--chat-transition-timing);
+}
+
+.message:hover .messageActions {
+  opacity: 1;
+}
+
+.messageText {
+  font-size: var(--chat-font-size-base);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.messageTimestamp {
+  margin-top: 0.5rem;
+  font-size: var(--chat-font-size-small);
+  color: var(--chat-color-muted-foreground);
+}

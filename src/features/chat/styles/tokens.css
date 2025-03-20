@@ -1,0 +1,54 @@
+/**
+ * Chat Design Tokens
+ * These tokens can be overridden by database values
+ */
+
+.chat-theme {
+  /* Layout Tokens */
+  --chat-layout-width: 400px;
+  --chat-layout-height: 500px;
+  --chat-layout-sidebar-width: 320px;
+  --chat-layout-message-spacing: 1rem;
+  --chat-layout-padding: 1rem;
+  --chat-layout-gap: 0.5rem;
+
+  /* Color Tokens */
+  --chat-color-background: hsl(var(--background));
+  --chat-color-foreground: hsl(var(--foreground));
+  --chat-color-muted: hsl(var(--muted));
+  --chat-color-muted-foreground: hsl(var(--muted-foreground));
+  --chat-color-border: hsl(var(--border));
+  --chat-color-primary: hsl(var(--primary));
+  --chat-color-primary-foreground: hsl(var(--primary-foreground));
+
+  /* Message Colors */
+  --chat-color-message-user: hsl(var(--primary) / 0.1);
+  --chat-color-message-assistant: hsl(var(--muted) / 0.3);
+  --chat-color-message-system: hsl(var(--secondary) / 0.2);
+
+  /* Border Radius Tokens */
+  --chat-radius-container: var(--radius);
+  --chat-radius-message: calc(var(--radius) - 2px);
+  --chat-radius-button: var(--radius);
+
+  /* Shadow Tokens */
+  --chat-shadow-container: var(--shadow);
+  --chat-shadow-message: 0 1px 2px hsl(var(--shadow) / 0.1);
+  --chat-shadow-hover: 0 2px 4px hsl(var(--shadow) / 0.1);
+
+  /* Animation Tokens */
+  --chat-transition-duration: 200ms;
+  --chat-transition-timing: ease;
+
+  /* Z-Index Tokens */
+  --chat-z-index-base: 50;
+  --chat-z-index-dropdown: 100;
+  --chat-z-index-modal: 200;
+
+  /* Typography Tokens */
+  --chat-font-message: var(--font-sans);
+  --chat-font-size-small: 0.875rem;
+  --chat-font-size-base: 1rem;
+  --chat-font-size-large: 1.125rem;
+  --chat-line-height-message: 1.5;
+}

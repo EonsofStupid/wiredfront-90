@@ -1,0 +1,73 @@
+/* Chat Variables */
+:root {
+  --chat-width: 400px;
+  --chat-height: 500px;
+  --chat-bg: rgba(0, 0, 0, 0.3);
+  --chat-border: hsl(var(--border));
+  --chat-radius: var(--radius);
+  --chat-shadow: var(--shadow);
+  --chat-z-index: 50;
+
+  /* Message specific */
+  --message-spacing: 1rem;
+  --message-radius: 0.5rem;
+  --message-user-bg: hsl(var(--primary) / 0.1);
+  --message-assistant-bg: hsl(var(--muted) / 0.3);
+
+  /* Sidebar specific */
+  --sidebar-width: 320px;
+  --sidebar-bg: hsl(var(--background));
+  --sidebar-border: hsl(var(--border));
+}
+
+/* Chat Container */
+.chat-container {
+  width: var(--chat-width);
+  height: var(--chat-height);
+  background: var(--chat-bg);
+  border: 1px solid var(--chat-border);
+  border-radius: var(--chat-radius);
+  box-shadow: var(--chat-shadow);
+  z-index: var(--chat-z-index);
+}
+
+/* Chat Sidebar */
+.chat-sidebar {
+  width: var(--sidebar-width);
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+}
+
+/* Message Styles */
+.chat-message {
+  padding: var(--message-spacing);
+  border-radius: var(--message-radius);
+  transition: background-color 0.2s ease;
+}
+
+.chat-message-user {
+  background: var(--message-user-bg);
+}
+
+.chat-message-assistant {
+  background: var(--message-assistant-bg);
+}
+
+/* Animation Utilities */
+.chat-fade-in {
+  animation: chatFadeIn 0.2s ease;
+}
+
+.chat-slide-in {
+  animation: chatSlideIn 0.3s ease;
+}
+
+@keyframes chatFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes chatSlideIn {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
