@@ -1,0 +1,77 @@
+import { normalizeChatMode } from '@/types/chat/core';
+import { toJson, jsonToRecord } from '@/types/supabase';
+/**
+ * Convert a database message to an application message
+ */
+export function dbMessageToMessage(dbMessage) {
+    return {
+        id: dbMessage.id,
+        session_id: dbMessage.session_id,
+        user_id: dbMessage.user_id,
+        role: dbMessage.role,
+        content: dbMessage.content,
+        metadata: jsonToRecord(dbMessage.metadata),
+        message_status: dbMessage.status,
+        retry_count: dbMessage.retry_count,
+        last_retry: dbMessage.last_retry || undefined,
+        created_at: dbMessage.created_at,
+        updated_at: dbMessage.updated_at,
+        timestamp: dbMessage.created_at,
+        position_order: dbMessage.position_order
+    };
+}
+/**
+ * Convert an application message to a database message
+ */
+export function messageToDBMessage(message) {
+    return {
+        id: message.id,
+        session_id: message.session_id,
+        user_id: message.user_id || null,
+        role: message.role,
+        content: message.content,
+        metadata: toJson(message.metadata || {}),
+        status: message.message_status,
+        retry_count: message.retry_count || 0,
+        last_retry: message.last_retry || null,
+        position_order: message.position_order || 0
+    };
+}
+/**
+ * Convert a database session to an application session
+ */
+export function dbSessionToSession(dbSession) {
+    return {
+        id: dbSession.id,
+        title: dbSession.title || 'Untitled Chat',
+        user_id: dbSession.user_id,
+        mode: normalizeChatMode(dbSession.mode),
+        provider_id: dbSession.provider_id || undefined,
+        project_id: dbSession.project_id || undefined,
+        metadata: jsonToRecord(dbSession.metadata),
+        context: jsonToRecord(dbSession.context),
+        is_active: dbSession.is_active,
+        created_at: dbSession.created_at,
+        last_accessed: dbSession.last_accessed,
+        tokens_used: dbSession.tokens_used,
+        message_count: dbSession.message_count
+    };
+}
+/**
+ * Convert an application session to a database session
+ */
+export function sessionToDBSession(session) {
+    return {
+        id: session.id,
+        title: session.title,
+        user_id: session.user_id,
+        mode: session.mode,
+        provider_id: session.provider_id || null,
+        project_id: session.project_id || null,
+        metadata: toJson(session.metadata || {}),
+        context: toJson(session.context || {}),
+        is_active: session.is_active,
+        tokens_used: session.tokens_used || 0,
+        message_count: session.message_count || 0
+    };
+}

@@ -1,0 +1,7 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+export function PreferencesStep({ isFirstTimeUser = false }) {
+    return (_jsx(Card, { children: _jsx(CardContent, { className: "pt-6", children: _jsxs("div", { className: "space-y-6", children: [_jsxs("div", { className: "flex items-center justify-between", children: [_jsxs("div", { className: "space-y-0.5", children: [_jsx(Label, { htmlFor: "notifications", children: "Enable Notifications" }), _jsx("p", { className: "text-sm text-muted-foreground", children: "Receive updates about your chat sessions" })] }), _jsx(Switch, { id: "notifications" })] }), _jsxs("div", { className: "flex items-center justify-between", children: [_jsxs("div", { className: "space-y-0.5", children: [_jsx(Label, { htmlFor: "dark-mode", children: "Dark Mode" }), _jsx("p", { className: "text-sm text-muted-foreground", children: "Toggle between light and dark theme" })] }), _jsx(Switch, { id: "dark-mode" })] }), _jsxs("div", { className: "flex items-center justify-between", children: [_jsxs("div", { className: "space-y-0.5", children: [_jsx(Label, { htmlFor: "sound", children: "Sound Effects" }), _jsx("p", { className: "text-sm text-muted-foreground", children: "Play sounds for notifications and messages" })] }), _jsx(Switch, { id: "sound" })] })] }) }) }));
+}

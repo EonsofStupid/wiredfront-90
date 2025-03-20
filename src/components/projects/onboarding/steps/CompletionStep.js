@@ -1,0 +1,6 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { Button } from "@/components/ui/button";
+import { Check } from "lucide-react";
+export function CompletionStep({ projectName, isImporting, repoUrl, onComplete }) {
+    return (_jsxs("div", { className: "space-y-6 text-center", children: [_jsx("div", { className: "flex justify-center", children: _jsx("div", { className: "h-16 w-16 rounded-full bg-green-500/20 flex items-center justify-center", children: _jsx(Check, { className: "h-8 w-8 text-green-500" }) }) }), _jsx("h2", { className: "text-2xl font-bold", children: "Project Created!" }), _jsxs("p", { children: ["Your project ", _jsx("span", { className: "font-medium", children: projectName }), " has been successfully created."] }), isImporting ? (_jsx("p", { className: "text-muted-foreground", children: "Your imported project is ready to use." })) : repoUrl ? (_jsx("p", { className: "text-muted-foreground", children: "A new GitHub repository has been created and linked to your project." })) : (_jsx("p", { className: "text-muted-foreground", children: "Your project is ready to use." })), _jsx(Button, { onClick: onComplete, className: "mt-4", children: "Start Using Your Project" })] }));
+}

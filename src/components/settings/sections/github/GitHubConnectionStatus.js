@@ -1,0 +1,9 @@
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
+import { Button } from "@/components/ui/button";
+import { X, Github } from "lucide-react";
+import { Spinner } from "@/components/chat/components/Spinner";
+export function GitHubConnectionStatus({ isConnected, username, loading, connectionStatus, onConnect, onDisconnect }) {
+    // Only disable the button when actually connecting
+    const isButtonDisabled = connectionStatus === 'connecting';
+    return (_jsxs("div", { className: "flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-muted/50 rounded-lg", children: [_jsxs("div", { className: "flex items-center gap-3", children: [_jsx(Github, { className: "h-8 w-8" }), _jsxs("div", { children: [_jsx("h3", { className: "font-medium", children: "GitHub" }), isConnected && username ? (_jsxs("p", { className: "text-sm text-muted-foreground", children: ["Connected as @", username] })) : (_jsx("p", { className: "text-sm text-muted-foreground", children: "Not connected" }))] })] }), _jsx("div", { className: "flex items-center gap-2", children: isConnected ? (_jsx(_Fragment, { children: _jsxs(Button, { variant: "outline", onClick: onDisconnect, disabled: isButtonDisabled, className: "text-destructive hover:text-destructive hover:bg-destructive/10", children: [connectionStatus === 'connecting' ? (_jsx(Spinner, { size: "sm", className: "mr-2", label: "Disconnecting..." })) : (_jsx(X, { className: "mr-2 h-4 w-4" })), "Disconnect"] }) })) : (_jsx(Button, { variant: "outline", onClick: onConnect, disabled: isButtonDisabled, className: "border-primary/20 hover:border-primary", children: connectionStatus === 'connecting' ? (_jsxs(_Fragment, { children: [_jsx(Spinner, { size: "sm", className: "mr-2", label: "Connecting..." }), "Connecting..."] })) : (_jsxs(_Fragment, { children: [_jsx(Github, { className: "mr-2 h-4 w-4" }), "Connect GitHub"] })) })) })] }));
+}
