@@ -1,7 +1,7 @@
+import { ErrorBoundary as BaseErrorBoundary } from "@/components/error/ErrorBoundary";
+import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 import React from "react";
-import { ErrorBoundary as BaseErrorBoundary } from "../../../components/error/ErrorBoundary";
-import { Button } from "../../../components/ui/button";
 
 interface MobileErrorFallbackProps {
   error: Error;

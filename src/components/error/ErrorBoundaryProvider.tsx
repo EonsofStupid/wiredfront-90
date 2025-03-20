@@ -1,7 +1,6 @@
-
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { ErrorBoundary } from './ErrorBoundary';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { logger } from '@/services/chat/LoggingService';
+import React, { createContext, useCallback, useContext, useState } from 'react';
 
 interface ErrorBoundaryContextType {
   ErrorBoundary: typeof ErrorBoundary;
@@ -30,11 +29,11 @@ export const ErrorBoundaryProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   return (
-    <ErrorBoundaryContext.Provider value={{ 
-      ErrorBoundary, 
-      logError, 
+    <ErrorBoundaryContext.Provider value={{
+      ErrorBoundary,
+      logError,
       lastError,
-      clearError 
+      clearError
     }}>
       {children}
     </ErrorBoundaryContext.Provider>
