@@ -1,11 +1,18 @@
+// Types
+export * from './types';
 
-export { providerRegistry, getProvider, getDefaultProvider, getAllProviders, getProvidersByCategory } from './registry/ProviderRegistry';
-export { type LLMProviderInterface } from './base/ProviderInterface';
-export { BaseProvider } from './base/BaseProvider';
+// Base
+export * from './base';
 
-// Export providers
-export { OpenAIProvider } from './openai/OpenAIProvider';
+// Registry
+export {
+    getAllProviders, getDefaultProvider, getProvider, getProvidersByCategory, providerRegistry
+} from './registry/ProviderRegistry';
+
+// Providers
 export { AnthropicProvider } from './anthropic/AnthropicProvider';
 export { GeminiProvider } from './gemini/GeminiProvider';
-export { StabilityAIProvider } from './stabilityai/StabilityAIProvider';
+export { OpenAIProvider } from './openai/OpenAIProvider';
 export { OpenRouterProvider } from './openrouter/OpenRouterProvider';
+export { ReplicateProvider } from './replicate/ReplicateProvider';
+export { StabilityAIProvider } from './stabilityai/StabilityAIProvider';

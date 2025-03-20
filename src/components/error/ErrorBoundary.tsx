@@ -1,8 +1,7 @@
-
-import React from "react";
 import { AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import React from "react";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import { Button } from "../ui/button";
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -36,9 +35,9 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   render() {
     if (this.state.hasError) {
       if (this.props.FallbackComponent) {
-        return <this.props.FallbackComponent 
-          error={this.state.error || new Error('Unknown error')} 
-          resetErrorBoundary={this.resetErrorBoundary} 
+        return <this.props.FallbackComponent
+          error={this.state.error || new Error('Unknown error')}
+          resetErrorBoundary={this.resetErrorBoundary}
         />;
       }
 
