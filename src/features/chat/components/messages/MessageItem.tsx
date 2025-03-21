@@ -1,161 +1,44 @@
-import { CodeBlock } from '@/components/ui/code-block';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useChatLayoutStore } from '@/features/chat/store/chatLayoutStore';
 import { cn } from '@/lib/utils';
-import { Message } from '@/types/chat/messages';
-import { formatMessageTimestamp } from '@/utils/messageConversion';
-import { motion } from 'framer-motion';
-import { AlertCircle, ArrowRight, Bot, Check, Clock, Sparkles, Terminal, User } from 'lucide-react';
-import React, { useState } from 'react';
-import { MessageActions } from './MessageActions';
+import { Message } from '@/types/chat/types';
+import { format } from 'date-fns';
+import React from 'react';
 
 interface MessageItemProps {
   message: Message;
-  isLast?: boolean;
-  onRetry?: () => void;
-  onDelete?: (id: string) => void;
-  onEdit?: (id: string, content: string) => void;
+  className?: string;
 }
 
-export function MessageItem({
-  message,
-  isLast,
-  onRetry,
-  onDelete,
-  onEdit
-}: MessageItemProps) {
-  const [isVisible, setIsVisible] = useState(false);
+export const MessageItem: React.FC<MessageItemProps> = ({ message, className }) => {
+  const { uiPreferences } = useChatLayoutStore();
   const isUser = message.role === 'user';
-  const isSystem = message.role === 'system';
-
-  // Get message status with backward compatibility
-  const messageStatus = message.message_status || message.status || 'sent';
-  const isStreaming = messageStatus === 'pending';
-  const isFailed = messageStatus === 'failed';
-
-  // Get timestamp with backward compatibility
-  const timestamp = message.timestamp || message.created_at || new Date().toISOString();
-
-  // Determine icon based on role
-  const getIcon = () => {
-    if (isUser) return <User className="h-4 w-4 text-neon-pink" />;
-    if (isSystem) return <Terminal className="h-4 w-4 text-neon-green" />;
-    return <Bot className="h-4 w-4 text-neon-blue" />;
-  };
-
-  // Get status icon and tooltip
-  const getStatusConfig = () => {
-    switch (messageStatus) {
-      case 'pending':
-        return { icon: <Clock className="h-3 w-3 animate-pulse" />, tooltip: 'Sending message...' };
-      case 'sent':
-        return { icon: <Check className="h-3 w-3" />, tooltip: 'Message sent' };
-      case 'failed':
-        return { icon: <AlertCircle className="h-3 w-3 text-destructive" />, tooltip: 'Failed to send' };
-      default:
-        return { icon: null, tooltip: '' };
-    }
-  };
-
-  const { icon: statusIcon, tooltip: statusTooltip } = getStatusConfig();
-
-  // Add animation when component mounts
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsVisible(true);
-    }, 50);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Handle retry click
-  const handleRetryClick = () => {
-    if (isFailed && onRetry) {
-      onRetry();
-    }
-  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+    <div
       className={cn(
-        "chat-message flex items-start gap-2 mb-4 group",
-        isUser ? "flex-row-reverse" : "flex-row"
+        'flex w-full gap-2 p-2',
+        isUser ? 'justify-end' : 'justify-start',
+        className
       )}
     >
-      <div className={cn(
-        "flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center",
-        isUser ? "bg-neon-pink/20" : isSystem ? "bg-neon-green/20" : "bg-neon-blue/20",
-        isUser ? "cyber-border-pink" : isSystem ? "cyber-border-green" : "cyber-border"
-      )}>
-        {getIcon()}
-      </div>
-
-      <div className={cn(
-        "max-w-[80%] px-4 py-2 rounded-lg relative",
-        isUser ?
-          "chat-message-user cyber-border-pink text-right ml-auto" :
-          isSystem ?
-            "bg-dark-purple/40 cyber-border-green text-left mr-auto" :
-            "chat-message-assistant cyber-border text-left mr-auto",
-        isStreaming && "chat-pulse",
-        isFailed && "chat-message-failed"
-      )}
-      onClick={isFailed ? handleRetryClick : undefined}
-      tabIndex={isFailed ? 0 : undefined}
-      role={isFailed ? 'button' : undefined}
-      aria-label={isFailed ? 'Retry sending message' : undefined}
-      onKeyDown={isFailed ? (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          handleRetryClick();
-        }
-      } : undefined}
+      <div
+        className={cn(
+          'max-w-[80%] rounded-lg p-3',
+          'transition-all duration-[var(--chat-transition-normal)]',
+          isUser
+            ? 'bg-[var(--chat-accent-color)] text-white'
+            : 'bg-[var(--chat-bg-secondary)] text-[var(--chat-text-primary)]',
+          uiPreferences.fontSize === 'small' && 'text-sm',
+          uiPreferences.fontSize === 'large' && 'text-lg'
+        )}
       >
-        <div className="text-sm">
-          <CodeBlock content={message.content} />
-          {isStreaming && (
-            <span className="chat-typing-indicator ml-1">
-              <span></span>
-              <span></span>
-              <span></span>
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1 mt-1 text-xs text-white/60">
-          {isUser && <ArrowRight className="h-3 w-3" />}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="flex items-center gap-1">
-                  {statusIcon}
-                  {formatMessageTimestamp(timestamp)}
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="chat-tooltip-content text-xs">
-                <p>{statusTooltip}</p>
-                <p className="chat-message-timestamp">
-                  {new Date(timestamp).toLocaleTimeString()}
-                </p>
-                {isFailed && (
-                  <p className="chat-message-retry text-xs text-destructive mt-1">Click to retry</p>
-                )}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          {!isUser && !isSystem && <Sparkles className="h-3 w-3 ml-1" />}
-        </div>
-
-        <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <MessageActions
-            messageId={message.id}
-            content={message.content}
-            onDelete={onDelete}
-            onEdit={onEdit}
-          />
-        </div>
+        <div className="whitespace-pre-wrap break-words">{message.content}</div>
+        {uiPreferences.showTimestamps && (
+          <div className="mt-1 text-xs opacity-70">
+            {format(new Date(message.timestamp), 'HH:mm')}
+          </div>
+        )}
       </div>
-    </motion.div>
+    </div>
   );
-}
+};
