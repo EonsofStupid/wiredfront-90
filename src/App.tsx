@@ -1,6 +1,6 @@
 import { GuestCTA } from "@/components/auth/GuestCTA";
-import { ChatProvider } from "@/components/chat/ChatProvider";
 import { DraggableChat } from "@/components/chat/DraggableChat";
+import { ChatProvider } from "@/features/chat/providers/ChatProvider";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuthStore } from "@/stores/auth";
 import { useEffect } from "react";
