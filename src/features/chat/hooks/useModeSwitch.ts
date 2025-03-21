@@ -68,6 +68,24 @@ export function useModeSwitch() {
 
       logger.info(`Changing mode from ${currentMode} to ${mode}`, { providerId });
 
+      // Handle page navigation based on mode
+      switch (mode) {
+        case 'dev':
+          window.location.href = '/editor';
+          break;
+        case 'image':
+          window.location.href = '/gallery';
+          break;
+        case 'training':
+          window.location.href = '/training';
+          break;
+        case 'chat':
+          // Stay on current page, just switch mode
+          break;
+        default:
+          logger.warn(`No page navigation defined for mode: ${mode}`);
+      }
+
       // Use the switchMode function from useChatCore
       const success = await switchMode(mode);
 
