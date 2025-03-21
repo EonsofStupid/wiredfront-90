@@ -347,45 +347,104 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_command_usage_log: {
+        Row: {
+          args: Json | null
+          command_id: string | null
+          id: string
+          used_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          args?: Json | null
+          command_id?: string | null
+          id?: string
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          args?: Json | null
+          command_id?: string | null
+          id?: string
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_command_usage_log_command_id_fkey"
+            columns: ["command_id"]
+            isOneToOne: false
+            referencedRelation: "chat_commands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_commands: {
         Row: {
+          affects_settings: boolean | null
+          category: string | null
           created_at: string | null
+          created_by: string | null
           description: string | null
           enabled: boolean | null
+          example_usage: string | null
           id: string
           metadata: Json | null
           name: string
-          required_role: Database["public"]["Enums"]["app_role"] | null
-          required_tier: string | null
+          required_role: Database["public"]["Enums"]["user_role"] | null
+          required_tier: Database["public"]["Enums"]["user_tier"] | null
+          requires_github: boolean | null
+          requires_project: boolean | null
+          shortcut_for: string | null
+          syntax: string | null
           system_command: boolean | null
           updated_at: string | null
-          workflow_trigger: Json | null
+          updated_by: string | null
+          workflow_trigger: string | null
         }
         Insert: {
+          affects_settings?: boolean | null
+          category?: string | null
           created_at?: string | null
+          created_by?: string | null
           description?: string | null
           enabled?: boolean | null
+          example_usage?: string | null
           id?: string
           metadata?: Json | null
           name: string
-          required_role?: Database["public"]["Enums"]["app_role"] | null
-          required_tier?: string | null
+          required_role?: Database["public"]["Enums"]["user_role"] | null
+          required_tier?: Database["public"]["Enums"]["user_tier"] | null
+          requires_github?: boolean | null
+          requires_project?: boolean | null
+          shortcut_for?: string | null
+          syntax?: string | null
           system_command?: boolean | null
           updated_at?: string | null
-          workflow_trigger?: Json | null
+          updated_by?: string | null
+          workflow_trigger?: string | null
         }
         Update: {
+          affects_settings?: boolean | null
+          category?: string | null
           created_at?: string | null
+          created_by?: string | null
           description?: string | null
           enabled?: boolean | null
+          example_usage?: string | null
           id?: string
           metadata?: Json | null
           name?: string
-          required_role?: Database["public"]["Enums"]["app_role"] | null
-          required_tier?: string | null
+          required_role?: Database["public"]["Enums"]["user_role"] | null
+          required_tier?: Database["public"]["Enums"]["user_tier"] | null
+          requires_github?: boolean | null
+          requires_project?: boolean | null
+          shortcut_for?: string | null
+          syntax?: string | null
           system_command?: boolean | null
           updated_at?: string | null
-          workflow_trigger?: Json | null
+          updated_by?: string | null
+          workflow_trigger?: string | null
         }
         Relationships: []
       }
@@ -651,28 +710,37 @@ export type Database = {
       }
       chat_ui_docking: {
         Row: {
+          animation_preferences: Json | null
           created_at: string | null
           docked: boolean | null
           docked_items: Json | null
+          icon_layout: Json | null
           id: string
+          overlay_icons: Json | null
           position: Json | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          animation_preferences?: Json | null
           created_at?: string | null
           docked?: boolean | null
           docked_items?: Json | null
+          icon_layout?: Json | null
           id?: string
+          overlay_icons?: Json | null
           position?: Json | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          animation_preferences?: Json | null
           created_at?: string | null
           docked?: boolean | null
           docked_items?: Json | null
+          icon_layout?: Json | null
           id?: string
+          overlay_icons?: Json | null
           position?: Json | null
           updated_at?: string | null
           user_id?: string
@@ -778,15 +846,7 @@ export type Database = {
           status?: string | null
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "command_executions_command_id_fkey"
-            columns: ["command_id"]
-            isOneToOne: false
-            referencedRelation: "chat_commands"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       dev_session_reverts: {
         Row: {
@@ -1227,6 +1287,7 @@ export type Database = {
       github_repositories: {
         Row: {
           auto_sync: boolean | null
+          clone_from_repo_id: string | null
           connection_id: string
           created_at: string | null
           default_branch: string | null
@@ -1248,6 +1309,7 @@ export type Database = {
         }
         Insert: {
           auto_sync?: boolean | null
+          clone_from_repo_id?: string | null
           connection_id: string
           created_at?: string | null
           default_branch?: string | null
@@ -1269,6 +1331,7 @@ export type Database = {
         }
         Update: {
           auto_sync?: boolean | null
+          clone_from_repo_id?: string | null
           connection_id?: string
           created_at?: string | null
           default_branch?: string | null
@@ -1294,6 +1357,13 @@ export type Database = {
             columns: ["connection_id"]
             isOneToOne: false
             referencedRelation: "github_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "github_repositories_clone_from_repo_id_fkey"
+            columns: ["clone_from_repo_id"]
+            isOneToOne: false
+            referencedRelation: "github_repositories"
             referencedColumns: ["id"]
           },
         ]
@@ -1784,6 +1854,7 @@ export type Database = {
           indexing_status: string | null
           is_active: boolean | null
           name: string
+          rag_provider: Database["public"]["Enums"]["rag_provider"] | null
           status: string | null
           sync_frequency: string | null
           updated_at: string | null
@@ -1798,6 +1869,7 @@ export type Database = {
           indexing_status?: string | null
           is_active?: boolean | null
           name: string
+          rag_provider?: Database["public"]["Enums"]["rag_provider"] | null
           status?: string | null
           sync_frequency?: string | null
           updated_at?: string | null
@@ -1812,6 +1884,7 @@ export type Database = {
           indexing_status?: string | null
           is_active?: boolean | null
           name?: string
+          rag_provider?: Database["public"]["Enums"]["rag_provider"] | null
           status?: string | null
           sync_frequency?: string | null
           updated_at?: string | null
@@ -2185,6 +2258,164 @@ export type Database = {
         }
         Relationships: []
       }
+      theme_categories: {
+        Row: {
+          category_type: Database["public"]["Enums"]["theme_token_category"]
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          parent_id: string | null
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          category_type: Database["public"]["Enums"]["theme_token_category"]
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          parent_id?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          category_type?: Database["public"]["Enums"]["theme_token_category"]
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          parent_id?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "theme_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "theme_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "theme_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "vw_theme_tokens_with_categories"
+            referencedColumns: ["category_id"]
+          },
+        ]
+      }
+      theme_tokens: {
+        Row: {
+          category_id: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_css_var: boolean
+          metadata: Json | null
+          tailwind_class: string | null
+          theme_id: string
+          token_name: string
+          token_value: string
+          updated_at: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_css_var?: boolean
+          metadata?: Json | null
+          tailwind_class?: string | null
+          theme_id: string
+          token_name: string
+          token_value: string
+          updated_at?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_css_var?: boolean
+          metadata?: Json | null
+          tailwind_class?: string | null
+          theme_id?: string
+          token_name?: string
+          token_value?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "theme_tokens_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "theme_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "theme_tokens_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "vw_theme_tokens_with_categories"
+            referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "theme_tokens_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "themes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "theme_tokens_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "vw_theme_tokens_with_categories"
+            referencedColumns: ["theme_id"]
+          },
+        ]
+      }
+      themes: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_built_in: boolean
+          is_default: boolean
+          metadata: Json | null
+          name: string
+          type: Database["public"]["Enums"]["theme_type"]
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_built_in?: boolean
+          is_default?: boolean
+          metadata?: Json | null
+          name: string
+          type?: Database["public"]["Enums"]["theme_type"]
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_built_in?: boolean
+          is_default?: boolean
+          metadata?: Json | null
+          name?: string
+          type?: Database["public"]["Enums"]["theme_type"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       token_transaction_log: {
         Row: {
           amount: number
@@ -2305,6 +2536,24 @@ export type Database = {
           },
         ]
       }
+      user_ai_access: {
+        Row: {
+          enabled: boolean | null
+          provider: Database["public"]["Enums"]["rag_provider"] | null
+          user_id: string | null
+        }
+        Insert: {
+          enabled?: boolean | null
+          provider?: Database["public"]["Enums"]["rag_provider"] | null
+          user_id?: string | null
+        }
+        Update: {
+          enabled?: boolean | null
+          provider?: Database["public"]["Enums"]["rag_provider"] | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_analytics: {
         Row: {
           device_info: Json | null
@@ -2352,6 +2601,7 @@ export type Database = {
           docked_sections: Json | null
           metadata: Json | null
           theme: string | null
+          theme_id: string | null
           updated_at: string | null
           user_id: string
         }
@@ -2362,6 +2612,7 @@ export type Database = {
           docked_sections?: Json | null
           metadata?: Json | null
           theme?: string | null
+          theme_id?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -2372,10 +2623,26 @@ export type Database = {
           docked_sections?: Json | null
           metadata?: Json | null
           theme?: string | null
+          theme_id?: string | null
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_chat_preferences_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "themes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_chat_preferences_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "vw_theme_tokens_with_categories"
+            referencedColumns: ["theme_id"]
+          },
+        ]
       }
       user_provider_settings: {
         Row: {
@@ -2626,7 +2893,73 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      vw_chat_theme_tokens: {
+        Row: {
+          category_name: string | null
+          is_css_var: boolean | null
+          theme_id: string | null
+          theme_name: string | null
+          token_description: string | null
+          token_id: string | null
+          token_name: string | null
+          token_value: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "theme_tokens_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "themes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "theme_tokens_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "vw_theme_tokens_with_categories"
+            referencedColumns: ["theme_id"]
+          },
+        ]
+      }
+      vw_theme_tokens_with_categories: {
+        Row: {
+          category_id: string | null
+          category_name: string | null
+          category_type:
+            | Database["public"]["Enums"]["theme_token_category"]
+            | null
+          is_css_var: boolean | null
+          tailwind_class: string | null
+          theme_id: string | null
+          theme_name: string | null
+          token_description: string | null
+          token_id: string | null
+          token_name: string | null
+          token_value: string | null
+        }
+        Relationships: []
+      }
+      vw_user_icon_config: {
+        Row: {
+          docked: boolean | null
+          overlay_icons: Json | null
+          position: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          docked?: boolean | null
+          overlay_icons?: Json | null
+          position?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          docked?: boolean | null
+          overlay_icons?: Json | null
+          position?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       binary_quantize:
@@ -2642,6 +2975,12 @@ export type Database = {
             }
             Returns: unknown
           }
+      get_theme_css_variables: {
+        Args: {
+          p_theme_id: string
+        }
+        Returns: string
+      }
       halfvec_avg: {
         Args: {
           "": number[]
@@ -2920,8 +3259,25 @@ export type Database = {
       metric_trend: "up" | "down" | "neutral"
       plan_mode_type: "basic" | "detailed" | "architectural"
       provider_category: "ai" | "vector" | "voice" | "storage" | "development"
+      rag_provider:
+        | "openai"
+        | "anthropic"
+        | "gemini"
+        | "groq"
+        | "supabase"
+        | "pinecone"
       rag_tier_type: "standard" | "premium"
       subscription_status: "active" | "past_due" | "canceled" | "trialing"
+      theme_token_category:
+        | "color"
+        | "spacing"
+        | "typography"
+        | "animation"
+        | "effect"
+        | "border"
+        | "z-index"
+        | "css"
+      theme_type: "light" | "dark" | "system" | "high_contrast" | "custom"
       token_enforcement_mode: "always" | "never" | "role_based" | "mode_based"
       token_validation_status:
         | "valid"
@@ -2929,6 +3285,8 @@ export type Database = {
         | "expired"
         | "revoked"
         | "pending"
+      user_role: "guest" | "subscriber" | "developer" | "admin" | "super_admin"
+      user_tier: "free" | "standard" | "pro" | "enterprise"
       vector_store_type: "pinecone" | "weaviate" | "qdrant" | "milvus"
     }
     CompositeTypes: {
