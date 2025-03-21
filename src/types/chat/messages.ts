@@ -12,6 +12,8 @@ export interface Message {
   timestamp: string;
   status?: MessageStatus;
   metadata?: Record<string, any>;
+  sessionId?: string;
+  user_id?: string | null;
 }
 
 // Chat message with session info
@@ -43,3 +45,19 @@ export interface CodeMessage extends Message {
 
 // Helper type for message operations
 export type MessageUpdate = Partial<Message> & { id: string };
+
+// Enhanced chat message with additional metadata
+export interface EnhancedChatMessage extends Message {
+  session_id: string;
+  user_id: string;
+  metadata?: {
+    tokens?: number;
+    temperature?: number;
+    model?: string;
+    [key: string]: any;
+  };
+  retry_count?: number;
+  last_retry?: string;
+  created_at?: string;
+  updated_at?: string;
+}

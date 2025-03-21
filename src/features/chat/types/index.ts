@@ -1,8 +1,14 @@
-import type { ChatMode } from './chat-mode';
-import type { DBSession, Session } from './session';
 
-export type { ChatMode } from './chat-mode';
-export type { BaseSession, DBSession, Session } from './session';
+/**
+ * Re-export chat types from the central type definition
+ */
+import type { ChatMode, Message, Session } from '@/types/chat';
 
-// Re-export with alternative names if needed
-export type { DBSession as ChatDBSession, ChatMode as ChatModeType, Session as ChatSession };
+// Re-export the types
+export type { ChatMode, Message, Session };
+
+// Re-export with alternative names if needed for backward compatibility
+export type { 
+  ChatMode as ChatModeType, 
+  Session as ChatSession
+};

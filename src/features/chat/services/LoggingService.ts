@@ -2,6 +2,7 @@
 /**
  * Chat-specific logging service
  */
+import { MessageRole } from '@/types/chat';
 
 // Log levels
 type LogLevel = 'info' | 'warn' | 'error' | 'debug';

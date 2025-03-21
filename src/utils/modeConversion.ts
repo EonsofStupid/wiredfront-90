@@ -1,5 +1,5 @@
 
-import { ChatMode, isChatMode } from '@/types/chat/core';
+import { ChatMode, isChatMode, CHAT_MODES } from '@/types/chat/core';
 
 /**
  * Convert a Supabase mode to a store-compatible mode
@@ -7,8 +7,8 @@ import { ChatMode, isChatMode } from '@/types/chat/core';
 export function supabaseModeToStoreMode(mode: string): ChatMode {
   // Map database mode values to store mode values
   const modeMap: Record<string, ChatMode> = {
-    'standard': 'chat',
-    'developer': 'dev'
+    'standard': CHAT_MODES.CHAT,
+    'developer': CHAT_MODES.DEV
   };
   
   // If it's already a valid mode, return it or its mapped value
@@ -22,7 +22,7 @@ export function supabaseModeToStoreMode(mode: string): ChatMode {
   }
   
   // Default fallback
-  return 'chat';
+  return CHAT_MODES.CHAT;
 }
 
 /**

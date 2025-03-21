@@ -2,9 +2,7 @@
 /**
  * Docking types for the chat client
  */
-import { ChatPosition } from './ui';
-
-export type DockPosition = 'left' | 'right' | 'bottom' | 'top' | 'floating' | 'hidden';
+import { ChatPosition, DockPosition } from './ui';
 
 export interface DockingState {
   docked: boolean;

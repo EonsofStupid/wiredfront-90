@@ -4,7 +4,8 @@
  */
 import { ChatMode, MessageRole, MessageStatus } from './core';
 import { ChatLayoutState, ChatPosition, ChatUIPreferences, DockPosition } from './ui';
-import { Message, Session } from './database';
+import { Message } from './messages';
+import { Session, SessionCreateOptions } from './sessions';
 
 // Message store types
 export interface MessageState {
@@ -41,13 +42,6 @@ export interface SessionActions {
   deleteSession: (sessionId: string) => Promise<void>;
 }
 
-export interface SessionCreateOptions {
-  title?: string;
-  mode?: ChatMode;
-  metadata?: Record<string, any>;
-  provider_id?: string;
-}
-
 export type SessionStore = SessionState & SessionActions;
 
 // Chat mode store types
@@ -67,47 +61,45 @@ export interface ModeActions {
 
 export type ModeStore = ModeState & ModeActions;
 
-// Layout store types using Jotai
-export interface LayoutState {
-  isMinimized: boolean;
-  scale: number;
-  showSidebar: boolean;
-  uiPreferences: ChatUIPreferences;
+// Layout store types
+export type { LayoutState, LayoutActions, LayoutStore } from './layout';
+
+// Docking store types
+export type { DockingState, DockingActions, DockingStore } from './docking';
+
+// Feature state types
+export interface FeatureState {
+  voice: boolean;
+  rag: boolean;
+  modeSwitch: boolean;
+  notifications: boolean;
+  github: boolean;
+  codeAssistant: boolean;
+  ragSupport: boolean;
+  githubSync: boolean;
+  tokenEnforcement: boolean;
+  startMinimized: boolean;
+  showTimestamps: boolean;
+  saveHistory: boolean;
 }
 
-export interface LayoutActions {
-  setMinimized: (isMinimized: boolean) => void;
-  toggleMinimized: () => void;
-  setScale: (scale: number) => void;
-  toggleSidebar: () => void;
-  setSidebar: (visible: boolean) => void;
-  updateUIPreferences: (preferences: Partial<ChatUIPreferences>) => void;
-  resetLayout: () => void;
-  
-  // Persistence methods
-  saveLayoutToStorage: () => Promise<boolean>;
-  loadLayoutFromStorage: () => Promise<boolean>;
-}
-
-export type LayoutStore = LayoutState & LayoutActions;
-
-// Docking store types using Jotai
-export interface DockingState {
+// Chat state main types
+export interface ChatState {
+  initialized: boolean;
+  messages: Message[];
+  userInput: string;
+  isWaitingForResponse: boolean;
+  selectedModel: string;
+  selectedMode: ChatMode;
+  error: string | null;
+  chatId: string | null;
   docked: boolean;
+  isOpen: boolean;
+  isHidden: boolean;
+  features: FeatureState;
+  currentMode: ChatMode;
+  isMinimized: boolean;
+  showSidebar: boolean;
+  scale: number;
   position: ChatPosition;
-  dockedItems: Record<string, DockPosition>;
 }
-
-export interface DockingActions {
-  setDocked: (docked: boolean) => void;
-  toggleDocked: () => void;
-  setPosition: (position: ChatPosition) => void;
-  setDockedItem: (id: string, position: DockPosition) => void;
-  resetDocking: () => void;
-  
-  // Persistence methods
-  saveDockingToStorage: () => Promise<boolean>;
-  loadDockingFromStorage: () => Promise<boolean>;
-}
-
-export type DockingStore = DockingState & DockingActions;

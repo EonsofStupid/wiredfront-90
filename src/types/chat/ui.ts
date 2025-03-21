@@ -12,6 +12,9 @@ export interface ChatPosition {
   y: number;
 }
 
+// Chat position types (for responsive layouts)
+export type ChatPositionType = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+
 // Chat window scale
 export type ChatScale = number;
 
@@ -22,11 +25,12 @@ export type ChatTheme = 'light' | 'dark' | 'system' | 'cyberpunk';
 export interface ChatUIPreferences {
   theme: ChatTheme;
   fontSize: 'small' | 'medium' | 'large';
-  messageBehavior: 'enter_send' | 'ctrl_enter_send';
+  messageBehavior: 'enter_send' | 'ctrl_enter_send' | 'shift_enter_send';
   notifications: boolean;
   soundEnabled?: boolean;
   typingIndicators?: boolean;
   showTimestamps?: boolean;
+  saveHistory?: boolean;
 }
 
 // Chat layout state

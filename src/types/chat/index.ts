@@ -3,21 +3,17 @@
  * Central export file for all chat-related types
  */
 
-// Re-export all type modules
+// Core types
 export * from './core';
-export * from './database';
-export * from './ui';
-export * from './store';
 export * from './messages';
-export * from './modes';
 export * from './sessions';
-export * from './preferences';
+export * from './ui';
 export * from './layout';
 export * from './docking';
+export * from './store';
+export * from './database';
 
-// Additional helper types
-export type ConnectionState = 'connected' | 'connecting' | 'disconnected' | 'error';
-
+// Helper functions
 /**
  * Helper for converting JSON to TypeScript records
  */

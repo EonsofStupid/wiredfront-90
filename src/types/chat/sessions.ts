@@ -38,3 +38,14 @@ export interface Session extends BaseSession {
   metadata: Record<string, any>;
   context?: Record<string, any>;
 }
+
+// Enhanced chat session with additional metadata
+export interface EnhancedChatSession {
+  id: string;
+  user_id: string;
+  title: string;
+  mode: ChatMode;
+  metadata?: Record<string, any>;
+  created_at?: string;
+  updated_at?: string;
+}
