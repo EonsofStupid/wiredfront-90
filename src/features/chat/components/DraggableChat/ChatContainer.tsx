@@ -1,6 +1,7 @@
 
 import React, { useRef } from 'react';
 import { useChatLayoutStore } from '@/stores/chat/chatLayoutStore';
+import { useChatModeStore } from '@/stores/features/chat/modeStore';
 import { cn } from '@/lib/utils';
 import ChatHeader from './ChatHeader';
 import ChatContent from '../ChatContent';
@@ -16,6 +17,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
   dockPosition = 'bottom-right' 
 }) => {
   const { isMinimized, docked } = useChatLayoutStore();
+  const { currentMode } = useChatModeStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Determine position class based on dockPosition
@@ -24,7 +26,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
   return (
     <div 
       className={cn(
-        "chat-container",
+        "chat-container cyber-bg",
         !docked && 'cursor-grab active:cursor-grabbing',
         docked && `fixed bottom-4 ${positionClass}`,
         className

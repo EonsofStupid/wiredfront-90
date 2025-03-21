@@ -1,70 +1,60 @@
 
 import React from 'react';
-import { useChatSessionStore } from '@/stores/features/chat/sessionStore';
-import { useLayoutActions } from '@/stores/chat/chatLayoutStore';
-import { Clock, Plus } from 'lucide-react';
-import { formatRelativeTime } from '@/utils/dateUtils';
+import { Code, Image, BookOpen, Terminal, Github, Cpu, Settings, History } from 'lucide-react';
+import { useChatModeStore } from '@/stores/features/chat/modeStore';
+import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 interface ChatSidebarProps {
   className?: string;
 }
 
 const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
-  const { sessions, currentSession, setCurrentSession, createSession } = useChatSessionStore();
-  const { toggleSidebar } = useLayoutActions();
+  const { currentMode, setMode } = useChatModeStore();
   
-  const handleNewChat = async () => {
-    try {
-      const newSession = await createSession();
-      setCurrentSession(newSession);
-    } catch (error) {
-      console.error('Failed to create new session:', error);
-    }
-  };
-  
-  const handleSelectSession = (sessionId: string) => {
-    const session = sessions.find(s => s.id === sessionId);
-    if (session) {
-      setCurrentSession(session);
-    }
-  };
+  const modes = [
+    { id: 'dev', name: 'Developer', icon: <Code className="h-5 w-5" /> },
+    { id: 'image', name: 'Images', icon: <Image className="h-5 w-5" /> },
+    { id: 'training', name: 'Training', icon: <BookOpen className="h-5 w-5" /> },
+    { id: 'code', name: 'Code Assistant', icon: <Terminal className="h-5 w-5" /> },
+    { id: 'planning', name: 'Planning', icon: <Cpu className="h-5 w-5" /> },
+    { id: 'github', name: 'GitHub', icon: <Github className="h-5 w-5" /> },
+  ];
   
   return (
-    <div className="chat-sidebar h-full p-2 flex flex-col">
-      <div className="p-2 mb-4">
-        <button 
-          className="w-full bg-neon-blue/20 hover:bg-neon-blue/30 text-white py-2 px-4 rounded-md flex items-center justify-center gap-2 transition-colors"
-          onClick={handleNewChat}
-        >
-          <Plus size={16} />
-          <span>New Chat</span>
-        </button>
-      </div>
-      
-      <div className="flex-1 overflow-y-auto space-y-2">
-        {sessions.map(session => (
+    <div className={cn("chat-sidebar h-full flex flex-col justify-between", className)}>
+      <div className="flex flex-col p-3 space-y-2">
+        <h2 className="text-sm font-semibold text-center mb-4 text-white/80">AI Modes</h2>
+        
+        {modes.map((mode) => (
           <button
-            key={session.id}
-            className={`w-full text-left p-3 rounded-md flex flex-col transition-colors ${
-              currentSession?.id === session.id 
-                ? 'bg-neon-blue/30 cyber-border' 
-                : 'hover:bg-white/5'
-            }`}
-            onClick={() => handleSelectSession(session.id)}
+            key={mode.id}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors",
+              currentMode === mode.id 
+                ? "bg-neon-blue/20 text-white" 
+                : "text-white/60 hover:bg-white/10 hover:text-white"
+            )}
+            onClick={() => setMode(mode.id as any)}
           >
-            <span className="font-medium truncate">{session.title}</span>
-            <div className="flex items-center text-xs text-white/60 mt-1 gap-1">
-              <Clock size={12} />
-              <span>{formatRelativeTime(new Date(session.last_accessed))}</span>
-            </div>
+            {mode.icon}
+            <span>{mode.name}</span>
           </button>
         ))}
-        
-        {sessions.length === 0 && (
-          <div className="text-center py-8 text-white/40">
-            <p>No recent chats</p>
-          </div>
-        )}
+      </div>
+      
+      <div className="p-3 border-t border-white/10">
+        <div className="flex flex-col gap-2">
+          <button className="flex items-center gap-3 px-3 py-2 text-white/60 hover:bg-white/10 hover:text-white rounded-lg">
+            <History className="h-5 w-5" />
+            <span>History</span>
+          </button>
+          
+          <button className="flex items-center gap-3 px-3 py-2 text-white/60 hover:bg-white/10 hover:text-white rounded-lg">
+            <Settings className="h-5 w-5" />
+            <span>Settings</span>
+          </button>
+        </div>
       </div>
     </div>
   );

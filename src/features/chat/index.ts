@@ -19,3 +19,9 @@ export * from '@/types/chat/types';
 
 // Export services
 export * from './services/LoggingService';
+
+// Export store factories
+export * from '@/stores/chat/chatLayoutStore';
+export * from '@/stores/features/chat/messageStore';
+export * from '@/stores/features/chat/sessionStore';
+export * from '@/stores/features/chat/modeStore';

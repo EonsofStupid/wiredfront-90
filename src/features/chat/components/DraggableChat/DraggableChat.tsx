@@ -5,6 +5,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useViewportAwareness } from "../../hooks/useViewportAwareness";
 import { logger } from "../../services/LoggingService";
 import { useChatLayoutStore } from "@/stores/chat/chatLayoutStore";
+import { useChatModeStore } from "@/stores/features/chat/modeStore";
+import { useLocation } from "react-router-dom";
 import ChatContainer from "./ChatContainer";
 import ChatSidebar from "./ChatSidebar";
 import { ChatToggleButton } from "./ChatToggleButton";
@@ -23,7 +25,10 @@ export function DraggableChat() {
     setPosition
   } = useChatLayoutStore();
 
+  const { currentMode } = useChatModeStore();
   const { containerRef, isOverflowing } = useViewportAwareness();
+  const location = useLocation();
+  const isEditorPage = location.pathname === '/editor';
 
   // Load position from localStorage on mount
   useEffect(() => {
@@ -52,9 +57,11 @@ export function DraggableChat() {
       isMinimized,
       showSidebar,
       scale,
-      isOverflowing
+      isOverflowing,
+      path: location.pathname,
+      currentMode
     });
-  }, [isOpen, isMinimized, showSidebar, scale, isOverflowing]);
+  }, [isOpen, isMinimized, showSidebar, scale, isOverflowing, location.pathname, currentMode]);
 
   if (!isOpen) {
     return <ChatToggleButton onClick={toggleOpen} />;
