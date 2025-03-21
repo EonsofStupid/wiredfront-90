@@ -1,10 +1,11 @@
+
 import { atom } from 'jotai';
 import { ChatPosition } from '../../types/chat';
 
 // UI State Atoms
 export const chatPositionAtom = atom<ChatPosition>({ x: 0, y: 0 });
 export const chatScaleAtom = atom<number>(1);
-export const chatIsDockedAtom = atom<boolean>(false);
+export const chatIsDockedAtom = atom<boolean>(true);
 export const chatIsMinimizedAtom = atom<boolean>(false);
 export const chatShowSidebarAtom = atom<boolean>(false);
 
@@ -31,9 +32,24 @@ export const chatPositionWithDockAtom = atom((get) => {
 
   if (!isDocked) return position;
 
-  // If docked, snap to the right edge
+  // If docked, snap to the right edge of the viewport
   return {
     x: window.innerWidth - dimensions.width,
     y: 0,
+  };
+});
+
+// Preference Atoms
+export const chatPreferencesAtom = atom((get) => {
+  return {
+    position: get(chatPositionAtom),
+    scale: get(chatScaleAtom),
+    isDocked: get(chatIsDockedAtom),
+    isMinimized: get(chatIsMinimizedAtom),
+    showSidebar: get(chatShowSidebarAtom),
+    showTimestamps: true,
+    saveHistory: true,
+    theme: 'system',
+    fontSize: 'medium',
   };
 });

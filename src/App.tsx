@@ -1,3 +1,4 @@
+
 import { GuestCTA } from "@/components/auth/GuestCTA";
 import { DraggableChat } from "@/features/chat/components/DraggableChat";
 import { ChatProvider } from "@/features/chat/providers/ChatProvider";
@@ -13,15 +14,18 @@ import { RouteLoggingService } from "./services/navigation/RouteLoggingService";
 
 const App = () => {
   const { isMobile } = useIsMobile();
-  const { user, isAuthenticated, initializeAuth } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
+  
+  // Initialize auth from our consolidated auth store
+  const { initializeAuth, isAuthenticated, user } = useAuthStore();
 
   useEffect(() => {
-    const init = async () => {
-      await initializeAuth();
+    // Initialize auth on app load
+    const cleanup = initializeAuth();
+    return () => {
+      cleanup().catch(console.error);
     };
-    init();
   }, [initializeAuth]);
 
   useEffect(() => {

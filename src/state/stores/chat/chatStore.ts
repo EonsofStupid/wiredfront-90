@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { ChatFeature, ChatPreferences, ChatState } from '../../types/chat';
@@ -5,7 +6,7 @@ import { ChatFeature, ChatPreferences, ChatState } from '../../types/chat';
 const defaultPreferences: ChatPreferences = {
   position: { x: 0, y: 0 },
   scale: 1,
-  isDocked: false,
+  isDocked: true,
   isMinimized: false,
   showSidebar: false,
   theme: 'system',
@@ -21,17 +22,29 @@ const defaultFeatures: Record<string, ChatFeature> = {
     description: 'Show chat notifications',
     isEnabled: true,
   },
-  github: {
-    id: 'github',
-    name: 'GitHub Integration',
-    description: 'Enable GitHub integration',
+  modeSwitch: {
+    id: 'modeSwitch',
+    name: 'Mode Switching',
+    description: 'Enable switching between chat modes',
     isEnabled: true,
   },
-  knowledge: {
-    id: 'knowledge',
-    name: 'Knowledge Base',
-    description: 'Enable knowledge base integration',
+  saveHistory: {
+    id: 'saveHistory',
+    name: 'Save History',
+    description: 'Save chat history between sessions',
     isEnabled: true,
+  },
+  showTimestamps: {
+    id: 'showTimestamps',
+    name: 'Show Timestamps',
+    description: 'Show timestamps for chat messages',
+    isEnabled: true,
+  },
+  startMinimized: {
+    id: 'startMinimized',
+    name: 'Start Minimized',
+    description: 'Start chat in minimized state',
+    isEnabled: false,
   },
 };
 
@@ -44,7 +57,7 @@ export const useChatStore = create<ChatState>()(
       showSidebar: false,
       position: { x: 0, y: 0 },
       scale: 1,
-      isDocked: false,
+      isDocked: true,
 
       // Chat State
       currentMode: 'chat',
@@ -89,6 +102,12 @@ export const useChatStore = create<ChatState>()(
     }),
     {
       name: 'chat-store',
+      partialize: (state) => ({
+        preferences: state.preferences,
+        features: state.features,
+        selectedModel: state.selectedModel,
+        currentMode: state.currentMode,
+      }),
     }
   )
 );

@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -31,7 +32,7 @@ export function ChatSettings() {
     updatePreferences
   } = useChatStore();
 
-  // Jotai Atoms
+  // Jotai Atoms for UI state
   const [position, setPosition] = useAtom(chatPositionAtom);
   const [scale, setScale] = useAtom(chatScaleAtom);
   const [isDocked, setIsDocked] = useAtom(chatIsDockedAtom);

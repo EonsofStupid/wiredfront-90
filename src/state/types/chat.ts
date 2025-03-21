@@ -1,8 +1,12 @@
-import { ChatMode } from '@/features/chat/types';
 
 export interface ChatPosition {
   x: number;
   y: number;
+}
+
+export interface ChatDimensions {
+  width: number;
+  height: number;
 }
 
 export interface ChatPreferences {
@@ -15,13 +19,6 @@ export interface ChatPreferences {
   fontSize: 'small' | 'medium' | 'large';
   showTimestamps: boolean;
   saveHistory: boolean;
-}
-
-export interface ChatProvider {
-  id: string;
-  name: string;
-  models: string[];
-  isEnabled: boolean;
 }
 
 export interface ChatFeature {
@@ -41,10 +38,10 @@ export interface ChatState {
   isDocked: boolean;
 
   // Chat State
-  currentMode: ChatMode;
+  currentMode: string;
   selectedModel: string;
-  currentProvider: ChatProvider | null;
-  availableProviders: ChatProvider[];
+  currentProvider: any | null;
+  availableProviders: any[];
 
   // Preferences
   preferences: ChatPreferences;
@@ -59,9 +56,9 @@ export interface ChatState {
   setPosition: (position: ChatPosition) => void;
   setScale: (scale: number) => void;
   setDocked: (isDocked: boolean) => void;
-  setCurrentMode: (mode: ChatMode) => void;
+  setCurrentMode: (mode: string) => void;
   setSelectedModel: (model: string) => void;
-  updateCurrentProvider: (provider: ChatProvider) => void;
+  updateCurrentProvider: (provider: any) => void;
   updatePreferences: (prefs: Partial<ChatPreferences>) => void;
   toggleFeature: (featureId: string) => void;
   resetToDefaults: () => void;
