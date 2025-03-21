@@ -1,25 +1,32 @@
 import { create } from 'zustand';
 
+interface Position {
+  x: number;
+  y: number;
+}
+
 interface ChatStore {
   isOpen: boolean;
-  isLoading: boolean;
-  sessionLoading: boolean;
-  setIsOpen: (isOpen: boolean) => void;
-  setIsLoading: (isLoading: boolean) => void;
-  setSessionLoading: (loading: boolean) => void;
-  initializeChatSettings: () => void;
+  isMinimized: boolean;
+  showSidebar: boolean;
+  position: Position;
+  scale: number;
+  toggleChat: () => void;
+  toggleMinimize: () => void;
+  toggleSidebar: () => void;
+  setPosition: (position: Position) => void;
+  setScale: (scale: number) => void;
 }
 
 export const useChatStore = create<ChatStore>((set) => ({
   isOpen: false,
-  isLoading: false,
-  sessionLoading: false,
-  setIsOpen: (isOpen) => set({ isOpen }),
-  setIsLoading: (isLoading) => set({ isLoading }),
-  setSessionLoading: (loading) => set({ sessionLoading: loading }),
-  initializeChatSettings: () => {
-    // Initialize any chat settings from localStorage or defaults
-    const storedIsOpen = localStorage.getItem('chatIsOpen') === 'true';
-    set({ isOpen: storedIsOpen });
-  }
+  isMinimized: false,
+  showSidebar: false,
+  position: { x: 0, y: 0 },
+  scale: 1,
+  toggleChat: () => set((state) => ({ isOpen: !state.isOpen })),
+  toggleMinimize: () => set((state) => ({ isMinimized: !state.isMinimized })),
+  toggleSidebar: () => set((state) => ({ showSidebar: !state.showSidebar })),
+  setPosition: (position) => set({ position }),
+  setScale: (scale) => set({ scale }),
 }));
