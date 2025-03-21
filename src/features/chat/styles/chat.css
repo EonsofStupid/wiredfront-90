@@ -1,4 +1,3 @@
-
 /**
  * Unified chat styling
  * This file contains all styling for the chat components
@@ -11,17 +10,17 @@
   --chat-height: 500px;
   --chat-border-radius: 0.75rem;
   --chat-z-index: 50;
-  
+
   /* Colors */
   --chat-bg: rgba(17, 17, 17, 0.85);
   --chat-border: hsla(0, 0%, 60%, 0.15);
   --chat-text: hsla(0, 0%, 100%, 0.9);
   --chat-text-muted: hsla(0, 0%, 100%, 0.6);
-  
+
   /* Header */
   --chat-header-bg: rgba(0, 0, 0, 0.2);
   --chat-header-height: 3rem;
-  
+
   /* Messages */
   --chat-message-spacing: 0.75rem;
   --chat-message-user-bg: rgba(56, 114, 224, 0.15);
@@ -30,21 +29,21 @@
   --chat-message-user-text: hsla(0, 0%, 100%, 0.95);
   --chat-message-assistant-text: hsla(0, 0%, 100%, 0.95);
   --chat-message-system-text: hsla(0, 0%, 100%, 0.75);
-  
+
   /* Input */
   --chat-input-bg: rgba(0, 0, 0, 0.3);
   --chat-button-bg: rgb(56, 114, 224);
   --chat-button-hover: rgb(42, 96, 200);
-  
+
   /* Animations */
   --chat-transition-duration: 0.2s;
-  
+
   /* Neon elements - for cyberpunk theme */
   --neon-blue: #39f;
   --neon-pink: #ff00d0;
   --neon-green: #39ff14;
   --neon-purple: #bc13fe;
-  
+
   /* Sidebar */
   --chat-sidebar-width: 240px;
   --chat-sidebar-bg: var(--chat-bg);
@@ -57,12 +56,12 @@
   --chat-button-bg: #8B5CF6;
   --chat-button-hover: #7c3aed;
   --chat-icon-color: rgba(255, 255, 255, 0.8);
-  
+
   /* Knowledge source colors */
   --chat-knowledge-border: rgba(59, 130, 246, 0.5);
   --chat-knowledge-bg: rgba(59, 130, 246, 0.1);
   --chat-knowledge-text: rgba(59, 130, 246, 0.8);
-  
+
   /* Sizing */
   --chat-width: 400px;
   --chat-min-width: 320px;
@@ -76,7 +75,7 @@
   --chat-icon-size: 2.5rem;
   --chat-header-height: 3rem;
   --chat-scrollbar-width: 4px;
-  
+
   /* Z-index values - match with global z-index for consistency */
   --z-chat-button: 9700;
   --z-chat-container: 9650;
@@ -371,10 +370,10 @@
 }
 
 @keyframes cyber-pulse {
-  0%, 100% { 
+  0%, 100% {
     box-shadow: 0 0 5px 2px rgba(57, 153, 255, 0.3);
   }
-  50% { 
+  50% {
     box-shadow: 0 0 10px 4px rgba(57, 153, 255, 0.5);
   }
 }
@@ -420,12 +419,53 @@
     width: calc(100vw - 2rem);
     height: 60vh;
   }
-  
+
   .chat-sidebar-container {
     display: none;
   }
-  
+
   .chat-icon-stack {
     display: none;
   }
+}
+
+/* Top Navigation Styles */
+.chat-header-top-nav {
+  position: relative;
+  isolation: isolate;
+}
+
+.chat-header-top-nav::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom right,
+    var(--chat-knowledge-text),
+    transparent
+  );
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.chat-header-top-nav-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.chat-header-top-nav-button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg,
+    rgba(var(--color-neon-blue), 0.2),
+    rgba(var(--color-neon-pink), 0.2)
+  );
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.chat-header-top-nav-button:hover::after {
+  opacity: 1;
 }
