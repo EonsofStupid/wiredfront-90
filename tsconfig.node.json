@@ -13,7 +13,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "types": ["node"],
-    "noEmit": false,
+    "noEmit": false
   },
   "include": ["vite.config.ts"]
 }
