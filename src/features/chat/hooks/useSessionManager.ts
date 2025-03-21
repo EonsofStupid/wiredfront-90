@@ -1,11 +1,11 @@
 import { supabase } from '@/lib/supabase';
-import { handleError } from '@/lib/utils';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '../services/LoggingService';
 import { useChatStore } from '../store/chatStore';
-import { ChatMode, DBSession, Session } from '../types';
+import type { ChatMode } from '../types/chat-mode';
+import type { DBSession, Session } from '../types/session';
 
 // Error handling utility
 function handleError(error: unknown, message: string) {
@@ -74,7 +74,7 @@ export function useSessionManager() {
       logger.info('Sessions refreshed', { count: formattedSessions.length });
       return formattedSessions;
     } catch (error) {
-      handleError(error, 'Failed to refresh sessions');
+      toast.error('Failed to refresh sessions');
       return [];
     } finally {
       setIsLoading(false);
@@ -123,7 +123,7 @@ export function useSessionManager() {
 
       return sessionId;
     } catch (error) {
-      handleError(error, 'Failed to create session');
+      toast.error('Failed to create session');
       return null;
     } finally {
       setIsLoading(false);
@@ -142,7 +142,7 @@ export function useSessionManager() {
         .then(() => {
           logger.info('Session switched', { sessionId });
         })
-        .catch(error => {
+        .catch((error: unknown) => {
           logger.error('Failed to update session last_accessed', { error, sessionId });
         });
 
@@ -177,7 +177,7 @@ export function useSessionManager() {
 
       return true;
     } catch (error) {
-      handleError(error, 'Failed to delete session');
+      toast.error('Failed to delete session');
       return false;
     }
   }, [currentSessionId, sessions]);
@@ -215,7 +215,7 @@ export function useSessionManager() {
 
       return true;
     } catch (error) {
-      handleError(error, 'Failed to clear sessions');
+      toast.error('Failed to clear sessions');
       return false;
     }
   }, [currentSessionId, sessions]);
@@ -255,7 +255,7 @@ export function useSessionManager() {
 
       return deletedCount;
     } catch (error) {
-      handleError(error, 'Failed to cleanup inactive sessions');
+      toast.error('Failed to cleanup inactive sessions');
       return 0;
     }
   }, [currentSessionId]);
