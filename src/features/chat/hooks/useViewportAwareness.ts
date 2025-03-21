@@ -1,68 +1,88 @@
-
+import { logger } from '@/services/chat/LoggingService';
+import { useChatStore } from '@/stores/features/chat/chatStore';
 import { useEffect, useRef, useState } from 'react';
 
-interface ViewportAwarenessResult {
-  containerRef: React.RefObject<HTMLDivElement>;
-  isOverflowing: boolean;
-  isNearEdge: boolean;
-  viewportWidth: number;
-  viewportHeight: number;
-}
-
-export function useViewportAwareness(): ViewportAwarenessResult {
-  const containerRef = useRef<HTMLDivElement>(null);
+export function useViewportAwareness() {
+  const { position, scale, setScale, docked } = useChatStore();
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
-  const [isNearEdge, setIsNearEdge] = useState(false);
-  const [viewportSize, setViewportSize] = useState({
-    width: typeof window !== 'undefined' ? window.innerWidth : 0,
-    height: typeof window !== 'undefined' ? window.innerHeight : 0
+  const [viewportDimensions, setViewportDimensions] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight
   });
-  
-  // Check if container is overflowing viewport
+
+  // Update viewport dimensions on resize
   useEffect(() => {
-    const checkOverflow = () => {
-      if (!containerRef.current) return;
-      
-      const rect = containerRef.current.getBoundingClientRect();
-      const isHorizontalOverflow = rect.left < 0 || rect.right > window.innerWidth;
-      const isVerticalOverflow = rect.top < 0 || rect.bottom > window.innerHeight;
-      
-      setIsOverflowing(isHorizontalOverflow || isVerticalOverflow);
-      
-      // Check if near edge (20px threshold)
-      const nearLeft = rect.left < 20;
-      const nearRight = rect.right > window.innerWidth - 20;
-      const nearTop = rect.top < 20;
-      const nearBottom = rect.bottom > window.innerHeight - 20;
-      
-      setIsNearEdge(nearLeft || nearRight || nearTop || nearBottom);
-    };
-    
     const handleResize = () => {
-      setViewportSize({
+      setViewportDimensions({
         width: window.innerWidth,
         height: window.innerHeight
       });
-      checkOverflow();
     };
-    
-    checkOverflow();
+
     window.addEventListener('resize', handleResize);
-    
-    // Set up an interval to continuously check
-    const intervalId = setInterval(checkOverflow, 500);
-    
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      clearInterval(intervalId);
-    };
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
-  
-  return {
-    containerRef,
-    isOverflowing,
-    isNearEdge,
-    viewportWidth: viewportSize.width,
-    viewportHeight: viewportSize.height
-  };
+
+  // Keep chat in viewport
+  useEffect(() => {
+    if (!containerRef.current || !docked) return;
+
+    const updatePosition = () => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      const { width: viewportWidth, height: viewportHeight } = viewportDimensions;
+
+      // Check if overflowing horizontally
+      const isOverflowingX = (position.x + rect.width > viewportWidth) ||
+                            (position.x < 0);
+
+      // Check if overflowing vertically
+      const isOverflowingY = position.y + rect.height > viewportHeight;
+
+      const currentlyOverflowing = isOverflowingX || isOverflowingY;
+
+      // Only update state and log if the overflow state has changed
+      if (currentlyOverflowing !== isOverflowing) {
+        setIsOverflowing(currentlyOverflowing);
+
+        if (currentlyOverflowing) {
+          logger.info('Chat is overflowing viewport', {
+            containerWidth: rect.width,
+            containerHeight: rect.height,
+            viewportWidth,
+            viewportHeight,
+            overflowX: isOverflowingX,
+            overflowY: isOverflowingY
+          });
+        }
+      }
+
+      // If we need to auto-scale
+      if (currentlyOverflowing) {
+        // Calculate scale to fit viewport
+        const scaleX = viewportWidth / rect.width;
+        const scaleY = viewportHeight / rect.height;
+        const newScale = Math.min(scaleX, scaleY, 1) * 0.9; // 90% of max possible scale
+
+        if (Math.abs(newScale - scale) > 0.05) { // Only update if change is significant
+          logger.info('Adjusting chat scale to fit viewport', {
+            oldScale: scale,
+            newScale,
+            scaleX,
+            scaleY
+          });
+          setScale(newScale);
+        }
+      }
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    return () => window.removeEventListener('resize', updatePosition);
+  }, [position, scale, setScale, docked, viewportDimensions, isOverflowing]);
+
+  return { containerRef, isOverflowing, viewportDimensions };
 }
