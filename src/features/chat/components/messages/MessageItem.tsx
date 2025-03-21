@@ -1,9 +1,10 @@
 import { CodeBlock } from '@/components/ui/code-block';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { Message } from '@/types/chat/messages';
 import { formatMessageTimestamp } from '@/utils/messageConversion';
 import { motion } from 'framer-motion';
-import { ArrowRight, Bot, Clock, Sparkles, Terminal, User } from 'lucide-react';
+import { AlertCircle, ArrowRight, Bot, Check, Clock, Sparkles, Terminal, User } from 'lucide-react';
 import React, { useState } from 'react';
 import { MessageActions } from './MessageActions';
 
@@ -29,6 +30,7 @@ export function MessageItem({
   // Get message status with backward compatibility
   const messageStatus = message.message_status || message.status || 'sent';
   const isStreaming = messageStatus === 'pending';
+  const isFailed = messageStatus === 'failed';
 
   // Get timestamp with backward compatibility
   const timestamp = message.timestamp || message.created_at || new Date().toISOString();
@@ -40,6 +42,22 @@ export function MessageItem({
     return <Bot className="h-4 w-4 text-neon-blue" />;
   };
 
+  // Get status icon and tooltip
+  const getStatusConfig = () => {
+    switch (messageStatus) {
+      case 'pending':
+        return { icon: <Clock className="h-3 w-3 animate-pulse" />, tooltip: 'Sending message...' };
+      case 'sent':
+        return { icon: <Check className="h-3 w-3" />, tooltip: 'Message sent' };
+      case 'failed':
+        return { icon: <AlertCircle className="h-3 w-3 text-destructive" />, tooltip: 'Failed to send' };
+      default:
+        return { icon: null, tooltip: '' };
+    }
+  };
+
+  const { icon: statusIcon, tooltip: statusTooltip } = getStatusConfig();
+
   // Add animation when component mounts
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -48,6 +66,13 @@ export function MessageItem({
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Handle retry click
+  const handleRetryClick = () => {
+    if (isFailed && onRetry) {
+      onRetry();
+    }
+  };
 
   return (
     <motion.div
@@ -74,8 +99,19 @@ export function MessageItem({
           isSystem ?
             "bg-dark-purple/40 cyber-border-green text-left mr-auto" :
             "chat-message-assistant cyber-border text-left mr-auto",
-        isStreaming && "chat-pulse"
-      )}>
+        isStreaming && "chat-pulse",
+        isFailed && "chat-message-failed"
+      )}
+      onClick={isFailed ? handleRetryClick : undefined}
+      tabIndex={isFailed ? 0 : undefined}
+      role={isFailed ? 'button' : undefined}
+      aria-label={isFailed ? 'Retry sending message' : undefined}
+      onKeyDown={isFailed ? (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          handleRetryClick();
+        }
+      } : undefined}
+      >
         <div className="text-sm">
           <CodeBlock content={message.content} />
           {isStreaming && (
@@ -89,8 +125,25 @@ export function MessageItem({
 
         <div className="text-xs opacity-50 mt-1 flex items-center justify-end gap-1">
           {isUser && <ArrowRight className="h-3 w-3" />}
-          {messageStatus === 'pending' && <Clock className="h-3 w-3 animate-spin" />}
-          {formatMessageTimestamp(timestamp)}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="flex items-center gap-1">
+                  {statusIcon}
+                  {formatMessageTimestamp(timestamp)}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="chat-tooltip-content text-xs">
+                <p>{statusTooltip}</p>
+                <p className="chat-message-timestamp">
+                  {new Date(timestamp).toLocaleTimeString()}
+                </p>
+                {isFailed && (
+                  <p className="chat-message-retry text-xs text-destructive mt-1">Click to retry</p>
+                )}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           {!isUser && !isSystem && <Sparkles className="h-3 w-3 ml-1" />}
         </div>
 

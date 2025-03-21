@@ -1,12 +1,11 @@
-
-import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
-import { v4 as uuidv4 } from 'uuid';
-import { Message, MessageRole, MessageStatus, MessageStore } from '@/types/chat';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
-import { toast } from 'sonner';
+import { Message, MessageRole, MessageStatus, MessageStore } from '@/types/chat';
 import { toJson } from '@/types/supabase';
+import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
+import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
 
 export const useChatMessageStore = create<MessageStore>()(
   devtools(
@@ -19,24 +18,24 @@ export const useChatMessageStore = create<MessageStore>()(
         addMessage: (message) => {
           const id = message.id || uuidv4();
           const timestamp = message.timestamp || message.created_at || new Date().toISOString();
-          
+
           const newMessage: Message = {
             ...message,
             id,
             timestamp,
             message_status: message.message_status || 'sent',
           };
-          
+
           set((state) => ({
             messages: [...state.messages, newMessage],
           }));
-          
+
           return id;
         },
 
         updateMessage: (id, updates) => {
           set((state) => ({
-            messages: state.messages.map((message) => 
+            messages: state.messages.map((message) =>
               message.id === id ? { ...message, ...updates } : message
             ),
           }));
@@ -51,18 +50,18 @@ export const useChatMessageStore = create<MessageStore>()(
         fetchMessages: async (sessionId) => {
           try {
             set({ isLoading: true, error: null });
-            
+
             const { data, error } = await supabase
               .from('chat_messages')
               .select('*')
               .eq('session_id', sessionId)
               .order('created_at', { ascending: true });
-            
+
             if (error) throw error;
-            
+
             // Clear existing messages before adding new ones
             set({ messages: [] });
-            
+
             // Transform and add messages
             const parsedMessages = (data || []).map(msg => ({
               id: msg.id,
@@ -79,11 +78,11 @@ export const useChatMessageStore = create<MessageStore>()(
               timestamp: msg.created_at,
               position_order: msg.position_order
             }));
-            
+
             parsedMessages.forEach(msg => {
               get().addMessage(msg);
             });
-            
+
             set({ isLoading: false });
             logger.info('Messages fetched successfully', { sessionId, count: parsedMessages.length });
           } catch (error) {
@@ -94,6 +93,53 @@ export const useChatMessageStore = create<MessageStore>()(
 
         clearMessages: () => {
           set({ messages: [] });
+        },
+
+        retryMessage: async (messageId) => {
+          try {
+            const message = get().messages.find(m => m.id === messageId);
+            if (!message) throw new Error('Message not found');
+
+            // Update message status to pending
+            get().updateMessage(messageId, {
+              message_status: 'pending',
+              retry_count: (message.retry_count || 0) + 1,
+              last_retry: new Date().toISOString()
+            });
+
+            // Get current user information
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('User not authenticated');
+
+            // Update message in database
+            const { error } = await supabase
+              .from('chat_messages')
+              .update({
+                status: 'sent',
+                retry_count: (message.retry_count || 0) + 1,
+                last_retry: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', messageId);
+
+            if (error) throw error;
+
+            // Update local message status
+            get().updateMessage(messageId, {
+              message_status: 'sent'
+            });
+
+            logger.info('Message retried successfully', { messageId });
+            toast.success('Message retried successfully');
+          } catch (error) {
+            logger.error('Failed to retry message', { error, messageId });
+            toast.error('Failed to retry message');
+            // Update message status to failed
+            get().updateMessage(messageId, {
+              message_status: 'failed'
+            });
+            throw error;
+          }
         },
 
         sendMessage: async (content, sessionId, role = 'user') => {
@@ -108,13 +154,13 @@ export const useChatMessageStore = create<MessageStore>()(
               created_at: new Date().toISOString(),
               timestamp: new Date().toISOString()
             };
-            
+
             const messageId = get().addMessage(message);
-            
+
             // Get current user information
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('User not authenticated');
-            
+
             // Save to the database
             const { data, error } = await supabase
               .from('chat_messages')
@@ -132,15 +178,15 @@ export const useChatMessageStore = create<MessageStore>()(
               })
               .select()
               .single();
-              
+
             if (error) throw error;
-            
+
             // Update local message status
-            get().updateMessage(messageId, { 
+            get().updateMessage(messageId, {
               message_status: 'sent',
               user_id: user.id
             });
-            
+
             // Update message count for the session
             try {
               await supabase.rpc('increment_count', {
@@ -152,11 +198,18 @@ export const useChatMessageStore = create<MessageStore>()(
             } catch (countError) {
               logger.warn('Failed to increment message count', { countError, sessionId });
             }
-            
+
             return messageId;
           } catch (error) {
             logger.error('Failed to send message', { error, sessionId });
             toast.error('Failed to send message');
+            // Update message status to failed
+            const messageId = get().messages.find(m => m.content === content && m.message_status === 'pending')?.id;
+            if (messageId) {
+              get().updateMessage(messageId, {
+                message_status: 'failed'
+              });
+            }
             throw error;
           }
         }
@@ -184,4 +237,5 @@ export const useMessageActions = () => ({
   fetchMessages: useChatMessageStore(state => state.fetchMessages),
   clearMessages: useChatMessageStore(state => state.clearMessages),
   sendMessage: useChatMessageStore(state => state.sendMessage),
+  retryMessage: useChatMessageStore(state => state.retryMessage),
 });

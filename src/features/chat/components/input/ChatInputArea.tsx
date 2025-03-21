@@ -1,11 +1,11 @@
-
-import React, { useState, useRef, useEffect } from 'react';
-import { Mic, Send, Paperclip, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { useChatMode } from '@/hooks/chat/useChatMode';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
-import { useChatMode } from '../providers/ChatModeProvider';
 import { cn } from '@/lib/utils';
+import { Paperclip, Send, Sparkles } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { VoiceInput } from './VoiceInput';
 
 interface ChatInputAreaProps {
   onSendMessage: (message: string) => void;
@@ -13,49 +13,49 @@ interface ChatInputAreaProps {
   className?: string;
 }
 
-const ChatInputArea: React.FC<ChatInputAreaProps> = ({ 
-  onSendMessage, 
+export function ChatInputArea({
+  onSendMessage,
   disabled = false,
-  className 
-}) => {
+  className
+}: ChatInputAreaProps) {
   const [input, setInput] = useState('');
   const [rows, setRows] = useState(1);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { isEnabled } = useFeatureFlags();
   const { currentMode } = useChatMode();
-  
+
   const showVoice = isEnabled('voice_input');
-  
+
   useEffect(() => {
     // Focus input when component mounts
     if (inputRef.current) {
       inputRef.current.focus();
     }
   }, []);
-  
+
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
-    
+
     // Adjust rows based on content length
     const lineCount = e.target.value.split('\n').length;
     setRows(Math.min(Math.max(lineCount, 1), 5));
   };
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!input.trim() || disabled) return;
-    
+
     onSendMessage(input.trim());
     setInput('');
     setRows(1);
-    
+
     // Focus input after sending
     if (inputRef.current) {
       inputRef.current.focus();
     }
   };
-  
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Send on Enter (without shift)
     if (e.key === 'Enter' && !e.shiftKey && !disabled) {
@@ -63,7 +63,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
       handleSubmit(e);
     }
   };
-  
+
   const getPlaceholder = () => {
     switch (currentMode) {
       case 'dev':
@@ -78,7 +78,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
         return 'Message AI...';
     }
   };
-  
+
   return (
     <form onSubmit={handleSubmit} className={cn("p-3 border-t border-white/10 bg-black/20", className)}>
       <div className="flex items-end gap-2">
@@ -93,12 +93,12 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
             rows={rows}
             disabled={disabled}
           />
-          
+
           <div className="absolute right-2 bottom-2">
-            <Button 
-              type="button" 
-              size="icon" 
-              variant="ghost" 
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
               className="h-7 w-7 text-white/40 hover:text-neon-pink"
               disabled={disabled}
             >
@@ -106,21 +106,21 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
             </Button>
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           {showVoice && (
-            <Button 
-              type="button"
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 rounded-full bg-black/20 border-neon-pink/30 text-neon-pink hover:bg-neon-pink/20 hover:text-white"
+            <VoiceInput
+              onVoiceCapture={(text) => {
+                setInput(text);
+                if (inputRef.current) {
+                  inputRef.current.focus();
+                }
+              }}
               disabled={disabled}
-            >
-              <Mic className="h-4 w-4" />
-            </Button>
+            />
           )}
-          
-          <Button 
+
+          <Button
             type="button"
             variant="outline"
             size="icon"
@@ -129,8 +129,8 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
           >
             <Sparkles className="h-4 w-4" />
           </Button>
-          
-          <Button 
+
+          <Button
             type="submit"
             disabled={!input.trim() || disabled}
             className="h-9 w-9 rounded-full p-0 bg-gradient-to-r from-neon-blue to-neon-blue/70 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -139,12 +139,10 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
           </Button>
         </div>
       </div>
-      
+
       <div className="text-[10px] text-right mt-1 text-white/30">
         Press Enter to send, Shift+Enter for new line
       </div>
     </form>
   );
-};
-
-export default ChatInputArea;
+}

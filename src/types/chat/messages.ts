@@ -14,7 +14,12 @@ export interface Message {
   created_at?: string; // For backward compatibility
   metadata?: Record<string, any>;
   sessionId?: string;
+  session_id?: string; // For backward compatibility
   user_id?: string | null;
+  retry_count?: number;
+  last_retry?: string;
+  updated_at?: string;
+  position_order?: number;
 }
 
 // Chat message with session info

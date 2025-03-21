@@ -1,11 +1,10 @@
-
 /**
  * Store-specific type definitions for the chat system
  */
-import { ChatMode, MessageRole, MessageStatus } from './core';
-import { ChatLayoutState, ChatPosition, ChatUIPreferences, DockPosition } from './ui';
+import { ChatMode, MessageRole } from './core';
 import { Message } from './messages';
 import { Session, SessionCreateOptions } from './sessions';
+import { ChatPosition } from './ui';
 
 // Message store types
 export interface MessageState {
@@ -21,6 +20,7 @@ export interface MessageActions {
   fetchMessages: (sessionId: string) => Promise<void>;
   clearMessages: () => void;
   sendMessage: (content: string, sessionId: string, role?: MessageRole) => Promise<string>;
+  retryMessage: (messageId: string) => Promise<void>;
 }
 
 export type MessageStore = MessageState & MessageActions;
@@ -62,10 +62,10 @@ export interface ModeActions {
 export type ModeStore = ModeState & ModeActions;
 
 // Layout store types
-export type { LayoutState, LayoutActions, LayoutStore } from './layout';
+export type { LayoutActions, LayoutState, LayoutStore } from './layout';
 
 // Docking store types
-export type { DockingState, DockingActions, DockingStore } from './docking';
+export type { DockingActions, DockingState, DockingStore } from './docking';
 
 // Feature state types
 export interface FeatureState {
