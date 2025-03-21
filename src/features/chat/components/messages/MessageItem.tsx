@@ -123,7 +123,7 @@ export function MessageItem({
           )}
         </div>
 
-        <div className="text-xs opacity-50 mt-1 flex items-center justify-end gap-1">
+        <div className="flex items-center gap-1 mt-1 text-xs text-white/60">
           {isUser && <ArrowRight className="h-3 w-3" />}
           <TooltipProvider>
             <Tooltip>

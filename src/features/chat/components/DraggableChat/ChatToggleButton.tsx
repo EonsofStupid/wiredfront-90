@@ -6,19 +6,34 @@ import React from 'react';
 
 interface ChatToggleButtonProps {
   onClick: () => void;
+  isPreview?: boolean;
+  scale?: number;
 }
 
-export const ChatToggleButton: React.FC<ChatToggleButtonProps> = ({ onClick }) => {
+export const ChatToggleButton: React.FC<ChatToggleButtonProps> = ({
+  onClick,
+  isPreview = false,
+  scale = 1
+}) => {
   const { position } = useChatLayoutStore();
 
   const positionClass = position?.x > window.innerWidth / 2
     ? 'right-4'
     : 'left-4';
 
+  const buttonStyle: React.CSSProperties = {
+    transform: `scale(${scale})`,
+    transformOrigin: 'bottom right',
+    position: isPreview ? 'relative' : 'fixed',
+    bottom: isPreview ? 'auto' : 16,
+    right: isPreview ? 'auto' : position?.x || 16,
+    margin: isPreview ? '0' : undefined,
+  };
+
   return (
     <motion.button
       className={cn(
-        "fixed bottom-4",
+        "chat-toggle-button",
         "bg-gradient-to-r from-neon-blue to-neon-blue/70",
         "text-white p-3 rounded-full",
         "shadow-[0_0_15px_rgba(168,85,247,0.3)]",
@@ -27,6 +42,7 @@ export const ChatToggleButton: React.FC<ChatToggleButtonProps> = ({ onClick }) =
         "backdrop-blur-md",
         positionClass
       )}
+      style={buttonStyle}
       whileHover={{
         scale: 1.1,
         boxShadow: "0 0 20px rgba(168,85,247,0.4)"
