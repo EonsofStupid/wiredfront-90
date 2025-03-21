@@ -19,3 +19,6 @@ export * from './messages';
 
 // Sidebar Components
 export * from './sidebar';
+
+// UI Components
+export * from './ui/ChatButton';
