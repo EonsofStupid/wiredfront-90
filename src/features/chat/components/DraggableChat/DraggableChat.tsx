@@ -1,16 +1,15 @@
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { DndContext } from "@dnd-kit/core";
 import { AnimatePresence, motion } from "framer-motion";
 import { useViewportAwareness } from "../../hooks/useViewportAwareness";
 import { logger } from "../../services/LoggingService";
-import { useChatLayoutStore } from "@/stores/chat/chatLayoutStore";
-import { useChatModeStore } from "@/stores/features/chat/modeStore";
 import { useLocation } from "react-router-dom";
 import ChatContainer from "./ChatContainer";
 import ChatSidebar from "./ChatSidebar";
 import { ChatToggleButton } from "./ChatToggleButton";
 import { IconStack } from "../IconStack";
+import { useChat } from "../../hooks/useChat";
 import "../../styles/chat.css";
 
 export function DraggableChat() {
@@ -22,13 +21,12 @@ export function DraggableChat() {
     scale,
     docked,
     position,
-    setPosition
-  } = useChatLayoutStore();
+    setPosition,
+    currentMode
+  } = useChat();
 
-  const { currentMode } = useChatModeStore();
   const { containerRef, isOverflowing } = useViewportAwareness();
   const location = useLocation();
-  const isEditorPage = location.pathname === '/editor';
 
   // Load position from localStorage on mount
   useEffect(() => {
@@ -99,7 +97,6 @@ export function DraggableChat() {
           )}
         </AnimatePresence>
 
-        {/* Add IconStack component */}
         <IconStack position={dockPosition === 'bottom-right' ? 'right' : 'left'} />
         
         <ChatContainer dockPosition={dockPosition} />

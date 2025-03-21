@@ -6,10 +6,15 @@ export * from './components/DraggableChat';
 export { default as ChatContent } from './components/ChatContent';
 export { default as ChatMessage } from './components/ChatMessage';
 export { default as ChatInputArea } from './components/ChatInputArea';
+export { default as ChatHeader } from './components/ChatHeader';
+export { default as ChatSidebar } from './components/DraggableChat/ChatSidebar';
+export { default as ChatContainer } from './components/DraggableChat/ChatContainer';
+export { ChatToggleButton } from './components/DraggableChat/ChatToggleButton';
 export { IconStack } from './components/IconStack';
 
 // Export hooks
 export * from './hooks/useViewportAwareness';
+export * from './hooks/useChat';
 
 // Export styles
 import './styles/chat.css';

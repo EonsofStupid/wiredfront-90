@@ -1,153 +1,132 @@
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+
 import { useCallback } from 'react';
+import { useChatLayoutStore } from '@/stores/chat/chatLayoutStore';
+import { useChatModeStore } from '@/stores/features/chat/modeStore';
+import { useChatMessageStore } from '@/stores/features/chat/messageStore';
+import { useChatSessionStore } from '@/stores/features/chat/sessionStore';
 import { toast } from 'sonner';
-import {
-    appendMessageAtom,
-    chatInputAtom,
-    clearMessagesAtom,
-    deleteMessageAtom,
-    isComposingAtom,
-    isSubmittingAtom,
-    messagesAtom,
-    updateMessageAtom,
-} from '../atoms';
-import { ChatService } from '../service';
-import { useChatStore } from '../store';
-import type { ChatMessage } from '../types';
+import { v4 as uuidv4 } from 'uuid';
+import { Message, ChatMode } from '@/types/chat/types';
 
 export const useChat = () => {
-  // Jotai atoms
-  const [input, setInput] = useAtom(chatInputAtom);
-  const [isComposing, setIsComposing] = useAtom(isComposingAtom);
-  const [isSubmitting, setIsSubmitting] = useAtom(isSubmittingAtom);
-  const messages = useAtomValue(messagesAtom);
-  const appendMessage = useSetAtom(appendMessageAtom);
-  const updateMessage = useSetAtom(updateMessageAtom);
-  const deleteMessage = useSetAtom(deleteMessageAtom);
-  const clearMessages = useSetAtom(clearMessagesAtom);
+  // Access all chat-related stores
+  const layout = useChatLayoutStore();
+  const mode = useChatModeStore();
+  const messageStore = useChatMessageStore();
+  const sessionStore = useChatSessionStore();
 
-  // Zustand store
-  const {
-    currentSessionId,
-    currentMode,
-    currentProvider,
-    isOpen,
-    toggleChat,
-    setError
-  } = useChatStore();
-
-  const handleSubmit = useCallback(async () => {
-    if (!currentSessionId || !input.trim() || isSubmitting) return;
-
-    setIsSubmitting(true);
-    const userMessage: Omit<ChatMessage, 'id' | 'createdAt'> = {
-      content: input.trim(),
-      role: 'user',
-      sessionId: currentSessionId,
-    };
-
+  // Combine commonly used values
+  const isWaitingForResponse = messageStore.isLoading;
+  
+  // Create a new chat session
+  const createSession = useCallback(async (options?: { 
+    mode?: ChatMode, 
+    title?: string 
+  }) => {
     try {
-      // Create user message
-      const createdMessage = await ChatService.createMessage(userMessage);
-      appendMessage(createdMessage);
-      setInput('');
-
-      // Get assistant response
-      const assistantMessage = await ChatService.createMessage({
-        content: 'Processing...',
+      const session = await sessionStore.createSession({
+        mode: options?.mode || mode.currentMode,
+        title: options?.title || `New ${options?.mode || mode.currentMode} chat`
+      });
+      
+      // Set as current session
+      sessionStore.setCurrentSession(session);
+      
+      // Switch to the session's mode if needed
+      if (session.mode !== mode.currentMode) {
+        mode.setMode(session.mode as ChatMode);
+      }
+      
+      return session;
+    } catch (error) {
+      console.error('Failed to create session:', error);
+      toast.error('Failed to create new chat session');
+      return null;
+    }
+  }, [sessionStore, mode]);
+  
+  // Send a message
+  const sendMessage = useCallback(async (content: string) => {
+    try {
+      // Ensure we have an active session
+      if (!sessionStore.currentSession) {
+        const newSession = await createSession();
+        if (!newSession) throw new Error('Could not create a new session');
+      }
+      
+      const sessionId = sessionStore.currentSession?.id;
+      if (!sessionId) throw new Error('No active session found');
+      
+      // Send the message
+      const messageId = await messageStore.sendMessage(content, sessionId);
+      
+      // Simulate AI response for now
+      const aiMessageId = uuidv4();
+      messageStore.addMessage({
+        id: aiMessageId,
+        session_id: sessionId,
         role: 'assistant',
-        sessionId: currentSessionId,
+        content: `This is a placeholder response for "${content}". Real AI integration pending.`,
+        message_status: 'sent',
+        created_at: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       });
-      appendMessage(assistantMessage);
-
-      // TODO: Implement actual message processing with the current provider
-      // This is just a placeholder
-      const response = await new Promise<string>((resolve) => {
-        setTimeout(() => {
-          resolve('This is a placeholder response. Implement actual provider integration.');
-        }, 1000);
-      });
-
-      // Update assistant message with response
-      const updatedMessage = await ChatService.updateMessage(assistantMessage.id, {
-        content: response,
-      });
-      updateMessage(updatedMessage);
+      
+      return messageId;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setIsSubmitting(false);
+      console.error('Failed to send message:', error);
+      toast.error('Failed to send message');
+      return null;
     }
-  }, [
-    currentSessionId,
-    input,
-    isSubmitting,
-    setInput,
-    setIsSubmitting,
-    appendMessage,
-    updateMessage,
-    setError,
-  ]);
-
-  const handleInputChange = useCallback((value: string) => {
-    setInput(value);
-  }, [setInput]);
-
-  const handleCompositionStart = useCallback(() => {
-    setIsComposing(true);
-  }, [setIsComposing]);
-
-  const handleCompositionEnd = useCallback(() => {
-    setIsComposing(false);
-  }, [setIsComposing]);
-
-  const handleDeleteMessage = useCallback(async (messageId: string) => {
-    try {
-      await ChatService.deleteMessage(messageId);
-      deleteMessage(messageId);
-      toast.success('Message deleted');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to delete message';
-      setError(errorMessage);
-      toast.error(errorMessage);
+  }, [messageStore, sessionStore, createSession]);
+  
+  // Get welcome message based on mode
+  const getWelcomeMessage = useCallback(() => {
+    switch (mode.currentMode) {
+      case 'dev': return 'I can help you with your code. Ask me anything about development!';
+      case 'image': return 'Describe the image you want to generate, and I\'ll create it for you.';
+      case 'training': return 'I\'m here to help you learn. What would you like to practice today?';
+      case 'planning': return 'Let\'s plan your project together. What are you working on?';
+      case 'code': return 'I can help you write, review, or debug code. What are you working on?';
+      default: return 'How can I help you today?';
     }
-  }, [deleteMessage, setError]);
-
-  const handleClearMessages = useCallback(async () => {
-    if (!currentSessionId) return;
-
-    try {
-      // TODO: Implement bulk delete in the API
-      const messagesToDelete = messages.map(msg => msg.id);
-      await Promise.all(messagesToDelete.map(id => ChatService.deleteMessage(id)));
-      clearMessages();
-      toast.success('Messages cleared');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to clear messages';
-      setError(errorMessage);
-      toast.error(errorMessage);
-    }
-  }, [currentSessionId, messages, clearMessages, setError]);
-
+  }, [mode.currentMode]);
+  
   return {
-    // State
-    input,
-    messages,
-    isComposing,
-    isSubmitting,
-    isOpen,
-    currentMode,
-    currentProvider,
-
-    // Actions
-    handleSubmit,
-    handleInputChange,
-    handleCompositionStart,
-    handleCompositionEnd,
-    handleDeleteMessage,
-    handleClearMessages,
-    toggleChat,
+    // Layout
+    isOpen: layout.isOpen,
+    isMinimized: layout.isMinimized,
+    showSidebar: layout.showSidebar,
+    docked: layout.docked,
+    position: layout.position,
+    scale: layout.scale,
+    toggleOpen: layout.toggleOpen,
+    toggleMinimize: layout.toggleMinimize,
+    toggleSidebar: layout.toggleSidebar,
+    toggleDocked: layout.toggleDocked,
+    setPosition: layout.setPosition,
+    setScale: layout.setScale,
+    
+    // Mode
+    currentMode: mode.currentMode,
+    setMode: mode.setMode,
+    switchMode: mode.switchMode,
+    
+    // Messages
+    messages: messageStore.messages,
+    isLoading: messageStore.isLoading,
+    sendMessage,
+    clearMessages: messageStore.clearMessages,
+    
+    // Sessions
+    currentSession: sessionStore.currentSession,
+    sessions: sessionStore.sessions,
+    createSession,
+    
+    // Utility
+    isWaitingForResponse,
+    getWelcomeMessage
   };
 };
+
+export default useChat;

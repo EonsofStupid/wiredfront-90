@@ -1,14 +1,14 @@
 
 import { GuestCTA } from "@/components/auth/GuestCTA";
 import { DraggableChat } from "@/features/chat/components/DraggableChat";
-import { ChatProvider } from "@/features/chat/providers/ChatProvider";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuthStore } from "@/stores/auth";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import MobileExperience from "./mobile";
-import { AppRoutes, PUBLIC_ROUTES } from "./routes";
+import { AppRoutes } from "./routes";
+import { PUBLIC_ROUTES } from "./routes";
 import { ADMIN_ROUTES } from "./routes/admin";
 import { RouteLoggingService } from "./services/navigation/RouteLoggingService";
 
@@ -40,10 +40,10 @@ const App = () => {
 
   if (isMobile) {
     return (
-      <ChatProvider>
+      <>
         <MobileExperience />
         <Toaster position="top-center" />
-      </ChatProvider>
+      </>
     );
   }
 
@@ -51,7 +51,7 @@ const App = () => {
   const isAdminRoute = ADMIN_ROUTES.some(route => location.pathname.startsWith(route));
 
   return (
-    <ChatProvider>
+    <>
       <AppRoutes
         isAuthenticated={isAuthenticated}
         isPublicRoute={isPublicRoute}
@@ -60,7 +60,7 @@ const App = () => {
       <DraggableChat />
       <GuestCTA />
       <Toaster />
-    </ChatProvider>
+    </>
   );
 };
 
