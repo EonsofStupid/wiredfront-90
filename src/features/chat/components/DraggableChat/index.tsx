@@ -5,9 +5,9 @@ import { useLocation } from "react-router-dom";
 import { useViewportAwareness } from "../../hooks/useViewportAwareness";
 import { logger } from "../../services/LoggingService";
 import { useChatStore } from "../../store/chatStore";
-import { ChatContainer } from "../ChatContainer";
-import { ChatSidebar } from "../ChatSidebar";
-import { ChatToggleButton } from "../ChatToggleButton";
+import { ChatContainer } from "./ChatContainer";
+import { ChatSidebar } from "./ChatSidebar";
+import { ChatToggleButton } from "./ChatToggleButton";
 
 export function DraggableChat() {
   const {

@@ -7,11 +7,12 @@ import { useChatStore } from '../../store/chatStore';
 import { containerStyles } from '../../styles';
 
 interface ChatContainerProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   className?: string;
+  dockPosition?: 'bottom-left' | 'bottom-right';
 }
 
-export function ChatContainer({ children, className }: ChatContainerProps) {
+export function ChatContainer({ children, className, dockPosition = 'bottom-right' }: ChatContainerProps) {
   const { position, scale, isMinimized } = useChatStore();
   const { containerRef, isOverflowing } = useViewportAwareness();
   const { attributes, listeners, setNodeRef, transform } = useDraggable({

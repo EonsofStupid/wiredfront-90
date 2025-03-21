@@ -5,10 +5,16 @@ import { useChatStore } from '../../store/chatStore';
 
 interface ChatToggleButtonProps {
   className?: string;
+  onClick?: () => void;
 }
 
-export function ChatToggleButton({ className }: ChatToggleButtonProps) {
+export function ChatToggleButton({ className, onClick }: ChatToggleButtonProps) {
   const { toggleChat, isOpen } = useChatStore();
+
+  const handleClick = () => {
+    toggleChat();
+    onClick?.();
+  };
 
   return (
     <Button
@@ -19,7 +25,7 @@ export function ChatToggleButton({ className }: ChatToggleButtonProps) {
         isOpen && 'hidden',
         className
       )}
-      onClick={toggleChat}
+      onClick={handleClick}
       aria-label={isOpen ? 'Close chat' : 'Open chat'}
     >
       <MessageSquare className="h-6 w-6" />
