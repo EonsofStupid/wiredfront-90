@@ -2,31 +2,29 @@
 import { DndContext } from "@dnd-kit/core";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef } from "react";
-import { useLocation } from "react-router-dom";
 import { useViewportAwareness } from "../../hooks/useViewportAwareness";
 import { logger } from "../../services/LoggingService";
-import { useChatStore } from "../../store/chatStore";
+import { useChatLayoutStore } from "@/stores/chat/layoutStore";
 import { ChatContainer } from "./ChatContainer";
 import { ChatSidebar } from "./ChatSidebar";
 import { ChatToggleButton } from "./ChatToggleButton";
 import { IconStack } from "../IconStack";
-import "../../styles/variables.css";
+import "../../styles/index.css";
 
 export function DraggableChat() {
   const {
     isOpen,
-    toggleChat,
+    toggleOpen,
     isMinimized,
     showSidebar,
     scale,
     docked,
     position,
     setPosition
-  } = useChatStore();
+  } = useChatLayoutStore();
 
   const { containerRef, isOverflowing } = useViewportAwareness();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const location = useLocation();
 
   // Load position from localStorage on mount
   useEffect(() => {
@@ -55,13 +53,12 @@ export function DraggableChat() {
       isMinimized,
       showSidebar,
       scale,
-      isOverflowing,
-      path: location.pathname
+      isOverflowing
     });
-  }, [isOpen, isMinimized, showSidebar, scale, isOverflowing, location.pathname]);
+  }, [isOpen, isMinimized, showSidebar, scale, isOverflowing]);
 
   if (!isOpen) {
-    return <ChatToggleButton onClick={toggleChat} />;
+    return <ChatToggleButton onClick={toggleOpen} />;
   }
 
   // Determine position class based on position state
@@ -70,7 +67,7 @@ export function DraggableChat() {
   return (
     <DndContext>
       <motion.div
-        className="fixed bottom-4 flex gap-4 z-[var(--chat-z-index)]"
+        className="fixed bottom-4 flex gap-4 z-[var(--z-chat)]"
         style={{
           transformOrigin: dockPosition === 'bottom-right' ? 'bottom right' : 'bottom left',
           right: dockPosition === 'bottom-right' ? '1rem' : 'auto',

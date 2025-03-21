@@ -1,20 +1,15 @@
-// API
-export * from './api/client';
 
-// Atoms
-export * from './atoms';
+// Export components
+export * from './components/DraggableChat';
 
-// Components
-export * from './components/ChatProvider';
+// Export hooks
+export * from './hooks/useViewportAwareness';
 
-// Hooks
-export * from './hooks/useChat';
+// Export styles
+import './styles/index.css';
 
-// Service
-export * from './service';
-
-// Store
-export * from './store';
-
-// Types
+// Export types
 export * from './types';
+
+// Export services
+export * from './services/LoggingService';

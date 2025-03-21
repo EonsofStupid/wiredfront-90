@@ -1,95 +1,68 @@
 
 import { useEffect, useRef, useState } from 'react';
-import { logger } from '../services/LoggingService';
 
-interface ViewportAwarenessOptions {
-  threshold?: number;
-  debounceMs?: number;
+interface ViewportAwarenessResult {
+  containerRef: React.RefObject<HTMLDivElement>;
+  isOverflowing: boolean;
+  isNearEdge: boolean;
+  viewportWidth: number;
+  viewportHeight: number;
 }
 
-export function useViewportAwareness(options: ViewportAwarenessOptions = {}) {
-  const { 
-    threshold = 100, // px from viewport edge
-    debounceMs = 100 
-  } = options;
-  
+export function useViewportAwareness(): ViewportAwarenessResult {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
   const [isNearEdge, setIsNearEdge] = useState(false);
-  const [edge, setEdge] = useState<'top' | 'right' | 'bottom' | 'left' | null>(null);
+  const [viewportSize, setViewportSize] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 0,
+    height: typeof window !== 'undefined' ? window.innerHeight : 0
+  });
   
-  // Check if the element is near the viewport edge
+  // Check if container is overflowing viewport
   useEffect(() => {
-    const checkPosition = () => {
-      const container = containerRef.current;
-      if (!container) return;
+    const checkOverflow = () => {
+      if (!containerRef.current) return;
       
-      const rect = container.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
+      const rect = containerRef.current.getBoundingClientRect();
+      const isHorizontalOverflow = rect.left < 0 || rect.right > window.innerWidth;
+      const isVerticalOverflow = rect.top < 0 || rect.bottom > window.innerHeight;
       
-      // Check for visibility in viewport
-      const isInViewport = 
-        rect.top < viewportHeight &&
-        rect.bottom > 0 &&
-        rect.left < viewportWidth &&
-        rect.right > 0;
+      setIsOverflowing(isHorizontalOverflow || isVerticalOverflow);
       
-      setIsVisible(isInViewport);
+      // Check if near edge (20px threshold)
+      const nearLeft = rect.left < 20;
+      const nearRight = rect.right > window.innerWidth - 20;
+      const nearTop = rect.top < 20;
+      const nearBottom = rect.bottom > window.innerHeight - 20;
       
-      // Check if overflowing viewport
-      const isOverflow = 
-        rect.top < 0 ||
-        rect.bottom > viewportHeight ||
-        rect.left < 0 ||
-        rect.right > viewportWidth;
-      
-      setIsOverflowing(isOverflow);
-      
-      // Check for edge proximity
-      const isNearTop = rect.top < threshold;
-      const isNearRight = viewportWidth - rect.right < threshold;
-      const isNearBottom = viewportHeight - rect.bottom < threshold;
-      const isNearLeft = rect.left < threshold;
-      
-      const nearEdge = isNearTop || isNearRight || isNearBottom || isNearLeft;
-      setIsNearEdge(nearEdge);
-      
-      // Determine which edge
-      if (isNearTop) setEdge('top');
-      else if (isNearRight) setEdge('right');
-      else if (isNearBottom) setEdge('bottom');
-      else if (isNearLeft) setEdge('left');
-      else setEdge(null);
+      setIsNearEdge(nearLeft || nearRight || nearTop || nearBottom);
     };
     
-    // Debounced handler
-    let timeout: NodeJS.Timeout;
-    const debouncedCheck = () => {
-      clearTimeout(timeout);
-      timeout = setTimeout(checkPosition, debounceMs);
+    const handleResize = () => {
+      setViewportSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+      checkOverflow();
     };
     
-    // Initial check
-    checkPosition();
+    checkOverflow();
+    window.addEventListener('resize', handleResize);
     
-    // Set up listeners
-    window.addEventListener('resize', debouncedCheck);
-    window.addEventListener('scroll', debouncedCheck);
+    // Set up an interval to continuously check
+    const intervalId = setInterval(checkOverflow, 500);
     
     return () => {
-      clearTimeout(timeout);
-      window.removeEventListener('resize', debouncedCheck);
-      window.removeEventListener('scroll', debouncedCheck);
+      window.removeEventListener('resize', handleResize);
+      clearInterval(intervalId);
     };
-  }, [threshold, debounceMs]);
+  }, []);
   
   return {
     containerRef,
     isOverflowing,
-    isVisible,
     isNearEdge,
-    edge
+    viewportWidth: viewportSize.width,
+    viewportHeight: viewportSize.height
   };
 }

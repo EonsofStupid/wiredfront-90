@@ -1,70 +1,53 @@
 
-import { cn } from '@/lib/utils';
-import { useDraggable } from '@dnd-kit/core';
-import { AnimatePresence, motion } from 'framer-motion';
-import React, { useEffect, useState } from 'react';
-import { useViewportAwareness } from '../../hooks/useViewportAwareness';
-import { useChatStore } from '../../store/chatStore';
-import { containerStyles } from '../../styles';
+import { cn } from "@/lib/utils";
+import { useDraggable } from "@dnd-kit/core";
+import { AnimatePresence, motion } from "framer-motion";
+import React, { useEffect, useRef, useState } from "react";
+import { useChatLayoutStore } from "@/stores/chat/layoutStore";
+import { useViewportAwareness } from "../../hooks/useViewportAwareness";
+import { ChatContent } from "../ChatContent";
+import { ChatHeader } from "../ChatHeader";
+import { ChatInputArea } from "../ChatInputArea";
+import { ModeSelectionDialog } from "../ModeSelection/ModeSelectionDialog";
 
 interface ChatContainerProps {
-  children?: React.ReactNode;
   className?: string;
-  dockPosition?: 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right';
+  dockPosition?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
 }
 
 export function ChatContainer({ 
-  children, 
   className, 
   dockPosition = 'bottom-right' 
 }: ChatContainerProps) {
-  const { position, scale, isMinimized, docked, setPosition } = useChatStore();
-  const { containerRef, isOverflowing } = useViewportAwareness();
-  const [isDocked, setIsDocked] = useState(docked);
+  const { 
+    position, 
+    setPosition, 
+    scale, 
+    isMinimized, 
+    docked, 
+  } = useChatLayoutStore();
+  
+  const [modeDialogOpen, setModeDialogOpen] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { containerRef } = useViewportAwareness();
   
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: 'chat-container',
-    disabled: isDocked
+    disabled: docked
   });
-
-  // Calculate position based on docking status and position
-  useEffect(() => {
-    if (docked) {
-      setIsDocked(true);
-      
-      // Set position based on dock location
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      const newPosition = { x: 0, y: 0 };
-      
-      switch (dockPosition) {
-        case 'bottom-right':
-          newPosition.x = viewportWidth - 420;
-          newPosition.y = viewportHeight - 520;
-          break;
-        case 'bottom-left':
-          newPosition.x = 20;
-          newPosition.y = viewportHeight - 520;
-          break;
-        case 'top-right':
-          newPosition.x = viewportWidth - 420;
-          newPosition.y = 20;
-          break;
-        case 'top-left':
-          newPosition.x = 20;
-          newPosition.y = 20;
-          break;
+  
+  // Calculate transform style for dragging
+  const style = transform && !docked
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0) scale(${scale})`,
       }
-      
-      setPosition(newPosition);
-    } else {
-      setIsDocked(false);
-    }
-  }, [docked, dockPosition, setPosition]);
-
-  // Check if the container is at the edge of the screen
+    : {
+        transform: `translate3d(0, 0, 0) scale(${scale})`,
+      };
+  
+  // Auto snap to edges when dragging
   useEffect(() => {
-    if (!transform || isDocked) return;
+    if (!transform || docked) return;
     
     const threshold = 20; // pixels from edge
     const containerWidth = 400; // Approximate container width
@@ -83,55 +66,77 @@ export function ChatContainer({
     const isNearTopEdge = newY < threshold;
     
     // Auto-snap to edges
-    if (isNearRightEdge) {
-      setPosition({ ...position, x: viewportWidth - containerWidth - 10 });
-    } else if (isNearLeftEdge) {
-      setPosition({ ...position, x: 10 });
+    if (isNearRightEdge || isNearLeftEdge || isNearBottomEdge || isNearTopEdge) {
+      const snappedX = isNearRightEdge 
+        ? viewportWidth - containerWidth - 10 
+        : isNearLeftEdge 
+          ? 10 
+          : position.x + transform.x;
+      
+      const snappedY = isNearBottomEdge
+        ? viewportHeight - containerHeight - 10
+        : isNearTopEdge
+          ? 10
+          : position.y + transform.y;
+      
+      setPosition({ x: snappedX, y: snappedY });
+    } else {
+      // Update position based on drag
+      setPosition({ 
+        x: position.x + transform.x, 
+        y: position.y + transform.y 
+      });
     }
-    
-    if (isNearBottomEdge) {
-      setPosition({ ...position, y: viewportHeight - containerHeight - 10 });
-    } else if (isNearTopEdge) {
-      setPosition({ ...position, y: 10 });
+  }, [transform, position, setPosition, docked]);
+  
+  // Scroll to bottom on new messages
+  useEffect(() => {
+    if (messagesEndRef.current && !isMinimized) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [transform, position, setPosition, isDocked]);
-
-  const style = transform && !isDocked
-    ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0) scale(${scale})`,
-      }
-    : {
-        transform: `translate3d(${position.x}px, ${position.y}px, 0) scale(${scale})`,
-      };
-
+  }, [isMinimized]);
+  
+  // Handle opening mode selector
+  const handleOpenModeSelector = () => {
+    setModeDialogOpen(true);
+  };
+  
+  // Handle toggle sidebar
+  const handleToggleSidebar = () => {
+    useChatLayoutStore.getState().toggleSidebar();
+  };
+  
   return (
-    <AnimatePresence>
-      {!isMinimized && (
-        <motion.div
-          ref={setNodeRef}
-          style={style}
-          className={cn(
-            containerStyles.container,
-            isDocked && containerStyles.docked,
-            className
-          )}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          transition={{ duration: 0.2 }}
-          {...(isDocked ? {} : { ...attributes, ...listeners })}
-        >
-          <div 
-            ref={containerRef} 
-            className={cn(
-              containerStyles.content,
-              isDocked && containerStyles.dockedContent
-            )}
-          >
-            {children}
-          </div>
-        </motion.div>
+    <div 
+      ref={setNodeRef}
+      style={style}
+      {...(docked ? {} : { ...listeners, ...attributes })}
+      className={cn(
+        "chat-container overflow-hidden flex flex-col cyber-bg",
+        !docked && 'cursor-grab active:cursor-grabbing',
+        className
       )}
-    </AnimatePresence>
+    >
+      <ChatHeader 
+        onToggleSidebar={handleToggleSidebar}
+        onOpenModeSelector={handleOpenModeSelector}
+      />
+      
+      {!isMinimized && (
+        <div className="flex-1 overflow-hidden flex flex-col" ref={containerRef}>
+          <ChatContent className="flex-1" />
+          <div ref={messagesEndRef} />
+        </div>
+      )}
+      
+      {!isMinimized && (
+        <ChatInputArea />
+      )}
+      
+      <ModeSelectionDialog
+        open={modeDialogOpen}
+        onOpenChange={setModeDialogOpen}
+      />
+    </div>
   );
 }
