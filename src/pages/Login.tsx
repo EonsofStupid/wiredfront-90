@@ -1,12 +1,12 @@
 
 import { Auth } from "@supabase/auth-ui-react";
-import { supabase } from "@/integrations/supabase/client";
+import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
+import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/stores/auth";
 import { getLoginRedirectUrl } from "@/utils/auth";
-import { toast } from "sonner";
 
 const Login = () => {
   const navigate = useNavigate();
