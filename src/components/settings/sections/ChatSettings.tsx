@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ChatButton } from "@/features/chat/components";
+import { ChatButton } from "@/features/chat/components/ui/ChatButton";
 import {
     chatIsDockedAtom,
     chatIsMinimizedAtom,
@@ -158,7 +158,7 @@ export function ChatSettings() {
             </div>
             <Switch
               checked={preferences.showTimestamps}
-              onCheckedChange={(checked) => updatePreferences({ showTimestamps: checked })}
+              onCheckedChange={(checked: boolean) => updatePreferences({ showTimestamps: checked })}
             />
           </div>
 
@@ -169,7 +169,7 @@ export function ChatSettings() {
             </div>
             <Switch
               checked={preferences.saveHistory}
-              onCheckedChange={(checked) => updatePreferences({ saveHistory: checked })}
+              onCheckedChange={(checked: boolean) => updatePreferences({ saveHistory: checked })}
             />
           </div>
         </div>
@@ -183,7 +183,7 @@ export function ChatSettings() {
             <Label>Default Provider</Label>
             <Select
               value={currentProvider?.id || ''}
-              onValueChange={(value) => {
+              onValueChange={(value: string) => {
                 const provider = availableProviders.find(p => p.id === value);
                 if (provider) updateCurrentProvider(provider);
               }}
@@ -205,13 +205,13 @@ export function ChatSettings() {
             <Label>Default Model</Label>
             <Select
               value={selectedModel}
-              onValueChange={(value) => setCurrentMode(value as any)}
+              onValueChange={(value: string) => setCurrentMode(value)}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select model" />
               </SelectTrigger>
               <SelectContent>
-                {currentProvider?.models.map(model => (
+                {currentProvider?.models.map((model: string) => (
                   <SelectItem key={model} value={model}>
                     {model}
                   </SelectItem>
