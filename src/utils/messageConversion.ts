@@ -1,7 +1,6 @@
-
-import { Message, DBMessage, Session, DBSession } from '@/types/chat';
+import { DBMessage, DBSession, Message, Session } from '@/types/chat';
 import { normalizeChatMode } from '@/types/chat/core';
-import { toJson, jsonToRecord } from '@/types/supabase';
+import { jsonToRecord, toJson } from '@/types/supabase';
 
 /**
  * Convert a database message to an application message
@@ -80,4 +79,41 @@ export function sessionToDBSession(session: Session): Partial<DBSession> {
     tokens_used: session.tokens_used || 0,
     message_count: session.message_count || 0
   };
+}
+
+export function formatMessageTimestamp(timestamp: string): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+
+  // If less than 1 minute ago
+  if (diff < 60000) {
+    return 'just now';
+  }
+
+  // If less than 1 hour ago
+  if (diff < 3600000) {
+    const minutes = Math.floor(diff / 60000);
+    return `${minutes}m ago`;
+  }
+
+  // If less than 24 hours ago
+  if (diff < 86400000) {
+    const hours = Math.floor(diff / 3600000);
+    return `${hours}h ago`;
+  }
+
+  // If less than 7 days ago
+  if (diff < 604800000) {
+    const days = Math.floor(diff / 86400000);
+    return `${days}d ago`;
+  }
+
+  // Otherwise, show the date
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 }
