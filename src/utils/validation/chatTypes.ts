@@ -1,75 +1,36 @@
 
-import { z } from 'zod';
-import { ChatMode, isChatMode, MessageRole, MessageStatus } from '@/types/chat';
-import { toast } from 'sonner';
-import { logger } from '@/services/chat/LoggingService';
+import { ChatMode, isChatMode } from '@/types/chat/core';
 
-// Chat mode validation schema
-export const chatModeSchema = z.custom<ChatMode>(
-  (val) => isChatMode(val),
-  { message: "Invalid chat mode" }
-);
-
-// Message role validation schema
-export const messageRoleSchema = z.enum(['user', 'assistant', 'system'] as [MessageRole, ...MessageRole[]]);
-
-// Message status validation schema - ensure the array matches the type
-export const messageStatusSchema = z.enum([
-  'pending', 'sent', 'delivered', 'read', 'error', 'failed', 'cached'
-] as const);
-
-// Error types for validation failures
-export type ChatTypeError = {
-  code: 'INVALID_MODE' | 'INVALID_ROLE' | 'INVALID_STATUS' | 'CONVERSION_ERROR';
-  message: string;
-  originalValue?: unknown;
-};
+interface ValidateChatModeOptions {
+  silent?: boolean;
+  fallback?: ChatMode;
+}
 
 /**
- * Validates a chat mode value
- * @param value The value to validate
- * @param options Optional configuration
- * @returns The validated ChatMode or an error object
+ * Validates that a value is a valid chat mode and normalizes it
  */
-export const validateChatMode = (
+export function validateChatMode(
   value: unknown, 
-  options: { silent?: boolean; fallback?: ChatMode } = {}
-): ChatMode => {
-  try {
-    return chatModeSchema.parse(value);
-  } catch (error) {
-    const fallback = options.fallback || 'chat';
-    
-    if (!options.silent) {
-      logger.warn(`Invalid chat mode: ${String(value)}, using fallback: ${fallback}`);
-    }
-    
-    return fallback;
+  options: ValidateChatModeOptions = {}
+): ChatMode {
+  const { silent = false, fallback = 'chat' } = options;
+  
+  if (isChatMode(value)) {
+    return value;
   }
-};
+  
+  if (!silent) {
+    console.warn(`Invalid chat mode: ${value}, falling back to ${fallback}`);
+  }
+  
+  return fallback;
+}
 
 /**
- * Safe function to convert any value to a valid chat mode
+ * Validates that a string is a valid session ID format
  */
-export const toChatMode = (value: unknown): ChatMode => {
-  // Handle null/undefined
-  if (value == null) return 'chat';
-  
-  // If it's already a valid mode, return it
-  if (isChatMode(value)) return value;
-  
-  // Handle string conversions
-  if (typeof value === 'string') {
-    // Map legacy values
-    const modeMap: Record<string, ChatMode> = {
-      'standard': 'chat',
-      'developer': 'dev'
-    };
-    
-    const normalized = modeMap[value] || value;
-    if (isChatMode(normalized)) return normalized;
-  }
-  
-  // Default fallback
-  return 'chat';
-};
+export function validateSessionId(id: string): boolean {
+  // Check for UUID format
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+}

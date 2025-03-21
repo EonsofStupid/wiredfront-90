@@ -1,6 +1,7 @@
 
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { Spinner } from '@/components/ui/Spinner';
+import { supabase } from '@/lib/supabase';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Toaster } from "sonner";
@@ -24,11 +25,27 @@ interface ChatProviderProps {
 export function ChatProvider({ children }: ChatProviderProps) {
   const location = useLocation();
   const isEditorPage = location.pathname === '/editor';
-  const { isOpen, initializeChatSettings, setSessionLoading } = useChatStore();
+  const { isOpen, toggleChat, setSessionLoading } = useChatStore();
   const { currentSessionId, refreshSessions } = useSessionManager();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+
+  // Check authentication state
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      return !!data.session;
+    };
+    
+    checkAuth()
+      .then(isAuthenticated => {
+        logger.info('Auth state checked in ChatProvider', { isAuthenticated });
+      })
+      .catch(err => {
+        logger.error('Error checking auth in ChatProvider', { error: err });
+      });
+  }, []);
 
   // Initialize the chat system
   useEffect(() => {
@@ -36,9 +53,8 @@ export function ChatProvider({ children }: ChatProviderProps) {
       try {
         setIsInitializing(true);
 
-        // Initialize chat settings from the store
-        initializeChatSettings();
-        logger.info('Chat settings initialized');
+        // Wait a bit to ensure other systems are initialized
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         // If on editor or home page, load sessions
         if (isEditorPage || location.pathname === '/') {
@@ -48,6 +64,7 @@ export function ChatProvider({ children }: ChatProviderProps) {
         }
 
         setIsInitialized(true);
+        logger.info('Chat provider initialized');
       } catch (error) {
         const err = error instanceof Error ? error : new Error('Failed to initialize chat');
         setError(err);
@@ -58,7 +75,7 @@ export function ChatProvider({ children }: ChatProviderProps) {
     };
 
     initialize();
-  }, [initializeChatSettings, isEditorPage, location.pathname, refreshSessions, setSessionLoading]);
+  }, [isEditorPage, location.pathname, refreshSessions, setSessionLoading]);
 
   // Log important state changes
   useEffect(() => {

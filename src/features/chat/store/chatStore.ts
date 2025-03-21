@@ -54,6 +54,11 @@ interface ChatStore {
   updateThemePrefs: (prefs: Partial<ThemePreferences>) => void;
   updateIconPrefs: (prefs: Partial<IconPreferences>) => void;
   resetToDefaults: () => void;
+  
+  // Session handling
+  setSessionLoading: (isLoading: boolean) => void;
+  setCurrentMode: (mode: string) => void;
+  initializeChatSettings: () => void;
 }
 
 // Default values
@@ -81,7 +86,7 @@ const defaultIconPrefs: IconPreferences = {
 
 export const useChatStore = create<ChatStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       // UI States
       isOpen: false,
       isMinimized: false,
@@ -116,6 +121,18 @@ export const useChatStore = create<ChatStore>()(
         themePrefs: defaultThemePrefs,
         iconPrefs: defaultIconPrefs,
       }),
+      
+      // Session handling
+      setSessionLoading: (isLoading) => set({ 
+        // This is a placeholder for now
+      }),
+      setCurrentMode: (mode) => set({
+        // This is a placeholder for now
+      }),
+      initializeChatSettings: () => {
+        // Try to load saved preferences, if any
+        // This is a placeholder that will be expanded
+      }
     }),
     {
       name: 'chat-preferences',

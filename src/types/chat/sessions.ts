@@ -1,30 +1,8 @@
 
 /**
- * Session-related types
+ * Session-specific type definitions for the chat system
  */
-import { ChatMode } from './modes';
-
-// Basic session interface
-export interface Session {
-  id: string;
-  title: string;
-  user_id: string;
-  mode?: ChatMode;
-  metadata: Record<string, any>;
-  created_at?: string;
-  updated_at?: string;
-  last_accessed?: string;
-  is_active?: boolean;
-}
-
-// Database session type
-export interface DBSession extends Session {
-  provider_id?: string;
-  project_id?: string;
-  tokens_used?: number;
-  context?: Record<string, any>;
-  message_count?: number;
-}
+import { ChatMode } from './core';
 
 // Session creation options
 export interface SessionCreateOptions {
@@ -34,20 +12,29 @@ export interface SessionCreateOptions {
   provider_id?: string;
 }
 
-// Session update options
-export interface SessionUpdateOptions {
-  title?: string;
-  mode?: ChatMode;
-  metadata?: Record<string, any>;
-  provider_id?: string;
-  is_active?: boolean;
-}
-
-// Session list item (for UI)
-export interface SessionListItem {
+// Base session interface
+export interface BaseSession {
   id: string;
   title: string;
-  lastAccessed: Date;
-  isActive: boolean;
-  mode?: ChatMode;
+  user_id: string;
+  created_at: string;
+  last_accessed: string;
+  is_active: boolean;
+  mode: ChatMode;
+  provider_id: string;
+  project_id: string;
+  tokens_used: number;
+  message_count: number;
+}
+
+// Session as stored in the database
+export interface DBSession extends BaseSession {
+  metadata: string | Record<string, any>;
+  context?: string | Record<string, any>;
+}
+
+// Session as used in the application
+export interface Session extends BaseSession {
+  metadata: Record<string, any>;
+  context?: Record<string, any>;
 }

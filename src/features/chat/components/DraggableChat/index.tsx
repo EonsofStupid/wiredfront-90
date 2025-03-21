@@ -10,6 +10,7 @@ import { ChatContainer } from "./ChatContainer";
 import { ChatSidebar } from "./ChatSidebar";
 import { ChatToggleButton } from "./ChatToggleButton";
 import { IconStack } from "../IconStack";
+import "../../styles/variables.css";
 
 export function DraggableChat() {
   const {
@@ -69,7 +70,7 @@ export function DraggableChat() {
   return (
     <DndContext>
       <motion.div
-        className="fixed bottom-4 flex gap-4 z-[var(--z-chat)]"
+        className="fixed bottom-4 flex gap-4 z-[var(--chat-z-index)]"
         style={{
           transformOrigin: dockPosition === 'bottom-right' ? 'bottom right' : 'bottom left',
           right: dockPosition === 'bottom-right' ? '1rem' : 'auto',

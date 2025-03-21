@@ -1,38 +1,45 @@
+
 /**
- * Message-related types and utilities
+ * Message-specific type definitions for the chat system
  */
+import { MessageRole, MessageStatus } from './core';
 
-import type {
-    DBMessage,
-    Message,
-    MessageInput,
-    MessageRole,
-    MessageStatus,
-    MessageWithTyping
-} from './core';
-
-export type {
-    DBMessage, Message, MessageInput, MessageRole,
-    MessageStatus, MessageWithTyping
-};
-
-// Additional message-specific types and utilities can be added here
-export interface MessageGroup {
-  messages: Message[];
-  timestamp: string;
-  isCollapsed?: boolean;
-}
-
-export interface MessageThread {
+// Base message interface
+export interface Message {
   id: string;
-  messages: Message[];
-  parentMessageId?: string;
-  createdAt: string;
-  updatedAt: string;
+  content: string;
+  role: MessageRole;
+  timestamp: string;
+  status?: MessageStatus;
+  metadata?: Record<string, any>;
 }
 
-export interface MessageSearchResult {
-  message: Message;
-  context: string;
-  relevance: number;
+// Chat message with session info
+export interface ChatMessage extends Message {
+  sessionId: string;
+  userId?: string;
 }
+
+// Message with file attachments
+export interface MessageWithAttachment extends Message {
+  attachments?: {
+    id: string;
+    name: string;
+    url: string;
+    type: string;
+    size: number;
+  }[];
+}
+
+// Message with code blocks
+export interface CodeMessage extends Message {
+  language?: string;
+  codeBlocks?: {
+    code: string;
+    language: string;
+    fileName?: string;
+  }[];
+}
+
+// Helper type for message operations
+export type MessageUpdate = Partial<Message> & { id: string };
