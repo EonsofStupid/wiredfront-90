@@ -1,4 +1,3 @@
-
 /**
  * Message-specific type definitions for the chat system
  */
@@ -11,6 +10,8 @@ export interface Message {
   role: MessageRole;
   timestamp: string;
   status?: MessageStatus;
+  message_status?: MessageStatus; // For backward compatibility
+  created_at?: string; // For backward compatibility
   metadata?: Record<string, any>;
   sessionId?: string;
   user_id?: string | null;

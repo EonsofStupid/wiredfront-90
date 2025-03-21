@@ -26,12 +26,12 @@ export function MessageItem({
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
 
-  // Get message status
-  const messageStatus = message.status || 'sent';
+  // Get message status with backward compatibility
+  const messageStatus = message.message_status || message.status || 'sent';
   const isStreaming = messageStatus === 'pending';
 
-  // Get timestamp
-  const timestamp = message.timestamp || new Date().toISOString();
+  // Get timestamp with backward compatibility
+  const timestamp = message.timestamp || message.created_at || new Date().toISOString();
 
   // Determine icon based on role
   const getIcon = () => {
