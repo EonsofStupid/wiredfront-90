@@ -1,105 +1,68 @@
 
-import React, { useRef, useState, useEffect } from 'react';
-import { Send, Mic, Paperclip } from 'lucide-react';
+import React, { useState } from 'react';
+import { Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useChatMessageStore } from '@/stores/features/chat/messageStore';
 import { useChatSessionStore } from '@/stores/features/chat/sessionStore';
 
 interface ChatInputAreaProps {
   className?: string;
-  placeholder?: string;
   disabled?: boolean;
 }
 
-export function ChatInputArea({
-  className,
-  placeholder = 'Type a message...',
-  disabled = false
-}: ChatInputAreaProps) {
-  const [message, setMessage] = useState('');
-  const [isComposing, setIsComposing] = useState(false);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  
+const ChatInputArea: React.FC<ChatInputAreaProps> = ({ className, disabled = false }) => {
+  const [input, setInput] = useState('');
   const { sendMessage } = useChatMessageStore();
   const { currentSession } = useChatSessionStore();
   
-  // Auto-resize textarea
-  useEffect(() => {
-    const textarea = inputRef.current;
-    if (!textarea) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    textarea.style.height = 'auto';
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
-  }, [message]);
-  
-  // Handle Cmd/Ctrl+Enter to submit
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Check for Enter without Shift
-    if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-  
-  const handleSendMessage = async () => {
-    if (!message.trim() || disabled || !currentSession) return;
+    if (!input.trim() || disabled || !currentSession) return;
     
     try {
-      await sendMessage(message.trim(), currentSession.id);
-      setMessage('');
-      
-      // Reset input height
-      if (inputRef.current) {
-        inputRef.current.style.height = 'auto';
-      }
+      await sendMessage(input, currentSession.id);
+      setInput('');
     } catch (error) {
       console.error('Failed to send message:', error);
     }
   };
   
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+  };
+  
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+  
   return (
-    <div className={cn("chat-input-area", className)}>
-      <button
-        type="button"
-        className="chat-input-button text-white/60 hover:text-white"
-        aria-label="Attach file"
-      >
-        <Paperclip size={20} />
-      </button>
-      
-      <textarea
-        ref={inputRef}
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        onKeyDown={handleKeyDown}
-        onCompositionStart={() => setIsComposing(true)}
-        onCompositionEnd={() => setIsComposing(false)}
-        placeholder={placeholder}
-        disabled={disabled}
-        rows={1}
-        className="chat-input"
-        aria-label="Message input"
-      />
-      
-      {message.trim() ? (
+    <div className={cn("chat-input-container", className)}>
+      <form onSubmit={handleSubmit} className="chat-input-row">
+        <textarea
+          className="chat-input"
+          placeholder="Type a message..."
+          value={input}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          disabled={disabled}
+          rows={1}
+        />
+        
         <button
-          type="button"
-          onClick={handleSendMessage}
-          disabled={disabled || !message.trim()}
+          type="submit"
           className="chat-send-button"
+          disabled={!input.trim() || disabled}
           aria-label="Send message"
         >
-          <Send size={20} />
+          <Send size={18} />
         </button>
-      ) : (
-        <button
-          type="button"
-          className="chat-input-button text-white/60 hover:text-white"
-          aria-label="Voice input"
-        >
-          <Mic size={20} />
-        </button>
-      )}
+      </form>
     </div>
   );
-}
+};
+
+export default ChatInputArea;
