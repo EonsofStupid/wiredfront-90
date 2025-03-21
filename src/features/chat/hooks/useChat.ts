@@ -1,7 +1,7 @@
-import { useChatMessageStore } from '@/stores/features/chat/messageStore';
-import { useChatModeStore } from '@/stores/features/chat/modeStore';
-import { useChatSessionStore } from '@/stores/features/chat/sessionStore';
-import { chatLayoutStateAtom } from '@/stores/ui/chat/layout/atoms';
+import { chatLayoutStateAtom } from '@/features/chat/store/layout/atoms';
+import { useChatMessageStore } from '@/features/chat/store/messageStore';
+import { useChatModeStore } from '@/features/chat/store/modeStore';
+import { useChatSessionStore } from '@/features/chat/store/sessionStore';
 import { Message } from '@/types/chat/types';
 import { useAtom } from 'jotai';
 import { useCallback } from 'react';

@@ -1,5 +1,5 @@
+import { chatLayoutStateAtom } from '@/features/chat/store/layout/atoms';
 import { cn } from '@/lib/utils';
-import { chatLayoutStateAtom } from '@/stores/ui/chat/layout/atoms';
 import { useAtom } from 'jotai';
 import React from 'react';
 

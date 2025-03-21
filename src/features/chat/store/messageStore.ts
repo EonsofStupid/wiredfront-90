@@ -19,6 +19,7 @@ interface MessageActions {
   fetchMessages: (sessionId: string) => Promise<void>;
   clearMessages: () => void;
   sendMessage: (content: string, sessionId: string, role?: MessageRole) => Promise<string>;
+  getMessageById: (id: string) => Message | undefined;
 }
 
 export type MessageStore = MessageState & MessageActions;
@@ -180,7 +181,11 @@ export const useChatMessageStore = create<MessageStore>()(
             }));
             throw error;
           }
-        }
+        },
+
+        getMessageById: (id) => {
+          return get().messages.find((message) => message.id === id);
+        },
       }),
       {
         name: 'chat-messages',
@@ -205,4 +210,5 @@ export const useMessageActions = () => ({
   sendMessage: useChatMessageStore(state => state.sendMessage),
   fetchMessages: useChatMessageStore(state => state.fetchMessages),
   clearMessages: useChatMessageStore(state => state.clearMessages),
+  getMessageById: useChatMessageStore(state => state.getMessageById),
 });

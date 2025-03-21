@@ -1,5 +1,5 @@
+import { useChatLayoutStore } from '@/features/chat/store/chatLayoutStore';
 import { cn } from '@/lib/utils';
-import { useChatLayoutStore } from '@/stores/chat/chatLayoutStore';
 import { motion } from 'framer-motion';
 import { MessageSquare } from 'lucide-react';
 import React from 'react';

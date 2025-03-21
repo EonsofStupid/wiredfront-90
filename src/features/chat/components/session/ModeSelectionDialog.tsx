@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useChatModeStore } from '@/stores/features/chat/modeStore';
+import { useChatModeStore } from '@/features/chat/store/modeStore';
 import { ChatMode } from "@/types/chat/modes";
 import { Brain, Code, ImageIcon, MessageSquare, Zap } from "lucide-react";
 import React from "react";

@@ -33,6 +33,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "framer-motion": "^12.5.0",
+    "i": "^0.3.7",
     "jotai": "^2.6.4",
     "lucide-react": "^0.323.0",
     "react": "^18.2.0",

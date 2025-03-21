@@ -1,6 +1,6 @@
+import { useChatModeStore } from '@/features/chat/store/modeStore';
 import { useChatCore } from '@/hooks/useChatCore';
 import { logger } from '@/services/chat/LoggingService';
-import { useChatModeStore } from '@/stores/features/chat/modeStore';
 import { ChatMode } from '@/types/chat/modes';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';

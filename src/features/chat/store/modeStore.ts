@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { ChatMode, isChatMode } from '@/types/chat/modes';
-import { atom } from 'jotai';
+import { atom, useAtom } from 'jotai';
 
 // Core atoms
 export const currentModeAtom = atom<ChatMode>('chat');
@@ -76,6 +76,50 @@ export const updateSessionModeAtom = atom(
     }
   }
 );
+
+// Hook for using the mode store
+export const useChatModeStore = () => {
+  const [currentMode, setMode] = useAtom(currentModeAtom);
+  const [providerId, setProviderId] = useAtom(providerIdAtom);
+
+  return {
+    currentMode,
+    providerId,
+    setCurrentMode: (mode: ChatMode, newProviderId?: string) => {
+      if (!isChatMode(mode)) {
+        logger.warn('Attempted to set unsupported chat mode', { mode });
+        return;
+      }
+
+      logger.info('Setting chat mode', { mode, providerId: newProviderId });
+      setMode(mode);
+      if (newProviderId) {
+        setProviderId(newProviderId);
+      }
+
+      // Persist in local storage
+      try {
+        localStorage.setItem('wired_front_chat_mode', mode);
+        if (newProviderId) {
+          localStorage.setItem('wired_front_provider_id', newProviderId);
+        }
+      } catch (error) {
+        logger.error('Failed to persist chat mode to localStorage', { error });
+      }
+    },
+    resetMode: () => {
+      setMode('chat');
+      setProviderId(undefined);
+
+      try {
+        localStorage.removeItem('wired_front_chat_mode');
+        localStorage.removeItem('wired_front_provider_id');
+      } catch (error) {
+        logger.error('Failed to clear chat mode from localStorage', { error });
+      }
+    }
+  };
+};
 
 // Initialize from localStorage
 if (typeof window !== 'undefined') {
