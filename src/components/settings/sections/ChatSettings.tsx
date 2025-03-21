@@ -1,17 +1,24 @@
-
-import React from "react";
-import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useChatStore } from "@/components/chat/store/chatStore";
-import { useChatButtonStore } from "@/components/chat/store/chatButtonStore";
+import { Switch } from "@/components/ui/switch";
+import { ChatButton } from "@/features/chat/components/ChatButton";
+import {
+    chatIsDockedAtom,
+    chatIsMinimizedAtom,
+    chatPositionAtom,
+    chatPositionWithDockAtom,
+    chatScaleAtom,
+    chatShowSidebarAtom
+} from "@/state/atoms/chat/chatAtoms";
+import { useChatStore } from "@/state/stores/chat/chatStore";
+import { useAtom } from "jotai";
 import { toast } from "sonner";
 import styles from "../styles/ChatSettings.module.css";
-import { ChatButton } from "@/components/chat/components/ChatButton";
 
 export function ChatSettings() {
-  const { 
+  // Zustand Store
+  const {
     currentMode,
     setCurrentMode,
     selectedModel,
@@ -19,22 +26,26 @@ export function ChatSettings() {
     currentProvider,
     updateCurrentProvider,
     features,
-    toggleFeature
+    toggleFeature,
+    preferences,
+    updatePreferences
   } = useChatStore();
 
-  const {
-    position,
-    setPosition,
-    scale,
-    setScale,
-    docked,
-    toggleDocked,
-    features: buttonFeatures,
-    toggleFeature: toggleButtonFeature
-  } = useChatButtonStore();
+  // Jotai Atoms
+  const [position, setPosition] = useAtom(chatPositionAtom);
+  const [scale, setScale] = useAtom(chatScaleAtom);
+  const [isDocked, setIsDocked] = useAtom(chatIsDockedAtom);
+  const [isMinimized, setIsMinimized] = useAtom(chatIsMinimizedAtom);
+  const [showSidebar, setShowSidebar] = useAtom(chatShowSidebarAtom);
+  const [positionWithDock] = useAtom(chatPositionWithDockAtom);
 
-  const handlePositionChange = (newPosition: string) => {
-    setPosition(newPosition as "bottom-right" | "bottom-left");
+  const handlePositionChange = (newPosition: 'left' | 'right') => {
+    setPosition({ x: 0, y: 0 }); // Reset position when changing dock side
+    setIsDocked(true);
+    setPosition({
+      x: newPosition === 'left' ? 0 : window.innerWidth - 400,
+      y: 0
+    });
   };
 
   const handleScaleChange = (newScale: number) => {
@@ -62,24 +73,24 @@ export function ChatSettings() {
           <div className={styles.settingsCardHeader}>
             <h4 className={styles.settingsCardTitle}>Position & Appearance</h4>
           </div>
-          
+
           <div className={styles.formGroup}>
             <Label>Chat Button Position</Label>
             <div className={styles.positionOptions}>
-              <div 
-                className={`${styles.positionOption} ${position === 'bottom-left' ? styles.positionOptionSelected : ''}`}
-                onClick={() => handlePositionChange('bottom-left')}
+              <button
+                className={`${styles.positionOption} ${position.x === 0 ? styles.positionOptionSelected : ''}`}
+                onClick={() => handlePositionChange('left')}
               >
                 <div className={`${styles.positionOptionIndicator} ${styles.positionOptionLeft}`}></div>
-                Bottom Left
-              </div>
-              <div 
-                className={`${styles.positionOption} ${position === 'bottom-right' ? styles.positionOptionSelected : ''}`}
-                onClick={() => handlePositionChange('bottom-right')}
+                Left Side
+              </button>
+              <button
+                className={`${styles.positionOption} ${position.x > window.innerWidth / 2 ? styles.positionOptionSelected : ''}`}
+                onClick={() => handlePositionChange('right')}
               >
                 <div className={`${styles.positionOptionIndicator} ${styles.positionOptionRight}`}></div>
-                Bottom Right
-              </div>
+                Right Side
+              </button>
             </div>
           </div>
 
@@ -106,9 +117,9 @@ export function ChatSettings() {
             <Label>Docked Mode</Label>
             <div className={styles.formRow}>
               <span>Keep chat window docked</span>
-              <Switch 
-                checked={docked} 
-                onCheckedChange={toggleDocked}
+              <Switch
+                checked={isDocked}
+                onCheckedChange={setIsDocked}
               />
             </div>
           </div>
@@ -116,7 +127,7 @@ export function ChatSettings() {
           <div className={styles.previewContainer}>
             <span className={styles.previewLabel}>Preview</span>
             <ChatButton
-              position={position}
+              position={positionWithDock}
               scale={scale}
               onClick={() => {}}
               isPreview={true}
@@ -128,37 +139,37 @@ export function ChatSettings() {
           <div className={styles.settingsCardHeader}>
             <h4 className={styles.settingsCardTitle}>Behavior</h4>
           </div>
-          
+
           <div className={styles.formRow}>
             <div>
               <span>Start Minimized</span>
               <p className="text-sm text-muted-foreground">Open chat in minimized state</p>
             </div>
-            <Switch 
-              checked={buttonFeatures.startMinimized} 
-              onCheckedChange={() => toggleButtonFeature('startMinimized')}
+            <Switch
+              checked={isMinimized}
+              onCheckedChange={setIsMinimized}
             />
           </div>
-          
+
           <div className={styles.formRow}>
             <div>
               <span>Show Timestamps</span>
               <p className="text-sm text-muted-foreground">Display time for each message</p>
             </div>
-            <Switch 
-              checked={buttonFeatures.showTimestamps} 
-              onCheckedChange={() => toggleButtonFeature('showTimestamps')}
+            <Switch
+              checked={preferences.showTimestamps}
+              onCheckedChange={(checked) => updatePreferences({ showTimestamps: checked })}
             />
           </div>
-          
+
           <div className={styles.formRow}>
             <div>
               <span>Save History</span>
               <p className="text-sm text-muted-foreground">Persist chat history between sessions</p>
             </div>
-            <Switch 
-              checked={buttonFeatures.saveHistory} 
-              onCheckedChange={() => toggleButtonFeature('saveHistory')}
+            <Switch
+              checked={preferences.saveHistory}
+              onCheckedChange={(checked) => updatePreferences({ saveHistory: checked })}
             />
           </div>
         </div>
@@ -167,10 +178,10 @@ export function ChatSettings() {
           <div className={styles.settingsCardHeader}>
             <h4 className={styles.settingsCardTitle}>AI Provider Settings</h4>
           </div>
-          
+
           <div className={styles.formGroup}>
             <Label>Default Provider</Label>
-            <Select 
+            <Select
               value={currentProvider?.id || ''}
               onValueChange={(value) => {
                 const provider = availableProviders.find(p => p.id === value);
@@ -189,10 +200,10 @@ export function ChatSettings() {
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className={styles.formGroup}>
             <Label>Default Model</Label>
-            <Select 
+            <Select
               value={selectedModel}
               onValueChange={(value) => setCurrentMode(value as any)}
             >
@@ -200,11 +211,11 @@ export function ChatSettings() {
                 <SelectValue placeholder="Select model" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
-                <SelectItem value="gpt-4">GPT-4</SelectItem>
-                <SelectItem value="claude-3-haiku">Claude 3 Haiku</SelectItem>
-                <SelectItem value="claude-3-sonnet">Claude 3 Sonnet</SelectItem>
-                <SelectItem value="gemini-pro">Gemini Pro</SelectItem>
+                {currentProvider?.models.map(model => (
+                  <SelectItem key={model} value={model}>
+                    {model}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -214,15 +225,15 @@ export function ChatSettings() {
           <div className={styles.settingsCardHeader}>
             <h4 className={styles.settingsCardTitle}>Features</h4>
           </div>
-          
+
           {Object.entries(features).map(([feature, enabled]) => (
             <div key={feature} className={styles.formRow}>
               <div>
                 <span>{feature.replace(/([A-Z])/g, ' $1').trim()}</span>
               </div>
-              <Switch 
-                checked={enabled} 
-                onCheckedChange={() => toggleFeature(feature as keyof typeof features)}
+              <Switch
+                checked={enabled}
+                onCheckedChange={() => toggleFeature(feature)}
               />
             </div>
           ))}
