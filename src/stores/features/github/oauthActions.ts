@@ -7,8 +7,8 @@ export interface OAuthActions {
   setupOAuthListener: () => () => void;
 }
 
-export const createOAuthActions = (set: (fn: (state: GitHubState) => Partial<GitHubState>) => void) => ({
-  handleOAuthMessage: async (event: MessageEvent) => {
+export const createOAuthActions = (set: (fn: (state: GitHubState) => Partial<GitHubState>) => void) => {
+  const handleMessage = async (event: MessageEvent) => {
     // Validate the origin
     const isValidOrigin = event.origin === window.location.origin ||
                          event.origin.includes('github.com') ||
@@ -78,19 +78,18 @@ export const createOAuthActions = (set: (fn: (state: GitHubState) => Partial<Git
       });
       toast.error(`GitHub authentication failed: ${data.error || 'Unknown error'}`);
     }
-  },
+  };
 
-  setupOAuthListener: () => {
-    console.log('Setting up GitHub OAuth message listener');
-    window.addEventListener('message', (event) => {
-      createOAuthActions(set).handleOAuthMessage(event);
-    });
+  return {
+    handleOAuthMessage: handleMessage,
+    setupOAuthListener: () => {
+      console.log('Setting up GitHub OAuth message listener');
+      window.addEventListener('message', handleMessage);
 
-    return () => {
-      console.log('Removing GitHub OAuth message listener');
-      window.removeEventListener('message', (event) => {
-        createOAuthActions(set).handleOAuthMessage(event);
-      });
-    };
-  }
-});
+      return () => {
+        console.log('Removing GitHub OAuth message listener');
+        window.removeEventListener('message', handleMessage);
+      };
+    }
+  };
+};
