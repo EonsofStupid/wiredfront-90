@@ -1,26 +1,25 @@
+
 import { Button } from '@/components/ui/button';
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
-import { useChatCombined } from '@/stores/features/chat';
 import { ChatMode } from '@/types/chat';
-import { validateChatMode } from '@/utils/validation/chatTypes';
 import { motion } from 'framer-motion';
 import {
-    Code,
-    Database,
-    GraduationCap,
-    Image,
-    MessageSquare,
-    Mic,
-    PlaneLanding
+  Code,
+  Database,
+  GraduationCap,
+  Image,
+  MessageSquare,
+  Mic,
+  PlaneLanding
 } from 'lucide-react';
 import React, { useState } from 'react';
-import { toast } from 'sonner';
+import { useNavigationModes } from '../../hooks/useNavigationModes';
 
 interface ChatFeaturesProps {
   className?: string;
@@ -57,22 +56,20 @@ function FeatureCard({ title, description, icon, isActive, onClick }: FeatureCar
 }
 
 export function ChatFeatures({ className }: ChatFeaturesProps) {
-  const { currentMode, setMode } = useChatCombined();
+  // Use our new navigation modes hook
+  const { currentMode, changeMode, getModeLabel, getModeDescription } = useNavigationModes();
   const [isModeDialogOpen, setIsModeDialogOpen] = useState(false);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [isVoiceActive, setIsVoiceActive] = useState(false);
 
   const handleModeSelect = (newMode: ChatMode) => {
-    const validMode = validateChatMode(newMode, { fallback: 'chat' });
-    setMode(validMode);
+    changeMode(newMode);
     setIsModeDialogOpen(false);
-    toast.success(`Switched to ${validMode} mode`);
   };
 
   const toggleVoiceRecognition = () => {
     setIsVoiceActive(!isVoiceActive);
     // Implement voice recognition logic here
-    toast.info(isVoiceActive ? 'Voice recognition stopped' : 'Voice recognition started');
   };
 
   return (

@@ -1,10 +1,11 @@
 
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MessageSquare } from "lucide-react";
 import { ChatPosition } from "../../types";
 import { motion } from "framer-motion";
 import { useHasUnreadMessages } from "../../hooks/useHasUnreadMessages";
+import { useChatModeStore } from "@/stores/features/chat/modeStore";
+import { ModeIndicator } from "./ModeIndicator";
 
 interface ChatButtonProps {
   position: ChatPosition;
@@ -27,6 +28,9 @@ export function ChatButton({
   // For auto-detecting unread messages
   const hasUnread = useHasUnreadMessages();
   const showNotification = hasNotification || hasUnread;
+  
+  // Get current mode for styling
+  const { currentMode } = useChatModeStore();
   
   // Calculate button position
   const buttonPosition = {
@@ -58,6 +62,7 @@ export function ChatButton({
           "border border-purple-500/50",
           "shadow-[0_0_15px_rgba(168,85,247,0.3)]",
           "backdrop-blur-md",
+          "relative",
           showNotification && "chat-button-pulse"
         )}
         whileHover={{
@@ -68,6 +73,13 @@ export function ChatButton({
         aria-label="Open chat"
       >
         <MessageSquare className="h-6 w-6" />
+        
+        {/* Mode indicator */}
+        <div className="absolute -top-2 -right-2">
+          <ModeIndicator mode={currentMode} size="sm" />
+        </div>
+        
+        {/* Notification indicator */}
         {showNotification && (
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-white"></span>
         )}
@@ -75,3 +87,5 @@ export function ChatButton({
     </motion.div>
   );
 }
+
+export default ChatButton;

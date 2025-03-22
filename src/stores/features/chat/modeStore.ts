@@ -4,7 +4,7 @@ import { devtools, persist } from 'zustand/middleware';
 import { ChatMode, ModeStore } from '@/types/chat';
 import { logger } from '@/services/chat/LoggingService';
 
-// Create the store
+// Create the store with improved types and persistence
 export const useChatModeStore = create<ModeStore>()(
   devtools(
     persist(
@@ -31,7 +31,7 @@ export const useChatModeStore = create<ModeStore>()(
           }
 
           if (get().currentMode === mode) {
-            return;
+            return true; // Already in this mode
           }
 
           set({
@@ -66,6 +66,8 @@ export const useChatModeStore = create<ModeStore>()(
             
             logger.info('Chat mode switched', { mode, previousMode: get().previousMode });
           }, 500);
+          
+          return true;
         },
 
         cancelTransition: () => {
@@ -103,6 +105,9 @@ export const useChatModeStore = create<ModeStore>()(
 
 // Selector hooks for more granular access
 export const useCurrentMode = () => useChatModeStore(state => state.currentMode);
+export const usePreviousMode = () => useChatModeStore(state => state.previousMode);
+export const useIsTransitioning = () => useChatModeStore(state => state.isTransitioning);
+export const useTransitionProgress = () => useChatModeStore(state => state.transitionProgress);
 export const useModeActions = () => ({
   setMode: useChatModeStore(state => state.setMode),
   switchMode: useChatModeStore(state => state.switchMode),

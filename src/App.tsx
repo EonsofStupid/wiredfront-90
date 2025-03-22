@@ -1,6 +1,7 @@
 
 import { GuestCTA } from "@/components/auth/GuestCTA";
 import { DraggableChat } from "@/features/chat/components/DraggableChat";
+import { useSyncModeWithNavigation } from "@/features/chat/hooks/useSyncModeWithNavigation";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuthStore } from "@/stores/auth";
 import { useEffect } from "react";
@@ -19,6 +20,9 @@ const App = () => {
   
   // Initialize auth from our consolidated auth store
   const { initializeAuth, isAuthenticated, user } = useAuthStore();
+
+  // Sync chat mode with navigation
+  useSyncModeWithNavigation();
 
   useEffect(() => {
     // Initialize auth on app load

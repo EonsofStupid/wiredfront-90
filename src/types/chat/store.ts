@@ -1,105 +1,70 @@
+
+import { ChatMode } from './modes';
+
 /**
- * Store-specific type definitions for the chat system
+ * Chat Mode Store - Manages the current chat mode and transitions
  */
-import { ChatMode, MessageRole } from './core';
-import { Message } from './messages';
-import { Session, SessionCreateOptions } from './sessions';
-import { ChatPosition } from './ui';
-
-// Message store types
-export interface MessageState {
-  messages: Message[];
-  isLoading: boolean;
-  error: Error | null;
-}
-
-export interface MessageActions {
-  addMessage: (message: Message) => string;
-  updateMessage: (id: string, updates: Partial<Message>) => void;
-  removeMessage: (id: string) => void;
-  fetchMessages: (sessionId: string) => Promise<void>;
-  clearMessages: () => void;
-  sendMessage: (content: string, sessionId: string, role?: MessageRole) => Promise<string>;
-  retryMessage: (messageId: string) => Promise<void>;
-}
-
-export type MessageStore = MessageState & MessageActions;
-
-// Session store types
-export interface SessionState {
-  sessions: Session[];
-  currentSession: Session | null;
-  isLoading: boolean;
-  error: Error | null;
-}
-
-export interface SessionActions {
-  fetchSessions: () => Promise<void>;
-  setCurrentSession: (session: Session) => void;
-  clearSessions: () => void;
-  createSession: (options?: SessionCreateOptions) => Promise<Session>;
-  updateSession: (sessionId: string, updates: Partial<Session>) => Promise<void>;
-  deleteSession: (sessionId: string) => Promise<void>;
-}
-
-export type SessionStore = SessionState & SessionActions;
-
-// Chat mode store types
-export interface ModeState {
+export interface ModeStore {
+  // State
   currentMode: ChatMode;
   previousMode: ChatMode | null;
   isTransitioning: boolean;
   transitionProgress: number;
-}
-
-export interface ModeActions {
+  
+  // Actions
   setMode: (mode: ChatMode) => void;
-  switchMode: (mode: ChatMode) => Promise<void>;
+  switchMode: (mode: ChatMode) => Promise<boolean>;
   cancelTransition: () => void;
   resetMode: () => void;
 }
 
-export type ModeStore = ModeState & ModeActions;
-
-// Layout store types
-export type { LayoutActions, LayoutState, LayoutStore } from './layout';
-
-// Docking store types
-export type { DockingActions, DockingState, DockingStore } from './docking';
-
-// Feature state types
-export interface FeatureState {
-  voice: boolean;
-  rag: boolean;
-  modeSwitch: boolean;
-  notifications: boolean;
-  github: boolean;
-  codeAssistant: boolean;
-  ragSupport: boolean;
-  githubSync: boolean;
-  tokenEnforcement: boolean;
-  startMinimized: boolean;
-  showTimestamps: boolean;
-  saveHistory: boolean;
+/**
+ * Chat Message Store - Manages the chat messages
+ */
+export interface MessageStore {
+  // State
+  messages: any[]; // Replace with proper Message type
+  isLoading: boolean;
+  error: Error | null;
+  
+  // Actions
+  sendMessage: (content: string) => Promise<void>;
+  addMessage: (message: any) => void; // Replace with proper Message type
+  updateMessage: (id: string, updates: Partial<any>) => void; // Replace with proper Message type
+  removeMessage: (id: string) => void;
+  clearMessages: () => void;
 }
 
-// Chat state main types
-export interface ChatState {
-  initialized: boolean;
-  messages: Message[];
-  userInput: string;
-  isWaitingForResponse: boolean;
-  selectedModel: string;
-  selectedMode: ChatMode;
-  error: string | null;
-  chatId: string | null;
-  docked: boolean;
+/**
+ * Chat Session Store - Manages chat sessions
+ */
+export interface SessionStore {
+  // State
+  currentSession: string | null;
+  sessions: Record<string, any>; // Replace with proper Session type
+  
+  // Actions
+  createSession: () => string;
+  updateSession: (id: string, updates: Partial<any>) => void; // Replace with proper Session type
+  deleteSession: (id: string) => void;
+}
+
+/**
+ * Chat Layout Store - Manages the chat UI layout
+ */
+export interface LayoutStore {
+  // State
   isOpen: boolean;
-  isHidden: boolean;
-  features: FeatureState;
-  currentMode: ChatMode;
   isMinimized: boolean;
-  showSidebar: boolean;
+  docked: boolean;
+  position: { x: number; y: number };
   scale: number;
-  position: ChatPosition;
+  showSidebar: boolean;
+  
+  // Actions
+  toggleOpen: () => void;
+  toggleMinimize: () => void;
+  toggleDocked: () => void;
+  toggleSidebar: () => void;
+  setPosition: (position: { x: number; y: number }) => void;
 }
