@@ -1,12 +1,12 @@
-
-import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
-import { ChatState } from './types';
-import { createLayoutSlice } from './slice/layoutSlice';
-import { createMessagesSlice } from './slice/messagesSlice';
-import { createSessionSlice } from './slice/sessionSlice';
-import { createModeSlice } from './slice/modeSlice';
-import { createPreferencesSlice } from './slice/preferencesSlice';
+import { create } from "zustand";
+import { devtools, persist } from "zustand/middleware";
+import { createFeatureSlice } from "./slice/featureSlice";
+import { createLayoutSlice } from "./slice/layoutSlice";
+import { createMessagesSlice } from "./slice/messagesSlice";
+import { createModeSlice } from "./slice/modeSlice";
+import { createPreferencesSlice } from "./slice/preferencesSlice";
+import { createSessionSlice } from "./slice/sessionSlice";
+import { ChatState } from "./types";
 
 /**
  * Main chat store with all slices combined
@@ -21,9 +21,10 @@ export const useChatStore = create<ChatState>()(
         ...createSessionSlice(...a),
         ...createModeSlice(...a),
         ...createPreferencesSlice(...a),
+        ...createFeatureSlice(...a),
       }),
       {
-        name: 'chat-storage',
+        name: "chat-storage",
         partialize: (state) => ({
           messages: state.messages,
           uiPreferences: state.uiPreferences,
@@ -34,8 +35,9 @@ export const useChatStore = create<ChatState>()(
           docked: state.docked,
           showSidebar: state.showSidebar,
           sessions: state.sessions,
-          currentSession: state.currentSession
-        })
+          currentSession: state.currentSession,
+          features: state.features,
+        }),
       }
     )
   )
@@ -44,27 +46,30 @@ export const useChatStore = create<ChatState>()(
 /**
  * Export selectors for common state slices
  */
-export const useMessages = () => useChatStore(state => state.messages);
-export const useCurrentSession = () => useChatStore(state => state.currentSession);
-export const useSessions = () => useChatStore(state => state.sessions);
-export const useUIPreferences = () => useChatStore(state => state.uiPreferences);
-export const useChatMode = () => useChatStore(state => state.currentMode);
+export const useMessages = () => useChatStore((state) => state.messages);
+export const useCurrentSession = () =>
+  useChatStore((state) => state.currentSession);
+export const useSessions = () => useChatStore((state) => state.sessions);
+export const useUIPreferences = () =>
+  useChatStore((state) => state.uiPreferences);
+export const useFeatures = () => useChatStore((state) => state.features);
+export const useChatMode = () => useChatStore((state) => state.currentMode);
 export const useChatLayout = () => {
-  const { 
-    isOpen, 
-    isMinimized, 
-    docked, 
-    position, 
-    scale, 
+  const {
+    isOpen,
+    isMinimized,
+    docked,
+    position,
+    scale,
     showSidebar,
     toggleOpen,
     toggleMinimize,
     toggleDocked,
     setPosition,
     setScale,
-    toggleSidebar
+    toggleSidebar,
   } = useChatStore();
-  
+
   return {
     isOpen,
     isMinimized,
@@ -77,6 +82,6 @@ export const useChatLayout = () => {
     toggleDocked,
     setPosition,
     setScale,
-    toggleSidebar
+    toggleSidebar,
   };
 };

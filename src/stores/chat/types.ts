@@ -1,10 +1,10 @@
-
-import { ChatMode, ChatSession, Message } from '@/types/chat';
+import { ChatMode, ChatSession, Message } from "@/types/chat";
+import { FeatureState } from "@/types/chat/features";
 
 /**
  * Complete chat state type definition combining all slices
  */
-export interface ChatState {
+export interface ChatState extends FeatureState {
   // Layout state
   isOpen: boolean;
   isMinimized: boolean;
@@ -13,20 +13,20 @@ export interface ChatState {
   scale: number;
   showSidebar: boolean;
   theme: string;
-  
+
   // Messages state
   messages: Message[];
-  
+
   // Session state
   sessions: ChatSession[];
   currentSession: ChatSession | null;
-  
+
   // Mode state
   currentMode: ChatMode;
-  
+
   // Preferences state
   uiPreferences: {
-    messageBehavior: 'enter_send';
+    messageBehavior: "enter_send";
     notifications: boolean;
     soundEnabled: boolean;
     typingIndicators: boolean;
@@ -41,24 +41,24 @@ export interface ChatState {
   setPosition: (position: { x: number; y: number }) => void;
   setScale: (scale: number) => void;
   setTheme: (theme: string) => void;
-  
+
   // Messages actions
   addMessage: (message: Message) => void;
   updateMessage: (id: string, updates: Partial<Message>) => void;
   removeMessage: (id: string) => void;
   clearMessages: () => void;
   sendMessage: (content: string, sessionId: string) => Promise<void>;
-  
+
   // Session actions
   setCurrentSession: (session: ChatSession) => void;
   createSession: () => Promise<ChatSession>;
   updateSession: (session: ChatSession) => void;
-  
+
   // Mode actions
   setCurrentMode: (mode: ChatMode) => void;
   getModeLabel: (mode: ChatMode) => string;
   getModeDescription: (mode: ChatMode) => string;
-  
+
   // Preferences actions
-  updatePreferences: (prefs: Partial<ChatState['uiPreferences']>) => void;
+  updatePreferences: (prefs: Partial<ChatState["uiPreferences"]>) => void;
 }

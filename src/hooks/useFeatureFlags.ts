@@ -1,7 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/services/chat/LoggingService";
 import { useChatStore } from "@/stores/chat/chatStore";
-import { convertFeatureKeyToChatFeature } from "@/types/chat/store";
+import {
+  FeatureKey,
+  convertFeatureKeyToChatFeature,
+} from "@/types/chat/features";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { useFeatureFlag } from "./useFeatureFlag";
@@ -48,7 +51,8 @@ export function useFeatureFlags() {
         logger.error(
           `Feature ${String(
             featureKey
-          )} cannot be toggled as it's not a chat feature`
+          )} cannot be toggled as it's not a chat feature`,
+          { source: "feature_flags" }
         );
         toast.error(`Cannot toggle this feature in the chat interface`);
         return;
@@ -62,7 +66,10 @@ export function useFeatureFlags() {
         // Log the feature usage
         await logFeatureUsage(String(featureKey), { action: "toggle" });
       } catch (error) {
-        logger.error(`Error toggling feature ${String(featureKey)}:`, error);
+        logger.error(`Error toggling feature ${String(featureKey)}:`, {
+          source: "feature_flags",
+          error,
+        });
         toast.error(`Failed to toggle ${String(featureKey)} feature`);
       } finally {
         setIsUpdating(false);
@@ -87,7 +94,8 @@ export function useFeatureFlags() {
         logger.error(
           `Feature ${String(
             featureKey
-          )} cannot be enabled as it's not a chat feature`
+          )} cannot be enabled as it's not a chat feature`,
+          { source: "feature_flags" }
         );
         toast.error(`Cannot enable this feature in the chat interface`);
         return;
@@ -101,7 +109,10 @@ export function useFeatureFlags() {
         // Log the feature usage
         await logFeatureUsage(String(featureKey), { action: "enable" });
       } catch (error) {
-        logger.error(`Error enabling feature ${String(featureKey)}:`, error);
+        logger.error(`Error enabling feature ${String(featureKey)}:`, {
+          source: "feature_flags",
+          error,
+        });
         toast.error(`Failed to enable ${String(featureKey)} feature`);
       } finally {
         setIsUpdating(false);
@@ -126,7 +137,8 @@ export function useFeatureFlags() {
         logger.error(
           `Feature ${String(
             featureKey
-          )} cannot be disabled as it's not a chat feature`
+          )} cannot be disabled as it's not a chat feature`,
+          { source: "feature_flags" }
         );
         toast.error(`Cannot disable this feature in the chat interface`);
         return;
@@ -140,7 +152,10 @@ export function useFeatureFlags() {
         // Log the feature usage
         await logFeatureUsage(String(featureKey), { action: "disable" });
       } catch (error) {
-        logger.error(`Error disabling feature ${String(featureKey)}:`, error);
+        logger.error(`Error disabling feature ${String(featureKey)}:`, {
+          source: "feature_flags",
+          error,
+        });
         toast.error(`Failed to disable ${String(featureKey)} feature`);
       } finally {
         setIsUpdating(false);
@@ -165,7 +180,8 @@ export function useFeatureFlags() {
         logger.error(
           `Feature ${String(
             featureKey
-          )} state cannot be set as it's not a chat feature`
+          )} state cannot be set as it's not a chat feature`,
+          { source: "feature_flags" }
         );
         toast.error(`Cannot update this feature in the chat interface`);
         return;
@@ -182,10 +198,10 @@ export function useFeatureFlags() {
           enabled: isEnabled,
         });
       } catch (error) {
-        logger.error(
-          `Error setting feature ${String(featureKey)} state:`,
-          error
-        );
+        logger.error(`Error setting feature ${String(featureKey)} state:`, {
+          source: "feature_flags",
+          error,
+        });
         toast.error(`Failed to update ${String(featureKey)} feature`);
       } finally {
         setIsUpdating(false);
@@ -209,7 +225,10 @@ export function useFeatureFlags() {
         context,
       });
     } catch (error) {
-      logger.error(`Error logging feature usage for ${featureKey}:`, error);
+      logger.error(`Error logging feature usage for ${featureKey}:`, {
+        source: "feature_flags",
+        error,
+      });
     }
   };
 
