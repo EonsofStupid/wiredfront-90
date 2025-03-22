@@ -43,3 +43,15 @@
   --chat-message-assistant-bg: #e5e7eb;
   --chat-message-assistant-text: #000000;
 }
+
+/* Cyberpunk theme */
+[data-theme="cyberpunk"] {
+  --chat-bg-primary: rgba(13, 10, 20, 0.9);
+  --chat-bg-secondary: rgba(22, 15, 36, 0.8);
+  --chat-border-color: rgba(255, 0, 208, 0.4);
+  --chat-glow-color: rgba(57, 255, 20, 0.3);
+  --chat-text-primary: #ffffff;
+  --chat-text-secondary: rgba(57, 255, 20, 0.8);
+  --chat-message-user-bg: #ff00d0;
+  --chat-message-assistant-bg: #1e0122;
+}

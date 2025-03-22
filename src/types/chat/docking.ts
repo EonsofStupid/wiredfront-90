@@ -1,25 +1,33 @@
 
 /**
- * Docking types for the chat client
+ * Docking-specific type definitions for the chat system
  */
-import { ChatPosition, DockPosition } from './ui';
+import { DockPosition } from './layout';
 
-export interface DockingState {
+// Docking state
+export interface ChatDocking {
   docked: boolean;
-  position: ChatPosition;
+  position: DockPosition;
   dockedItems: Record<string, DockPosition>;
 }
 
-export interface DockingActions {
-  setDocked: (docked: boolean) => void;
-  toggleDocked: () => void;
-  setPosition: (position: ChatPosition) => void;
-  setDockedItem: (id: string, position: DockPosition) => void;
-  resetDocking: () => void;
-  
-  // Persistence methods
-  saveDockingToStorage: () => Promise<boolean>;
-  loadDockingFromStorage: () => Promise<boolean>;
+// Docking preferences
+export interface DockingPreferences {
+  snapToEdges: boolean;
+  preferredEdge: 'right' | 'left' | 'bottom' | 'top';
+  dockThreshold: number;
 }
 
-export type DockingStore = DockingState & DockingActions;
+// Default docking configuration
+export const DEFAULT_CHAT_DOCKING: ChatDocking = {
+  docked: true,
+  position: 'bottom-right',
+  dockedItems: {}
+};
+
+// Default docking preferences
+export const DEFAULT_DOCKING_PREFERENCES: DockingPreferences = {
+  snapToEdges: true,
+  preferredEdge: 'right',
+  dockThreshold: 20
+};

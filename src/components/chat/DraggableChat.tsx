@@ -21,22 +21,12 @@ export function DraggableChat() {
 
   // Load position from store on mount
   useEffect(() => {
-    const savedPosition = localStorage.getItem('chatPosition');
-    if (savedPosition) {
-      try {
-        const positionData = JSON.parse(savedPosition);
-        if (positionData) {
-          setPosition(positionData);
-        }
-      } catch (error) {
-        console.error('Failed to parse saved chat position', { error });
-      }
-    }
-  }, [setPosition]);
+    // This is now handled by Jotai's atomWithStorage
+  }, []);
 
   // Save position to localStorage when it changes
   useEffect(() => {
-    localStorage.setItem('chatPosition', JSON.stringify(position));
+    // This is now handled by Jotai's atomWithStorage
   }, [position]);
 
   const togglePosition = () => {
