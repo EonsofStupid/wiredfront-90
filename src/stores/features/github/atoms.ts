@@ -1,67 +1,63 @@
-import { atom } from 'jotai';
+import { atomWithDefault } from 'jotai/utils';
 import { useGitHubStore } from './githubStore';
-import type { GitHubBranch, GitHubCommit, GitHubIssue, GitHubPullRequest, GitHubRepository } from './types';
+import type { GitHubBranch, GitHubCommit, GitHubIssue, GitHubPullRequest, GitHubRepository, GitHubState } from './types';
+
+// Helper function to get store state
+const getStoreState = () => useGitHubStore.getState();
 
 // UI State Atoms
-export const githubImportModalAtom = atom(
-  (get) => get(useGitHubStore).showImportModal,
-  (get, set, show: boolean) => set(useGitHubStore, { showImportModal: show })
+export const githubImportModalAtom = atomWithDefault<boolean>(
+  () => getStoreState().showImportModal
 );
 
-export const githubProfileDialogAtom = atom(
-  (get) => get(useGitHubStore).showProfileDialog,
-  (get, set, show: boolean) => set(useGitHubStore, { showProfileDialog: show })
+export const githubProfileDialogAtom = atomWithDefault<boolean>(
+  () => getStoreState().showProfileDialog
 );
 
-export const githubConnectDialogAtom = atom(
-  (get) => get(useGitHubStore).showConnectDialog,
-  (get, set, show: boolean) => set(useGitHubStore, { showConnectDialog: show })
+export const githubConnectDialogAtom = atomWithDefault<boolean>(
+  () => getStoreState().showConnectDialog
 );
 
-export const githubDisconnectDialogAtom = atom(
-  (get) => get(useGitHubStore).showDisconnectDialog,
-  (get, set, show: boolean) => set(useGitHubStore, { showDisconnectDialog: show })
+export const githubDisconnectDialogAtom = atomWithDefault<boolean>(
+  () => getStoreState().showDisconnectDialog
 );
 
-export const githubAccountSwitcherAtom = atom(
-  (get) => get(useGitHubStore).showAccountSwitcher,
-  (get, set, show: boolean) => set(useGitHubStore, { showAccountSwitcher: show })
+export const githubAccountSwitcherAtom = atomWithDefault<boolean>(
+  () => getStoreState().showAccountSwitcher
 );
 
 // Data Atoms
-export const githubRepositoriesAtom = atom(
-  (get) => get(useGitHubStore).repositories,
-  (get, set, repositories: GitHubRepository[]) => set(useGitHubStore, { repositories })
+export const githubRepositoriesAtom = atomWithDefault<GitHubRepository[]>(
+  () => getStoreState().repositories
 );
 
-export const selectedRepositoryAtom = atom(
-  (get) => get(useGitHubStore).selectedRepository,
-  (get, set, repository: GitHubRepository | null) => set(useGitHubStore, { selectedRepository: repository })
+export const selectedRepositoryAtom = atomWithDefault<GitHubRepository | null>(
+  () => getStoreState().selectedRepository
 );
 
-export const githubBranchesAtom = atom(
-  (get) => get(useGitHubStore).branches,
-  (get, set, branches: Record<string, GitHubBranch[]>) => set(useGitHubStore, { branches })
+export const githubBranchesAtom = atomWithDefault<Record<string, GitHubBranch[]>>(
+  () => getStoreState().branches
 );
 
-export const githubCommitsAtom = atom(
-  (get) => get(useGitHubStore).commits,
-  (get, set, commits: Record<string, GitHubCommit[]>) => set(useGitHubStore, { commits })
+export const githubCommitsAtom = atomWithDefault<Record<string, GitHubCommit[]>>(
+  () => getStoreState().commits
 );
 
-export const githubIssuesAtom = atom(
-  (get) => get(useGitHubStore).issues,
-  (get, set, issues: Record<string, GitHubIssue[]>) => set(useGitHubStore, { issues })
+export const githubIssuesAtom = atomWithDefault<Record<string, GitHubIssue[]>>(
+  () => getStoreState().issues
 );
 
-export const githubPullRequestsAtom = atom(
-  (get) => get(useGitHubStore).pullRequests,
-  (get, set, pullRequests: Record<string, GitHubPullRequest[]>) => set(useGitHubStore, { pullRequests })
+export const githubPullRequestsAtom = atomWithDefault<Record<string, GitHubPullRequest[]>>(
+  () => getStoreState().pullRequests
 );
 
 // Derived Atoms
-export const githubSyncStatusAtom = atom((get) => {
-  const store = get(useGitHubStore);
+export const githubSyncStatusAtom = atomWithDefault<{
+  isSyncing: boolean;
+  hasError: boolean;
+  statuses: GitHubState['syncStatus'];
+}>(() => {
+  const store = getStoreState();
   return {
     isSyncing: Object.values(store.syncStatus).some(
       (status) => status.status === 'syncing'
@@ -73,8 +69,14 @@ export const githubSyncStatusAtom = atom((get) => {
   };
 });
 
-export const githubConnectionStatusAtom = atom((get) => {
-  const store = get(useGitHubStore);
+export const githubConnectionStatusAtom = atomWithDefault<{
+  isConnected: boolean;
+  isLoading: boolean;
+  error: string | null;
+  currentUser: GitHubState['currentUser'];
+  linkedAccounts: GitHubState['linkedAccounts'];
+}>(() => {
+  const store = getStoreState();
   return {
     isConnected: store.isConnected,
     isLoading: store.isLoading,
