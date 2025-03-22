@@ -1,22 +1,11 @@
 
-/**
- * Central export file for all chat components
- */
-
-// Main chat component
+// Export DraggableChat and related components
 export { default as DraggableChat } from './DraggableChat';
-
-// UI Components
-export { default as ChatButton } from './ui/ChatButton';
-export { default as ChatHeader } from './ChatHeader';
 export { default as ChatContent } from './ChatContent';
+export { default as ChatHeader } from './ChatHeader';
 export { default as ChatInputArea } from './ChatInputArea';
+export { default as ChatMessage } from './ChatMessage';
+export { ChatButton } from './ui/ChatButton';
 
-// Messaging Components
-export { default as MessageBubble } from './messaging/MessageBubble';
-export { default as MessageList } from './messaging/MessageList';
-export { default as User } from './messaging/User';
-
-// Settings Components
-export { default as ChatSettings } from './settings/ChatSettings';
-export { default as SettingsPanel } from './settings/SettingsPanel';
+// Re-export hook for easy access
+export { useChat } from '@/hooks/useChat';

@@ -2,35 +2,59 @@
 /**
  * Layout-specific type definitions for the chat system
  */
+import { ChatPosition, ChatScale, ChatTheme, ChatUIPreferences } from './ui';
 
-// Position interface for the chat window
-export interface ChatPosition {
-  x: number;
-  y: number;
-}
-
-// Docking position options
-export type DockPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-
-// Scale options
-export type ChatScale = number;
-
-// Layout state for the chat window
-export interface ChatLayout {
-  isOpen: boolean;
+// Layout state for chat UI
+export interface LayoutState {
   isMinimized: boolean;
+  isOpen: boolean;
   docked: boolean;
   position: ChatPosition;
   scale: ChatScale;
   showSidebar: boolean;
+  theme: ChatTheme;
+  uiPreferences: ChatUIPreferences;
 }
 
-// Default layout configuration
-export const DEFAULT_CHAT_LAYOUT: ChatLayout = {
-  isOpen: false,
+// Layout actions
+export interface LayoutActions {
+  toggleMinimize: () => void;
+  toggleOpen: () => void;
+  toggleDocked: () => void;
+  setPosition: (position: ChatPosition) => void;
+  setScale: (scale: ChatScale) => void;
+  toggleSidebar: () => void;
+  setTheme: (theme: ChatTheme) => void;
+  updatePreferences: (prefs: Partial<ChatUIPreferences>) => void;
+  resetLayout: () => void;
+  
+  // Persistence methods
+  saveLayoutToStorage: () => Promise<boolean>;
+  loadLayoutFromStorage: () => Promise<boolean>;
+}
+
+// Combined layout store type
+export type LayoutStore = LayoutState & LayoutActions;
+
+/**
+ * Default layout preferences
+ */
+export const DEFAULT_LAYOUT: LayoutState = {
   isMinimized: false,
+  isOpen: false,
   docked: true,
-  position: { x: 20, y: 20 },
+  position: { x: 0, y: 0 },
   scale: 1,
-  showSidebar: false
+  showSidebar: false,
+  theme: 'system',
+  uiPreferences: {
+    theme: 'system',
+    fontSize: 'medium',
+    messageBehavior: 'enter_send',
+    notifications: true,
+    soundEnabled: true,
+    typingIndicators: true,
+    showTimestamps: true,
+    saveHistory: true
+  }
 };

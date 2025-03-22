@@ -5,25 +5,24 @@
 import { Message } from './messages';
 
 // Chat session type
-export interface Session {
+export interface ChatSession {
   id: string;
   title: string;
   createdAt: string;
   updatedAt: string;
   messages: Message[];
-  mode?: string;
-  metadata?: Record<string, any>;
+  isMinimized?: boolean;
+  position?: { x: number; y: number };
 }
 
 // Options for creating a new chat session
 export interface SessionCreateOptions {
   title?: string;
   initialMessage?: string;
-  mode?: string;
 }
 
 // Type to represent a session in a list (without full message content)
-export type SessionListItem = Omit<Session, 'messages'> & {
+export type SessionListItem = Omit<ChatSession, 'messages'> & {
   messageCount: number;
   lastMessagePreview?: string;
 };

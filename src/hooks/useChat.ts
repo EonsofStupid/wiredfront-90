@@ -1,93 +1,96 @@
 
 import { useCallback } from 'react';
-import { useAtom } from 'jotai';
-import { 
-  isOpenAtom, 
-  isMinimizedAtom, 
-  isDockedAtom,
-  positionAtom,
-  scaleAtom,
-  showSidebarAtom,
-  toggleOpenAtom,
-  toggleMinimizedAtom,
-  toggleDockedAtom,
-  toggleSidebarAtom,
-  themeAtom
-} from '@/stores/ui/chat/atoms';
 import { useChatStore } from '@/stores/chat/chatStore';
-import { ChatPosition, ChatTheme, Message } from '@/types/chat';
+import { Message } from '@/types/chat';
 
 /**
- * Primary hook for accessing all chat functionality
- * Combines UI state (Jotai) with application state (Zustand)
+ * Main hook for interacting with the chat system
+ * Provides access to all chat-related state and actions
  */
 export const useChat = () => {
-  // UI state from Jotai
-  const [isOpen, setIsOpen] = useAtom(isOpenAtom);
-  const [isMinimized, setIsMinimized] = useAtom(isMinimizedAtom);
-  const [docked, setDocked] = useAtom(isDockedAtom);
-  const [position, setPosition] = useAtom(positionAtom);
-  const [scale, setScale] = useAtom(scaleAtom);
-  const [showSidebar, setShowSidebar] = useAtom(showSidebarAtom);
-  const [theme, setTheme] = useAtom(themeAtom);
-  
-  // Chat functionality from Zustand
   const {
-    // Messages
+    // Layout state
+    isOpen,
+    isMinimized,
+    docked,
+    position,
+    scale,
+    showSidebar,
+    theme,
+    uiPreferences,
+    
+    // Layout actions
+    toggleOpen,
+    toggleMinimize,
+    toggleDocked,
+    toggleSidebar,
+    setPosition,
+    setScale,
+    setTheme,
+    
+    // Messages state
     messages,
+    
+    // Messages actions
     addMessage,
     updateMessage,
     removeMessage,
+    sendMessage,
     clearMessages,
-    sendMessage: storeSendMessage,
     
-    // Sessions
+    // Session state
     sessions,
     currentSession,
+    
+    // Session actions
     setCurrentSession,
     createSession,
+    updateSession,
     
-    // Mode
+    // Mode state
     currentMode,
+    
+    // Mode actions
     setCurrentMode,
     getModeLabel,
-    getModeDescription
+    getModeDescription,
+    
+    // Preferences actions
+    updatePreferences
   } = useChatStore();
-  
-  // UI actions from Jotai
-  const [, toggleOpen] = useAtom(toggleOpenAtom);
-  const [, toggleMinimize] = useAtom(toggleMinimizedAtom);
-  const [, toggleDocked] = useAtom(toggleDockedAtom);
-  const [, toggleSidebar] = useAtom(toggleSidebarAtom);
-  
-  // Enhanced combined actions
-  
-  /**
-   * Send a message, creating a session if needed
-   */
-  const sendMessage = useCallback(async (content: string) => {
+
+  // Send a message, creating a session if needed
+  const handleSendMessage = useCallback(async (content: string) => {
     if (!currentSession) {
       const session = await createSession();
       setCurrentSession(session);
-      return storeSendMessage(content, session.id);
+      return sendMessage(content, session.id);
     }
-    return storeSendMessage(content, currentSession.id);
-  }, [currentSession, createSession, setCurrentSession, storeSendMessage]);
-  
-  /**
-   * Update an existing message
-   */
+    return sendMessage(content, currentSession.id);
+  }, [currentSession, createSession, setCurrentSession, sendMessage]);
+
+  // Update a message
   const handleUpdateMessage = useCallback((messageId: string, updates: Partial<Message>) => {
     updateMessage(messageId, updates);
   }, [updateMessage]);
-  
-  /**
-   * Delete a message
-   */
+
+  // Delete a message
   const handleDeleteMessage = useCallback((messageId: string) => {
     removeMessage(messageId);
   }, [removeMessage]);
-  
+
+  // Create a session
+  const handleCreateSession = useCallback(async () => {
+    const session = await createSession();
+    setCurrentSession(session);
+    return session;
+  }, [createSession, setCurrentSession]);
+
+  // Toggle chat open state
+  const toggleChat = useCallback(() => {
+    toggleOpen();
+  }, [toggleOpen]);
+
   return {
     // Layout state
     isOpen,
@@ -97,38 +100,44 @@ export const useChat = () => {
     scale,
     showSidebar,
     theme,
+    uiPreferences,
     
     // Layout actions
     toggleOpen,
     toggleMinimize,
     toggleDocked,
     toggleSidebar,
-    setIsOpen,
-    setIsMinimized,
-    setDocked,
     setPosition,
     setScale,
-    setShowSidebar,
     setTheme,
+    toggleChat,
     
-    // Messages state & actions
+    // Message state
     messages,
-    sendMessage,
+    
+    // Message actions
+    sendMessage: handleSendMessage,
     updateMessage: handleUpdateMessage,
     deleteMessage: handleDeleteMessage,
     clearMessages,
     
-    // Session state & actions
+    // Session state
     sessions,
     currentSession,
-    setCurrentSession,
-    createSession,
     
-    // Mode state & actions
+    // Session actions
+    createSession: handleCreateSession,
+    setCurrentSession,
+    updateSession,
+    
+    // Mode state and actions
     currentMode,
     setMode: setCurrentMode,
     getModeLabel,
-    getModeDescription
+    getModeDescription,
+    
+    // Preferences actions
+    updatePreferences
   };
 };
 

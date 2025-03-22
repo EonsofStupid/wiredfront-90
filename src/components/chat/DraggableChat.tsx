@@ -7,7 +7,6 @@ import { ChatContent } from "./ChatContent";
 import { ChatHeader } from "./ChatHeader";
 import { ChatInputArea } from "./ChatInputArea";
 import { ChatButton } from "./ui/ChatButton";
-import "./styles/chat-variables.css";
 
 export function DraggableChat() {
   const {
@@ -20,7 +19,25 @@ export function DraggableChat() {
     setPosition
   } = useChat();
 
-  // Save position to localStorage when it changes is now handled by Jotai
+  // Load position from store on mount
+  useEffect(() => {
+    const savedPosition = localStorage.getItem('chatPosition');
+    if (savedPosition) {
+      try {
+        const positionData = JSON.parse(savedPosition);
+        if (positionData) {
+          setPosition(positionData);
+        }
+      } catch (error) {
+        console.error('Failed to parse saved chat position', { error });
+      }
+    }
+  }, [setPosition]);
+
+  // Save position to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('chatPosition', JSON.stringify(position));
+  }, [position]);
 
   const togglePosition = () => {
     setPosition({
