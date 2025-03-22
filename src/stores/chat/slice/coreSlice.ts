@@ -2,7 +2,7 @@ import { ChatMode } from "@/types/chat/modes";
 import { StateCreator } from "zustand";
 import { ChatState } from "../types/state";
 
-interface ChatModeState {
+interface ModeState {
   current: ChatMode;
   history: ChatMode[];
 }
@@ -10,7 +10,7 @@ interface ChatModeState {
 export interface CoreSlice {
   isChatOpen: boolean;
   activeProjectId: string | null;
-  mode: ChatModeState;
+  mode: ModeState;
   sessionId: string | null;
   setMode: (mode: ChatMode) => void;
   setSessionId: (id: string | null) => void;
@@ -24,7 +24,7 @@ export const createCoreSlice: StateCreator<ChatState, [], [], CoreSlice> = (
   isChatOpen: false,
   activeProjectId: null,
   mode: {
-    current: "dev",
+    current: "chat",
     history: [],
   },
   sessionId: null,
