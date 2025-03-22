@@ -11,7 +11,6 @@ export * from './ui';
 export * from './layout';
 export * from './docking';
 export * from './store';
-export * from './database';
 
 // Helper functions
 /**

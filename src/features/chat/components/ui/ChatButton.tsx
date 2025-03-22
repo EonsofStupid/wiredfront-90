@@ -4,17 +4,29 @@ import { cn } from "@/lib/utils";
 import { MessageSquare } from "lucide-react";
 import { ChatPosition } from "../../types";
 import { motion } from "framer-motion";
+import { useHasUnreadMessages } from "../../hooks/useHasUnreadMessages";
 
 interface ChatButtonProps {
   position: ChatPosition;
   scale: number;
   onClick: () => void;
   isPreview?: boolean;
+  hasNotification?: boolean;
 }
 
-export function ChatButton({ position, scale, onClick, isPreview = false }: ChatButtonProps) {
+export function ChatButton({ 
+  position, 
+  scale, 
+  onClick, 
+  isPreview = false,
+  hasNotification 
+}: ChatButtonProps) {
   // Determine if the button should be on the left or right side based on position
   const isRightSide = position.x > window.innerWidth / 2;
+  
+  // For auto-detecting unread messages
+  const hasUnread = useHasUnreadMessages();
+  const showNotification = hasNotification || hasUnread;
   
   // Calculate button position
   const buttonPosition = {
@@ -45,7 +57,8 @@ export function ChatButton({ position, scale, onClick, isPreview = false }: Chat
           "text-white",
           "border border-purple-500/50",
           "shadow-[0_0_15px_rgba(168,85,247,0.3)]",
-          "backdrop-blur-md"
+          "backdrop-blur-md",
+          showNotification && "chat-button-pulse"
         )}
         whileHover={{
           scale: 1.1,
@@ -55,6 +68,9 @@ export function ChatButton({ position, scale, onClick, isPreview = false }: Chat
         aria-label="Open chat"
       >
         <MessageSquare className="h-6 w-6" />
+        {showNotification && (
+          <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-white"></span>
+        )}
       </motion.button>
     </motion.div>
   );

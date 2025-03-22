@@ -3,9 +3,6 @@
  * Chat feature store exports
  */
 
-// Export role management
-export * from './roleStore';
-
 // Export chat mode management
 export * from './modeStore';
 
@@ -19,7 +16,7 @@ export * from './sessionStore';
 import { useChatModeStore } from './modeStore';
 import { useChatMessageStore } from './messageStore';
 import { useChatSessionStore } from './sessionStore';
-import { useChatLayoutStore } from '@/stores/chat/chatLayoutStore';
+import { useChatLayoutStore } from '@/features/chat/store/chatLayoutStore';
 
 /**
  * Combined access to all chat stores
