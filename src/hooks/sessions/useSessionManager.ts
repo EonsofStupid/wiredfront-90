@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/services/chat/LoggingService";
 import { useChatStore } from "@/stores/chat/chatStore";
-import { ChatMode, DBSession, Session } from "@/types/chat";
+import { Session } from "@/types/chat";
 import { handleError } from "@/utils/errorHandling";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -16,7 +16,10 @@ export function useSessionManager() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { isSessionLoading, setIsSessionLoading } = useChatStore();
+  const {
+    session: { isLoading: isSessionLoading },
+    actions: { setIsSessionLoading },
+  } = useChatStore();
 
   const refreshSessions = useCallback(async () => {
     try {
@@ -39,12 +42,12 @@ export function useSessionManager() {
       if (error) throw error;
 
       const formattedSessions = (data || []).map(
-        (session: DBSession): Session => ({
+        (session: any): Session => ({
           id: session.id,
-          title: session.title,
+          title: session.title || `New Chat ${new Date().toLocaleString()}`,
           user_id: session.user_id,
-          created_at: session.created_at,
-          last_accessed: session.last_accessed,
+          created_at: session.created_at || new Date().toISOString(),
+          last_accessed: session.last_accessed || new Date().toISOString(),
           is_active: session.is_active || false,
           mode: session.mode || "chat",
           provider_id: session.provider_id || "",
@@ -52,11 +55,7 @@ export function useSessionManager() {
           tokens_used: session.tokens_used || 0,
           message_count: session.message_count || 0,
           metadata: session.metadata || {},
-          context: session.context
-            ? ((typeof session.context === "string"
-                ? JSON.parse(session.context)
-                : session.context) as Record<string, any>)
-            : {},
+          context: session.context || {},
         })
       );
 
@@ -70,7 +69,7 @@ export function useSessionManager() {
       logger.info("Sessions refreshed", { count: formattedSessions.length });
       return formattedSessions;
     } catch (error) {
-      handleError(error, "Failed to refresh sessions");
+      handleError(error);
       toast.error("Failed to load chat sessions");
       return [];
     } finally {
@@ -94,7 +93,7 @@ export function useSessionManager() {
         const sessionId = uuidv4();
         const now = new Date().toISOString();
 
-        const newSession = {
+        const newSession: Session = {
           id: sessionId,
           title: options.title || `New Chat ${new Date().toLocaleString()}`,
           user_id: user.id,
@@ -102,16 +101,24 @@ export function useSessionManager() {
           last_accessed: now,
           is_active: true,
           metadata: options.metadata || {},
-          mode: "chat" as ChatMode,
+          mode: "chat",
           provider_id: "",
           project_id: "",
           tokens_used: 0,
           message_count: 0,
+          context: {},
         };
 
-        const { error } = await supabase
-          .from("chat_sessions")
-          .insert(newSession);
+        const { error } = await supabase.from("chat_sessions").insert({
+          ...newSession,
+          mode: newSession.mode as
+            | "chat"
+            | "code"
+            | "image"
+            | "dev"
+            | "training"
+            | "planning",
+        });
 
         if (error) throw error;
 
@@ -124,7 +131,7 @@ export function useSessionManager() {
 
         return sessionId;
       } catch (error) {
-        handleError(error, "Failed to create session");
+        handleError(error);
         return null;
       } finally {
         setIsLoading(false);
@@ -139,16 +146,15 @@ export function useSessionManager() {
         setCurrentSessionId(sessionId);
 
         // Update the last_accessed timestamp in the database
-        supabase
+        void supabase
           .from("chat_sessions")
           .update({ last_accessed: new Date().toISOString() })
           .eq("id", sessionId)
           .then(() => {
             logger.info("Session switched", { sessionId });
           })
-          .catch((error) => {
+          .then(() => {
             logger.error("Failed to update session last_accessed", {
-              error,
               sessionId,
             });
           });
@@ -187,7 +193,7 @@ export function useSessionManager() {
 
         return true;
       } catch (error) {
-        handleError(error, "Failed to delete session");
+        handleError(error);
         return false;
       }
     },
@@ -233,7 +239,7 @@ export function useSessionManager() {
 
         return true;
       } catch (error) {
-        handleError(error, "Failed to clear sessions");
+        handleError(error);
         return false;
       }
     },
@@ -286,7 +292,7 @@ export function useSessionManager() {
 
       return deletedCount;
     } catch (error) {
-      handleError(error, "Failed to cleanup inactive sessions");
+      handleError(error);
       return 0;
     }
   }, [currentSessionId]);
