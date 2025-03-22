@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useChat } from "@/hooks/useChat";
 import { cn } from "@/lib/utils";
 import { Maximize2, Minimize2, MoveRight, Pin, PinOff, X, Zap } from "lucide-react";
+import { StatusButton } from "./features/status-button";
 
 interface ChatHeaderProps {
   onPositionToggle: () => void;
@@ -29,62 +30,66 @@ export function ChatHeader({ onPositionToggle }: ChatHeaderProps) {
         </span>
       </div>
 
-      <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            "chat-control-button h-8 w-8",
-            "hover:bg-white/10 hover:text-purple-400",
-            "transition-colors duration-200"
-          )}
-          onClick={onPositionToggle}
-          aria-label="Toggle chat position"
-        >
-          <MoveRight className="h-4 w-4" />
-        </Button>
+      <div className="flex items-center gap-2">
+        <StatusButton />
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            "chat-control-button h-8 w-8",
-            "hover:bg-white/10 hover:text-purple-400",
-            "transition-colors duration-200"
-          )}
-          onClick={toggleDocked}
-          aria-label={docked ? "Undock chat" : "Dock chat"}
-        >
-          {docked ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "chat-control-button h-8 w-8",
+              "hover:bg-white/10 hover:text-purple-400",
+              "transition-colors duration-200"
+            )}
+            onClick={onPositionToggle}
+            aria-label="Toggle chat position"
+          >
+            <MoveRight className="h-4 w-4" />
+          </Button>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            "chat-control-button h-8 w-8",
-            "hover:bg-white/10 hover:text-purple-400",
-            "transition-colors duration-200"
-          )}
-          onClick={toggleMinimize}
-          aria-label={isMinimized ? "Maximize chat" : "Minimize chat"}
-        >
-          {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
-        </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "chat-control-button h-8 w-8",
+              "hover:bg-white/10 hover:text-purple-400",
+              "transition-colors duration-200"
+            )}
+            onClick={toggleDocked}
+            aria-label={docked ? "Undock chat" : "Dock chat"}
+          >
+            {docked ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
+          </Button>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            "chat-control-button h-8 w-8",
-            "hover:bg-red-400/10 hover:text-red-400",
-            "transition-colors duration-200"
-          )}
-          onClick={toggleOpen}
-          aria-label="Close chat"
-        >
-          <X className="h-4 w-4" />
-        </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "chat-control-button h-8 w-8",
+              "hover:bg-white/10 hover:text-purple-400",
+              "transition-colors duration-200"
+            )}
+            onClick={toggleMinimize}
+            aria-label={isMinimized ? "Maximize chat" : "Minimize chat"}
+          >
+            {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "chat-control-button h-8 w-8",
+              "hover:bg-red-400/10 hover:text-red-400",
+              "transition-colors duration-200"
+            )}
+            onClick={toggleOpen}
+            aria-label="Close chat"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );
