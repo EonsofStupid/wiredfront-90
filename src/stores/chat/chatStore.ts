@@ -1,13 +1,29 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
-import { createFeatureSlice } from "./slice/featureSlice";
-import { createLayoutSlice } from "./slice/layoutSlice";
-import { createMessageSlice } from "./slice/messageSlice";
-import { createModeSlice } from "./slice/modeSlice";
-import { createPreferencesSlice } from "./slice/preferencesSlice";
-import { createSessionSlice } from "./slice/sessionSlice";
-import { createUISlice } from "./slice/uiSlice";
 import { ChatState } from "./types/state";
+
+export type ChatMode = "dev" | "image" | "training";
+
+interface ChatState {
+  // Global app-level state
+  isOpen: boolean;
+  projectId: string | null;
+  mode: ChatMode;
+  sessionId: string | null;
+
+  // Analytics and tracking
+  costTracking: {
+    currentSession: number;
+    total: number;
+  };
+
+  // Actions
+  setMode: (mode: ChatMode) => void;
+  setSessionId: (id: string | null) => void;
+  toggleChat: () => void;
+  setProjectId: (id: string | null) => void;
+  updateCost: (amount: number) => void;
+}
 
 /**
  * Main chat store with all slices combined
@@ -16,53 +32,36 @@ import { ChatState } from "./types/state";
 export const useChatStore = create<ChatState>()(
   devtools(
     persist(
-      (...a) => ({
-        ...createMessageSlice(...a),
-        ...createSessionSlice(...a),
-        ...createModeSlice(...a),
-        ...createPreferencesSlice(...a),
-        ...createLayoutSlice(...a),
-        ...createFeatureSlice(...a),
-        ...createUISlice(...a),
+      (set) => ({
+        // Initial state
+        isOpen: false,
+        projectId: null,
+        mode: "dev",
+        sessionId: null,
+        costTracking: {
+          currentSession: 0,
+          total: 0,
+        },
+
+        // Actions
+        setMode: (mode) => set({ mode }),
+        setSessionId: (id) => set({ sessionId: id }),
+        toggleChat: () => set((state) => ({ isOpen: !state.isOpen })),
+        setProjectId: (id) => set({ projectId: id }),
+        updateCost: (amount) =>
+          set((state) => ({
+            costTracking: {
+              currentSession: state.costTracking.currentSession + amount,
+              total: state.costTracking.total + amount,
+            },
+          })),
       }),
       {
         name: "chat-storage",
         partialize: (state) => ({
-          messages: {
-            list: state.messages.list,
-            isLoading: state.messages.isLoading,
-            error: state.messages.error,
-          },
-          session: {
-            current: state.session.current,
-            list: state.session.list,
-            isLoading: state.session.isLoading,
-            error: state.session.error,
-          },
-          mode: {
-            current: state.mode.current,
-            history: state.mode.history,
-          },
-          uiPreferences: {
-            messageBehavior: state.uiPreferences.messageBehavior,
-            notifications: state.uiPreferences.notifications,
-            soundEnabled: state.uiPreferences.soundEnabled,
-            typingIndicators: state.uiPreferences.typingIndicators,
-          },
-          layout: {
-            isSidebarOpen: state.layout.isSidebarOpen,
-            isSettingsOpen: state.layout.isSettingsOpen,
-            isMinimized: state.layout.isMinimized,
-            position: state.layout.position,
-          },
-          features: state.features,
-          // UI state
-          selectedMessageId: state.selectedMessageId,
-          editingMessageId: state.editingMessageId,
-          isEditing: state.isEditing,
-          formState: state.formState,
-          messageMenuOpen: state.messageMenuOpen,
-          messageActionsVisible: state.messageActionsVisible,
+          projectId: state.projectId,
+          mode: state.mode,
+          costTracking: state.costTracking,
         }),
       }
     )
