@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { useRoleStore } from "@/stores/features/chat/roleStore";
+import { useRoleStore } from "@/stores/role";
 import { AlertCircle, Loader2, LockIcon } from "lucide-react";
 import React from "react";
 
@@ -66,10 +66,7 @@ export const AdminCardHeader = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn("mb-3 flex flex-col space-y-1.5", className)}
-    {...props}
-  />
+  <div className={cn("mb-3 flex flex-col space-y-1.5", className)} {...props} />
 );
 
 export const AdminCardTitle = ({
@@ -89,10 +86,7 @@ export const AdminCardDescription = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLParagraphElement>) => (
-  <p
-    className={cn("text-sm text-muted-foreground", className)}
-    {...props}
-  />
+  <p className={cn("text-sm text-muted-foreground", className)} {...props} />
 );
 
 export const AdminCardContent = ({
@@ -106,10 +100,7 @@ export const AdminCardFooter = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn("mt-4 flex items-center pt-2", className)}
-    {...props}
-  />
+  <div className={cn("mt-4 flex items-center pt-2", className)} {...props} />
 );
 
 export const AdminCardActions = ({

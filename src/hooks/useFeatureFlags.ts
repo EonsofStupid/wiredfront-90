@@ -1,13 +1,19 @@
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/services/chat/LoggingService";
 import { useChatStore } from "@/stores/chat/chatStore";
-import { convertFeatureKeyToChatFeature } from "@/types/store/chat/types";
+import { convertFeatureKeyToChatFeature } from "@/types/chat/store";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { useFeatureFlag } from "./useFeatureFlag";
 
 export function useFeatureFlags() {
-  const { features, toggleFeature, enableFeature, disableFeature, setFeatureState } = useChatStore();
+  const {
+    features,
+    toggleFeature,
+    enableFeature,
+    disableFeature,
+    setFeatureState,
+  } = useChatStore();
   const [isUpdating, setIsUpdating] = useState(false);
 
   /**
@@ -39,7 +45,11 @@ export function useFeatureFlags() {
 
       // If we couldn't map it to a chat feature, we can't toggle it
       if (!chatFeatureKey) {
-        logger.error(`Feature ${String(featureKey)} cannot be toggled as it's not a chat feature`);
+        logger.error(
+          `Feature ${String(
+            featureKey
+          )} cannot be toggled as it's not a chat feature`
+        );
         toast.error(`Cannot toggle this feature in the chat interface`);
         return;
       }
@@ -50,7 +60,7 @@ export function useFeatureFlags() {
         toggleFeature(chatFeatureKey);
 
         // Log the feature usage
-        await logFeatureUsage(String(featureKey), { action: 'toggle' });
+        await logFeatureUsage(String(featureKey), { action: "toggle" });
       } catch (error) {
         logger.error(`Error toggling feature ${String(featureKey)}:`, error);
         toast.error(`Failed to toggle ${String(featureKey)} feature`);
@@ -74,7 +84,11 @@ export function useFeatureFlags() {
 
       // If we couldn't map it to a chat feature, we can't enable it
       if (!chatFeatureKey) {
-        logger.error(`Feature ${String(featureKey)} cannot be enabled as it's not a chat feature`);
+        logger.error(
+          `Feature ${String(
+            featureKey
+          )} cannot be enabled as it's not a chat feature`
+        );
         toast.error(`Cannot enable this feature in the chat interface`);
         return;
       }
@@ -85,7 +99,7 @@ export function useFeatureFlags() {
         enableFeature(chatFeatureKey);
 
         // Log the feature usage
-        await logFeatureUsage(String(featureKey), { action: 'enable' });
+        await logFeatureUsage(String(featureKey), { action: "enable" });
       } catch (error) {
         logger.error(`Error enabling feature ${String(featureKey)}:`, error);
         toast.error(`Failed to enable ${String(featureKey)} feature`);
@@ -109,7 +123,11 @@ export function useFeatureFlags() {
 
       // If we couldn't map it to a chat feature, we can't disable it
       if (!chatFeatureKey) {
-        logger.error(`Feature ${String(featureKey)} cannot be disabled as it's not a chat feature`);
+        logger.error(
+          `Feature ${String(
+            featureKey
+          )} cannot be disabled as it's not a chat feature`
+        );
         toast.error(`Cannot disable this feature in the chat interface`);
         return;
       }
@@ -120,7 +138,7 @@ export function useFeatureFlags() {
         disableFeature(chatFeatureKey);
 
         // Log the feature usage
-        await logFeatureUsage(String(featureKey), { action: 'disable' });
+        await logFeatureUsage(String(featureKey), { action: "disable" });
       } catch (error) {
         logger.error(`Error disabling feature ${String(featureKey)}:`, error);
         toast.error(`Failed to disable ${String(featureKey)} feature`);
@@ -144,7 +162,11 @@ export function useFeatureFlags() {
 
       // If we couldn't map it to a chat feature, we can't set its state
       if (!chatFeatureKey) {
-        logger.error(`Feature ${String(featureKey)} state cannot be set as it's not a chat feature`);
+        logger.error(
+          `Feature ${String(
+            featureKey
+          )} state cannot be set as it's not a chat feature`
+        );
         toast.error(`Cannot update this feature in the chat interface`);
         return;
       }
@@ -156,11 +178,14 @@ export function useFeatureFlags() {
 
         // Log the feature usage
         await logFeatureUsage(String(featureKey), {
-          action: 'setState',
-          enabled: isEnabled
+          action: "setState",
+          enabled: isEnabled,
         });
       } catch (error) {
-        logger.error(`Error setting feature ${String(featureKey)} state:`, error);
+        logger.error(
+          `Error setting feature ${String(featureKey)} state:`,
+          error
+        );
         toast.error(`Failed to update ${String(featureKey)} feature`);
       } finally {
         setIsUpdating(false);
@@ -170,15 +195,18 @@ export function useFeatureFlags() {
   );
 
   // Helper function to log feature usage
-  const logFeatureUsage = async (featureKey: string, context: Record<string, any> = {}) => {
+  const logFeatureUsage = async (
+    featureKey: string,
+    context: Record<string, any> = {}
+  ) => {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData?.user) return;
 
-      await supabase.from('feature_usage' as any).insert({
+      await supabase.from("feature_usage" as any).insert({
         user_id: userData.user.id,
         feature_name: featureKey,
-        context
+        context,
       });
     } catch (error) {
       logger.error(`Error logging feature usage for ${featureKey}:`, error);
@@ -192,7 +220,7 @@ export function useFeatureFlags() {
     enableFeature: handleEnableFeature,
     disableFeature: handleDisableFeature,
     setFeatureState: handleSetFeatureState,
-    isUpdating
+    isUpdating,
   };
 }
 
@@ -202,7 +230,9 @@ export function useFeatureFlags() {
 export function useCombinedFeatureFlag(featureKey: FeatureKey) {
   const { features } = useChatStore();
   const { isEnabled: checkLocalEnabled } = useFeatureFlags();
-  const { isEnabled: isRemoteEnabled, isLoading } = useFeatureFlag(String(featureKey));
+  const { isEnabled: isRemoteEnabled, isLoading } = useFeatureFlag(
+    String(featureKey)
+  );
 
   // Check if the key is a valid chat feature key
   const chatFeatureKey = convertFeatureKeyToChatFeature(featureKey);
@@ -212,12 +242,14 @@ export function useCombinedFeatureFlag(featureKey: FeatureKey) {
 
   // Combined flag is enabled if either local or remote is enabled
   // We prioritize the remote flag when it's available
-  const isEnabled = isLoading ? isLocalEnabled : (isRemoteEnabled || isLocalEnabled);
+  const isEnabled = isLoading
+    ? isLocalEnabled
+    : isRemoteEnabled || isLocalEnabled;
 
   return {
     isEnabled,
     isLoading,
     isLocalEnabled,
-    isRemoteEnabled
+    isRemoteEnabled,
   };
 }
