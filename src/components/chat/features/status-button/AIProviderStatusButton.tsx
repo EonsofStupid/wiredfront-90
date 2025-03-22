@@ -1,41 +1,38 @@
-
-import React, { useState } from 'react';
-import { Zap, Server, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { ProviderCategory } from '../../store/types/chat-store-types';
-import { useChatStore } from '../../store/chatStore';
 import { logger } from '@/services/chat/LoggingService';
+import { useChatStore } from '@/stores/chat/chatStore';
+import { AlertTriangle, Server, Zap } from 'lucide-react';
 
 export function AIProviderStatusButton() {
   const { currentProvider } = useChatStore();
-  
+
   // Get status info
   const getStatus = () => {
     if (!currentProvider) {
-      return { 
-        text: 'Not Connected', 
-        color: 'text-yellow-500', 
-        icon: AlertTriangle, 
-        description: 'No AI provider connected' 
+      return {
+        text: 'Not Connected',
+        color: 'text-yellow-500',
+        icon: AlertTriangle,
+        description: 'No AI provider connected'
       };
     }
-    
-    return { 
-      text: 'Connected', 
-      color: 'text-green-500', 
-      icon: Zap, 
-      description: `Using ${currentProvider.name}` 
+
+    return {
+      text: 'Connected',
+      color: 'text-green-500',
+      icon: Zap,
+      description: `Using ${currentProvider.name}`
     };
   };
-  
+
   const status = getStatus();
   const Icon = status.icon;
-  
+
   const handleClick = () => {
     logger.info('AI Provider status clicked');
   };
-  
+
   return (
     <HoverCard openDelay={300} closeDelay={200}>
       <HoverCardTrigger asChild>
@@ -62,21 +59,21 @@ export function AIProviderStatusButton() {
                 <span>{status.text}</span>
               </span>
             </div>
-            
+
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">Provider</span>
               <span className="text-xs font-medium">
                 {currentProvider?.name || 'None'}
               </span>
             </div>
-            
+
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">Model</span>
               <span className="text-xs font-medium">
                 {currentProvider?.models?.[0] || 'Not specified'}
               </span>
             </div>
-            
+
             <div className="text-xs text-muted-foreground mt-2">
               {status.description}
             </div>

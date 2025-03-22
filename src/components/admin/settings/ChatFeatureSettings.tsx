@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
-import { useChatLayoutStore } from "@/stores/chat/chatLayoutStore";
+import { useChatStore } from "@/stores/chat/chatStore";
 import { KnownFeatureFlag } from "@/types/admin/settings/feature-flags";
 import { DEFAULT_LAYOUT } from "@/types/chat/layout";
 import { ArrowLeftRight, Palette, Pin, PinOff, RotateCcw } from "lucide-react";
@@ -14,7 +14,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 export const ChatFeatureSettings = () => {
-  const { position, setPosition, docked, toggleDocked, scale, setScale } = useChatLayoutStore();
+  const { position, setPosition, docked, toggleDocked, scale, setScale } = useChatStore();
   const { features, toggleFeature, isUpdating } = useFeatureFlags();
   const [activeTab, setActiveTab] = useState("features");
   // State for chat styling

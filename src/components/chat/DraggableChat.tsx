@@ -1,7 +1,7 @@
-import { useChat } from "@/hooks/useChat";
 import { cn } from "@/lib/utils";
+import { useChatStore } from "@/stores/chat/chatStore";
 import { motion } from "framer-motion";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { ChatContent } from "./ChatContent";
 import { ChatHeader } from "./ChatHeader";
 import { ChatInputArea } from "./ChatInputArea";
@@ -17,12 +17,11 @@ export function DraggableChat() {
     docked,
     position,
     setPosition,
+    togglePosition,
     currentMode
-  } = useChat();
+  } = useChatStore();
 
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // Load position from localStorage on mount
+  // Load position from store on mount
   useEffect(() => {
     const savedPosition = localStorage.getItem('chatPosition');
     if (savedPosition) {
@@ -42,15 +41,6 @@ export function DraggableChat() {
     localStorage.setItem('chatPosition', JSON.stringify(position));
   }, [position]);
 
-  // Toggle position between bottom-right and bottom-left
-  const togglePosition = () => {
-    const newPosition = {
-      x: position.x > window.innerWidth / 2 ? 0 : window.innerWidth,
-      y: position.y
-    };
-    setPosition(newPosition);
-  };
-
   if (!isOpen) {
     return <ChatButton position={position} scale={scale} onClick={toggleOpen} />;
   }
@@ -59,7 +49,7 @@ export function DraggableChat() {
   const dockPosition = position?.x > window.innerWidth / 2 ? 'bottom-right' : 'bottom-left';
 
   return (
-    <div ref={containerRef}>
+    <div>
       <motion.div
         className={cn(
           "fixed z-50 flex gap-4",

@@ -29,6 +29,7 @@ type FullChatStore = ChatState & {
   toggleMinimize: () => void;
   toggleOpen: () => void;
   setPosition: (position: { x: number; y: number }) => void;
+  togglePosition: () => void;
   toggleSidebar: () => void;
   setTheme: (theme: string) => void;
   updatePreferences: (prefs: any) => void;
@@ -254,6 +255,15 @@ export const useChatStore = create<FullChatStore>()(
 
         setPosition: (position) => {
           set({ position }, false, { type: 'chat/setPosition' });
+        },
+
+        togglePosition: () => {
+          set(state => ({
+            position: {
+              x: state.position.x > window.innerWidth / 2 ? 0 : window.innerWidth,
+              y: state.position.y
+            }
+          }), false, { type: 'chat/togglePosition' });
         },
 
         toggleSidebar: () => {

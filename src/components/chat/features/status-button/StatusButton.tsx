@@ -56,8 +56,8 @@ export function StatusButton() {
 
   return (
     <ErrorBoundary fallback={<div className="text-xs text-destructive">Error loading status</div>}>
-      <div className="flex gap-2 justify-end" role="toolbar" aria-label="Status controls">
-        {/* AI Provider Status Button - Added first in the list */}
+      <div className="flex items-center gap-2" role="toolbar" aria-label="Status controls">
+        {/* AI Provider Status Button */}
         <AIProviderStatusButton />
 
         {features.githubSync && (

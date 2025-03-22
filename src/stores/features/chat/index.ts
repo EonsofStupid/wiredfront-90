@@ -15,8 +15,7 @@ export * from './sessionStore';
 export * from './layoutStore';
 
 // Export combined hooks
-import { useChatLayoutStore } from './layoutStore';
-import { useChatMessageStore } from './messageStore';
+import { useChatStore } from '@/stores/chat/chatStore';
 import { useChatModeStore } from './modeStore';
 import { useChatSessionStore } from './sessionStore';
 
@@ -70,3 +69,22 @@ export const useChatCombined = () => {
 
 // Export types
 export * from './types';
+
+// Export hooks
+export { useChatModeStore, useChatSessionStore };
+
+export const useChatFeatures = () => {
+  const features = useChatStore(state => state.features);
+  const toggleFeature = useChatStore(state => state.toggleFeature);
+  const enableFeature = useChatStore(state => state.enableFeature);
+  const disableFeature = useChatStore(state => state.disableFeature);
+  const setFeatureState = useChatStore(state => state.setFeatureState);
+
+  return {
+    features,
+    toggleFeature,
+    enableFeature,
+    disableFeature,
+    setFeatureState
+  };
+};
