@@ -1,7 +1,9 @@
+
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MessageSquare } from "lucide-react";
 import { ChatPosition } from "../../types";
+import { motion } from "framer-motion";
 
 interface ChatButtonProps {
   position: ChatPosition;
@@ -11,20 +13,49 @@ interface ChatButtonProps {
 }
 
 export function ChatButton({ position, scale, onClick, isPreview = false }: ChatButtonProps) {
+  // Determine if the button should be on the left or right side based on position
+  const isRightSide = position.x > window.innerWidth / 2;
+  
+  // Calculate button position
+  const buttonPosition = {
+    position: isPreview ? 'relative' : 'fixed',
+    bottom: isPreview ? 'auto' : '16px',
+    [isRightSide ? 'right' : 'left']: isPreview ? 'auto' : '16px',
+    transform: `scale(${scale})`,
+    transformOrigin: isRightSide ? 'bottom right' : 'bottom left',
+  } as React.CSSProperties;
+
   return (
-    <Button
-      onClick={onClick}
+    <motion.div
+      style={buttonPosition}
       className={cn(
-        "fixed rounded-full p-4 shadow-lg transition-all duration-200",
+        "z-[var(--z-chat-button)]",
         isPreview && "pointer-events-none"
       )}
-      style={{
-        left: `${position.x}px`,
-        top: `${position.y}px`,
-        transform: `scale(${scale})`,
-      }}
+      initial={{ scale: 0.8, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
     >
-      <MessageSquare className="h-6 w-6" />
-    </Button>
+      <motion.button
+        onClick={onClick}
+        className={cn(
+          "chat-toggle-button",
+          "rounded-full p-3",
+          "bg-gradient-to-r from-purple-600 to-purple-800",
+          "text-white",
+          "border border-purple-500/50",
+          "shadow-[0_0_15px_rgba(168,85,247,0.3)]",
+          "backdrop-blur-md"
+        )}
+        whileHover={{
+          scale: 1.1,
+          boxShadow: "0 0 20px rgba(168,85,247,0.4)"
+        }}
+        whileTap={{ scale: 0.95 }}
+        aria-label="Open chat"
+      >
+        <MessageSquare className="h-6 w-6" />
+      </motion.button>
+    </motion.div>
   );
 }
