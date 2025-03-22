@@ -1,35 +1,66 @@
 
 import React from 'react';
-import { Mic, StopCircle } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Mic, Square, AlertCircle } from "lucide-react";
+import { useVoiceRecognition } from './useVoiceRecognition';
+import { toast } from "sonner";
 
-export interface VoiceToTextButtonProps {
-  isListening: boolean;
-  onClick: () => void;
-  className?: string;
+interface VoiceToTextButtonProps {
+  onTranscription: (text: string) => void;
+  isProcessing: boolean;
 }
 
-export const VoiceToTextButton: React.FC<VoiceToTextButtonProps> = ({ 
-  isListening,
-  onClick,
-  className = ''
-}) => {
+export function VoiceToTextButton({ onTranscription, isProcessing }: VoiceToTextButtonProps) {
+  const {
+    isListening,
+    isError,
+    errorMessage,
+    startListening,
+    stopListening
+  } = useVoiceRecognition((text) => {
+    onTranscription(text);
+    toast.success('Voice transcription completed');
+  });
+
+  const handleClick = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
+
+  if (isError) {
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className="text-destructive hover:text-destructive/90 hover:bg-destructive/10 h-[var(--chat-input-height)]"
+        onClick={() => toast.error(errorMessage || 'Voice recognition error')}
+        title={errorMessage || 'Voice recognition error'}
+      >
+        <AlertCircle className="h-4 w-4" />
+      </Button>
+    );
+  }
+
   return (
-    <button
-      onClick={onClick}
-      className={`p-2 rounded-full transition-all duration-300 ${
-        isListening 
-          ? 'bg-red-500/20 text-red-500 animate-pulse border border-red-500/30' 
-          : 'text-muted-foreground hover:text-neon-blue hover:bg-neon-blue/10 hover:border-neon-blue/30 border border-transparent'
-      } ${className}`}
-      aria-label={isListening ? "Stop recording" : "Start voice input"}
+    <Button
+      variant="ghost"
+      size="icon"
+      className="relative chat-cyber-border h-[var(--chat-input-height)]"
+      onClick={handleClick}
+      disabled={isProcessing}
+      data-testid="voice-to-text-button"
     >
       {isListening ? (
-        <StopCircle className="h-5 w-5" />
+        <>
+          <Square className="h-4 w-4 text-red-500" />
+          <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+        </>
       ) : (
-        <Mic className="h-5 w-5" />
+        <Mic className="h-4 w-4" />
       )}
-    </button>
+    </Button>
   );
-};
-
-export default VoiceToTextButton;
+}

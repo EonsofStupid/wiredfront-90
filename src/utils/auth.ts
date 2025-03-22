@@ -1,18 +1,30 @@
+import { User } from '@supabase/supabase-js';
 
-export const getLoginRedirectUrl = (): string => {
-  // Check if there's a redirect URL in the session storage
-  const redirectUrl = sessionStorage.getItem('redirectUrl');
+export const getRedirectPath = (user: User | null) => {
+  // Get stored path or default to dashboard
+  const storedPath = sessionStorage.getItem('lastVisitedPath');
   
-  if (redirectUrl) {
-    // Clear the redirect URL so it's not used again
-    sessionStorage.removeItem('redirectUrl');
-    return redirectUrl;
-  }
+  if (!user) return '/login';
   
-  // Default to dashboard if no redirect URL is found
-  return '/dashboard';
+  // Check user role for custom landing page
+  const userRole = user.app_metadata.role;
+  if (userRole === 'admin') return '/admin/dashboard';
+  
+  // Return stored path or default dashboard
+  return storedPath || '/dashboard';
 };
 
-export const setLoginRedirectUrl = (url: string): void => {
-  sessionStorage.setItem('redirectUrl', url);
+export const storeLastVisitedPath = (path: string) => {
+  // Don't store login or auth-related paths
+  if (path === '/login' || path.startsWith('/auth')) return;
+  sessionStorage.setItem('lastVisitedPath', path);
+};
+
+export const getLoginRedirectUrl = () => {
+  const currentPath = window.location.pathname;
+  if (currentPath === '/login') {
+    const returnTo = new URLSearchParams(window.location.search).get('returnTo');
+    return returnTo || '/dashboard';
+  }
+  return currentPath;
 };

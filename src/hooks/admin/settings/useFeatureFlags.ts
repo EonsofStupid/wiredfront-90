@@ -3,11 +3,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { FeatureFlag, FeatureFlagFormData, AppRole } from "@/types/admin/settings/feature-flags";
+import { FeatureFlag, FeatureFlagFormValues } from "@/types/admin/settings/feature-flags";
 import { useRoleStore } from "@/stores/role";
-
-// Type for form inputs
-export type FeatureFlagFormValues = FeatureFlagFormData;
 
 export const useFeatureFlags = () => {
   const { hasRole } = useRoleStore();
@@ -35,11 +32,7 @@ export const useFeatureFlags = () => {
     mutationFn: async ({ id, enabled }: { id: string; enabled: boolean }) => {
       const { data, error } = await supabase
         .from('feature_flags')
-        .update({ 
-          enabled, 
-          updated_by: (await supabase.auth.getUser()).data.user?.id,
-          updated_at: new Date().toISOString()
-        })
+        .update({ enabled, updated_by: (await supabase.auth.getUser()).data.user?.id })
         .eq('id', id)
         .select()
         .single();
@@ -60,14 +53,10 @@ export const useFeatureFlags = () => {
   // Create a new feature flag
   const createFeatureFlag = useMutation({
     mutationFn: async (formValues: FeatureFlagFormValues) => {
-      const currentUser = (await supabase.auth.getUser()).data.user?.id;
-      
       const newFlag = {
         ...formValues,
-        created_by: currentUser,
-        updated_by: currentUser,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        created_by: (await supabase.auth.getUser()).data.user?.id,
+        updated_by: (await supabase.auth.getUser()).data.user?.id,
       };
 
       const { data, error } = await supabase
@@ -98,15 +87,12 @@ export const useFeatureFlags = () => {
   // Update an existing feature flag
   const updateFeatureFlag = useMutation({
     mutationFn: async (flag: FeatureFlag) => {
-      const updatePayload = {
-        ...flag,
-        updated_by: (await supabase.auth.getUser()).data.user?.id,
-        updated_at: new Date().toISOString()
-      };
-
       const { data, error } = await supabase
         .from('feature_flags')
-        .update(updatePayload)
+        .update({ 
+          ...flag,
+          updated_by: (await supabase.auth.getUser()).data.user?.id 
+        })
         .eq('id', flag.id)
         .select()
         .single();

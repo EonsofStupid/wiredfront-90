@@ -6,20 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Define proper types
-type ProviderCategory = 'chat' | 'image' | 'vector' | 'voice' | 'other';
-
-interface ChatProvider {
-  id: string;
-  name: string;
-  type: string;
-  isDefault: boolean;
-  category: ProviderCategory;
-  models?: string[];
-  features?: string[];
-  supportsStreaming?: boolean;
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -27,8 +13,8 @@ serve(async (req) => {
   }
 
   try {
-    // Define providers with proper type annotations
-    const providers: ChatProvider[] = [
+    // Define providers
+    const providers = [
       {
         id: 'openai-default',
         name: 'OpenAI',
@@ -36,8 +22,7 @@ serve(async (req) => {
         isDefault: true,
         category: 'chat',
         models: ['gpt-4', 'gpt-3.5-turbo'],
-        features: ['chat', 'rag', 'code'],
-        supportsStreaming: true
+        features: ['chat', 'rag', 'code']
       },
       {
         id: 'gemini-default',
@@ -46,8 +31,7 @@ serve(async (req) => {
         isDefault: false,
         category: 'chat',
         models: ['gemini-1.5-flash', 'gemini-1.5-pro'],
-        features: ['chat', 'rag'],
-        supportsStreaming: true
+        features: ['chat', 'rag']
       },
       {
         id: 'anthropic-default',
@@ -56,18 +40,16 @@ serve(async (req) => {
         isDefault: false,
         category: 'chat',
         models: ['claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku'],
-        features: ['chat', 'rag'],
-        supportsStreaming: true
+        features: ['chat', 'rag']
       },
       {
         id: 'replicate-default',
         name: 'Replicate',
         type: 'replicate',
         isDefault: false,
-        category: 'image',
+        category: 'mixed',
         models: ['llama-3', 'mistral'],
-        features: ['chat', 'image'],
-        supportsStreaming: false
+        features: ['chat', 'image']
       },
       {
         id: 'stabilityai-default',
@@ -76,8 +58,7 @@ serve(async (req) => {
         isDefault: false,
         category: 'image',
         models: ['stable-diffusion-xl'],
-        features: ['image'],
-        supportsStreaming: false
+        features: ['image']
       }
     ];
 

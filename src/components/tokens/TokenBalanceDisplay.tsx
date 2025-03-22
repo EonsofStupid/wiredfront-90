@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { useTokenManagement } from '@/hooks/useTokenManagement';
-import { withTokenErrorBoundary } from './TokenErrorBoundary';
+import { useTokenManagement, withTokenErrorBoundary } from '@/hooks/useTokenManagement';
 import { TokenAuthGuard } from './TokenAuthGuard';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';

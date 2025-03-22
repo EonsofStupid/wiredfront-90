@@ -1,13 +1,15 @@
-import { useErrorBoundary } from '@/components/chat/hooks/useErrorBoundary';
-import { Button } from '@/components/ui/button';
+
+import React, { useState } from 'react';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { useChatStore } from '@/stores/chat/chatStore';
-import { BellIcon, CheckCircle, GitBranchIcon } from 'lucide-react';
-import { useState } from 'react';
-import { AIProviderStatusButton } from './AIProviderStatusButton';
+import { Button } from '@/components/ui/button';
+import { GitBranchIcon, BellIcon, AlertCircle, CheckCircle } from 'lucide-react';
 import { GitHubStatusDialog } from './GitHubStatusDialog';
 import { NotificationsStatusDialog } from './NotificationsStatusDialog';
+import { AIProviderStatusButton } from './AIProviderStatusButton';
+import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
+import { useChatStore } from '../../store/chatStore';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useErrorBoundary } from '../../hooks/useErrorBoundary';
 
 export function StatusButton() {
   const [activeTab, setActiveTab] = useState<'github' | 'notifications'>('github');
@@ -39,7 +41,7 @@ export function StatusButton() {
         </div>
       );
     }
-
+    
     return (
       <div className="space-y-2">
         <div className="flex items-center justify-between">
@@ -56,10 +58,10 @@ export function StatusButton() {
 
   return (
     <ErrorBoundary fallback={<div className="text-xs text-destructive">Error loading status</div>}>
-      <div className="flex items-center gap-2" role="toolbar" aria-label="Status controls">
-        {/* AI Provider Status Button */}
+      <div className="flex gap-2 justify-end" role="toolbar" aria-label="Status controls">
+        {/* AI Provider Status Button - Added first in the list */}
         <AIProviderStatusButton />
-
+        
         {features.githubSync && (
           <Dialog>
             <HoverCard openDelay={300} closeDelay={200}>
@@ -76,7 +78,7 @@ export function StatusButton() {
                   </Button>
                 </DialogTrigger>
               </HoverCardTrigger>
-              <HoverCardContent
+              <HoverCardContent 
                 className="w-64 p-3 chat-dialog-content"
                 side="top"
                 align="end"
@@ -93,7 +95,7 @@ export function StatusButton() {
             {activeTab === 'github' && getDialogContent()}
           </Dialog>
         )}
-
+        
         {features.notifications && (
           <Dialog>
             <HoverCard openDelay={300} closeDelay={200}>
@@ -111,7 +113,7 @@ export function StatusButton() {
                   </Button>
                 </DialogTrigger>
               </HoverCardTrigger>
-              <HoverCardContent
+              <HoverCardContent 
                 className="w-64 p-3 chat-dialog-content"
                 side="top"
                 align="end"

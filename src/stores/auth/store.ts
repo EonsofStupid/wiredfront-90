@@ -1,118 +1,170 @@
-
 import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
-import { AuthState, AuthStore } from './types';
-import { supabase } from '@/lib/supabase';
+import { persist } from 'zustand/middleware';
+import type { AuthState, AuthStore, LoginResponse } from './types';
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const initialState: AuthState = {
+  version: '1.0.0',
   user: null,
   isAuthenticated: false,
   token: null,
-  isLoading: false,
-  error: null
+  status: 'idle',
+  error: null,
+  lastUpdated: null,
+  loading: true,
 };
 
 export const useAuthStore = create<AuthStore>()(
-  devtools(
-    persist(
-      (set, get) => ({
-        ...initialState,
+  persist(
+    (set, get) => ({
+      ...initialState,
 
-        login: async (email, password) => {
-          try {
-            set({ isLoading: true, error: null });
-            
-            const { data, error } = await supabase.auth.signInWithPassword({
-              email,
-              password
-            });
-            
-            if (error) throw error;
-            
-            set({
-              user: data.user,
-              isAuthenticated: !!data.user,
-              token: data.session?.access_token || null,
-              isLoading: false
-            });
-          } catch (error) {
-            set({
-              error: error as Error,
-              isLoading: false
-            });
-            throw error;
-          }
-        },
-
-        logout: async () => {
-          try {
-            set({ isLoading: true });
-            
-            const { error } = await supabase.auth.signOut();
-            if (error) throw error;
-            
-            set({
-              ...initialState,
-              isLoading: false
-            });
-          } catch (error) {
-            set({
-              error: error as Error,
-              isLoading: false
-            });
-            throw error;
-          }
-        },
-
-        refreshToken: async () => {
-          try {
-            set({ isLoading: true });
-            
-            const { data, error } = await supabase.auth.refreshSession();
-            if (error) throw error;
-            
-            set({
-              user: data.user,
-              isAuthenticated: !!data.user,
-              token: data.session?.access_token || null,
-              isLoading: false
-            });
-            
-            return !!data.session;
-          } catch (error) {
-            set({
-              error: error as Error,
-              isLoading: false
-            });
-            return false;
-          }
-        },
-
-        resetAuth: () => {
-          set(initialState);
-        }
+      setUser: (user) => set({ 
+        user, 
+        isAuthenticated: !!user,
+        status: 'success',
+        lastUpdated: Date.now(),
+        loading: false
       }),
-      {
-        name: 'auth-storage',
-        partialize: (state) => ({
-          token: state.token
-        })
-      }
-    ),
+
+      setLoading: (loading) => set({ loading }),
+
+      login: async (credentials): Promise<LoginResponse> => {
+        set({ status: 'loading', loading: true, error: null });
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: credentials.email,
+            password: credentials.password,
+          });
+          
+          if (error) throw error;
+          
+          const { session, user } = data;
+          if (!session) throw new Error('No session returned after login');
+
+          set({ 
+            user,
+            isAuthenticated: true,
+            token: session.access_token,
+            status: 'success',
+            error: null,
+            lastUpdated: Date.now(),
+            loading: false
+          });
+
+          toast.success('Logged in successfully');
+          return { success: true };
+        } catch (error) {
+          const errorMessage = (error as Error).message;
+          set({ 
+            status: 'error', 
+            error: errorMessage,
+            lastUpdated: Date.now(),
+            loading: false
+          });
+          toast.error(`Login failed: ${errorMessage}`);
+          throw error;
+        }
+      },
+
+      logout: async () => {
+        try {
+          const { error } = await supabase.auth.signOut();
+          if (error) throw error;
+
+          set({
+            ...initialState,
+            loading: false,
+            status: 'idle',
+            lastUpdated: Date.now()
+          });
+          
+          toast.success('Logged out successfully');
+        } catch (error) {
+          toast.error('Error logging out');
+          console.error('Logout error:', error);
+        }
+      },
+
+      refreshToken: async () => {
+        try {
+          const { data, error } = await supabase.auth.refreshSession();
+          if (error) throw error;
+          
+          const { session } = data;
+          if (session) {
+            set({
+              token: session.access_token,
+              user: session.user,
+              isAuthenticated: true,
+              status: 'success',
+              lastUpdated: Date.now()
+            });
+          }
+        } catch (error) {
+          console.error('Token refresh error:', error);
+          get().logout();
+        }
+      },
+
+      initializeAuth: async () => {
+        set({ loading: true });
+        try {
+          const { data: { session }, error } = await supabase.auth.getSession();
+          if (error) throw error;
+
+          if (session?.user) {
+            set({
+              user: session.user,
+              isAuthenticated: true,
+              token: session.access_token,
+              status: 'success',
+              loading: false,
+              lastUpdated: Date.now()
+            });
+          } else {
+            set({ ...initialState, loading: false });
+          }
+
+          // Set up auth state change listener and return cleanup function
+          const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+              set({
+                user: session?.user ?? null,
+                isAuthenticated: !!session?.user,
+                token: session?.access_token ?? null,
+                status: 'success',
+                loading: false,
+                lastUpdated: Date.now()
+              });
+            } else if (event === 'SIGNED_OUT') {
+              set({
+                ...initialState,
+                loading: false,
+                status: 'idle',
+                lastUpdated: Date.now()
+              });
+            }
+          });
+
+          return () => {
+            subscription.unsubscribe();
+          };
+        } catch (error) {
+          console.error('Auth initialization error:', error);
+          set({ ...initialState, loading: false });
+          return () => {};
+        }
+      },
+    }),
     {
-      name: 'AuthStore',
-      enabled: process.env.NODE_ENV !== 'production'
+      name: 'auth-storage',
+      partialize: (state) => ({
+        user: state.user,
+        token: state.token,
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
   )
 );
-
-// Selector hooks
-export const useUser = () => useAuthStore(state => state.user);
-export const useIsAuthenticated = () => useAuthStore(state => state.isAuthenticated);
-export const useAuthToken = () => useAuthStore(state => state.token);
-export const useAuthActions = () => ({
-  login: useAuthStore(state => state.login),
-  logout: useAuthStore(state => state.logout),
-  refreshToken: useAuthStore(state => state.refreshToken),
-  resetAuth: useAuthStore(state => state.resetAuth)
-});

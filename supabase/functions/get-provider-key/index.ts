@@ -1,37 +1,60 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { corsHeaders } from '../_shared/cors.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.37.0';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
   
   try {
+    // Create a Supabase client with the Auth context of the logged-in user
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'No authorization header provided' }),
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 401 }
+      );
+    }
+    
+    // Create Supabase admin client to access secrets
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      { auth: { persistSession: false } }
+    );
+    
+    // Get the request body
     const { provider, keyType } = await req.json();
     
-    // Construct environment variable name based on provider and key type
-    // Format: PROVIDER_KEYTYPE_APIKEY (e.g., OPENAI_CHAT_APIKEY, STABILITYAI_IMAGE_APIKEY)
-    const envVarName = `${provider.toUpperCase()}_${keyType.toUpperCase()}_APIKEY`;
+    if (!provider) {
+      return new Response(
+        JSON.stringify({ error: 'Provider name is required' }),
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 400 }
+      );
+    }
     
-    // Get the API key from environment variables
-    const apiKey = Deno.env.get(envVarName);
+    // Construct the key name based on the provider and type
+    const keyName = keyType 
+      ? `${provider.toUpperCase()}_${keyType.toUpperCase()}_APIKEY` 
+      : `${provider.toUpperCase()}_APIKEY`;
+    
+    // Fetch the API key from environment variables
+    const apiKey = Deno.env.get(keyName);
     
     if (!apiKey) {
-      // Return error if API key is not configured
       return new Response(
         JSON.stringify({ 
-          error: `API key not configured for ${provider}`,
-          success: false
+          error: `API key not found for provider ${provider}`,
+          keyName
         }),
-        {
-          status: 404,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          }
-        }
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 404 }
       );
     }
     
@@ -41,32 +64,14 @@ serve(async (req) => {
         apiKey,
         provider,
         keyType,
-        success: true
+        keyName
       }),
-      {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      }
+      { headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   } catch (error) {
-    // Log the error
-    console.error(`Error processing request: ${error.message}`);
-    
-    // Return an error response
     return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        success: false
-      }),
-      {
-        status: 500,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      }
+      JSON.stringify({ error: error.message }),
+      { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
     );
   }
 });

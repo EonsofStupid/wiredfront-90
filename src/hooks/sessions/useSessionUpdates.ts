@@ -1,28 +1,20 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { updateChatSession, archiveChatSession } from '@/services/sessions';
-import { logger } from '@/services/chat/LoggingService';
 import { UpdateSessionParams } from '@/types/sessions';
+import { updateSession, archiveSession } from '@/services/sessions';
+import { logger } from '@/services/chat/LoggingService';
 import { SESSION_QUERY_KEYS } from './useSessionCore';
 
 /**
- * Hook for session update functionality
+ * Hook for session update and archive functionality
  */
 export function useSessionUpdates() {
   const queryClient = useQueryClient();
 
-  const { mutateAsync: updateSession } = useMutation({
-    mutationFn: async ({ 
-      sessionId, 
-      params 
-    }: { sessionId: string; params: UpdateSessionParams }) => {
-      const result = await updateChatSession(sessionId, params);
-      if (!result.success) {
-        throw new Error('Failed to update chat session');
-      }
-      return result;
-    },
+  const { mutateAsync: updateSessionMutation } = useMutation({
+    mutationFn: ({ sessionId, params }: { sessionId: string, params: UpdateSessionParams }) => 
+      updateSession(sessionId, params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEYS.SESSIONS });
     },
@@ -32,14 +24,8 @@ export function useSessionUpdates() {
     },
   });
 
-  const { mutateAsync: archiveSession } = useMutation({
-    mutationFn: async (sessionId: string) => {
-      const result = await archiveChatSession(sessionId);
-      if (!result.success) {
-        throw new Error('Failed to archive chat session');
-      }
-      return result;
-    },
+  const { mutateAsync: archiveSessionMutation } = useMutation({
+    mutationFn: (sessionId: string) => archiveSession(sessionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEYS.SESSIONS });
       toast.success('Chat session archived');
@@ -51,7 +37,7 @@ export function useSessionUpdates() {
   });
 
   return {
-    updateSession,
-    archiveSession,
+    updateSession: updateSessionMutation,
+    archiveSession: archiveSessionMutation,
   };
 }

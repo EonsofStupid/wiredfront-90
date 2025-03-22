@@ -1,16 +1,13 @@
 
-import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useChatStore } from '../store/chatStore';
-import { logger } from '@/services/chat/LoggingService';
-import { ChatMode, isChatMode } from '@/types/chat';
-import { validateChatMode } from '@/utils/validation/chatTypes';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+
+// Extended mode types to include 'image'
+export type ChatMode = 'standard' | 'editor' | 'chat-only' | 'image';
 
 interface ChatModeContextType {
-  currentMode: ChatMode;
-  setMode: (mode: ChatMode) => void;
-  isModeSupported: (mode: unknown) => boolean;
+  mode: ChatMode;
   isEditorPage: boolean;
+  setMode?: (mode: ChatMode) => void;
 }
 
 const ChatModeContext = createContext<ChatModeContextType | undefined>(undefined);
@@ -21,63 +18,26 @@ interface ChatModeProviderProps {
 }
 
 export function ChatModeProvider({ children, isEditorPage }: ChatModeProviderProps) {
-  const [currentMode, setCurrentMode] = useState<ChatMode>('chat');
-  const { setCurrentMode: setStoreMode } = useChatStore();
-  const location = useLocation();
-  const navigate = useNavigate();
+  // Default mode based on page context
+  const defaultMode: ChatMode = isEditorPage ? 'editor' : 'standard';
+  const [mode, setMode] = useState<ChatMode>(defaultMode);
 
+  // Reset mode when switching pages
   useEffect(() => {
-    // Get mode from location state if available
-    const locationMode = location.state?.mode;
-    
-    if (locationMode) {
-      // Validate and normalize the mode
-      const validMode = validateChatMode(locationMode, { silent: true, fallback: 'chat' });
-      
-      if (validMode !== currentMode) {
-        setCurrentMode(validMode);
-        setStoreMode(validMode);
-        logger.info('Mode set from location state', { mode: validMode });
-      }
-    }
-  }, [location.state?.mode, setStoreMode, currentMode]);
-
-  const setMode = (mode: ChatMode) => {
-    if (isModeSupported(mode)) {
-      setCurrentMode(mode);
-      setStoreMode(mode);
-      
-      // Update the location state
-      navigate(location.pathname, { 
-        state: { ...location.state, mode } 
-      });
-      
-      logger.info('Mode updated', { mode });
-    } else {
-      logger.warn('Unsupported mode', { mode });
-    }
-  };
-
-  const isModeSupported = (mode: unknown): boolean => {
-    return isChatMode(mode);
-  };
+    setMode(isEditorPage ? 'editor' : 'standard');
+  }, [isEditorPage]);
 
   return (
-    <ChatModeContext.Provider value={{ 
-      currentMode, 
-      setMode, 
-      isModeSupported, 
-      isEditorPage 
-    }}>
+    <ChatModeContext.Provider value={{ mode, isEditorPage, setMode }}>
       {children}
     </ChatModeContext.Provider>
   );
 }
 
-export function useChatMode() {
+export const useChatMode = () => {
   const context = useContext(ChatModeContext);
   if (context === undefined) {
     throw new Error('useChatMode must be used within a ChatModeProvider');
   }
   return context;
-}
+};

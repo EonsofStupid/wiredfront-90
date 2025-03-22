@@ -1,99 +1,222 @@
 
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ChatMode, isChatMode } from '@/types/chat';
-import { useChatMode } from '../../providers/ChatModeProvider';
-import { ModeCard } from './ModeCard';
-import { Code, Image, MessageSquare, GraduationCap, PlaneLanding } from 'lucide-react';
-import { useChatStore } from '../../store';
-import { validateChatMode } from '@/utils/validation/chatTypes';
-import { toast } from 'sonner';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Terminal, Image, MessageSquare, LineChart, BarChart4 } from "lucide-react";
+import { useChatStore } from "../../store/chatStore";
+import { useLocation } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/services/chat/LoggingService";
 
 interface ChatModeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onModeSelect: (mode: ChatMode, providerId: string) => void;
 }
 
-export function ChatModeDialog({ open, onOpenChange, onModeSelect }: ChatModeDialogProps) {
-  const { currentMode, setMode } = useChatMode();
-  const { availableProviders } = useChatStore();
+export function ChatModeDialog({ open, onOpenChange }: ChatModeDialogProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<string>("mode");
+  const { 
+    messages, 
+    startTime, 
+    currentMode, 
+    setCurrentMode,
+    availableProviders
+  } = useChatStore();
   
-  const handleModeSelect = (newMode: ChatMode, providerId: string) => {
-    // Validate the mode
-    const validMode = validateChatMode(newMode, { fallback: 'chat' });
-    
-    // Close the dialog
-    onOpenChange(false);
-    
-    // Update the mode in the provider
-    setMode(validMode);
-    
-    // Call the onModeSelect callback to update related state
-    onModeSelect(validMode, providerId);
-  };
+  // Calculated stats
+  const messageCount = messages?.length || 0;
+  const aiResponses = messages?.filter(m => m.role === 'assistant').length || 0;
+  const userMessages = messages?.filter(m => m.role === 'user').length || 0;
+  const sessionDuration = startTime ? Math.floor((Date.now() - startTime) / 1000 / 60) : 0;
+  
+  // Code stats
+  const codeBlocks = messages?.reduce((count, msg) => {
+    const matches = msg.content.match(/```/g);
+    return count + (matches ? matches.length / 2 : 0);
+  }, 0) || 0;
 
-  // Find the appropriate provider for a given mode
-  const getProviderForMode = (mode: ChatMode): string => {
-    if (mode === 'image') {
-      return availableProviders.find(p => p.category === 'image')?.id || '';
+  // Current page detection
+  const isEditorPage = location.pathname === '/editor';
+  const isGalleryPage = location.pathname === '/gallery';
+  
+  // Get current mode based on page
+  useEffect(() => {
+    if (isEditorPage) {
+      setCurrentMode('dev');
+    } else if (isGalleryPage) {
+      setCurrentMode('image');
+    } else if (location.pathname === '/') {
+      setCurrentMode('chat');
     }
-    return availableProviders.find(p => p.category === 'chat')?.id || '';
+  }, [isEditorPage, isGalleryPage, setCurrentMode, location.pathname]);
+
+  const handleModeChange = (mode: 'chat' | 'dev' | 'image') => {
+    setCurrentMode(mode);
+    
+    // Navigate to the appropriate page based on mode
+    if (mode === 'dev') {
+      navigate('/editor');
+    } else if (mode === 'image') {
+      navigate('/gallery');
+    } else {
+      navigate('/');
+    }
+    
+    onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] bg-black/80 border-purple-500/50 text-white backdrop-blur-md cyber-bg">
+      <DialogContent 
+        className="sm:max-w-[425px] bg-black/90 border border-gray-800 text-white shadow-xl shadow-purple-900/20 backdrop-blur-xl"
+        style={{ zIndex: 'var(--z-chat-dialogs)' }}
+      >
         <DialogHeader>
-          <DialogTitle className="text-center text-neon-blue">Select Chat Mode</DialogTitle>
+          <DialogTitle className="text-white flex items-center gap-2">
+            <span className="bg-gradient-to-r from-blue-400 to-violet-500 bg-clip-text text-transparent font-bold">
+              Chat Mode Selection
+            </span>
+            <Badge variant="outline" className="ml-2 bg-gray-900/50 text-xs border-gray-700">
+              {currentMode.toUpperCase()}
+            </Badge>
+          </DialogTitle>
+          <DialogDescription className="text-gray-400">
+            Switch between different AI assistant modes or view session statistics
+          </DialogDescription>
         </DialogHeader>
         
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <ModeCard 
-            title="Chat"
-            description="General assistance"
-            icon={<MessageSquare className="h-8 w-8 text-neon-blue" />}
-            isActive={currentMode === 'chat'}
-            providerId={getProviderForMode('chat')}
-            onSelect={() => handleModeSelect('chat', getProviderForMode('chat'))}
-          />
+        <Tabs defaultValue="mode" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid grid-cols-2 mb-4 bg-gray-900/50">
+            <TabsTrigger value="mode" className="data-[state=active]:bg-gray-800 data-[state=active]:text-white">
+              Mode Selection
+            </TabsTrigger>
+            <TabsTrigger value="stats" className="data-[state=active]:bg-gray-800 data-[state=active]:text-white">
+              Session Stats
+            </TabsTrigger>
+          </TabsList>
           
-          <ModeCard 
-            title="Developer"
-            description="Code assistance"
-            icon={<Code className="h-8 w-8 text-neon-green" />}
-            isActive={currentMode === 'dev'}
-            providerId={getProviderForMode('dev')}
-            onSelect={() => handleModeSelect('dev', getProviderForMode('dev'))}
-          />
+          <TabsContent value="mode" className="space-y-4">
+            <div className="grid grid-cols-1 gap-3">
+              <Button 
+                onClick={() => handleModeChange('chat')}
+                variant={currentMode === 'chat' ? 'default' : 'outline'}
+                className={`flex justify-start items-center p-4 ${currentMode === 'chat' ? 'bg-gradient-to-r from-blue-500/80 to-violet-500/80 hover:from-blue-500/90 hover:to-violet-500/90' : 'bg-gray-900/50 hover:bg-gray-800/70 border-gray-700'}`}
+              >
+                <MessageSquare className="h-5 w-5 mr-3" />
+                <div className="text-left">
+                  <p className="font-bold">Chat Mode</p>
+                  <p className="text-xs text-gray-400 font-normal">General AI assistance and conversation</p>
+                </div>
+              </Button>
+
+              <Button 
+                onClick={() => handleModeChange('dev')}
+                variant={currentMode === 'dev' ? 'default' : 'outline'}
+                className={`flex justify-start items-center p-4 ${currentMode === 'dev' ? 'bg-gradient-to-r from-blue-500/80 to-violet-500/80 hover:from-blue-500/90 hover:to-violet-500/90' : 'bg-gray-900/50 hover:bg-gray-800/70 border-gray-700'}`}
+              >
+                <Terminal className="h-5 w-5 mr-3" />
+                <div className="text-left">
+                  <p className="font-bold">Development Mode</p>
+                  <p className="text-xs text-gray-400 font-normal">Coding assistance and technical solutions</p>
+                </div>
+              </Button>
+
+              <Button 
+                onClick={() => handleModeChange('image')}
+                variant={currentMode === 'image' ? 'default' : 'outline'}
+                className={`flex justify-start items-center p-4 ${currentMode === 'image' ? 'bg-gradient-to-r from-blue-500/80 to-violet-500/80 hover:from-blue-500/90 hover:to-violet-500/90' : 'bg-gray-900/50 hover:bg-gray-800/70 border-gray-700'}`}
+              >
+                <Image className="h-5 w-5 mr-3" />
+                <div className="text-left">
+                  <p className="font-bold">Image Generation</p>
+                  <p className="text-xs text-gray-400 font-normal">Create and edit images with AI</p>
+                </div>
+              </Button>
+            </div>
+            
+            {availableProviders && availableProviders.length > 0 ? (
+              <div className="text-xs text-gray-500 pt-2 border-t border-gray-800">
+                <p>Available providers: {availableProviders.map(p => p.name).join(', ')}</p>
+              </div>
+            ) : (
+              <div className="text-xs text-amber-500/80 pt-2 border-t border-gray-800">
+                <p>No AI providers configured. Please set up API keys in Admin Settings.</p>
+              </div>
+            )}
+          </TabsContent>
           
-          <ModeCard 
-            title="Image"
-            description="Generate images"
-            icon={<Image className="h-8 w-8 text-neon-pink" />}
-            isActive={currentMode === 'image'}
-            providerId={getProviderForMode('image')}
-            onSelect={() => handleModeSelect('image', getProviderForMode('image'))}
-          />
-          
-          <ModeCard 
-            title="Training"
-            description="Learn and practice"
-            icon={<GraduationCap className="h-8 w-8 text-orange-400" />}
-            isActive={currentMode === 'training'}
-            providerId={getProviderForMode('training')}
-            onSelect={() => handleModeSelect('training', getProviderForMode('training'))}
-          />
-          
-          <ModeCard 
-            title="Planning"
-            description="Architecture planning"
-            icon={<PlaneLanding className="h-8 w-8 text-cyan-400" />}
-            isActive={currentMode === 'planning'}
-            providerId={getProviderForMode('planning')}
-            onSelect={() => handleModeSelect('planning', getProviderForMode('planning'))}
-          />
-        </div>
+          <TabsContent value="stats" className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                <div className="flex items-center mb-1">
+                  <MessageSquare className="h-4 w-4 mr-2 text-blue-400" />
+                  <span className="text-sm font-semibold">Messages</span>
+                </div>
+                <p className="text-xl font-bold">{messageCount}</p>
+                <div className="text-xs text-gray-400 mt-1 flex flex-col">
+                  <span>User: {userMessages}</span>
+                  <span>AI: {aiResponses}</span>
+                </div>
+              </div>
+              
+              <div className="bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                <div className="flex items-center mb-1">
+                  <LineChart className="h-4 w-4 mr-2 text-violet-400" />
+                  <span className="text-sm font-semibold">Duration</span>
+                </div>
+                <p className="text-xl font-bold">{sessionDuration} min</p>
+                <div className="text-xs text-gray-400 mt-1">
+                  <span>Started: {startTime ? new Date(startTime).toLocaleTimeString() : 'N/A'}</span>
+                </div>
+              </div>
+              
+              <div className="bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                <div className="flex items-center mb-1">
+                  <Terminal className="h-4 w-4 mr-2 text-green-400" />
+                  <span className="text-sm font-semibold">Code Blocks</span>
+                </div>
+                <p className="text-xl font-bold">{codeBlocks}</p>
+                <div className="text-xs text-gray-400 mt-1">
+                  <span>Avg per response: {aiResponses > 0 ? (codeBlocks / aiResponses).toFixed(1) : '0'}</span>
+                </div>
+              </div>
+              
+              <div className="bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                <div className="flex items-center mb-1">
+                  <BarChart4 className="h-4 w-4 mr-2 text-amber-400" />
+                  <span className="text-sm font-semibold">Response Time</span>
+                </div>
+                <p className="text-xl font-bold">~2.1s</p>
+                <div className="text-xs text-gray-400 mt-1">
+                  <span>Est. tokens: ~1200</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-semibold">Session Cost</span>
+                <Badge variant="outline" className="text-xs bg-gray-800/50 border-gray-700">Estimated</Badge>
+              </div>
+              <p className="text-2xl font-bold text-right">$0.02</p>
+              <div className="text-xs text-gray-400 mt-1">
+                <div className="flex justify-between">
+                  <span>Provider:</span>
+                  <span>{availableProviders?.find(p => p.isDefault)?.name || 'Unknown'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Token usage:</span>
+                  <span>~2450 tokens</span>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

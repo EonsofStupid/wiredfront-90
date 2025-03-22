@@ -1,142 +1,90 @@
-import { ChatState } from '../../../types/chat-store-types';
-import { FeatureKey, SetState, GetState, convertFeatureKeyToChatFeature } from '../types';
-import { logger } from '@/services/chat/LoggingService';
-import { supabase } from '@/integrations/supabase/client';
 
-export function createFeatureToggleActions(
+import { ChatState } from '../../../types/chat-store-types';
+import { FeatureKey, SetState, GetState } from '../types';
+import { logFeatureToggle } from './toggle-utils';
+
+// Create feature toggle-specific actions
+export const createFeatureToggleActions = (
   set: SetState<ChatState>,
   get: GetState<ChatState>
-) {
-  return {
-    toggleFeature: async (feature: FeatureKey) => {
-      // Convert to a valid feature state key
-      const featureStateKey = convertFeatureKeyToChatFeature(feature);
-      
-      // Skip if feature can't be mapped to a valid key
-      if (!featureStateKey) {
-        logger.warn(`Feature ${String(feature)} cannot be toggled: invalid feature key`);
-        return;
-      }
-      
-      const currentState = get().features[featureStateKey];
-      
-      try {
-        // Update state optimistically
-        set(
-          state => ({
-            features: {
-              ...state.features,
-              [featureStateKey]: !currentState
-            }
-          }),
-          false,
-          { type: 'toggleFeature', feature: featureStateKey }
-        );
+) => ({
+  toggleFeature: (feature: FeatureKey) =>
+    set(
+      (state: ChatState) => {
+        const newValue = !state.features[feature];
+        
+        // Log the change to the database
+        logFeatureToggle(feature, state.features[feature], newValue);
+        
+        return {
+          ...state,
+          features: {
+            ...state.features,
+            [feature]: newValue,
+          },
+        };
+      },
+      false,
+      { type: 'features/toggle', feature }
+    ),
 
-        // Log the toggle
-        await supabase.from('feature_toggle_history').insert({
-          feature_name: String(feature),
-          old_value: currentState,
-          new_value: !currentState,
-          metadata: { source: 'client' }
-        });
+  enableFeature: (feature: FeatureKey) =>
+    set(
+      (state: ChatState) => {
+        // Only log if the feature wasn't already enabled
+        if (!state.features[feature]) {
+          logFeatureToggle(feature, state.features[feature], true);
+        }
+        
+        return {
+          ...state,
+          features: {
+            ...state.features,
+            [feature]: true,
+          },
+        };
+      },
+      false,
+      { type: 'features/enable', feature }
+    ),
 
-        logger.info(`Feature ${String(feature)} toggled to ${!currentState}`);
-      } catch (error) {
-        // Revert on error
-        logger.error('Failed to toggle feature:', error);
-        set(
-          state => ({
-            features: {
-              ...state.features,
-              [featureStateKey]: currentState
-            }
-          }),
-          false,
-          { type: 'toggleFeature', feature: featureStateKey }
-        );
-      }
-    },
-    
-    enableFeature: (feature: FeatureKey) => {
-      // Convert to a valid feature state key
-      const featureStateKey = convertFeatureKeyToChatFeature(feature);
-      
-      // Skip if feature can't be mapped to a valid key
-      if (!featureStateKey) {
-        logger.warn(`Feature ${String(feature)} cannot be enabled: invalid feature key`);
-        return;
-      }
-      
-      if (!(featureStateKey in get().features)) {
-        logger.warn(`Feature '${String(featureStateKey)}' does not exist in the store`);
-        return;
-      }
-      
-      set(
-        state => ({
+  disableFeature: (feature: FeatureKey) =>
+    set(
+      (state: ChatState) => {
+        // Only log if the feature wasn't already disabled
+        if (state.features[feature]) {
+          logFeatureToggle(feature, state.features[feature], false);
+        }
+        
+        return {
+          ...state,
           features: {
             ...state.features,
-            [featureStateKey]: true
-          }
-        }),
-        false,
-        { type: 'enableFeature', feature: featureStateKey }
-      );
-    },
-    
-    disableFeature: (feature: FeatureKey) => {
-      // Convert to a valid feature state key
-      const featureStateKey = convertFeatureKeyToChatFeature(feature);
-      
-      // Skip if feature can't be mapped to a valid key
-      if (!featureStateKey) {
-        logger.warn(`Feature ${String(feature)} cannot be disabled: invalid feature key`);
-        return;
-      }
-      
-      if (!(featureStateKey in get().features)) {
-        logger.warn(`Feature '${String(featureStateKey)}' does not exist in the store`);
-        return;
-      }
-      
-      set(
-        state => ({
+            [feature]: false,
+          },
+        };
+      },
+      false,
+      { type: 'features/disable', feature }
+    ),
+
+  setFeatureState: (feature: FeatureKey, isEnabled: boolean) =>
+    set(
+      (state: ChatState) => {
+        // Only log if there's an actual change
+        if (state.features[feature] !== isEnabled) {
+          logFeatureToggle(feature, state.features[feature], isEnabled);
+        }
+        
+        return {
+          ...state,
           features: {
             ...state.features,
-            [featureStateKey]: false
-          }
-        }),
-        false,
-        { type: 'disableFeature', feature: featureStateKey }
-      );
-    },
-    
-    setFeatureState: (feature: FeatureKey, isEnabled: boolean) => {
-      // Convert to a valid feature state key
-      const featureStateKey = convertFeatureKeyToChatFeature(feature);
-      
-      // Skip if feature can't be mapped to a valid key
-      if (!featureStateKey) {
-        logger.warn(`Feature ${String(feature)} state cannot be set: invalid feature key`);
-        return;
-      }
-      
-      if (!(featureStateKey in get().features)) {
-        logger.warn(`Feature '${String(featureStateKey)}' does not exist in the store`);
-        return;
-      }
-      
-      set(
-        state => ({
-          features: {
-            ...state.features,
-            [featureStateKey]: isEnabled
-          }
-        }),
-        false,
-        { type: 'setFeatureState', feature: featureStateKey, isEnabled }
-      );
-    }
-  };
-}
+            [feature]: isEnabled,
+          },
+        };
+      },
+      false,
+      { type: 'features/setState', feature, isEnabled }
+    ),
+});

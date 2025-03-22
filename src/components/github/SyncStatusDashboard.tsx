@@ -24,11 +24,6 @@ interface SyncLog {
   created_at: string;
 }
 
-interface GithubRepository {
-  repo_name: string;
-  repo_owner: string;
-}
-
 export function SyncStatusDashboard() {
   const [loading, setLoading] = useState(true);
   const [syncLogs, setSyncLogs] = useState<SyncLog[]>([]);
@@ -44,46 +39,34 @@ export function SyncStatusDashboard() {
   const fetchSyncLogs = async () => {
     setLoading(true);
     try {
-      // First, get all repositories for easier joining
-      const { data: repoData, error: repoError } = await supabase
-        .from('github_repositories' as any)
-        .select('id, repo_name, repo_owner');
-      
-      if (repoError) throw repoError;
-      
-      const repoMap = new Map<string, GithubRepository>();
-      if (repoData) {
-        repoData.forEach((repo: any) => {
-          repoMap.set(repo.id, { 
-            repo_name: repo.repo_name, 
-            repo_owner: repo.repo_owner 
-          });
-        });
-      }
-
-      // Now fetch sync logs
-      const { data: logsData, error: logsError } = await supabase
-        .from('github_sync_logs' as any)
-        .select('*')
-        .order('created_at', { ascending: false })
+      // Query that joins github_sync_logs with github_repositories to get repo name
+      const { data, error } = await supabase
+        .from("github_sync_logs")
+        .select(`
+          id,
+          repo_id,
+          sync_type,
+          status,
+          details,
+          created_at,
+          github_repositories(repo_name, repo_owner)
+        `)
+        .order("created_at", { ascending: false })
         .limit(50);
 
-      if (logsError) throw logsError;
+      if (error) throw error;
 
-      // Transform the data manually to include repo name and owner
-      const transformedData = logsData.map((log: any) => {
-        const repo = repoMap.get(log.repo_id);
-        return {
-          id: log.id,
-          repo_id: log.repo_id,
-          repo_name: repo?.repo_name || 'Unknown',
-          repo_owner: repo?.repo_owner || 'Unknown',
-          sync_type: log.sync_type,
-          status: log.status,
-          details: log.details,
-          created_at: log.created_at
-        };
-      });
+      // Transform the data to include repo name and owner
+      const transformedData = data.map(log => ({
+        id: log.id,
+        repo_id: log.repo_id,
+        repo_name: log.github_repositories?.repo_name || 'Unknown',
+        repo_owner: log.github_repositories?.repo_owner || 'Unknown',
+        sync_type: log.sync_type,
+        status: log.status,
+        details: log.details,
+        created_at: log.created_at
+      }));
 
       setSyncLogs(transformedData);
     } catch (error) {

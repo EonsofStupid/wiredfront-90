@@ -3,10 +3,17 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Info, Bug, FileText, GitBranch } from "lucide-react";
 import { format } from "date-fns";
-import { SystemLog } from "@/utils/typeUtils";
+import { Json } from "@/integrations/supabase/types";
 
 interface LogItemProps {
-  log: SystemLog;
+  log: {
+    id: string;
+    timestamp: string;
+    level: string;
+    source: string;
+    message: string;
+    metadata: Json | null;
+  };
   isExpanded: boolean;
   onToggleExpand: () => void;
 }

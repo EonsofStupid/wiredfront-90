@@ -52,8 +52,6 @@ export function EnforcementTab({
             <SelectItem value="never">Never (Testing only)</SelectItem>
             <SelectItem value="role_based">Role-based (By user role)</SelectItem>
             <SelectItem value="mode_based">Mode-based (By chat mode)</SelectItem>
-            <SelectItem value="hard">Hard (Strict enforcement)</SelectItem>
-            <SelectItem value="soft">Soft (Warning only)</SelectItem>
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground mt-1">

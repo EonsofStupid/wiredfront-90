@@ -1,7 +1,8 @@
-import { cn } from "@/lib/utils";
-import { useRoleStore } from "@/stores/role";
-import { AlertCircle, Loader2, LockIcon } from "lucide-react";
+
 import React from "react";
+import { cn } from "@/lib/utils";
+import { Loader2, LockIcon, AlertCircle } from "lucide-react";
+import { useRoleStore } from "@/stores/role";
 
 interface AdminCardProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "accent" | "highlight";
@@ -40,7 +41,7 @@ export const AdminCard = ({
           <Loader2 className="h-8 w-8 animate-spin text-white/80" />
         </div>
       )}
-
+      
       {!hasAccess && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-dark/80 backdrop-blur-sm z-10 text-white/80">
           <LockIcon className="h-12 w-12 mb-3 opacity-70" />
@@ -66,7 +67,10 @@ export const AdminCardHeader = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("mb-3 flex flex-col space-y-1.5", className)} {...props} />
+  <div
+    className={cn("mb-3 flex flex-col space-y-1.5", className)}
+    {...props}
+  />
 );
 
 export const AdminCardTitle = ({
@@ -86,7 +90,10 @@ export const AdminCardDescription = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLParagraphElement>) => (
-  <p className={cn("text-sm text-muted-foreground", className)} {...props} />
+  <p
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
 );
 
 export const AdminCardContent = ({
@@ -100,7 +107,10 @@ export const AdminCardFooter = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("mt-4 flex items-center pt-2", className)} {...props} />
+  <div
+    className={cn("mt-4 flex items-center pt-2", className)}
+    {...props}
+  />
 );
 
 export const AdminCardActions = ({

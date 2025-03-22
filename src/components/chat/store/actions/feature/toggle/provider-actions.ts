@@ -1,40 +1,34 @@
 
-import { ChatState, ChatProvider } from '../../../types/chat-store-types';
+import { ChatState } from '../../../types/chat-store-types';
 import { SetState, GetState } from '../types';
+import { logProviderChange } from './toggle-utils';
 
-export function createProviderActions(
+// Create provider-specific actions
+export const createProviderActions = (
   set: SetState<ChatState>,
   get: GetState<ChatState>
-) {
-  return {
-    updateChatProvider: (providers: ChatProvider[]) => {
-      set(
-        state => ({
+) => ({
+  updateChatProvider: (providers: ChatState['availableProviders']) =>
+    set(
+      (state: ChatState) => {
+        const newDefaultProvider = providers.find((p) => p.isDefault) || providers[0] || state.currentProvider;
+        
+        // If the provider is changing, log it
+        if (state.currentProvider?.id !== newDefaultProvider?.id) {
+          logProviderChange(state.currentProvider?.name, newDefaultProvider?.name);
+        }
+        
+        return {
+          ...state,
           availableProviders: providers,
-        }),
-        false,
-        { type: 'updateChatProvider', providers }
-      );
-    },
-
-    updateCurrentProvider: (provider: ChatProvider) => {
-      set(
-        state => ({
-          currentProvider: provider,
-        }),
-        false,
-        { type: 'updateCurrentProvider', provider }
-      );
-    },
-
-    updateAvailableProviders: (providers: ChatProvider[]) => {
-      set(
-        state => ({
-          availableProviders: providers,
-        }),
-        false,
-        { type: 'updateAvailableProviders', providers }
-      );
-    },
-  };
-}
+          currentProvider: newDefaultProvider,
+          providers: {
+            ...state.providers,
+            availableProviders: providers,
+          },
+        };
+      },
+      false,
+      { type: 'providers/update', count: providers.length }
+    ),
+});

@@ -1,37 +1,102 @@
-import { useGitHubStore } from '@/stores/features/github';
 
-export function useGitHubRepository(repoId: string) {
-  const {
-    repositories,
-    branches,
-    commits,
-    issues,
-    pullRequests,
-    isLoading,
-    error,
-    fetchBranches,
-    fetchCommits,
-    fetchIssues,
-    fetchPullRequests
-  } = useGitHubStore();
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-  const repository = repositories.find(repo => repo.id === repoId);
-  const repoBranches = branches[repoId] || [];
-  const repoCommits = commits[repoId] || [];
-  const repoIssues = issues[repoId] || [];
-  const repoPullRequests = pullRequests[repoId] || [];
+export interface GitHubRepoData {
+  repoUrl: string;
+  repoName: string;
+  repoOwner: string;
+}
+
+export function useGitHubRepository() {
+  const [isCreating, setIsCreating] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<string | null>(null);
+
+  const createRepository = async (
+    projectName: string,
+    projectId: string,
+    description?: string
+  ): Promise<GitHubRepoData | null> => {
+    setIsCreating(true);
+    try {
+      const user = await supabase.auth.getUser();
+      const userId = user.data.user?.id;
+      
+      if (!userId) {
+        throw new Error("User not authenticated");
+      }
+
+      const response = await supabase.functions.invoke("github-repo-management", {
+        body: { 
+          action: "create-repo", 
+          payload: {
+            userId,
+            projectId,
+            projectName,
+            description
+          }
+        }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to create GitHub repository");
+      }
+      
+      toast.success("GitHub repository created successfully");
+      return response.data;
+    } catch (error) {
+      console.error("Error creating GitHub repository:", error);
+      toast.error(error.message || "Failed to create GitHub repository");
+      return null;
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const checkGitHubStatus = async (): Promise<{
+    connected: boolean;
+    status: string;
+    username: string | null;
+  } | null> => {
+    setIsChecking(true);
+    try {
+      const user = await supabase.auth.getUser();
+      const userId = user.data.user?.id;
+      
+      if (!userId) {
+        throw new Error("User not authenticated");
+      }
+
+      const response = await supabase.functions.invoke("github-repo-management", {
+        body: { 
+          action: "check-github-status", 
+          payload: {
+            userId
+          }
+        }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to check GitHub status");
+      }
+
+      setConnectionStatus(response.data.status);
+      return response.data;
+    } catch (error) {
+      console.error("Error checking GitHub status:", error);
+      return null;
+    } finally {
+      setIsChecking(false);
+    }
+  };
 
   return {
-    repository,
-    branches: repoBranches,
-    commits: repoCommits,
-    issues: repoIssues,
-    pullRequests: repoPullRequests,
-    isLoading,
-    error,
-    fetchBranches: () => fetchBranches(repoId),
-    fetchCommits: (branch?: string) => fetchCommits(repoId, branch),
-    fetchIssues: () => fetchIssues(repoId),
-    fetchPullRequests: () => fetchPullRequests(repoId)
+    createRepository,
+    checkGitHubStatus,
+    isCreating,
+    isChecking,
+    connectionStatus
   };
 }

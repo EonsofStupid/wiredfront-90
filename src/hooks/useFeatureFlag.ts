@@ -3,13 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import { useRoleStore } from "@/stores/role";
-import { FeatureFlag, mapFeatureFlagToChat } from "@/types/admin/settings/feature-flags";
-import { AppRole } from "@/integrations/supabase/types/enums";
+import { Database } from "@/integrations/supabase/types";
+import { FeatureFlag } from "@/types/admin/settings/feature-flags";
 
 export function useFeatureFlag(flagKey: string) {
   const { user } = useAuthStore();
   const { roles } = useRoleStore();
-  const userRole = roles[0] as AppRole;
+  const userRole = roles[0] as Database["public"]["Enums"]["app_role"];
 
   const { data, isLoading } = useQuery({
     queryKey: ['feature-flag', flagKey],
@@ -34,8 +34,7 @@ export function useFeatureFlag(flagKey: string) {
           created_at: null,
           updated_at: null,
           created_by: null,
-          updated_by: null,
-          metadata: null
+          updated_by: null
         } as FeatureFlag;
       }
 
@@ -58,7 +57,7 @@ export function useFeatureFlag(flagKey: string) {
     }
     
     // Check percentage rollout
-    if (data.rollout_percentage && data.rollout_percentage < 100) {
+    if (data.rollout_percentage < 100) {
       // Use user ID as consistent seed for randomization
       // This ensures a user always gets the same result
       if (!user?.id) return false;
@@ -76,9 +75,7 @@ export function useFeatureFlag(flagKey: string) {
   return {
     isEnabled: isEnabled(),
     isLoading,
-    featureFlag: data,
-    // Add helper for chat features
-    chatFeatureKey: data?.key ? mapFeatureFlagToChat(data.key as any) : null
+    featureFlag: data
   };
 }
 

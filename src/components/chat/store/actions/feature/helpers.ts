@@ -14,7 +14,7 @@ export const logFeatureToggle = async (
     if (!userData?.user) return;
 
     // Log to feature_toggle_history table
-    await supabase.from('feature_toggle_history' as any).insert({
+    await supabase.from('feature_toggle_history').insert({
       user_id: userData.user.id,
       feature_name: feature,
       old_value: oldValue,
@@ -23,7 +23,7 @@ export const logFeatureToggle = async (
     });
 
     // Log feature usage
-    await supabase.from('feature_usage' as any).insert({
+    await supabase.from('feature_usage').insert({
       user_id: userData.user.id,
       feature_name: feature,
       context: { action: 'toggle', new_state: newValue }
@@ -43,7 +43,7 @@ export const logProviderChange = async (oldProvider: string | undefined, newProv
     const { data: userData } = await supabase.auth.getUser();
     if (!userData?.user) return;
 
-    await supabase.from('provider_change_log' as any).insert({
+    await supabase.from('provider_change_log').insert({
       user_id: userData.user.id,
       provider_name: newProvider,
       old_provider: oldProvider,
