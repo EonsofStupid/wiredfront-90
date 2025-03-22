@@ -1,10 +1,9 @@
-
-import { cn } from '@/lib/utils';
 import { useChatLayoutStore } from '@/features/chat/store/chatLayoutStore';
 import { useChatModeStore } from '@/features/chat/store/chatModeStore';
+import { cn } from '@/lib/utils';
 import React, { useRef } from 'react';
-import ChatContent from '../ChatContent';
-import ChatInputArea from '../ChatInputArea';
+import { ChatContent } from '../ChatContent/ChatContent';
+import { ChatInputArea } from '../ChatInputArea/ChatInputArea';
 import ChatHeader from './ChatHeader';
 
 interface ChatContainerProps {

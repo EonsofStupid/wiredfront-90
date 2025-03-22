@@ -1,16 +1,15 @@
-
+import { useChatCombined } from "@/stores/features/chat";
+import { ChatMode } from "@/types/chat/modes";
 import { DndContext } from "@dnd-kit/core";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { useViewportAwareness } from "../../hooks/useViewportAwareness";
 import { logger } from "../../services/LoggingService";
-import { useChatLayoutStore } from "@/features/chat/store/chatLayoutStore";
-import { useChatModeStore } from "@/features/chat/store/chatModeStore";
+import "../../styles/index.css";
+import { IconStack } from "../IconStack";
+import { ChatButton } from "../ui/ChatButton";
 import ChatContainer from "./ChatContainer";
 import ChatSidebar from "./ChatSidebar";
-import { ChatButton } from "../ui/ChatButton";
-import IconStack from "../IconStack";
-import "../../styles/index.css";
 
 export function DraggableChat() {
   const {
@@ -21,10 +20,10 @@ export function DraggableChat() {
     scale,
     docked,
     position,
-    setPosition
-  } = useChatLayoutStore();
+    setPosition,
+    currentMode
+  } = useChatCombined();
 
-  const { currentMode } = useChatModeStore();
   const { containerRef, isOverflowing } = useViewportAwareness();
 
   // Load position from localStorage on mount
@@ -86,11 +85,11 @@ export function DraggableChat() {
         </AnimatePresence>
 
         {/* Add IconStack component with proper mode */}
-        <IconStack 
-          position={dockPosition === 'bottom-right' ? 'right' : 'left'} 
-          currentMode={currentMode}
+        <IconStack
+          position={dockPosition === 'bottom-right' ? 'right' : 'left'}
+          currentMode={currentMode as ChatMode}
         />
-        
+
         <ChatContainer dockPosition={dockPosition} />
       </motion.div>
     </DndContext>

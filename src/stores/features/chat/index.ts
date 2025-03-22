@@ -1,4 +1,3 @@
-
 /**
  * Chat feature store exports
  */
@@ -12,11 +11,14 @@ export * from './messageStore';
 // Export chat session management
 export * from './sessionStore';
 
+// Export chat layout management
+export * from './layoutStore';
+
 // Export combined hooks
-import { useChatModeStore } from './modeStore';
+import { useChatLayoutStore } from './layoutStore';
 import { useChatMessageStore } from './messageStore';
+import { useChatModeStore } from './modeStore';
 import { useChatSessionStore } from './sessionStore';
-import { useChatLayoutStore } from '@/features/chat/store/chatLayoutStore';
 
 /**
  * Combined access to all chat stores
@@ -26,14 +28,14 @@ export const useChatCombined = () => {
   const messages = useChatMessageStore();
   const session = useChatSessionStore();
   const layout = useChatLayoutStore();
-  
+
   return {
     // Mode
     currentMode: mode.currentMode,
     previousMode: mode.previousMode,
     setMode: mode.setMode,
     switchMode: mode.switchMode,
-    
+
     // Messages
     messages: messages.messages,
     isLoading: messages.isLoading,
@@ -43,14 +45,14 @@ export const useChatCombined = () => {
     updateMessage: messages.updateMessage,
     removeMessage: messages.removeMessage,
     clearMessages: messages.clearMessages,
-    
+
     // Session
     currentSession: session.currentSession,
     sessions: session.sessions,
     createSession: session.createSession,
     updateSession: session.updateSession,
     deleteSession: session.deleteSession,
-    
+
     // Layout
     isOpen: layout.isOpen,
     isMinimized: layout.isMinimized,

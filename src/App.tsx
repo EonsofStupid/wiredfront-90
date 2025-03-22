@@ -1,21 +1,20 @@
-
 import { GuestCTA } from "@/components/auth/GuestCTA";
 import { DraggableChat } from "@/features/chat/components/DraggableChat";
 import { useSyncModeWithNavigation } from "@/features/chat/hooks/useSyncModeWithNavigation";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useMobile } from "@/hooks/use-mobile";
 import { useAuthStore } from "@/stores/auth";
 import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import MobileExperience from "./mobile";
-import { AppRoutes } from "./routes";
-import { PUBLIC_ROUTES, ADMIN_ROUTES } from "./routes";
+import { AppRoutes, PUBLIC_ROUTES } from "./routes";
+import { ADMIN_ROUTES } from "./routes/admin";
 import { RouteLoggingService } from "./services/navigation/RouteLoggingService";
 
 const App = () => {
-  const { isMobile } = useIsMobile();
+  const isMobile = useMobile();
   const location = useLocation();
-  
+
   // Initialize auth from our consolidated auth store
   const { initializeAuth, isAuthenticated, user } = useAuthStore();
 
@@ -24,11 +23,16 @@ const App = () => {
   useSyncModeWithNavigation();
 
   useEffect(() => {
+    let cleanup: (() => void) | undefined;
+
     // Initialize auth on app load
-    const cleanup = initializeAuth();
+    initializeAuth().then(unsubscribe => {
+      cleanup = unsubscribe;
+    });
+
     return () => {
-      if (cleanup && typeof cleanup === 'function') {
-        cleanup().catch(console.error);
+      if (cleanup) {
+        cleanup();
       }
     };
   }, [initializeAuth]);

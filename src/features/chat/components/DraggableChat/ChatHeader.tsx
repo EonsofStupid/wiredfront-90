@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { useChatCombined } from '@/stores/features/chat';
 import { Maximize2, Minimize2, Pin, PinOff, X, Zap } from 'lucide-react';
 import React from 'react';
-import ChatFeatures from './ChatFeatures';
+import { ChatFeatures } from './ChatFeatures';
 
 interface ChatHeaderProps {
   className?: string;
