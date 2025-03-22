@@ -1,8 +1,8 @@
+import { ChatButton } from "@/components/chat/ui/ChatButton";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ChatButton } from "@/features/chat/components/ui/ChatButton";
 import {
     chatIsDockedAtom,
     chatIsMinimizedAtom,

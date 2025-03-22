@@ -1,8 +1,7 @@
-
-import React from "react";
 import { cn } from "@/lib/utils";
-import { Loader2, LockIcon, AlertCircle } from "lucide-react";
-import { useRoleStore } from "@/stores/role";
+import { useRoleStore } from "@/stores/features/chat/roleStore";
+import { AlertCircle, Loader2, LockIcon } from "lucide-react";
+import React from "react";
 
 interface AdminCardProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "accent" | "highlight";
@@ -41,7 +40,7 @@ export const AdminCard = ({
           <Loader2 className="h-8 w-8 animate-spin text-white/80" />
         </div>
       )}
-      
+
       {!hasAccess && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-dark/80 backdrop-blur-sm z-10 text-white/80">
           <LockIcon className="h-12 w-12 mb-3 opacity-70" />
