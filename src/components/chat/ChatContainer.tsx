@@ -1,6 +1,5 @@
-
-import { cn } from "@/lib/utils";
 import { useChat } from "@/hooks/useChat";
+import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { ChatContent } from "./ChatContent";
@@ -8,7 +7,7 @@ import { ChatHeader } from "./ChatHeader";
 import { ChatInputArea } from "./ChatInputArea";
 import { ChatButton } from "./ui/ChatButton";
 
-export function DraggableChat() {
+export function ChatContainer() {
   const {
     isOpen,
     toggleOpen,
@@ -16,12 +15,12 @@ export function DraggableChat() {
     docked,
     position,
     scale,
-    setPosition
+    setPosition,
   } = useChat();
 
   // Load position from store on mount
   useEffect(() => {
-    const savedPosition = localStorage.getItem('chatPosition');
+    const savedPosition = localStorage.getItem("chatPosition");
     if (savedPosition) {
       try {
         const positionData = JSON.parse(savedPosition);
@@ -29,44 +28,52 @@ export function DraggableChat() {
           setPosition(positionData);
         }
       } catch (error) {
-        console.error('Failed to parse saved chat position', { error });
+        console.error("Failed to parse saved chat position", { error });
       }
     }
   }, [setPosition]);
 
   // Save position to localStorage when it changes
   useEffect(() => {
-    localStorage.setItem('chatPosition', JSON.stringify(position));
+    localStorage.setItem("chatPosition", JSON.stringify(position));
   }, [position]);
 
   const togglePosition = () => {
     setPosition({
       x: position.x > window.innerWidth / 2 ? 0 : window.innerWidth,
-      y: position.y
+      y: position.y,
     });
   };
 
   if (!isOpen) {
-    return <ChatButton position={position} scale={scale} onClick={toggleOpen} />;
+    return (
+      <ChatButton position={position} scale={scale} onClick={toggleOpen} />
+    );
   }
 
   // Determine position class based on position state
-  const dockPosition = position.x > window.innerWidth / 2 ? 'bottom-right' : 'bottom-left';
+  const dockPosition =
+    position.x > window.innerWidth / 2 ? "bottom-right" : "bottom-left";
 
   return (
     <div>
       <motion.div
         className={cn(
           "fixed z-50 flex gap-4",
-          docked ? `bottom-4 ${dockPosition === 'bottom-right' ? 'right-4' : 'left-4'}` : ''
+          docked
+            ? `bottom-4 ${
+                dockPosition === "bottom-right" ? "right-4" : "left-4"
+              }`
+            : ""
         )}
         style={{
-          transformOrigin: dockPosition === 'bottom-right' ? 'bottom right' : 'bottom left',
+          transformOrigin:
+            dockPosition === "bottom-right" ? "bottom right" : "bottom left",
           transform: `scale(${scale})`,
         }}
         animate={{
           scale: scale,
-          transition: { duration: 0.3, ease: "easeOut" }
+          transition: { duration: 0.3, ease: "easeOut" },
         }}
       >
         <div
@@ -75,7 +82,7 @@ export function DraggableChat() {
             "bg-black/80 backdrop-blur-md border border-purple-500/50",
             "shadow-[0_0_15px_rgba(168,85,247,0.2)]",
             "flex flex-col rounded-lg overflow-hidden",
-            !docked && 'cursor-grab active:cursor-grabbing'
+            !docked && "cursor-grab active:cursor-grabbing"
           )}
         >
           <ChatHeader onPositionToggle={togglePosition} />
@@ -93,4 +100,4 @@ export function DraggableChat() {
   );
 }
 
-export default DraggableChat;
+export default ChatContainer;

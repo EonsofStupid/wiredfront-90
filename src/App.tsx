@@ -1,5 +1,5 @@
 import { GuestCTA } from "@/components/auth/GuestCTA";
-import { DraggableChat } from "@/components/chat/DraggableChat";
+import { ChatContainer } from "@/components/chat/ChatContainer";
 import { useSyncModeWithNavigation } from "@/components/chat/hooks/useSyncModeWithNavigation";
 import { useMobile } from "@/hooks/use-mobile";
 import { useAuthStore } from "@/stores/auth";
@@ -26,7 +26,7 @@ const App = () => {
     let cleanup: (() => void) | undefined;
 
     // Initialize auth on app load
-    initializeAuth().then(unsubscribe => {
+    initializeAuth().then((unsubscribe) => {
       cleanup = unsubscribe;
     });
 
@@ -39,11 +39,11 @@ const App = () => {
 
   useEffect(() => {
     const cleanPath = location.pathname + location.search;
-    const storedPath = sessionStorage.getItem('currentPath');
+    const storedPath = sessionStorage.getItem("currentPath");
 
     if (storedPath !== cleanPath) {
-      RouteLoggingService.logRouteChange(storedPath || 'initial', cleanPath);
-      sessionStorage.setItem('currentPath', cleanPath);
+      RouteLoggingService.logRouteChange(storedPath || "initial", cleanPath);
+      sessionStorage.setItem("currentPath", cleanPath);
     }
   }, [location.pathname, location.search]);
 
@@ -57,7 +57,9 @@ const App = () => {
   }
 
   const isPublicRoute = PUBLIC_ROUTES.includes(location.pathname);
-  const isAdminRoute = ADMIN_ROUTES.some(route => location.pathname.startsWith(route));
+  const isAdminRoute = ADMIN_ROUTES.some((route) =>
+    location.pathname.startsWith(route)
+  );
 
   return (
     <>
@@ -66,7 +68,7 @@ const App = () => {
         isPublicRoute={isPublicRoute}
         isAdminRoute={isAdminRoute}
       />
-      <DraggableChat />
+      <ChatContainer />
       <GuestCTA />
       <Toaster />
     </>

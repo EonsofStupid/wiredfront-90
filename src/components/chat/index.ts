@@ -1,11 +1,11 @@
+// Export ChatContainer and related components
+export { default as ChatContainer } from "./ChatContainer";
 
-// Export DraggableChat and related components
-export { default as DraggableChat } from './DraggableChat';
-export { default as ChatContent } from './ChatContent';
-export { default as ChatHeader } from './ChatHeader';
-export { default as ChatInputArea } from './ChatInputArea';
-export { default as ChatMessage } from './ChatMessage';
-export { ChatButton } from './ui/ChatButton';
+// Export other components
+export * from "./ChatContent";
+export * from "./ChatHeader";
+export * from "./ChatInputArea";
+export * from "./ui/ChatButton";
 
 // Re-export hook for easy access
-export { useChat } from '@/hooks/useChat';
+export { useChat } from "@/hooks/useChat";
