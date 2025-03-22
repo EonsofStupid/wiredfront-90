@@ -1,5 +1,4 @@
 import { useChatCombined } from "@/stores/features/chat";
-import { ChatMode } from "@/types/chat/modes";
 import { DndContext } from "@dnd-kit/core";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect } from "react";
@@ -84,10 +83,9 @@ export function DraggableChat() {
           )}
         </AnimatePresence>
 
-        {/* Add IconStack component with proper mode */}
         <IconStack
           position={dockPosition === 'bottom-right' ? 'right' : 'left'}
-          currentMode={currentMode as ChatMode}
+          currentMode={currentMode || 'chat'}
         />
 
         <ChatContainer dockPosition={dockPosition} />
