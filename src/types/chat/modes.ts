@@ -12,7 +12,14 @@ export type ChatMode =
   | "assistant";
 
 // Default Chat modes array for validation
-export const CHAT_MODES: ChatMode[] = ["chat", "code", "assistant"];
+export const CHAT_MODES: ChatMode[] = [
+  "dev",
+  "image",
+  "training",
+  "chat",
+  "code",
+  "assistant",
+];
 
 /**
  * Type guard to check if a value is a valid ChatMode
@@ -28,11 +35,14 @@ export function normalizeChatMode(mode: unknown): ChatMode {
   if (isChatMode(mode)) {
     return mode;
   }
-  return "chat"; // Default fallback
+  return "dev"; // Default fallback
 }
 
 // Mode labels for UI display
 export const MODE_LABELS: Record<ChatMode, string> = {
+  dev: "Development",
+  image: "Image Generation",
+  training: "Training",
   chat: "Chat",
   code: "Code Assistant",
   assistant: "Assistant",
@@ -40,6 +50,9 @@ export const MODE_LABELS: Record<ChatMode, string> = {
 
 // Mode descriptions for tooltips/documentation
 export const MODE_DESCRIPTIONS: Record<ChatMode, string> = {
+  dev: "Development assistance mode",
+  image: "AI image generation mode",
+  training: "Model training mode",
   chat: "General chat mode",
   code: "Code assistance mode",
   assistant: "AI assistant mode",
