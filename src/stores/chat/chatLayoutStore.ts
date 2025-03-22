@@ -1,127 +1,121 @@
 
+import { ChatPosition, ChatScale, ChatTheme, ChatUIPreferences } from '@/types/chat';
+import { logger } from '@/services/chat/LoggingService';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { ChatPosition, ChatScale, ChatTheme, LayoutState, DEFAULT_LAYOUT } from '@/types/chat/types';
 
-interface LayoutActions {
-  toggleMinimize: () => void;
-  toggleOpen: () => void;
-  toggleDocked: () => void;
-  setPosition: (position: ChatPosition) => void;
-  setScale: (scale: ChatScale) => void;
-  toggleSidebar: () => void;
-  setTheme: (theme: ChatTheme) => void;
-  updatePreferences: (prefs: Partial<typeof DEFAULT_LAYOUT.uiPreferences>) => void;
-  resetLayout: () => void;
-  saveLayoutToStorage: () => Promise<boolean>;
-  loadLayoutFromStorage: () => Promise<boolean>;
+// Default values
+const DEFAULT_UI_PREFERENCES: ChatUIPreferences = {
+  theme: 'system',
+  fontSize: 'medium',
+  messageBehavior: 'enter_send',
+  notifications: true,
+  soundEnabled: true,
+  typingIndicators: true,
+  showTimestamps: true,
+  saveHistory: true
+};
+
+// Chat layout store interface
+interface ChatLayoutState {
+  // UI state
+  isOpen: boolean;
+  isMinimized: boolean;
+  docked: boolean;
+  position: ChatPosition;
+  scale: ChatScale;
+  showSidebar: boolean;
+  theme: ChatTheme;
+  uiPreferences: ChatUIPreferences;
 }
 
-/**
- * Central store for chat UI layout
- */
-export const useChatLayoutStore = create<LayoutState & LayoutActions>()(
+interface ChatLayoutActions {
+  // Actions
+  toggleOpen: () => void;
+  toggleMinimize: () => void;
+  toggleDocked: () => void;
+  toggleSidebar: () => void;
+  setPosition: (position: ChatPosition) => void;
+  setScale: (scale: ChatScale) => void;
+  setTheme: (theme: ChatTheme) => void;
+  updatePreferences: (prefs: Partial<ChatUIPreferences>) => void;
+  resetLayout: () => void;
+}
+
+type ChatLayoutStore = ChatLayoutState & ChatLayoutActions;
+
+export const useChatLayoutStore = create<ChatLayoutStore>()(
   persist(
-    (set, get) => ({
-      // State
-      ...DEFAULT_LAYOUT,
-      
+    (set) => ({
+      // Default state
+      isOpen: false,
+      isMinimized: false,
+      docked: true,
+      position: { x: 20, y: 20 },
+      scale: 1,
+      showSidebar: false,
+      theme: 'system',
+      uiPreferences: DEFAULT_UI_PREFERENCES,
+
       // Actions
-      toggleMinimize: () => set(state => ({ isMinimized: !state.isMinimized })),
-      toggleOpen: () => set(state => ({ isOpen: !state.isOpen })),
-      toggleDocked: () => set(state => ({ docked: !state.docked })),
-      setPosition: (position) => set({ position }),
-      setScale: (scale) => set({ scale }),
-      toggleSidebar: () => set(state => ({ showSidebar: !state.showSidebar })),
-      setTheme: (theme) => set({ theme }),
-      updatePreferences: (prefs) => set(state => ({ 
-        uiPreferences: { ...state.uiPreferences, ...prefs } 
+      toggleOpen: () => set((state) => ({ 
+        isOpen: !state.isOpen 
       })),
-      resetLayout: () => set(DEFAULT_LAYOUT),
       
-      // Persistence methods
-      saveLayoutToStorage: async () => {
-        try {
-          const layoutState = get();
-          localStorage.setItem('chat-layout', JSON.stringify({
-            isMinimized: layoutState.isMinimized,
-            docked: layoutState.docked,
-            position: layoutState.position,
-            scale: layoutState.scale,
-            showSidebar: layoutState.showSidebar,
-            theme: layoutState.theme,
-            uiPreferences: layoutState.uiPreferences
-          }));
-          return true;
-        } catch (error) {
-          console.error('Failed to save layout to storage:', error);
-          return false;
-        }
+      toggleMinimize: () => set((state) => ({ 
+        isMinimized: !state.isMinimized 
+      })),
+      
+      toggleDocked: () => set((state) => ({ 
+        docked: !state.docked 
+      })),
+      
+      toggleSidebar: () => set((state) => ({ 
+        showSidebar: !state.showSidebar 
+      })),
+      
+      setPosition: (position) => {
+        set({ position });
+        logger.info('Chat position updated', { position });
       },
       
-      loadLayoutFromStorage: async () => {
-        try {
-          const savedLayout = localStorage.getItem('chat-layout');
-          if (savedLayout) {
-            const layout = JSON.parse(savedLayout);
-            set({
-              isMinimized: layout.isMinimized ?? DEFAULT_LAYOUT.isMinimized,
-              docked: layout.docked ?? DEFAULT_LAYOUT.docked,
-              position: layout.position ?? DEFAULT_LAYOUT.position,
-              scale: layout.scale ?? DEFAULT_LAYOUT.scale,
-              showSidebar: layout.showSidebar ?? DEFAULT_LAYOUT.showSidebar,
-              theme: layout.theme ?? DEFAULT_LAYOUT.theme,
-              uiPreferences: {
-                ...DEFAULT_LAYOUT.uiPreferences,
-                ...(layout.uiPreferences || {})
-              }
-            });
-            return true;
-          }
-          return false;
-        } catch (error) {
-          console.error('Failed to load layout from storage:', error);
-          return false;
-        }
+      setScale: (scale) => {
+        set({ scale });
+        logger.info('Chat scale updated', { scale });
+      },
+      
+      setTheme: (theme) => {
+        set({ theme });
+        logger.info('Chat theme updated', { theme });
+      },
+      
+      updatePreferences: (prefs) => set((state) => ({
+        uiPreferences: { ...state.uiPreferences, ...prefs }
+      })),
+      
+      resetLayout: () => {
+        set({
+          isOpen: false,
+          isMinimized: false,
+          docked: true,
+          position: { x: 20, y: 20 },
+          scale: 1,
+          showSidebar: false,
+          theme: 'system',
+          uiPreferences: DEFAULT_UI_PREFERENCES
+        });
+        logger.info('Chat layout reset to defaults');
       }
     }),
     {
       name: 'chat-layout-storage',
       partialize: (state) => ({
-        isMinimized: state.isMinimized,
-        docked: state.docked,
         position: state.position,
         scale: state.scale,
-        showSidebar: state.showSidebar,
+        docked: state.docked,
         theme: state.theme,
         uiPreferences: state.uiPreferences
       })
     }
   )
 );
-
-// Selectors for more granular access
-export const useLayoutState = () => ({
-  isMinimized: useChatLayoutStore(state => state.isMinimized),
-  isOpen: useChatLayoutStore(state => state.isOpen),
-  docked: useChatLayoutStore(state => state.docked),
-  position: useChatLayoutStore(state => state.position),
-  scale: useChatLayoutStore(state => state.scale),
-  showSidebar: useChatLayoutStore(state => state.showSidebar),
-  theme: useChatLayoutStore(state => state.theme),
-  uiPreferences: useChatLayoutStore(state => state.uiPreferences)
-});
-
-export const useLayoutActions = () => ({
-  toggleMinimize: useChatLayoutStore(state => state.toggleMinimize),
-  toggleOpen: useChatLayoutStore(state => state.toggleOpen),
-  toggleDocked: useChatLayoutStore(state => state.toggleDocked),
-  setPosition: useChatLayoutStore(state => state.setPosition),
-  setScale: useChatLayoutStore(state => state.setScale),
-  toggleSidebar: useChatLayoutStore(state => state.toggleSidebar),
-  setTheme: useChatLayoutStore(state => state.setTheme),
-  updatePreferences: useChatLayoutStore(state => state.updatePreferences),
-  resetLayout: useChatLayoutStore(state => state.resetLayout),
-  saveLayoutToStorage: useChatLayoutStore(state => state.saveLayoutToStorage),
-  loadLayoutFromStorage: useChatLayoutStore(state => state.loadLayoutFromStorage)
-});
