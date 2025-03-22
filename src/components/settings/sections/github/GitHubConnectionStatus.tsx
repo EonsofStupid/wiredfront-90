@@ -1,5 +1,5 @@
+import { Spinner } from "@/components/chat/components/Spinner";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/Spinner";
 import { Github, X } from "lucide-react";
 
 interface GitHubConnectionStatusProps {
@@ -38,21 +38,21 @@ export function GitHubConnectionStatus({
 
       <div className="flex items-center gap-2">
         {isConnected ? (
-          <>
-            <Button
-              variant="outline"
-              onClick={onDisconnect}
-              disabled={isButtonDisabled}
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-            >
-              {connectionStatus === 'connecting' ? (
-                <Spinner size="sm" className="mr-2" label="Disconnecting..." />
-              ) : (
+          <Button
+            variant="outline"
+            onClick={onDisconnect}
+            disabled={isButtonDisabled}
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+          >
+            {connectionStatus === 'connecting' ? (
+              <Spinner size="sm" className="mr-2" label="Disconnecting..." />
+            ) : (
+              <>
                 <X className="mr-2 h-4 w-4" />
-              )}
-              Disconnect
-            </Button>
-          </>
+                Disconnect
+              </>
+            )}
+          </Button>
         ) : (
           <Button
             variant="outline"
@@ -61,10 +61,7 @@ export function GitHubConnectionStatus({
             className="border-primary/20 hover:border-primary"
           >
             {connectionStatus === 'connecting' ? (
-              <>
-                <Spinner size="sm" className="mr-2" label="Connecting..." />
-                Connecting...
-              </>
+              <Spinner size="sm" className="mr-2" label="Connecting..." />
             ) : (
               <>
                 <Github className="mr-2 h-4 w-4" />
