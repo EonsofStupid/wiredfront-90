@@ -1,7 +1,6 @@
-
 import { Button } from "@/components/ui/button";
-import { X, Github, AlertCircle } from "lucide-react";
-import { Spinner } from "@/components/chat/components/Spinner";
+import { Spinner } from "@/components/ui/Spinner";
+import { Github, X } from "lucide-react";
 
 interface GitHubConnectionStatusProps {
   isConnected: boolean;
@@ -36,7 +35,7 @@ export function GitHubConnectionStatus({
           )}
         </div>
       </div>
-      
+
       <div className="flex items-center gap-2">
         {isConnected ? (
           <>
