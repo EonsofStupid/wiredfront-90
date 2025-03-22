@@ -1,10 +1,10 @@
-
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
+import './components/chat/styles/animations.css'
+import './components/chat/styles/chat.css'
+import './components/chat/styles/cyber-theme.css'
 import './index.css'
-import './styles/chat.css'
-import './features/chat/styles/chat.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

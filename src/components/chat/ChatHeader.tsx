@@ -1,11 +1,13 @@
-
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { useChat } from "@/hooks/useChat";
-import { Maximize2, Minimize2, Pin, PinOff, X, Zap } from "lucide-react";
-import React from "react";
+import { cn } from "@/lib/utils";
+import { Maximize2, Minimize2, MoveRight, Pin, PinOff, X, Zap } from "lucide-react";
 
-export function ChatHeader() {
+interface ChatHeaderProps {
+  onPositionToggle: () => void;
+}
+
+export function ChatHeader({ onPositionToggle }: ChatHeaderProps) {
   const {
     isMinimized,
     docked,
@@ -28,6 +30,20 @@ export function ChatHeader() {
       </div>
 
       <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "chat-control-button h-8 w-8",
+            "hover:bg-white/10 hover:text-purple-400",
+            "transition-colors duration-200"
+          )}
+          onClick={onPositionToggle}
+          aria-label="Toggle chat position"
+        >
+          <MoveRight className="h-4 w-4" />
+        </Button>
+
         <Button
           variant="ghost"
           size="icon"

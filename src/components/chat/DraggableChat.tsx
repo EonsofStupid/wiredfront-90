@@ -1,12 +1,11 @@
-
-import React, { useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChatButton } from "./ui/ChatButton";
 import { useChat } from "@/hooks/useChat";
-import { ChatHeader } from "./ChatHeader";
-import { ChatContent } from "./ChatContent";
-import { ChatInputArea } from "./ChatInputArea";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
+import { ChatContent } from "./ChatContent";
+import { ChatHeader } from "./ChatHeader";
+import { ChatInputArea } from "./ChatInputArea";
+import { ChatButton } from "./ui/ChatButton";
 
 export function DraggableChat() {
   const {
@@ -20,9 +19,9 @@ export function DraggableChat() {
     setPosition,
     currentMode
   } = useChat();
-  
+
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   // Load position from localStorage on mount
   useEffect(() => {
     const savedPosition = localStorage.getItem('chatPosition');
@@ -42,6 +41,15 @@ export function DraggableChat() {
   useEffect(() => {
     localStorage.setItem('chatPosition', JSON.stringify(position));
   }, [position]);
+
+  // Toggle position between bottom-right and bottom-left
+  const togglePosition = () => {
+    const newPosition = {
+      x: position.x > window.innerWidth / 2 ? 0 : window.innerWidth,
+      y: position.y
+    };
+    setPosition(newPosition);
+  };
 
   if (!isOpen) {
     return <ChatButton position={position} scale={scale} onClick={toggleOpen} />;
@@ -75,7 +83,7 @@ export function DraggableChat() {
             !docked && 'cursor-grab active:cursor-grabbing'
           )}
         >
-          <ChatHeader />
+          <ChatHeader onPositionToggle={togglePosition} />
 
           {!isMinimized && (
             <div className="flex-1 overflow-hidden flex flex-col">
