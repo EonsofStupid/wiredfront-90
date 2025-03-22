@@ -1,0 +1,42 @@
+/* Safari specific scrollbar styles */
+@supports (-webkit-backdrop-filter: none) {
+  .scrollable-container::-webkit-scrollbar {
+    width: var(--scrollbar-width);
+    height: var(--scrollbar-width);
+  }
+
+  .scrollable-container::-webkit-scrollbar-track {
+    background: var(--scrollbar-track-color);
+    border-radius: var(--scrollbar-border-radius);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .scrollable-container::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb-color);
+    border-radius: var(--scrollbar-border-radius);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: background-color 0.2s ease;
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .scrollable-container::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-thumb-hover-color);
+  }
+}
+
+/* Safari momentum scrolling */
+.scrollable-container {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Safari specific container styles */
+.chat-content-wrapper,
+.chat-messages-container {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Safari scrollbar corner */
+.scrollable-container::-webkit-scrollbar-corner {
+  background: transparent;
+}

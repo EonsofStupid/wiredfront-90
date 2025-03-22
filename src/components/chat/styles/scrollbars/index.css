@@ -1,0 +1,10 @@
+/* Import base scrollbar styles */
+@import "./base.css";
+
+/* Import browser-specific styles */
+@import "./webkit.css"; /* Chrome/Opera */
+@import "./firefox.css"; /* Firefox */
+@import "./safari.css"; /* Safari */
+@import "./edge.css"; /* Edge */
+
+/* Note: Mobile will have its own separate app structure */
