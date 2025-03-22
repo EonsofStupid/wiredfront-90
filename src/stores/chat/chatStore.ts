@@ -16,20 +16,43 @@ export const useChatStore = create<ChatState>()(
   devtools(
     persist(
       (...a) => ({
-        ...createFeatureSlice(...a),
-        ...createLayoutSlice(...a),
         ...createMessageSlice(...a),
         ...createSessionSlice(...a),
         ...createModeSlice(...a),
         ...createPreferencesSlice(...a),
+        ...createLayoutSlice(...a),
+        ...createFeatureSlice(...a),
       }),
       {
-        name: "chat-store",
+        name: "chat-storage",
         partialize: (state) => ({
-          messages: state.messages,
-          session: state.session,
-          mode: state.mode,
-          uiPreferences: state.uiPreferences,
+          messages: {
+            list: state.messages.list,
+            isLoading: state.messages.isLoading,
+            error: state.messages.error,
+          },
+          session: {
+            current: state.session.current,
+            list: state.session.list,
+            isLoading: state.session.isLoading,
+            error: state.session.error,
+          },
+          mode: {
+            current: state.mode.current,
+            history: state.mode.history,
+          },
+          uiPreferences: {
+            messageBehavior: state.uiPreferences.messageBehavior,
+            notifications: state.uiPreferences.notifications,
+            soundEnabled: state.uiPreferences.soundEnabled,
+            typingIndicators: state.uiPreferences.typingIndicators,
+          },
+          layout: {
+            isSidebarOpen: state.layout.isSidebarOpen,
+            isSettingsOpen: state.layout.isSettingsOpen,
+            isMinimized: state.layout.isMinimized,
+            position: state.layout.position,
+          },
           features: state.features,
         }),
       }
@@ -40,7 +63,7 @@ export const useChatStore = create<ChatState>()(
 /**
  * Export selectors for common state slices
  */
-export const useMessages = () => useChatStore((state) => state.messages);
+export const useMessages = () => useChatStore((state) => state.messages.list);
 export const useCurrentSession = () =>
   useChatStore((state) => state.session.current);
 export const useSessionList = () => useChatStore((state) => state.session.list);
