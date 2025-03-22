@@ -1,6 +1,6 @@
 import { GuestCTA } from "@/components/auth/GuestCTA";
-import { DraggableChat } from "@/features/chat/components/DraggableChat";
-import { useSyncModeWithNavigation } from "@/features/chat/hooks/useSyncModeWithNavigation";
+import { DraggableChat } from "@/components/chat/DraggableChat";
+import { useSyncModeWithNavigation } from "@/components/chat/hooks/useSyncModeWithNavigation";
 import { useMobile } from "@/hooks/use-mobile";
 import { useAuthStore } from "@/stores/auth";
 import { useEffect } from "react";
