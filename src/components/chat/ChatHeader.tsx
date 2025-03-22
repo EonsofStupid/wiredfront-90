@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useChat } from "@/hooks/useChat";
 import { cn } from "@/lib/utils";
 import { Maximize2, Minimize2, MoveRight, Pin, PinOff, X, Zap } from "lucide-react";
-import { StatusButton } from "./features/status-button";
+import { StatusButton } from "./features/status-button/StatusButton";
 
 interface ChatHeaderProps {
   onPositionToggle: () => void;
