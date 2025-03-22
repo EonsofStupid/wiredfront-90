@@ -1,6 +1,8 @@
 import { cn } from "@/lib/utils";
-import { useChatLayout } from "@/stores/chat/chatStore";
+import { useAtomValue } from "jotai";
 import React from "react";
+import { layoutPreferencesAtom } from "../store/atoms";
+import styles from "./ChatContainer.module.css";
 
 interface ChatContainerProps {
   children: React.ReactNode;
@@ -11,20 +13,15 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   children,
   className,
 }) => {
-  const { isMinimized } = useChatLayout();
+  const { isMinimized } = useAtomValue(layoutPreferencesAtom);
 
   return (
     <div
       className={cn(
-        "flex flex-col h-full w-full bg-[var(--chat-bg-primary)] text-[var(--chat-text-primary)]",
-        "transition-all duration-[var(--chat-transition-normal)]",
-        isMinimized ? "rounded-lg shadow-lg" : "rounded-none shadow-none",
+        styles.container,
+        isMinimized ? styles.minimized : styles.expanded,
         className
       )}
-      style={{
-        transform: `scale(1)`,
-        transformOrigin: "top left",
-      }}
     >
       {children}
     </div>

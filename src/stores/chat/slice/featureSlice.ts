@@ -2,6 +2,8 @@ import { ChatFeatureKey, FeatureState } from "@/types/chat/features";
 import { StateCreator } from "zustand";
 import { ChatState } from "../types/state";
 
+export type FeatureSlice = FeatureState;
+
 export const createFeatureSlice: StateCreator<
   ChatState,
   [],

@@ -1,12 +1,18 @@
+import { ChatMode } from "@/types/chat/modes";
 import { StateCreator } from "zustand";
 import { ChatState } from "../types/state";
+
+interface ChatModeState {
+  current: ChatMode;
+  history: ChatMode[];
+}
 
 export interface CoreSlice {
   isChatOpen: boolean;
   activeProjectId: string | null;
-  mode: "dev" | "image" | "training";
+  mode: ChatModeState;
   sessionId: string | null;
-  setMode: (mode: CoreSlice["mode"]) => void;
+  setMode: (mode: ChatMode) => void;
   setSessionId: (id: string | null) => void;
   toggleChat: () => void;
   setProjectId: (id: string | null) => void;
@@ -17,9 +23,18 @@ export const createCoreSlice: StateCreator<ChatState, [], [], CoreSlice> = (
 ) => ({
   isChatOpen: false,
   activeProjectId: null,
-  mode: "dev",
+  mode: {
+    current: "dev",
+    history: [],
+  },
   sessionId: null,
-  setMode: (mode) => set({ mode }),
+  setMode: (mode) =>
+    set((state) => ({
+      mode: {
+        current: mode,
+        history: [...state.mode.history, mode],
+      },
+    })),
   setSessionId: (id) => set({ sessionId: id }),
   toggleChat: () => set((state) => ({ isChatOpen: !state.isChatOpen })),
   setProjectId: (id) => set({ activeProjectId: id }),

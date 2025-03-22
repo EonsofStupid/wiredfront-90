@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
-import { ChatState } from "./types/state";
 
 export type ChatMode = "dev" | "image" | "training";
 
@@ -26,7 +25,7 @@ interface ChatState {
 }
 
 /**
- * Main chat store with all slices combined
+ * Main chat store with global app-level state
  * Uses Zustand middleware for persistence and dev tools
  */
 export const useChatStore = create<ChatState>()(
@@ -68,38 +67,10 @@ export const useChatStore = create<ChatState>()(
   )
 );
 
-/**
- * Export selectors for common state slices
- */
-export const useMessages = () => useChatStore((state) => state.messages.list);
-export const useCurrentSession = () =>
-  useChatStore((state) => state.session.current);
-export const useSessionList = () => useChatStore((state) => state.session.list);
-export const useUIPreferences = () =>
-  useChatStore((state) => state.uiPreferences);
-export const useFeatures = () => useChatStore((state) => state.features);
-export const useChatMode = () => useChatStore((state) => state.mode.current);
-export const useChatLayout = () => {
-  const { layout, toggleSidebar, toggleSettings, toggleMinimize, setPosition } =
-    useChatStore();
-
-  return {
-    ...layout,
-    toggleSidebar,
-    toggleSettings,
-    toggleMinimize,
-    setPosition,
-  };
-};
-
-// UI state selectors
-export const useSelectedMessage = () =>
-  useChatStore((state) => state.selectedMessageId);
-export const useEditingMessage = () =>
-  useChatStore((state) => state.editingMessageId);
-export const useIsEditing = () => useChatStore((state) => state.isEditing);
-export const useFormState = () => useChatStore((state) => state.formState);
-export const useMessageMenu = (messageId: string) =>
-  useChatStore((state) => state.messageMenuOpen[messageId]);
-export const useMessageActions = (messageId: string) =>
-  useChatStore((state) => state.messageActionsVisible[messageId]);
+// Export simple selectors for the global state
+export const useChatOpen = () => useChatStore((state) => state.isOpen);
+export const useProjectId = () => useChatStore((state) => state.projectId);
+export const useChatMode = () => useChatStore((state) => state.mode);
+export const useSessionId = () => useChatStore((state) => state.sessionId);
+export const useCostTracking = () =>
+  useChatStore((state) => state.costTracking);
