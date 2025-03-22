@@ -6,6 +6,7 @@ import { createMessageSlice } from "./slice/messageSlice";
 import { createModeSlice } from "./slice/modeSlice";
 import { createPreferencesSlice } from "./slice/preferencesSlice";
 import { createSessionSlice } from "./slice/sessionSlice";
+import { createUISlice } from "./slice/uiSlice";
 import { ChatState } from "./types/state";
 
 /**
@@ -22,6 +23,7 @@ export const useChatStore = create<ChatState>()(
         ...createPreferencesSlice(...a),
         ...createLayoutSlice(...a),
         ...createFeatureSlice(...a),
+        ...createUISlice(...a),
       }),
       {
         name: "chat-storage",
@@ -54,6 +56,13 @@ export const useChatStore = create<ChatState>()(
             position: state.layout.position,
           },
           features: state.features,
+          // UI state
+          selectedMessageId: state.selectedMessageId,
+          editingMessageId: state.editingMessageId,
+          isEditing: state.isEditing,
+          formState: state.formState,
+          messageMenuOpen: state.messageMenuOpen,
+          messageActionsVisible: state.messageActionsVisible,
         }),
       }
     )
@@ -83,3 +92,15 @@ export const useChatLayout = () => {
     setPosition,
   };
 };
+
+// UI state selectors
+export const useSelectedMessage = () =>
+  useChatStore((state) => state.selectedMessageId);
+export const useEditingMessage = () =>
+  useChatStore((state) => state.editingMessageId);
+export const useIsEditing = () => useChatStore((state) => state.isEditing);
+export const useFormState = () => useChatStore((state) => state.formState);
+export const useMessageMenu = (messageId: string) =>
+  useChatStore((state) => state.messageMenuOpen[messageId]);
+export const useMessageActions = (messageId: string) =>
+  useChatStore((state) => state.messageActionsVisible[messageId]);
