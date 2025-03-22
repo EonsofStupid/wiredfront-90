@@ -3,49 +3,38 @@
  */
 
 // Chat modes
-export type ChatMode = "dev" | "image" | "training" | "chat";
+export type ChatMode = "chat" | "code" | "assistant";
 
 // Default Chat modes array for validation
-export const CHAT_MODES: ChatMode[] = ["dev", "image", "training", "chat"];
+export const CHAT_MODES: ChatMode[] = ["chat", "code", "assistant"];
 
 /**
  * Type guard to check if a value is a valid ChatMode
  */
-export function isChatMode(mode: unknown): mode is ChatMode {
-  return typeof mode === "string" && CHAT_MODES.includes(mode as ChatMode);
+export function isChatMode(value: unknown): value is ChatMode {
+  return typeof value === "string" && CHAT_MODES.includes(value as ChatMode);
 }
 
 /**
  * Normalize a potentially invalid chat mode to a valid one
  */
-export function normalizeChatMode(mode: string): ChatMode {
-  switch (mode.toLowerCase()) {
-    case "dev":
-    case "development":
-      return "dev";
-    case "img":
-    case "image":
-      return "image";
-    case "train":
-    case "training":
-      return "training";
-    default:
-      return "chat";
+export function normalizeChatMode(mode: unknown): ChatMode {
+  if (isChatMode(mode)) {
+    return mode;
   }
+  return "chat"; // Default fallback
 }
 
-// Mode labels for display
+// Mode labels for UI display
 export const MODE_LABELS: Record<ChatMode, string> = {
-  dev: "Development",
-  image: "Image Generation",
-  training: "Training",
   chat: "Chat",
+  code: "Code Assistant",
+  assistant: "Assistant",
 };
 
-// Mode descriptions
+// Mode descriptions for tooltips/documentation
 export const MODE_DESCRIPTIONS: Record<ChatMode, string> = {
-  dev: "AI-assisted development mode",
-  image: "Generate and edit images",
-  training: "Train and fine-tune models",
-  chat: "General chat conversation",
+  chat: "General chat mode",
+  code: "Code assistance mode",
+  assistant: "AI assistant mode",
 };

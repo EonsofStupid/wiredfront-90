@@ -105,39 +105,3 @@ export const providerLoadingAtom = atom(false);
 export const modelFetchStatusAtom = atom<
   "idle" | "loading" | "success" | "error"
 >("idle");
-
-// Input state
-export const messageInputAtom = atom("");
-export const isComposingAtom = atom(false);
-
-// UI toggles
-export const isEmojiPickerOpenAtom = atom(false);
-export const isMarkdownPreviewOpenAtom = atom(false);
-export const selectedMessageIdAtom = atom<string | null>(null);
-
-// Streaming state
-export const isStreamingAtom = atom(false);
-export const streamProgressAtom = atom(0);
-
-// Form state
-export const formStateAtom = atom({
-  isSubmitting: false,
-  isDirty: false,
-  error: null as string | null,
-});
-
-// Local UI preferences (persisted)
-export const uiPreferencesAtom = atomWithStorage("chat-ui-preferences", {
-  fontSize: "medium",
-  messageBehavior: "enter_send",
-  showTimestamps: true,
-  scrollBehavior: "smooth",
-});
-
-// Message list UI state
-export const scrollPositionAtom = atom(0);
-export const visibleMessagesAtom = atom<string[]>([]);
-
-// Local component state
-export const hoveredMessageIdAtom = atom<string | null>(null);
-export const focusedElementAtom = atom<string | null>(null);
