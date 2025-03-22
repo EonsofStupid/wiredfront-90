@@ -42,40 +42,23 @@ export const useChatStore = create<ChatState>()(
  */
 export const useMessages = () => useChatStore((state) => state.messages);
 export const useCurrentSession = () =>
-  useChatStore((state) => state.currentSession);
-export const useSessions = () => useChatStore((state) => state.sessions);
+  useChatStore((state) => state.session.current);
+export const useSessionList = () => useChatStore((state) => state.session.list);
 export const useUIPreferences = () =>
   useChatStore((state) => state.uiPreferences);
 export const useFeatures = () => useChatStore((state) => state.features);
-export const useChatMode = () => useChatStore((state) => state.currentMode);
+export const useChatMode = () => useChatStore((state) => state.mode.current);
 export const useChatLayout = () => {
   const {
-    isOpen,
-    isMinimized,
-    docked,
-    position,
-    scale,
-    showSidebar,
-    toggleOpen,
-    toggleMinimize,
-    toggleDocked,
-    setPosition,
-    setScale,
-    toggleSidebar,
+    layout,
+    actions: { toggleSidebar, toggleSettings, toggleMinimize, setPosition },
   } = useChatStore();
 
   return {
-    isOpen,
-    isMinimized,
-    docked,
-    position,
-    scale,
-    showSidebar,
-    toggleOpen,
-    toggleMinimize,
-    toggleDocked,
-    setPosition,
-    setScale,
+    ...layout,
     toggleSidebar,
+    toggleSettings,
+    toggleMinimize,
+    setPosition,
   };
 };
