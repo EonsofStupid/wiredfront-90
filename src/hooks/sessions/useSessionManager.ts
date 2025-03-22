@@ -18,7 +18,7 @@ export function useSessionManager() {
   const [isLoading, setIsLoading] = useState(false);
   const {
     session: { isLoading: isSessionLoading },
-    actions: { setIsSessionLoading },
+    setIsSessionLoading,
   } = useChatStore();
 
   const refreshSessions = useCallback(async () => {

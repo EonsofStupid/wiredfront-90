@@ -1,41 +1,54 @@
-
 /* Chat Component CSS Variables */
 :root {
   /* Colors */
+  --chat-bg: rgba(0, 0, 0, 0.8);
   --chat-bg-primary: rgba(0, 0, 0, 0.8);
   --chat-bg-secondary: rgba(0, 0, 0, 0.6);
   --chat-border-color: rgba(139, 92, 246, 0.5);
   --chat-glow-color: rgba(168, 85, 247, 0.2);
   --chat-text-primary: #ffffff;
   --chat-text-secondary: rgba(255, 255, 255, 0.7);
-  
+
   /* Message colors */
-  --chat-message-user-bg: #8B5CF6;
+  --chat-message-user-bg: #8b5cf6;
   --chat-message-assistant-bg: #374151;
   --chat-message-user-text: #ffffff;
   --chat-message-assistant-text: #ffffff;
-  
+
   /* Dimensions */
   --chat-width: 400px;
   --chat-height: 600px;
+  --chat-min-width: 300px;
+  --chat-max-width: 800px;
+  --chat-min-height: 400px;
+  --chat-max-height: 800px;
+  --chat-header-height: 48px;
   --chat-border-radius: 12px;
-  
+  --chat-scrollbar-width: 6px;
+
   /* Z-index values */
   --z-chat: 50;
   --z-chat-button: 50;
-  
+
   /* Animation durations */
   --chat-transition-duration: 300ms;
+
+  /* Box shadows */
+  --chat-box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+  --chat-neon-glow: 0 0 10px rgba(139, 92, 246, 0.8);
+  --chat-cyber-glow: 0 0 20px rgba(0, 255, 255, 0.3);
 }
 
 /* Dark mode overrides */
 [data-theme="dark"] {
+  --chat-bg: rgba(0, 0, 0, 0.9);
   --chat-bg-primary: rgba(0, 0, 0, 0.9);
   --chat-bg-secondary: rgba(0, 0, 0, 0.7);
 }
 
 /* Light mode overrides */
 [data-theme="light"] {
+  --chat-bg: rgba(255, 255, 255, 0.9);
   --chat-bg-primary: rgba(255, 255, 255, 0.9);
   --chat-bg-secondary: rgba(255, 255, 255, 0.7);
   --chat-text-primary: #000000;

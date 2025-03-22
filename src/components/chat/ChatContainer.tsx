@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { ChatContent } from "./ChatContent";
 import { ChatHeader } from "./ChatHeader";
 import { ChatInputArea } from "./ChatInputArea";
+import styles from "./styles/container.module.css";
 import { ChatButton } from "./ui/ChatButton";
 
 export function ChatContainer() {
@@ -59,16 +60,13 @@ export function ChatContainer() {
     <div>
       <motion.div
         className={cn(
-          "fixed z-50 flex gap-4",
-          docked
-            ? `bottom-4 ${
-                dockPosition === "bottom-right" ? "right-4" : "left-4"
-              }`
-            : ""
+          styles.chatContainerWrapper,
+          docked && styles.chatDocked,
+          dockPosition === "bottom-right"
+            ? styles.chatDockRight
+            : styles.chatDockLeft
         )}
         style={{
-          transformOrigin:
-            dockPosition === "bottom-right" ? "bottom right" : "bottom left",
           transform: `scale(${scale})`,
         }}
         animate={{
@@ -78,17 +76,16 @@ export function ChatContainer() {
       >
         <div
           className={cn(
-            "chat-container relative w-[400px] h-[600px]",
-            "bg-black/80 backdrop-blur-md border border-purple-500/50",
-            "shadow-[0_0_15px_rgba(168,85,247,0.2)]",
-            "flex flex-col rounded-lg overflow-hidden",
-            !docked && "cursor-grab active:cursor-grabbing"
+            styles.chatContainer,
+            styles.chatGlassCard,
+            !docked && styles.chatFloating,
+            isMinimized && styles.chatMinimized
           )}
         >
           <ChatHeader onPositionToggle={togglePosition} />
 
           {!isMinimized && (
-            <div className="flex-1 overflow-hidden flex flex-col">
+            <div className={styles.chatContentWrapper}>
               <ChatContent />
             </div>
           )}
