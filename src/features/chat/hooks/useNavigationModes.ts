@@ -1,141 +1,81 @@
 
+import { useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useChatModeStore } from '@/stores/features/chat/modeStore';
-import { logger } from '@/services/chat/LoggingService';
-import { ChatMode } from '@/types/chat';
-import { toast } from 'sonner';
+import { ChatMode, CHAT_MODE_DESCRIPTIONS, CHAT_MODE_DISPLAY_NAMES } from '@/types/chat/modes';
+import { useChatModeStore } from '../store/chatModeStore';
 
 /**
- * Hook that handles mode switching with navigation
- * - Provides a unified interface for switching modes
- * - Handles navigation to the correct page based on mode
- * - Manages mode state persistence
+ * Hook for navigating between different chat modes with bi-directional sync
  */
-export function useNavigationModes() {
+export const useNavigationModes = () => {
+  const { currentMode, setMode } = useChatModeStore();
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentMode, setMode, switchMode } = useChatModeStore();
-  
-  /**
-   * Map of modes to their corresponding routes
-   */
-  const MODE_ROUTES: Record<ChatMode, string | null> = {
-    'chat': null, // Stay on current page
-    'dev': '/editor',
-    'image': '/gallery',
-    'training': '/training',
-    'code': '/editor',
-    'planning': null, // Stay on current page
-  };
-  
-  /**
-   * Get a user-friendly label for the mode
-   */
-  const getModeLabel = (mode: ChatMode): string => {
+
+  // Convert the current path to a mode
+  const pathToMode = useCallback((path: string): ChatMode => {
+    if (path.includes('/dev') || path.includes('/code')) return 'dev';
+    if (path.includes('/image') || path.includes('/gallery')) return 'image';
+    if (path.includes('/training') || path.includes('/learn')) return 'training';
+    if (path.includes('/planning') || path.includes('/project')) return 'planning';
+    return 'chat';
+  }, []);
+
+  // Convert a mode to a path
+  const modeToPath = useCallback((mode: ChatMode): string => {
     switch (mode) {
-      case 'chat': return 'Chat';
-      case 'dev': return 'Developer';
-      case 'image': return 'Image Generation';
-      case 'training': return 'Training';
-      case 'planning': return 'Planning';
-      case 'code': return 'Code Assistant';
-      default: return mode;
+      case 'dev': return '/dev';
+      case 'image': return '/gallery';
+      case 'training': return '/training';
+      case 'planning': return '/planning';
+      default: return '/';
     }
-  };
-  
-  /**
-   * Get a description for the mode
-   */
-  const getModeDescription = (mode: ChatMode): string => {
-    switch (mode) {
-      case 'chat': return 'General assistance and conversation';
-      case 'dev': return 'Development and programming help';
-      case 'image': return 'Generate and edit images';
-      case 'training': return 'Educational content and tutorials';
-      case 'code': return 'Code-specific assistance and reviews';
-      case 'planning': return 'Project planning and architecture';
-      default: return 'AI assistance';
+  }, []);
+
+  // Change the chat mode and optionally navigate
+  const changeMode = useCallback((mode: ChatMode, shouldNavigate = false) => {
+    setMode(mode);
+    
+    if (shouldNavigate) {
+      const path = modeToPath(mode);
+      navigate(path);
     }
-  };
-  
-  /**
-   * Change mode with navigation
-   */
-  const changeMode = async (newMode: ChatMode): Promise<boolean> => {
-    try {
-      // If we're already in this mode, no need to change
-      if (newMode === currentMode) {
-        logger.info(`Already in ${newMode} mode`);
-        return true;
-      }
-      
-      // Get the target route for this mode
-      const targetRoute = MODE_ROUTES[newMode];
-      
-      // Use the switchMode function for transition animations
-      const success = await switchMode(newMode);
-      
-      if (!success) {
-        throw new Error(`Failed to switch to ${newMode} mode`);
-      }
-      
-      // Only navigate if we have a target and we're not already there
-      if (targetRoute && location.pathname !== targetRoute) {
-        logger.info(`Navigating to ${targetRoute} for ${newMode} mode`);
-        navigate(targetRoute, { state: { mode: newMode } });
-      } else {
-        // Just update the location state without navigation
-        navigate(location.pathname, { 
-          state: { ...location.state, mode: newMode },
-          replace: true 
-        });
-      }
-      
-      // Show success toast
-      toast.success(`Switched to ${getModeLabel(newMode)} mode`, {
-        description: getModeDescription(newMode),
-      });
-      
-      return true;
-    } catch (error) {
-      logger.error('Error changing mode', error);
-      toast.error(`Failed to switch mode: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      return false;
+  }, [setMode, navigate, modeToPath]);
+
+  // Sync the page with the current mode
+  const syncPageWithMode = useCallback(() => {
+    const modePath = modeToPath(currentMode);
+    if (location.pathname !== modePath) {
+      navigate(modePath);
     }
-  };
-  
-  /**
-   * Check if current page matches the expected page for the mode
-   */
-  const isPageMatchingMode = (): boolean => {
-    const expectedRoute = MODE_ROUTES[currentMode];
-    
-    if (!expectedRoute) return true; // Modes without specific routes always match
-    
-    return location.pathname === expectedRoute;
-  };
-  
-  /**
-   * If needed, navigate to the correct page for the current mode
-   */
-  const syncPageWithMode = () => {
-    const targetRoute = MODE_ROUTES[currentMode];
-    
-    if (targetRoute && location.pathname !== targetRoute) {
-      logger.info(`Syncing page with ${currentMode} mode: navigating to ${targetRoute}`);
-      navigate(targetRoute, { state: { mode: currentMode } });
-      return true;
+  }, [currentMode, location.pathname, navigate, modeToPath]);
+
+  // Sync the mode with the current page
+  const syncModeWithPage = useCallback(() => {
+    const pathMode = pathToMode(location.pathname);
+    if (currentMode !== pathMode) {
+      setMode(pathMode);
     }
-    
-    return false;
-  };
-  
+  }, [currentMode, location.pathname, pathToMode, setMode]);
+
+  // Get a user-friendly label for the mode
+  const getModeLabel = useCallback((mode: ChatMode): string => {
+    return CHAT_MODE_DISPLAY_NAMES[mode] || mode;
+  }, []);
+
+  // Get a description for the mode
+  const getModeDescription = useCallback((mode: ChatMode): string => {
+    return CHAT_MODE_DESCRIPTIONS[mode] || '';
+  }, []);
+
   return {
     currentMode,
     changeMode,
+    syncPageWithMode,
+    syncModeWithPage,
     getModeLabel,
     getModeDescription,
-    isPageMatchingMode,
-    syncPageWithMode
+    pathToMode,
+    modeToPath
   };
-}
+};

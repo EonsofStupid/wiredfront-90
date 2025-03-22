@@ -1,100 +1,106 @@
 
-import { useChatLayoutStore } from '@/features/chat/store/chatLayoutStore';
-import { useChatModeStore } from '@/stores/features/chat/modeStore';
-import { useChatMessageStore } from '@/stores/features/chat/messageStore';
-import { useChatSessionStore } from '@/stores/features/chat/sessionStore';
-import { useNavigationModes } from '@/features/chat/hooks/useNavigationModes';
-import { Message } from '@/types/chat';
 import { useCallback } from 'react';
+import { useChatLayoutStore } from '../store/chatLayoutStore';
+import { useChatModeStore } from '../store/chatModeStore';
+import { useNavigationModes } from './useNavigationModes';
+import { ChatMode } from '@/types/chat/modes';
+import { ChatPosition, ChatScale, ChatTheme, ChatUIPreferences } from '@/types/chat/ui';
 
 /**
- * Main hook for interacting with the chat system
- * Provides access to all chat-related state and actions
+ * Main hook for chat functionality, providing a unified API for all chat-related features
  */
 export const useChat = () => {
-  // Access stores
-  const layout = useChatLayoutStore();
-  const { messages, addMessage, updateMessage, removeMessage, sendMessage, fetchMessages } = useChatMessageStore();
-  const { sessions, currentSession, setCurrentSession, createSession, updateSession } = useChatSessionStore();
-  const { currentMode } = useChatModeStore();
-  const { changeMode, getModeLabel, getModeDescription, syncPageWithMode } = useNavigationModes();
+  // Layout
+  const {
+    isOpen,
+    isMinimized,
+    docked,
+    position,
+    scale,
+    showSidebar,
+    theme,
+    uiPreferences,
+    toggleOpen,
+    toggleMinimize,
+    toggleDocked,
+    toggleSidebar,
+    setPosition,
+    setScale,
+    setTheme,
+    updatePreferences,
+    resetLayout
+  } = useChatLayoutStore();
 
-  // Create a message
-  const handleSendMessage = useCallback(async (content: string) => {
-    if (!currentSession) {
-      const session = await createSession();
-      setCurrentSession(session);
-      return sendMessage(content, session.id);
-    }
-    return sendMessage(content, currentSession.id);
-  }, [currentSession, createSession, setCurrentSession, sendMessage]);
+  // Mode
+  const {
+    currentMode,
+    previousMode,
+    isTransitioning,
+    transitionProgress,
+    setMode: setModeInternal,
+    switchMode,
+    cancelTransition,
+    resetMode
+  } = useChatModeStore();
 
-  // Update a message
-  const handleUpdateMessage = useCallback((messageId: string, updates: Partial<Message>) => {
-    updateMessage(messageId, updates);
-  }, [updateMessage]);
+  // Navigation
+  const {
+    changeMode,
+    syncPageWithMode,
+    syncModeWithPage,
+    getModeLabel,
+    getModeDescription
+  } = useNavigationModes();
 
-  // Delete a message
-  const handleDeleteMessage = useCallback((messageId: string) => {
-    removeMessage(messageId);
-  }, [removeMessage]);
-
-  // Create a session
-  const handleCreateSession = useCallback(async () => {
-    const session = await createSession();
-    setCurrentSession(session);
-    return session;
-  }, [createSession, setCurrentSession]);
-
-  // Toggle chat open state
+  // Enhanced handlers
   const toggleChat = useCallback(() => {
-    layout.toggleOpen();
-  }, [layout]);
+    toggleOpen();
+  }, [toggleOpen]);
+
+  const setMode = useCallback((mode: ChatMode, navigate = false) => {
+    changeMode(mode, navigate);
+  }, [changeMode]);
 
   return {
     // Layout state
-    isOpen: layout.isOpen,
-    isMinimized: layout.isMinimized,
-    docked: layout.docked,
-    position: layout.position,
-    scale: layout.scale,
-    showSidebar: layout.showSidebar,
-    theme: layout.theme,
-    uiPreferences: layout.uiPreferences,
+    isOpen,
+    isMinimized,
+    docked,
+    position,
+    scale,
+    showSidebar,
+    theme,
+    uiPreferences,
     
     // Layout actions
-    toggleOpen: layout.toggleOpen,
-    toggleMinimize: layout.toggleMinimize,
-    toggleDocked: layout.toggleDocked,
-    toggleSidebar: layout.toggleSidebar,
-    setPosition: layout.setPosition,
-    setScale: layout.setScale,
+    toggleOpen,
+    toggleMinimize,
+    toggleDocked,
+    toggleSidebar,
+    setPosition,
+    setScale,
+    setTheme,
+    updatePreferences,
+    resetLayout,
     toggleChat,
     
-    // Message state
-    messages,
-    
-    // Message actions
-    sendMessage: handleSendMessage,
-    updateMessage: handleUpdateMessage,
-    deleteMessage: handleDeleteMessage,
-    fetchMessages,
-    
-    // Session state
-    sessions,
-    currentSession,
-    
-    // Session actions
-    createSession: handleCreateSession,
-    setCurrentSession,
-    updateSession,
-    
-    // Mode state and actions
+    // Mode state
     currentMode,
-    setMode: changeMode,
+    previousMode,
+    isTransitioning,
+    transitionProgress,
+    
+    // Mode actions
+    setMode,
+    switchMode,
+    cancelTransition,
+    resetMode,
+    
+    // Navigation helpers
+    syncPageWithMode,
+    syncModeWithPage,
     getModeLabel,
-    getModeDescription,
-    syncPageWithMode
+    getModeDescription
   };
 };
 

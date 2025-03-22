@@ -9,7 +9,6 @@ export type ChatMode =
   | 'dev'      // Developer assistance mode
   | 'image'    // Image generation mode
   | 'training' // Training/educational mode
-  | 'code'     // Code-specific assistance
   | 'planning'; // Planning/architectural mode
 
 // Constants for chat modes (matching database)
@@ -18,7 +17,6 @@ export const CHAT_MODES = {
   DEV: 'dev',
   IMAGE: 'image',
   TRAINING: 'training',
-  CODE: 'code',
   PLANNING: 'planning'
 } as const;
 
@@ -39,8 +37,8 @@ export function normalizeChatMode(mode: string | null | undefined): ChatMode {
   const modeMap: Record<string, ChatMode> = {
     'standard': CHAT_MODES.CHAT,
     'developer': CHAT_MODES.DEV,
-    'editor': CHAT_MODES.CODE,
-    'project': CHAT_MODES.CODE,
+    'code': CHAT_MODES.DEV,
+    'project': CHAT_MODES.DEV,
     'assistant': CHAT_MODES.CHAT,
     'agent': CHAT_MODES.CHAT,
     'doc': CHAT_MODES.CHAT
@@ -64,7 +62,6 @@ export const CHAT_MODE_DISPLAY_NAMES: Record<ChatMode, string> = {
   'dev': 'Developer',
   'image': 'Image',
   'training': 'Training',
-  'code': 'Code',
   'planning': 'Planning'
 };
 
@@ -76,6 +73,5 @@ export const CHAT_MODE_DESCRIPTIONS: Record<ChatMode, string> = {
   'dev': 'Development and programming help',
   'image': 'Generate and edit images',
   'training': 'Educational content and tutorials',
-  'code': 'Code-specific assistance and reviews',
   'planning': 'Project planning and architecture'
 };

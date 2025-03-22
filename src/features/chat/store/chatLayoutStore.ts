@@ -1,19 +1,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { ChatPosition, ChatScale, ChatTheme, ChatUIPreferences } from '../types';
-
-// Default UI preferences
-const DEFAULT_UI_PREFERENCES: ChatUIPreferences = {
-  theme: 'system',
-  fontSize: 'medium',
-  messageBehavior: 'enter_send',
-  notifications: true,
-  soundEnabled: true,
-  typingIndicators: true,
-  showTimestamps: true,
-  saveHistory: true
-};
+import { ChatPosition, ChatScale, ChatTheme, ChatUIPreferences, DEFAULT_UI_PREFERENCES } from '@/types/chat/ui';
 
 // Default position for the chat button
 const DEFAULT_POSITION: ChatPosition = { x: 20, y: 20 };

@@ -15,7 +15,6 @@ import { RouteLoggingService } from "./services/navigation/RouteLoggingService";
 const App = () => {
   const { isMobile } = useIsMobile();
   const location = useLocation();
-  const navigate = useNavigate();
   
   // Initialize auth from our consolidated auth store
   const { initializeAuth, isAuthenticated, user } = useAuthStore();

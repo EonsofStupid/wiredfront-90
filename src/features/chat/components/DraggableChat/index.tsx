@@ -5,11 +5,11 @@ import { useEffect } from "react";
 import { useViewportAwareness } from "../../hooks/useViewportAwareness";
 import { logger } from "../../services/LoggingService";
 import { useChatLayoutStore } from "@/features/chat/store/chatLayoutStore";
-import { useChatModeStore } from "@/stores/features/chat/modeStore";
-import { ChatContainer } from "./ChatContainer";
-import { ChatSidebar } from "./ChatSidebar";
+import { useChatModeStore } from "@/features/chat/store/chatModeStore";
+import ChatContainer from "./ChatContainer";
+import ChatSidebar from "./ChatSidebar";
 import { ChatButton } from "../ui/ChatButton";
-import { IconStack } from "../IconStack";
+import IconStack from "../IconStack";
 import "../../styles/index.css";
 
 export function DraggableChat() {

@@ -5,7 +5,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Code, Image, MessageSquare, PlaneLanding, GraduationCap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigationModes } from '../../hooks/useNavigationModes';
-import { ChatMode } from '@/types/chat';
+import { ChatMode } from '@/types/chat/modes';
 
 interface IconStackProps {
   position: 'left' | 'right';
