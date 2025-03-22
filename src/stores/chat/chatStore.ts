@@ -3,7 +3,7 @@ import { Message } from '@/types/chat';
 import { ChatMode, ChatState, FeatureState, ProviderCategory } from '@/types/store/chat/types';
 import { v4 as uuidv4 } from 'uuid';
 import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { devtools, persist } from 'zustand/middleware';
 
 type FullChatStore = ChatState & {
   // Actions
@@ -25,10 +25,15 @@ type FullChatStore = ChatState & {
   addTokens: (amount: number) => Promise<boolean>;
   spendTokens: (amount: number) => Promise<boolean>;
   setTokenBalance: (balance: number) => Promise<boolean>;
+  // Layout actions
+  toggleMinimize: () => void;
+  toggleOpen: () => void;
+  setPosition: (position: { x: number; y: number }) => void;
+  toggleSidebar: () => void;
+  setTheme: (theme: string) => void;
+  updatePreferences: (prefs: any) => void;
+  resetLayout: () => void;
 };
-
-const noop = () => {};
-const asyncNoop = async () => false;
 
 const initialState: ChatState = {
   initialized: false,
@@ -62,7 +67,6 @@ const initialState: ChatState = {
   availableProviders: [],
   currentProvider: null,
   position: { x: 0, y: 0 },
-
   tokenControl: {
     balance: 0,
     enforcementMode: 'never' as TokenEnforcementMode,
@@ -71,13 +75,11 @@ const initialState: ChatState = {
     freeQueryLimit: 5,
     queriesUsed: 0
   },
-
   providers: {
     availableProviders: [],
     currentProvider: null,
     error: null
   },
-
   isMinimized: false,
   showSidebar: false,
   scale: 1,
@@ -86,180 +88,125 @@ const initialState: ChatState = {
     messageLoading: false,
     providerLoading: false,
   },
-};
-
-export const clearMiddlewareStorage = () => {
-  try {
-    console.log("🧹 Starting complete middleware storage cleanup");
-
-    const allKeys = Object.keys(localStorage);
-    const zustandKeys = allKeys.filter(key =>
-      key.includes('zustand') ||
-      key.includes('chat-') ||
-      key.includes('provider-') ||
-      key.includes('session-') ||
-      key.startsWith('persist:')
-    );
-
-    console.log(`Found ${zustandKeys.length} Zustand-related localStorage keys to remove`);
-    zustandKeys.forEach(key => {
-      localStorage.removeItem(key);
-      console.log(`Removed storage key: ${key}`);
-    });
-
-    const sessionKeys = Object.keys(sessionStorage);
-    const zustandSessionKeys = sessionKeys.filter(key =>
-      key.includes('zustand') ||
-      key.includes('chat-') ||
-      key.includes('provider-') ||
-      key.includes('session-')
-    );
-
-    zustandSessionKeys.forEach(key => {
-      sessionStorage.removeItem(key);
-      console.log(`Removed session storage key: ${key}`);
-    });
-
-    if (window.indexedDB) {
-      try {
-        const dbNames = [
-          'zustand-persist',
-          'zustand-chat',
-          'chat-sessions',
-          'chat-providers',
-          'message-cache'
-        ];
-
-        dbNames.forEach(dbName => {
-          const request = window.indexedDB.deleteDatabase(dbName);
-          request.onsuccess = () => console.log(`Deleted IndexedDB: ${dbName}`);
-          request.onerror = () => console.error(`Failed to delete IndexedDB: ${dbName}`);
-        });
-      } catch (idbError) {
-        console.error('Error clearing IndexedDB:', idbError);
-      }
-    }
-
-    console.log('Middleware storage cleanup completed');
-    return true;
-  } catch (e) {
-    console.error('Error clearing middleware storage:', e);
-    return false;
+  theme: 'light',
+  uiPreferences: {
+    messageBehavior: 'enter_send',
+    notifications: true,
+    soundEnabled: true,
+    typingIndicators: true
   }
 };
 
 export const useChatStore = create<FullChatStore>()(
   devtools(
-    (set, get) => ({
-      ...initialState,
+    persist(
+      (set, get) => ({
+        ...initialState,
 
-      resetChatState: () => {
-        clearMiddlewareStorage();
+        resetChatState: () => {
+          set({
+            ...initialState,
+            initialized: true,
+            availableProviders: get().availableProviders,
+            currentProvider: get().currentProvider,
+            features: get().features,
+          }, false, { type: 'chat/resetState' });
+        },
 
-        set({
-          ...initialState,
-          initialized: true,
-          availableProviders: get().availableProviders,
-          currentProvider: get().currentProvider,
-          features: get().features,
-        }, false, { type: 'chat/resetState' });
-      },
+        setUserInput: (input: string) => {
+          set({ userInput: input }, false, { type: 'chat/setUserInput' });
+        },
 
-      setUserInput: (input: string) => {
-        set({ userInput: input }, false, { type: 'chat/setUserInput' });
-      },
+        addMessage: (message: Message) => {
+          set(state => ({
+            messages: [...state.messages, {
+              ...message,
+              id: message.id || uuidv4(),
+              timestamp: message.timestamp || new Date().toISOString(),
+            }]
+          }), false, { type: 'chat/addMessage' });
+        },
 
-      addMessage: (message: Message) => {
-        set(state => ({
-          messages: [...state.messages, {
-            id: message.id || uuidv4(),
-            timestamp: new Date().toISOString(),
-            ...message,
-          }]
-        }), false, { type: 'chat/addMessage' });
-      },
+        updateMessage: (id: string, updates: Partial<Message>) => {
+          set(state => ({
+            messages: state.messages.map(msg =>
+              msg.id === id ? { ...msg, ...updates } : msg
+            )
+          }), false, { type: 'chat/updateMessage' });
+        },
 
-      updateMessage: (id: string, updates: Partial<Message>) => {
-        set(state => ({
-          messages: state.messages.map(msg =>
-            msg.id === id ? { ...msg, ...updates } : msg
-          )
-        }), false, { type: 'chat/updateMessage' });
-      },
+        toggleDocked: () => {
+          set(state => ({
+            docked: !state.docked
+          }), false, { type: 'chat/toggleDocked' });
+        },
 
-      toggleDocked: () => {
-        set(state => ({
-          docked: !state.docked
-        }), false, { type: 'chat/toggleDocked' });
-      },
+        setScale: (scale: number) => {
+          set({ scale }, false, { type: 'chat/setScale' });
+        },
 
-      setScale: (scale: number) => {
-        set({ scale }, false, { type: 'chat/setScale' });
-      },
+        setCurrentMode: (mode: ChatMode) => {
+          set({ currentMode: mode }, false, { type: 'chat/setCurrentMode', mode });
+        },
 
-      setCurrentMode: (mode: ChatMode) => {
-        set({ currentMode: mode }, false, { type: 'chat/setCurrentMode', mode });
-      },
+        updateCurrentProvider: (provider: ProviderCategory) => {
+          set({ currentProvider: provider }, false, { type: 'chat/updateCurrentProvider', provider });
+        },
 
-      updateCurrentProvider: (provider: ProviderCategory) => {
-        set({ currentProvider: provider }, false, { type: 'chat/updateCurrentProvider', provider });
-      },
+        updateAvailableProviders: (providers: ProviderCategory[]) => {
+          set({ availableProviders: providers }, false, { type: 'chat/updateAvailableProviders', providers });
+        },
 
-      updateAvailableProviders: (providers: ProviderCategory[]) => {
-        set({ availableProviders: providers }, false, { type: 'chat/updateAvailableProviders', providers });
-      },
+        updateChatProvider: (providers: ProviderCategory[]) => {
+          set({ availableProviders: providers }, false, { type: 'chat/updateChatProvider', providers });
+        },
 
-      updateChatProvider: (providers: ProviderCategory[]) => {
-        set({ availableProviders: providers }, false, { type: 'chat/updateChatProvider', providers });
-      },
+        toggleFeature: (featureName: keyof FeatureState) => {
+          set(state => ({
+            features: {
+              ...state.features,
+              [featureName]: !state.features[featureName],
+            },
+          }), false, { type: 'chat/toggleFeature', feature: featureName });
+        },
 
-      toggleFeature: (featureName: keyof FeatureState) => {
-        set(state => ({
-          features: {
-            ...state.features,
-            [featureName]: !state.features[featureName],
-          },
-        }), false, { type: 'chat/toggleFeature', feature: featureName });
-      },
+        enableFeature: (featureName: keyof FeatureState) => {
+          set(state => ({
+            features: {
+              ...state.features,
+              [featureName]: true,
+            },
+          }), false, { type: 'chat/enableFeature', feature: featureName });
+        },
 
-      enableFeature: (featureName: keyof FeatureState) => {
-        set(state => ({
-          features: {
-            ...state.features,
-            [featureName]: true,
-          },
-        }), false, { type: 'chat/enableFeature', feature: featureName });
-      },
+        disableFeature: (featureName: keyof FeatureState) => {
+          set(state => ({
+            features: {
+              ...state.features,
+              [featureName]: false,
+            },
+          }), false, { type: 'chat/disableFeature', feature: featureName });
+        },
 
-      disableFeature: (featureName: keyof FeatureState) => {
-        set(state => ({
-          features: {
-            ...state.features,
-            [featureName]: false,
-          },
-        }), false, { type: 'chat/disableFeature', feature: featureName });
-      },
+        setFeatureState: (featureName: keyof FeatureState, isEnabled: boolean) => {
+          set(state => ({
+            features: {
+              ...state.features,
+              [featureName]: isEnabled,
+            },
+          }), false, { type: 'chat/setFeatureState', feature: featureName, isEnabled });
+        },
 
-      setFeatureState: (featureName: keyof FeatureState, isEnabled: boolean) => {
-        set(state => ({
-          features: {
-            ...state.features,
-            [featureName]: isEnabled,
-          },
-        }), false, { type: 'chat/setFeatureState', feature: featureName, isEnabled });
-      },
+        setTokenEnforcementMode: (mode: TokenEnforcementMode) => {
+          set(state => ({
+            tokenControl: {
+              ...state.tokenControl,
+              enforcementMode: mode,
+            },
+          }), false, { type: 'chat/setTokenEnforcementMode', mode });
+        },
 
-      setTokenEnforcementMode: (mode: TokenEnforcementMode) => {
-        set(state => ({
-          tokenControl: {
-            ...state.tokenControl,
-            enforcementMode: mode,
-          },
-        }), false, { type: 'chat/setTokenEnforcementMode', mode });
-      },
-
-      addTokens: async (amount: number) => {
-        try {
+        addTokens: async (amount: number) => {
           set(state => ({
             tokenControl: {
               ...state.tokenControl,
@@ -268,30 +215,24 @@ export const useChatStore = create<FullChatStore>()(
             },
           }), false, { type: 'chat/addTokens', amount });
           return true;
-        } catch (error) {
-          console.error('Error adding tokens:', error);
-          return false;
-        }
-      },
+        },
 
-      spendTokens: async (amount: number) => {
-        try {
+        spendTokens: async (amount: number) => {
+          const state = get();
+          if (state.tokenControl.balance < amount) {
+            return false;
+          }
           set(state => ({
             tokenControl: {
               ...state.tokenControl,
-              balance: Math.max(0, state.tokenControl.balance - amount),
+              balance: state.tokenControl.balance - amount,
               lastUpdated: new Date().toISOString(),
             },
           }), false, { type: 'chat/spendTokens', amount });
           return true;
-        } catch (error) {
-          console.error('Error spending tokens:', error);
-          return false;
-        }
-      },
+        },
 
-      setTokenBalance: async (balance: number) => {
-        try {
+        setTokenBalance: async (balance: number) => {
           set(state => ({
             tokenControl: {
               ...state.tokenControl,
@@ -300,14 +241,61 @@ export const useChatStore = create<FullChatStore>()(
             },
           }), false, { type: 'chat/setTokenBalance', balance });
           return true;
-        } catch (error) {
-          console.error('Error setting token balance:', error);
-          return false;
+        },
+
+        // Layout actions
+        toggleMinimize: () => {
+          set(state => ({ isMinimized: !state.isMinimized }), false, { type: 'chat/toggleMinimize' });
+        },
+
+        toggleOpen: () => {
+          set(state => ({ isOpen: !state.isOpen }), false, { type: 'chat/toggleOpen' });
+        },
+
+        setPosition: (position) => {
+          set({ position }, false, { type: 'chat/setPosition' });
+        },
+
+        toggleSidebar: () => {
+          set(state => ({ showSidebar: !state.showSidebar }), false, { type: 'chat/toggleSidebar' });
+        },
+
+        setTheme: (theme) => {
+          set({ theme }, false, { type: 'chat/setTheme' });
+        },
+
+        updatePreferences: (prefs) => {
+          set(state => ({
+            uiPreferences: { ...state.uiPreferences, ...prefs }
+          }), false, { type: 'chat/updatePreferences' });
+        },
+
+        resetLayout: () => {
+          set({
+            isMinimized: initialState.isMinimized,
+            docked: initialState.docked,
+            position: initialState.position,
+            scale: initialState.scale,
+            showSidebar: initialState.showSidebar,
+            theme: initialState.theme,
+            uiPreferences: initialState.uiPreferences
+          }, false, { type: 'chat/resetLayout' });
         }
-      },
-    }),
-    {
-      name: 'ChatStore',
-    }
+      }),
+      {
+        name: 'chat-storage',
+        partialize: (state) => ({
+          messages: state.messages,
+          features: state.features,
+          uiPreferences: state.uiPreferences,
+          theme: state.theme,
+          position: state.position,
+          scale: state.scale,
+          isMinimized: state.isMinimized,
+          docked: state.docked,
+          showSidebar: state.showSidebar
+        })
+      }
+    )
   )
 );

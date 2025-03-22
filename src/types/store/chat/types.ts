@@ -105,4 +105,11 @@ export interface ChatState {
   showSidebar: boolean;
   scale: number;
   ui: UIState;
+  theme: string;
+  uiPreferences: {
+    messageBehavior: 'enter_send';
+    notifications: boolean;
+    soundEnabled: boolean;
+    typingIndicators: boolean;
+  };
 }
