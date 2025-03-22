@@ -34,6 +34,16 @@ type FullChatStore = ChatState & {
   setTheme: (theme: string) => void;
   updatePreferences: (prefs: any) => void;
   resetLayout: () => void;
+  // Message actions
+  removeMessage: (id: string) => void;
+  sendMessage: (content: string, sessionId: string) => Promise<void>;
+  fetchMessages: (sessionId: string) => Promise<void>;
+  // Session actions
+  sessions: ChatSession[];
+  currentSession: ChatSession | null;
+  setCurrentSession: (session: ChatSession) => void;
+  createSession: () => Promise<ChatSession>;
+  updateSession: (session: ChatSession) => void;
 };
 
 const initialState: ChatState = {
@@ -290,6 +300,60 @@ export const useChatStore = create<FullChatStore>()(
             theme: initialState.theme,
             uiPreferences: initialState.uiPreferences
           }, false, { type: 'chat/resetLayout' });
+        },
+
+        // Message actions
+        removeMessage: (id: string) => {
+          set(state => ({
+            messages: state.messages.filter(msg => msg.id !== id)
+          }), false, { type: 'chat/removeMessage' });
+        },
+
+        sendMessage: async (content: string, sessionId: string) => {
+          const message: Message = {
+            id: uuidv4(),
+            content,
+            role: 'user',
+            timestamp: new Date().toISOString(),
+            sessionId
+          };
+          set(state => ({
+            messages: [...state.messages, message]
+          }), false, { type: 'chat/sendMessage' });
+        },
+
+        fetchMessages: async (sessionId: string) => {
+          // Implement message fetching logic here
+          set({ messages: [] }, false, { type: 'chat/fetchMessages' });
+        },
+
+        // Session actions
+        sessions: [],
+        currentSession: null,
+        setCurrentSession: (session: ChatSession) => {
+          set({ currentSession: session }, false, { type: 'chat/setCurrentSession' });
+        },
+
+        createSession: async () => {
+          const session: ChatSession = {
+            id: uuidv4(),
+            title: 'New Chat',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            messages: []
+          };
+          set(state => ({
+            sessions: [...state.sessions, session]
+          }), false, { type: 'chat/createSession' });
+          return session;
+        },
+
+        updateSession: (session: ChatSession) => {
+          set(state => ({
+            sessions: state.sessions.map(s =>
+              s.id === session.id ? session : s
+            )
+          }), false, { type: 'chat/updateSession' });
         }
       }),
       {
@@ -303,7 +367,9 @@ export const useChatStore = create<FullChatStore>()(
           scale: state.scale,
           isMinimized: state.isMinimized,
           docked: state.docked,
-          showSidebar: state.showSidebar
+          showSidebar: state.showSidebar,
+          sessions: state.sessions,
+          currentSession: state.currentSession
         })
       }
     )

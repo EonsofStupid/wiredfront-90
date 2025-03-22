@@ -29,6 +29,5 @@ export * from './ui/chat/layout';
 export * from './ui/chat/messages';
 
 // Feature stores
-export * from '@/features/auth';
 export * from './features/tokens';
 export * from './features/vector';

@@ -4,6 +4,9 @@ import { ConnectionState } from '@/types/websocket';
 
 export interface ChatSession {
   id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
   messages: Message[];
   isMinimized: boolean;
   position: { x: number; y: number };
@@ -112,4 +115,25 @@ export interface ChatState {
     soundEnabled: boolean;
     typingIndicators: boolean;
   };
+}
+
+export type FeatureKey = keyof FeatureState;
+
+export function convertFeatureKeyToChatFeature(key: string): FeatureKey | null {
+  const validKeys: FeatureKey[] = [
+    'voice',
+    'rag',
+    'modeSwitch',
+    'notifications',
+    'github',
+    'codeAssistant',
+    'ragSupport',
+    'githubSync',
+    'tokenEnforcement',
+    'startMinimized',
+    'showTimestamps',
+    'saveHistory'
+  ];
+
+  return validKeys.includes(key as FeatureKey) ? (key as FeatureKey) : null;
 }

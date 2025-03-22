@@ -1,10 +1,7 @@
-import {
-    convertFeatureKeyToChatFeature,
-    FeatureKey
-} from "@/components/chat/store/actions/feature/types";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/services/chat/LoggingService";
 import { useChatStore } from "@/stores/chat/chatStore";
+import { convertFeatureKeyToChatFeature } from "@/types/store/chat/types";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { useFeatureFlag } from "./useFeatureFlag";

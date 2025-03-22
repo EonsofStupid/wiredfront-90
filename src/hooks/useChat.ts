@@ -1,3 +1,5 @@
+import { useModeSwitch } from '@/components/chat/hooks/useModeSwitch';
+import { useSyncModeWithNavigation } from '@/components/chat/hooks/useSyncModeWithNavigation';
 import { useChatStore } from '@/stores/chat/chatStore';
 import { Message } from '@/types/chat';
 import { useCallback } from 'react';
@@ -8,56 +10,109 @@ import { useCallback } from 'react';
  */
 export const useChat = () => {
   // Access store
-  const store = useChatStore();
+  const {
+    messages,
+    addMessage,
+    updateMessage,
+    removeMessage,
+    sendMessage,
+    fetchMessages,
+    sessions,
+    currentSession,
+    setCurrentSession,
+    createSession,
+    updateSession,
+    currentMode,
+    // Layout state
+    isOpen,
+    isMinimized,
+    docked,
+    position,
+    scale,
+    showSidebar,
+    theme,
+    uiPreferences,
+    // Layout actions
+    toggleOpen,
+    toggleMinimize,
+    toggleDocked,
+    toggleSidebar,
+    setPosition,
+    setScale
+  } = useChatStore();
+
+  const { changeMode, getModeLabel, getModeDescription } = useModeSwitch();
+  useSyncModeWithNavigation();
 
   // Create a message
   const handleSendMessage = useCallback(async (content: string) => {
-    store.addMessage({
-      id: crypto.randomUUID(),
-      content,
-      role: 'user',
-      timestamp: new Date().toISOString()
-    });
-  }, [store]);
+    if (!currentSession) {
+      const session = await createSession();
+      setCurrentSession(session);
+      return sendMessage(content, session.id);
+    }
+    return sendMessage(content, currentSession.id);
+  }, [currentSession, createSession, setCurrentSession, sendMessage]);
 
   // Update a message
   const handleUpdateMessage = useCallback((messageId: string, updates: Partial<Message>) => {
-    store.updateMessage(messageId, updates);
-  }, [store]);
+    updateMessage(messageId, updates);
+  }, [updateMessage]);
 
   // Delete a message
   const handleDeleteMessage = useCallback((messageId: string) => {
-    store.updateMessage(messageId, { status: 'deleted' });
-  }, [store]);
+    removeMessage(messageId);
+  }, [removeMessage]);
+
+  // Create a session
+  const handleCreateSession = useCallback(async () => {
+    const session = await createSession();
+    setCurrentSession(session);
+    return session;
+  }, [createSession, setCurrentSession]);
+
+  // Toggle chat open state
+  const toggleChat = useCallback(() => {
+    toggleOpen();
+  }, [toggleOpen]);
 
   return {
     // Layout state
-    isOpen: store.isOpen,
-    isMinimized: store.isMinimized,
-    docked: store.docked,
-    position: store.position,
-    scale: store.scale,
-    showSidebar: store.showSidebar,
-
+    isOpen,
+    isMinimized,
+    docked,
+    position,
+    scale,
+    showSidebar,
+    theme,
+    uiPreferences,
     // Layout actions
-    toggleOpen: () => store.setFeatureState('startMinimized', !store.isOpen),
-    toggleMinimize: () => store.setFeatureState('startMinimized', !store.isMinimized),
-    toggleDocked: store.toggleDocked,
-    toggleSidebar: () => store.setFeatureState('modeSwitch', !store.showSidebar),
-    setPosition: (pos: { x: number; y: number }) => store.setFeatureState('startMinimized', false),
-    setScale: store.setScale,
-
+    toggleOpen,
+    toggleMinimize,
+    toggleDocked,
+    toggleSidebar,
+    setPosition,
+    setScale,
+    toggleChat,
     // Message state
-    messages: store.messages,
-
+    messages,
     // Message actions
     sendMessage: handleSendMessage,
     updateMessage: handleUpdateMessage,
     deleteMessage: handleDeleteMessage,
-
+    fetchMessages,
+    // Session state
+    sessions,
+    currentSession,
+    // Session actions
+    createSession: handleCreateSession,
+    setCurrentSession,
+    updateSession,
     // Mode state and actions
-    currentMode: store.currentMode,
-    setMode: store.setCurrentMode
+    currentMode,
+    setMode: changeMode,
+    getModeLabel,
+    getModeDescription
   };
 };
 
