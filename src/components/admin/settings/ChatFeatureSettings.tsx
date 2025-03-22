@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { useChatLayoutStore } from "@/stores/chat/chatLayoutStore";
 import { KnownFeatureFlag } from "@/types/admin/settings/feature-flags";
-import { DEFAULT_LAYOUT } from "@/types/chat/types";
+import { DEFAULT_LAYOUT } from "@/types/chat/layout";
 import { ArrowLeftRight, Palette, Pin, PinOff, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
