@@ -1,8 +1,11 @@
+
 import { useChatLayoutStore } from '@/features/chat/store/chatLayoutStore';
+import { useChatModeStore } from '@/stores/features/chat/modeStore';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { MessageSquare } from 'lucide-react';
 import React from 'react';
+import { ModeIndicator } from '../ui/ModeIndicator';
 
 interface ChatToggleButtonProps {
   onClick: () => void;
@@ -16,17 +19,18 @@ export const ChatToggleButton: React.FC<ChatToggleButtonProps> = ({
   scale = 1
 }) => {
   const { position } = useChatLayoutStore();
+  const { currentMode } = useChatModeStore();
 
-  const positionClass = position?.x > window.innerWidth / 2
-    ? 'right-4'
-    : 'left-4';
+  const isRightSide = position?.x > window.innerWidth / 2;
+  const positionClass = isRightSide ? 'right-4' : 'left-4';
 
   const buttonStyle: React.CSSProperties = {
     transform: `scale(${scale})`,
-    transformOrigin: 'bottom right',
+    transformOrigin: isRightSide ? 'bottom right' : 'bottom left',
     position: isPreview ? 'relative' : 'fixed',
     bottom: isPreview ? 'auto' : 16,
-    right: isPreview ? 'auto' : position?.x || 16,
+    right: isPreview && !isRightSide ? 'auto' : undefined,
+    left: isPreview && isRightSide ? 'auto' : undefined,
     margin: isPreview ? '0' : undefined,
   };
 
@@ -34,12 +38,13 @@ export const ChatToggleButton: React.FC<ChatToggleButtonProps> = ({
     <motion.button
       className={cn(
         "chat-toggle-button",
-        "bg-gradient-to-r from-neon-blue to-neon-blue/70",
+        "bg-gradient-to-r from-purple-600 to-purple-800",
         "text-white p-3 rounded-full",
         "shadow-[0_0_15px_rgba(168,85,247,0.3)]",
         "z-[var(--z-chat-button)]",
         "border border-purple-500/50",
         "backdrop-blur-md",
+        "relative",
         positionClass
       )}
       style={buttonStyle}
@@ -58,6 +63,11 @@ export const ChatToggleButton: React.FC<ChatToggleButtonProps> = ({
       }}
     >
       <MessageSquare className="h-6 w-6" />
+      
+      {/* Mode indicator */}
+      <div className="absolute -top-2 -right-2">
+        <ModeIndicator mode={currentMode} size="sm" />
+      </div>
     </motion.button>
   );
 };

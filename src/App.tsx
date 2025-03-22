@@ -21,7 +21,8 @@ const App = () => {
   // Initialize auth from our consolidated auth store
   const { initializeAuth, isAuthenticated, user } = useAuthStore();
 
-  // Sync chat mode with navigation
+  // Sync chat mode with navigation - this handles bidirectional sync
+  // between chat mode and the current route
   useSyncModeWithNavigation();
 
   useEffect(() => {

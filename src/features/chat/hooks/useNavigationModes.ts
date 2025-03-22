@@ -63,11 +63,21 @@ export function useNavigationModes() {
    */
   const changeMode = async (newMode: ChatMode): Promise<boolean> => {
     try {
-      // Set the mode in the store
-      setMode(newMode);
+      // If we're already in this mode, no need to change
+      if (newMode === currentMode) {
+        logger.info(`Already in ${newMode} mode`);
+        return true;
+      }
       
       // Get the target route for this mode
       const targetRoute = MODE_ROUTES[newMode];
+      
+      // Use the switchMode function for transition animations
+      const success = await switchMode(newMode);
+      
+      if (!success) {
+        throw new Error(`Failed to switch to ${newMode} mode`);
+      }
       
       // Only navigate if we have a target and we're not already there
       if (targetRoute && location.pathname !== targetRoute) {

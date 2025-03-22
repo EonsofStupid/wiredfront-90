@@ -3,7 +3,8 @@ import { useChatLayoutStore } from '@/features/chat/store/chatLayoutStore';
 import { useChatModeStore } from '@/stores/features/chat/modeStore';
 import { useChatMessageStore } from '@/stores/features/chat/messageStore';
 import { useChatSessionStore } from '@/stores/features/chat/sessionStore';
-import { Message, Session } from '@/types/chat';
+import { useNavigationModes } from '@/features/chat/hooks/useNavigationModes';
+import { Message } from '@/types/chat';
 import { useCallback } from 'react';
 
 /**
@@ -15,7 +16,8 @@ export const useChat = () => {
   const layout = useChatLayoutStore();
   const { messages, addMessage, updateMessage, removeMessage, sendMessage, fetchMessages } = useChatMessageStore();
   const { sessions, currentSession, setCurrentSession, createSession, updateSession } = useChatSessionStore();
-  const { currentMode, setMode } = useChatModeStore();
+  const { currentMode } = useChatModeStore();
+  const { changeMode, getModeLabel, getModeDescription, syncPageWithMode } = useNavigationModes();
 
   // Create a message
   const handleSendMessage = useCallback(async (content: string) => {
@@ -89,7 +91,10 @@ export const useChat = () => {
     
     // Mode state and actions
     currentMode,
-    setMode
+    setMode: changeMode,
+    getModeLabel,
+    getModeDescription,
+    syncPageWithMode
   };
 };
 

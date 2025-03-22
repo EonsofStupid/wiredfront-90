@@ -4,7 +4,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef } from "react";
 import { useViewportAwareness } from "../../hooks/useViewportAwareness";
 import { logger } from "../../services/LoggingService";
-import { useChatLayoutStore } from "@/stores/chat/layoutStore";
+import { useChatLayoutStore } from "@/features/chat/store/chatLayoutStore";
+import { useChatModeStore } from "@/stores/features/chat/modeStore";
 import { ChatContainer } from "./ChatContainer";
 import { ChatSidebar } from "./ChatSidebar";
 import { ChatToggleButton } from "./ChatToggleButton";
@@ -23,8 +24,8 @@ export function DraggableChat() {
     setPosition
   } = useChatLayoutStore();
 
+  const { currentMode } = useChatModeStore();
   const { containerRef, isOverflowing } = useViewportAwareness();
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Load position from localStorage on mount
   useEffect(() => {
@@ -53,9 +54,10 @@ export function DraggableChat() {
       isMinimized,
       showSidebar,
       scale,
-      isOverflowing
+      isOverflowing,
+      currentMode
     });
-  }, [isOpen, isMinimized, showSidebar, scale, isOverflowing]);
+  }, [isOpen, isMinimized, showSidebar, scale, isOverflowing, currentMode]);
 
   if (!isOpen) {
     return <ChatToggleButton onClick={toggleOpen} />;
@@ -93,8 +95,11 @@ export function DraggableChat() {
           )}
         </AnimatePresence>
 
-        {/* Add IconStack component */}
-        <IconStack position={dockPosition === 'bottom-right' ? 'right' : 'left'} />
+        {/* Add IconStack component with proper mode */}
+        <IconStack 
+          position={dockPosition === 'bottom-right' ? 'right' : 'left'} 
+          currentMode={currentMode}
+        />
         
         <ChatContainer dockPosition={dockPosition} />
       </motion.div>
