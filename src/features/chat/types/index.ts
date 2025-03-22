@@ -1,19 +1,31 @@
+
 /**
  * Re-export chat types from the central type definition
  */
-import type { ChatMode, Message, Session } from '@/types/chat';
+import type { 
+  ChatMode, 
+  Message, 
+  Session,
+  ChatTheme,
+  ChatScale,
+  MessageRole,
+  MessageStatus,
+  DockPosition,
+  ChatUIPreferences
+} from '@/types/chat';
 
 // Re-export the types
-export type { ChatMode, Message, Session };
-
-// Re-export with alternative names if needed for backward compatibility
-    export type {
-        ChatMode as ChatModeType,
-        Session as ChatSession
-    };
-
-// Chat modes
-export type ChatMode = 'chat' | 'dev' | 'image' | 'training' | 'code' | 'planning';
+export type { 
+  ChatMode, 
+  Message, 
+  Session,
+  ChatTheme,
+  ChatScale,
+  MessageRole,
+  MessageStatus,
+  DockPosition,
+  ChatUIPreferences
+};
 
 // UI Positioning
 export type ChatPositionType = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
@@ -23,41 +35,7 @@ export interface ChatPosition {
 }
 
 // UI States
-export type ChatScale = number;
-export type ChatTheme = 'light' | 'dark' | 'system' | 'cyberpunk';
-export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'failed' | 'pending' | 'error' | 'cached';
-export type MessageRole = 'user' | 'assistant' | 'system' | 'error' | 'warning' | 'info';
-export type DockPosition = 'left' | 'right' | 'bottom' | 'top' | 'floating' | 'hidden';
-
-// UI Preferences
-export interface ChatUIPreferences {
-  theme: ChatTheme;
-  fontSize: 'small' | 'medium' | 'large';
-  messageBehavior: 'enter_send' | 'ctrl_enter_send' | 'shift_enter_send';
-  notifications: boolean;
-  soundEnabled?: boolean;
-  typingIndicators?: boolean;
-  showTimestamps?: boolean;
-  saveHistory?: boolean;
-}
-
-// Messages
-export interface Message {
-  id: string;
-  content: string;
-  role: MessageRole;
-  timestamp: string;
-  message_status?: MessageStatus;
-  status?: MessageStatus; // For backward compatibility
-  metadata?: Record<string, any>;
-  session_id?: string;
-  user_id?: string | null;
-  created_at?: string;
-  updated_at?: string;
-}
-
-// Layout State
-export interface LayoutState {
+export type ChatLayoutState = {
   isMinimized: boolean;
   isOpen: boolean;
   docked: boolean;
@@ -66,10 +44,10 @@ export interface LayoutState {
   showSidebar: boolean;
   theme: ChatTheme;
   uiPreferences: ChatUIPreferences;
-}
+};
 
 // Default layout configuration
-export const DEFAULT_LAYOUT: LayoutState = {
+export const DEFAULT_LAYOUT: ChatLayoutState = {
   isMinimized: false,
   isOpen: false,
   docked: true,

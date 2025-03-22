@@ -1,5 +1,5 @@
 
-import { useChatLayoutStore } from '@/stores/chat/chatLayoutStore';
+import { useChatLayoutStore } from '@/features/chat/store/chatLayoutStore';
 import { useChatModeStore } from '@/stores/features/chat/modeStore';
 import { useChatMessageStore } from '@/stores/features/chat/messageStore';
 import { useChatSessionStore } from '@/stores/features/chat/sessionStore';
