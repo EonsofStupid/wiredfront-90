@@ -1,12 +1,31 @@
+
 /**
- * Chat Store Exports
- *
- * Zustand: Business logic & persistence
- * Jotai: UI-specific state
+ * Export all chat stores and selectors
  */
 
-// Business Logic (Zustand)
-export * from './chatStore';
+// Export the main chat store
+export { 
+  useChatStore,
+  useMessages,
+  useCurrentSession,
+  useSessions,
+  useCurrentMode
+} from './chatStore';
 
-// UI State (Jotai)
-export * from './atoms';
+// Export UI atoms
+export {
+  isOpenAtom,
+  isMinimizedAtom,
+  isDockedAtom,
+  positionAtom,
+  scaleAtom,
+  showSidebarAtom,
+  themeAtom,
+  toggleOpenAtom,
+  toggleMinimizedAtom,
+  toggleDockedAtom,
+  toggleSidebarAtom
+} from './atoms';
+
+// Export feature-specific stores
+export * from '../features/chat';

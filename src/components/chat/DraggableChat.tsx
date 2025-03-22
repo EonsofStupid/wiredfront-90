@@ -7,6 +7,7 @@ import { ChatContent } from "./ChatContent";
 import { ChatHeader } from "./ChatHeader";
 import { ChatInputArea } from "./ChatInputArea";
 import { ChatButton } from "./ui/ChatButton";
+import "./styles/chat-variables.css";
 
 export function DraggableChat() {
   const {
@@ -19,15 +20,7 @@ export function DraggableChat() {
     setPosition
   } = useChat();
 
-  // Load position from store on mount
-  useEffect(() => {
-    // This is now handled by Jotai's atomWithStorage
-  }, []);
-
-  // Save position to localStorage when it changes
-  useEffect(() => {
-    // This is now handled by Jotai's atomWithStorage
-  }, [position]);
+  // Save position to localStorage when it changes is now handled by Jotai
 
   const togglePosition = () => {
     setPosition({

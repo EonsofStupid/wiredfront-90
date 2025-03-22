@@ -1,6 +1,5 @@
 
 import { useCallback } from 'react';
-import { useChatStore } from '@/stores/chat/chatStore';
 import { useAtom } from 'jotai';
 import { 
   isOpenAtom, 
@@ -13,42 +12,17 @@ import {
   toggleMinimizedAtom,
   toggleDockedAtom,
   toggleSidebarAtom,
-  themeAtom,
-  chatPreferencesAtom
+  themeAtom
 } from '@/stores/ui/chat/atoms';
-import { Message } from '@/types/chat';
+import { useChatStore } from '@/stores/chat/chatStore';
+import { ChatPosition, ChatTheme, Message } from '@/types/chat';
 
 /**
- * Main hook for interacting with the chat system
- * Combines Zustand store for application state and Jotai atoms for UI state
+ * Primary hook for accessing all chat functionality
+ * Combines UI state (Jotai) with application state (Zustand)
  */
 export const useChat = () => {
-  // Zustand state for data
-  const {
-    // Message state and actions
-    messages,
-    addMessage,
-    updateMessage,
-    removeMessage,
-    clearMessages,
-    sendMessage,
-    
-    // Session state and actions
-    sessions,
-    currentSession,
-    setCurrentSession,
-    createSession,
-    updateSession,
-    deleteSession,
-    
-    // Mode state and actions
-    currentMode,
-    setCurrentMode,
-    getModeLabel,
-    getModeDescription
-  } = useChatStore();
-  
-  // Jotai atoms for UI state
+  // UI state from Jotai
   const [isOpen, setIsOpen] = useAtom(isOpenAtom);
   const [isMinimized, setIsMinimized] = useAtom(isMinimizedAtom);
   const [docked, setDocked] = useAtom(isDockedAtom);
@@ -56,46 +30,63 @@ export const useChat = () => {
   const [scale, setScale] = useAtom(scaleAtom);
   const [showSidebar, setShowSidebar] = useAtom(showSidebarAtom);
   const [theme, setTheme] = useAtom(themeAtom);
-  const [uiPreferences] = useAtom(chatPreferencesAtom);
   
-  // Jotai actions
+  // Chat functionality from Zustand
+  const {
+    // Messages
+    messages,
+    addMessage,
+    updateMessage,
+    removeMessage,
+    clearMessages,
+    sendMessage: storeSendMessage,
+    
+    // Sessions
+    sessions,
+    currentSession,
+    setCurrentSession,
+    createSession,
+    
+    // Mode
+    currentMode,
+    setCurrentMode,
+    getModeLabel,
+    getModeDescription
+  } = useChatStore();
+  
+  // UI actions from Jotai
   const [, toggleOpen] = useAtom(toggleOpenAtom);
   const [, toggleMinimize] = useAtom(toggleMinimizedAtom);
   const [, toggleDocked] = useAtom(toggleDockedAtom);
   const [, toggleSidebar] = useAtom(toggleSidebarAtom);
   
-  // Enhanced actions that combine multiple systems
+  // Enhanced combined actions
   
-  // Send a message, creating a session if needed
-  const handleSendMessage = useCallback(async (content: string) => {
+  /**
+   * Send a message, creating a session if needed
+   */
+  const sendMessage = useCallback(async (content: string) => {
     if (!currentSession) {
       const session = await createSession();
       setCurrentSession(session);
-      return sendMessage(content, session.id);
+      return storeSendMessage(content, session.id);
     }
-    return sendMessage(content, currentSession.id);
-  }, [currentSession, createSession, setCurrentSession, sendMessage]);
+    return storeSendMessage(content, currentSession.id);
+  }, [currentSession, createSession, setCurrentSession, storeSendMessage]);
   
-  // Update a message
+  /**
+   * Update an existing message
+   */
   const handleUpdateMessage = useCallback((messageId: string, updates: Partial<Message>) => {
     updateMessage(messageId, updates);
   }, [updateMessage]);
   
-  // Delete a message
+  /**
+   * Delete a message
+   */
   const handleDeleteMessage = useCallback((messageId: string) => {
     removeMessage(messageId);
   }, [removeMessage]);
-  
-  // Create a session
-  const handleCreateSession = useCallback(async (options = {}) => {
-    const session = await createSession(options);
-    return session;
-  }, [createSession]);
-  
-  // Toggle chat open state
-  const toggleChat = useCallback(() => {
-    toggleOpen();
-  }, [toggleOpen]);
   
   return {
     // Layout state
@@ -106,37 +97,34 @@ export const useChat = () => {
     scale,
     showSidebar,
     theme,
-    uiPreferences,
     
     // Layout actions
     toggleOpen,
     toggleMinimize,
     toggleDocked,
     toggleSidebar,
+    setIsOpen,
+    setIsMinimized,
+    setDocked,
     setPosition,
     setScale,
+    setShowSidebar,
     setTheme,
-    toggleChat,
     
-    // Message state
+    // Messages state & actions
     messages,
-    
-    // Message actions
-    sendMessage: handleSendMessage,
+    sendMessage,
     updateMessage: handleUpdateMessage,
     deleteMessage: handleDeleteMessage,
     clearMessages,
     
-    // Session state
+    // Session state & actions
     sessions,
     currentSession,
-    
-    // Session actions
-    createSession: handleCreateSession,
     setCurrentSession,
-    updateSession,
+    createSession,
     
-    // Mode state and actions
+    // Mode state & actions
     currentMode,
     setMode: setCurrentMode,
     getModeLabel,
