@@ -9,8 +9,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import MobileExperience from "./mobile";
 import { AppRoutes } from "./routes";
-import { PUBLIC_ROUTES } from "./routes";
-import { ADMIN_ROUTES } from "./routes/admin";
+import { PUBLIC_ROUTES, ADMIN_ROUTES } from "./routes";
 import { RouteLoggingService } from "./services/navigation/RouteLoggingService";
 
 const App = () => {
@@ -29,7 +28,9 @@ const App = () => {
     // Initialize auth on app load
     const cleanup = initializeAuth();
     return () => {
-      cleanup().catch(console.error);
+      if (cleanup && typeof cleanup === 'function') {
+        cleanup().catch(console.error);
+      }
     };
   }, [initializeAuth]);
 

@@ -99,3 +99,5 @@ export const IconStack: React.FC<IconStackProps> = ({
     </div>
   );
 };
+
+export default IconStack;

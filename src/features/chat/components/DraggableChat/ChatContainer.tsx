@@ -1,5 +1,6 @@
+
 import { cn } from '@/lib/utils';
-import { useChatLayoutStore } from '@/stores/chat/chatLayoutStore';
+import { useChatLayoutStore } from '@/features/chat/store/chatLayoutStore';
 import { useChatModeStore } from '@/stores/features/chat/modeStore';
 import React, { useRef } from 'react';
 import ChatContent from '../ChatContent';

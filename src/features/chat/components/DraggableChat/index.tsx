@@ -1,14 +1,14 @@
 
 import { DndContext } from "@dnd-kit/core";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useViewportAwareness } from "../../hooks/useViewportAwareness";
 import { logger } from "../../services/LoggingService";
 import { useChatLayoutStore } from "@/features/chat/store/chatLayoutStore";
 import { useChatModeStore } from "@/stores/features/chat/modeStore";
 import { ChatContainer } from "./ChatContainer";
 import { ChatSidebar } from "./ChatSidebar";
-import { ChatToggleButton } from "./ChatToggleButton";
+import { ChatButton } from "../ui/ChatButton";
 import { IconStack } from "../IconStack";
 import "../../styles/index.css";
 
@@ -44,23 +44,13 @@ export function DraggableChat() {
 
   // Save position to localStorage when it changes
   useEffect(() => {
-    localStorage.setItem('chatPosition', JSON.stringify(position));
+    if (position) {
+      localStorage.setItem('chatPosition', JSON.stringify(position));
+    }
   }, [position]);
 
-  // Log significant chat state changes
-  useEffect(() => {
-    logger.info('Chat state updated', {
-      isOpen,
-      isMinimized,
-      showSidebar,
-      scale,
-      isOverflowing,
-      currentMode
-    });
-  }, [isOpen, isMinimized, showSidebar, scale, isOverflowing, currentMode]);
-
   if (!isOpen) {
-    return <ChatToggleButton onClick={toggleOpen} />;
+    return <ChatButton position={position} scale={scale} onClick={toggleOpen} />;
   }
 
   // Determine position class based on position state
@@ -106,3 +96,5 @@ export function DraggableChat() {
     </DndContext>
   );
 }
+
+export default DraggableChat;
