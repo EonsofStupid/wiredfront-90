@@ -1,30 +1,11 @@
-/**
- * Chat Component Exports
- */
 
-// Layout Components
-export * from './layout/ChatContainer';
-export * from './layout/ChatFooter';
-export * from './layout/ChatHeader';
-export * from './layout/ChatSidebar';
+// Export DraggableChat and related components
+export { default as DraggableChat } from './DraggableChat';
+export { default as ChatContent } from './ChatContent';
+export { default as ChatHeader } from './ChatHeader';
+export { default as ChatInputArea } from './ChatInputArea';
+export { default as ChatMessage } from './ChatMessage';
+export { ChatButton } from './ui/ChatButton';
 
-// Message Components
-export * from './messages/MessageActions';
-export * from './messages/MessageInput';
-export * from './messages/MessageItem';
-export * from './messages/MessageList';
-
-// UI Components
-export * from './ui/ChatAvatar';
-export * from './ui/ChatBadge';
-export * from './ui/ChatButton';
-export * from './ui/ChatIcon';
-
-// Hooks
-export * from './hooks/useChat';
-export * from './hooks/useChatMessages';
-export * from './hooks/useChatSession';
-export * from './hooks/useChatUI';
-
-// Styles
-import './styles/chat.css';
+// Re-export hook for easy access
+export { useChat } from '@/hooks/useChat';
