@@ -1,19 +1,32 @@
-
-import { StateCreator } from 'zustand';
-import { ChatState } from '../types';
+import { StateCreator } from "zustand";
+import { ChatState } from "../types";
 
 export interface PreferencesSlice {
-  // Preferences state
+  // UI preferences state
   uiPreferences: {
-    messageBehavior: 'enter_send';
-    notifications: boolean;
+    messageBehavior: {
+      autoScroll: boolean;
+      showTimestamps: boolean;
+    };
+    notifications: {
+      enabled: boolean;
+      sound: boolean;
+    };
     soundEnabled: boolean;
     typingIndicators: boolean;
-    showTimestamps: boolean;
   };
-  
-  // Preferences actions
-  updatePreferences: (prefs: Partial<typeof PreferencesSlice.prototype.uiPreferences>) => void;
+
+  // UI preference actions
+  setMessageBehavior: (behavior: {
+    autoScroll?: boolean;
+    showTimestamps?: boolean;
+  }) => void;
+  setNotificationSettings: (settings: {
+    enabled?: boolean;
+    sound?: boolean;
+  }) => void;
+  setSoundEnabled: (enabled: boolean) => void;
+  setTypingIndicators: (enabled: boolean) => void;
 }
 
 export const createPreferencesSlice: StateCreator<
@@ -24,15 +37,51 @@ export const createPreferencesSlice: StateCreator<
 > = (set) => ({
   // Default state
   uiPreferences: {
-    messageBehavior: 'enter_send',
-    notifications: true,
+    messageBehavior: {
+      autoScroll: true,
+      showTimestamps: false,
+    },
+    notifications: {
+      enabled: true,
+      sound: true,
+    },
     soundEnabled: true,
     typingIndicators: true,
-    showTimestamps: true
   },
-  
+
   // Actions
-  updatePreferences: (prefs) => set((state) => ({
-    uiPreferences: { ...state.uiPreferences, ...prefs }
-  }))
+  setMessageBehavior: (behavior) =>
+    set((state) => ({
+      uiPreferences: {
+        ...state.uiPreferences,
+        messageBehavior: {
+          ...state.uiPreferences.messageBehavior,
+          ...behavior,
+        },
+      },
+    })),
+  setNotificationSettings: (settings) =>
+    set((state) => ({
+      uiPreferences: {
+        ...state.uiPreferences,
+        notifications: {
+          ...state.uiPreferences.notifications,
+          ...settings,
+        },
+      },
+    })),
+  setSoundEnabled: (enabled) =>
+    set((state) => ({
+      uiPreferences: {
+        ...state.uiPreferences,
+        soundEnabled: enabled,
+      },
+    })),
+  setTypingIndicators: (enabled) =>
+    set((state) => ({
+      uiPreferences: {
+        ...state.uiPreferences,
+        typingIndicators: enabled,
+      },
+    })),
 });

@@ -16,12 +16,12 @@ export function useSessionManager() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { setSessionLoading } = useChatStore();
+  const { isSessionLoading, setIsSessionLoading } = useChatStore();
 
   const refreshSessions = useCallback(async () => {
     try {
       setIsLoading(true);
-      setSessionLoading(true);
+      setIsSessionLoading(true);
 
       const {
         data: { user },
@@ -51,11 +51,7 @@ export function useSessionManager() {
           project_id: session.project_id || "",
           tokens_used: session.tokens_used || 0,
           message_count: session.message_count || 0,
-          metadata: session.metadata
-            ? ((typeof session.metadata === "string"
-                ? JSON.parse(session.metadata)
-                : session.metadata) as Record<string, any>)
-            : {},
+          metadata: session.metadata || {},
           context: session.context
             ? ((typeof session.context === "string"
                 ? JSON.parse(session.context)
@@ -75,12 +71,13 @@ export function useSessionManager() {
       return formattedSessions;
     } catch (error) {
       handleError(error, "Failed to refresh sessions");
+      toast.error("Failed to load chat sessions");
       return [];
     } finally {
       setIsLoading(false);
-      setSessionLoading(false);
+      setIsSessionLoading(false);
     }
-  }, [currentSessionId, setSessionLoading]);
+  }, [setIsSessionLoading]);
 
   const createSession = useCallback(
     async (options: CreateSessionOptions = {}) => {

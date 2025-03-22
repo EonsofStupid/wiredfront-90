@@ -1,18 +1,21 @@
-
-import { StateCreator } from 'zustand';
-import { ChatState } from '../types';
-import { ChatSession } from '@/types/chat';
-import { v4 as uuidv4 } from 'uuid';
+import { ChatSession, SessionListItem } from "@/types/chat";
+import { StateCreator } from "zustand";
+import { ChatState } from "../types";
 
 export interface SessionSlice {
   // Session state
-  sessions: ChatSession[];
-  currentSession: ChatSession | null;
-  
+  session: {
+    current: ChatSession | null;
+    list: SessionListItem[];
+    isLoading: boolean;
+    error: string | null;
+  };
+
   // Session actions
-  setCurrentSession: (session: ChatSession) => void;
-  createSession: () => Promise<ChatSession>;
-  updateSession: (session: ChatSession) => void;
+  setCurrentSession: (session: ChatSession | null) => void;
+  setSessionList: (sessions: SessionListItem[]) => void;
+  setIsSessionLoading: (isLoading: boolean) => void;
+  setSessionError: (error: string | null) => void;
 }
 
 export const createSessionSlice: StateCreator<
@@ -22,31 +25,43 @@ export const createSessionSlice: StateCreator<
   SessionSlice
 > = (set) => ({
   // Default state
-  sessions: [],
-  currentSession: null,
-  
-  // Actions
-  setCurrentSession: (session) => set({ currentSession: session }),
-  
-  createSession: async () => {
-    const session: ChatSession = {
-      id: uuidv4(),
-      title: 'New Chat',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      messages: []
-    };
-    
-    set((state) => ({
-      sessions: [...state.sessions, session]
-    }));
-    
-    return session;
+  session: {
+    current: null,
+    list: [],
+    isLoading: false,
+    error: null,
   },
-  
-  updateSession: (session) => set((state) => ({
-    sessions: state.sessions.map(s =>
-      s.id === session.id ? session : s
-    )
-  }))
+
+  // Actions
+  setCurrentSession: (session) =>
+    set((state) => ({
+      session: {
+        ...state.session,
+        current: session,
+      },
+    })),
+
+  setSessionList: (sessions) =>
+    set((state) => ({
+      session: {
+        ...state.session,
+        list: sessions,
+      },
+    })),
+
+  setIsSessionLoading: (isLoading) =>
+    set((state) => ({
+      session: {
+        ...state.session,
+        isLoading,
+      },
+    })),
+
+  setSessionError: (error) =>
+    set((state) => ({
+      session: {
+        ...state.session,
+        error,
+      },
+    })),
 });

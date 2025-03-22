@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { createFeatureSlice } from "./slice/featureSlice";
 import { createLayoutSlice } from "./slice/layoutSlice";
-import { createMessagesSlice } from "./slice/messagesSlice";
+import { createMessageSlice } from "./slice/messageSlice";
 import { createModeSlice } from "./slice/modeSlice";
 import { createPreferencesSlice } from "./slice/preferencesSlice";
 import { createSessionSlice } from "./slice/sessionSlice";
@@ -16,26 +16,20 @@ export const useChatStore = create<ChatState>()(
   devtools(
     persist(
       (...a) => ({
+        ...createFeatureSlice(...a),
         ...createLayoutSlice(...a),
-        ...createMessagesSlice(...a),
+        ...createMessageSlice(...a),
         ...createSessionSlice(...a),
         ...createModeSlice(...a),
         ...createPreferencesSlice(...a),
-        ...createFeatureSlice(...a),
       }),
       {
-        name: "chat-storage",
+        name: "chat-store",
         partialize: (state) => ({
           messages: state.messages,
+          session: state.session,
+          mode: state.mode,
           uiPreferences: state.uiPreferences,
-          theme: state.theme,
-          position: state.position,
-          scale: state.scale,
-          isMinimized: state.isMinimized,
-          docked: state.docked,
-          showSidebar: state.showSidebar,
-          sessions: state.sessions,
-          currentSession: state.currentSession,
           features: state.features,
         }),
       }

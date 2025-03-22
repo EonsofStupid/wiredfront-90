@@ -1,48 +1,60 @@
-
-import { StateCreator } from 'zustand';
-import { ChatState } from '../types';
+import { StateCreator } from "zustand";
+import { ChatState } from "../types";
 
 export interface LayoutSlice {
   // Layout state
-  isOpen: boolean;
-  isMinimized: boolean;
-  docked: boolean;
-  position: { x: number; y: number };
-  scale: number;
-  showSidebar: boolean;
-  theme: string;
-  
+  layout: {
+    isSidebarOpen: boolean;
+    isSettingsOpen: boolean;
+    isMinimized: boolean;
+    position: { x: number; y: number };
+  };
+
   // Layout actions
-  toggleOpen: () => void;
-  toggleMinimize: () => void;
-  toggleDocked: () => void;
   toggleSidebar: () => void;
+  toggleSettings: () => void;
+  toggleMinimize: () => void;
   setPosition: (position: { x: number; y: number }) => void;
-  setScale: (scale: number) => void;
-  setTheme: (theme: string) => void;
 }
 
-export const createLayoutSlice: StateCreator<
-  ChatState,
-  [],
-  [],
-  LayoutSlice
-> = (set) => ({
+export const createLayoutSlice: StateCreator<ChatState, [], [], LayoutSlice> = (
+  set
+) => ({
   // Default state
-  isOpen: false,
-  isMinimized: false,
-  docked: true,
-  position: { x: 20, y: 20 },
-  scale: 1,
-  showSidebar: false,
-  theme: 'system',
-  
+  layout: {
+    isSidebarOpen: false,
+    isSettingsOpen: false,
+    isMinimized: false,
+    position: { x: 20, y: 20 },
+  },
+
   // Actions
-  toggleOpen: () => set((state) => ({ isOpen: !state.isOpen })),
-  toggleMinimize: () => set((state) => ({ isMinimized: !state.isMinimized })),
-  toggleDocked: () => set((state) => ({ docked: !state.docked })),
-  toggleSidebar: () => set((state) => ({ showSidebar: !state.showSidebar })),
-  setPosition: (position) => set({ position }),
-  setScale: (scale) => set({ scale }),
-  setTheme: (theme) => set({ theme })
+  toggleSidebar: () =>
+    set((state) => ({
+      layout: {
+        ...state.layout,
+        isSidebarOpen: !state.layout.isSidebarOpen,
+      },
+    })),
+  toggleSettings: () =>
+    set((state) => ({
+      layout: {
+        ...state.layout,
+        isSettingsOpen: !state.layout.isSettingsOpen,
+      },
+    })),
+  toggleMinimize: () =>
+    set((state) => ({
+      layout: {
+        ...state.layout,
+        isMinimized: !state.layout.isMinimized,
+      },
+    })),
+  setPosition: (position) =>
+    set((state) => ({
+      layout: {
+        ...state.layout,
+        position,
+      },
+    })),
 });
