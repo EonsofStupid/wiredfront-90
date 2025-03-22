@@ -1,37 +1,50 @@
+import { useChatStore } from '@/features/chat/store/chatStore';
 import { atom } from 'jotai';
-import { atomWithStorage } from 'jotai/utils';
 import { useGitHubStore } from './githubStore';
 
-// Helper function to get store state
-const getStoreState = () => useGitHubStore.getState();
+// Helper functions to get store states
+const getChatStoreState = () => useChatStore.getState();
+const getGitHubStoreState = () => useGitHubStore.getState();
 
-// UI State Atoms
-export const githubImportModalAtom = atomWithStorage<boolean>('github-import-modal', false);
+// UI State Atoms - These are now derived from chat store
+export const githubImportModalAtom = atom(
+  () => getChatStoreState().showSidebar && getChatStoreState().isOpen
+);
 
-export const githubProfileDialogAtom = atomWithStorage<boolean>('github-profile-dialog', false);
+export const githubProfileDialogAtom = atom(
+  () => getChatStoreState().isOpen && !getChatStoreState().isMinimized
+);
 
-export const githubConnectDialogAtom = atomWithStorage<boolean>('github-connect-dialog', false);
+export const githubConnectDialogAtom = atom(
+  () => getChatStoreState().isOpen && !getChatStoreState().isMinimized
+);
 
-export const githubDisconnectDialogAtom = atomWithStorage<boolean>('github-disconnect-dialog', false);
+export const githubDisconnectDialogAtom = atom(
+  () => getChatStoreState().isOpen && !getChatStoreState().isMinimized
+);
 
-export const githubAccountSwitcherAtom = atomWithStorage<boolean>('github-account-switcher', false);
+export const githubAccountSwitcherAtom = atom(
+  () => getChatStoreState().isOpen && !getChatStoreState().isMinimized
+);
 
-// Data Atoms
-export const githubRepositoriesAtom = atom(() => getStoreState().repositories);
+// Data Atoms - These remain from GitHub store
+export const githubRepositoriesAtom = atom(() => getGitHubStoreState().repositories);
 
-export const selectedRepositoryAtom = atom(() => getStoreState().selectedRepository);
+export const selectedRepositoryAtom = atom(() => getGitHubStoreState().selectedRepository);
 
-export const githubBranchesAtom = atom(() => getStoreState().branches);
+export const githubBranchesAtom = atom(() => getGitHubStoreState().branches);
 
-export const githubCommitsAtom = atom(() => getStoreState().commits);
+export const githubCommitsAtom = atom(() => getGitHubStoreState().commits);
 
-export const githubIssuesAtom = atom(() => getStoreState().issues);
+export const githubIssuesAtom = atom(() => getGitHubStoreState().issues);
 
-export const githubPullRequestsAtom = atom(() => getStoreState().pullRequests);
+export const githubPullRequestsAtom = atom(() => getGitHubStoreState().pullRequests);
 
-// Derived Atoms
+// Derived Atoms - These combine both stores
 export const githubSyncStatusAtom = atom(() => {
-  const store = getStoreState();
+  const store = getGitHubStoreState();
+  const chatStore = getChatStoreState();
+
   return {
     isSyncing: Object.values(store.syncStatus).some(
       (status) => status.status === 'syncing'
@@ -40,16 +53,28 @@ export const githubSyncStatusAtom = atom(() => {
       (status) => status.status === 'error'
     ),
     statuses: store.syncStatus,
+    isVisible: chatStore.isOpen && !chatStore.isMinimized,
+    position: chatStore.position,
+    scale: chatStore.scale,
+    docked: chatStore.docked
   };
 });
 
 export const githubConnectionStatusAtom = atom(() => {
-  const store = getStoreState();
+  const store = getGitHubStoreState();
+  const chatStore = getChatStoreState();
+
   return {
     isConnected: store.isConnected,
     isLoading: store.isLoading,
     error: store.error,
     currentUser: store.currentUser,
     linkedAccounts: store.linkedAccounts,
+    isVisible: chatStore.isOpen && !chatStore.isMinimized,
+    theme: chatStore.themePrefs.theme,
+    fontSize: chatStore.themePrefs.fontSize,
+    animations: chatStore.themePrefs.animations,
+    glowEffects: chatStore.themePrefs.glowEffects,
+    transparencyLevel: chatStore.themePrefs.transparencyLevel
   };
 });
