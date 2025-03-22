@@ -1,66 +1,45 @@
 
+/* Chat Component CSS Variables */
 :root {
-  /* Base chat theme variables */
-  --chat-bg: rgba(0, 0, 0, 0.4);
-  --chat-border: rgba(139, 92, 246, 0.5);
-  --chat-text: #ffffff;
-  --chat-text-muted: rgba(255, 255, 255, 0.6);
+  /* Colors */
+  --chat-bg-primary: rgba(0, 0, 0, 0.8);
+  --chat-bg-secondary: rgba(0, 0, 0, 0.6);
+  --chat-border-color: rgba(139, 92, 246, 0.5);
+  --chat-glow-color: rgba(168, 85, 247, 0.2);
+  --chat-text-primary: #ffffff;
+  --chat-text-secondary: rgba(255, 255, 255, 0.7);
   
   /* Message colors */
   --chat-message-user-bg: #8B5CF6;
-  --chat-message-user-text: #ffffff;
   --chat-message-assistant-bg: #374151;
+  --chat-message-user-text: #ffffff;
   --chat-message-assistant-text: #ffffff;
-  --chat-message-system-bg: rgba(0, 0, 0, 0.2);
-  --chat-message-system-text: #9ca3af;
   
-  /* UI elements */
-  --chat-header-bg: rgba(0, 0, 0, 0.4);
-  --chat-footer-bg: rgba(0, 0, 0, 0.4);
-  --chat-sidebar-bg: rgba(0, 0, 0, 0.3);
-  --chat-input-bg: rgba(0, 0, 0, 0.2);
-  --chat-button-bg: #8B5CF6;
-  --chat-button-hover: #7c3aed;
-  --chat-icon-color: rgba(255, 255, 255, 0.8);
-  
-  /* Neon colors */
-  --chat-neon-purple: #8B5CF6;
-  --chat-neon-pink: #EC4899;
-  --chat-neon-blue: #3B82F6;
-  --chat-neon-green: #10B981;
-  --chat-ocean-blue: #0EA5E9;
-  
-  /* Knowledge source colors */
-  --chat-knowledge-border: rgba(59, 130, 246, 0.5);
-  --chat-knowledge-bg: rgba(59, 130, 246, 0.1);
-  --chat-knowledge-text: rgba(59, 130, 246, 0.8);
-  
-  /* Sizing */
+  /* Dimensions */
   --chat-width: 400px;
-  --chat-min-width: 320px;
-  --chat-max-width: 800px;
-  --chat-height: 500px;
-  --chat-min-height: 300px;
-  --chat-max-height: 80vh;
+  --chat-height: 600px;
   --chat-border-radius: 12px;
-  --chat-button-radius: 8px;
-  --chat-toggle-size: 3rem;
-  --chat-icon-size: 2.5rem;
-  --chat-header-height: 3rem;
-  --chat-scrollbar-width: 4px;
   
-  /* Animations */
-  --chat-transition-speed: 0.3s;
+  /* Z-index values */
+  --z-chat: 50;
+  --z-chat-button: 50;
   
-  /* Shadows */
-  --chat-box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-  --chat-inner-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3);
-  --chat-neon-glow: 0 0 10px rgba(139, 92, 246, 0.3), 0 0 20px rgba(139, 92, 246, 0.2);
-  --chat-cyber-glow: 0 0 5px rgba(0, 255, 255, 0.5), 0 0 10px rgba(255, 0, 127, 0.3);
-  
-  /* Z-index values - match with global z-index for consistency */
-  --z-chat-button: 9700;
-  --z-chat-container: 9650;
-  --z-chat-icons: 9600;
-  --z-chat-popover: 9550;
+  /* Animation durations */
+  --chat-transition-duration: 300ms;
+}
+
+/* Dark mode overrides */
+[data-theme="dark"] {
+  --chat-bg-primary: rgba(0, 0, 0, 0.9);
+  --chat-bg-secondary: rgba(0, 0, 0, 0.7);
+}
+
+/* Light mode overrides */
+[data-theme="light"] {
+  --chat-bg-primary: rgba(255, 255, 255, 0.9);
+  --chat-bg-secondary: rgba(255, 255, 255, 0.7);
+  --chat-text-primary: #000000;
+  --chat-text-secondary: rgba(0, 0, 0, 0.7);
+  --chat-message-assistant-bg: #e5e7eb;
+  --chat-message-assistant-text: #000000;
 }

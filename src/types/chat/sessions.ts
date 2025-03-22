@@ -2,50 +2,27 @@
 /**
  * Session-specific type definitions for the chat system
  */
-import { ChatMode } from './core';
+import { Message } from './messages';
 
-// Session creation options
+// Chat session type
+export interface ChatSession {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  messages: Message[];
+  isMinimized?: boolean;
+  position?: { x: number; y: number };
+}
+
+// Options for creating a new chat session
 export interface SessionCreateOptions {
   title?: string;
-  mode?: ChatMode;
-  metadata?: Record<string, any>;
-  provider_id?: string;
+  initialMessage?: string;
 }
 
-// Base session interface
-export interface BaseSession {
-  id: string;
-  title: string;
-  user_id: string;
-  created_at: string;
-  last_accessed: string;
-  is_active: boolean;
-  mode: ChatMode;
-  provider_id: string;
-  project_id: string;
-  tokens_used: number;
-  message_count: number;
-}
-
-// Session as stored in the database
-export interface DBSession extends BaseSession {
-  metadata: string | Record<string, any>;
-  context?: string | Record<string, any>;
-}
-
-// Session as used in the application
-export interface Session extends BaseSession {
-  metadata: Record<string, any>;
-  context?: Record<string, any>;
-}
-
-// Enhanced chat session with additional metadata
-export interface EnhancedChatSession {
-  id: string;
-  user_id: string;
-  title: string;
-  mode: ChatMode;
-  metadata?: Record<string, any>;
-  created_at?: string;
-  updated_at?: string;
-}
+// Type to represent a session in a list (without full message content)
+export type SessionListItem = Omit<ChatSession, 'messages'> & {
+  messageCount: number;
+  lastMessagePreview?: string;
+};

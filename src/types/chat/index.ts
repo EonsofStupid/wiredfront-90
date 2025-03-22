@@ -6,11 +6,11 @@
 // Core types
 export * from './core';
 export * from './messages';
+export * from './modes';
 export * from './sessions';
 export * from './ui';
 export * from './layout';
 export * from './docking';
-export * from './store';
 
 // Helper functions
 /**

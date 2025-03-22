@@ -3,75 +3,39 @@
  * Mode-specific type definitions for the chat system
  */
 
-// Basic chat modes supported by the system
-export type ChatMode = 
-  | 'chat'     // Standard chat mode
-  | 'dev'      // Developer assistance mode
-  | 'image'    // Image generation mode
-  | 'training' // Training/educational mode
-  | 'planning'; // Planning/architectural mode
+// Chat modes
+export type ChatMode = 'chat' | 'code' | 'assistant';
 
-// Constants for chat modes (matching database)
-export const CHAT_MODES = {
-  CHAT: 'chat',
-  DEV: 'dev',
-  IMAGE: 'image',
-  TRAINING: 'training',
-  PLANNING: 'planning'
-} as const;
+// Default Chat modes array for validation
+export const CHAT_MODES: ChatMode[] = ['chat', 'code', 'assistant'];
 
 /**
- * Type guard for chat modes
+ * Type guard to check if a value is a valid ChatMode
  */
 export function isChatMode(value: unknown): value is ChatMode {
-  return typeof value === 'string' && Object.values(CHAT_MODES).includes(value as ChatMode);
+  return typeof value === 'string' && CHAT_MODES.includes(value as ChatMode);
 }
 
 /**
- * Normalize legacy mode names to current ones
+ * Normalize a potentially invalid chat mode to a valid one
  */
-export function normalizeChatMode(mode: string | null | undefined): ChatMode {
-  if (!mode) return CHAT_MODES.CHAT;
-  
-  // Map legacy values to new expected values
-  const modeMap: Record<string, ChatMode> = {
-    'standard': CHAT_MODES.CHAT,
-    'developer': CHAT_MODES.DEV,
-    'code': CHAT_MODES.DEV,
-    'project': CHAT_MODES.DEV,
-    'assistant': CHAT_MODES.CHAT,
-    'agent': CHAT_MODES.CHAT,
-    'doc': CHAT_MODES.CHAT
-  };
-  
-  // If it's a valid mode, return it or its mapped value
-  const normalizedMode = modeMap[mode as string] || mode;
-  if (isChatMode(normalizedMode)) {
-    return normalizedMode;
+export function normalizeChatMode(mode: unknown): ChatMode {
+  if (isChatMode(mode)) {
+    return mode;
   }
-  
-  // Default fallback
-  return CHAT_MODES.CHAT;
+  return 'chat'; // Default fallback
 }
 
-/**
- * Map of mode names to display names
- */
-export const CHAT_MODE_DISPLAY_NAMES: Record<ChatMode, string> = {
+// Mode labels for UI display
+export const MODE_LABELS: Record<ChatMode, string> = {
   'chat': 'Chat',
-  'dev': 'Developer',
-  'image': 'Image',
-  'training': 'Training',
-  'planning': 'Planning'
+  'code': 'Code Assistant',
+  'assistant': 'Assistant'
 };
 
-/**
- * Map of modes to descriptions
- */
-export const CHAT_MODE_DESCRIPTIONS: Record<ChatMode, string> = {
-  'chat': 'General assistance and conversation',
-  'dev': 'Development and programming help',
-  'image': 'Generate and edit images',
-  'training': 'Educational content and tutorials',
-  'planning': 'Project planning and architecture'
+// Mode descriptions for tooltips/documentation
+export const MODE_DESCRIPTIONS: Record<ChatMode, string> = {
+  'chat': 'General chat mode',
+  'code': 'Code assistance mode',
+  'assistant': 'AI assistant mode'
 };

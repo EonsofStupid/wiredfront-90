@@ -8,6 +8,10 @@ import { createSessionSlice } from './slice/sessionSlice';
 import { createModeSlice } from './slice/modeSlice';
 import { createPreferencesSlice } from './slice/preferencesSlice';
 
+/**
+ * Main chat store with all slices combined
+ * Uses Zustand middleware for persistence and dev tools
+ */
 export const useChatStore = create<ChatState>()(
   devtools(
     persist(
@@ -36,3 +40,43 @@ export const useChatStore = create<ChatState>()(
     )
   )
 );
+
+/**
+ * Export selectors for common state slices
+ */
+export const useMessages = () => useChatStore(state => state.messages);
+export const useCurrentSession = () => useChatStore(state => state.currentSession);
+export const useSessions = () => useChatStore(state => state.sessions);
+export const useUIPreferences = () => useChatStore(state => state.uiPreferences);
+export const useChatMode = () => useChatStore(state => state.currentMode);
+export const useChatLayout = () => {
+  const { 
+    isOpen, 
+    isMinimized, 
+    docked, 
+    position, 
+    scale, 
+    showSidebar,
+    toggleOpen,
+    toggleMinimize,
+    toggleDocked,
+    setPosition,
+    setScale,
+    toggleSidebar
+  } = useChatStore();
+  
+  return {
+    isOpen,
+    isMinimized,
+    docked,
+    position,
+    scale,
+    showSidebar,
+    toggleOpen,
+    toggleMinimize,
+    toggleDocked,
+    setPosition,
+    setScale,
+    toggleSidebar
+  };
+};

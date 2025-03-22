@@ -1,6 +1,9 @@
 
 import { ChatMode, ChatSession, Message } from '@/types/chat';
 
+/**
+ * Complete chat state type definition combining all slices
+ */
 export interface ChatState {
   // Layout state
   isOpen: boolean;
