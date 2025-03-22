@@ -1,28 +1,14 @@
-import { useModeSwitch } from '@/components/chat/hooks/useModeSwitch';
-import { useSyncModeWithNavigation } from '@/components/chat/hooks/useSyncModeWithNavigation';
+
+import { useCallback } from 'react';
 import { useChatStore } from '@/stores/chat/chatStore';
 import { Message } from '@/types/chat';
-import { useCallback } from 'react';
 
 /**
  * Main hook for interacting with the chat system
  * Provides access to all chat-related state and actions
  */
 export const useChat = () => {
-  // Access store
   const {
-    messages,
-    addMessage,
-    updateMessage,
-    removeMessage,
-    sendMessage,
-    fetchMessages,
-    sessions,
-    currentSession,
-    setCurrentSession,
-    createSession,
-    updateSession,
-    currentMode,
     // Layout state
     isOpen,
     isMinimized,
@@ -32,19 +18,48 @@ export const useChat = () => {
     showSidebar,
     theme,
     uiPreferences,
+    
     // Layout actions
     toggleOpen,
     toggleMinimize,
     toggleDocked,
     toggleSidebar,
     setPosition,
-    setScale
+    setScale,
+    setTheme,
+    
+    // Messages state
+    messages,
+    
+    // Messages actions
+    addMessage,
+    updateMessage,
+    removeMessage,
+    sendMessage,
+    clearMessages,
+    
+    // Session state
+    sessions,
+    currentSession,
+    
+    // Session actions
+    setCurrentSession,
+    createSession,
+    updateSession,
+    
+    // Mode state
+    currentMode,
+    
+    // Mode actions
+    setCurrentMode,
+    getModeLabel,
+    getModeDescription,
+    
+    // Preferences actions
+    updatePreferences
   } = useChatStore();
 
-  const { changeMode, getModeLabel, getModeDescription } = useModeSwitch();
-  useSyncModeWithNavigation();
-
-  // Create a message
+  // Send a message, creating a session if needed
   const handleSendMessage = useCallback(async (content: string) => {
     if (!currentSession) {
       const session = await createSession();
@@ -86,6 +101,7 @@ export const useChat = () => {
     showSidebar,
     theme,
     uiPreferences,
+    
     // Layout actions
     toggleOpen,
     toggleMinimize,
@@ -93,26 +109,35 @@ export const useChat = () => {
     toggleSidebar,
     setPosition,
     setScale,
+    setTheme,
     toggleChat,
+    
     // Message state
     messages,
+    
     // Message actions
     sendMessage: handleSendMessage,
     updateMessage: handleUpdateMessage,
     deleteMessage: handleDeleteMessage,
-    fetchMessages,
+    clearMessages,
+    
     // Session state
     sessions,
     currentSession,
+    
     // Session actions
     createSession: handleCreateSession,
     setCurrentSession,
     updateSession,
+    
     // Mode state and actions
     currentMode,
-    setMode: changeMode,
+    setMode: setCurrentMode,
     getModeLabel,
-    getModeDescription
+    getModeDescription,
+    
+    // Preferences actions
+    updatePreferences
   };
 };
 

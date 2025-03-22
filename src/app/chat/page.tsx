@@ -1,3 +1,4 @@
+
 import { DraggableChat } from '@/components/chat';
 
 export default function ChatPage() {

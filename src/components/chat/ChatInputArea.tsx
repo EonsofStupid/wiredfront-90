@@ -22,12 +22,6 @@ export function ChatInputArea() {
     if (uiPreferences.messageBehavior === 'enter_send' && e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
-    } else if (uiPreferences.messageBehavior === 'ctrl_enter_send' && e.key === 'Enter' && e.ctrlKey) {
-      e.preventDefault();
-      handleSendMessage();
-    } else if (uiPreferences.messageBehavior === 'shift_enter_send' && e.key === 'Enter' && e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
     }
   };
 

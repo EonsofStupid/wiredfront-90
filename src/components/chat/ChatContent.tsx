@@ -1,9 +1,7 @@
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useChat } from "@/hooks/useChat";
 import { ChatMessage } from "./ChatMessage";
-import { GitHubSyncModule } from "./modules/GitHubSyncModule";
-import { NotificationsModule } from "./modules/NotificationsModule";
-import { RAGModule } from "./modules/RAGModule";
 
 export function ChatContent() {
   const { messages, currentSession } = useChat();
@@ -27,11 +25,6 @@ export function ChatContent() {
   return (
     <ScrollArea className="flex-1 p-4">
       <div className="space-y-4">
-        <div className="flex flex-col gap-2">
-          <GitHubSyncModule />
-          <NotificationsModule />
-          <RAGModule />
-        </div>
         {messages.map((message) => (
           <ChatMessage
             key={message.id}

@@ -1,5 +1,6 @@
+
 import { cn } from "@/lib/utils";
-import { useChatStore } from "@/stores/chat/chatStore";
+import { useChat } from "@/hooks/useChat";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { ChatContent } from "./ChatContent";
@@ -12,14 +13,11 @@ export function DraggableChat() {
     isOpen,
     toggleOpen,
     isMinimized,
-    showSidebar,
-    scale,
     docked,
     position,
-    setPosition,
-    togglePosition,
-    currentMode
-  } = useChatStore();
+    scale,
+    setPosition
+  } = useChat();
 
   // Load position from store on mount
   useEffect(() => {
@@ -41,12 +39,19 @@ export function DraggableChat() {
     localStorage.setItem('chatPosition', JSON.stringify(position));
   }, [position]);
 
+  const togglePosition = () => {
+    setPosition({
+      x: position.x > window.innerWidth / 2 ? 0 : window.innerWidth,
+      y: position.y
+    });
+  };
+
   if (!isOpen) {
     return <ChatButton position={position} scale={scale} onClick={toggleOpen} />;
   }
 
   // Determine position class based on position state
-  const dockPosition = position?.x > window.innerWidth / 2 ? 'bottom-right' : 'bottom-left';
+  const dockPosition = position.x > window.innerWidth / 2 ? 'bottom-right' : 'bottom-left';
 
   return (
     <div>
