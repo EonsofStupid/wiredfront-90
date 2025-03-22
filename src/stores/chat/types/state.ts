@@ -1,9 +1,9 @@
 import { FeatureState } from "@/types/chat/features";
-import { LayoutSlice } from "./slice/layoutSlice";
-import { MessageSlice } from "./slice/messageSlice";
-import { ModeSlice } from "./slice/modeSlice";
-import { PreferencesSlice } from "./slice/preferencesSlice";
-import { SessionSlice } from "./slice/sessionSlice";
+import { LayoutSlice } from "../slice/layoutSlice";
+import { MessageSlice } from "../slice/messageSlice";
+import { ModeSlice } from "../slice/modeSlice";
+import { PreferencesSlice } from "../slice/preferencesSlice";
+import { SessionSlice } from "../slice/sessionSlice";
 
 /**
  * Complete chat state type definition combining all slices

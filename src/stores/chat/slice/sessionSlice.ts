@@ -1,6 +1,6 @@
 import { ChatSession, SessionListItem } from "@/types/chat";
 import { StateCreator } from "zustand";
-import { ChatState } from "../types";
+import { ChatState } from "../types/state";
 
 export interface SessionSlice {
   // Session state

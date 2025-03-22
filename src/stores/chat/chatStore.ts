@@ -6,7 +6,7 @@ import { createMessageSlice } from "./slice/messageSlice";
 import { createModeSlice } from "./slice/modeSlice";
 import { createPreferencesSlice } from "./slice/preferencesSlice";
 import { createSessionSlice } from "./slice/sessionSlice";
-import { ChatState } from "./types";
+import { ChatState } from "./types/state";
 
 /**
  * Main chat store with all slices combined
@@ -49,10 +49,8 @@ export const useUIPreferences = () =>
 export const useFeatures = () => useChatStore((state) => state.features);
 export const useChatMode = () => useChatStore((state) => state.mode.current);
 export const useChatLayout = () => {
-  const {
-    layout,
-    actions: { toggleSidebar, toggleSettings, toggleMinimize, setPosition },
-  } = useChatStore();
+  const { layout, toggleSidebar, toggleSettings, toggleMinimize, setPosition } =
+    useChatStore();
 
   return {
     ...layout,

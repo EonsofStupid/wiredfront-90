@@ -1,6 +1,6 @@
 import { ChatMode } from "@/types/chat";
 import { StateCreator } from "zustand";
-import { ChatState } from "../types";
+import { ChatState } from "../types/state";
 
 export interface ModeSlice {
   // Mode state

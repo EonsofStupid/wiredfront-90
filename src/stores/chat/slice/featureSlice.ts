@@ -1,6 +1,6 @@
 import { ChatFeatureKey, FeatureState } from "@/types/chat/features";
 import { StateCreator } from "zustand";
-import { ChatState } from "../types";
+import { ChatState } from "../types/state";
 
 const defaultFeatures: Record<ChatFeatureKey, boolean> = {
   enableCodeCompletion: true,

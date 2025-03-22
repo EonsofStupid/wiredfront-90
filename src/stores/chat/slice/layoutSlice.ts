@@ -1,5 +1,5 @@
 import { StateCreator } from "zustand";
-import { ChatState } from "../types";
+import { ChatState } from "../types/state";
 
 export interface LayoutSlice {
   // Layout state
