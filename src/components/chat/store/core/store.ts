@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { devtools } from "zustand/middleware";
+import { devtools, DevtoolsOptions } from "zustand/middleware";
 import { createFeatureActions } from "../features/actions";
 import { ChatState } from "../types/chat-store-types";
 import { createUIActions } from "../ui/actions";
@@ -132,13 +132,11 @@ export const clearMiddlewareStorage = () => {
   }
 };
 
-export const useChatStore = create<
-  FullChatStore,
-  StoreMiddlewares,
-  StoreDevtools
->()(
+type StoreWithDevtools = ReturnType<typeof devtools<FullChatStore>>;
+
+export const useChatStore = create<FullChatStore>()(
   devtools(
-    (set, get) => ({
+    (set, get, store) => ({
       ...initialState,
 
       resetChatState: () => {
@@ -157,13 +155,13 @@ export const useChatStore = create<
         );
       },
 
-      ...createInitializationActions(set, get),
-      ...createFeatureActions(set, get),
-      ...createUIActions(set, get),
+      ...createInitializationActions(set, get, store),
+      ...createFeatureActions(set, get, store),
+      ...createUIActions(set, get, store),
     }),
     {
       name: "ChatStore",
       enabled: process.env.NODE_ENV !== "production",
-    }
+    } as DevtoolsOptions
   )
 );

@@ -19,7 +19,7 @@ export const createFeatureActions: StateCreator<
   [],
   [],
   FeatureSlice
-> = (set, get) => ({
+> = (set, get, store) => ({
   toggleFeature: (feature) => {
     set({
       features: {

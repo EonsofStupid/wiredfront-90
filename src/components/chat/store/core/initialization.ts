@@ -24,7 +24,7 @@ export const createInitializationActions: StateCreator<
   [],
   [],
   InitSlice
-> = (set, get) => ({
+> = (set, get, store) => ({
   initializeChatSettings: async () => {
     try {
       logger.info("Initializing chat settings");

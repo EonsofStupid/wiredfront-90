@@ -7,7 +7,8 @@ type UISlice = Pick<UIStore, keyof UIStateActions>;
 
 export const createUIActions: StateCreator<UIStore, [], [], UISlice> = (
   set,
-  get
+  get,
+  store
 ) => ({
   toggleMinimize: () => set({ isMinimized: !get().isMinimized }),
   toggleSidebar: () => set({ showSidebar: !get().showSidebar }),
