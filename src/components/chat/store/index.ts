@@ -1,3 +1,16 @@
+// Core store exports
+export { clearMiddlewareStorage, useChatStore } from "./core/store";
 
-export { useChatStore } from './chatStore';
-export type { ChatState, ChatPosition } from './types/chat-store-types';
+// Types
+export type {
+  ChatFeatures,
+  ChatMessage,
+  ChatProvider,
+  ChatState,
+  ChatUI,
+} from "./types/chat-store-types";
+
+// Actions
+export { createInitializationActions } from "./core/initialization";
+export { createFeatureActions } from "./features/actions";
+export { createUIActions } from "./ui/actions";

@@ -1,5 +1,29 @@
+import {
+  ChatMode,
+  TokenEnforcementMode,
+} from "@/integrations/supabase/types/enums";
 import { Message } from "@/types/chat";
-import { ChatMode, TokenEnforcementMode } from "@/integrations/supabase/types/enums";
+
+// Re-export Message type as ChatMessage
+export type ChatMessage = Message;
+
+export interface ChatFeatures {
+  voice: boolean;
+  rag: boolean;
+  modeSwitch: boolean;
+  notifications: boolean;
+  github: boolean;
+  codeAssistant: boolean;
+  ragSupport: boolean;
+  githubSync: boolean;
+  tokenEnforcement: boolean;
+}
+
+export interface ChatUI {
+  sessionLoading: boolean;
+  messageLoading: boolean;
+  providerLoading: boolean;
+}
 
 export interface ChatProvider {
   id: string;
@@ -7,10 +31,14 @@ export interface ChatProvider {
   type: string;
   isDefault: boolean;
   isEnabled?: boolean;
-  category?: 'chat' | 'image' | 'integration';
+  category?: "chat" | "image" | "integration";
 }
 
-export type ChatPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+export type ChatPosition =
+  | "bottom-right"
+  | "bottom-left"
+  | "top-right"
+  | "top-left";
 
 export interface TokenControl {
   balance: number;
@@ -23,12 +51,12 @@ export interface TokenControl {
 
 export interface ChatState {
   initialized: boolean;
-  messages: Message[];
+  messages: ChatMessage[];
   userInput: string;
   isWaitingForResponse: boolean;
   selectedModel: string;
   selectedMode: string;
-  modelFetchStatus: 'idle' | 'loading' | 'success' | 'error';
+  modelFetchStatus: "idle" | "loading" | "success" | "error";
   error: string | null;
   chatId: string | null;
   docked: boolean;
@@ -36,39 +64,24 @@ export interface ChatState {
   isHidden: boolean;
   position: ChatPosition | { x: number; y: number };
   startTime: number;
-  features: {
-    voice: boolean;
-    rag: boolean;
-    modeSwitch: boolean;
-    notifications: boolean;
-    github: boolean;
-    // Feature flags that components expect
-    codeAssistant: boolean;
-    ragSupport: boolean;
-    githubSync: boolean;
-    tokenEnforcement: boolean;
-  };
+  features: ChatFeatures;
   currentMode: ChatMode;
   availableProviders: ChatProvider[];
   currentProvider: ChatProvider | null;
-  
+
   // Token control system
   tokenControl: TokenControl;
-  
+
   // Add providers mapping for session management
   providers?: {
     availableProviders: ChatProvider[];
   };
-  
+
   // UI state properties
   isMinimized: boolean;
   showSidebar: boolean;
   scale: number;
-  ui: {
-    sessionLoading: boolean;
-    messageLoading: boolean;
-    providerLoading: boolean;
-  };
+  ui: ChatUI;
 
   // Store actions
   resetChatState: () => void;
