@@ -1,41 +1,45 @@
-import { supabase } from '@/integrations/supabase/client';
-import { SessionOperationResult } from '@/types/sessions';
-import { logger } from '@/services/chat/LoggingService';
-import { clearMiddlewareStorage } from '@/components/chat/store/chatStore';
+import { clearMiddlewareStorage } from "@/components/chat/store";
+import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/services/chat/LoggingService";
+import { SessionOperationResult } from "@/types/sessions";
 
 /**
  * Deletes inactive sessions, keeping the current session and recent ones
  */
-export async function cleanupSessions(currentSessionId: string): Promise<number> {
+export async function cleanupSessions(
+  currentSessionId: string
+): Promise<number> {
   try {
     // Get user from Supabase auth
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
-      throw new Error('User not authenticated');
+      throw new Error("User not authenticated");
     }
 
     // Keep current session and the 5 most recently updated sessions
     const { data, error } = await supabase
-      .from('chat_sessions')
-      .select('id, last_accessed')
-      .eq('user_id', user.id)
-      .order('last_accessed', { ascending: false });
+      .from("chat_sessions")
+      .select("id, last_accessed")
+      .eq("user_id", user.id)
+      .order("last_accessed", { ascending: false });
 
     if (error) throw error;
 
     if (!data || !Array.isArray(data)) {
-      throw new Error('Invalid data returned from database');
+      throw new Error("Invalid data returned from database");
     }
 
     // Keep the current session and the 5 most recent ones
     const sessionsToKeep = new Set<string>([
-      currentSessionId, 
-      ...data.slice(0, 5).map(s => s.id)
+      currentSessionId,
+      ...data.slice(0, 5).map((s) => s.id),
     ]);
-    
+
     const sessionsToDelete = data
-      .filter(s => !sessionsToKeep.has(s.id))
-      .map(s => s.id);
+      .filter((s) => !sessionsToKeep.has(s.id))
+      .map((s) => s.id);
 
     if (sessionsToDelete.length === 0) {
       return 0;
@@ -43,31 +47,35 @@ export async function cleanupSessions(currentSessionId: string): Promise<number>
 
     // Delete inactive sessions
     const { error: deleteError } = await supabase
-      .from('chat_sessions')
+      .from("chat_sessions")
       .delete()
-      .in('id', sessionsToDelete);
+      .in("id", sessionsToDelete);
 
     if (deleteError) throw deleteError;
 
     // Delete associated messages
     const { error: messagesError } = await supabase
-      .from('messages')
+      .from("messages")
       .delete()
-      .in('chat_session_id', sessionsToDelete);
+      .in("chat_session_id", sessionsToDelete);
 
     if (messagesError) {
-      logger.warn('Failed to delete some associated messages', { error: messagesError });
+      logger.warn("Failed to delete some associated messages", {
+        error: messagesError,
+      });
     }
 
     // Clear Zustand persistence for deleted sessions
-    sessionsToDelete.forEach(sessionId => {
+    sessionsToDelete.forEach((sessionId) => {
       localStorage.removeItem(`chat-session-${sessionId}`);
     });
 
-    logger.info('Cleaned up inactive sessions', { count: sessionsToDelete.length });
+    logger.info("Cleaned up inactive sessions", {
+      count: sessionsToDelete.length,
+    });
     return sessionsToDelete.length;
   } catch (error) {
-    logger.error('Failed to clean up sessions', { error });
+    logger.error("Failed to clean up sessions", { error });
     throw error;
   }
 }
@@ -75,75 +83,84 @@ export async function cleanupSessions(currentSessionId: string): Promise<number>
 /**
  * Clears all sessions for the current user except the specified one
  */
-export async function clearAllSessions(currentSessionId: string | null = null): Promise<SessionOperationResult> {
+export async function clearAllSessions(
+  currentSessionId: string | null = null
+): Promise<SessionOperationResult> {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
-      throw new Error('User not authenticated');
+      throw new Error("User not authenticated");
     }
 
     // Start a transaction to ensure both operations succeed or fail together
-    let query = supabase
-      .from('chat_sessions')
-      .delete();
-    
+    let query = supabase.from("chat_sessions").delete();
+
     // If currentSessionId is provided and not null, exclude it from deletion
     if (currentSessionId) {
-      query = query.neq('id', currentSessionId);
-      
+      query = query.neq("id", currentSessionId);
+
       // Delete messages for all sessions except the current one
       const { error: messagesError } = await supabase
-        .from('messages')
+        .from("messages")
         .delete()
-        .eq('user_id', user.id)
-        .neq('chat_session_id', currentSessionId);
-      
+        .eq("user_id", user.id)
+        .neq("chat_session_id", currentSessionId);
+
       if (messagesError) {
-        logger.warn('Failed to delete some associated messages', { error: messagesError });
+        logger.warn("Failed to delete some associated messages", {
+          error: messagesError,
+        });
       }
-      
+
       // Now delete the sessions (except current)
-      const { error, count } = await query.eq('user_id', user.id);
-      
+      const { error, count } = await query.eq("user_id", user.id);
+
       if (error) throw error;
-      
+
       // Clear Zustand persistence for all sessions except current
       const keys = Object.keys(localStorage);
-      keys.forEach(key => {
-        if (key.startsWith('chat-session-') && !key.includes(currentSessionId)) {
+      keys.forEach((key) => {
+        if (
+          key.startsWith("chat-session-") &&
+          !key.includes(currentSessionId)
+        ) {
           localStorage.removeItem(key);
         }
       });
-      
-      logger.info('Cleared sessions except current', { 
-        count: count, 
-        preservedSessionId: currentSessionId 
+
+      logger.info("Cleared sessions except current", {
+        count: count,
+        preservedSessionId: currentSessionId,
       });
     } else {
       // Delete all messages for the user
       const { error: messagesError } = await supabase
-        .from('messages')
+        .from("messages")
         .delete()
-        .eq('user_id', user.id);
-      
+        .eq("user_id", user.id);
+
       if (messagesError) {
-        logger.warn('Failed to delete associated messages', { error: messagesError });
+        logger.warn("Failed to delete associated messages", {
+          error: messagesError,
+        });
       }
-      
+
       // Delete all sessions for the user
-      const { error, count } = await query.eq('user_id', user.id);
-      
+      const { error, count } = await query.eq("user_id", user.id);
+
       if (error) throw error;
-      
+
       // Clear all Zustand persistence
       clearMiddlewareStorage();
-      
-      logger.info('Cleared all sessions', { count });
+
+      logger.info("Cleared all sessions", { count });
     }
-    
+
     return { success: true };
   } catch (error) {
-    logger.error('Failed to clear sessions', { error });
+    logger.error("Failed to clear sessions", { error });
     return { success: false, error };
   }
 }

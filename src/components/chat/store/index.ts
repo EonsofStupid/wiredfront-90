@@ -1,5 +1,6 @@
 // Core store exports
-export { clearMiddlewareStorage, useChatStore } from "./core/store";
+export { useChatStore } from "./chatStore";
+export { clearMiddlewareStorage } from "./core/store";
 
 // Types
 export type {
