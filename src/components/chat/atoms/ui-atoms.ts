@@ -1,6 +1,8 @@
+import { ChatMode } from "@/integrations/supabase/types/enums";
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import { ChatMode, ChatPosition } from "../store/types/chat-store-types";
+import { useChatStore } from "../store/chatStore";
+import { ChatPosition } from "../store/types/chat-store-types";
 
 // UI State Atoms
 export const chatPositionAtom = atomWithStorage<ChatPosition>(
@@ -10,7 +12,27 @@ export const chatPositionAtom = atomWithStorage<ChatPosition>(
 export const chatScaleAtom = atomWithStorage<number>("chat-scale", 1);
 export const isMinimizedAtom = atom<boolean>(false);
 export const showSidebarAtom = atom<boolean>(false);
-export const currentModeAtom = atom<ChatMode>("standard");
+export const currentModeAtom = atom<ChatMode>("chat");
+
+// Sync with Zustand store
+export const isChatVisibleAtom = atom(
+  (get) => {
+    const isMinimized = get(isMinimizedAtom);
+    const showSidebar = get(showSidebarAtom);
+    const { isHidden } = useChatStore.getState();
+    return !isMinimized && showSidebar && !isHidden;
+  },
+  (get, set, isVisible: boolean) => {
+    const { isHidden } = useChatStore.getState();
+    if (isVisible) {
+      set(showSidebarAtom, true);
+      useChatStore.getState().showChat();
+    } else {
+      set(showSidebarAtom, false);
+      useChatStore.getState().toggleChat();
+    }
+  }
+);
 
 // Derived Atoms
 export const chatWindowStyleAtom = atom((get) => {
@@ -22,13 +44,6 @@ export const chatWindowStyleAtom = atom((get) => {
     scale,
     transform: `scale(${scale})`,
   };
-});
-
-// Computed Atoms
-export const isChatVisibleAtom = atom((get) => {
-  const isMinimized = get(isMinimizedAtom);
-  const showSidebar = get(showSidebarAtom);
-  return !isMinimized && showSidebar;
 });
 
 // UI State Actions

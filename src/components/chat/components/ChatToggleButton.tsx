@@ -1,8 +1,9 @@
+import { ChatMode } from "@/integrations/supabase/types/enums";
 import { logger } from "@/services/chat/LoggingService";
 import { motion } from "framer-motion";
 import { Code, MessageSquare, MessagesSquare } from "lucide-react";
 import React from "react";
-import { ChatMode, ChatPosition } from "../../store/types/chat-store-types";
+import { ChatPosition } from "../../store/types/chat-store-types";
 import styles from "./ChatToggleButton.module.css";
 
 interface ChatToggleButtonProps {
@@ -26,17 +27,17 @@ export function ChatToggleButton({
 
   // Pick icon based on mode
   const Icon =
-    mode === "editor"
+    mode === "dev"
       ? Code
-      : mode === "chat-only"
+      : mode === "training"
       ? MessagesSquare
       : MessageSquare;
 
   // Determine tooltip text based on mode
   const tooltipText =
-    mode === "editor"
+    mode === "dev"
       ? "Open Code Assistant"
-      : mode === "chat-only"
+      : mode === "training"
       ? "Open Context Planning"
       : "Open Chat";
 
