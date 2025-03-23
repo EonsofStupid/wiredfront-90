@@ -1,14 +1,16 @@
+
+import React, { useEffect, useCallback } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { logger } from "@/services/chat/LoggingService";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { AnimatePresence, motion } from "framer-motion";
-import React, { useCallback, useEffect } from "react";
-import { MessageSkeleton } from "../components/MessageSkeleton";
-import { useAutoScroll } from "../hooks/useAutoScroll";
-import { useErrorBoundary } from "../hooks/useErrorBoundary";
 import { Message } from "../Message";
 import { useMessageStore } from "../messaging/MessageManager";
-import { useChatStore } from "../store/chatStore";
+import { AnimatePresence, motion } from "framer-motion";
+import { useAutoScroll } from '../hooks/useAutoScroll';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { useErrorBoundary } from '../hooks/useErrorBoundary';
+import { Spinner } from '../components/Spinner';
+import { logger } from '@/services/chat/LoggingService';
+import { MessageSkeleton } from '../components/MessageSkeleton';
+import { useChatStore } from '../store/chatStore';
 
 interface MessageModuleProps {
   scrollRef: React.RefObject<HTMLDivElement>;
@@ -19,14 +21,14 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
   const { ui } = useChatStore();
   const { scrollToBottom } = useAutoScroll(scrollRef);
   const { ErrorBoundary, DefaultErrorFallback } = useErrorBoundary();
-
+  
   // Handle retry logic for failed messages
   const handleRetry = useCallback((messageId: string) => {
-    logger.info("Attempting to retry message", { messageId });
-    // In a real implementation, we would call a function from useMessageStore
+    logger.info('Attempting to retry message', { messageId });
+    // In a real implementation, we would call a function from useMessageStore 
     // to retry sending the message
   }, []);
-
+  
   // Virtual list implementation for performance optimization
   const rowVirtualizer = useVirtualizer({
     count: messages.length,
@@ -34,14 +36,14 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
     estimateSize: () => 80, // Estimated height of each message
     overscan: 5, // Number of items to render outside of the visible area
   });
-
+  
   // Scroll to bottom when new messages arrive
   useEffect(() => {
     if (messages.length > 0) {
       scrollToBottom();
     }
   }, [messages.length, scrollToBottom]);
-
+  
   if (messages.length === 0) {
     if (ui.sessionLoading) {
       return (
@@ -52,13 +54,11 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
         </div>
       );
     }
-
+    
     return (
       <div className="flex flex-col items-center justify-center h-full p-4 text-center">
         <p className="text-muted-foreground mb-2">No messages yet</p>
-        <p className="text-xs text-muted-foreground">
-          Start a conversation by typing a message below
-        </p>
+        <p className="text-xs text-muted-foreground">Start a conversation by typing a message below</p>
       </div>
     );
   }
@@ -74,11 +74,11 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
         </div>
       }
     >
-      <ScrollArea
+      <ScrollArea 
         ref={scrollRef}
         className="w-full h-full chat-messages-container relative"
       >
-        <div
+        <div 
           className="relative w-full"
           style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
         >
@@ -111,7 +111,7 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
               </div>
             );
           })}
-
+          
           {/* Render loading indicator for new message */}
           {ui.messageLoading && (
             <motion.div

@@ -1,14 +1,9 @@
+import React from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { MessageSquare, Clock, Check, Hash, AlertCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { AlertCircle, Check, Clock, Hash, MessageSquare } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMessageStore } from "../messaging/MessageManager";
-import { Message } from "../store/types/chat-store-types";
 
 interface SessionItemProps {
   id: string;
@@ -18,35 +13,32 @@ interface SessionItemProps {
   title?: string;
   onSelect: (id: string) => void;
   provider?: string;
-  message: Message;
 }
 
-export const SessionItem = ({
-  id,
-  lastAccessed,
-  isActive,
+export const SessionItem = ({ 
+  id, 
+  lastAccessed, 
+  isActive, 
   messageCount = 0,
   title,
   onSelect,
-  provider,
+  provider
 }: SessionItemProps) => {
   // Format the date with date-fns
   const formattedDate = formatDistanceToNow(lastAccessed, { addSuffix: true });
-
+  
   // Determine if session is recent (less than 1 hour old)
-  const isRecent =
-    new Date().getTime() - lastAccessed.getTime() < 60 * 60 * 1000;
+  const isRecent = new Date().getTime() - lastAccessed.getTime() < 60 * 60 * 1000;
 
   // Get the first message for this session
-  const messages = useMessageStore((state) => state.messages);
-  const sessionMessages = messages.filter((m) => m.sessionId === id);
-  const firstMessage = sessionMessages[0]?.content || "New Chat";
+  const messages = useMessageStore(state => state.messages);
+  const sessionMessages = messages.filter(m => m.sessionId === id);
+  const firstMessage = sessionMessages[0]?.content || 'New Chat';
 
   // Truncate the first message for display
-  const truncatedMessage =
-    firstMessage.length > 50
-      ? firstMessage.substring(0, 50) + "..."
-      : firstMessage;
+  const truncatedMessage = firstMessage.length > 50 
+    ? firstMessage.substring(0, 50) + '...' 
+    : firstMessage;
 
   // Check if session is getting long (more than 20 messages)
   const isLongSession = messageCount > 20;
@@ -58,8 +50,8 @@ export const SessionItem = ({
           <Button
             variant={isActive ? "secondary" : "ghost"}
             className={`w-full justify-start gap-2 mb-1 transition-all duration-200 ${
-              isActive
-                ? "bg-chat-message-assistant-bg/50 text-chat-knowledge-text chat-cyber-border"
+              isActive 
+                ? "bg-chat-message-assistant-bg/50 text-chat-knowledge-text chat-cyber-border" 
                 : "hover:bg-chat-message-assistant-bg/20"
             }`}
             onClick={() => onSelect(id)}
@@ -68,7 +60,9 @@ export const SessionItem = ({
             <div className="flex-1 text-left truncate flex flex-col">
               <span className="truncate">{truncatedMessage}</span>
               {provider && (
-                <span className="text-xs opacity-70 truncate">{provider}</span>
+                <span className="text-xs opacity-70 truncate">
+                  {provider}
+                </span>
               )}
             </div>
             {messageCount > 0 && (
@@ -85,10 +79,7 @@ export const SessionItem = ({
                   <AlertCircle className="h-4 w-4 text-yellow-500" />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>
-                    This session is getting long. Consider starting a new chat
-                    for better performance.
-                  </p>
+                  <p>This session is getting long. Consider starting a new chat for better performance.</p>
                 </TooltipContent>
               </Tooltip>
             )}
@@ -98,21 +89,20 @@ export const SessionItem = ({
             </span>
           </Button>
         </TooltipTrigger>
-        <TooltipContent
-          side="right"
+        <TooltipContent 
+          side="right" 
           className="text-xs chat-dialog-content max-w-[300px]"
         >
           <div className="space-y-1">
             <p className="font-medium">First Message:</p>
             <p className="opacity-90">{firstMessage}</p>
             <p>Last accessed: {lastAccessed.toLocaleString()}</p>
-            <p>Status: {isActive ? "Active" : "Inactive"}</p>
+            <p>Status: {isActive ? 'Active' : 'Inactive'}</p>
             {messageCount > 0 && <p>Messages: {messageCount}</p>}
             {provider && <p>Provider: {provider}</p>}
             {isLongSession && (
               <p className="text-yellow-500">
-                ⚠️ This session is getting long. Consider starting a new chat
-                for better performance.
+                ⚠️ This session is getting long. Consider starting a new chat for better performance.
               </p>
             )}
           </div>

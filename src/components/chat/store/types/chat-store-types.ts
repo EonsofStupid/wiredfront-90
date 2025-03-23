@@ -1,38 +1,11 @@
-import { Json } from "@/integrations/supabase/types";
-import { TokenEnforcementMode } from "@/integrations/supabase/types/enums";
+import {
+  ChatMode,
+  TokenEnforcementMode,
+} from "@/integrations/supabase/types/enums";
+import { Message } from "@/types/chat";
 
-export type MessageStatus = "pending" | "sent" | "failed" | "error" | "cached";
-export type MessageRole = "user" | "assistant" | "system";
-
-export interface Message {
-  id: string;
-  content: string;
-  user_id: string | null;
-  type: "text" | "command" | "system";
-  metadata: Json;
-  created_at: string;
-  updated_at: string;
-  chat_session_id: string;
-  is_minimized: boolean;
-  position: Json;
-  window_state: Json;
-  last_accessed: string;
-  retry_count: number;
-  message_status: MessageStatus;
-  role: MessageRole;
-  source_type?: string;
-  provider?: string;
-  processing_status?: string;
-  last_retry?: string;
-  rate_limit_window?: string;
-}
-
-export type ChatMode = "chat" | "dev" | "image" | "training";
-export type ChatPosition =
-  | "bottom-right"
-  | "bottom-left"
-  | "top-right"
-  | "top-left";
+// Re-export Message type as ChatMessage
+export type ChatMessage = Message;
 
 export interface ChatFeatures {
   voice: boolean;
@@ -61,10 +34,16 @@ export interface ChatProvider {
   category?: "chat" | "image" | "integration";
 }
 
+export type ChatPosition =
+  | "bottom-right"
+  | "bottom-left"
+  | "top-right"
+  | "top-left";
+
 export interface TokenControl {
   balance: number;
   enforcementMode: TokenEnforcementMode;
-  lastUpdated: number | null;
+  lastUpdated: string | null;
   tokensPerQuery: number;
   freeQueryLimit: number;
   queriesUsed: number;
@@ -72,11 +51,11 @@ export interface TokenControl {
 
 export interface ChatState {
   initialized: boolean;
-  messages: Message[];
+  messages: ChatMessage[];
   userInput: string;
   isWaitingForResponse: boolean;
   selectedModel: string;
-  selectedMode: ChatMode;
+  selectedMode: string;
   modelFetchStatus: "idle" | "loading" | "success" | "error";
   error: string | null;
   chatId: string | null;
@@ -89,10 +68,16 @@ export interface ChatState {
   currentMode: ChatMode;
   availableProviders: ChatProvider[];
   currentProvider: ChatProvider | null;
+
+  // Token control system
   tokenControl: TokenControl;
-  providers: {
+
+  // Add providers mapping for session management
+  providers?: {
     availableProviders: ChatProvider[];
   };
+
+  // UI state properties
   isMinimized: boolean;
   showSidebar: boolean;
   scale: number;
@@ -100,18 +85,6 @@ export interface ChatState {
 
   // Store actions
   resetChatState: () => void;
-  setUserInput: (input: string) => void;
-  setChatId: (id: string | null) => void;
-  setIsWaitingForResponse: (waiting: boolean) => void;
-  setCurrentMode: (mode: ChatMode) => void;
-  setPosition: (position: ChatPosition) => void;
-  setIsMinimized: (minimized: boolean) => void;
-  setShowSidebar: (show: boolean) => void;
-  toggleChat: () => void;
-  minimizeChat: () => void;
-  maximizeChat: () => void;
-  closeChat: () => void;
-  openChat: () => void;
 }
 
 export interface UIStateActions {

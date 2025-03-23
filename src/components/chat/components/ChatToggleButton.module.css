@@ -1,5 +1,3 @@
-@import "../styles/theme.css";
-
 .button {
   @apply rounded-full p-4;
   color: var(--chat-button-text);
@@ -18,8 +16,7 @@
 }
 
 .container {
-  @apply fixed bottom-4;
-  z-index: var(--z-chat);
+  @apply fixed bottom-4 z-[var(--z-chat)];
 }
 
 .container[data-position="bottom-right"] {

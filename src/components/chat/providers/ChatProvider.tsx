@@ -1,8 +1,6 @@
-
 import { Spinner } from "@/components/shared/Spinner";
 import { useSessionManager } from "@/hooks/useSessionManager";
 import { logger } from "@/services/chat/LoggingService";
-import { Provider, useSetAtom } from "jotai";
 import {
   createContext,
   ReactNode,
@@ -12,9 +10,9 @@ import {
 } from "react";
 import { useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
-import { showSidebarAtom } from "../atoms/ui-atoms";
 import { useMessageStore } from "../messaging/MessageManager";
 import { useChatStore } from "../store/chatStore";
+import { ChatModeProvider } from "./ChatModeProvider";
 
 interface ChatContextType {
   isEditorPage: boolean;
@@ -24,16 +22,14 @@ interface ChatContextType {
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
-function ChatProviderContent({ children }: { children: ReactNode }) {
+export function ChatProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const isEditorPage = location.pathname === "/editor";
-  const { isOpen, initializeChatSettings, setSessionLoading, showChat } =
-    useChatStore();
+  const { isOpen, initializeChatSettings, setSessionLoading } = useChatStore();
   const { currentSessionId, refreshSessions } = useSessionManager();
   const messageStore = useMessageStore();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
-  const setShowSidebar = useSetAtom(showSidebarAtom);
 
   useEffect(() => {
     const initialize = async () => {
@@ -49,8 +45,6 @@ function ChatProviderContent({ children }: { children: ReactNode }) {
           setSessionLoading(false);
         }
 
-        showChat();
-        setShowSidebar(true); // Ensure the sidebar is visible by default
         setIsInitialized(true);
       } catch (error) {
         logger.error("Failed to initialize chat", { error });
@@ -67,8 +61,6 @@ function ChatProviderContent({ children }: { children: ReactNode }) {
     location.pathname,
     refreshSessions,
     setSessionLoading,
-    showChat,
-    setShowSidebar,
   ]);
 
   useEffect(() => {
@@ -97,17 +89,11 @@ function ChatProviderContent({ children }: { children: ReactNode }) {
     <ChatContext.Provider
       value={{ isEditorPage, isInitialized, isInitializing }}
     >
-      {children}
-      <Toaster position="top-right" />
+      <ChatModeProvider isEditorPage={isEditorPage}>
+        {children}
+        <Toaster position="top-right" />
+      </ChatModeProvider>
     </ChatContext.Provider>
-  );
-}
-
-export function ChatProvider({ children }: { children: ReactNode }) {
-  return (
-    <Provider>
-      <ChatProviderContent>{children}</ChatProviderContent>
-    </Provider>
   );
 }
 

@@ -1,81 +1,30 @@
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Mic, Square } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useVoiceRecognition } from "./useVoiceRecognition";
 
 interface VoiceToTextButtonProps {
   onTranscription: (text: string) => void;
-  isProcessing?: boolean;
-}
-
-// Extend the built-in SpeechRecognition interface
-interface WebkitSpeechRecognition extends SpeechRecognition {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-}
-
-declare global {
-  interface Window {
-    webkitSpeechRecognition: {
-      new (): WebkitSpeechRecognition;
-    };
-  }
+  isProcessing: boolean;
 }
 
 export function VoiceToTextButton({
   onTranscription,
-  isProcessing = false,
+  isProcessing,
 }: VoiceToTextButtonProps) {
-  const [isListening, setIsListening] = useState(false);
-  const [isError, setIsError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [recognition, setRecognition] =
-    useState<WebkitSpeechRecognition | null>(null);
+  const { isListening, isError, errorMessage, startListening, stopListening } =
+    useVoiceRecognition((text) => {
+      onTranscription(text);
+      toast.success("Voice transcription completed");
+    });
 
-  useEffect(() => {
-    if (typeof window !== "undefined" && "webkitSpeechRecognition" in window) {
-      const recognition = new window.webkitSpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = "en-US";
-
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        onTranscription(transcript);
-        setIsListening(false);
-        toast.success("Voice transcription completed");
-      };
-
-      recognition.onerror = (event) => {
-        setIsError(true);
-        setErrorMessage(event.error);
-        setIsListening(false);
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      setRecognition(recognition);
-    } else {
-      setIsError(true);
-      setErrorMessage("Speech recognition is not supported in your browser");
-    }
-  }, [onTranscription]);
-
-  const handleClick = useCallback(() => {
-    if (!recognition) return;
-
+  const handleClick = () => {
     if (isListening) {
-      recognition.stop();
+      stopListening();
     } else {
-      setIsError(false);
-      setErrorMessage(null);
-      recognition.start();
-      setIsListening(true);
+      startListening();
     }
-  }, [isListening, recognition]);
+  };
 
   if (isError) {
     return (
@@ -98,7 +47,6 @@ export function VoiceToTextButton({
       onClick={handleClick}
       disabled={isProcessing}
       className="relative h-[var(--chat-input-height)] border border-[var(--chat-knowledge-border)] bg-[var(--chat-knowledge-bg)]/50"
-      title="Use browser's speech recognition"
       data-testid="voice-to-text-button"
     >
       {isListening ? (

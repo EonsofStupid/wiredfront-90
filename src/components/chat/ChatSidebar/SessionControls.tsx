@@ -1,5 +1,10 @@
-import { Spinner } from "@/components/shared/Spinner";
-import {
+
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Plus, Trash2, X, TrashIcon } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Spinner } from '../components/Spinner';
+import { 
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -10,15 +15,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Plus, Trash2, TrashIcon, X } from "lucide-react";
-import React from "react";
 
 interface SessionControlsProps {
   onNewSession: () => void;
@@ -35,25 +31,21 @@ export const SessionControls: React.FC<SessionControlsProps> = ({
   onClearSessions,
   onClearAllSessions,
   sessionCount,
-  isLoading = false,
+  isLoading = false
 }) => {
   return (
     <div className="p-3 border-t border-white/10 flex justify-between items-center gap-2">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 px-2"
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 px-2" 
               onClick={onNewSession}
               disabled={isLoading}
             >
-              {isLoading ? (
-                <Spinner size="sm" />
-              ) : (
-                <Plus className="h-4 w-4 mr-1" />
-              )}
+              {isLoading ? <Spinner size="sm" /> : <Plus className="h-4 w-4 mr-1" />}
               New Chat
             </Button>
           </TooltipTrigger>
@@ -68,9 +60,9 @@ export const SessionControls: React.FC<SessionControlsProps> = ({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
                   className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
                   onClick={onCleanupSessions}
                   disabled={isLoading}
@@ -89,9 +81,9 @@ export const SessionControls: React.FC<SessionControlsProps> = ({
               <Tooltip>
                 <AlertDialogTrigger asChild>
                   <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
                       className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
                       disabled={isLoading}
                     >
@@ -104,22 +96,16 @@ export const SessionControls: React.FC<SessionControlsProps> = ({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <AlertDialogContent
-              className="glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#D946EF]/20"
-              style={{ zIndex: 9900 }}
-            >
+            <AlertDialogContent className="glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#D946EF]/20" style={{ zIndex: 9900 }}>
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete Other Sessions</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will delete ALL other chat sessions except the current
-                  one. This action cannot be undone.
+                  This will delete ALL other chat sessions except the current one. This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel className="border-white/10 hover:bg-white/10">
-                  Cancel
-                </AlertDialogCancel>
-                <AlertDialogAction
+                <AlertDialogCancel className="border-white/10 hover:bg-white/10">Cancel</AlertDialogCancel>
+                <AlertDialogAction 
                   onClick={onClearSessions}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
@@ -134,9 +120,9 @@ export const SessionControls: React.FC<SessionControlsProps> = ({
               <Tooltip>
                 <AlertDialogTrigger asChild>
                   <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
                       className="h-8 w-8 text-muted-foreground hover:bg-red-500/20 hover:text-red-500 transition-colors"
                       disabled={isLoading}
                     >
@@ -149,23 +135,16 @@ export const SessionControls: React.FC<SessionControlsProps> = ({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <AlertDialogContent
-              className="glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#D946EF]/20"
-              style={{ zIndex: 9900 }}
-            >
+            <AlertDialogContent className="glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#D946EF]/20" style={{ zIndex: 9900 }}>
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete All Sessions</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will delete ALL chat sessions, including the current
-                  active one, and create a new empty session. This action cannot
-                  be undone.
+                  This will delete ALL chat sessions, including the current active one, and create a new empty session. This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel className="border-white/10 hover:bg-white/10">
-                  Cancel
-                </AlertDialogCancel>
-                <AlertDialogAction
+                <AlertDialogCancel className="border-white/10 hover:bg-white/10">Cancel</AlertDialogCancel>
+                <AlertDialogAction 
                   onClick={onClearAllSessions}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >

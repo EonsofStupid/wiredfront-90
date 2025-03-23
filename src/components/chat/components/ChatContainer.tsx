@@ -4,15 +4,7 @@ import { useChatStore } from "../store/chatStore";
 import type { ChatContainerProps } from "../types";
 import { Messages } from "./Messages";
 
-interface ExtendedChatContainerProps extends ChatContainerProps {
-  isMinimized: boolean;
-}
-
-function ChatContainerBase({
-  scrollRef,
-  isEditorPage,
-  isMinimized,
-}: ExtendedChatContainerProps) {
+function ChatContainerBase({ scrollRef, isEditorPage }: ChatContainerProps) {
   const chatRef = useRef<HTMLDivElement>(null);
   const { docked } = useChatStore();
 
@@ -41,7 +33,7 @@ function ChatContainerBase({
         chatRef.current = el;
         setNodeRef(el);
       }}
-      className={`chat-container chat-glass ${isMinimized ? "minimized" : ""}`}
+      className="chat-container chat-glass"
       style={style}
       {...attributes}
       {...listeners}
