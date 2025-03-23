@@ -1,56 +1,75 @@
-
-import { create } from "zustand";
 import { logger } from "@/services/chat/LoggingService";
+import { create } from "zustand";
+import { createInitializationActions } from "./core/initialization";
+import { createFeatureActions } from "./features/actions";
+import { ChatState, UIStateActions } from "./types/chat-store-types";
+import { createUIActions } from "./ui/actions";
 
-export interface ChatState {
-  isOpen: boolean;
-  isHidden: boolean;
-  docked: boolean;
-  position: "bottom-right" | "bottom-left";
-  messages: any[];
-  loading: boolean;
-  setIsOpen: (isOpen: boolean) => void;
-  setIsHidden: (isHidden: boolean) => void;
-  setDocked: (docked: boolean) => void;
-  setPosition: (position: "bottom-right" | "bottom-left") => void;
-  togglePosition: () => void;
-}
+type FullChatStore = ChatState &
+  UIStateActions &
+  ReturnType<typeof createInitializationActions> &
+  ReturnType<typeof createFeatureActions>;
 
 // Initialize the chat store with proper default values
-const initialState: Omit<ChatState, 
-  'setIsOpen' | 'setIsHidden' | 'setDocked' | 'setPosition' | 'togglePosition'
-> = {
-  isOpen: false,
-  isHidden: false, // Make sure this is explicitly set to false
-  docked: false,
-  position: "bottom-right",
+const initialState: Omit<ChatState, keyof UIStateActions> = {
+  initialized: false,
   messages: [],
-  loading: false,
+  userInput: "",
+  isWaitingForResponse: false,
+  selectedModel: "gpt-4",
+  selectedMode: "chat",
+  modelFetchStatus: "idle",
+  error: null,
+  chatId: null,
+  docked: false,
+  isOpen: false,
+  isHidden: false,
+  position: "bottom-right",
+  startTime: Date.now(),
+  features: {
+    voice: true,
+    rag: true,
+    modeSwitch: true,
+    notifications: true,
+    github: true,
+    codeAssistant: true,
+    ragSupport: true,
+    githubSync: true,
+    tokenEnforcement: false,
+  },
+  currentMode: "chat",
+  availableProviders: [],
+  currentProvider: null,
+  tokenControl: {
+    balance: 0,
+    enforcementMode: "never",
+    lastUpdated: null,
+    tokensPerQuery: 1,
+    freeQueryLimit: 5,
+    queriesUsed: 0,
+  },
+  providers: {
+    availableProviders: [],
+  },
+  isMinimized: false,
+  showSidebar: false,
+  scale: 1,
+  ui: {
+    sessionLoading: false,
+    messageLoading: false,
+    providerLoading: false,
+  },
+  resetChatState: () => {
+    logger.info("Resetting chat state");
+    // Additional reset logic can go here
+  },
 };
 
-export const useChatStore = create<ChatState>((set) => ({
+export const useChatStore = create<FullChatStore>()((set, get, store) => ({
   ...initialState,
-  setIsOpen: (isOpen) => {
-    logger.debug("Setting chat isOpen", { isOpen });
-    set({ isOpen });
-  },
-  setIsHidden: (isHidden) => {
-    logger.debug("Setting chat isHidden", { isHidden });
-    set({ isHidden });
-  },
-  setDocked: (docked) => {
-    logger.debug("Setting chat docked", { docked });
-    set({ docked });
-  },
-  setPosition: (position) => {
-    logger.debug("Setting chat position", { position });
-    set({ position });
-  },
-  togglePosition: () => {
-    set((state) => ({
-      position: state.position === "bottom-right" ? "bottom-left" : "bottom-right",
-    }));
-  },
+  ...createInitializationActions(set, get, store),
+  ...createFeatureActions(set, get, store),
+  ...createUIActions(set, get, store),
 }));
 
 // Initialize chat settings

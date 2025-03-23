@@ -96,4 +96,5 @@ export interface UIStateActions {
   setProviderLoading: (isLoading: boolean) => void;
   setScale: (scale: number) => void;
   setCurrentMode: (mode: ChatMode) => void;
+  setUserInput: (input: string) => void;
 }

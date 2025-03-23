@@ -26,4 +26,6 @@ export const createUIActions: StateCreator<UIStore, [], [], UISlice> = (
   setScale: (scale: number) => set({ scale }),
 
   setCurrentMode: (mode: ChatMode) => set({ currentMode: mode }),
+
+  setUserInput: (input: string) => set({ userInput: input }),
 });
