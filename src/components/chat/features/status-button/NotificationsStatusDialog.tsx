@@ -39,10 +39,10 @@ const notificationIcons: Record<Notification["type"], LucideIcon> = {
 };
 
 const notificationColors: Record<Notification["type"], string> = {
-  info: "text-blue-400",
-  success: "text-green-400",
-  warning: "text-amber-400",
-  error: "text-red-400",
+  info: "text-[var(--chat-notification-info)]",
+  success: "text-[var(--chat-notification-success)]",
+  warning: "text-[var(--chat-notification-warning)]",
+  error: "text-[var(--chat-notification-error)]",
 };
 
 export function NotificationsStatusDialog() {
@@ -246,7 +246,7 @@ export function NotificationsStatusDialog() {
           {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
-              className="flex items-start justify-between p-3 rounded-md bg-chat-message-system-bg/30"
+              className="flex items-start justify-between p-3 rounded-md bg-[var(--chat-notification-read-bg)]"
             >
               <div className="space-y-1 w-full">
                 <Skeleton className="h-4 w-3/4" />
@@ -260,28 +260,29 @@ export function NotificationsStatusDialog() {
 
     if (notifications.length === 0) {
       return (
-        <div className="text-center py-8 text-white/60">
+        <div className="text-center py-8 text-[var(--chat-text)]/60">
           <BellIcon className="h-8 w-8 mx-auto mb-2 opacity-40" />
           <p className="mb-1">No notifications</p>
-          <p className="text-xs text-muted-foreground">You're all caught up!</p>
+          <p className="text-xs text-[var(--chat-message-system-text)]">
+            You're all caught up!
+          </p>
         </div>
       );
     }
 
     return (
-      <div className="space-y-2 max-h-[300px] overflow-y-auto chat-messages-container pr-2">
+      <ul className="space-y-2 max-h-[300px] overflow-y-auto chat-messages-container pr-2">
         {notifications.map((notification) => {
           const NotificationIcon = notificationIcons[notification.type];
           const colorClass = notificationColors[notification.type];
           return (
-            <div
-              role="list"
+            <li
               key={notification.id}
               className={`flex items-start justify-between p-3 rounded-md ${
                 notification.read
-                  ? "bg-chat-message-system-bg/30"
-                  : "bg-chat-message-assistant-bg/30"
-              } hover:bg-chat-message-assistant-bg/40 transition-colors duration-200`}
+                  ? "bg-[var(--chat-notification-read-bg)]"
+                  : "bg-[var(--chat-notification-unread-bg)]"
+              } hover:bg-[var(--chat-notification-hover-bg)] transition-colors duration-200`}
               aria-label={
                 notification.read ? "Read notification" : "Unread notification"
               }
@@ -299,14 +300,14 @@ export function NotificationsStatusDialog() {
                     {notification.message}
                   </p>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="flex items-center text-xs text-muted-foreground">
+                    <span className="flex items-center text-xs text-[var(--chat-message-system-text)]">
                       <Clock className="h-3 w-3 mr-1" />
                       {formatTime(notification.timestamp)}
                     </span>
                     {!notification.read && (
                       <Badge
                         variant="outline"
-                        className="text-[10px] h-4 bg-red-500/10 text-red-400"
+                        className="text-[10px] h-4 bg-[var(--chat-notification-background)] text-[var(--chat-notification-text)]"
                       >
                         New
                       </Badge>
@@ -318,7 +319,7 @@ export function NotificationsStatusDialog() {
                 {!notification.read && (
                   <button
                     onClick={() => markAsRead(notification.id)}
-                    className="text-primary hover:text-primary/80 p-1 rounded-sm hover:bg-white/5 transition-colors"
+                    className="text-[var(--chat-knowledge-text)] hover:text-[var(--chat-knowledge-text)]/80 p-1 rounded-sm hover:bg-[var(--chat-notification-hover)] transition-colors"
                     aria-label="Mark as read"
                   >
                     <CheckIcon className="h-3.5 w-3.5" />
@@ -326,16 +327,16 @@ export function NotificationsStatusDialog() {
                 )}
                 <button
                   onClick={() => dismissNotification(notification.id)}
-                  className="text-muted-foreground hover:text-destructive p-1 rounded-sm hover:bg-white/5 transition-colors"
+                  className="text-[var(--chat-message-system-text)] hover:text-[var(--chat-notification-text)] p-1 rounded-sm hover:bg-[var(--chat-notification-hover)] transition-colors"
                   aria-label="Dismiss notification"
                 >
                   <XIcon className="h-3.5 w-3.5" />
                 </button>
               </div>
-            </div>
+            </li>
           );
         })}
-      </div>
+      </ul>
     );
   }
 }

@@ -1,52 +1,76 @@
-
-import React, { memo, useCallback } from "react";
-import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
-import { Check, Clock, AlertCircle } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { AlertCircle, Check, Clock } from "lucide-react";
+import { memo, useCallback } from "react";
 
 interface MessageProps {
   content: string;
-  role: 'user' | 'assistant' | 'system';
-  status?: 'pending' | 'sent' | 'failed';
+  role: "user" | "assistant" | "system";
+  status?: "pending" | "sent" | "failed";
   id?: string;
   timestamp?: string;
   onRetry?: (id: string) => void;
 }
 
 // Use memo to prevent unnecessary re-renders
-const Message = memo(function Message({ 
-  content, 
-  role, 
-  status = 'sent',
+const Message = memo(function Message({
+  content,
+  role,
+  status = "sent",
   id,
   timestamp,
-  onRetry
+  onRetry,
 }: MessageProps) {
   // Map role to appropriate CSS classes
-  const messageClass = role === 'user' 
-    ? 'chat-message-user' 
-    : role === 'system' 
-      ? 'chat-message-system' 
-      : 'chat-message-assistant';
-  
+  const messageClass =
+    role === "user"
+      ? "bg-[var(--chat-message-user-bg)] text-[var(--chat-message-user-text)]"
+      : role === "system"
+      ? "bg-[var(--chat-message-system-bg)] text-[var(--chat-message-system-text)]"
+      : "bg-[var(--chat-message-assistant-bg)] text-[var(--chat-message-assistant-text)]";
+
   // Map status to icon and tooltip text
   const statusConfig = {
-    pending: { icon: <Clock className="h-3 w-3 animate-pulse" />, tooltip: 'Sending message...' },
-    sent: { icon: <Check className="h-3 w-3" />, tooltip: 'Message sent' },
-    failed: { icon: <AlertCircle className="h-3 w-3 text-destructive" />, tooltip: 'Failed to send' }
+    pending: {
+      icon: (
+        <Clock className="h-3 w-3 animate-pulse text-[var(--chat-message-system-text)]" />
+      ),
+      tooltip: "Sending message...",
+    },
+    sent: {
+      icon: (
+        <Check className="h-3 w-3 text-[var(--chat-message-system-text)]" />
+      ),
+      tooltip: "Message sent",
+    },
+    failed: {
+      icon: (
+        <AlertCircle className="h-3 w-3 text-[var(--chat-notification-error)]" />
+      ),
+      tooltip: "Failed to send",
+    },
   };
-  
+
   const { icon, tooltip } = statusConfig[status];
 
   // Add proper ARIA attributes for accessibility
-  const messageType = role === 'user' ? 'Sent' : 'Received';
-  const statusText = status === 'pending' ? 'Sending...' : 
-                   status === 'sent' ? 'Sent' : 'Failed to send';
-                   
+  const messageType = role === "user" ? "Sent" : "Received";
+  const statusText =
+    status === "pending"
+      ? "Sending..."
+      : status === "sent"
+      ? "Sent"
+      : "Failed to send";
+
   // Handle retry click with memoization to prevent rerenders
   const handleRetryClick = useCallback(() => {
-    if (status === 'failed' && id && onRetry) {
+    if (status === "failed" && id && onRetry) {
       onRetry(id);
     }
   }, [id, status, onRetry]);
@@ -65,41 +89,53 @@ const Message = memo(function Message({
     >
       <Card
         className={cn(
-          "max-w-[80%] px-4 py-2 shadow-sm transition-all duration-200",
+          "max-w-[80%] px-4 py-2 shadow-[var(--chat-box-shadow)] transition-all duration-[var(--chat-transition-duration)] ease-[var(--chat-transition-timing)]",
           messageClass,
-          status === 'failed' && "border-destructive hover:border-destructive/70 cursor-pointer"
+          status === "failed" &&
+            "border-[var(--chat-notification-error)] hover:border-[var(--chat-notification-error)]/70 cursor-pointer"
         )}
-        onClick={status === 'failed' ? handleRetryClick : undefined}
-        tabIndex={status === 'failed' ? 0 : undefined}
-        role={status === 'failed' ? 'button' : undefined}
-        aria-label={status === 'failed' ? 'Retry sending message' : undefined}
-        onKeyDown={status === 'failed' ? (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            handleRetryClick();
-          }
-        } : undefined}
+        onClick={status === "failed" ? handleRetryClick : undefined}
+        tabIndex={status === "failed" ? 0 : undefined}
+        role={status === "failed" ? "button" : undefined}
+        aria-label={status === "failed" ? "Retry sending message" : undefined}
+        onKeyDown={
+          status === "failed"
+            ? (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  handleRetryClick();
+                }
+              }
+            : undefined
+        }
       >
         <div className="flex items-start gap-2">
-          <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{content}</p>
+          <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
+            {content}
+          </p>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span 
-                  className="ml-2 flex h-4 w-4 items-center justify-center self-end" 
+                <span
+                  className="ml-2 flex h-4 w-4 items-center justify-center self-end"
                   aria-label={statusText}
                 >
                   {icon}
                 </span>
               </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs chat-dialog-content">
+              <TooltipContent
+                side="top"
+                className="text-xs bg-[var(--chat-dialog-bg)] border-[var(--chat-dialog-border)] text-[var(--chat-dialog-text)]"
+              >
                 <p>{tooltip}</p>
                 {timestamp && (
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-[var(--chat-message-system-text)] mt-1">
                     {new Date(timestamp).toLocaleTimeString()}
                   </p>
                 )}
-                {status === 'failed' && (
-                  <p className="text-xs text-destructive mt-1">Click to retry</p>
+                {status === "failed" && (
+                  <p className="text-xs text-[var(--chat-notification-error)] mt-1">
+                    Click to retry
+                  </p>
                 )}
               </TooltipContent>
             </Tooltip>
