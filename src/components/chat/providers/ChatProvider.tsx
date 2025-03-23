@@ -25,7 +25,8 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export function ChatProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const isEditorPage = location.pathname === "/editor";
-  const { isOpen, initializeChatSettings, setSessionLoading } = useChatStore();
+  const { isOpen, initializeChatSettings, setSessionLoading, showChat } =
+    useChatStore();
   const { currentSessionId, refreshSessions } = useSessionManager();
   const messageStore = useMessageStore();
   const [isInitialized, setIsInitialized] = useState(false);
@@ -45,6 +46,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           setSessionLoading(false);
         }
 
+        showChat();
         setIsInitialized(true);
       } catch (error) {
         logger.error("Failed to initialize chat", { error });
@@ -61,6 +63,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     location.pathname,
     refreshSessions,
     setSessionLoading,
+    showChat,
   ]);
 
   useEffect(() => {
