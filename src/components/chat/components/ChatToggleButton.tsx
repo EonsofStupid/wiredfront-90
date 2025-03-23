@@ -2,16 +2,21 @@ import { logger } from "@/services/chat/LoggingService";
 import { motion } from "framer-motion";
 import { Code, MessageSquare, MessagesSquare } from "lucide-react";
 import React from "react";
-import { useChatMode } from "../providers/ChatModeProvider";
-import { useChatStore } from "../store/chatStore";
+import { ChatMode } from "../../providers/ChatModeProvider";
+import { useChatStore } from "../../store/chatStore";
 import styles from "./ChatToggleButton.module.css";
 
 interface ChatToggleButtonProps {
   onClick: () => void;
+  isOpen: boolean;
+  mode: ChatMode;
 }
 
-export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
-  const { mode } = useChatMode();
+export function ChatToggleButton({
+  onClick,
+  isOpen,
+  mode,
+}: ChatToggleButtonProps) {
   const { position } = useChatStore();
 
   const handleClick = (e: React.MouseEvent) => {
