@@ -1,6 +1,7 @@
 import { Spinner } from "@/components/shared/Spinner";
 import { useSessionManager } from "@/hooks/useSessionManager";
 import { logger } from "@/services/chat/LoggingService";
+import { Provider } from "jotai";
 import {
   createContext,
   ReactNode,
@@ -12,7 +13,6 @@ import { useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import { useMessageStore } from "../messaging/MessageManager";
 import { useChatStore } from "../store/chatStore";
-import { ChatModeProvider } from "./ChatModeProvider";
 
 interface ChatContextType {
   isEditorPage: boolean;
@@ -89,14 +89,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <ChatContext.Provider
-      value={{ isEditorPage, isInitialized, isInitializing }}
-    >
-      <ChatModeProvider isEditorPage={isEditorPage}>
+    <Provider>
+      <ChatContext.Provider
+        value={{ isEditorPage, isInitialized, isInitializing }}
+      >
         {children}
         <Toaster position="top-right" />
-      </ChatModeProvider>
-    </ChatContext.Provider>
+      </ChatContext.Provider>
+    </Provider>
   );
 }
 

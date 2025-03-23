@@ -21,10 +21,8 @@ const initialState: ChatState = {
   modelFetchStatus: "idle",
   error: null,
   chatId: null,
-  docked: true,
   isOpen: false,
   isHidden: false,
-  position: "bottom-right",
   startTime: Date.now(),
   features: {
     voice: true,
@@ -54,9 +52,6 @@ const initialState: ChatState = {
     availableProviders: [],
   },
 
-  isMinimized: false,
-  showSidebar: false,
-  scale: 1,
   ui: {
     sessionLoading: false,
     messageLoading: false,
