@@ -1,8 +1,8 @@
 import { useRef } from "react";
-import { ChatProvider } from "./ChatProvider";
 import { ChatContainer } from "./components/ChatContainer";
+import { ChatProvider } from "./providers/ChatProvider";
 
-export function ChatWrapper() {
+export function Chat() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -12,4 +12,4 @@ export function ChatWrapper() {
   );
 }
 
-export default ChatWrapper;
+export default Chat;

@@ -5,21 +5,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 import { AlertCircle, Check, Clock } from "lucide-react";
 import { memo, useCallback } from "react";
-
-interface MessageProps {
-  content: string;
-  role: "user" | "assistant" | "system";
-  status?: "pending" | "sent" | "failed";
-  id?: string;
-  timestamp?: string;
-  onRetry?: (id: string) => void;
-}
+import type { MessageProps } from "./types";
 
 // Use memo to prevent unnecessary re-renders
-const Message = memo(function Message({
+export const Message = memo(function Message({
   content,
   role,
   status = "sent",
@@ -77,23 +68,22 @@ const Message = memo(function Message({
 
   return (
     <div
-      className={cn(
-        "flex w-full mb-4",
+      className={`flex w-full mb-4 ${
         role === "user" ? "justify-end" : "justify-start"
-      )}
-      role="listitem"
-      aria-label={`${messageType} message: ${content}`}
+      }`}
+      aria-label={`${
+        role === "user" ? "Sent" : "Received"
+      } message: ${content}`}
       data-message-id={id}
       data-message-role={role}
       data-message-status={status}
     >
       <Card
-        className={cn(
-          "max-w-[80%] px-4 py-2 shadow-[var(--chat-box-shadow)] transition-all duration-[var(--chat-transition-duration)] ease-[var(--chat-transition-timing)]",
-          messageClass,
-          status === "failed" &&
-            "border-[var(--chat-notification-error)] hover:border-[var(--chat-notification-error)]/70 cursor-pointer"
-        )}
+        className={`max-w-[80%] px-4 py-2 shadow-[var(--chat-box-shadow)] ${messageClass} ${
+          status === "failed"
+            ? "border-[var(--chat-notification-error)] hover:border-[var(--chat-notification-error)]/70 cursor-pointer"
+            : ""
+        }`}
         onClick={status === "failed" ? handleRetryClick : undefined}
         tabIndex={status === "failed" ? 0 : undefined}
         role={status === "failed" ? "button" : undefined}
@@ -145,5 +135,3 @@ const Message = memo(function Message({
     </div>
   );
 });
-
-export { Message };
