@@ -6,9 +6,11 @@ import { Send } from "lucide-react";
 import React, { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
-import { VoiceToTextButton } from "../features/voice-to-text";
+import { ElevenLabsVoiceButton } from "../features/voice-to-text/ElevenLabsVoiceButton";
+import { VoiceToTextButton } from "../features/voice-to-text/VoiceToTextButton";
 import { useMessageStore } from "../messaging/MessageManager";
 import { useChatStore } from "../store";
+import { Message } from "../store/types/chat-store-types";
 
 export const ChatInputModule = () => {
   const { userInput, setUserInput, isWaitingForResponse, chatId } =
@@ -35,16 +37,28 @@ export const ChatInputModule = () => {
 
     // Create new message ID
     const messageId = uuidv4();
+    const now = new Date().toISOString();
 
     // Add the user message
-    addMessage({
+    const userMessage: Message = {
       id: messageId,
       role: "user",
       content: userInput,
-      timestamp: new Date(),
-      status: "sent",
-      sessionId: chatId || "default",
-    });
+      user_id: null,
+      type: "text",
+      metadata: {},
+      created_at: now,
+      updated_at: now,
+      chat_session_id: chatId || "default",
+      is_minimized: false,
+      position: {},
+      window_state: {},
+      last_accessed: now,
+      retry_count: 0,
+      message_status: "sent",
+    };
+
+    addMessage(userMessage);
 
     // Clear the input
     setUserInput("");
@@ -63,39 +77,71 @@ export const ChatInputModule = () => {
         console.error("Error sending message:", error);
 
         // Add error response
-        addMessage({
+        const errorMessage: Message = {
           id: uuidv4(),
           role: "assistant",
           content: `Error: ${error.message || "Failed to send message"}`,
-          timestamp: new Date(),
-          status: "error",
-          sessionId: chatId || "default",
-        });
+          user_id: null,
+          type: "text",
+          metadata: {},
+          created_at: now,
+          updated_at: now,
+          chat_session_id: chatId || "default",
+          is_minimized: false,
+          position: {},
+          window_state: {},
+          last_accessed: now,
+          retry_count: 0,
+          message_status: "error",
+        };
 
+        addMessage(errorMessage);
         return;
       }
 
       // Add the assistant response
-      addMessage({
+      const assistantMessage: Message = {
         id: uuidv4(),
         role: "assistant",
         content: data?.response || "No response received",
-        timestamp: new Date(),
-        status: "received",
-        sessionId: chatId || "default",
-      });
+        user_id: null,
+        type: "text",
+        metadata: {},
+        created_at: now,
+        updated_at: now,
+        chat_session_id: chatId || "default",
+        is_minimized: false,
+        position: {},
+        window_state: {},
+        last_accessed: now,
+        retry_count: 0,
+        message_status: "sent",
+      };
+
+      addMessage(assistantMessage);
     } catch (error) {
       console.error("Error in chat flow:", error);
 
       // Add error response
-      addMessage({
+      const errorMessage: Message = {
         id: uuidv4(),
         role: "assistant",
         content: `Error: ${error.message || "An unexpected error occurred"}`,
-        timestamp: new Date(),
-        status: "error",
-        sessionId: chatId || "default",
-      });
+        user_id: null,
+        type: "text",
+        metadata: {},
+        created_at: now,
+        updated_at: now,
+        chat_session_id: chatId || "default",
+        is_minimized: false,
+        position: {},
+        window_state: {},
+        last_accessed: now,
+        retry_count: 0,
+        message_status: "error",
+      };
+
+      addMessage(errorMessage);
     } finally {
       setIsProcessing(false);
     }
@@ -117,7 +163,16 @@ export const ChatInputModule = () => {
 
   return (
     <div className="p-4 border-t border-[var(--chat-border-color)] bg-[var(--chat-input-bg)] flex items-center gap-2">
-      <VoiceToTextButton onVoiceInput={setUserInput} />
+      <div className="flex gap-1">
+        <VoiceToTextButton
+          onTranscription={setUserInput}
+          isProcessing={isProcessing}
+        />
+        <ElevenLabsVoiceButton
+          onTranscription={setUserInput}
+          isProcessing={isProcessing}
+        />
+      </div>
 
       <Input
         placeholder="Type a message..."
