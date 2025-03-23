@@ -3,164 +3,224 @@
  * WiredFront Mode Switching Behavior
  * 
  * This file defines the rules and behavior for switching between different
- * application modes in the WiredFront application.
+ * AI chat modes (chat, developer, image generation, training, etc.)
  */
 
-import { ChatMode } from '../src/integrations/supabase/types/enums';
+import { ChatMode } from "@/integrations/supabase/types/enums";
 
-export const modeSwitchingBehavior = {
+/**
+ * Mode Auto-Switching Rules
+ * 
+ * Define when the system should automatically switch between different modes
+ * based on context, route, or user actions.
+ */
+export const modeAutoSwitchingRules = {
   /**
-   * Available Chat Modes
+   * Route-based mode switching
    * 
-   * Based on the ChatMode enum in the application
+   * When navigating to these routes, the chat should automatically
+   * switch to the specified mode.
    */
-  availableModes: {
-    chat: 'Standard conversational mode',
-    search: 'RAG-enabled search mode with project context',
-    dev: 'Developer assistance mode with code context',
-    training: 'Educational mode with guided learning',
-    image: 'Image generation and editing mode',
-    settings: 'Configuration mode for chat settings'
-  } as Record<ChatMode, string>,
-  
-  /**
-   * Auto-Switching Rules
-   * 
-   * Rules for automatically switching modes based on context
-   */
-  autoSwitchingRules: {
-    routeBased: {
-      '/': 'chat',                      // Home page
-      '/editor': 'dev',                 // Editor page
-      '/projects': 'search',            // Projects page
-      '/training': 'training',          // Training page
-      '/settings': 'settings',          // Settings page
-      '/documents': 'search'            // Documents page
-    },
-    
-    contentBased: {
-      'codeContext': 'dev',             // When code is in context
-      'imagePrompt': 'image',           // When image generation is needed
-      'searchQuery': 'search',          // When search syntax is detected
-      'configCommand': 'settings'       // When configuration commands are used
-    }
+  routeBased: {
+    '/projects': 'dev' as ChatMode,
+    '/editor': 'dev' as ChatMode,
+    '/gallery': 'image' as ChatMode,
+    '/training': 'training' as ChatMode,
+    '/search': 'search' as ChatMode,
+    '/docs': 'chat' as ChatMode,
+    '/': 'chat' as ChatMode
   },
-  
+
   /**
-   * Manual Override Logic
+   * Context-based mode switching
    * 
-   * How to handle manual mode switching by the user
+   * When certain contexts are detected, the chat should switch to the 
+   * appropriate mode regardless of the current route.
    */
-  manualOverride: {
-    persistence: 'session',             // How long to persist manual selection
-    overridePriority: 'user',           // User override takes precedence
-    resetTriggers: [
-      'page navigation',                // Reset on page change
-      'session timeout',                // Reset after inactive period
-      'explicit reset'                  // Reset on user-triggered reset
-    ]
+  contextBased: {
+    codeEditorFocused: 'dev' as ChatMode,
+    imageGalleryOpen: 'image' as ChatMode,
+    trainingModuleActive: 'training' as ChatMode
   },
-  
+
   /**
-   * Mode Switching Implementation
+   * Command-based mode switching
    * 
-   * How mode switching is implemented in the codebase
+   * Chat commands that trigger mode switching
    */
-  implementation: {
-    storeAction: 'setCurrentMode',       // Action name in the store
-    
-    example: `
-      // In mode switching component
-      import { useChatStore } from '@/components/chat/store';
-      
-      function ModeSwitcher() {
-        const { currentMode, setCurrentMode } = useChatStore();
-        
-        const handleModeChange = (newMode: ChatMode) => {
-          setCurrentMode(newMode);
-          // Additional side effects on mode change
-        };
-        
-        return (
-          <div>
-            {/* Mode selection UI */}
-          </div>
-        );
-      }
-    `
-  },
-  
-  /**
-   * Session Archival
-   * 
-   * Rules for archiving sessions during mode switches
-   */
-  sessionArchival: {
-    thresholds: {
-      messageCount: 20,               // Archive after 20 messages
-      inactivityPeriod: 30 * 60 * 1000, // 30 minutes of inactivity
-      modeSwitch: true                 // Archive on mode switch
-    },
-    
-    archiveActions: [
-      'Save to database',              // Persist to backend
-      'Clear from active memory',      // Remove from active state
-      'Make available in history'      // Show in session history
-    ],
-    
-    implementation: `
-      // Session archival implementation
-      export async function archiveSession(sessionId: string) {
-        try {
-          // Update session status in database
-          await supabase
-            .from('chat_sessions')
-            .update({ is_archived: true })
-            .eq('id', sessionId);
-          
-          // Clear from active store
-          useChatStore.getState().resetChatState();
-          
-          return true;
-        } catch (error) {
-          console.error('Failed to archive session:', error);
-          return false;
-        }
-      }
-    `
-  },
-  
-  /**
-   * Mode-Specific Features
-   * 
-   * Features enabled for each mode
-   */
-  modeFeatures: {
-    chat: ['voice', 'notifications', 'rag'],
-    search: ['rag', 'github', 'codeAssistant', 'ragSupport'],
-    dev: ['github', 'codeAssistant', 'ragSupport', 'githubSync', 'tokenEnforcement'],
-    training: ['voice', 'rag', 'modeSwitch', 'notifications'],
-    image: ['voice', 'notifications'],
-    settings: ['modeSwitch']
-  },
-  
-  /**
-   * Mode Switching Events
-   * 
-   * Events triggered during mode switching
-   */
-  events: {
-    beforeModeSwitch: [
-      'Save current session state',
-      'Check for unsaved changes',
-      'Confirm with user if necessary'
-    ],
-    
-    afterModeSwitch: [
-      'Initialize new mode resources',
-      'Update UI components',
-      'Adjust feature availability',
-      'Log mode change analytics'
-    ]
+  commandBased: {
+    '/dev': 'dev' as ChatMode,
+    '/code': 'dev' as ChatMode,
+    '/image': 'image' as ChatMode,
+    '/img': 'image' as ChatMode,
+    '/draw': 'image' as ChatMode,
+    '/train': 'training' as ChatMode,
+    '/search': 'search' as ChatMode,
+    '/chat': 'chat' as ChatMode
   }
 };
+
+/**
+ * Mode Transition Rules
+ * 
+ * Define how transitions between modes should be handled
+ */
+export const modeTransitionRules = {
+  /**
+   * Preservation rules for mode transitions
+   * 
+   * What data should be preserved when switching between modes
+   */
+  preserveOnTransition: {
+    'chat-to-dev': ['conversation_context', 'project_context'],
+    'dev-to-chat': ['last_code_reference'],
+    'chat-to-image': ['description_context'],
+    'image-to-chat': ['generated_images'],
+    'any-to-any': ['user_preferences', 'theme_settings']
+  },
+
+  /**
+   * Required confirmations for mode switches
+   * 
+   * When these mode transitions occur, user confirmation
+   * should be requested before proceeding.
+   */
+  requireConfirmation: [
+    {
+      from: 'dev' as ChatMode, 
+      to: 'chat' as ChatMode, 
+      when: 'unsaved_changes_exist',
+      message: 'You have unsaved changes in developer mode. Switch to chat mode anyway?'
+    },
+    {
+      from: 'image' as ChatMode, 
+      to: 'chat' as ChatMode, 
+      when: 'generation_in_progress',
+      message: 'Image generation is still in progress. Switch to chat mode anyway?'
+    }
+  ]
+};
+
+/**
+ * Session Archival Rules
+ * 
+ * Define when and how chat sessions should be archived
+ */
+export const sessionArchivalRules = {
+  /**
+   * Thresholds for automatic archival
+   */
+  archiveThresholds: {
+    messageCount: 50,        // Archive when session has more than 50 messages
+    inactivityPeriod: 7,     // Archive after 7 days of inactivity
+    sessionAgeDays: 30       // Archive sessions older than 30 days
+  },
+
+  /**
+   * What to preserve when archiving
+   */
+  archivePreservation: {
+    preserveMetadata: true,
+    preserveContext: true,
+    preserveImages: true,
+    preserveCodeChanges: true
+  }
+};
+
+/**
+ * Manual Override Settings
+ * 
+ * Configure how manual mode overrides work
+ */
+export const manualOverrideSettings = {
+  /**
+   * How long a manual override should persist
+   */
+  persistDuration: {
+    navigations: 1,          // Reset after 1 navigation
+    timeLimitMinutes: 30,    // Reset after 30 minutes
+    sessionEnd: true         // Reset on session end
+  },
+
+  /**
+   * UI indicators for manual override
+   */
+  uiIndicators: {
+    showOverrideIndicator: true,
+    indicatorPosition: 'chat-header',
+    showResetOption: true
+  }
+};
+
+/**
+ * Mode-specific behavior configuration
+ */
+export const modeBehaviorConfig = {
+  'chat': {
+    allowVoiceInput: true,
+    defaultModel: 'gpt-4',
+    contextWindow: 'medium',
+    autoCompletions: true
+  },
+  'dev': {
+    allowVoiceInput: false,
+    defaultModel: 'gpt-4',
+    contextWindow: 'large',
+    codeCompletion: true,
+    livePreview: true,
+    fileAccess: true,
+    gitIntegration: true
+  },
+  'image': {
+    allowVoiceInput: true,
+    defaultModel: 'stability-xl',
+    contextWindow: 'small',
+    galleryIntegration: true,
+    imageEditing: true
+  },
+  'training': {
+    allowVoiceInput: false,
+    defaultModel: 'gpt-4',
+    contextWindow: 'medium',
+    progressTracking: true,
+    exerciseGeneration: true
+  },
+  'search': {
+    allowVoiceInput: true,
+    defaultModel: 'gpt-4',
+    contextWindow: 'small',
+    vectorSearch: true,
+    documentContext: true
+  }
+};
+
+/**
+ * Example implementation of mode switching logic
+ */
+export const modeSwitchingExample = `
+// Example of how to implement mode switching in a component
+import { useEffect } from 'react';
+import { useRouter } from 'next/router';
+import { useChatStore } from '@/stores/chat';
+import { modeAutoSwitchingRules } from '@/devtools/ai/mode-switching-behavior';
+
+export function useModeAutoSwitching() {
+  const router = useRouter();
+  const { setCurrentMode, currentMode } = useChatStore();
+  
+  useEffect(() => {
+    // Get the current route path
+    const path = router.pathname;
+    
+    // Check if we have a mode mapping for this route
+    for (const [route, mode] of Object.entries(modeAutoSwitchingRules.routeBased)) {
+      if (path.startsWith(route) && currentMode !== mode) {
+        setCurrentMode(mode);
+        break;
+      }
+    }
+  }, [router.pathname, setCurrentMode, currentMode]);
+  
+  return { currentMode };
+}
+`;
