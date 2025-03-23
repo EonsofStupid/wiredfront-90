@@ -85,6 +85,20 @@ export interface ChatState {
 
   // Store actions
   resetChatState: () => void;
+
+  // UI actions
+  togglePosition: () => void;
+  toggleDocked: () => void;
+  setIsHidden: (hidden: boolean) => void;
+  toggleMinimize: () => void;
+  toggleSidebar: () => void;
+  toggleChat: () => void;
+  setSessionLoading: (isLoading: boolean) => void;
+  setMessageLoading: (isLoading: boolean) => void;
+  setProviderLoading: (isLoading: boolean) => void;
+  setScale: (scale: number) => void;
+  setCurrentMode: (mode: ChatMode) => void;
+  setUserInput: (input: string) => void;
 }
 
 export interface UIStateActions {
