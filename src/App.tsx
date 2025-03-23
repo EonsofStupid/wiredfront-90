@@ -13,8 +13,8 @@ import { APIKeyManagement } from "@/components/admin/settings/api/APIKeyManageme
 import { RAGKeysSettings } from "@/components/admin/settings/api/RAGKeysSettings";
 import { SubscriptionManagementPanel } from "@/components/admin/subscriptions/SubscriptionManagementPanel";
 import { GuestCTA } from "@/components/auth/GuestCTA";
+import { ChatWrapper } from "@/components/chat";
 import { ChatProvider } from "@/components/chat/ChatProvider";
-import { ChatContainer } from "@/components/chat/components/DraggableChatContainer";
 import { EditorModeProvider } from "@/components/editor/providers/EditorModeProvider";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { CoreLayout } from "@/core/layout/CoreLayout";
@@ -257,10 +257,7 @@ const App = () => {
           <GuestCTA />
         </CoreLayout>
       )}
-      <ChatContainer
-        scrollRef={chatScrollRef}
-        isEditorPage={location.pathname === "/editor"}
-      />
+      <ChatWrapper />
       <Toaster />
     </ChatProvider>
   );
