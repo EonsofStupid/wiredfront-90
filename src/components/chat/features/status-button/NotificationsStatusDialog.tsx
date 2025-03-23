@@ -1,233 +1,253 @@
-
-import React, { useState, useEffect, useCallback } from 'react';
-import { 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogDescription
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  BellIcon, 
-  CheckIcon, 
-  XIcon, 
-  CheckCircleIcon, 
+} from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { logger } from "@/services/chat/LoggingService";
+import {
   AlertTriangle,
+  BellIcon,
+  CheckCircleIcon,
+  CheckIcon,
   Clock,
   Info,
   LucideIcon,
-  ClipboardCheck
+  XIcon,
 } from "lucide-react";
-import { logger } from '@/services/chat/LoggingService';
-import { toast } from 'sonner';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface Notification {
   id: string;
   message: string;
   timestamp: Date;
   read: boolean;
-  type: 'info' | 'success' | 'warning' | 'error';
+  type: "info" | "success" | "warning" | "error";
 }
 
-const notificationIcons: Record<Notification['type'], LucideIcon> = {
+const notificationIcons: Record<Notification["type"], LucideIcon> = {
   info: Info,
   success: CheckCircleIcon,
   warning: AlertTriangle,
-  error: AlertTriangle
+  error: AlertTriangle,
 };
 
-const notificationColors: Record<Notification['type'], string> = {
-  info: 'text-blue-400',
-  success: 'text-green-400',
-  warning: 'text-amber-400',
-  error: 'text-red-400'
+const notificationColors: Record<Notification["type"], string> = {
+  info: "text-blue-400",
+  success: "text-green-400",
+  warning: "text-amber-400",
+  error: "text-red-400",
 };
 
 export function NotificationsStatusDialog() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
+  const [activeTab, setActiveTab] = useState<"all" | "unread">("all");
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchNotifications = useCallback(async () => {
     setIsLoading(true);
     try {
-      logger.info('Fetching notifications');
-      
+      logger.info("Fetching notifications");
+
       // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1200));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+
       // Mock data
       setNotifications([
         {
-          id: '1',
-          message: 'New commit pushed to repository',
+          id: "1",
+          message: "New commit pushed to repository",
           timestamp: new Date(),
           read: false,
-          type: 'info'
+          type: "info",
         },
         {
-          id: '2',
-          message: 'Code generation completed successfully',
+          id: "2",
+          message: "Code generation completed successfully",
           timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
           read: false,
-          type: 'success'
+          type: "success",
         },
         {
-          id: '3',
-          message: 'API rate limit approaching threshold',
+          id: "3",
+          message: "API rate limit approaching threshold",
           timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
           read: true,
-          type: 'warning'
+          type: "warning",
         },
         {
-          id: '4',
-          message: 'Failed to validate GitHub token',
+          id: "4",
+          message: "Failed to validate GitHub token",
           timestamp: new Date(Date.now() - 1000 * 60 * 120), // 2 hours ago
           read: true,
-          type: 'error'
-        }
+          type: "error",
+        },
       ]);
-      
-      logger.info('Notifications fetched successfully');
+
+      logger.info("Notifications fetched successfully");
     } catch (error) {
-      logger.error('Failed to fetch notifications', { error });
-      toast.error('Failed to load notifications');
+      logger.error("Failed to fetch notifications", { error });
+      toast.error("Failed to load notifications");
     } finally {
       setIsLoading(false);
     }
   }, []);
-  
+
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
 
   const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id 
-          ? { ...notification, read: true } 
-          : notification
+    setNotifications((prev) =>
+      prev.map((notification) =>
+        notification.id === id ? { ...notification, read: true } : notification
       )
     );
-    logger.info('Notification marked as read', { id });
+    logger.info("Notification marked as read", { id });
   };
 
   const dismissNotification = (id: string) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
-    logger.info('Notification dismissed', { id });
-  };
-  
-  const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, read: true }))
+    setNotifications((prev) =>
+      prev.filter((notification) => notification.id !== id)
     );
-    toast.success('All notifications marked as read');
-    logger.info('All notifications marked as read');
-  };
-  
-  const dismissAll = () => {
-    setNotifications([]);
-    toast.success('All notifications cleared');
-    logger.info('All notifications cleared');
+    logger.info("Notification dismissed", { id });
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-  const displayedNotifications = activeTab === 'all' 
-    ? notifications 
-    : notifications.filter(n => !n.read);
+  const markAllAsRead = () => {
+    setNotifications((prev) =>
+      prev.map((notification) => ({ ...notification, read: true }))
+    );
+    toast.success("All notifications marked as read");
+    logger.info("All notifications marked as read");
+  };
+
+  const dismissAll = () => {
+    setNotifications([]);
+    toast.success("All notifications cleared");
+    logger.info("All notifications cleared");
+  };
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+  const displayedNotifications =
+    activeTab === "all" ? notifications : notifications.filter((n) => !n.read);
 
   const formatTime = (date: Date) => {
     const now = new Date();
     const diff = now.getTime() - date.getTime();
-    
+
     const minutes = Math.floor(diff / (1000 * 60));
-    if (minutes < 60) return `${minutes === 0 ? 'Just now' : `${minutes}m ago`}`;
-    
+    if (minutes < 60)
+      return `${minutes === 0 ? "Just now" : `${minutes}m ago`}`;
+
     const hours = Math.floor(minutes / 60);
     if (hours < 24) return `${hours}h ago`;
-    
+
     return date.toLocaleDateString();
   };
 
   return (
-    <DialogContent className="chat-dialog-content sm:max-w-[500px]">
+    <DialogContent className="bg-[var(--chat-dialog-bg)] border-[var(--chat-dialog-border)] text-[var(--chat-dialog-text)] sm:max-w-[500px]">
       <DialogHeader>
         <DialogTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-chat-knowledge-text">
+          <div className="flex items-center gap-2 text-[var(--chat-knowledge-text)]">
             <BellIcon className="h-5 w-5" />
             Notifications
           </div>
-          <Badge variant="outline" className={`text-xs ${unreadCount > 0 ? 'bg-red-500/10 text-red-400' : ''}`}>
-            {unreadCount} Unread
+          <Badge
+            variant="outline"
+            className={`text-xs ${
+              unreadCount > 0
+                ? "bg-[var(--chat-notification-background)] text-[var(--chat-notification-text)]"
+                : ""
+            }`}
+          >
+            {unreadCount} unread
           </Badge>
         </DialogTitle>
-        <DialogDescription className="text-muted-foreground text-xs">
-          Stay updated on system events and important alerts
+        <DialogDescription className="text-[var(--chat-message-system-text)] text-xs">
+          Manage your notifications and preferences
         </DialogDescription>
       </DialogHeader>
-      
-      <Tabs value={activeTab} onValueChange={setActiveTab as any} className="mt-2">
+
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab as any}
+        className="mt-2"
+      >
         <TabsList className="grid w-full grid-cols-2 h-9">
-          <TabsTrigger value="all" className="text-xs">All Notifications</TabsTrigger>
+          <TabsTrigger value="all" className="text-xs">
+            All Notifications
+          </TabsTrigger>
           <TabsTrigger value="unread" className="text-xs">
             Unread
             {unreadCount > 0 && (
-              <Badge variant="outline" className="ml-2 bg-red-500/10 text-red-400 h-5 w-5 p-0 flex items-center justify-center">
+              <Badge
+                variant="outline"
+                className="ml-2 bg-[var(--chat-notification-background)] text-[var(--chat-notification-text)] h-5 w-5 p-0 flex items-center justify-center"
+              >
                 {unreadCount}
               </Badge>
             )}
           </TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="all" className="mt-2">
-          {renderNotificationList(displayedNotifications, isLoading)}
+          {renderNotificationList(notifications, isLoading)}
         </TabsContent>
-        
+
         <TabsContent value="unread" className="mt-2">
           {renderNotificationList(displayedNotifications, isLoading)}
         </TabsContent>
       </Tabs>
-      
+
       <DialogFooter className="flex flex-col sm:flex-row gap-2">
-        <Button 
-          variant="outline" 
-          size="sm" 
+        <Button
+          variant="outline"
           onClick={markAllAsRead}
           disabled={unreadCount === 0 || isLoading}
-          className="text-chat-knowledge-text border-chat-knowledge-border"
+          className="text-[var(--chat-knowledge-text)] border-[var(--chat-knowledge-border)]"
         >
           <CheckCircleIcon className="h-4 w-4 mr-2" />
-          Mark All as Read
+          Mark all as read
         </Button>
-        <Button 
-          variant="default" 
-          size="sm" 
+
+        <Button
+          variant="default"
           onClick={dismissAll}
           disabled={notifications.length === 0 || isLoading}
-          className="text-white bg-gradient-to-r from-[#1EAEDB] to-[#0080B3] border-none hover:opacity-90"
+          className="text-white bg-gradient-to-r from-[var(--chat-knowledge-text)] to-[#0080B3] border-none hover:opacity-90"
         >
           <XIcon className="h-4 w-4 mr-2" />
-          Clear All
-          {notifications.length > 0 && (
-            <Badge variant="outline" className="ml-2 bg-white/10 text-white h-5 w-5 p-0 flex items-center justify-center">
-              {notifications.length}
-            </Badge>
-          )}
+          Clear all
+          <Badge
+            variant="outline"
+            className="ml-2 bg-white/10 text-white h-5 w-5 p-0 flex items-center justify-center"
+          >
+            {notifications.length}
+          </Badge>
         </Button>
       </DialogFooter>
     </DialogContent>
   );
 
-  function renderNotificationList(notifications: Notification[], isLoading: boolean) {
+  function renderNotificationList(
+    notifications: Notification[],
+    isLoading: boolean
+  ) {
     if (isLoading) {
       return (
         <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="flex items-start justify-between p-3 rounded-md bg-chat-message-system-bg/30">
+            <div
+              key={i}
+              className="flex items-start justify-between p-3 rounded-md bg-chat-message-system-bg/30"
+            >
               <div className="space-y-1 w-full">
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-3 w-1/3" />
@@ -253,22 +273,29 @@ export function NotificationsStatusDialog() {
         {notifications.map((notification) => {
           const NotificationIcon = notificationIcons[notification.type];
           const colorClass = notificationColors[notification.type];
-          
           return (
-            <div 
-              key={notification.id} 
+            <div
+              role="list"
+              key={notification.id}
               className={`flex items-start justify-between p-3 rounded-md ${
-                notification.read ? 'bg-chat-message-system-bg/30' : 'bg-chat-message-assistant-bg/30'
+                notification.read
+                  ? "bg-chat-message-system-bg/30"
+                  : "bg-chat-message-assistant-bg/30"
               } hover:bg-chat-message-assistant-bg/40 transition-colors duration-200`}
-              role="listitem"
-              aria-label={notification.read ? 'Read notification' : 'Unread notification'}
+              aria-label={
+                notification.read ? "Read notification" : "Unread notification"
+              }
             >
               <div className="flex gap-2">
                 <div className={`mt-0.5 ${colorClass}`}>
                   <NotificationIcon className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className={`${notification.read ? 'font-normal' : 'font-medium'} text-sm`}>
+                  <p
+                    className={`${
+                      notification.read ? "font-normal" : "font-medium"
+                    } text-sm`}
+                  >
                     {notification.message}
                   </p>
                   <div className="flex items-center gap-2 mt-1">
@@ -277,7 +304,10 @@ export function NotificationsStatusDialog() {
                       {formatTime(notification.timestamp)}
                     </span>
                     {!notification.read && (
-                      <Badge variant="outline" className="text-[10px] h-4 bg-red-500/10 text-red-400">
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] h-4 bg-red-500/10 text-red-400"
+                      >
                         New
                       </Badge>
                     )}
@@ -286,7 +316,7 @@ export function NotificationsStatusDialog() {
               </div>
               <div className="flex gap-1">
                 {!notification.read && (
-                  <button 
+                  <button
                     onClick={() => markAsRead(notification.id)}
                     className="text-primary hover:text-primary/80 p-1 rounded-sm hover:bg-white/5 transition-colors"
                     aria-label="Mark as read"
@@ -294,7 +324,7 @@ export function NotificationsStatusDialog() {
                     <CheckIcon className="h-3.5 w-3.5" />
                   </button>
                 )}
-                <button 
+                <button
                   onClick={() => dismissNotification(notification.id)}
                   className="text-muted-foreground hover:text-destructive p-1 rounded-sm hover:bg-white/5 transition-colors"
                   aria-label="Dismiss notification"

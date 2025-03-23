@@ -1,0 +1,44 @@
+.button {
+  @apply rounded-full p-4;
+  color: var(--chat-button-text);
+  background: var(--chat-glass-bg);
+  -webkit-backdrop-filter: blur(var(--chat-glass-blur));
+  backdrop-filter: blur(var(--chat-glass-blur));
+  border: 1px solid var(--chat-glass-border);
+  box-shadow: var(--chat-box-shadow);
+  transition: all var(--chat-transition-duration) var(--chat-transition-timing);
+}
+
+.button:hover {
+  background: var(--chat-bg-hover);
+  color: var(--chat-button-hover);
+  transform: scale(1.05);
+}
+
+.container {
+  @apply fixed bottom-4 z-[var(--z-chat)];
+}
+
+.container[data-position="bottom-right"] {
+  @apply right-4;
+}
+
+.container[data-position="bottom-left"] {
+  @apply left-4;
+}
+
+.pulsingGlow {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--chat-button-primary-rgb), 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(var(--chat-button-primary-rgb), 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--chat-button-primary-rgb), 0);
+  }
+}

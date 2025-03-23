@@ -1,10 +1,10 @@
-
+import { logger } from "@/services/chat/LoggingService";
+import { motion } from "framer-motion";
+import { Code, MessageSquare, MessagesSquare } from "lucide-react";
 import React from "react";
-import { MessageSquare, Code, MessagesSquare } from "lucide-react";
 import { useChatMode } from "../providers/ChatModeProvider";
 import { useChatStore } from "../store/chatStore";
-import { motion } from "framer-motion";
-import { logger } from "@/services/chat/LoggingService";
+import styles from "./ChatToggleButton.module.css";
 
 interface ChatToggleButtonProps {
   onClick: () => void;
@@ -16,25 +16,24 @@ export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    logger.info('Chat toggle button clicked', { mode, position });
+    logger.info("Chat toggle button clicked", { mode, position });
     onClick();
   };
 
-  // Position the button based on the selected position
-  const positionClass = position === 'bottom-right' ? 'right-4' : 'left-4';
-
   // Pick icon based on mode
-  const Icon = mode === 'editor' 
-    ? Code 
-    : mode === 'chat-only' 
-      ? MessagesSquare 
+  const Icon =
+    mode === "editor"
+      ? Code
+      : mode === "chat-only"
+      ? MessagesSquare
       : MessageSquare;
-      
+
   // Determine tooltip text based on mode
-  const tooltipText = mode === 'editor' 
-    ? "Open Code Assistant" 
-    : mode === 'chat-only' 
-      ? "Open Context Planning" 
+  const tooltipText =
+    mode === "editor"
+      ? "Open Code Assistant"
+      : mode === "chat-only"
+      ? "Open Context Planning"
       : "Open Chat";
 
   return (
@@ -43,12 +42,12 @@ export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.8 }}
       transition={{ duration: 0.2 }}
-      className={`fixed bottom-4 ${positionClass} z-[var(--z-chat)]`}
-      style={{ zIndex: 'var(--z-chat)' }}
+      className={styles.container}
+      data-position={position}
     >
       <button
         onClick={handleClick}
-        className="chat-button chat-glass-card chat-pulsing-glow hover:scale-105 transition-transform duration-200"
+        className={`${styles.button} ${styles.pulsingGlow}`}
         title={tooltipText}
         data-testid="chat-toggle-button"
       >
