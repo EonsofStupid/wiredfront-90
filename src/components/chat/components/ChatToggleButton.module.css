@@ -18,7 +18,8 @@
 }
 
 .container {
-  @apply fixed bottom-4 z-[var(--z-chat)];
+  @apply fixed bottom-4;
+  z-index: var(--z-chat);
 }
 
 .container[data-position="bottom-right"] {

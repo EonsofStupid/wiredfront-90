@@ -13,7 +13,8 @@ export function ChatToggle() {
   const [mode] = useAtom(currentModeAtom);
   const [isVisible] = useAtom(isChatVisibleAtom);
 
-  if (isHidden || !isVisible) return null;
+  // Only hide if explicitly hidden
+  if (isHidden) return null;
 
   return (
     <ChatToggleButton
