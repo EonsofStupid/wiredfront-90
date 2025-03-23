@@ -1,3 +1,4 @@
+
 import { ChatMode } from "@/integrations/supabase/types/enums";
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
@@ -11,7 +12,7 @@ export const chatPositionAtom = atomWithStorage<ChatPosition>(
 );
 export const chatScaleAtom = atomWithStorage<number>("chat-scale", 1);
 export const isMinimizedAtom = atom<boolean>(false);
-export const showSidebarAtom = atom<boolean>(false);
+export const showSidebarAtom = atom<boolean>(true); // Setting this to true by default
 export const currentModeAtom = atom<ChatMode>("chat");
 
 // Sync with Zustand store

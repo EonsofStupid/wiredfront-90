@@ -1,3 +1,4 @@
+
 import { Spinner } from "@/components/shared/Spinner";
 import { useSessionManager } from "@/hooks/useSessionManager";
 import { logger } from "@/services/chat/LoggingService";
@@ -49,7 +50,7 @@ function ChatProviderContent({ children }: { children: ReactNode }) {
         }
 
         showChat();
-        setShowSidebar(true);
+        setShowSidebar(true); // Ensure the sidebar is visible by default
         setIsInitialized(true);
       } catch (error) {
         logger.error("Failed to initialize chat", { error });
