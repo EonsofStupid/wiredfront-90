@@ -1,9 +1,8 @@
-
-import { useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuthStore } from '@/stores/auth';
-import { logger } from '@/services/chat/LoggingService';
-import { useChatStore } from '@/components/chat/store/chatStore';
+import { useChatStore } from "@/components/chat/store/chatStore";
+import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/services/chat/LoggingService";
+import { useAuthStore } from "@/stores/auth";
+import { useCallback, useState } from "react";
 
 /**
  * A hook to track feature usage and provide feature availability information
@@ -19,23 +18,36 @@ export function useFeatureUsage() {
   const logFeatureUsage = useCallback(
     async (featureName: string, context: Record<string, any> = {}) => {
       if (!user?.id || isLogging) return;
-      
+
       setIsLogging(true);
       try {
-        await supabase.from('feature_usage').insert({
+        // Get the current feature state
+        const currentValue =
+          features[featureName as keyof typeof features] || false;
+
+        await supabase.from("feature_toggle_history").insert({
           user_id: user.id,
           feature_name: featureName,
-          context
+          old_value: currentValue,
+          new_value: currentValue, // Same value since we're just logging usage
+          context,
+          metadata: {
+            action: "usage",
+            timestamp: new Date().toISOString(),
+          },
         });
-        
-        logger.info(`Feature used: ${featureName}`, { feature: featureName, context });
+
+        logger.info(`Feature used: ${featureName}`, {
+          feature: featureName,
+          context,
+        });
       } catch (error) {
-        logger.error('Error logging feature usage:', error);
+        logger.error("Error logging feature usage:", error);
       } finally {
         setIsLogging(false);
       }
     },
-    [user, isLogging]
+    [user, isLogging, features]
   );
 
   /**
@@ -53,8 +65,8 @@ export function useFeatureUsage() {
    */
   const useFeature = useCallback(
     async <T>(
-      featureName: string, 
-      callback: () => T | Promise<T>, 
+      featureName: string,
+      callback: () => T | Promise<T>,
       context: Record<string, any> = {}
     ): Promise<T | null> => {
       // Check if the feature is enabled
@@ -62,10 +74,10 @@ export function useFeatureUsage() {
         logger.warn(`Feature "${featureName}" is disabled`);
         return null;
       }
-      
+
       // Log the feature usage
       await logFeatureUsage(featureName, context);
-      
+
       // Execute the callback
       try {
         return await callback();
@@ -80,6 +92,6 @@ export function useFeatureUsage() {
   return {
     logFeatureUsage,
     isFeatureEnabled,
-    useFeature
+    useFeature,
   };
 }
