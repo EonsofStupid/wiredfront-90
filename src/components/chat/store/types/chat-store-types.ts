@@ -99,6 +99,16 @@ export interface ChatState {
   setScale: (scale: number) => void;
   setCurrentMode: (mode: ChatMode) => void;
   setUserInput: (input: string) => void;
+
+  // Provider management actions
+  updateCurrentProvider: (provider: ChatProvider) => void;
+  updateAvailableProviders: (providers: ChatProvider[]) => void;
+
+  // Token management actions
+  addTokens: (amount: number) => void;
+  spendTokens: (amount: number) => void;
+  setTokenBalance: (balance: number) => void;
+  setTokenEnforcementMode: (mode: TokenEnforcementMode) => void;
 }
 
 export interface UIStateActions {

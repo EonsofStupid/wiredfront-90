@@ -1,26 +1,34 @@
-
-import { logger } from '@/services/chat/LoggingService';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/services/chat/LoggingService";
 
 /**
  * Log feature toggle changes to the database
  */
-export const logFeatureToggle = async (featureName: string, newValue: boolean, oldValue?: boolean) => {
+export const logFeatureToggle = async (
+  featureName: string,
+  newValue: boolean,
+  oldValue?: boolean
+) => {
   try {
-    logger.info(`Feature toggle changed: ${featureName}`, { oldValue, newValue });
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    
+    logger.info(`Feature toggle changed: ${featureName}`, {
+      oldValue,
+      newValue,
+    });
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (user) {
-      await supabase.from('feature_toggle_history').insert({
+      await supabase.from("feature_toggle_history").insert({
         user_id: user.id,
         feature_name: featureName,
         old_value: oldValue,
         new_value: newValue,
         metadata: {
-          source: 'client',
-          timestamp: new Date().toISOString()
-        }
+          source: "client",
+          timestamp: new Date().toISOString(),
+        },
       });
     }
   } catch (error) {
@@ -31,27 +39,36 @@ export const logFeatureToggle = async (featureName: string, newValue: boolean, o
 /**
  * Log provider changes to the database
  */
-export const logProviderChange = async (oldProvider?: string, newProvider?: string) => {
+export const logProviderChange = async (
+  oldProvider?: string,
+  newProvider?: string
+) => {
   try {
-    logger.info(`Provider changed from ${oldProvider || 'none'} to ${newProvider || 'none'}`);
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    
+    logger.info(
+      `Provider changed from ${oldProvider || "none"} to ${
+        newProvider || "none"
+      }`
+    );
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (user) {
-      await supabase.from('provider_change_log').insert({
+      await supabase.from("provider_change_log").insert({
         user_id: user.id,
         old_provider: oldProvider || null,
-        new_provider: newProvider || 'unknown',
-        provider_name: newProvider || 'unknown',
-        reason: 'user_selection',
+        new_provider: newProvider || "unknown",
+        provider_name: newProvider || "unknown",
+        reason: "user_selection",
         metadata: {
-          source: 'client',
-          timestamp: new Date().toISOString()
-        }
+          source: "client",
+          timestamp: new Date().toISOString(),
+        },
       });
     }
   } catch (error) {
-    logger.error('Failed to log provider change', error);
+    logger.error("Failed to log provider change", error);
   }
 };
 
@@ -61,19 +78,26 @@ export const logProviderChange = async (oldProvider?: string, newProvider?: stri
 export const logCommandUsage = async (commandName: string, args: string[]) => {
   try {
     logger.info(`Command used: /${commandName}`, { args });
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (user) {
-      await supabase.from('feature_usage').insert({
+      await supabase.from("feature_toggle_history").insert({
         user_id: user.id,
         feature_name: `command_${commandName}`,
-        count: 1,
+        old_value: false,
+        new_value: true,
+        metadata: {
+          source: "client",
+          action: "command_execution",
+          timestamp: new Date().toISOString(),
+        },
         context: {
           command: commandName,
           args: args,
-          timestamp: new Date().toISOString()
-        }
+        },
       });
     }
   } catch (error) {
