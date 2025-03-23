@@ -1,4 +1,3 @@
-
 import { ChatMode } from "@/integrations/supabase/types/enums";
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
