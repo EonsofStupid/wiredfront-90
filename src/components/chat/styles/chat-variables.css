@@ -1,0 +1,154 @@
+
+:root {
+  /* Z-index variables */
+  --z-chat: 1000;
+  --z-chat-overlay: 999;
+  --z-chat-modal: 1001;
+  --z-chat-tooltip: 1002;
+
+  /* Sizing and Layout */
+  --chat-width: 400px;
+  --chat-min-width: 320px;
+  --chat-max-width: 600px;
+  --chat-height: 500px;
+  --chat-min-height: 300px;
+  --chat-max-height: 800px;
+  --chat-border-radius: 12px;
+  --chat-header-height: 48px;
+  --chat-footer-height: 64px;
+  --chat-input-height: 2.5rem;
+  --chat-scrollbar-width: 6px;
+
+  /* Colors - Button */
+  --chat-button-primary: hsl(219, 90%, 60%);
+  --chat-button-primary-rgb: 51, 122, 255;
+  --chat-button-secondary: hsl(335, 90%, 60%);
+  --chat-button-text: hsl(0, 0%, 100%);
+  --chat-button-hover: hsl(219, 90%, 50%);
+  --chat-button-active: hsl(219, 90%, 40%);
+  --chat-button-disabled: hsl(240, 5%, 30%);
+  --chat-button-border: hsl(240, 5%, 20%);
+
+  /* Colors - Messages */
+  --chat-message-user-bg: var(--primary, #8b5cf6);
+  --chat-message-user-text: var(--primary-foreground, white);
+  --chat-message-assistant-bg: var(--secondary, #374151);
+  --chat-message-assistant-text: var(--secondary-foreground, white);
+  --chat-message-system-bg: var(--muted, #1f2937);
+  --chat-message-system-text: var(--muted-foreground, #9ca3af);
+
+  /* Colors - Input */
+  --chat-input-bg: rgba(26, 31, 44, 0.9);
+  --chat-input-text: #1eaedb;
+  --chat-input-placeholder: rgba(30, 174, 219, 0.5);
+  --chat-input-border: rgba(30, 174, 219, 0.2);
+  --chat-input-focus-border: rgba(30, 174, 219, 0.6);
+  --chat-input-focus-glow: 0 0 8px rgba(30, 174, 219, 0.4);
+
+  /* Colors - Knowledge Base */
+  --chat-knowledge-bg: rgba(26, 31, 44, 0.95);
+  --chat-knowledge-border: rgba(30, 174, 219, 0.3);
+  --chat-knowledge-text: #1eaedb;
+
+  /* Colors - Notifications */
+  --chat-notification-bg: rgba(26, 31, 44, 0.95);
+  --chat-notification-border: rgba(255, 59, 48, 0.3);
+  --chat-notification-text: #ff3b30;
+  --chat-notification-background: rgba(255, 59, 48, 0.1);
+  --chat-notification-info: #3b82f6;
+  --chat-notification-success: #22c55e;
+  --chat-notification-warning: #f59e0b;
+  --chat-notification-error: #ef4444;
+  --chat-notification-hover: rgba(255, 255, 255, 0.05);
+  --chat-notification-read-bg: rgba(var(--chat-message-system-bg), 0.3);
+  --chat-notification-unread-bg: rgba(var(--chat-message-assistant-bg), 0.3);
+  --chat-notification-hover-bg: rgba(var(--chat-message-assistant-bg), 0.4);
+
+  /* Colors - Dialog */
+  --chat-dialog-bg: var(--chat-bg-primary);
+  --chat-dialog-border: var(--chat-border-color);
+  --chat-dialog-text: var(--chat-text);
+  --chat-dialog-overlay: rgba(0, 0, 0, 0.5);
+  --chat-dialog-header-border: var(--chat-border-color);
+  --chat-dialog-footer-border: var(--chat-border-color);
+  --chat-dialog-tab-bg: var(--chat-bg-secondary);
+  --chat-dialog-tab-active: var(--chat-bg-hover);
+  --chat-dialog-tab-hover: var(--chat-bg-active);
+  --chat-dialog-scrollbar-thumb: rgba(255, 255, 255, 0.1);
+  --chat-dialog-scrollbar-track: transparent;
+
+  /* Effects */
+  --chat-box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --chat-neon-glow: 0 0 10px rgba(139, 92, 246, 0.4),
+    0 0 20px rgba(139, 92, 246, 0.2);
+  --chat-cyber-glow: 0 0 15px rgba(0, 255, 255, 0.5);
+
+  /* Backgrounds */
+  --chat-bg: rgba(0, 0, 0, 0.3);
+  --chat-bg-primary: hsl(222, 47%, 11%);
+  --chat-bg-secondary: hsl(222, 47%, 13%);
+  --chat-bg-hover: hsl(222, 47%, 15%);
+  --chat-bg-active: hsl(222, 47%, 17%);
+  --chat-header-bg: rgba(0, 0, 0, 0.2);
+  --chat-text: var(--foreground, white);
+
+  /* Borders */
+  --chat-border-color: rgba(255, 255, 255, 0.1);
+  --chat-knowledge-border: rgba(0, 255, 255, 0.3);
+
+  /* Glass effect */
+  --chat-glass-bg: rgba(0, 0, 0, 0.3);
+  --chat-glass-border: rgba(255, 255, 255, 0.1);
+  --chat-glass-blur: 10px;
+
+  /* Transitions */
+  --chat-transition-duration: 200ms;
+  --chat-transition-timing: ease-in-out;
+  --chat-transition-speed: 0.3s;
+
+  /* Neon Colors */
+  --chat-neon-blue: 30, 174, 219;
+  --chat-neon-pink: 255, 0, 127;
+}
+
+/* Dark theme overrides */
+[data-theme="dark"] {
+  --chat-bg-primary: hsl(222, 47%, 9%);
+  --chat-bg-secondary: hsl(222, 47%, 11%);
+  --chat-bg-hover: hsl(222, 47%, 13%);
+  --chat-bg-active: hsl(222, 47%, 15%);
+  --chat-glass-bg: rgba(0, 0, 0, 0.3);
+  --chat-glass-border: rgba(255, 255, 255, 0.1);
+  --chat-input-bg: rgba(26, 31, 44, 0.9);
+  --chat-notification-bg: rgba(26, 31, 44, 0.95);
+  --chat-knowledge-bg: rgba(26, 31, 44, 0.95);
+  --chat-dialog-overlay: rgba(0, 0, 0, 0.7);
+  --chat-notification-read-bg: rgba(31, 41, 55, 0.3);
+  --chat-notification-unread-bg: rgba(55, 65, 81, 0.3);
+  --chat-notification-hover-bg: rgba(55, 65, 81, 0.4);
+  --chat-dialog-scrollbar-thumb: rgba(255, 255, 255, 0.1);
+}
+
+/* Light theme overrides */
+[data-theme="light"] {
+  --chat-bg-primary: hsl(0, 0%, 100%);
+  --chat-bg-secondary: hsl(0, 0%, 98%);
+  --chat-bg-hover: hsl(0, 0%, 96%);
+  --chat-bg-active: hsl(0, 0%, 94%);
+  --chat-glass-bg: rgba(255, 255, 255, 0.8);
+  --chat-glass-border: rgba(0, 0, 0, 0.1);
+  --chat-button-text: hsl(222, 47%, 11%);
+  --chat-input-bg: rgba(255, 255, 255, 0.9);
+  --chat-notification-bg: rgba(255, 255, 255, 0.95);
+  --chat-knowledge-bg: rgba(255, 255, 255, 0.95);
+  --chat-header-bg: rgba(255, 255, 255, 0.2);
+  --chat-message-system-bg: var(--muted, #f3f4f6);
+  --chat-message-system-text: var(--muted-foreground, #6b7280);
+  --chat-dialog-overlay: rgba(0, 0, 0, 0.3);
+  --chat-text: var(--foreground, hsl(222, 47%, 11%));
+  --chat-notification-read-bg: rgba(243, 244, 246, 0.3);
+  --chat-notification-unread-bg: rgba(249, 250, 251, 0.3);
+  --chat-notification-hover-bg: rgba(249, 250, 251, 0.4);
+  --chat-dialog-scrollbar-thumb: rgba(0, 0, 0, 0.1);
+}

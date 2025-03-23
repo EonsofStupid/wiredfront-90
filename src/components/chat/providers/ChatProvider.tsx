@@ -1,106 +1,29 @@
-import { Spinner } from "@/components/shared/Spinner";
-import { useSessionManager } from "@/hooks/useSessionManager";
-import { logger } from "@/services/chat/LoggingService";
-import {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-import { useLocation } from "react-router-dom";
-import { Toaster } from "sonner";
-import { useMessageStore } from "../messaging/MessageManager";
-import { useChatStore } from "../store/chatStore";
+
+import React, { useEffect } from "react";
+import { useChatStore, initializeChatSettings } from "../store/chatStore";
 import { ChatModeProvider } from "./ChatModeProvider";
+import { logger } from "@/services/chat/LoggingService";
 
-interface ChatContextType {
-  isEditorPage: boolean;
-  isInitialized: boolean;
-  isInitializing: boolean;
+interface ChatProviderProps {
+  children: React.ReactNode;
 }
 
-const ChatContext = createContext<ChatContextType | undefined>(undefined);
-
-export function ChatProvider({ children }: { children: ReactNode }) {
-  const location = useLocation();
-  const isEditorPage = location.pathname === "/editor";
-  const { isOpen, initializeChatSettings, setSessionLoading } = useChatStore();
-  const { currentSessionId, refreshSessions } = useSessionManager();
-  const messageStore = useMessageStore();
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(true);
+export function ChatProvider({ children }: ChatProviderProps) {
+  const { isHidden, setIsHidden } = useChatStore();
 
   useEffect(() => {
-    const initialize = async () => {
-      try {
-        setIsInitializing(true);
-
-        initializeChatSettings();
-        logger.info("Chat settings initialized");
-
-        if (isEditorPage || location.pathname === "/") {
-          setSessionLoading(true);
-          await refreshSessions();
-          setSessionLoading(false);
-        }
-
-        setIsInitialized(true);
-      } catch (error) {
-        logger.error("Failed to initialize chat", { error });
-        console.error("Failed to initialize chat:", error);
-      } finally {
-        setIsInitializing(false);
-      }
-    };
-
-    initialize();
-  }, [
-    initializeChatSettings,
-    isEditorPage,
-    location.pathname,
-    refreshSessions,
-    setSessionLoading,
-  ]);
-
-  useEffect(() => {
-    logger.info("Chat context updated", {
-      isEditorPage,
-      isOpen,
-      currentSessionId,
-      isInitialized,
+    // Initialize chat settings when the provider mounts
+    const settings = initializeChatSettings();
+    logger.info("Chat provider initialized", { 
+      isHidden: settings.isHidden,
+      position: settings.position 
     });
-  }, [isEditorPage, isOpen, currentSessionId, isInitialized]);
+    
+    // Force isHidden to false to ensure chat button is visible
+    if (settings.isHidden) {
+      setIsHidden(false);
+    }
+  }, [setIsHidden]);
 
-  if (isInitializing) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Spinner size="lg" />
-          <p className="mt-4 text-muted-foreground">
-            Initializing chat system...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <ChatContext.Provider
-      value={{ isEditorPage, isInitialized, isInitializing }}
-    >
-      <ChatModeProvider isEditorPage={isEditorPage}>
-        {children}
-        <Toaster position="top-right" />
-      </ChatModeProvider>
-    </ChatContext.Provider>
-  );
+  return <ChatModeProvider>{children}</ChatModeProvider>;
 }
-
-export const useChat = () => {
-  const context = useContext(ChatContext);
-  if (context === undefined) {
-    throw new Error("useChat must be used within a ChatProvider");
-  }
-  return context;
-};

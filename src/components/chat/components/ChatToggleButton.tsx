@@ -1,7 +1,8 @@
+
 import { logger } from "@/services/chat/LoggingService";
 import { motion } from "framer-motion";
 import { Code, MessageSquare, MessagesSquare } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
 import { useChatMode } from "../providers/ChatModeProvider";
 import { useChatStore } from "../store/chatStore";
 import styles from "./ChatToggleButton.module.css";
@@ -12,13 +13,23 @@ interface ChatToggleButtonProps {
 
 export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
   const { mode } = useChatMode();
-  const { position } = useChatStore();
+  const { position, isHidden } = useChatStore();
+
+  useEffect(() => {
+    console.log("ChatToggleButton mounted", { isHidden, position, mode });
+  }, [isHidden, position, mode]);
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     logger.info("Chat toggle button clicked", { mode, position });
     onClick();
   };
+
+  // If hidden, don't render the button
+  if (isHidden) {
+    console.log("Chat button is hidden, not rendering");
+    return null;
+  }
 
   // Pick icon based on mode
   const Icon =
@@ -35,6 +46,8 @@ export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
       : mode === "chat-only"
       ? "Open Context Planning"
       : "Open Chat";
+
+  console.log("Rendering chat button", { position, mode });
 
   return (
     <motion.div

@@ -1,17 +1,28 @@
+
 import { useDraggable } from "@dnd-kit/core";
-import { memo, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import { useChatStore } from "../store/chatStore";
 import type { ChatContainerProps } from "../types";
 import { Messages } from "./Messages";
 
 function ChatContainerBase({ scrollRef, isEditorPage }: ChatContainerProps) {
   const chatRef = useRef<HTMLDivElement>(null);
-  const { docked } = useChatStore();
+  const { docked, isHidden } = useChatStore();
+
+  useEffect(() => {
+    console.log("ChatContainer mounted", { docked, isHidden });
+  }, [docked, isHidden]);
 
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: "chat-window",
     disabled: docked,
   });
+
+  // If chat is hidden, don't render the container
+  if (isHidden) {
+    console.log("Chat is hidden, not rendering container");
+    return null;
+  }
 
   const adjustedTransform =
     transform && !docked

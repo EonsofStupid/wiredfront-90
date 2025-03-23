@@ -1,3 +1,7 @@
+
+/* Import chat variables first */
+@import '../styles/chat-variables.css';
+
 .button {
   @apply rounded-full p-4;
   color: var(--chat-button-text);
