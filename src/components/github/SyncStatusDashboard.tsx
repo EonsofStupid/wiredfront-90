@@ -45,11 +45,11 @@ export function SyncStatusDashboard() {
         .select(`
           id,
           repository_id,
-          triggered_by as sync_type,
+          triggered_by,
           status,
-          message as details,
+          message,
           created_at,
-          github_repositories(repo_name, repo_owner)
+          github_repositories!repository_id(repo_name, repo_owner)
         `)
         .order("created_at", { ascending: false })
         .limit(50);
@@ -62,9 +62,9 @@ export function SyncStatusDashboard() {
         repository_id: log.repository_id,
         repo_name: log.github_repositories?.repo_name || 'Unknown',
         repo_owner: log.github_repositories?.repo_owner || 'Unknown',
-        sync_type: log.sync_type,
+        sync_type: log.triggered_by,
         status: log.status,
-        details: { message: log.details },
+        details: { message: log.message },
         created_at: log.created_at
       }));
 

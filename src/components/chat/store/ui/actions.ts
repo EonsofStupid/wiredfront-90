@@ -37,7 +37,7 @@ export const additionalUIActions: StateCreator<
   [],
   [],
   Pick<ChatState, 'togglePosition' | 'toggleDocked' | 'setIsHidden' | 'updateCurrentProvider' | 'updateAvailableProviders'>
-> = (set, get) => ({
+> = (set, get, store) => ({
   togglePosition: () => {
     set((state) => {
       if (typeof state.position === 'string') {
