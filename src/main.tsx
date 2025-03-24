@@ -7,6 +7,7 @@ import './index.css'
 import './styles/mobile.css'
 import './mobile/styles/mobile.css'
 import './components/chat/styles/chat-variables.css'
+import './components/chat/styles/container.css'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './lib/queryClient'
 

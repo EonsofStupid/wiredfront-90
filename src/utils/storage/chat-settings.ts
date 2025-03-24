@@ -1,3 +1,4 @@
+
 import { ChatButtonSettings } from '@/types/chat/button-styles';
 
 const CHAT_SETTINGS_KEY = 'chat_settings';
@@ -31,7 +32,7 @@ export interface ChatSettings {
 const defaultSettings: ChatSettings = {
   appearance: {
     position: 'bottom-right',
-    buttonStyle: 'wfpulse',
+    buttonStyle: 'ultra',  // Set "Ultra" as default
     buttonSize: 'medium',
     buttonColor: '#0EA5E9',
     chatWidth: 400,
