@@ -2640,7 +2640,6 @@ export type Database = {
           custom_css: string | null
           docked_icons: Json | null
           docked_sections: Json | null
-          icon_style: Database["public"]["Enums"]["chat_icon_style"] | null
           metadata: Json | null
           theme: string | null
           theme_id: string | null
@@ -2652,7 +2651,6 @@ export type Database = {
           custom_css?: string | null
           docked_icons?: Json | null
           docked_sections?: Json | null
-          icon_style?: Database["public"]["Enums"]["chat_icon_style"] | null
           metadata?: Json | null
           theme?: string | null
           theme_id?: string | null
@@ -2664,7 +2662,6 @@ export type Database = {
           custom_css?: string | null
           docked_icons?: Json | null
           docked_sections?: Json | null
-          icon_style?: Database["public"]["Enums"]["chat_icon_style"] | null
           metadata?: Json | null
           theme?: string | null
           theme_id?: string | null
@@ -3250,7 +3247,6 @@ export type Database = {
         | "github"
       app_role: "super_admin" | "admin" | "developer" | "subscriber" | "guest"
       chat_api_provider: "openai" | "anthropic" | "gemini" | "huggingface"
-      chat_icon_style: "default" | "wfpulse" | "retro"
       chat_mode:
         | "chat"
         | "dev"

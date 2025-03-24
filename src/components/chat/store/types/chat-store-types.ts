@@ -1,3 +1,4 @@
+
 import {
   ChatMode,
   TokenEnforcementMode,
@@ -34,8 +35,11 @@ export interface ChatProvider {
   category?: "chat" | "image" | "integration";
 }
 
-export type ChatPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
-export type ChatIconStyle = "default" | "wfpulse" | "retro";
+export type ChatPosition =
+  | "bottom-right"
+  | "bottom-left"
+  | "top-right"
+  | "top-left";
 
 export interface TokenControl {
   balance: number;
@@ -59,7 +63,7 @@ export interface ChatState {
   docked: boolean;
   isOpen: boolean;
   isHidden: boolean;
-  position: ChatPosition;
+  position: ChatPosition | { x: number; y: number };
   startTime: number;
   features: ChatFeatures;
   currentMode: ChatMode;
@@ -118,9 +122,4 @@ export interface UIStateActions {
   setScale: (scale: number) => void;
   setCurrentMode: (mode: ChatMode) => void;
   setUserInput: (input: string) => void;
-  togglePosition: () => void;
-  toggleDocked: () => void;
-  setIsHidden: (hidden: boolean) => void;
-  updateCurrentProvider: (provider: ChatProvider) => void;
-  updateAvailableProviders: (providers: ChatProvider[]) => void;
 }
