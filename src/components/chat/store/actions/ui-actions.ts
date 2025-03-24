@@ -1,8 +1,7 @@
 
 import { StateCreator } from 'zustand';
 import { ChatState, ChatProvider, ChatPosition } from '../types/chat-store-types';
-import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/services/chat/LoggingService';
+import { logProviderChange } from './feature/toggle/toggle-utils';
 
 export interface UISlice {
   toggleMinimize: () => void;
@@ -15,42 +14,18 @@ export interface UISlice {
   setProviderLoading: (isLoading: boolean) => void;
   setScale: (scale: number) => void;
   setCurrentMode: (mode: 'chat' | 'dev' | 'image') => void;
+  setUserInput: (input: string) => void;
   updateCurrentProvider: (provider: ChatProvider) => void;
   updateAvailableProviders: (providers: ChatProvider[]) => void;
+  setIsHidden: (hidden: boolean) => void;
 }
-
-// Helper function to log provider changes to the database
-const logProviderChange = async (oldProvider: string | undefined, newProvider: string | undefined) => {
-  if (!newProvider) return;
-  
-  try {
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData?.user) return;
-
-    await supabase.from('provider_change_log').insert({
-      user_id: userData.user.id,
-      provider_name: newProvider,
-      old_provider: oldProvider,
-      new_provider: newProvider,
-      reason: 'user_action',
-      metadata: { source: 'client_app', action: 'update_current_provider' }
-    });
-
-    logger.info(`Provider changed from ${oldProvider || 'none'} to ${newProvider}`, { 
-      oldProvider, 
-      newProvider 
-    });
-  } catch (error) {
-    logger.error('Error logging provider change:', error);
-  }
-};
 
 export const createUIActions: StateCreator<
   ChatState, 
   [["zustand/devtools", never]], 
   [], 
   UISlice
-> = (set, get) => ({
+> = (set, get, store) => ({
   toggleMinimize: () => {
     set(
       (state) => ({
@@ -104,6 +79,16 @@ export const createUIActions: StateCreator<
       }),
       false,
       { type: 'ui/toggleDocked' }
+    );
+  },
+  setIsHidden: (hidden: boolean) => {
+    set(
+      (state) => ({
+        ...state,
+        isHidden: hidden
+      }),
+      false,
+      { type: 'ui/setIsHidden', hidden }
     );
   },
   setSessionLoading: (isLoading: boolean) => {
@@ -165,6 +150,16 @@ export const createUIActions: StateCreator<
       { type: 'ui/setCurrentMode', mode }
     );
   },
+  setUserInput: (input: string) => {
+    set(
+      (state) => ({
+        ...state,
+        userInput: input,
+      }),
+      false,
+      { type: 'ui/setUserInput', input }
+    );
+  },
   updateCurrentProvider: (provider: ChatProvider) => {
     set(
       (state) => {
@@ -195,6 +190,7 @@ export const createUIActions: StateCreator<
     set(
       (state) => ({
         ...state,
+        availableProviders: providers,
         providers: {
           ...state.providers,
           availableProviders: providers

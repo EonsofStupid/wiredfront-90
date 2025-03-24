@@ -7,6 +7,8 @@ import { useFeatureFlag } from "./useFeatureFlag";
 import { toast } from "sonner";
 import { KnownFeatureFlag } from "@/types/admin/settings/feature-flags";
 import { FeatureKey } from "@/components/chat/store/actions/feature-actions";
+import { logFeatureUsage } from "@/components/chat/store/actions/feature/toggle/toggle-utils";
+import { useAuthStore } from "@/stores/auth";
 
 // Export is now handled by re-exporting from feature-actions.ts
 // export type FeatureKey = KnownFeatureFlag;
@@ -14,6 +16,7 @@ import { FeatureKey } from "@/components/chat/store/actions/feature-actions";
 export function useFeatureFlags() {
   const { features, toggleFeature, enableFeature, disableFeature, setFeatureState } = useChatStore();
   const [isUpdating, setIsUpdating] = useState(false);
+  const { user } = useAuthStore();
 
   /**
    * Check if a feature is enabled in the local store
@@ -37,8 +40,8 @@ export function useFeatureFlags() {
         // Use the store's action to toggle the feature
         toggleFeature(featureKey);
         
-        // Log the feature usage
-        await logFeatureUsage(featureKey, { action: 'toggle' });
+        // Log the feature usage using our utility function
+        await logFeatureUsage(featureKey, user?.id, { action: 'toggle' });
       } catch (error) {
         logger.error(`Error toggling feature ${featureKey}:`, error);
         toast.error(`Failed to toggle ${featureKey} feature`);
@@ -46,7 +49,7 @@ export function useFeatureFlags() {
         setIsUpdating(false);
       }
     },
-    [toggleFeature, isUpdating]
+    [toggleFeature, isUpdating, user?.id]
   );
 
   /**
@@ -61,8 +64,8 @@ export function useFeatureFlags() {
         // Use the store's action to enable the feature
         enableFeature(featureKey);
         
-        // Log the feature usage
-        await logFeatureUsage(featureKey, { action: 'enable' });
+        // Log the feature usage using our utility function
+        await logFeatureUsage(featureKey, user?.id, { action: 'enable' });
       } catch (error) {
         logger.error(`Error enabling feature ${featureKey}:`, error);
         toast.error(`Failed to enable ${featureKey} feature`);
@@ -70,7 +73,7 @@ export function useFeatureFlags() {
         setIsUpdating(false);
       }
     },
-    [enableFeature, isUpdating]
+    [enableFeature, isUpdating, user?.id]
   );
 
   /**
@@ -85,8 +88,8 @@ export function useFeatureFlags() {
         // Use the store's action to disable the feature
         disableFeature(featureKey);
         
-        // Log the feature usage
-        await logFeatureUsage(featureKey, { action: 'disable' });
+        // Log the feature usage using our utility function
+        await logFeatureUsage(featureKey, user?.id, { action: 'disable' });
       } catch (error) {
         logger.error(`Error disabling feature ${featureKey}:`, error);
         toast.error(`Failed to disable ${featureKey} feature`);
@@ -94,7 +97,7 @@ export function useFeatureFlags() {
         setIsUpdating(false);
       }
     },
-    [disableFeature, isUpdating]
+    [disableFeature, isUpdating, user?.id]
   );
 
   /**
@@ -109,8 +112,8 @@ export function useFeatureFlags() {
         // Use the store's action to set the feature state
         setFeatureState(featureKey, isEnabled);
         
-        // Log the feature usage
-        await logFeatureUsage(featureKey, { 
+        // Log the feature usage using our utility function
+        await logFeatureUsage(featureKey, user?.id, { 
           action: 'setState', 
           enabled: isEnabled 
         });
@@ -121,24 +124,8 @@ export function useFeatureFlags() {
         setIsUpdating(false);
       }
     },
-    [setFeatureState, isUpdating]
+    [setFeatureState, isUpdating, user?.id]
   );
-
-  // Helper function to log feature usage
-  const logFeatureUsage = async (featureKey: FeatureKey, context: Record<string, any> = {}) => {
-    try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData?.user) return;
-      
-      await supabase.from('feature_usage').insert({
-        user_id: userData.user.id,
-        feature_name: featureKey,
-        context
-      });
-    } catch (error) {
-      logger.error(`Error logging feature usage for ${featureKey}:`, error);
-    }
-  };
 
   return {
     features,

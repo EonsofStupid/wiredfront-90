@@ -38,7 +38,8 @@ export function useFeatureFlag(flagKey: string) {
         } as FeatureFlag;
       }
 
-      return data as FeatureFlag;
+      // Type assertion to match our FeatureFlag interface
+      return data as unknown as FeatureFlag;
     },
   });
 
