@@ -19,7 +19,11 @@ export const useChatIconStyle = () => {
   // Fetch the user's chat icon style preference from the database
   useEffect(() => {
     const fetchIconStyle = async () => {
-      if (!user?.id) return;
+      if (!user?.id) {
+        // If no user, default to wfpulse
+        setIconStyle("wfpulse");
+        return;
+      }
 
       setIsLoading(true);
       setError(null);
@@ -40,10 +44,13 @@ export const useChatIconStyle = () => {
           // If no preference is found, create a default one using wfpulse
           console.log("No chat icon style found, creating wfpulse default");
           await createDefaultPreference(user.id);
+          setIconStyle("wfpulse");
         }
       } catch (err) {
         console.error("Error fetching chat icon style:", err);
         setError("Failed to load chat icon style");
+        // Still set a default
+        setIconStyle("wfpulse");
       } finally {
         setIsLoading(false);
       }
@@ -66,7 +73,11 @@ export const useChatIconStyle = () => {
 
   // Update the user's chat icon style preference
   const updateIconStyle = async (style: ChatIconStyle) => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      // If no user, just update the local state
+      setIconStyle(style);
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -92,7 +103,7 @@ export const useChatIconStyle = () => {
   };
 
   return {
-    iconStyle,
+    iconStyle: iconStyle || "wfpulse", // Always provide a default
     setIconStyle: updateIconStyle,
     isLoading,
     error,

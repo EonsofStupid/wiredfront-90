@@ -11,7 +11,6 @@ import { wfpulseStyle } from "./styles/WFPulseStyle";
 import { retroStyle } from "./styles/RetroStyle";
 import { basicStyle } from "./styles/BasicStyle";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ChatMode } from "@/integrations/supabase/types/enums";
 
 interface ChatToggleButtonProps {
   onClick: () => void;
@@ -83,8 +82,12 @@ export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
         }
       })();
 
-  // Select style based on user preference
+  // Always default to wfpulse style if not set or invalid
   const styleToUse = (() => {
+    if (!iconStyle || !["default", "wfpulse", "retro", "basic"].includes(iconStyle)) {
+      return wfpulseStyle;
+    }
+    
     switch (iconStyle) {
       case "wfpulse":
         return wfpulseStyle;
@@ -92,8 +95,10 @@ export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
         return retroStyle;
       case "basic":
         return basicStyle;
+      case "default":
+        return defaultStyle;
       default:
-        return wfpulseStyle; // Changed default to wfpulse
+        return wfpulseStyle;
     }
   })();
 
@@ -107,7 +112,6 @@ export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
         className={styleToUse.container}
         data-position={position || "bottom-right"} // Set bottom-right as fallback
         data-testid="chat-toggle-container"
-        style={{ zIndex: "var(--z-chat-toggle-button)" }}
       >
         <Tooltip>
           <TooltipTrigger asChild>
@@ -115,7 +119,7 @@ export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
               onClick={handleClick}
               className={`${styleToUse.button} ${styleToUse.animation}`}
               data-testid="chat-toggle-button"
-              data-style={iconStyle}
+              data-style={iconStyle || "wfpulse"}
               aria-label={tooltipText}
             >
               <Icon className={styleToUse.icon} />

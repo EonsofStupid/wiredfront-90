@@ -6,7 +6,6 @@ import { ChatIconSettings } from "@/components/settings/sections/ChatIconSetting
 import { useSessionStore } from "@/stores/session/store";
 import { Loader2 } from "lucide-react";
 import { TokenBalanceDisplay } from "@/components/tokens/TokenBalanceDisplay";
-import { ChatFeatureSettings } from "@/components/admin/settings/ChatFeatureSettings";
 
 interface ChatUserSettingsProps {
   adminView?: boolean;
@@ -17,7 +16,6 @@ export function ChatUserSettings({ adminView = false }: ChatUserSettingsProps) {
   const { user } = useSessionStore();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Always render settings even if not logged in
   return (
     <div className={adminView ? "" : "shadow-md"}>
       {!adminView && (
@@ -66,7 +64,9 @@ export function ChatUserSettings({ adminView = false }: ChatUserSettingsProps) {
           
           {adminView && (
             <TabsContent value="features">
-              <ChatFeatureSettings />
+              <p className="text-sm text-muted-foreground">
+                Feature settings are available in admin mode.
+              </p>
             </TabsContent>
           )}
           

@@ -11,15 +11,15 @@
 
 :root {
   /* Base chat layering system - correctly mapped to central z-index values */
-  --z-chat-base: var(--z-chatBase);               /* Base z-index for all chat components */
-  --z-chat-container: var(--z-chatContainer);     /* Chat window container */
-  --z-chat-sticky: var(--z-chatSticky);           /* Fixed elements within chat (headers, footers) */
-  --z-chat-toolbar: var(--z-chatToolbar);         /* Toolbars and action buttons inside chat */
-  --z-chat-sidebar: var(--z-chatSidebar);         /* Chat sidebar (sessions list, etc.) */
-  --z-chat-overlay: var(--z-chatOverlay);         /* Overlays like emoji picker, command palette */
-  --z-chat-modal: var(--z-chatModal);             /* Modal dialogs within chat */
-  --z-chat-tooltip: var(--z-chatTooltip);         /* Tooltips and small popovers */
-  --z-chat-notification: var(--z-chatNotification); /* Toast notifications */
-  --z-chat-toggle-button: var(--z-chatToggleButton); /* Chat toggle button (always on top) */
-  --z-chat-global-overlay: var(--z-chatGlobalOverlay); /* System-wide overlays that should cover chat */
+  --z-chat-base: var(--z-chatBase, 10000);               /* Base z-index for all chat components */
+  --z-chat-container: var(--z-chatContainer, 10100);     /* Chat window container */
+  --z-chat-sticky: var(--z-chatSticky, 10200);           /* Fixed elements within chat (headers, footers) */
+  --z-chat-toolbar: var(--z-chatToolbar, 10300);         /* Toolbars and action buttons inside chat */
+  --z-chat-sidebar: var(--z-chatSidebar, 10400);         /* Chat sidebar (sessions list, etc.) */
+  --z-chat-overlay: var(--z-chatOverlay, 10500);         /* Overlays like emoji picker, command palette */
+  --z-chat-modal: var(--z-chatModal, 10600);             /* Modal dialogs within chat */
+  --z-chat-tooltip: var(--z-chatTooltip, 10700);         /* Tooltips and small popovers */
+  --z-chat-notification: var(--z-chatNotification, 10800); /* Toast notifications */
+  --z-chat-toggle-button: var(--z-chatToggleButton, 10900); /* Chat toggle button (always on top) */
+  --z-chat-global-overlay: var(--z-chatGlobalOverlay, 11000); /* System-wide overlays that should cover chat */
 }

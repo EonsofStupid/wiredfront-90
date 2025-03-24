@@ -17,7 +17,7 @@ export function ChatIconSettings() {
 
   useEffect(() => {
     // Set the local state if it doesn't match the store
-    if (iconStyle !== localIconStyle) {
+    if (iconStyle !== localIconStyle && iconStyle) {
       setLocalIconStyle(iconStyle);
     }
   }, [iconStyle, localIconStyle, setLocalIconStyle]);
@@ -67,6 +67,9 @@ export function ChatIconSettings() {
     );
   };
 
+  // Use currentStyle with fallback to wfpulse if not set
+  const currentStyle = localIconStyle || "wfpulse";
+
   return (
     <Card>
       <CardHeader>
@@ -76,7 +79,7 @@ export function ChatIconSettings() {
       <CardContent>
         <div className="space-y-6">
           <RadioGroup
-            value={localIconStyle}
+            value={currentStyle}
             onValueChange={(value) => handleStyleChange(value as ChatIconStyle)}
             className="grid grid-cols-1 md:grid-cols-2 gap-4"
           >

@@ -13,3 +13,10 @@ export interface ChatContainerProps {
   scrollRef: React.RefObject<HTMLDivElement>;
   isEditorPage: boolean;
 }
+
+export interface ChatStyles {
+  container: string;
+  button: string;
+  icon: string;
+  animation: string;
+}

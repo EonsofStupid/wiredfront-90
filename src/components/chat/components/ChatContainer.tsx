@@ -11,9 +11,10 @@ function ChatContainerBase({ scrollRef, isEditorPage }: ChatContainerProps) {
   const { docked, isHidden, toggleChat, toggleMinimize, isMinimized } = useChatStore();
 
   useEffect(() => {
-    console.log("ChatContainer mounted", { docked, isHidden, isMinimized });
+    console.log("ChatContainer mounted with state:", { docked, isHidden, isMinimized });
   }, [docked, isHidden, isMinimized]);
 
+  // Configure draggable functionality
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: "chat-window",
     disabled: docked,
@@ -52,6 +53,7 @@ function ChatContainerBase({ scrollRef, isEditorPage }: ChatContainerProps) {
       style={style}
       {...attributes}
       {...listeners}
+      data-testid="chat-container"
     >
       <div className="chat-header">
         <h3 className="chat-title">Chat</h3>

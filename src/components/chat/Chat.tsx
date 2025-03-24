@@ -1,5 +1,5 @@
 
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useEffect } from "react";
 import { ChatContainer } from "./components/ChatContainer";
 import { ChatProvider } from "./providers/ChatProvider";
 import { ChatToggleButton } from "./components/ChatToggleButton";
@@ -23,8 +23,13 @@ export function Chat() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { isOpen, toggleChat } = useChatStore();
   
+  // Log component mounting for debugging
+  useEffect(() => {
+    console.log("Chat component mounted with state:", { isOpen });
+  }, [isOpen]);
+  
   const handleToggleChat = useCallback(() => {
-    console.log("Toggle chat button clicked, current state:", { isOpen: !isOpen });
+    console.log("Toggle chat button clicked, current state:", { isOpen });
     toggleChat();
   }, [toggleChat, isOpen]);
   
