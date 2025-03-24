@@ -54,6 +54,9 @@ export const createUIActions: StateCreator<
       false,
       { type: 'ui/toggleChat' }
     );
+    
+    const newState = !get().isOpen;
+    console.log(`Chat ${newState ? 'opened' : 'closed'}`);
   },
   togglePosition: () => {
     set(

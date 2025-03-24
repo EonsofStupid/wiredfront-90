@@ -38,6 +38,8 @@
   --chat-font-weight-bold: 600;
   
   /* Animation variables */
+  --chat-transition-duration: 0.3s;
+  --chat-transition-timing: ease-in-out;
   --chat-transition-fast: 150ms ease;
   --chat-transition-normal: 250ms ease;
   --chat-transition-slow: 350ms ease;
@@ -46,6 +48,7 @@
   --chat-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
   --chat-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
   --chat-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  --chat-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   
   /* Component-specific variables */
   --chat-container-width: 400px;
@@ -70,6 +73,17 @@
   --chat-button-hover-bg: #5d80d3;
   --chat-button-active-bg: #4b6cbf;
   --chat-button-text: #ffffff;
+  --chat-button-hover: #ffffff;
+  --chat-button-primary-rgb: 122, 162, 247;
+  
+  /* Glass effect variables */
+  --chat-glass-bg: rgba(26, 27, 38, 0.85);
+  --chat-glass-border: rgba(122, 162, 247, 0.2);
+  --chat-glass-blur: 10px;
+  --chat-bg-hover: rgba(30, 30, 46, 0.9);
+  
+  /* Z-index values */
+  --z-chat: 9700;
 }
 
 /* Dark mode overrides */
@@ -82,6 +96,9 @@
   --chat-bg-color: #f7f7fb;
   --chat-text-color: #1a1b26;
   --chat-border-color: #d1d5db;
+  --chat-glass-bg: rgba(247, 247, 251, 0.9);
+  --chat-glass-border: rgba(59, 130, 246, 0.2);
+  --chat-bg-hover: rgba(240, 240, 250, 0.95);
   --chat-user-message-bg: rgba(59, 130, 246, 0.1);
   --chat-assistant-message-bg: rgba(209, 213, 219, 0.5);
 }
