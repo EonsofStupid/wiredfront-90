@@ -1,113 +1,131 @@
-import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
+import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ConnectionState } from '@/types/websocket';
+import { WebSocketLogger } from '@/services/chat/websocket/monitoring/WebSocketLogger';
 
-interface PerformanceMetrics {
-  fps: number;
-  memory: {
-    used: number;
-    total: number;
-  };
-  renderTime: number;
-  components: number;
+interface MetricsData {
+  connectionState: ConnectionState;
+  messagesSent: number;
+  messagesReceived: number;
+  errors: Array<{ timestamp: number; error: string }>;
+  latency: number;
+  uptime: number;
+  reconnectAttempts: number;
 }
 
 export const DebugMetrics = () => {
-  const [metrics, setMetrics] = useState<PerformanceMetrics>({
-    fps: 0,
-    memory: { used: 0, total: 0 },
-    renderTime: 0,
-    components: 0,
-  });
+  const [metrics, setMetrics] = useState<MetricsData | null>(null);
+  const [activeTab, setActiveTab] = useState('metrics');
+  const [hasNewInfo, setHasNewInfo] = useState(false);
 
   useEffect(() => {
-    let frameCount = 0;
-    let lastTime = performance.now();
-    let lastRenderTime = performance.now();
-
     const updateMetrics = () => {
-      const now = performance.now();
-      const delta = now - lastTime;
-
-      // Calculate FPS
-      if (delta >= 1000) {
-        const fps = Math.round((frameCount * 1000) / delta);
-        setMetrics((prev) => ({ ...prev, fps }));
-        frameCount = 0;
-        lastTime = now;
-      }
-
-      // Calculate render time
-      const renderTime = now - lastRenderTime;
-      setMetrics((prev) => ({ ...prev, renderTime }));
-
-      // Get memory usage if available
-      if (performance.memory) {
-        const memory = {
-          used: Math.round(performance.memory.usedJSHeapSize / 1024 / 1024),
-          total: Math.round(performance.memory.totalJSHeapSize / 1024 / 1024),
-        };
-        setMetrics((prev) => ({ ...prev, memory }));
-      }
-
-      // Count mounted components
-      const componentCount = document.querySelectorAll("[data-zlayer]").length;
-      setMetrics((prev) => ({ ...prev, components: componentCount }));
-
-      frameCount++;
-      lastRenderTime = now;
-      requestAnimationFrame(updateMetrics);
+      const logger = WebSocketLogger.getInstance();
+      const currentMetrics = logger.getMetrics();
+      const newMetrics: MetricsData = {
+        connectionState: logger.getConnectionState(),
+        messagesSent: currentMetrics.messagesSent,
+        messagesReceived: currentMetrics.messagesReceived,
+        errors: logger.getLogs()
+          .filter(log => log.level === 'error')
+          .map(log => ({
+            timestamp: log.timestamp,
+            error: log.message
+          })),
+        latency: currentMetrics.latency,
+        uptime: currentMetrics.uptime,
+        reconnectAttempts: currentMetrics.reconnectAttempts
+      };
+      setMetrics(newMetrics);
+      setHasNewInfo(true);
     };
 
-    const animationFrame = requestAnimationFrame(updateMetrics);
-    return () => cancelAnimationFrame(animationFrame);
+    updateMetrics();
+    const interval = setInterval(updateMetrics, 1000);
+    return () => clearInterval(interval);
   }, []);
 
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value === 'metrics' || value === 'audit') {
+      setHasNewInfo(false);
+    }
+  };
+
+  if (!metrics) return null;
+
   return (
-    <div className="space-y-2 text-sm">
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1">
-          <p className="text-neon-pink">FPS</p>
-          <p
-            className={cn(
-              "font-mono",
-              metrics.fps >= 60
-                ? "text-green-400"
-                : metrics.fps >= 30
-                ? "text-yellow-400"
-                : "text-red-400"
-            )}
-          >
-            {metrics.fps}
-          </p>
-        </div>
-        <div className="space-y-1">
-          <p className="text-neon-pink">Render Time</p>
-          <p
-            className={cn(
-              "font-mono",
-              metrics.renderTime < 16
-                ? "text-green-400"
-                : metrics.renderTime < 32
-                ? "text-yellow-400"
-                : "text-red-400"
-            )}
-          >
-            {metrics.renderTime.toFixed(2)}ms
-          </p>
-        </div>
-      </div>
+    <Card className="fixed bottom-20 right-4 w-96 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <TabsList className="w-full">
+          <TabsTrigger value="metrics" className={hasNewInfo ? 'text-neon-blue animate-pulse' : ''}>
+            Metrics
+          </TabsTrigger>
+          <TabsTrigger value="audit">Audit</TabsTrigger>
+          <TabsTrigger value="logs">Logs</TabsTrigger>
+        </TabsList>
 
-      <div className="space-y-1">
-        <p className="text-neon-pink">Memory Usage</p>
-        <p className="font-mono text-blue-400">
-          {metrics.memory.used}MB / {metrics.memory.total}MB
-        </p>
-      </div>
+        <TabsContent value="metrics" className="p-4 space-y-4">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Connection State</span>
+              <Badge variant={metrics.connectionState === 'connected' ? 'default' : 'destructive'}>
+                {metrics.connectionState}
+              </Badge>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Messages Sent</span>
+              <Badge variant="secondary">{metrics.messagesSent}</Badge>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Messages Received</span>
+              <Badge variant="secondary">{metrics.messagesReceived}</Badge>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Latency</span>
+              <Badge variant="secondary">{metrics.latency}ms</Badge>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Uptime</span>
+              <Badge variant="secondary">{Math.floor(metrics.uptime / 1000)}s</Badge>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Reconnect Attempts</span>
+              <Badge variant="secondary">{metrics.reconnectAttempts}</Badge>
+            </div>
+          </div>
+        </TabsContent>
 
-      <div className="space-y-1">
-        <p className="text-neon-pink">Mounted Components</p>
-        <p className="font-mono text-purple-400">{metrics.components}</p>
-      </div>
-    </div>
+        <TabsContent value="audit" className="p-4">
+          <ScrollArea className="h-[300px]">
+            {metrics.errors.map((error, index) => (
+              <div key={index} className="mb-2 p-2 rounded bg-destructive/10 text-destructive">
+                <div className="text-xs font-mono">{new Date(error.timestamp).toLocaleTimeString()}</div>
+                <div className="text-sm">{error.error}</div>
+              </div>
+            ))}
+          </ScrollArea>
+        </TabsContent>
+
+        <TabsContent value="logs" className="p-4">
+          <ScrollArea className="h-[300px]">
+            {WebSocketLogger.getInstance().getLogs().map((log, index) => (
+              <div key={index} className="mb-2 text-xs">
+                <span className="font-mono">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                <span className="ml-2">{log.message}</span>
+              </div>
+            ))}
+          </ScrollArea>
+        </TabsContent>
+      </Tabs>
+    </Card>
   );
 };
