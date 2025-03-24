@@ -5,6 +5,7 @@ import { AppLayout } from './components/layout/AppLayout';
 import { MainLayout } from './components/layout/MainLayout';
 import { Chat } from './components/chat';
 import { setupZIndexVars } from './styles/setup/injectZIndexVars';
+import { ZIndexVisualizer } from './components/debug/ZIndexVisualizer';
 import './App.css';
 
 // Import your page components here
@@ -50,6 +51,8 @@ function App() {
       
       {/* Chat component rendered outside of MainLayout for proper z-indexing */}
       <Chat />
+      
+      {/* ZIndexVisualizer is now toggled by the wrench icon in the bottom bar */}
     </AppLayout>
   );
 }

@@ -2,10 +2,11 @@
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { BottomBarProps, LayoutZIndex } from "./types";
-import { Bug, Activity } from "lucide-react";
+import { Bug, Activity, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WebSocketLogger } from '@/services/chat/websocket/monitoring/WebSocketLogger';
 import { DebugMetrics } from "@/components/debug/DebugPanel/DebugMetrics";
+import { ZIndexVisualizer } from "@/components/debug/ZIndexVisualizer";
 
 /**
  * @name CoreBottomBar
@@ -14,6 +15,7 @@ import { DebugMetrics } from "@/components/debug/DebugPanel/DebugMetrics";
  */
 export function CoreBottomBar({ className }: BottomBarProps) {
   const [showDebug, setShowDebug] = useState(false);
+  const [showZIndexVisualizer, setShowZIndexVisualizer] = useState(false);
   const [hasNewActivity, setHasNewActivity] = useState(false);
 
   useEffect(() => {
@@ -33,13 +35,17 @@ export function CoreBottomBar({ className }: BottomBarProps) {
     setHasNewActivity(false);
   };
 
+  const handleZIndexVisualizerClick = () => {
+    setShowZIndexVisualizer(!showZIndexVisualizer);
+  };
+
   return (
     <footer 
       className={cn(
         "wf-core-bottombar h-12 glass-card border-t border-neon-blue/20 px-6", 
         className
       )}
-      style={{ zIndex: LayoutZIndex.navbar }}
+      style={{ zIndex: LayoutZIndex.bottombar }}
       data-testid="core-bottombar"
     >
       <div className="h-full flex items-center justify-between">
@@ -53,6 +59,7 @@ export function CoreBottomBar({ className }: BottomBarProps) {
               showDebug && "text-neon-blue",
               hasNewActivity && "animate-pulse"
             )}
+            title="Debug Panel"
           >
             <Bug className="w-5 h-5" />
           </Button>
@@ -64,8 +71,22 @@ export function CoreBottomBar({ className }: BottomBarProps) {
               "text-neon-pink hover:text-neon-blue transition-colors",
               hasNewActivity && "text-neon-blue animate-pulse"
             )}
+            title="Activity Monitor"
           >
             <Activity className="w-5 h-5" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleZIndexVisualizerClick}
+            className={cn(
+              "text-neon-pink hover:text-neon-blue transition-colors",
+              showZIndexVisualizer && "text-neon-blue"
+            )}
+            title="Z-Index Visualizer"
+          >
+            <Wrench className="w-5 h-5" />
           </Button>
         </div>
 
@@ -75,6 +96,7 @@ export function CoreBottomBar({ className }: BottomBarProps) {
         </div>
       </div>
       {showDebug && <DebugMetrics />}
+      {showZIndexVisualizer && <ZIndexVisualizer />}
     </footer>
   );
 }

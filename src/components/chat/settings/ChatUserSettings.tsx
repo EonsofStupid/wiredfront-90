@@ -7,13 +7,18 @@ import { useSessionStore } from "@/stores/session/store";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { TokenBalanceDisplay } from "@/components/tokens/TokenBalanceDisplay";
+import { ChatFeatureSettings } from "@/components/admin/settings/ChatFeatureSettings";
 
-export function ChatUserSettings() {
+interface ChatUserSettingsProps {
+  adminView?: boolean;
+}
+
+export function ChatUserSettings({ adminView = false }: ChatUserSettingsProps) {
   const [activeTab, setActiveTab] = useState("appearance");
   const { user } = useSessionStore();
   const [isLoading, setIsLoading] = useState(false);
 
-  if (!user) {
+  if (!user && !adminView) {
     return (
       <Card className="shadow-md">
         <CardHeader>
@@ -30,23 +35,28 @@ export function ChatUserSettings() {
   }
 
   return (
-    <Card className="shadow-md">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Chat Settings</CardTitle>
-            <CardDescription>
-              Customize your chat experience
-            </CardDescription>
+    <div className={adminView ? "" : "shadow-md"}>
+      {!adminView && (
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Chat Settings</CardTitle>
+              <CardDescription>
+                Customize your chat experience
+              </CardDescription>
+            </div>
+            <TokenBalanceDisplay compact />
           </div>
-          <TokenBalanceDisplay compact />
-        </div>
-      </CardHeader>
+        </CardHeader>
+      )}
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4 w-full">
             <TabsTrigger value="appearance" className="flex-1">Appearance</TabsTrigger>
             <TabsTrigger value="behavior" className="flex-1">Behavior</TabsTrigger>
+            {adminView && (
+              <TabsTrigger value="features" className="flex-1">Features</TabsTrigger>
+            )}
             <TabsTrigger value="notifications" className="flex-1">Notifications</TabsTrigger>
           </TabsList>
           
@@ -70,6 +80,12 @@ export function ChatUserSettings() {
             </Card>
           </TabsContent>
           
+          {adminView && (
+            <TabsContent value="features">
+              <ChatFeatureSettings />
+            </TabsContent>
+          )}
+          
           <TabsContent value="notifications">
             <Card>
               <CardHeader>
@@ -91,6 +107,6 @@ export function ChatUserSettings() {
           </div>
         )}
       </CardContent>
-    </Card>
+    </div>
   );
 }
