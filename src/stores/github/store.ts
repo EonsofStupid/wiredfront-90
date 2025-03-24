@@ -1,5 +1,7 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/services/chat/LoggingService";
+import { GithubSyncLog } from "@/types/github/sync";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { GithubStore } from "./types";
@@ -46,14 +48,15 @@ export const useGithubStore = create<GithubStore>()(
           if (error) throw error;
 
           const linkedAccounts = connections.map((conn) => ({
-            username: conn.github_username,
-            isDefault: conn.is_default,
+            id: conn.id,
+            username: conn.username || "",
+            default: !!conn.is_default
           }));
 
           set({
             isConnected: linkedAccounts.length > 0,
             githubUsername:
-              linkedAccounts.find((acc) => acc.isDefault)?.username || null,
+              linkedAccounts.find((acc) => acc.default)?.username || null,
             linkedAccounts,
           });
         } catch (error) {
@@ -132,7 +135,7 @@ export const useGithubStore = create<GithubStore>()(
           const { error: updateError } = await supabase
             .from("github_connections")
             .update({ is_default: true })
-            .eq("github_username", username);
+            .eq("username", username);
 
           if (updateError) throw updateError;
 
@@ -140,7 +143,7 @@ export const useGithubStore = create<GithubStore>()(
             githubUsername: username,
             linkedAccounts: state.linkedAccounts.map((acc) => ({
               ...acc,
-              isDefault: acc.username === username,
+              default: acc.username === username,
             })),
           }));
         } catch (error) {
@@ -160,7 +163,19 @@ export const useGithubStore = create<GithubStore>()(
             .order("synced_at", { ascending: false });
 
           if (error) throw error;
-          set({ logs: data || [] });
+          
+          const typedLogs: GithubSyncLog[] = data.map(log => ({
+            id: log.id,
+            repository_id: log.repository_id,
+            status: log.status,
+            synced_at: log.synced_at,
+            message: log.message,
+            duration_ms: log.duration_ms,
+            triggered_by: log.triggered_by,
+            created_at: log.created_at
+          }));
+          
+          set({ logs: typedLogs });
         } catch (error) {
           logger.error("[GitHub Store] Failed to fetch sync logs:", error);
           set({ error: "Failed to fetch sync logs" });
@@ -187,8 +202,19 @@ export const useGithubStore = create<GithubStore>()(
 
           if (error) throw error;
 
+          const typedLog: GithubSyncLog = {
+            id: data.id,
+            repository_id: data.repository_id,
+            status: data.status,
+            synced_at: data.synced_at,
+            message: data.message,
+            duration_ms: data.duration_ms,
+            triggered_by: data.triggered_by,
+            created_at: data.created_at
+          };
+
           set((state) => ({
-            logs: [data, ...state.logs],
+            logs: [typedLog, ...state.logs],
           }));
         } catch (error) {
           logger.error("[GitHub Store] Failed to add sync log:", error);

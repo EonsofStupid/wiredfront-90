@@ -52,6 +52,8 @@ export interface GitHubRepository {
   webhook_id?: string | null;
   webhook_secret?: string | null;
   sync_frequency?: string;
+  name: string;
+  full_name: string;
 }
 
 /**

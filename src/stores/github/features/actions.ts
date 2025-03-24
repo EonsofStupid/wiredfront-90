@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/services/chat/LoggingService";
+import { GithubSyncLog } from "@/types/github/sync";
 import { GitHubRepository, GithubActions } from "../types/github-store-types";
 
 /**
@@ -41,7 +42,7 @@ export const createFeatureActions = (set: any, get: any): GithubActions => ({
 
       const linkedAccounts = connections.map((conn) => ({
         id: conn.id,
-        username: conn.username || conn.account_username,
+        username: conn.username,
         avatar_url: conn.avatar_url,
         default: conn.is_default,
         status: conn.status,
@@ -221,7 +222,7 @@ export const createFeatureActions = (set: any, get: any): GithubActions => ({
 
       const linkedAccounts = connections.map((conn) => ({
         id: conn.id,
-        username: conn.username || conn.account_username,
+        username: conn.username,
         avatar_url: conn.avatar_url,
         default: conn.is_default,
         status: conn.status,
@@ -275,6 +276,12 @@ export const createFeatureActions = (set: any, get: any): GithubActions => ({
         webhook_id: repo.webhook_id,
         webhook_secret: repo.webhook_secret,
         sync_frequency: repo.sync_frequency,
+        // Add required fields with default values
+        name: repo.repo_name,
+        full_name: `${repo.repo_owner}/${repo.repo_name}`,
+        description: null,
+        private: false,
+        language: null,
       }));
       
       set({ repositories, isRepositoriesLoading: false });
@@ -386,10 +393,15 @@ export const createFeatureActions = (set: any, get: any): GithubActions => ({
 
       if (error) throw error;
 
-      const transformedLogs = data.map((log) => ({
-        ...log,
-        repo_name: log.github_repositories?.repo_name || "Unknown",
-        repo_owner: log.github_repositories?.repo_owner || "Unknown",
+      const transformedLogs: GithubSyncLog[] = data.map((log) => ({
+        id: log.id,
+        repository_id: log.repository_id,
+        status: log.status,
+        synced_at: log.synced_at,
+        message: log.message,
+        duration_ms: log.duration_ms,
+        triggered_by: log.triggered_by,
+        created_at: log.created_at,
       }));
 
       set({ logs: transformedLogs });
@@ -427,10 +439,15 @@ export const createFeatureActions = (set: any, get: any): GithubActions => ({
 
       if (error) throw error;
 
-      const transformedLog = {
-        ...data,
-        repo_name: data.github_repositories?.repo_name || "Unknown",
-        repo_owner: data.github_repositories?.repo_owner || "Unknown",
+      const transformedLog: GithubSyncLog = {
+        id: data.id,
+        repository_id: data.repository_id,
+        status: data.status,
+        synced_at: data.synced_at,
+        message: data.message,
+        duration_ms: data.duration_ms,
+        triggered_by: data.triggered_by,
+        created_at: data.created_at
       };
 
       set((state: any) => ({

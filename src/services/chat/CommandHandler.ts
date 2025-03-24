@@ -1,9 +1,17 @@
+
 import { useChatStore } from '@/components/chat/store/chatStore';
 import { clearMiddlewareStorage } from '@/components/chat/store';
 import { logger } from './LoggingService';
 import { toast } from 'sonner';
 import { MessageManager } from '@/components/chat/messaging/MessageManager';
 import { messageCache } from './MessageCacheService';
+import { ChatState } from '@/components/chat/store/types/chat-store-types';
+
+// Define FullChatStore type to match what's used in chat store
+type FullChatStore = ChatState & {
+  updateCurrentProvider: (provider: any) => void;
+  resetChatState: () => void;
+};
 
 /**
  * Parse a command string to determine if it's a valid command
@@ -85,7 +93,7 @@ export const executeCommand = async (command: string, args: string[]): Promise<b
         const provider = providers.find(p => p.name.toLowerCase() === providerName);
         
         if (provider) {
-          useChatStore.getState().setCurrentProvider(provider);
+          useChatStore.getState().updateCurrentProvider(provider);
           toast.success(`Provider switched to ${provider.name}`);
         } else {
           toast.error(`Provider '${args[0]}' not found`);
@@ -127,7 +135,7 @@ export const handleProviderCommand = (store: FullChatStore, providerName: string
     };
   }
   
-  // Update the current provider - fix function name
+  // Update the current provider - use correct function name
   store.updateCurrentProvider(provider);
   
   return {

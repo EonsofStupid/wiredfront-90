@@ -1,6 +1,4 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { Session } from '@/types/sessions';
 import { logger } from '@/services/chat/LoggingService';
 
 /**
@@ -55,3 +53,21 @@ export async function fetchUserSessions(): Promise<Session[]> {
     throw error;
   }
 }
+
+export const fetchSessionById = async (sessionId: string) => {
+  try {
+    // Simplify this to avoid excessive type instantiation
+    const { data, error } = await supabase
+      .from('chat_sessions')
+      .select('*')
+      .eq('id', sessionId)
+      .single();
+    
+    if (error) throw error;
+    
+    return { data, error: null };
+  } catch (error) {
+    logger.error('Error fetching session by ID:', error);
+    return { data: null, error };
+  }
+};

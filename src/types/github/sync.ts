@@ -1,16 +1,17 @@
+
 /**
  * GitHub Sync Status
  *
  * Represents the possible states of a GitHub sync operation.
  */
-export type GithubSyncStatus = "success" | "error" | "queued" | "skipped";
+export type GithubSyncStatus = "success" | "error" | "queued" | "skipped" | string;
 
 /**
  * GitHub Sync Trigger
  *
  * Represents the different ways a sync operation can be triggered.
  */
-export type GithubSyncTrigger = "manual" | "auto" | "webhook";
+export type GithubSyncTrigger = "manual" | "auto" | "webhook" | string;
 
 /**
  * GitHub Sync Log
