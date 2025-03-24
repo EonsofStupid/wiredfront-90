@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Code, MessageSquare } from "lucide-react";
 
 interface UISettingsProps {
   settings: {
@@ -11,6 +13,7 @@ interface UISettingsProps {
     fontSize: string;
     messageAlignment: string;
     showTimestamps: boolean;
+    iconStyle: string;
   };
   handleSettingChange: (section: string, setting: string, value: any) => void;
 }
@@ -86,6 +89,45 @@ export const UISettings: React.FC<UISettingsProps> = ({
             checked={settings.showTimestamps}
             onCheckedChange={(checked) => handleSettingChange('ui', 'showTimestamps', checked)}
           />
+        </div>
+        
+        <div className="space-y-3">
+          <Label>Chat Icon Style</Label>
+          <RadioGroup 
+            value={settings.iconStyle || 'default'} 
+            onValueChange={(value) => handleSettingChange('ui', 'iconStyle', value)}
+            className="flex flex-col space-y-2"
+          >
+            <div className="flex items-center space-x-2 p-2 rounded hover:bg-muted">
+              <RadioGroupItem value="default" id="icon-default" />
+              <Label htmlFor="icon-default" className="flex items-center cursor-pointer">
+                <div className="w-10 h-10 rounded-full bg-primary/90 flex items-center justify-center mr-2">
+                  <MessageSquare className="h-5 w-5 text-primary-foreground" />
+                </div>
+                <span>Default</span>
+              </Label>
+            </div>
+            
+            <div className="flex items-center space-x-2 p-2 rounded hover:bg-muted">
+              <RadioGroupItem value="wfpulse" id="icon-wfpulse" />
+              <Label htmlFor="icon-wfpulse" className="flex items-center cursor-pointer">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-pink-500 to-cyan-500 flex items-center justify-center mr-2 shadow-[0_0_10px_rgba(0,255,255,0.5)]">
+                  <MessageSquare className="h-5 w-5 text-white drop-shadow-[0_0_2px_rgba(255,255,255,0.8)]" />
+                </div>
+                <span>WFPULSE (Neon)</span>
+              </Label>
+            </div>
+            
+            <div className="flex items-center space-x-2 p-2 rounded hover:bg-muted">
+              <RadioGroupItem value="retro" id="icon-retro" />
+              <Label htmlFor="icon-retro" className="flex items-center cursor-pointer">
+                <div className="w-10 h-10 rounded-full border-2 border-black bg-gradient-to-r from-gray-200 to-gray-300 flex items-center justify-center mr-2 shadow-[3px_3px_0px_rgba(0,0,0,1)]" style={{ imageRendering: 'pixelated' }}>
+                  <MessageSquare className="h-5 w-5 text-black" />
+                </div>
+                <span>Retro (Pixelated)</span>
+              </Label>
+            </div>
+          </RadioGroup>
         </div>
       </CardContent>
     </Card>

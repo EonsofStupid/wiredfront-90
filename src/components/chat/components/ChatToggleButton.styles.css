@@ -1,0 +1,165 @@
+
+/* ChatToggleButton Theme Styles - Isolated CSS with theme variations */
+
+/* Base button styles - shared across all themes */
+.chatButton {
+  @apply rounded-full p-4 z-[var(--z-chat)] transition-all duration-300;
+  color: var(--chat-button-text);
+  background: var(--chat-glass-bg);
+  -webkit-backdrop-filter: blur(var(--chat-glass-blur));
+  backdrop-filter: blur(var(--chat-glass-blur));
+  border: 1px solid var(--chat-glass-border);
+  box-shadow: var(--chat-box-shadow);
+  transform-origin: center;
+}
+
+.chatButton:hover {
+  background: var(--chat-bg-hover);
+  color: var(--chat-button-hover);
+  transform: scale(1.05);
+}
+
+/* Container positioning */
+.buttonContainer {
+  @apply fixed z-[var(--z-chat)];
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.buttonContainer[data-position="bottom-right"] {
+  @apply right-4 bottom-4;
+}
+
+.buttonContainer[data-position="bottom-left"] {
+  @apply left-4 bottom-4;
+}
+
+.buttonContainer[data-position="top-right"] {
+  @apply right-4 top-4;
+}
+
+.buttonContainer[data-position="top-left"] {
+  @apply left-4 top-4;
+}
+
+/* Default theme styling */
+.defaultTheme {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.defaultTheme:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+.defaultPulse {
+  animation: default-pulse 2s infinite;
+}
+
+@keyframes default-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--chat-button-primary-rgb), 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(var(--chat-button-primary-rgb), 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--chat-button-primary-rgb), 0);
+  }
+}
+
+/* WFPULSE theme - cyberpunk-inspired neon glow */
+.wfpulseTheme {
+  border: 1px solid rgba(255, 0, 127, 0.3);
+  box-shadow: 
+    0 0 10px rgba(255, 0, 127, 0.5),
+    0 0 20px rgba(0, 255, 255, 0.3);
+  text-shadow: 0 0 5px currentColor;
+  position: relative;
+  overflow: hidden;
+}
+
+.wfpulseTheme::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(0, 255, 255, 0.3),
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: cyber-scan 3s linear infinite;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.wfpulseTheme:hover::before {
+  opacity: 1;
+}
+
+@keyframes cyber-scan {
+  0% {
+    transform: translateX(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) rotate(45deg);
+  }
+}
+
+.wfpulsePulse {
+  animation: wfpulse-pulse 2s infinite;
+}
+
+@keyframes wfpulse-pulse {
+  0% {
+    box-shadow: 
+      0 0 0 0 rgba(255, 0, 127, 0.6),
+      0 0 0 0 rgba(0, 255, 255, 0.4);
+  }
+  50% {
+    box-shadow: 
+      0 0 15px 5px rgba(255, 0, 127, 0.2),
+      0 0 25px 10px rgba(0, 255, 255, 0.1);
+  }
+  100% {
+    box-shadow: 
+      0 0 0 0 rgba(255, 0, 127, 0),
+      0 0 0 0 rgba(0, 255, 255, 0);
+  }
+}
+
+/* Retro theme - pixelated look */
+.retroTheme {
+  image-rendering: pixelated;
+  border: 3px solid #222;
+  box-shadow: 4px 4px 0px #000;
+  transform-origin: center;
+  transition: all 0.1s steps(2);
+}
+
+.retroTheme:hover {
+  transform: scale(1.05);
+  box-shadow: 6px 6px 0px #000;
+}
+
+.retroTheme:active {
+  transform: scale(0.95);
+  box-shadow: 2px 2px 0px #000;
+}
+
+.retroPulse {
+  animation: retro-pulse 1s steps(2) infinite alternate;
+}
+
+@keyframes retro-pulse {
+  0% {
+    border-color: #222;
+  }
+  100% {
+    border-color: #f0f0f0;
+  }
+}

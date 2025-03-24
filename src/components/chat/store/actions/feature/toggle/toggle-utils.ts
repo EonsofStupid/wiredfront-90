@@ -1,83 +1,141 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/services/chat/LoggingService';
+import { ChatProvider } from "@/components/chat/store/types/chat-store-types";
+import { logger } from "@/services/chat/LoggingService";
+import { supabase } from "@/integrations/supabase/client";
 
-// Helper function to log provider changes to the database
-export const logProviderChange = async (oldProvider: string | undefined, newProvider: string | undefined) => {
-  if (!newProvider) return;
-  
+/**
+ * Log provider change in the database
+ */
+export const logProviderChange = async (
+  oldProvider?: string,
+  newProvider?: string,
+  reason?: string
+) => {
   try {
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData?.user) return;
-
-    await supabase.from('provider_change_log').insert({
-      user_id: userData.user.id,
-      provider_name: newProvider,
-      old_provider: oldProvider,
-      new_provider: newProvider,
-      reason: 'user_action',
-      metadata: { source: 'client_app', action: 'update_current_provider' }
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      logger.info("Not logging provider change - user not authenticated");
+      return;
+    }
+    
+    // Only log when there's a real change
+    if (oldProvider === newProvider) {
+      return;
+    }
+    
+    const { error } = await supabase.from("provider_change_log").insert({
+      user_id: user.id,
+      old_provider: oldProvider || null,
+      new_provider: newProvider || "unknown",
+      reason: reason || "manual_switch",
+      metadata: {
+        timestamp: new Date().toISOString(),
+      },
     });
 
-    logger.info(`Provider changed from ${oldProvider || 'none'} to ${newProvider}`, { 
-      oldProvider, 
-      newProvider 
-    });
-  } catch (error) {
-    logger.error('Error logging provider change:', error);
+    if (error) {
+      logger.error("Failed to log provider change", { error });
+    } else {
+      logger.info("Logged provider change", { oldProvider, newProvider });
+    }
+  } catch (e) {
+    logger.error("Error logging provider change", e);
   }
 };
 
-// Helper function to log feature toggle actions
-export const logFeatureToggle = async (featureKey: string, oldValue: boolean, newValue: boolean) => {
-  try {
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData?.user) return;
-    
-    // Record the toggle history in the feature_toggle_history table
-    await supabase.from('feature_toggle_history').insert({
-      user_id: userData.user.id,
-      feature_name: featureKey,
-      old_value: oldValue,
-      new_value: newValue,
-      metadata: { 
-        source: 'client_app',
-        action: oldValue === newValue ? 'unchanged' : (newValue ? 'enable' : 'disable')
-      }
-    });
-    
-    logger.info(`Feature ${featureKey} toggled from ${oldValue} to ${newValue}`, {
-      feature: featureKey,
-      oldValue,
-      newValue
-    });
-  } catch (error) {
-    logger.error(`Error logging feature toggle for ${featureKey}:`, error);
+/**
+ * Save the user's chat style preferences to the database
+ */
+export const saveUserChatPreferences = async (
+  preferences: {
+    iconStyle?: 'default' | 'wfpulse' | 'retro';
+    theme?: string;
+    position?: string;
+    docked?: boolean;
   }
-};
-
-// Helper function to log feature usage - using the token_transaction_log table instead of feature_usage
-export const logFeatureUsage = async (featureKey: string, userId: string | undefined, context: Record<string, any> = {}) => {
-  if (!userId) return;
-  
+) => {
   try {
-    // Log in token_transaction_log table instead of feature_usage
-    await supabase.from('token_transaction_log').insert({
-      user_id: userId,
-      amount: 0, // No tokens spent for feature usage
-      transaction_type: 'feature_toggle',
-      description: `Feature ${featureKey} usage`,
-      metadata: { 
-        feature: featureKey,
-        action: context.action || 'usage',
-        context
-      }
-    });
+    const { data: { user } } = await supabase.auth.getUser();
     
-    logger.info(`Feature usage logged: ${featureKey}`, { feature: featureKey, context });
+    if (!user) {
+      logger.info("Not saving preferences - user not authenticated");
+      return false;
+    }
+    
+    // Check if user already has preferences
+    const { data: existingPrefs, error: fetchError } = await supabase
+      .from("user_chat_preferences")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+    
+    if (fetchError && fetchError.code !== "PGRST116") { // PGRST116 means no rows returned
+      logger.error("Error fetching user preferences", { error: fetchError });
+      return false;
+    }
+    
+    // Prepare the data to save
+    const prefsData = {
+      user_id: user.id,
+      ...preferences
+    };
+    
+    let result;
+    
+    if (existingPrefs) {
+      // Update existing preferences
+      result = await supabase
+        .from("user_chat_preferences")
+        .update(prefsData)
+        .eq("user_id", user.id);
+    } else {
+      // Insert new preferences
+      result = await supabase
+        .from("user_chat_preferences")
+        .insert(prefsData);
+    }
+    
+    if (result.error) {
+      logger.error("Failed to save user preferences", { error: result.error });
+      return false;
+    }
+    
+    logger.info("Saved user preferences", { preferences });
     return true;
-  } catch (error) {
-    logger.error(`Error logging feature usage for ${featureKey}:`, error);
+  } catch (e) {
+    logger.error("Error saving user preferences", e);
     return false;
+  }
+};
+
+/**
+ * Load the user's chat style preferences from the database
+ */
+export const loadUserChatPreferences = async () => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      logger.info("Not loading preferences - user not authenticated");
+      return null;
+    }
+    
+    const { data, error } = await supabase
+      .from("user_chat_preferences")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+    
+    if (error) {
+      logger.error("Error loading user preferences", { error });
+      return null;
+    }
+    
+    logger.info("Loaded user preferences", { preferences: data });
+    return data;
+  } catch (e) {
+    logger.error("Error loading user preferences", e);
+    return null;
   }
 };

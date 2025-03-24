@@ -1,8 +1,9 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { TokenEnforcementMode } from "@/integrations/supabase/types/enums";
 import { logger } from "@/services/chat/LoggingService";
 import { StateCreator } from "zustand";
-import { ChatProvider, ChatState } from "../types/chat-store-types";
+import { ChatProvider, ChatIconStyle, ChatState } from "../types/chat-store-types";
 
 interface InitializationActions {
   initializeChatSettings: () => Promise<void>;
@@ -84,6 +85,7 @@ export const createInitializationActions: StateCreator<
       if (session?.user?.id) {
         logger.info("User authenticated, loading settings from database");
 
+        // Load chat settings
         const { data: chatSettings, error: settingsError } = await supabase
           .from("chat_settings")
           .select("*")
@@ -93,6 +95,17 @@ export const createInitializationActions: StateCreator<
         if (settingsError && settingsError.code !== "PGRST116") {
           // PGRST116 is "no rows returned"
           logger.error("Error loading chat settings", settingsError);
+        }
+
+        // Load user chat preferences (including icon style)
+        const { data: chatPreferences, error: prefsError } = await supabase
+          .from("user_chat_preferences")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .single();
+
+        if (prefsError && prefsError.code !== "PGRST116") {
+          logger.error("Error loading chat preferences", prefsError);
         }
 
         if (chatSettings) {
@@ -132,6 +145,17 @@ export const createInitializationActions: StateCreator<
               enforcementMode: tokenEnforcement,
               ...tokenControl,
             },
+          });
+        }
+
+        if (chatPreferences) {
+          logger.info("Chat preferences loaded from database", chatPreferences);
+          
+          // Apply the user's chat icon style preference
+          set({
+            iconStyle: (chatPreferences.icon_style || 'default') as ChatIconStyle,
+            // If position is set in preferences, use it
+            position: chatPreferences.position || get().position
           });
         }
       }
