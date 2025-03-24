@@ -1,14 +1,12 @@
+
 import { logger } from "@/services/chat/LoggingService";
 import { create } from "zustand";
-import { createInitializationActions } from "./core/initialization";
-import { createFeatureActions } from "./features/actions";
+import { createCombinedStore } from "./index";
 import { ChatState, UIStateActions } from "./types/chat-store-types";
-import { createUIActions } from "./ui/actions";
 
 type FullChatStore = ChatState &
   UIStateActions &
-  ReturnType<typeof createInitializationActions> &
-  ReturnType<typeof createFeatureActions>;
+  ReturnType<typeof createCombinedStore>;
 
 // Initialize the chat store with proper default values
 const initialState: Omit<ChatState, keyof UIStateActions> = {
@@ -61,15 +59,23 @@ const initialState: Omit<ChatState, keyof UIStateActions> = {
   },
   resetChatState: () => {
     logger.info("Resetting chat state");
-    // Additional reset logic can go here
+    // Implementation will be provided by the store
   },
+  // Required for TypeScript, but will be implemented by the store
+  togglePosition: () => {},
+  toggleDocked: () => {},
+  setIsHidden: () => {},
+  updateCurrentProvider: () => {},
+  updateAvailableProviders: () => {},
+  addTokens: () => {},
+  spendTokens: () => {},
+  setTokenBalance: () => {},
+  setTokenEnforcementMode: () => {},
 };
 
 export const useChatStore = create<FullChatStore>()((set, get, store) => ({
   ...initialState,
-  ...createInitializationActions(set, get, store),
-  ...createFeatureActions(set, get, store),
-  ...createUIActions(set, get, store),
+  ...createCombinedStore(set, get, store),
 }));
 
 // Initialize chat settings

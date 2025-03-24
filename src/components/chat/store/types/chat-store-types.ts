@@ -1,3 +1,4 @@
+
 import {
   ChatMode,
   TokenEnforcementMode,
@@ -83,9 +84,6 @@ export interface ChatState {
   scale: number;
   ui: ChatUI;
 
-  // Store actions
-  resetChatState: () => void;
-
   // UI actions
   togglePosition: () => void;
   toggleDocked: () => void;
@@ -109,6 +107,9 @@ export interface ChatState {
   spendTokens: (amount: number) => void;
   setTokenBalance: (balance: number) => void;
   setTokenEnforcementMode: (mode: TokenEnforcementMode) => void;
+  
+  // Store actions
+  resetChatState: () => void;
 }
 
 export interface UIStateActions {

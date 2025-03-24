@@ -1,3 +1,5 @@
+
+import { TokenEnforcementMode } from "@/integrations/supabase/types/enums";
 import { StateCreator } from "zustand";
 import { ChatState } from "../types/chat-store-types";
 
@@ -9,6 +11,11 @@ interface FeatureActions {
     feature: keyof ChatState["features"],
     state: boolean
   ) => void;
+  // Token management actions
+  addTokens: (amount: number) => void;
+  spendTokens: (amount: number) => void;
+  setTokenBalance: (balance: number) => void;
+  setTokenEnforcementMode: (mode: TokenEnforcementMode) => void;
 }
 
 type FeatureStore = ChatState & FeatureActions;
@@ -54,5 +61,43 @@ export const createFeatureActions: StateCreator<
         [feature]: state,
       },
     });
+  },
+
+  // Token management actions
+  addTokens: (amount) => {
+    set((state) => ({
+      tokenControl: {
+        ...state.tokenControl,
+        balance: state.tokenControl.balance + amount,
+      },
+    }));
+  },
+
+  spendTokens: (amount) => {
+    set((state) => ({
+      tokenControl: {
+        ...state.tokenControl,
+        balance: Math.max(0, state.tokenControl.balance - amount),
+        queriesUsed: state.tokenControl.queriesUsed + 1,
+      },
+    }));
+  },
+
+  setTokenBalance: (balance) => {
+    set((state) => ({
+      tokenControl: {
+        ...state.tokenControl,
+        balance,
+      },
+    }));
+  },
+
+  setTokenEnforcementMode: (mode) => {
+    set((state) => ({
+      tokenControl: {
+        ...state.tokenControl,
+        enforcementMode: mode,
+      },
+    }));
   },
 });

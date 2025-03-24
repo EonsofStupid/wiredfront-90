@@ -1,17 +1,18 @@
-// Core store exports
-export { useChatStore } from "./chatStore";
-export { clearMiddlewareStorage } from "./core/store";
 
-// Types
-export type {
-  ChatFeatures,
-  ChatMessage,
-  ChatProvider,
-  ChatState,
-  ChatUI,
-} from "./types/chat-store-types";
+import { create } from "zustand";
+import { createInitializationActions } from "./core/initialization";
+import { createFeatureActions } from "./features/actions";
+import { additionalUIActions, createUIActions } from "./ui/actions";
+import { ChatState } from "./types/chat-store-types";
 
-// Actions
-export { createInitializationActions } from "./core/initialization";
-export { createFeatureActions } from "./features/actions";
-export { createUIActions } from "./ui/actions";
+// This file serves as a central export point for the store
+export * from "./chatStore";
+export * from "./types/chat-store-types";
+
+// Create a combined store creator function for use in chatStore.ts
+export const createCombinedStore = (set: any, get: any, store: any) => ({
+  ...createInitializationActions(set, get, store),
+  ...createFeatureActions(set, get, store),
+  ...createUIActions(set, get, store),
+  ...additionalUIActions(set, get),
+});

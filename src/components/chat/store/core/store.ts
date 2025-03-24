@@ -1,3 +1,4 @@
+
 import { create } from "zustand";
 import { devtools, DevtoolsOptions } from "zustand/middleware";
 import { createFeatureActions } from "../features/actions";
@@ -14,7 +15,7 @@ type FullChatStore = ChatState &
 type StoreMiddlewares = [];
 type StoreDevtools = [];
 
-const initialState: Omit<ChatState, "resetChatState"> = {
+const initialState: ChatState = {
   initialized: false,
   messages: [],
   userInput: "",
@@ -43,7 +44,6 @@ const initialState: Omit<ChatState, "resetChatState"> = {
   currentMode: "chat",
   availableProviders: [],
   currentProvider: null,
-
   tokenControl: {
     balance: 0,
     enforcementMode: "never",
@@ -52,11 +52,9 @@ const initialState: Omit<ChatState, "resetChatState"> = {
     freeQueryLimit: 5,
     queriesUsed: 0,
   },
-
   providers: {
     availableProviders: [],
   },
-
   isMinimized: false,
   showSidebar: false,
   scale: 1,
@@ -65,6 +63,29 @@ const initialState: Omit<ChatState, "resetChatState"> = {
     messageLoading: false,
     providerLoading: false,
   },
+  // UI actions
+  togglePosition: () => {},
+  toggleDocked: () => {},
+  setIsHidden: () => {},
+  toggleMinimize: () => {},
+  toggleSidebar: () => {},
+  toggleChat: () => {},
+  setSessionLoading: () => {},
+  setMessageLoading: () => {},
+  setProviderLoading: () => {},
+  setScale: () => {},
+  setCurrentMode: () => {},
+  setUserInput: () => {},
+  // Provider management
+  updateCurrentProvider: () => {},
+  updateAvailableProviders: () => {},
+  // Token management
+  addTokens: () => {},
+  spendTokens: () => {},
+  setTokenBalance: () => {},
+  setTokenEnforcementMode: () => {},
+  // Store actions
+  resetChatState: () => {},
 };
 
 // Enhanced function to clear all Zustand middleware storage
