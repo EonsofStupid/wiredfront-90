@@ -1,8 +1,10 @@
+import { CacheMetricsPanel } from "@/components/debug/CacheMetricsPanel";
 import { DebugMetrics } from "@/components/debug/DebugPanel/DebugMetrics";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { WebSocketLogger } from "@/services/chat/websocket/monitoring/WebSocketLogger";
-import { Activity, Bug } from "lucide-react";
+import { toggleZIndexDebug } from "@/utils/debug";
+import { Activity, Bug, Wrench } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface BottomBarProps {
@@ -10,7 +12,9 @@ interface BottomBarProps {
 }
 
 export const BottomBar = ({ className }: BottomBarProps) => {
-  const [showDebug, setShowDebug] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showZDebug, setShowZDebug] = useState(false);
+  const [showMetrics, setShowMetrics] = useState(false);
   const [hasNewActivity, setHasNewActivity] = useState(false);
 
   useEffect(() => {
@@ -25,8 +29,18 @@ export const BottomBar = ({ className }: BottomBarProps) => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleDebugClick = () => {
-    setShowDebug(!showDebug);
+  const handleAnalyticsClick = () => {
+    setShowAnalytics(!showAnalytics);
+    setHasNewActivity(false);
+  };
+
+  const handleZDebugClick = () => {
+    setShowZDebug(!showZDebug);
+    toggleZIndexDebug();
+  };
+
+  const handleMetricsClick = () => {
+    setShowMetrics(!showMetrics);
     setHasNewActivity(false);
   };
 
@@ -43,13 +57,13 @@ export const BottomBar = ({ className }: BottomBarProps) => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={handleDebugClick}
+            onClick={handleAnalyticsClick}
             className={cn(
               "text-neon-pink hover:text-neon-blue transition-colors",
-              showDebug && "text-neon-blue",
+              showAnalytics && "text-neon-blue",
               hasNewActivity && "animate-pulse"
             )}
-            data-zlayer={`debug-toggle (z: var(--z-footer))`}
+            data-zlayer={`analytics-toggle (z: var(--z-footer))`}
           >
             <Bug className="w-5 h-5" />
           </Button>
@@ -57,10 +71,26 @@ export const BottomBar = ({ className }: BottomBarProps) => {
           <Button
             variant="ghost"
             size="icon"
+            onClick={handleZDebugClick}
             className={cn(
               "text-neon-pink hover:text-neon-blue transition-colors",
-              hasNewActivity && "text-neon-blue animate-pulse"
+              showZDebug && "text-neon-blue"
             )}
+            data-zlayer={`zdebug-toggle (z: var(--z-footer))`}
+          >
+            <Wrench className="w-5 h-5" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleMetricsClick}
+            className={cn(
+              "text-neon-pink hover:text-neon-blue transition-colors",
+              showMetrics && "text-neon-blue",
+              hasNewActivity && "animate-pulse"
+            )}
+            data-zlayer={`metrics-toggle (z: var(--z-footer))`}
           >
             <Activity className="w-5 h-5" />
           </Button>
@@ -71,7 +101,8 @@ export const BottomBar = ({ className }: BottomBarProps) => {
           <span className="text-sm text-neon-blue">v1.0.0</span>
         </div>
       </div>
-      {showDebug && <DebugMetrics />}
+      {showAnalytics && <CacheMetricsPanel />}
+      {showMetrics && <DebugMetrics />}
     </footer>
   );
 };
