@@ -5,6 +5,8 @@
  * These values are used throughout the application for consistent styling
  */
 
+import { ZIndex } from './zIndex';
+
 export const coreColors = {
   // Primary colors
   neonBlue: "#00FFFF",
@@ -45,19 +47,8 @@ export const coreDimensions = {
 };
 
 /**
- * Core z-index values
- * These should match the values in src/core/layout/types.ts and :root CSS variables
+ * Core z-index values imported directly from the centralized zIndex.ts file
+ * No duplication of z-index values allowed!
  */
-export const coreZIndex = {
-  userMenu: 9750,
-  chat: 9700,
-  projectHub: 9600,
-  modal: 1000,
-  dropdown: 900,
-  tooltip: 800,
-  navbar: 700,
-  floating: 600,
-  content: 500,
-  background: 400,
-  base: 300,
-};
+export const coreZIndex = ZIndex;
+

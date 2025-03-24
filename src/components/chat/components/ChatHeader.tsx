@@ -54,7 +54,7 @@ export function ChatHeader({
   return (
     <motion.div 
       className="p-4 flex flex-row justify-between items-center chat-header"
-      style={{ position: 'relative', zIndex: 'var(--z-chat)' }}
+      style={{ position: 'relative', zIndex: 'var(--z-chat-sticky)' }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.2 }}

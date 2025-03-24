@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AppLayout } from './components/layout/AppLayout';
 import { MainLayout } from './components/layout/MainLayout';
 import { Chat } from './components/chat';
+import { setupZIndexVars } from './styles/setup/injectZIndexVars';
 import './App.css';
 
 // Import your page components here
@@ -14,6 +15,12 @@ import Editor from './pages/Editor';
 import Index from './pages/Index';
 
 function App() {
+  // Initialize z-index CSS variables
+  useEffect(() => {
+    setupZIndexVars();
+    console.log('Z-index CSS variables injected');
+  }, []);
+
   return (
     <AppLayout>
       <Routes>
