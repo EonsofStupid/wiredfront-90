@@ -6,11 +6,11 @@
  */
 
 /* Only apply in development mode */
-body.z-debug * {
+body.z-debug [data-zlayer] {
   position: relative !important;
 }
 
-body.z-debug *::after {
+body.z-debug [data-zlayer]::after {
   content: attr(data-zlayer);
   position: absolute;
   top: 0;
