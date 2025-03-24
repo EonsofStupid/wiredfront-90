@@ -3,7 +3,7 @@
 // by limiting recursive type definitions and adding explicit type annotations
 
 import { supabase } from "@/integrations/supabase/client";
-import { Session } from "../types";
+import { Session } from "./types";
 
 /**
  * Fetch a specific chat session by ID
@@ -31,12 +31,20 @@ export const fetchSessionById = async (sessionId: string): Promise<Session | nul
 /**
  * Fetch all chat sessions for a user
  */
-export const fetchUserSessions = async (userId: string): Promise<Session[]> => {
+export const fetchUserSessions = async (): Promise<Session[]> => {
   try {
+    // Get current user from supabase
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.warn("No authenticated user found when fetching sessions");
+      return [];
+    }
+    
     const { data, error } = await supabase
       .from("chat_sessions")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_id", user.id)
       .order("updated_at", { ascending: false });
 
     if (error) {
@@ -57,14 +65,21 @@ export const fetchUserSessions = async (userId: string): Promise<Session[]> => {
  * Fetch recent chat sessions for a user
  */
 export const fetchRecentSessions = async (
-  userId: string,
   limit: number = 10
 ): Promise<Session[]> => {
   try {
+    // Get current user from supabase
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.warn("No authenticated user found when fetching recent sessions");
+      return [];
+    }
+    
     const { data, error } = await supabase
       .from("chat_sessions")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_id", user.id)
       .order("updated_at", { ascending: false })
       .limit(limit);
 

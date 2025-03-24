@@ -1,82 +1,53 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { CreateSessionParams, SessionOperationResult } from '@/types/sessions';
-import { v4 as uuidv4 } from 'uuid';
-import { logger } from '@/services/chat/LoggingService';
+import { supabase } from "@/integrations/supabase/client";
+import { Session } from "./types";
+import { CreateSessionParams, SessionOperationResult } from "@/types/sessions";
 
 /**
- * Creates a new chat session
+ * Create a new chat session
  */
-export async function createNewSession(params?: CreateSessionParams): Promise<SessionOperationResult> {
+export const createNewSession = async (params?: CreateSessionParams): Promise<SessionOperationResult> => {
   try {
-    // Get user from Supabase auth
+    // Get current user
     const { data: { user } } = await supabase.auth.getUser();
+    
     if (!user) {
-      return { success: false, error: new Error('User not authenticated') };
+      console.error("No authenticated user found when creating session");
+      return { success: false, error: new Error("No authenticated user") };
     }
 
-    const sessionId = uuidv4();
+    const title = params?.title || "New Chat";
+    const metadata = params?.metadata || {};
+    
     const now = new Date().toISOString();
     
-    // Extract mode from metadata if available - with proper type checking
-    const metadata = params?.metadata || {};
-    const mode = typeof metadata === 'object' && 'mode' in metadata ? 
-      metadata.mode as string : 'standard';
-    const providerId = typeof metadata === 'object' && 'providerId' in metadata ? 
-      metadata.providerId as string : undefined;
-    
-    // Generate a better default title based on mode
-    let defaultTitle = params?.title;
-    if (!defaultTitle) {
-      const dateStr = new Date().toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: true
-      });
-      
-      switch (mode) {
-        case 'editor':
-          defaultTitle = `Code Session (${dateStr})`;
-          break;
-        case 'image':
-          defaultTitle = `Image Generation (${dateStr})`;
-          break;
-        default:
-          defaultTitle = `Chat ${dateStr}`;
-      }
-    }
-    
-    // Create a new session
-    const { error } = await supabase
-      .from('chat_sessions')
-      .insert({
-        id: sessionId,
-        user_id: user.id,
-        title: defaultTitle,
-        created_at: now,
-        last_accessed: now,
-        is_active: true,
-        metadata: {
-          ...(typeof metadata === 'object' ? metadata : {}),
-          mode,
-          providerId
+    const { data, error } = await supabase
+      .from("chat_sessions")
+      .insert([
+        { 
+          title, 
+          user_id: user.id,
+          created_at: now,
+          updated_at: now,
+          last_accessed: now,
+          message_count: 0,
+          metadata 
         }
-      });
+      ])
+      .select()
+      .single();
 
-    if (error) throw error;
-    
-    logger.info('New session created', { 
-      sessionId, 
-      title: defaultTitle,
-      mode,
-      providerId
-    });
-    
-    return { success: true, sessionId };
+    if (error) {
+      console.error("Error creating session:", error);
+      return { success: false, error };
+    }
+
+    return { 
+      success: true, 
+      sessionId: (data as Session).id 
+    };
   } catch (error) {
-    logger.error('Failed to create session', { error });
+    console.error("Exception creating session:", error);
     return { success: false, error };
   }
-}
+};

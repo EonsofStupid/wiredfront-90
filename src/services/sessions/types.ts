@@ -9,7 +9,8 @@ export interface Session {
   archived: boolean;
   context?: Record<string, any>;
   metadata?: Record<string, any>;
-  // Add any other fields that should be part of the Session
+  last_accessed?: string;
+  message_count?: number;
 }
 
 export interface SessionState {

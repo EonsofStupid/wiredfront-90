@@ -1,53 +1,79 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { UpdateSessionParams, SessionOperationResult } from '@/types/sessions';
-import { logger } from '@/services/chat/LoggingService';
+import { supabase } from "@/integrations/supabase/client";
+import { Session } from "./types";
+import { UpdateSessionParams } from "@/types/sessions";
 
 /**
- * Updates an existing chat session
+ * Update a chat session
  */
-export async function updateSession(
+export const updateSession = async (
   sessionId: string, 
-  params: UpdateSessionParams
-): Promise<SessionOperationResult> {
+  updates: UpdateSessionParams
+): Promise<boolean> => {
   try {
-    const { error } = await supabase
-      .from('chat_sessions')
-      .update({
-        ...(params.title && { title: params.title }),
-        ...(params.is_active !== undefined && { is_active: params.is_active }),
-        ...(params.metadata && { metadata: params.metadata }),
-        last_accessed: new Date().toISOString()
-      })
-      .eq('id', sessionId);
-      
-    if (error) throw error;
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
     
-    logger.info('Updated session', { sessionId });
-    return { success: true, sessionId };
+    if (!user) {
+      console.error("No authenticated user found when updating session");
+      return false;
+    }
+    
+    const now = new Date().toISOString();
+    
+    const { error } = await supabase
+      .from("chat_sessions")
+      .update({ 
+        ...updates,
+        updated_at: now 
+      })
+      .eq("id", sessionId)
+      .eq("user_id", user.id); // Security: Only allow updating own sessions
+
+    if (error) {
+      console.error("Error updating session:", error);
+      return false;
+    }
+
+    return true;
   } catch (error) {
-    logger.error('Failed to update session', { error, sessionId });
-    return { success: false, error };
+    console.error("Exception updating session:", error);
+    return false;
   }
-}
+};
 
 /**
- * Updates the last_accessed timestamp for a session
+ * Switch to a session (update last_accessed)
  */
-export async function switchToSession(sessionId: string): Promise<SessionOperationResult> {
+export const switchToSession = async (sessionId: string): Promise<boolean> => {
   try {
-    // Update the session's last_accessed timestamp
-    const { error } = await supabase
-      .from('chat_sessions')
-      .update({ last_accessed: new Date().toISOString() })
-      .eq('id', sessionId);
-      
-    if (error) throw error;
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
     
-    logger.info('Switched to session', { sessionId });
-    return { success: true, sessionId };
+    if (!user) {
+      console.error("No authenticated user found when switching session");
+      return false;
+    }
+    
+    const now = new Date().toISOString();
+    
+    const { error } = await supabase
+      .from("chat_sessions")
+      .update({ 
+        last_accessed: now,
+        updated_at: now
+      })
+      .eq("id", sessionId)
+      .eq("user_id", user.id); // Security: Only allow updating own sessions
+
+    if (error) {
+      console.error("Error switching session:", error);
+      return false;
+    }
+
+    return true;
   } catch (error) {
-    logger.error('Failed to switch session', { error, sessionId });
-    return { success: false, error };
+    console.error("Exception switching session:", error);
+    return false;
   }
-}
+};

@@ -1,24 +1,39 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { SessionOperationResult } from '@/types/sessions';
-import { logger } from '@/services/chat/LoggingService';
+import { supabase } from "@/integrations/supabase/client";
+import { Session } from "./types";
 
 /**
- * Archives a session by setting is_active to false
+ * Archive a chat session
  */
-export async function archiveSession(sessionId: string): Promise<SessionOperationResult> {
+export const archiveSession = async (sessionId: string): Promise<boolean> => {
   try {
-    const { error } = await supabase
-      .from('chat_sessions')
-      .update({ is_active: false })
-      .eq('id', sessionId);
-      
-    if (error) throw error;
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
     
-    logger.info('Archived session', { sessionId });
-    return { success: true, sessionId };
+    if (!user) {
+      console.error("No authenticated user found when archiving session");
+      return false;
+    }
+    
+    const now = new Date().toISOString();
+    
+    const { error } = await supabase
+      .from("chat_sessions")
+      .update({ 
+        archived: true,
+        updated_at: now 
+      })
+      .eq("id", sessionId)
+      .eq("user_id", user.id); // Security: Only allow archiving own sessions
+
+    if (error) {
+      console.error("Error archiving session:", error);
+      return false;
+    }
+
+    return true;
   } catch (error) {
-    logger.error('Failed to archive session', { error, sessionId });
-    return { success: false, error };
+    console.error("Exception archiving session:", error);
+    return false;
   }
-}
+};
