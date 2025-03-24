@@ -1,7 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { logger } from "@/services/chat/LoggingService";
 import { Json } from "@/integrations/supabase/types";
+import { logger } from "@/services/chat/LoggingService";
 
 export interface Session {
   id: string;
@@ -62,7 +61,7 @@ export async function fetchUserSessions(): Promise<Session[]> {
         return {
           ...session,
           message_count: count || 0,
-        };
+        } as Session;
       })
     );
 

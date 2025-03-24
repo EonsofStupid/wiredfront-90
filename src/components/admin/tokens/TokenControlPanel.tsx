@@ -1,4 +1,3 @@
-
 import {
   Card,
   CardContent,
@@ -170,12 +169,12 @@ export function TokenControlPanel() {
                   enforcementMode={
                     (enforcementMode as TokenEnforcementMode) || "never"
                   }
-                  addTokens={(amount: number) => {
-                    const { data } = supabase.auth.getUser();
+                  addTokens={async (amount: number) => {
+                    const { data } = await supabase.auth.getUser();
                     if (data.user?.id) {
                       return addTokens(data.user.id, amount);
                     }
-                    return Promise.resolve(null);
+                    return null;
                   }}
                   handleUpdateEnforcementConfig={handleUpdateEnforcementConfig}
                   isSubmitting={isSubmitting}
