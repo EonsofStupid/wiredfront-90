@@ -32,24 +32,72 @@ export interface GitHubConnectionStatusProps {
  */
 export interface GitHubRepository {
   id: string;
-  name: string;
-  full_name: string;
-  description: string | null;
-  private: boolean;
-  html_url: string;
-  language: string | null;
+  connection_id: string;
+  user_id: string;
+  repo_name: string;
+  repo_owner: string;
+  repo_url: string;
+  description?: string | null;
   default_branch: string;
+  is_active: boolean;
+  private?: boolean;
+  auto_sync: boolean;
   last_synced_at: string | null;
   sync_status: string | null;
   created_at: string;
   updated_at: string;
+  html_url?: string;
+  language?: string | null;
+  metadata?: any;
+  webhook_id?: string | null;
+  webhook_secret?: string | null;
+  sync_frequency?: string;
+}
+
+/**
+ * GitHub Linked Account
+ */
+export interface GitHubLinkedAccount {
+  id: string;
+  username: string;
+  avatar_url?: string | null;
+  default: boolean;
+  status?: string;
+  last_used?: string | null;
+  token_expires_at?: string | null;
+  scopes?: string[];
+}
+
+/**
+ * GitHub Metric
+ */
+export interface GitHubMetric {
+  id: string;
+  metric_type: string;
+  value: number;
+  timestamp: string;
+  metadata?: any;
+}
+
+/**
+ * GitHub OAuth Log
+ */
+export interface GitHubOAuthLog {
+  id: string;
+  timestamp: string;
+  user_id?: string;
+  event_type: string;
+  success: boolean;
+  error_code?: string;
+  error_message?: string;
+  request_id?: string;
+  metadata?: any;
 }
 
 /**
  * GitHub Store State
  *
- * Represents the state portion of the GitHub store, including
- * connection status, sync logs, and loading states.
+ * Represents the state portion of the GitHub store
  */
 export interface GithubState {
   // Connection state
@@ -57,11 +105,7 @@ export interface GithubState {
   isChecking: boolean;
   connectionStatus: GitHubConnectionStatusProps;
   githubUsername: string | null;
-  linkedAccounts: Array<{
-    id: string;
-    username: string;
-    default: boolean;
-  }>;
+  linkedAccounts: GitHubLinkedAccount[];
 
   // Repository state
   repositories: GitHubRepository[];
@@ -70,12 +114,12 @@ export interface GithubState {
   repositoriesError: string | null;
 
   // Metrics state
-  metrics: any[];
+  metrics: GitHubMetric[];
   isMetricsLoading: boolean;
   metricsError: string | null;
 
   // OAuth logs state
-  oauthLogs: any[];
+  oauthLogs: GitHubOAuthLog[];
   isOAuthLogsLoading: boolean;
   oauthLogsError: string | null;
 

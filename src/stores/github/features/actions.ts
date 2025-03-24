@@ -1,6 +1,7 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/services/chat/LoggingService";
-import { GithubActions } from "../types/github-store-types";
+import { GitHubRepository, GithubActions } from "../types/github-store-types";
 
 /**
  * Feature-specific actions for the GitHub store
@@ -23,6 +24,8 @@ export const createFeatureActions = (set: any, get: any): GithubActions => ({
             status: "disconnected",
             lastCheck: new Date().toISOString(),
             errorMessage: null,
+            lastSuccessfulOperation: null,
+            connectionId: null,
             metadata: null,
           },
         });
@@ -38,22 +41,30 @@ export const createFeatureActions = (set: any, get: any): GithubActions => ({
 
       const linkedAccounts = connections.map((conn) => ({
         id: conn.id,
-        username: conn.github_username,
+        username: conn.username || conn.account_username,
+        avatar_url: conn.avatar_url,
         default: conn.is_default,
+        status: conn.status,
+        last_used: conn.last_used,
+        token_expires_at: conn.token_expires_at,
+        scopes: conn.scopes,
       }));
+
+      const defaultAccount = linkedAccounts.find((acc) => acc.default);
 
       set({
         isConnected: linkedAccounts.length > 0,
-        githubUsername:
-          linkedAccounts.find((acc) => acc.default)?.username || null,
+        githubUsername: defaultAccount?.username || null,
         linkedAccounts,
         connectionStatus: {
           status: linkedAccounts.length > 0 ? "connected" : "disconnected",
           lastCheck: new Date().toISOString(),
           errorMessage: null,
+          lastSuccessfulOperation: new Date().toISOString(),
+          connectionId: defaultAccount?.id || null,
           metadata: {
-            username: linkedAccounts.find((acc) => acc.default)?.username,
-            scopes: connections[0]?.scopes,
+            username: defaultAccount?.username,
+            scopes: defaultAccount?.scopes,
           },
         },
       });
@@ -66,6 +77,8 @@ export const createFeatureActions = (set: any, get: any): GithubActions => ({
           lastCheck: new Date().toISOString(),
           errorMessage:
             error instanceof Error ? error.message : "Unknown error",
+          lastSuccessfulOperation: null,
+          connectionId: null,
           metadata: null,
         },
       });
@@ -112,6 +125,8 @@ export const createFeatureActions = (set: any, get: any): GithubActions => ({
           lastCheck: new Date().toISOString(),
           errorMessage:
             error instanceof Error ? error.message : "Unknown error",
+          lastSuccessfulOperation: null,
+          connectionId: null,
           metadata: null,
         },
       });
@@ -137,6 +152,8 @@ export const createFeatureActions = (set: any, get: any): GithubActions => ({
           status: "disconnected",
           lastCheck: new Date().toISOString(),
           errorMessage: null,
+          lastSuccessfulOperation: null,
+          connectionId: null,
           metadata: null,
         },
       });
@@ -149,6 +166,8 @@ export const createFeatureActions = (set: any, get: any): GithubActions => ({
           lastCheck: new Date().toISOString(),
           errorMessage:
             error instanceof Error ? error.message : "Unknown error",
+          lastSuccessfulOperation: null, 
+          connectionId: null,
           metadata: null,
         },
       });
@@ -202,14 +221,148 @@ export const createFeatureActions = (set: any, get: any): GithubActions => ({
 
       const linkedAccounts = connections.map((conn) => ({
         id: conn.id,
-        username: conn.github_username,
+        username: conn.username || conn.account_username,
+        avatar_url: conn.avatar_url,
         default: conn.is_default,
+        status: conn.status,
+        last_used: conn.last_used,
+        token_expires_at: conn.token_expires_at,
+        scopes: conn.scopes,
       }));
 
       set({ linkedAccounts });
     } catch (error) {
       logger.error("[GitHub Store] Failed to fetch linked accounts:", error);
       set({ error: "Failed to fetch linked accounts" });
+    }
+  },
+
+  // Repository actions - implementing the missing functions
+  fetchRepositories: async () => {
+    try {
+      set({ isRepositoriesLoading: true, repositoriesError: null });
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        set({ repositories: [], isRepositoriesLoading: false });
+        return;
+      }
+      
+      const { data, error } = await supabase
+        .from("github_repositories")
+        .select("*")
+        .eq("user_id", user.id);
+        
+      if (error) throw error;
+      
+      // Map database repositories to our GitHubRepository type
+      const repositories: GitHubRepository[] = data.map(repo => ({
+        id: repo.id,
+        connection_id: repo.connection_id,
+        user_id: repo.user_id,
+        repo_name: repo.repo_name,
+        repo_owner: repo.repo_owner,
+        repo_url: repo.repo_url,
+        default_branch: repo.default_branch,
+        is_active: repo.is_active,
+        auto_sync: repo.auto_sync,
+        last_synced_at: repo.last_synced_at,
+        sync_status: repo.sync_status,
+        created_at: repo.created_at,
+        updated_at: repo.updated_at,
+        html_url: repo.repo_url,
+        metadata: repo.metadata,
+        webhook_id: repo.webhook_id,
+        webhook_secret: repo.webhook_secret,
+        sync_frequency: repo.sync_frequency,
+      }));
+      
+      set({ repositories, isRepositoriesLoading: false });
+    } catch (error) {
+      logger.error("[GitHub Store] Failed to fetch repositories:", error);
+      set({ 
+        repositoriesError: error instanceof Error ? error.message : "Failed to fetch repositories",
+        isRepositoriesLoading: false 
+      });
+    }
+  },
+  
+  setActiveRepository: (repository: GitHubRepository | null) => {
+    set({ activeRepository: repository });
+  },
+  
+  // Metrics actions - implementing the missing function
+  fetchMetrics: async () => {
+    try {
+      set({ isMetricsLoading: true, metricsError: null });
+      
+      const { data, error } = await supabase
+        .from("github_metrics")
+        .select("*")
+        .order("timestamp", { ascending: false })
+        .limit(10);
+        
+      if (error) throw error;
+      
+      set({ 
+        metrics: data.map(metric => ({
+          id: metric.id,
+          metric_type: metric.metric_type,
+          value: metric.value,
+          timestamp: metric.timestamp,
+          metadata: metric.metadata
+        })),
+        isMetricsLoading: false 
+      });
+    } catch (error) {
+      logger.error("[GitHub Store] Failed to fetch metrics:", error);
+      set({ 
+        metricsError: error instanceof Error ? error.message : "Failed to fetch metrics",
+        isMetricsLoading: false 
+      });
+    }
+  },
+  
+  // OAuth logs actions - implementing the missing function
+  fetchOAuthLogs: async () => {
+    try {
+      set({ isOAuthLogsLoading: true, oauthLogsError: null });
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        set({ oauthLogs: [], isOAuthLogsLoading: false });
+        return;
+      }
+      
+      const { data, error } = await supabase
+        .from("github_oauth_logs")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("timestamp", { ascending: false })
+        .limit(20);
+        
+      if (error) throw error;
+      
+      set({ 
+        oauthLogs: data.map(log => ({
+          id: log.id,
+          timestamp: log.timestamp,
+          user_id: log.user_id,
+          event_type: log.event_type,
+          success: log.success,
+          error_code: log.error_code,
+          error_message: log.error_message,
+          request_id: log.request_id,
+          metadata: log.metadata
+        })),
+        isOAuthLogsLoading: false 
+      });
+    } catch (error) {
+      logger.error("[GitHub Store] Failed to fetch OAuth logs:", error);
+      set({ 
+        oauthLogsError: error instanceof Error ? error.message : "Failed to fetch OAuth logs",
+        isOAuthLogsLoading: false 
+      });
     }
   },
 

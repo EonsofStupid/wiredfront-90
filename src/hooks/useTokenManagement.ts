@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useChatStore } from '@/components/chat/store/chatStore';
 import { supabase } from '@/integrations/supabase/client';
@@ -139,11 +140,9 @@ export function useTokenManagement() {
     }
     
     try {
-      const success = await spendTokens(amount);
-      if (!success) {
-        toast.error('Failed to process tokens. Please try again.');
-      }
-      return success;
+      const result = await spendTokens(amount);
+      // Fixed: Don't test void for truthiness, assume success unless error thrown
+      return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('Error spending tokens:', error);

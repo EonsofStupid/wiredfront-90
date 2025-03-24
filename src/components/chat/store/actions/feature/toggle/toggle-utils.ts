@@ -28,6 +28,34 @@ export const logProviderChange = async (oldProvider: string | undefined, newProv
   }
 };
 
+// Helper function to log feature toggle actions
+export const logFeatureToggle = async (featureKey: string, oldValue: boolean, newValue: boolean) => {
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData?.user) return;
+    
+    // Record the toggle history in the feature_toggle_history table
+    await supabase.from('feature_toggle_history').insert({
+      user_id: userData.user.id,
+      feature_name: featureKey,
+      old_value: oldValue,
+      new_value: newValue,
+      metadata: { 
+        source: 'client_app',
+        action: oldValue === newValue ? 'unchanged' : (newValue ? 'enable' : 'disable')
+      }
+    });
+    
+    logger.info(`Feature ${featureKey} toggled from ${oldValue} to ${newValue}`, {
+      feature: featureKey,
+      oldValue,
+      newValue
+    });
+  } catch (error) {
+    logger.error(`Error logging feature toggle for ${featureKey}:`, error);
+  }
+};
+
 // Helper function to log feature usage - using the token_transaction_log table instead of feature_usage
 export const logFeatureUsage = async (featureKey: string, userId: string | undefined, context: Record<string, any> = {}) => {
   if (!userId) return;

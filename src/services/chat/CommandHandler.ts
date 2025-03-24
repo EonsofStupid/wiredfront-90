@@ -1,4 +1,3 @@
-
 import { useChatStore } from '@/components/chat/store/chatStore';
 import { clearMiddlewareStorage } from '@/components/chat/store';
 import { logger } from './LoggingService';
@@ -111,4 +110,28 @@ export const executeCommand = async (command: string, args: string[]): Promise<b
       toast.error(`Unknown command: /${command}`);
       return false;
   }
+};
+
+export const handleProviderCommand = (store: FullChatStore, providerName: string) => {
+  const { availableProviders } = store;
+  
+  // Find provider by name
+  const provider = availableProviders.find(p => 
+    p.name.toLowerCase() === providerName.toLowerCase()
+  );
+  
+  if (!provider) {
+    return {
+      success: false,
+      message: `Provider "${providerName}" not found. Available providers: ${availableProviders.map(p => p.name).join(', ')}`
+    };
+  }
+  
+  // Update the current provider - fix function name
+  store.updateCurrentProvider(provider);
+  
+  return {
+    success: true,
+    message: `Switched to provider: ${provider.name}`
+  };
 };
