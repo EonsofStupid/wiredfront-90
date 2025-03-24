@@ -1,3 +1,4 @@
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { logger } from "@/services/chat/LoggingService";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -101,7 +102,7 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
                     <Message
                       content={msg.content}
                       role={msg.role}
-                      status={msg.message_status}
+                      status={msg.message_status || "sent"}
                       id={msg.id}
                       timestamp={msg.timestamp}
                       onRetry={handleRetry}

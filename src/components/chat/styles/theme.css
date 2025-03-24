@@ -1,98 +1,15 @@
 
-/**
- * Chat Theme Styles
- * 
- * This file defines theme-specific styles for the chat component.
- * These styles are loaded dynamically based on the selected theme.
- */
-
-/* Cyberpunk theme inspired styles */
-.chat-container.theme-cyberpunk {
-  --chat-bg-color: #0f0e17;
-  --chat-text-color: #fffffe;
-  --chat-border-color: #ff8906;
-  --chat-accent-color: #ff8906;
-  --chat-secondary-color: #f25f4c;
-  --chat-error-color: #e53170;
-  --chat-success-color: #2cb67d;
-  
-  --chat-user-message-bg: rgba(255, 137, 6, 0.2);
-  --chat-assistant-message-bg: rgba(15, 14, 23, 0.7);
-  
-  /* Neon glow effects */
-  box-shadow: 0 0 10px rgba(255, 137, 6, 0.3);
-  
-  .chat-header {
-    border-bottom-color: var(--chat-accent-color);
-  }
-  
-  .chat-input-container {
-    border-top-color: var(--chat-accent-color);
-  }
-  
-  .chat-send-button {
-    text-shadow: 0 0 5px var(--chat-accent-color);
-  }
+/* Light/Dark Theme Variables */
+.light-theme {
+  --chat-glass-bg: rgba(240, 240, 250, 0.8);
+  --chat-glass-border: rgba(123, 97, 255, 0.2);
+  --chat-primary: #7b61ff;
+  --chat-primary-hover: #9882ff;
 }
 
-/* Dark modern theme */
-.chat-container.theme-dark-modern {
-  --chat-bg-color: #1f2028;
-  --chat-text-color: #fffffe;
-  --chat-border-color: #2e3039;
-  --chat-accent-color: #6246ea;
-  --chat-secondary-color: #e45858;
-  
-  --chat-user-message-bg: rgba(98, 70, 234, 0.2);
-  --chat-assistant-message-bg: rgba(46, 48, 57, 0.7);
-}
-
-/* Light clean theme */
-.chat-container.theme-light-clean {
-  --chat-bg-color: #fffffe;
-  --chat-text-color: #2b2c34;
-  --chat-border-color: #e6e6ef;
-  --chat-accent-color: #6246ea;
-  --chat-secondary-color: #e45858;
-  
-  --chat-user-message-bg: rgba(98, 70, 234, 0.1);
-  --chat-assistant-message-bg: rgba(230, 230, 239, 0.7);
-}
-
-/* Nature inspired theme */
-.chat-container.theme-nature {
-  --chat-bg-color: #faf4d3;
-  --chat-text-color: #3a3a3a;
-  --chat-border-color: #d4dca9;
-  --chat-accent-color: #8aaa79;
-  --chat-secondary-color: #c98c70;
-  
-  --chat-user-message-bg: rgba(138, 170, 121, 0.2);
-  --chat-assistant-message-bg: rgba(212, 220, 169, 0.7);
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .chat-container.theme-auto {
-    --chat-bg-color: #1a1b26;
-    --chat-text-color: #c0caf5;
-    --chat-border-color: #414868;
-    --chat-accent-color: #7aa2f7;
-    
-    --chat-user-message-bg: rgba(122, 162, 247, 0.2);
-    --chat-assistant-message-bg: rgba(65, 72, 104, 0.5);
-  }
-}
-
-/* Light mode support */
-@media (prefers-color-scheme: light) {
-  .chat-container.theme-auto {
-    --chat-bg-color: #f7f7fb;
-    --chat-text-color: #1a1b26;
-    --chat-border-color: #d1d5db;
-    --chat-accent-color: #3b82f6;
-    
-    --chat-user-message-bg: rgba(59, 130, 246, 0.1);
-    --chat-assistant-message-bg: rgba(209, 213, 219, 0.5);
-  }
+.dark-theme {
+  --chat-glass-bg: rgba(30, 30, 45, 0.8);
+  --chat-glass-border: rgba(123, 97, 255, 0.2);
+  --chat-primary: #7b61ff;
+  --chat-primary-hover: #9882ff;
 }

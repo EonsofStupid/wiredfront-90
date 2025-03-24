@@ -135,6 +135,12 @@ export const useChatStore = create<FullChatStore>()((set, get, store) => ({
 // Initialize chat settings
 export function initializeChatSettings() {
   logger.info("Initializing chat settings");
-  // Additional initialization logic can go here
-  return useChatStore.getState();
+  
+  // Force unhide the chat button
+  const state = useChatStore.getState();
+  if (state.isHidden) {
+    state.setIsHidden(false);
+  }
+  
+  return state;
 }

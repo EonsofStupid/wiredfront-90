@@ -19,9 +19,12 @@ export const useChatIconStyle = () => {
   // Fetch the user's chat icon style preference from the database
   useEffect(() => {
     const fetchIconStyle = async () => {
-      if (!user?.id) {
-        // If no user, default to wfpulse
+      // Default to wfpulse regardless of user state to ensure the chat is visible
+      if (iconStyle !== "wfpulse") {
         setIconStyle("wfpulse");
+      }
+      
+      if (!user?.id) {
         return;
       }
 
@@ -44,20 +47,17 @@ export const useChatIconStyle = () => {
           // If no preference is found, create a default one using wfpulse
           console.log("No chat icon style found, creating wfpulse default");
           await createDefaultPreference(user.id);
-          setIconStyle("wfpulse");
         }
       } catch (err) {
         console.error("Error fetching chat icon style:", err);
         setError("Failed to load chat icon style");
-        // Still set a default
-        setIconStyle("wfpulse");
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchIconStyle();
-  }, [user?.id, setIconStyle]);
+  }, [user?.id, setIconStyle, iconStyle]);
 
   // Create a default chat icon style preference with wfpulse
   const createDefaultPreference = async (userId: string) => {
@@ -73,9 +73,9 @@ export const useChatIconStyle = () => {
 
   // Update the user's chat icon style preference
   const updateIconStyle = async (style: ChatIconStyle) => {
+    setIconStyle(style);
+    
     if (!user?.id) {
-      // If no user, just update the local state
-      setIconStyle(style);
       return;
     }
 
@@ -92,11 +92,11 @@ export const useChatIconStyle = () => {
 
       if (error) throw error;
 
-      setIconStyle(style);
       console.log("Updated chat icon style:", style);
     } catch (err) {
       console.error("Error updating chat icon style:", err);
       setError("Failed to update chat icon style");
+      throw err;
     } finally {
       setIsLoading(false);
     }

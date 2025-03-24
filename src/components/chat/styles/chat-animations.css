@@ -1,47 +1,35 @@
 
-/* Chat-specific animations */
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 15px rgba(123, 97, 255, 0.5);
+/* Animations for chat elements */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--chat-button-primary-rgb), 0.4);
   }
-  50% {
-    box-shadow: 0 0 30px rgba(123, 97, 255, 0.8);
+  70% {
+    box-shadow: 0 0 0 10px rgba(var(--chat-button-primary-rgb), 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--chat-button-primary-rgb), 0);
   }
 }
 
-@keyframes rainbow-border {
-  0% { border-color: #ff0000; }
-  17% { border-color: #ff8000; }
-  33% { border-color: #ffff00; }
-  50% { border-color: #00ff00; }
-  67% { border-color: #0000ff; }
-  83% { border-color: #8000ff; }
-  100% { border-color: #ff0000; }
+.animate-pulse {
+  animation: pulse 2s infinite;
 }
 
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
 }
 
-.animate-rainbow-border {
-  animation: rainbow-border 6s linear infinite;
-}
-
-.animate-spin-slow {
-  animation: spin 3s linear infinite;
-}
-
-/* Transitions for chat elements */
-.chat-transition {
-  transition: all var(--chat-transition-duration) var(--chat-transition-timing);
-}
-
-.chat-fade-in {
-  opacity: 0;
-  animation: fadeIn var(--chat-transition-duration) var(--chat-transition-timing) forwards;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.animate-ping {
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  background-color: var(--chat-primary);
+  border-radius: 50%;
 }

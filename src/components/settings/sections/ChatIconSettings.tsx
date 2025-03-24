@@ -10,6 +10,7 @@ import { wfpulseStyle } from "@/components/chat/components/styles/WFPulseStyle";
 import { defaultStyle } from "@/components/chat/components/styles/DefaultStyle";
 import { retroStyle } from "@/components/chat/components/styles/RetroStyle";
 import { basicStyle } from "@/components/chat/components/styles/BasicStyle";
+import { toast } from "sonner";
 
 export function ChatIconSettings() {
   const { iconStyle, setIconStyle, isLoading, error } = useChatIconStyle();
@@ -32,7 +33,13 @@ export function ChatIconSettings() {
     setLocalIconStyle(style);
     
     // Also update the server state if needed
-    setIconStyle(style);
+    setIconStyle(style)
+      .then(() => {
+        toast.success(`Chat icon style updated to ${style}`);
+      })
+      .catch(() => {
+        toast.error("Failed to update chat icon style");
+      });
   };
 
   if (isLoading) {
@@ -62,10 +69,16 @@ export function ChatIconSettings() {
       }
     })();
 
+    const buttonStyle = {
+      ...styleToUse,
+      button: styleToUse.button + " inline-flex items-center justify-center",
+      container: "flex items-center justify-center h-full",
+    };
+
     return (
       <div className="bg-muted p-4 rounded-md flex justify-center h-24">
-        <div className="relative">
-          <div className={`${styleToUse.button} flex items-center justify-center`} style={{ width: 'fit-content', height: 'fit-content' }}>
+        <div className="relative flex items-center justify-center">
+          <div className={`${buttonStyle.button}`} style={{ width: 'fit-content', height: 'fit-content' }}>
             <MessageSquare className={styleToUse.icon} />
           </div>
         </div>
