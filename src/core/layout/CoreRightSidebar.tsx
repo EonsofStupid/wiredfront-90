@@ -18,7 +18,7 @@ export function CoreRightSidebar({ className, isCompact, isVisible }: Omit<Sideb
         "w-64",
         className
       )}
-      style={{ zIndex: LayoutZIndex.projectHub }}
+      style={{ zIndex: LayoutZIndex.projecthub }}
       data-testid="core-rightsidebar"
     >
       <ProjectOverview isCompact={isCompact} className="h-full" />
