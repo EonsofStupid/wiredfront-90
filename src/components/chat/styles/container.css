@@ -1,6 +1,6 @@
 /**
  * Chat Container Styles
- * 
+ *
  * This file defines styles for the chat container component.
  * All selectors are nested under the .chat-container class
  * to ensure style isolation.
@@ -21,9 +21,13 @@
   overflow: hidden;
   box-shadow: var(--chat-shadow-md);
   transition: all var(--chat-transition-normal);
-  position: relative;
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
   z-index: var(--z-chat-container);
-  
+  transform: translateZ(0);
+  isolation: isolate;
+
   /* All direct child components */
   .chat-header {
     height: var(--chat-header-height);
@@ -33,16 +37,19 @@
     align-items: center;
     justify-content: space-between;
     z-index: var(--z-chat-sticky);
-    
+    position: sticky;
+    top: 0;
+    background-color: var(--chat-bg-color);
+
     .chat-title {
       font-weight: var(--chat-font-weight-medium);
       margin: 0;
     }
-    
+
     .chat-controls {
       display: flex;
       gap: var(--chat-padding-sm);
-      
+
       .chat-control-button {
         background: transparent;
         border: none;
@@ -56,14 +63,14 @@
         padding: 4px;
         border-radius: 4px;
         transition: background-color var(--chat-transition-fast);
-        
+
         &:hover {
           background-color: rgba(255, 255, 255, 0.1);
         }
       }
     }
   }
-  
+
   .chat-messages-container {
     flex: 1;
     overflow-y: auto;
@@ -71,26 +78,28 @@
     display: flex;
     flex-direction: column;
     gap: var(--chat-margin-md);
-    
+
     .chat-message {
       display: flex;
       flex-direction: column;
       max-width: var(--chat-messages-max-width);
-      
+
       &.chat-message-user {
         align-self: flex-end;
         background-color: var(--chat-user-message-bg);
-        border-radius: var(--chat-border-radius) var(--chat-border-radius) 0 var(--chat-border-radius);
+        border-radius: var(--chat-border-radius) var(--chat-border-radius) 0
+          var(--chat-border-radius);
         padding: var(--chat-padding-md);
       }
-      
+
       &.chat-message-assistant {
         align-self: flex-start;
         background-color: var(--chat-assistant-message-bg);
-        border-radius: 0 var(--chat-border-radius) var(--chat-border-radius) var(--chat-border-radius);
+        border-radius: 0 var(--chat-border-radius) var(--chat-border-radius)
+          var(--chat-border-radius);
         padding: var(--chat-padding-md);
       }
-      
+
       &.chat-message-system {
         align-self: center;
         background-color: var(--chat-system-message-bg);
@@ -99,11 +108,11 @@
         font-size: var(--chat-font-size-sm);
         opacity: 0.8;
       }
-      
+
       .chat-message-content {
         margin: 0;
       }
-      
+
       .chat-message-time {
         font-size: var(--chat-font-size-sm);
         opacity: 0.7;
@@ -112,7 +121,7 @@
       }
     }
   }
-  
+
   .chat-input-container {
     min-height: var(--chat-input-height);
     padding: var(--chat-padding-md);
@@ -120,7 +129,7 @@
     display: flex;
     align-items: center;
     gap: var(--chat-padding-md);
-    
+
     .chat-input {
       flex: 1;
       background-color: var(--chat-input-bg);
@@ -133,13 +142,13 @@
       resize: none;
       min-height: 40px;
       max-height: 120px;
-      
+
       &:focus {
         outline: none;
         box-shadow: var(--chat-input-focus-ring);
       }
     }
-    
+
     .chat-send-button {
       background-color: var(--chat-button-bg);
       color: var(--chat-button-text);
@@ -149,32 +158,32 @@
       font-weight: var(--chat-font-weight-medium);
       cursor: pointer;
       transition: background-color var(--chat-transition-fast);
-      
+
       &:hover {
         background-color: var(--chat-button-hover-bg);
       }
-      
+
       &:active {
         background-color: var(--chat-button-active-bg);
       }
-      
+
       &:disabled {
         opacity: 0.5;
         cursor: not-allowed;
       }
     }
   }
-  
+
   /* State modifiers */
   &.chat-minimized {
     height: var(--chat-header-height);
-    
+
     .chat-messages-container,
     .chat-input-container {
       display: none;
     }
   }
-  
+
   &.chat-maximized {
     width: 100%;
     height: 100%;
@@ -197,7 +206,7 @@
     left: 0;
     right: 0;
     z-index: var(--z-chat-container);
-    
+
     .chat-messages-container {
       .chat-message {
         max-width: 90%;
