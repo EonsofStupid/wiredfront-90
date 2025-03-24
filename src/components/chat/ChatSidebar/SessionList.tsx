@@ -4,6 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { SessionItem } from "./SessionItem";
 import { motion } from "framer-motion";
 import { useChatStore } from "../store/chatStore";
+import { ChatMode } from "@/integrations/supabase/types/enums";
 
 interface SessionListProps {
   sessions: Array<{
@@ -12,6 +13,9 @@ interface SessionListProps {
     isActive: boolean;
     provider?: string;
     messageCount?: number;
+    mode?: ChatMode;
+    title?: string;
+    archived?: boolean;
   }>;
   onSelectSession: (id: string) => void;
 }
@@ -35,9 +39,12 @@ export const SessionList = ({ sessions, onSelectSession }: SessionListProps) => 
   // Get current provider from chat store
   const currentProvider = useChatStore(state => state.currentProvider);
 
+  // Filter out archived sessions
+  const activeSessions = sessions.filter(session => !session.archived);
+
   return (
     <ScrollArea className="h-full w-full pr-4 chat-messages-container">
-      {sessions.length === 0 ? (
+      {activeSessions.length === 0 ? (
         <div className="text-center p-6 text-muted-foreground flex flex-col items-center justify-center h-full">
           <div className="opacity-60 mb-2">🔄</div>
           <div className="text-chat-message-system-text">No active sessions</div>
@@ -52,15 +59,17 @@ export const SessionList = ({ sessions, onSelectSession }: SessionListProps) => 
           initial="hidden"
           animate="show"
         >
-          {sessions.map((session) => (
+          {activeSessions.map((session) => (
             <motion.div key={session.id} variants={item}>
               <SessionItem
                 id={session.id}
+                title={session.title}
                 lastAccessed={session.lastAccessed}
                 isActive={session.isActive}
                 onSelect={onSelectSession}
                 provider={session.provider || currentProvider?.name}
                 messageCount={session.messageCount}
+                mode={session.mode} // Pass the mode to SessionItem
               />
             </motion.div>
           ))}

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -8,6 +9,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { ChatMode } from '@/integrations/supabase/types/enums';
 import { ChatProviderType } from '@/types/admin/settings/chat-provider';
 import { useChatStore } from '../store/chatStore';
 import { 
@@ -17,9 +19,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { Code, ImageIcon, MessageSquare } from 'lucide-react';
-
-export type ChatMode = 'standard' | 'editor' | 'image';
+import { Code, ImageIcon, MessageSquare, FileCode, Brain } from 'lucide-react';
 
 export interface ModeSelectionDialogProps {
   open: boolean;
@@ -34,7 +34,7 @@ export function ModeSelectionDialog({
 }: ModeSelectionDialogProps) {
   const navigate = useNavigate();
   const { providers } = useChatStore();
-  const [selectedMode, setSelectedMode] = useState<ChatMode>('standard');
+  const [selectedMode, setSelectedMode] = useState<ChatMode>('chat');
   const [selectedProvider, setSelectedProvider] = useState<string>(
     providers.availableProviders.find(p => p.isEnabled)?.id || ''
   );
@@ -70,7 +70,8 @@ export function ModeSelectionDialog({
       
       // Navigate based on selected mode
       switch (selectedMode) {
-        case 'editor':
+        case 'dev':
+        case 'code':
           navigate('/editor');
           break;
         case 'image':
@@ -105,25 +106,25 @@ export function ModeSelectionDialog({
             <div className="grid grid-cols-3 gap-2">
               <Button
                 type="button"
-                variant={selectedMode === 'standard' ? 'default' : 'outline'}
+                variant={selectedMode === 'chat' ? 'default' : 'outline'}
                 className={`flex flex-col items-center justify-center p-4 h-auto ${
-                  selectedMode === 'standard' ? 'border-primary' : 'border-white/10'
+                  selectedMode === 'chat' ? 'border-primary' : 'border-white/10'
                 }`}
-                onClick={() => setSelectedMode('standard')}
+                onClick={() => setSelectedMode('chat')}
               >
                 <MessageSquare className="h-5 w-5 mb-2" />
                 <span className="text-xs">Chat</span>
               </Button>
               <Button
                 type="button"
-                variant={selectedMode === 'editor' ? 'default' : 'outline'}
+                variant={selectedMode === 'code' ? 'default' : 'outline'}
                 className={`flex flex-col items-center justify-center p-4 h-auto ${
-                  selectedMode === 'editor' ? 'border-primary' : 'border-white/10'
+                  selectedMode === 'code' ? 'border-primary' : 'border-white/10'
                 }`}
-                onClick={() => setSelectedMode('editor')}
+                onClick={() => setSelectedMode('code')}
               >
-                <Code className="h-5 w-5 mb-2" />
-                <span className="text-xs">Editor</span>
+                <FileCode className="h-5 w-5 mb-2" />
+                <span className="text-xs">Code</span>
               </Button>
               <Button
                 type="button"
@@ -135,6 +136,39 @@ export function ModeSelectionDialog({
               >
                 <ImageIcon className="h-5 w-5 mb-2" />
                 <span className="text-xs">Image</span>
+              </Button>
+              <Button
+                type="button"
+                variant={selectedMode === 'dev' ? 'default' : 'outline'}
+                className={`flex flex-col items-center justify-center p-4 h-auto ${
+                  selectedMode === 'dev' ? 'border-primary' : 'border-white/10'
+                }`}
+                onClick={() => setSelectedMode('dev')}
+              >
+                <Code className="h-5 w-5 mb-2" />
+                <span className="text-xs">Dev</span>
+              </Button>
+              <Button
+                type="button"
+                variant={selectedMode === 'planning' ? 'default' : 'outline'}
+                className={`flex flex-col items-center justify-center p-4 h-auto ${
+                  selectedMode === 'planning' ? 'border-primary' : 'border-white/10'
+                }`}
+                onClick={() => setSelectedMode('planning')}
+              >
+                <Brain className="h-5 w-5 mb-2" />
+                <span className="text-xs">Plan</span>
+              </Button>
+              <Button
+                type="button"
+                variant={selectedMode === 'training' ? 'default' : 'outline'}
+                className={`flex flex-col items-center justify-center p-4 h-auto ${
+                  selectedMode === 'training' ? 'border-primary' : 'border-white/10'
+                }`}
+                onClick={() => setSelectedMode('training')}
+              >
+                <Brain className="h-5 w-5 mb-2" />
+                <span className="text-xs">Train</span>
               </Button>
             </div>
           </div>

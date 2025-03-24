@@ -1,8 +1,6 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-
-// Extended mode types to include 'image'
-export type ChatMode = 'standard' | 'editor' | 'chat-only' | 'image';
+import { ChatMode } from '@/integrations/supabase/types/enums';
 
 interface ChatModeContextType {
   mode: ChatMode;
@@ -19,12 +17,12 @@ interface ChatModeProviderProps {
 
 export function ChatModeProvider({ children, isEditorPage = false }: ChatModeProviderProps) {
   // Default mode based on page context
-  const defaultMode: ChatMode = isEditorPage ? 'editor' : 'standard';
+  const defaultMode: ChatMode = isEditorPage ? 'dev' : 'chat';
   const [mode, setMode] = useState<ChatMode>(defaultMode);
 
   // Reset mode when switching pages
   useEffect(() => {
-    setMode(isEditorPage ? 'editor' : 'standard');
+    setMode(isEditorPage ? 'dev' : 'chat');
   }, [isEditorPage]);
 
   return (

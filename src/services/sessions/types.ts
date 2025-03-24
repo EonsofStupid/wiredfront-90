@@ -1,5 +1,6 @@
 
 import { Json } from '@/integrations/supabase/types';
+import { ChatMode } from '@/integrations/supabase/types/enums';
 import { Session as BaseSession } from '@/types/sessions';
 
 // Service-specific session interface that extends the base Session type
@@ -16,7 +17,7 @@ export interface SessionState {
 
 export interface SessionContextProps {
   sessionState: SessionState;
-  createSession: (title: string, mode: string) => Promise<Session | null>;
+  createSession: (title: string, mode: ChatMode) => Promise<Session | null>; // Update to use ChatMode
   updateSession: (sessionId: string, updates: Partial<Session>) => Promise<boolean>;
   deleteSession: (sessionId: string) => Promise<boolean>;
   setCurrentSession: (session: Session | null) => void;

@@ -1,120 +1,81 @@
-
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { MessageSquare, Clock, Check, Hash, AlertCircle, Archive } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useMessageStore } from "../messaging/MessageManager";
+import { MoreHorizontal } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { SessionModeBadge } from "./SessionModeBadge";
+import { ChatMode } from "@/integrations/supabase/types/enums";
 
 interface SessionItemProps {
   id: string;
+  title?: string;
   lastAccessed: Date;
   isActive: boolean;
-  messageCount?: number;
-  title?: string;
-  archived?: boolean;
   onSelect: (id: string) => void;
   provider?: string;
+  messageCount?: number;
+  mode?: ChatMode;
 }
 
 export const SessionItem = ({ 
   id, 
+  title = "New Chat", 
   lastAccessed, 
   isActive, 
-  messageCount = 0,
-  title,
-  archived = false,
   onSelect,
-  provider
+  provider,
+  messageCount = 0,
+  mode = "chat"
 }: SessionItemProps) => {
-  // Format the date with date-fns
-  const formattedDate = formatDistanceToNow(lastAccessed, { addSuffix: true });
+  const timeAgo = formatDistanceToNow(lastAccessed, { addSuffix: true });
   
-  // Determine if session is recent (less than 1 hour old)
-  const isRecent = new Date().getTime() - lastAccessed.getTime() < 60 * 60 * 1000;
-
-  // Get the first message for this session
-  const messages = useMessageStore(state => state.messages);
-  const sessionMessages = messages.filter(m => m.sessionId === id);
-  const firstMessage = sessionMessages[0]?.content || title || 'New Chat';
-
-  // Truncate the first message for display
-  const truncatedMessage = firstMessage.length > 50 
-    ? firstMessage.substring(0, 50) + '...' 
-    : firstMessage;
-
-  // Check if session is getting long (more than 20 messages)
-  const isLongSession = messageCount > 20;
-
+  const handleClick = () => {
+    onSelect(id);
+  };
+  
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant={isActive ? "secondary" : "ghost"}
-            className={`w-full justify-start gap-2 mb-1 transition-all duration-200 ${
-              isActive 
-                ? "bg-chat-message-assistant-bg/50 text-chat-knowledge-text chat-cyber-border" 
-                : "hover:bg-chat-message-assistant-bg/20"
-            } ${archived ? "opacity-60" : ""}`}
-            onClick={() => onSelect(id)}
-          >
-            {archived ? (
-              <Archive className="h-4 w-4" />
-            ) : (
-              <MessageSquare className="h-4 w-4" />
-            )}
-            <div className="flex-1 text-left truncate flex flex-col">
-              <span className="truncate">{truncatedMessage}</span>
-              {provider && (
-                <span className="text-xs opacity-70 truncate">
-                  {provider}
-                </span>
-              )}
-            </div>
+    <div
+      className={`rounded-md p-2 cursor-pointer transition-colors duration-200 ${
+        isActive
+          ? "bg-primary/10 text-primary-foreground"
+          : "hover:bg-muted/50 text-foreground/80"
+      }`}
+      onClick={handleClick}
+    >
+      <div className="flex justify-between items-start">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center space-x-2">
+            <h3 className="font-medium truncate text-sm">
+              {title}
+            </h3>
+            {mode && <SessionModeBadge mode={mode} />}
+          </div>
+          
+          <div className="flex items-center mt-1 text-xs text-muted-foreground">
+            <span className="truncate">{timeAgo}</span>
             {messageCount > 0 && (
-              <span className="inline-flex items-center justify-center rounded-full bg-primary/20 px-1.5 py-0.5 text-xs">
-                <Hash className="h-3 w-3 mr-0.5" />
-                {messageCount}
+              <span className="ml-2 px-1.5 py-0.5 bg-muted/50 rounded-full text-[10px]">
+                {messageCount} msg{messageCount !== 1 ? 's' : ''}
               </span>
             )}
-            {isRecent && !archived && <span className="h-2 w-2 rounded-full bg-green-500" />}
-            {isActive && <Check className="h-4 w-4 text-chat-knowledge-text" />}
-            {isLongSession && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <AlertCircle className="h-4 w-4 text-yellow-500" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>This session is getting long. Consider starting a new chat for better performance.</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-            <Clock className="h-4 w-4 opacity-50" />
-            <span className="text-xs opacity-70 truncate max-w-[80px]">
-              {formattedDate}
-            </span>
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent 
-          side="right" 
-          className="text-xs chat-dialog-content max-w-[300px]"
-        >
-          <div className="space-y-1">
-            <p className="font-medium">Session: {title || 'Untitled'}</p>
-            <p className="opacity-90">{firstMessage}</p>
-            <p>Last accessed: {lastAccessed.toLocaleString()}</p>
-            <p>Status: {archived ? 'Archived' : isActive ? 'Active' : 'Inactive'}</p>
-            {messageCount > 0 && <p>Messages: {messageCount}</p>}
-            {provider && <p>Provider: {provider}</p>}
-            {isLongSession && (
-              <p className="text-yellow-500">
-                ⚠️ This session is getting long. Consider starting a new chat for better performance.
-              </p>
+            {provider && (
+              <span className="ml-2 opacity-70 truncate">{provider}</span>
             )}
           </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+        </div>
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 rounded-full opacity-0 group-hover:opacity-100"
+          onClick={(e) => {
+            e.stopPropagation();
+            // TODO: Implement session actions menu
+          }}
+        >
+          <MoreHorizontal className="h-4 w-4" />
+          <span className="sr-only">Session actions</span>
+        </Button>
+      </div>
+    </div>
   );
 };

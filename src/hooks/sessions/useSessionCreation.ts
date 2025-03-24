@@ -5,6 +5,7 @@ import { CreateSessionParams } from '@/types/sessions';
 import { createNewSession } from '@/services/sessions';
 import { logger } from '@/services/chat/LoggingService';
 import { SESSION_QUERY_KEYS } from './useSessionCore';
+import { ChatMode } from '@/integrations/supabase/types/enums';
 
 const toastStyles = {
   success: {
