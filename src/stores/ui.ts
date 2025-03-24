@@ -6,12 +6,15 @@ import { UIStore } from '@/types/store/ui';
 interface LayoutState {
   sidebarExpanded: boolean;
   rightSidebarVisible: boolean;
+  adminIconOnly: boolean; // Added missing property
 }
 
 interface UIExtendedState extends UIStore {
   layout: LayoutState;
   toggleSidebar: () => void;
   toggleRightSidebar: () => void;
+  toggleAdminIconOnly: () => void; // Added missing method
+  setActiveProject: (projectId: string) => void; // Added missing method for project management
 }
 
 export const useUIStore = create<UIExtendedState>()(
@@ -28,6 +31,7 @@ export const useUIStore = create<UIExtendedState>()(
         layout: {
           sidebarExpanded: true,
           rightSidebarVisible: false,
+          adminIconOnly: false, // Default value
         },
         
         // Actions
@@ -44,6 +48,16 @@ export const useUIStore = create<UIExtendedState>()(
             ...state.layout,
             rightSidebarVisible: !state.layout.rightSidebarVisible
           }
+        })),
+        toggleAdminIconOnly: () => set((state) => ({
+          layout: {
+            ...state.layout,
+            adminIconOnly: !state.layout.adminIconOnly
+          }
+        })),
+        setActiveProject: (projectId) => set(() => ({
+          activePanel: 'project',
+          activeProjectId: projectId
         })),
         setActivePanel: (panelId) => set({ activePanel: panelId }),
       }),
