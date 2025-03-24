@@ -1,35 +1,23 @@
-import { Button } from "@/components/ui/button";
-import {
-  AnimatePresence,
-  motion,
-  useAnimation,
-  useReducedMotion,
-} from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+
+import { motion, useReducedMotion, AnimatePresence, useAnimation } from "framer-motion";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 
 export const HeroSection = () => {
   console.log("HeroSection rendering");
   const prefersReducedMotion = useReducedMotion();
 
   return (
-    <section
-      className="relative flex items-center justify-center py-28 w-full hero--neon-lines"
-      data-zlayer={`hero-section (z: var(--z-content))`}
-    >
+    <section className="relative flex items-center justify-center py-28 w-full hero--neon-lines">
       <motion.div
-        initial={
-          prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
-        }
+        initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="text-center z-10 px-4"
-        data-zlayer={`hero-content (z: var(--z-content))`}
       >
-        <div
-          className="neon-border p-8 glass-card mb-8"
-          data-zlayer={`hero-card (z: var(--z-content))`}
-        >
+        <div className="neon-border p-8 glass-card mb-8">
           <h1 className="text-6xl md:text-8xl font-bold gradient-text mb-6">
             wiredFRONT
           </h1>
@@ -39,9 +27,8 @@ export const HeroSection = () => {
         </div>
 
         <Link to="/login">
-          <Button
+          <Button 
             className="neon-glow bg-dark-lighter hover:bg-dark-lighter/80 text-neon-blue border border-neon-blue/50 text-lg px-8 py-6 transform hover:scale-115 transition-all duration-300 animate-button-float"
-            data-zlayer={`hero-button (z: var(--z-content))`}
           >
             Get Started
           </Button>
@@ -60,7 +47,7 @@ const BackgroundElements = () => {
   const [mounted, setMounted] = useState(true);
   const performanceRef = useRef<{ startTime: number; frames: number }>({
     startTime: performance.now(),
-    frames: 0,
+    frames: 0
   });
 
   useEffect(() => {
@@ -85,8 +72,8 @@ const BackgroundElements = () => {
           transition: {
             duration: 15,
             repeat: Infinity,
-            ease: "linear",
-          },
+            ease: "linear"
+          }
         });
       } catch (error) {
         console.error("Animation error:", error);
@@ -99,18 +86,16 @@ const BackgroundElements = () => {
       const currentTime = performance.now();
       const elapsed = currentTime - performanceRef.current.startTime;
       performanceRef.current.frames++;
-
+      
       if (elapsed >= 1000) {
-        const fps = Math.round(
-          (performanceRef.current.frames * 1000) / elapsed
-        );
+        const fps = Math.round((performanceRef.current.frames * 1000) / elapsed);
         console.log(`Background Animation FPS: ${fps}`);
         performanceRef.current = {
           startTime: currentTime,
-          frames: 0,
+          frames: 0
         };
       }
-
+      
       if (mounted) {
         requestAnimationFrame(monitorPerformance);
       }
@@ -136,7 +121,7 @@ const BackgroundElements = () => {
             style={{
               left: `${30 + i * 20}%`,
               top: `${20 + i * 20}%`,
-              transform: `translate3d(0, 0, 0)`,
+              transform: `translate3d(0, 0, 0)`
             }}
           />
         ))}

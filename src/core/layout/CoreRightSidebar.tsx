@@ -21,7 +21,6 @@ export function CoreRightSidebar({
         className
       )}
       style={{ zIndex: LayoutZIndex.projecthub }}
-      data-zlayer={`projecthub-sidebar (z: var(--z-projecthub))`}
       data-testid="core-rightsidebar"
     >
       <ProjectOverview isCompact={isCompact} className="h-full" />

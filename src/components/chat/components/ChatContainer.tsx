@@ -1,3 +1,4 @@
+
 import { useDraggable } from "@dnd-kit/core";
 import { memo, useEffect, useRef } from "react";
 import { useChatStore } from "../store/chatStore";
@@ -48,7 +49,6 @@ function ChatContainerBase({ scrollRef, isEditorPage }: ChatContainerProps) {
       }}
       className="chat-container chat-glass"
       style={style}
-      data-zlayer={`chat-container (z: var(--z-chat-container))`}
       {...attributes}
       {...listeners}
     >

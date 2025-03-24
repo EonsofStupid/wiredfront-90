@@ -1,22 +1,3 @@
-/**
- * Mobile Z-Index System
- *
- * This file defines mobile-specific z-index values that are lower than the main
- * application z-index system to ensure proper layering on mobile devices.
- *
- * IMPORTANT:
- * - Mobile z-indices are intentionally lower to prevent conflicts with desktop
- * - Mobile components should use these variables instead of the main system
- * - See src/styles/theme/zIndex.ts for the main z-index system
- *
- * MOBILE Z-INDEX HIERARCHY:
- * - Header/Footer: 50 (fixed navigation elements)
- * - Menu: 100 (mobile navigation menu)
- * - Chat: 100 (mobile chat interface)
- *
- * Note: These values are intentionally kept low to ensure they don't conflict
- * with the main application's z-index system, which starts at much higher values.
- */
 
 @tailwind base;
 @tailwind components;
@@ -40,30 +21,30 @@
   }
 
   .mobile-header {
-    @apply fixed top-0 left-0 right-0 h-16
-           bg-dark-lighter/90 backdrop-blur-md
-           border-b border-neon-blue/30
+    @apply fixed top-0 left-0 right-0 h-16 
+           bg-dark-lighter/90 backdrop-blur-md 
+           border-b border-neon-blue/30 
            z-[var(--mobile-z-index-header)];
   }
 
   .mobile-nav-item {
-    @apply flex flex-col items-center justify-center
+    @apply flex flex-col items-center justify-center 
            px-3 py-2 rounded-lg
-           text-neon-pink hover:text-neon-blue
+           text-neon-pink hover:text-neon-blue 
            transition-colors duration-200;
   }
 
   .mobile-bottom-nav {
-    @apply fixed bottom-0 left-0 right-0
-           h-16 bg-dark-lighter/90
-           backdrop-blur-md border-t
+    @apply fixed bottom-0 left-0 right-0 
+           h-16 bg-dark-lighter/90 
+           backdrop-blur-md border-t 
            border-neon-blue/30
            z-[var(--mobile-z-index-footer)];
   }
 
   /* Glass effects */
   .mobile-glass {
-    @apply bg-dark-lighter/80 backdrop-blur-md
+    @apply bg-dark-lighter/80 backdrop-blur-md 
            border border-neon-blue/20;
   }
 
@@ -73,7 +54,7 @@
 
   /* Button styles */
   .mobile-button {
-    @apply bg-neon-blue/20 hover:bg-neon-blue/30
+    @apply bg-neon-blue/20 hover:bg-neon-blue/30 
            text-neon-blue font-medium
            px-4 py-2 rounded-lg
            transition-colors duration-200
@@ -99,11 +80,11 @@
   /* Neon effects */
   .mobile-neon-text {
     @apply text-white;
-    text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff;
+    text-shadow: 0 0 5px #00FFFF, 0 0 10px #00FFFF;
   }
 
   .mobile-neon-border {
-    box-shadow: 0 0 5px #00ffff, 0 0 10px rgba(30, 174, 219, 0.2);
+    box-shadow: 0 0 5px #00FFFF, 0 0 10px rgba(30, 174, 219, 0.2);
   }
 
   /* Responsive typography */

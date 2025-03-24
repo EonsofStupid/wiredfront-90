@@ -115,7 +115,7 @@ export const SessionControls = React.forwardRef<
               </AlertDialogTrigger>
               <AlertDialogContent
                 className="glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#D946EF]/20"
-                style={{ zIndex: `var(--z-chat-modal)` }}
+                style={{ zIndex: 9900 }}
               >
                 <AlertDialogHeader>
                   <AlertDialogPrimitive.Title>
@@ -184,7 +184,7 @@ export const SessionControls = React.forwardRef<
               </AlertDialogTrigger>
               <AlertDialogContent
                 className="glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#D946EF]/20"
-                style={{ zIndex: `var(--z-chat-modal)` }}
+                style={{ zIndex: 9900 }}
               >
                 <AlertDialogHeader>
                   <AlertDialogPrimitive.Title>
