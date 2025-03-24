@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { useSessionStore } from "@/stores/session/store";
 import { useCallback, useEffect, useState } from "react";
@@ -48,6 +49,7 @@ export const useTokenManagement = () => {
       setError(null);
 
       try {
+        // Using the new add_tokens RPC function
         const { data, error } = await supabase.rpc("add_tokens", {
           user_uuid: userId,
           token_amount: amount,
@@ -56,12 +58,9 @@ export const useTokenManagement = () => {
         if (error) throw error;
 
         // Optimistically update the local state
-        setTokenBalance((prevBalance) =>
-          prevBalance !== null ? prevBalance + amount : amount
-        );
+        setTokenBalance(data || 0);
 
         toast.success(`Successfully added ${amount} tokens`);
-        await fetchUserTokens(userId); // Refresh tokens
         return data;
       } catch (error) {
         console.error("Error adding tokens:", error);
@@ -72,7 +71,7 @@ export const useTokenManagement = () => {
         setIsLoading(false);
       }
     },
-    [fetchUserTokens]
+    []
   );
 
   const spendTokens = useCallback(
@@ -89,13 +88,10 @@ export const useTokenManagement = () => {
 
         if (error) throw error;
 
-        // Optimistically update the local state
-        setTokenBalance((prevBalance) =>
-          prevBalance !== null ? prevBalance - amount : 0
-        );
+        // Update local state with returned balance
+        setTokenBalance(data || 0);
 
         toast.success(`Successfully spent ${amount} tokens`);
-        await fetchUserTokens(userId); // Refresh tokens
         return data;
       } catch (error) {
         console.error("Error spending tokens:", error);
@@ -106,7 +102,7 @@ export const useTokenManagement = () => {
         setIsLoading(false);
       }
     },
-    [fetchUserTokens]
+    []
   );
 
   const setTokenEnforcementMode = useCallback(

@@ -1,3 +1,4 @@
+
 import {
   Card,
   CardContent,
@@ -91,12 +92,17 @@ export function TokenControlPanel() {
 
       if (error) throw error;
 
-      // Update local state
-      await setTokenEnforcementMode(
-        (await supabase.auth.getUser()).data.user?.id || "",
-        mode
-      );
-      toast.success("Token enforcement configuration updated");
+      // Get the current user ID safely
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+
+      if (userId) {
+        // Update local state
+        await setTokenEnforcementMode(userId, mode);
+        toast.success("Token enforcement configuration updated");
+      } else {
+        toast.error("User not authenticated");
+      }
     } catch (error) {
       console.error("Error updating token enforcement config:", error);
       toast.error("Failed to update token configuration");
@@ -164,12 +170,13 @@ export function TokenControlPanel() {
                   enforcementMode={
                     (enforcementMode as TokenEnforcementMode) || "never"
                   }
-                  addTokens={(amount: number) =>
-                    addTokens(
-                      supabase.auth.getUser().data.user?.id || "",
-                      amount
-                    )
-                  }
+                  addTokens={(amount: number) => {
+                    const { data } = supabase.auth.getUser();
+                    if (data.user?.id) {
+                      return addTokens(data.user.id, amount);
+                    }
+                    return Promise.resolve(null);
+                  }}
                   handleUpdateEnforcementConfig={handleUpdateEnforcementConfig}
                   isSubmitting={isSubmitting}
                 />

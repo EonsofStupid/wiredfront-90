@@ -1,5 +1,7 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/services/chat/LoggingService";
+import { Json } from "@/integrations/supabase/types";
 
 export interface Session {
   id: string;
@@ -7,7 +9,7 @@ export interface Session {
   created_at: string;
   last_accessed: string;
   is_active: boolean;
-  metadata: Record<string, unknown>;
+  metadata: Json;
   user_id: string;
   message_count?: number;
 }
@@ -18,10 +20,8 @@ export interface Session {
 export async function fetchUserSessions(): Promise<Session[]> {
   try {
     // Get user from Supabase auth
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData.user) {
       throw new Error("User not authenticated");
     }
 
@@ -39,7 +39,7 @@ export async function fetchUserSessions(): Promise<Session[]> {
         user_id
       `
       )
-      .eq("user_id", user.id)
+      .eq("user_id", authData.user.id)
       .order("last_accessed", { ascending: false });
 
     if (error) throw error;
@@ -91,7 +91,7 @@ export const fetchSessionById = async (
 
     if (error) throw error;
 
-    return { data, error: null };
+    return { data: data as Session, error: null };
   } catch (error) {
     logger.error("Error fetching session by ID:", error);
     return { data: null, error: error as Error };

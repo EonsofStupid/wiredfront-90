@@ -3006,6 +3006,13 @@ export type Database = {
       }
     }
     Functions: {
+      add_tokens: {
+        Args: {
+          user_uuid: string
+          token_amount: number
+        }
+        Returns: number
+      }
       binary_quantize:
         | {
             Args: {
@@ -3171,6 +3178,13 @@ export type Database = {
         }
         Returns: number
       }
+      spend_tokens: {
+        Args: {
+          user_uuid: string
+          token_amount: number
+        }
+        Returns: number
+      }
       track_rag_usage: {
         Args: {
           p_operation: string
@@ -3250,7 +3264,7 @@ export type Database = {
         | "github"
       app_role: "super_admin" | "admin" | "developer" | "subscriber" | "guest"
       chat_api_provider: "openai" | "anthropic" | "gemini" | "huggingface"
-      chat_icon_style: "default" | "wfpulse" | "retro"
+      chat_icon_style: "default" | "wfpulse" | "retro" | "basic"
       chat_mode:
         | "chat"
         | "dev"

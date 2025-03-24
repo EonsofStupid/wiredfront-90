@@ -77,8 +77,7 @@ export const useChatIconStyle = () => {
         .upsert({
           user_id: user.id,
           icon_style: style,
-        })
-        .select();
+        });
 
       if (error) throw error;
 
