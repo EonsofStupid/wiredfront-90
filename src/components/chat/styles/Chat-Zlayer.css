@@ -1,24 +1,57 @@
-
 /**
  * Chat Z-Layer System
- * 
- * This file uses CSS variables defined and injected from the centralized
- * z-index system in src/styles/theme/zIndex.ts.
- * 
- * IMPORTANT: Do not define hardcoded z-index values here!
+ *
+ * This file defines the z-index variables specific to the chat system.
+ * These variables are injected from the centralized z-index system in
+ * src/styles/theme/zIndex.ts.
+ *
+ * IMPORTANT:
+ * - Do not define hardcoded z-index values here
+ * - All values should come from the main z-index system
+ * - The chat system uses z-indices 10000+ to ensure it stays above other UI
+ *
+ * CHAT Z-INDEX HIERARCHY:
+ * - Base: 10000 (foundation for all chat components)
+ * - Container: 10100 (main chat window)
+ * - Sticky: 10200 (fixed elements like headers/footers)
+ * - Toolbar: 10300 (chat-specific toolbars)
+ * - Sidebar: 10400 (chat sessions list)
+ * - Overlay: 10500 (chat-specific overlays)
+ * - Modal: 10600 (chat-specific modals)
+ * - Tooltip: 10700 (chat-specific tooltips)
+ * - Notification: 10800 (chat notifications)
+ * - Toggle Button: 10900 (chat toggle button)
+ * - Global Overlay: 11000 (system-wide overlays)
+ *
+ * STACKING CONTEXT:
+ * - The chat container creates its own stacking context
+ * - All chat components are contained within this context
+ * - This ensures proper layering of chat UI elements
  */
 
 :root {
   /* Base chat layering system */
-  --z-chat-base: var(--z-chat-base);               /* Base z-index for all chat components */
-  --z-chat-container: var(--z-chat-container);     /* Chat window container */
-  --z-chat-sticky: var(--z-chat-sticky);           /* Fixed elements within chat (headers, footers) */
-  --z-chat-toolbar: var(--z-chat-toolbar);         /* Toolbars and action buttons inside chat */
-  --z-chat-sidebar: var(--z-chat-sidebar);         /* Chat sidebar (sessions list, etc.) */
-  --z-chat-overlay: var(--z-chat-overlay);         /* Overlays like emoji picker, command palette */
-  --z-chat-modal: var(--z-chat-modal);             /* Modal dialogs within chat */
-  --z-chat-tooltip: var(--z-chat-tooltip);         /* Tooltips and small popovers */
+  --z-chat-base: var(--z-chat-base); /* Base z-index for all chat components */
+  --z-chat-container: var(--z-chat-container); /* Chat window container */
+  --z-chat-sticky: var(
+    --z-chat-sticky
+  ); /* Fixed elements within chat (headers, footers) */
+  --z-chat-toolbar: var(
+    --z-chat-toolbar
+  ); /* Toolbars and action buttons inside chat */
+  --z-chat-sidebar: var(
+    --z-chat-sidebar
+  ); /* Chat sidebar (sessions list, etc.) */
+  --z-chat-overlay: var(
+    --z-chat-overlay
+  ); /* Overlays like emoji picker, command palette */
+  --z-chat-modal: var(--z-chat-modal); /* Modal dialogs within chat */
+  --z-chat-tooltip: var(--z-chat-tooltip); /* Tooltips and small popovers */
   --z-chat-notification: var(--z-chat-notification); /* Toast notifications */
-  --z-chat-toggle-button: var(--z-chat-toggle-button); /* Chat toggle button (always on top) */
-  --z-chat-global-overlay: var(--z-chat-global-overlay); /* System-wide overlays that should cover chat */
+  --z-chat-toggle-button: var(
+    --z-chat-toggle-button
+  ); /* Chat toggle button (always on top) */
+  --z-chat-global-overlay: var(
+    --z-chat-global-overlay
+  ); /* System-wide overlays that should cover chat */
 }
