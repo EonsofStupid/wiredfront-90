@@ -20,3 +20,6 @@ export interface ChatStyles {
   icon: string;
   animation: string;
 }
+
+// Add this for clarity on what styling is being used
+export type ChatIconStyle = "default" | "wfpulse" | "retro" | "basic";

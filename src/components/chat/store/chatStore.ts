@@ -76,6 +76,60 @@ const initialState: Omit<ChatState, keyof UIStateActions> = {
 export const useChatStore = create<FullChatStore>()((set, get, store) => ({
   ...initialState,
   ...createCombinedStore(set, get, store),
+  
+  // Implement UI actions directly here to ensure they're available
+  toggleChat: () => {
+    set((state) => ({ 
+      isOpen: !state.isOpen,
+      isMinimized: false // Reset minimized state when toggling
+    }), false, "chat/toggleChat");
+    logger.info("Chat toggled:", { isOpen: !get().isOpen });
+  },
+  
+  toggleMinimize: () => {
+    set((state) => ({ isMinimized: !state.isMinimized }), false, "chat/toggleMinimize");
+    logger.info("Chat minimized state toggled:", { isMinimized: !get().isMinimized });
+  },
+  
+  toggleSidebar: () => {
+    set((state) => ({ showSidebar: !state.showSidebar }), false, "chat/toggleSidebar");
+  },
+  
+  setSessionLoading: (isLoading) => {
+    set((state) => ({ 
+      ui: { ...state.ui, sessionLoading: isLoading } 
+    }), false, "chat/setSessionLoading");
+  },
+  
+  setMessageLoading: (isLoading) => {
+    set((state) => ({ 
+      ui: { ...state.ui, messageLoading: isLoading } 
+    }), false, "chat/setMessageLoading");
+  },
+  
+  setProviderLoading: (isLoading) => {
+    set((state) => ({ 
+      ui: { ...state.ui, providerLoading: isLoading } 
+    }), false, "chat/setProviderLoading");
+  },
+  
+  setScale: (scale) => {
+    set({ scale }, false, "chat/setScale");
+  },
+  
+  setCurrentMode: (mode) => {
+    set({ currentMode: mode }, false, "chat/setCurrentMode");
+  },
+  
+  setUserInput: (input) => {
+    set({ userInput: input }, false, "chat/setUserInput");
+  },
+  
+  // Ensure setIsHidden is implemented directly
+  setIsHidden: (hidden) => {
+    set({ isHidden: hidden }, false, "chat/setIsHidden");
+    logger.info("Chat visibility updated:", { isHidden: hidden });
+  },
 }));
 
 // Initialize chat settings

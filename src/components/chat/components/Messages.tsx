@@ -2,6 +2,7 @@
 import React from "react";
 import { useChatStore } from "../store/chatStore";
 import type { ChatMessage } from "../types";
+import { Message } from "../Message";
 
 export function Messages() {
   const { messages } = useChatStore();
@@ -27,14 +28,14 @@ export function Messages() {
   return (
     <div role="list" className="chat-messages">
       {messages.map((message: ChatMessage) => (
-        <div key={message.id} role="listitem" className={`chat-message chat-message-${message.role}`}>
-          <div className="chat-message-content">{message.content}</div>
-          {message.timestamp && (
-            <span className="chat-message-time">
-              {new Date(message.timestamp).toLocaleTimeString()}
-            </span>
-          )}
-        </div>
+        <Message
+          key={message.id}
+          id={message.id}
+          content={message.content}
+          role={message.role}
+          status={message.status}
+          timestamp={message.timestamp}
+        />
       ))}
     </div>
   );

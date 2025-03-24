@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -14,17 +14,23 @@ import { basicStyle } from "@/components/chat/components/styles/BasicStyle";
 export function ChatIconSettings() {
   const { iconStyle, setIconStyle, isLoading, error } = useChatIconStyle();
   const [localIconStyle, setLocalIconStyle] = useAtom(chatIconStyleAtom);
+  const [previewStyle, setPreviewStyle] = useState<ChatIconStyle>("wfpulse");
 
   useEffect(() => {
     // Set the local state if it doesn't match the store
     if (iconStyle !== localIconStyle && iconStyle) {
       setLocalIconStyle(iconStyle);
+      setPreviewStyle(iconStyle);
     }
   }, [iconStyle, localIconStyle, setLocalIconStyle]);
 
   const handleStyleChange = (style: ChatIconStyle) => {
-    // Update the local state immediately for responsive UI
+    // Update the preview immediately for better UX
+    setPreviewStyle(style);
+    
+    // Update the local state
     setLocalIconStyle(style);
+    
     // Also update the server state if needed
     setIconStyle(style);
   };
@@ -59,7 +65,7 @@ export function ChatIconSettings() {
     return (
       <div className="bg-muted p-4 rounded-md flex justify-center h-24">
         <div className="relative">
-          <div className={`${styleToUse.button} flex items-center justify-center`}>
+          <div className={`${styleToUse.button} flex items-center justify-center`} style={{ width: 'fit-content', height: 'fit-content' }}>
             <MessageSquare className={styleToUse.icon} />
           </div>
         </div>
@@ -67,8 +73,8 @@ export function ChatIconSettings() {
     );
   };
 
-  // Use currentStyle with fallback to wfpulse if not set
-  const currentStyle = localIconStyle || "wfpulse";
+  // Use previewStyle for immediate visual feedback
+  const currentStyle = previewStyle || "wfpulse";
 
   return (
     <Card>

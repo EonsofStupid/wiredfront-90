@@ -1,7 +1,7 @@
 
 export const basicStyle = {
-  container: "fixed bottom-4 z-[var(--z-chat)]",
-  button: "rounded-full p-4 bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 transition-colors",
-  icon: "h-6 w-6",
+  container: "fixed bottom-4 right-4 z-[var(--z-chat-toggle-button)]",
+  button: "rounded-full p-3 bg-gray-700 text-gray-100 hover:bg-gray-600 shadow-sm",
+  icon: "h-5 w-5",
   animation: "",
 };

@@ -51,8 +51,6 @@ function ChatContainerBase({ scrollRef, isEditorPage }: ChatContainerProps) {
       }}
       className={`chat-container chat-glass ${isMinimized ? 'chat-minimized' : ''}`}
       style={style}
-      {...attributes}
-      {...listeners}
       data-testid="chat-container"
     >
       <div className="chat-header">
@@ -60,14 +58,14 @@ function ChatContainerBase({ scrollRef, isEditorPage }: ChatContainerProps) {
         <div className="chat-controls">
           <button 
             className="chat-control-button" 
-            onClick={() => toggleMinimize()}
+            onClick={toggleMinimize}
             aria-label={isMinimized ? "Expand" : "Minimize"}
           >
             <Minimize className="h-4 w-4" />
           </button>
           <button 
             className="chat-control-button" 
-            onClick={() => toggleChat()}
+            onClick={toggleChat}
             aria-label="Close"
           >
             <XCircle className="h-4 w-4" />

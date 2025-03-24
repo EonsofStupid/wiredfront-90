@@ -21,12 +21,17 @@ import "./styles/chat-animations.css"; // Animation styles
  */
 export function Chat() {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { isOpen, toggleChat } = useChatStore();
+  const { isOpen, toggleChat, isHidden, setIsHidden } = useChatStore();
   
   // Log component mounting for debugging
   useEffect(() => {
-    console.log("Chat component mounted with state:", { isOpen });
-  }, [isOpen]);
+    console.log("Chat component mounted with state:", { isOpen, isHidden });
+    
+    // Always ensure the button is visible when mounted
+    if (isHidden) {
+      setIsHidden(false);
+    }
+  }, [isOpen, isHidden, setIsHidden]);
   
   const handleToggleChat = useCallback(() => {
     console.log("Toggle chat button clicked, current state:", { isOpen });
