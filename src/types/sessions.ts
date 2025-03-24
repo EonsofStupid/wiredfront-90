@@ -8,7 +8,7 @@ export interface Session {
   created_at: string;
   last_accessed: string;
   message_count: number;
-  is_active?: boolean;
+  archived?: boolean; // Changed from is_active to archived
   metadata?: Json;
   user_id?: string;
 }
@@ -32,6 +32,6 @@ export interface CreateSessionParams {
 // Session update parameters
 export interface UpdateSessionParams {
   title?: string;
-  is_active?: boolean;
+  archived?: boolean; // Changed from is_active to archived
   metadata?: Json;
 }

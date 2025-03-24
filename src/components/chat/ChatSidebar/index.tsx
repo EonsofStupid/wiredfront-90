@@ -28,8 +28,9 @@ export const ChatSidebar = () => {
 
   const formattedSessions = sessions.map(session => ({
     id: session.id,
-    lastAccessed: new Date(session.last_accessed),
-    isActive: session.id === currentSessionId
+    lastAccessed: new Date(session.last_accessed || new Date()),
+    isActive: session.id === currentSessionId,
+    messageCount: session.message_count
   }));
 
   const handleClick = (e: React.MouseEvent) => {

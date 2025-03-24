@@ -6,7 +6,7 @@ export interface Session {
   created_at: string;
   updated_at: string;
   mode: string;
-  archived: boolean;
+  archived: boolean; // Changed from is_active to archived
   context?: Record<string, any>;
   metadata?: Record<string, any>;
   last_accessed?: string;
