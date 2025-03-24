@@ -1,180 +1,133 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { executeCommand, parseCommand } from "@/services/chat/CommandHandler";
-import { Message } from "@/types/chat";
-import { Send } from "lucide-react";
-import React, { useState } from "react";
-import { toast } from "sonner";
-import { v4 as uuidv4 } from "uuid";
-import { VoiceToTextButton } from "../features/voice-to-text";
-import { useMessageStore } from "../messaging/MessageManager";
-import { useChatStore } from "../store/chatStore";
+import React, { useState, useCallback } from 'react';
+import { useChatStore } from '../store';
+import { useMessageStore } from '../messaging/MessageManager';
+import { v4 as uuidv4 } from 'uuid';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Send, Mic } from 'lucide-react';
+import { VoiceToTextButton } from '../features/voice-to-text';
+import { supabase } from '@/integrations/supabase/client';
+import { parseCommand, executeCommand } from '@/services/chat/CommandHandler';
+import { toast } from 'sonner';
 
-interface ChatInputModuleProps {
-  isEditorPage?: boolean;
-}
-
-export function ChatInputModule({
-  isEditorPage = false,
-}: ChatInputModuleProps) {
-  const { userInput, setUserInput, isWaitingForResponse, chatId } =
-    useChatStore();
+export const ChatInputModule = () => {
+  const { userInput, setUserInput, isWaitingForResponse, chatId } = useChatStore();
   const addMessage = useMessageStore((state) => state.addMessage);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUserInput(e.target.value);
+  };
+
+  const sendMessage = useCallback(async () => {
     if (!userInput.trim() || isWaitingForResponse || isProcessing) return;
 
     // Check if the input is a command
     const { isCommand, command, args } = parseCommand(userInput);
-
+    
     if (isCommand) {
       // Execute command and clear input
       const processed = await executeCommand(command, args);
-      setUserInput("");
+      setUserInput('');
       return;
     }
 
     // Create new message ID
     const messageId = uuidv4();
-    const currentTime = new Date().toISOString();
-
+    
     // Add the user message
-    const userMessage: Message = {
+    addMessage({
       id: messageId,
+      role: 'user',
       content: userInput,
-      user_id: null,
-      type: "text",
-      metadata: {},
-      created_at: currentTime,
-      updated_at: currentTime,
-      chat_session_id: chatId || "default",
-      is_minimized: false,
-      position: {},
-      window_state: {},
-      last_accessed: currentTime,
-      retry_count: 0,
-      message_status: "sent",
-      role: "user",
-      sessionId: chatId || "default", // Add required sessionId
-      timestamp: currentTime, // Add required timestamp
-    };
-    addMessage(userMessage);
+      timestamp: new Date(),
+      status: 'sent',
+      sessionId: chatId || 'default',
+    });
 
     // Clear the input
-    setUserInput("");
-
+    setUserInput('');
+    
     // Set processing state
     setIsProcessing(true);
-
+    
     try {
       // Send the message to the API
-      const { data, error } = await supabase.functions.invoke("chat", {
-        body: { message: userInput, chatId },
+      const { data, error } = await supabase.functions.invoke('chat', {
+        body: { message: userInput, chatId }
       });
-
+      
       if (error) {
-        toast.error("Error sending message");
-        console.error("Error sending message:", error);
-
+        toast.error('Error sending message');
+        console.error('Error sending message:', error);
+        
         // Add error response
-        const errorMessage: Message = {
+        addMessage({
           id: uuidv4(),
-          content: `Error: ${error.message || "Failed to send message"}`,
-          user_id: null,
-          type: "text",
-          metadata: {},
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          chat_session_id: chatId || "default",
-          is_minimized: false,
-          position: {},
-          window_state: {},
-          last_accessed: new Date().toISOString(),
-          retry_count: 0,
-          message_status: "error",
-          role: "assistant",
-          sessionId: chatId || "default", // Add required sessionId
-          timestamp: new Date().toISOString(), // Add required timestamp
-        };
-        addMessage(errorMessage);
-
+          role: 'assistant',
+          content: `Error: ${error.message || 'Failed to send message'}`,
+          timestamp: new Date(),
+          status: 'error',
+          sessionId: chatId || 'default',
+        });
+        
         return;
       }
-
+      
       // Add the assistant response
-      const assistantMessage: Message = {
+      addMessage({
         id: uuidv4(),
-        content: data?.response || "No response received",
-        user_id: null,
-        type: "text",
-        metadata: {},
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        chat_session_id: chatId || "default",
-        is_minimized: false,
-        position: {},
-        window_state: {},
-        last_accessed: new Date().toISOString(),
-        retry_count: 0,
-        message_status: "sent",
-        role: "assistant",
-        sessionId: chatId || "default", // Add required sessionId
-        timestamp: new Date().toISOString(), // Add required timestamp
-      };
-      addMessage(assistantMessage);
+        role: 'assistant',
+        content: data?.response || 'No response received',
+        timestamp: new Date(),
+        status: 'received',
+        sessionId: chatId || 'default',
+      });
     } catch (error) {
-      console.error("Error in chat flow:", error);
-
+      console.error('Error in chat flow:', error);
+      
       // Add error response
-      const errorMessage: Message = {
+      addMessage({
         id: uuidv4(),
-        content: `Error: ${error.message || "An unexpected error occurred"}`,
-        user_id: null,
-        type: "text",
-        metadata: {},
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        chat_session_id: chatId || "default",
-        is_minimized: false,
-        position: {},
-        window_state: {},
-        last_accessed: new Date().toISOString(),
-        retry_count: 0,
-        message_status: "error",
-        role: "assistant",
-        sessionId: chatId || "default", // Add required sessionId
-        timestamp: new Date().toISOString(), // Add required timestamp
-      };
-      addMessage(errorMessage);
+        role: 'assistant',
+        content: `Error: ${error.message || 'An unexpected error occurred'}`,
+        timestamp: new Date(),
+        status: 'error',
+        sessionId: chatId || 'default',
+      });
     } finally {
       setIsProcessing(false);
+    }
+  }, [userInput, isWaitingForResponse, isProcessing, chatId, addMessage, setUserInput]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-2 p-4">
-      <input
-        type="text"
+    <div className="p-4 border-t bg-background flex items-center gap-2">
+      <VoiceToTextButton onVoiceInput={setUserInput} />
+      
+      <Input
+        placeholder="Type a message..."
         value={userInput}
-        onChange={(e) => setUserInput(e.target.value)}
-        placeholder="Type your message..."
-        className="flex-1 rounded-lg border border-gray-300 p-2 focus:border-blue-500 focus:outline-none"
+        onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
         disabled={isWaitingForResponse || isProcessing}
+        className="flex-1"
       />
-      <VoiceToTextButton
-        onTranscription={setUserInput}
-        isProcessing={isProcessing}
-      />
-      <button
-        type="submit"
-        disabled={isWaitingForResponse || !userInput.trim() || isProcessing}
-        className="rounded-lg bg-blue-500 p-2 text-white hover:bg-blue-600 disabled:bg-gray-400"
-        aria-label="Send message"
+      
+      <Button 
+        onClick={sendMessage} 
+        disabled={!userInput.trim() || isWaitingForResponse || isProcessing}
+        size="icon"
       >
-        <Send className="h-5 w-5" />
-      </button>
-    </form>
+        <Send className="h-4 w-4" />
+      </Button>
+    </div>
   );
-}
+};

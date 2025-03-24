@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 @import './styles/animations/index.css';
-/* Remove chat-specific import that was causing conflicts */
+@import './components/chat/styles/chat-variables.css';
 
 @layer base {
   :root {

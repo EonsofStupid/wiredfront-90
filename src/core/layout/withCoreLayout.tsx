@@ -1,17 +1,28 @@
 
-import React, { useEffect, useState } from 'react';
-import { CoreLayout } from './CoreLayout';
-import { useLocation } from 'react-router-dom';
+import React from "react";
+import { CoreLayout } from "./CoreLayout";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileLayout } from "@/components/layout/MobileLayout";
 
 /**
- * Higher-order component to wrap any page component with the CoreLayout
- * @param Component - The page component to wrap
- * @returns A new component with CoreLayout
+ * @name withCoreLayout
+ * @description A higher-order component that wraps a component with the appropriate layout
+ * based on the device type (mobile or desktop)
  */
 export function withCoreLayout<P extends object>(
   Component: React.ComponentType<P>
 ): React.FC<P> {
-  const WrappedComponent: React.FC<P> = (props) => {
+  const WithCoreLayout: React.FC<P> = (props) => {
+    const { isMobile } = useIsMobile();
+
+    if (isMobile) {
+      return (
+        <MobileLayout>
+          <Component {...props} />
+        </MobileLayout>
+      );
+    }
+
     return (
       <CoreLayout>
         <Component {...props} />
@@ -19,31 +30,30 @@ export function withCoreLayout<P extends object>(
     );
   };
 
-  // Set display name for debugging
-  const displayName = Component.displayName || Component.name || 'Component';
-  WrappedComponent.displayName = `withCoreLayout(${displayName})`;
-
-  return WrappedComponent;
+  WithCoreLayout.displayName = `withCoreLayout(${Component.displayName || Component.name || 'Component'})`;
+  
+  return WithCoreLayout;
 }
 
 /**
- * Hook to ensure that the current page uses CoreLayout
- * Can be used in page components to check if they're rendered inside CoreLayout
- * @returns Boolean indicating if current route is using CoreLayout
+ * @name useEnsureCoreLayout
+ * @description A hook that can be used to ensure a component is wrapped in the core layout
+ * This is useful for components that may be used in different contexts
  */
-export function useEnsureCoreLayout(): boolean {
-  const location = useLocation();
-  const [hasLayout, setHasLayout] = useState(false);
+export function useEnsureCoreLayout() {
+  const layoutContainerRef = React.useRef<HTMLElement | null>(null);
   
-  useEffect(() => {
-    // Check if we're inside a CoreLayout by looking for the container element
-    const hasLayoutElement = !!document.querySelector('.wf-core-layout-container');
-    setHasLayout(hasLayoutElement);
+  React.useEffect(() => {
+    // Check if we're inside a core layout container
+    const inCoreLayout = document.querySelector('.wf-core-layout-container');
     
-    if (!hasLayoutElement) {
-      console.warn(`Page at ${location.pathname} is not using CoreLayout`);
+    if (!inCoreLayout) {
+      console.warn(
+        'Component is not wrapped in CoreLayout. ' +
+        'Please ensure that components are rendered within a CoreLayout or use withCoreLayout HOC.'
+      );
     }
-  }, [location.pathname]);
+  }, []);
   
-  return hasLayout;
+  return layoutContainerRef;
 }

@@ -1,7 +1,6 @@
 
 import { useEffect } from 'react';
-import { useChatStore } from '@/components/chat/store/chatStore';
-import { clearMiddlewareStorage } from '@/components/chat/store';
+import { useChatStore, clearMiddlewareStorage } from '@/components/chat/store/chatStore';
 import { clearAllSessions } from '@/services/sessions/sessionDelete';
 import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';

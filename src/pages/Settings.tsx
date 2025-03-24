@@ -9,7 +9,6 @@ import { GitHubSettings } from "@/components/settings/sections/GitHubSettings";
 import { GitHubRepositorySettings } from "@/components/settings/sections/GitHubRepositorySettings";
 import { ProfileSettings } from "@/components/settings/sections/ProfileSettings";
 import { ProjectHubSettings } from "@/components/settings/sections/ProjectHubSettings";
-import { ChatUserSettings } from "@/components/chat/settings/ChatUserSettings";
 import { RouteLoggingService } from "@/services/navigation/RouteLoggingService";
 
 export default function Settings() {
@@ -61,11 +60,6 @@ export default function Settings() {
       value: "github-repos",
       label: "GitHub Repos",
       content: <GitHubRepositorySettings />
-    },
-    {
-      value: "chat",
-      label: "Chat",
-      content: <ChatUserSettings />
     },
     {
       value: "project-hub",

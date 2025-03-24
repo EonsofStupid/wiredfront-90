@@ -4,11 +4,11 @@ import { useAuthStore } from "@/stores/auth";
 import { ProjectService, ProjectCreateDTO, Project } from "@/services/projects/ProjectService";
 import { toast } from "sonner";
 import { useState } from "react";
-import { useUIStore } from "@/stores/ui"; // Import from the main UI store
+import { useUIStore } from "@/stores";
 
 export function useProjects() {
   const { user } = useAuthStore();
-  const { setActivePanel, setActiveProject } = useUIStore(); // Get setActiveProject from UI store
+  const { setActiveProject: setActiveProjectInUI } = useUIStore();
   const queryClient = useQueryClient();
   const [isCreating, setIsCreating] = useState(false);
   const [isActivating, setIsActivating] = useState(false);
@@ -53,13 +53,13 @@ export function useProjects() {
   });
 
   // Set active project mutation
-  const setActiveProjectMutation = useMutation({
+  const setActiveProject = useMutation({
     mutationFn: (projectId: string) => {
       setIsActivating(true);
       return ProjectService.setActiveProject(projectId);
     },
     onSuccess: (_, projectId) => {
-      setActiveProject(projectId); // Use the method from UI store
+      setActiveProjectInUI(projectId);
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['active-project'] });
     },
@@ -100,7 +100,7 @@ export function useProjects() {
       return false;
     }
     
-    return setActiveProjectMutation.mutateAsync(projectId);
+    return setActiveProject.mutateAsync(projectId);
   };
 
   // Handle deleting a project

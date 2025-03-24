@@ -2,9 +2,8 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { ModeSelectionDialog } from './ModeSelectionDialog';
+import { ModeSelectionDialog, ChatMode } from './ModeSelectionDialog';
 import { useSessionManager } from '@/hooks/sessions';
-import { ChatMode } from '@/integrations/supabase/types/enums';
 
 interface NewChatButtonProps {
   variant?: "default" | "outline" | "ghost";
@@ -20,8 +19,7 @@ export function NewChatButton({ variant = "default", fullWidth = false }: NewCha
       metadata: {
         mode,
         providerId
-      },
-      mode // Pass the validated mode directly
+      }
     });
   };
   

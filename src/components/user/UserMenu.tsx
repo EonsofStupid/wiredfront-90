@@ -12,7 +12,6 @@ import { UserMenuTrigger } from "./UserMenuTrigger";
 import { useAuthStore } from "@/stores/auth";
 import { NavigationService } from "@/services/navigation/NavigationService";
 import styles from "./styles/UserMenu.module.css";
-import { ZIndex } from "@/styles/theme/zIndex";
 
 export const UserMenu = () => {
   const navigate = useNavigate();
@@ -31,7 +30,7 @@ export const UserMenu = () => {
   return (
     <div 
       className={styles.userMenuContainer}
-      style={{ zIndex: `var(--z-user-menu)` }} 
+      style={{ zIndex: 'var(--z-user-menu)' }} 
     >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

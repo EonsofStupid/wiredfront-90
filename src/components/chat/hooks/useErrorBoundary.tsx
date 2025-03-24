@@ -1,35 +1,75 @@
-
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, ErrorInfo, ReactNode, useState, useCallback } from 'react';
 import { logger } from '@/services/chat/LoggingService';
-import { AlertTriangle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
   fallback: ReactNode;
+  onReset?: () => void;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
+  errorInfo: ErrorInfo | null;
 }
 
 class ErrorBoundaryComponent extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = {
+      hasError: false,
+      error: null,
+      errorInfo: null
+    };
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
+    return {
+      hasError: true,
+      error
+    };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    logger.error('UI Error caught by boundary:', { error, errorInfo });
+    logger.error('Error caught by boundary', { 
+      error: error.message, 
+      stack: error.stack,
+      component: errorInfo.componentStack 
+    });
+    
+    this.setState({
+      errorInfo
+    });
+    
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
   }
+
+  resetErrorBoundary = (): void => {
+    this.setState({
+      hasError: false,
+      error: null,
+      errorInfo: null
+    });
+    
+    if (this.props.onReset) {
+      this.props.onReset();
+    }
+  };
 
   render(): ReactNode {
     if (this.state.hasError) {
+      if (React.isValidElement(this.props.fallback)) {
+        return React.cloneElement(this.props.fallback as React.ReactElement<any>, {
+          error: this.state.error,
+          errorInfo: this.state.errorInfo,
+          resetErrorBoundary: this.resetErrorBoundary
+        });
+      }
+      
       return this.props.fallback;
     }
 
@@ -37,40 +77,47 @@ class ErrorBoundaryComponent extends Component<ErrorBoundaryProps, ErrorBoundary
   }
 }
 
-interface DefaultErrorFallbackProps {
+interface ErrorFallbackProps {
   error?: Error;
+  errorInfo?: ErrorInfo;
   resetErrorBoundary?: () => void;
 }
 
-// Default fallback component for error boundaries
-const DefaultErrorFallback: React.FC<DefaultErrorFallbackProps> = ({ 
-  error, 
-  resetErrorBoundary 
+export const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
+  error,
+  resetErrorBoundary
 }) => {
   return (
-    <div className="p-4 border border-destructive/30 rounded-md bg-destructive/10 text-destructive">
-      <div className="flex items-center gap-2 mb-2">
-        <AlertTriangle className="h-4 w-4" />
-        <h3 className="font-medium">Something went wrong</h3>
-      </div>
-      <p className="text-sm mb-3">{error?.message || 'An unexpected error occurred'}</p>
+    <div className="p-4 border border-destructive/50 rounded-md bg-destructive/10">
+      <h3 className="text-sm font-medium mb-2">Something went wrong</h3>
+      {error && (
+        <p className="text-xs text-muted-foreground mb-3">{error.message}</p>
+      )}
       {resetErrorBoundary && (
-        <Button
-          variant="outline"
-          size="sm"
+        <button
           onClick={resetErrorBoundary}
-          className="mt-2"
+          className="text-xs px-2 py-1 bg-primary/80 text-primary-foreground rounded hover:bg-primary transition-colors"
         >
           Try again
-        </Button>
+        </button>
       )}
     </div>
   );
 };
 
 export function useErrorBoundary() {
+  const [key, setKey] = useState(0);
+  
+  const resetBoundary = useCallback(() => {
+    setKey(prev => prev + 1);
+    toast.success('Component recovered successfully');
+    logger.info('Error boundary reset', { timestamp: new Date().toISOString() });
+  }, []);
+  
   return {
     ErrorBoundary: ErrorBoundaryComponent,
-    DefaultErrorFallback
+    DefaultErrorFallback,
+    resetBoundary,
+    boundaryKey: key
   };
 }

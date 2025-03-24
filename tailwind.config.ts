@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 import { colors } from "./src/styles/theme/colors";
 
@@ -32,9 +31,6 @@ export default {
         glow: "glow 2s ease-in-out infinite",
         "button-float": "button-float 2s ease-in-out infinite",
         "letter-gradient": "letter-gradient 3s ease infinite",
-        "spin-slow": "spin 3s linear infinite",
-        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
-        "rainbow-border": "rainbow-border 6s linear infinite",
       },
       keyframes: {
         "gradient-y": {
@@ -78,19 +74,6 @@ export default {
         "button-float": {
           "0%, 100%": { transform: "translateY(-8px) scale(1.15)" },
           "50%": { transform: "translateY(-12px) scale(1.15)" },
-        },
-        "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 15px rgba(123,97,255,0.5)" },
-          "50%": { boxShadow: "0 0 30px rgba(123,97,255,0.8)" },
-        },
-        "rainbow-border": {
-          "0%": { borderColor: "#ff0000" },
-          "17%": { borderColor: "#ff8000" },
-          "33%": { borderColor: "#ffff00" },
-          "50%": { borderColor: "#00ff00" },
-          "67%": { borderColor: "#0000ff" },
-          "83%": { borderColor: "#8000ff" },
-          "100%": { borderColor: "#ff0000" },
         },
       },
     },

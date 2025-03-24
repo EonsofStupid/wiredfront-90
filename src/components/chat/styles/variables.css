@@ -1,0 +1,57 @@
+
+/* Chat-specific CSS variables with isolation from app variables */
+:root {
+  /* Z-index for chat components - ensuring it's always on top */
+  --z-chat: 9700;
+  
+  /* Chat dimensions */
+  --chat-width: 400px;
+  --chat-min-width: 320px;
+  --chat-max-width: 600px;
+  --chat-height: 500px;
+  --chat-min-height: 300px;
+  --chat-max-height: 800px;
+  --chat-header-height: 3rem;
+  --chat-footer-height: 4.5rem;
+  --chat-input-height: 2.5rem;
+  
+  /* Chat styling */
+  --chat-border-radius: var(--radius, 0.75rem);
+  --chat-bg: rgba(0, 0, 0, 0.3);
+  --chat-text: var(--foreground, white);
+  --chat-header-bg: rgba(0, 0, 0, 0.2);
+  
+  /* Message styling */
+  --chat-message-user-bg: var(--primary, #8B5CF6);
+  --chat-message-user-text: var(--primary-foreground, white);
+  --chat-message-assistant-bg: var(--secondary, #374151);
+  --chat-message-assistant-text: var(--secondary-foreground, white);
+  --chat-message-system-bg: var(--muted, #1F2937);
+  --chat-message-system-text: var(--muted-foreground, #9CA3AF);
+  
+  /* Input styling */
+  --chat-input-bg: rgba(26, 31, 44, 0.9);
+  --chat-input-text: #1EAEDB;
+  --chat-input-placeholder: rgba(30, 174, 219, 0.5);
+  --chat-input-border: rgba(30, 174, 219, 0.2);
+  --chat-input-focus-border: rgba(30, 174, 219, 0.6);
+  --chat-input-focus-glow: 0 0 8px rgba(30, 174, 219, 0.4);
+  
+  /* Knowledge search styling */
+  --chat-knowledge-bg: rgba(26, 31, 44, 0.95);
+  --chat-knowledge-border: rgba(30, 174, 219, 0.3);
+  --chat-knowledge-text: #1EAEDB;
+  
+  /* Notification styling */
+  --chat-notification-bg: rgba(26, 31, 44, 0.95);
+  --chat-notification-border: rgba(255, 59, 48, 0.3);
+  --chat-notification-text: #FF3B30;
+  --chat-notification-background: rgba(255, 59, 48, 0.1);
+  
+  /* Effects */
+  --chat-scrollbar-width: 6px;
+  --chat-transition-speed: 0.3s;
+  --chat-box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  --chat-neon-glow: 0 0 15px rgba(139, 92, 246, 0.5), 0 0 30px rgba(255, 0, 127, 0.3);
+  --chat-cyber-glow: 0 0 10px rgba(30, 174, 219, 0.5), 0 0 20px rgba(30, 174, 219, 0.3);
+}

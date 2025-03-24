@@ -6,8 +6,7 @@ import { SessionHeader } from "./SessionHeader";
 import { useChatStore } from "../store/chatStore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useErrorBoundary } from "../hooks/useErrorBoundary";
-import { ChatMode } from "@/integrations/supabase/types/enums";
-import { ModeSelectionDialog } from "../SessionManagement/ModeSelectionDialog";
+import { ChatMode, ModeSelectionDialog } from "../SessionManagement/ModeSelectionDialog";
 
 // Lazy load SessionList for performance
 const SessionList = lazy(() => import("./SessionList").then(mod => ({ default: mod.SessionList })));
@@ -29,16 +28,8 @@ export const ChatSidebar = () => {
 
   const formattedSessions = sessions.map(session => ({
     id: session.id,
-    lastAccessed: new Date(session.last_accessed || new Date()),
-    isActive: session.id === currentSessionId,
-    messageCount: session.message_count,
-    title: session.title,
-    // Correctly use archived flag
-    archived: session.archived,
-    provider: session.metadata && typeof session.metadata === 'object' 
-      ? (session.metadata as Record<string, any>).providerId 
-      : undefined,
-    mode: session.mode || 'chat', // Use the mode from the session
+    lastAccessed: new Date(session.last_accessed),
+    isActive: session.id === currentSessionId
   }));
 
   const handleClick = (e: React.MouseEvent) => {
@@ -56,8 +47,7 @@ export const ChatSidebar = () => {
       metadata: {
         mode,
         providerId
-      },
-      mode // Pass the properly typed mode
+      }
     });
   };
 

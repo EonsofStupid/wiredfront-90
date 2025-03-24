@@ -15,7 +15,7 @@ import { toast } from "sonner";
 
 interface SyncLog {
   id: string;
-  repository_id: string;
+  repo_id: string;
   repo_name?: string;
   repo_owner?: string;
   sync_type: string;
@@ -44,12 +44,12 @@ export function SyncStatusDashboard() {
         .from("github_sync_logs")
         .select(`
           id,
-          repository_id,
-          triggered_by,
+          repo_id,
+          sync_type,
           status,
-          message,
+          details,
           created_at,
-          github_repositories!repository_id(repo_name, repo_owner)
+          github_repositories(repo_name, repo_owner)
         `)
         .order("created_at", { ascending: false })
         .limit(50);
@@ -59,12 +59,12 @@ export function SyncStatusDashboard() {
       // Transform the data to include repo name and owner
       const transformedData = data.map(log => ({
         id: log.id,
-        repository_id: log.repository_id,
+        repo_id: log.repo_id,
         repo_name: log.github_repositories?.repo_name || 'Unknown',
         repo_owner: log.github_repositories?.repo_owner || 'Unknown',
-        sync_type: log.triggered_by,
+        sync_type: log.sync_type,
         status: log.status,
-        details: { message: log.message },
+        details: log.details,
         created_at: log.created_at
       }));
 
@@ -103,8 +103,6 @@ export function SyncStatusDashboard() {
         return <GitPullRequest className="h-4 w-4 text-neon-pink" />;
       case "webhook":
         return <GitMerge className="h-4 w-4 text-green-500" />;
-      case "manual":
-        return <GitBranch className="h-4 w-4 text-neon-blue" />;
       default:
         return <GitBranch className="h-4 w-4 text-muted-foreground" />;
     }

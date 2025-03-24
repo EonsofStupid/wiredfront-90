@@ -4,7 +4,6 @@ import { Link, useLocation } from "react-router-dom";
 import { Home, Code, Bot, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMobileChat } from "../hooks/useMobileChat";
-import { ZIndex } from "@/styles/theme/zIndex";
 
 /**
  * Mobile-specific bottom navigation with animated indicators
@@ -20,10 +19,7 @@ export const MobileBottomNav = () => {
   ];
 
   return (
-    <nav 
-      className="fixed bottom-0 left-0 right-0 h-16 bg-dark-lighter/80 backdrop-blur-md border-t border-neon-blue/20"
-      style={{ zIndex: `var(--z-bottombar)` }}
-    >
+    <nav className="fixed bottom-0 left-0 right-0 h-16 bg-dark-lighter/80 backdrop-blur-md border-t border-neon-blue/20 z-50">
       <div className="grid grid-cols-4 h-full">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;

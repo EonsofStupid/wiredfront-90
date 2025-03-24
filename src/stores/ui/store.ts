@@ -2,7 +2,19 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { UIStore } from './types';
-import { ZIndex } from '@/styles/theme/zIndex';
+import { v4 as uuidv4 } from 'uuid';
+
+const Z_INDEX = {
+  modal: 1000,
+  dropdown: 900,
+  tooltip: 800,
+  navbar: 700,
+  projecthub: 9600,
+  floating: 600,
+  content: 500,
+  background: 400,
+  base: 300,
+} as const;
 
 export const useUIStore = create<UIStore>()(
   persist(
@@ -23,7 +35,7 @@ export const useUIStore = create<UIStore>()(
         highContrast: false,
         fontSize: 'normal',
       },
-      zIndex: ZIndex,
+      zIndex: Z_INDEX,
 
       setTheme: (theme) => set({ theme }),
 

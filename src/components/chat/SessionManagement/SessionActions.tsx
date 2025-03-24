@@ -14,7 +14,7 @@ export function SessionActions() {
 
   // Get active sessions count (excluding current)
   const activeSessionsCount = sessions.filter(
-    s => !s.archived && s.id !== currentSessionId
+    s => s.is_active && s.id !== currentSessionId
   ).length;
 
   const handleDeleteOthers = async () => {

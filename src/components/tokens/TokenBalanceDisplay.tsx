@@ -1,14 +1,10 @@
-import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useTokenManagement } from "@/hooks/useTokenManagement";
-import { AlertCircle, Coins } from "lucide-react";
-import React from "react";
-import { TokenAuthGuard } from "./TokenAuthGuard";
+
+import React from 'react';
+import { useTokenManagement, withTokenErrorBoundary } from '@/hooks/useTokenManagement';
+import { TokenAuthGuard } from './TokenAuthGuard';
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Coins, AlertCircle } from 'lucide-react';
 
 interface TokenBalanceDisplayProps {
   showLabel?: boolean;
@@ -16,17 +12,17 @@ interface TokenBalanceDisplayProps {
   className?: string;
 }
 
-export const TokenBalanceDisplay: React.FC<TokenBalanceDisplayProps> = ({
+const TokenBalanceDisplayComponent: React.FC<TokenBalanceDisplayProps> = ({
   showLabel = true,
   compact = false,
-  className = "",
+  className = ''
 }) => {
   const {
     tokenBalance,
     isTokenEnforcementEnabled,
     enforcementMode,
     isLoading,
-    error,
+    error
   } = useTokenManagement();
 
   if (error) {
@@ -52,37 +48,21 @@ export const TokenBalanceDisplay: React.FC<TokenBalanceDisplayProps> = ({
   }
 
   return (
-    <TokenAuthGuard
-      fallback={
-        compact ? (
-          <span className="text-muted-foreground text-xs">Sign in</span>
-        ) : null
-      }
-    >
+    <TokenAuthGuard fallback={compact ? <span className="text-muted-foreground text-xs">Sign in</span> : null}>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <div className={`flex items-center ${className}`}>
-              <Coins
-                size={compact ? 14 : 16}
-                className={`mr-1 ${
-                  isTokenEnforcementEnabled
-                    ? "text-amber-500"
-                    : "text-muted-foreground"
-                }`}
-              />
-
+              <Coins size={compact ? 14 : 16} className={`mr-1 ${isTokenEnforcementEnabled ? 'text-amber-500' : 'text-muted-foreground'}`} />
+              
               {showLabel && !compact && (
                 <span className="text-sm mr-1.5">Tokens:</span>
               )}
-
-              <Badge
-                variant={isTokenEnforcementEnabled ? "secondary" : "outline"}
-                className={compact ? "text-xs px-1.5 py-0" : ""}
-              >
+              
+              <Badge variant={isTokenEnforcementEnabled ? "secondary" : "outline"} className={compact ? "text-xs px-1.5 py-0" : ""}>
                 {tokenBalance}
               </Badge>
-
+              
               {isTokenEnforcementEnabled && !compact && (
                 <Badge variant="outline" className="ml-2 text-xs">
                   {enforcementMode}
@@ -92,17 +72,11 @@ export const TokenBalanceDisplay: React.FC<TokenBalanceDisplayProps> = ({
           </TooltipTrigger>
           <TooltipContent>
             <div className="space-y-1">
-              <p className="font-medium text-sm">
-                Token Balance: {tokenBalance}
-              </p>
+              <p className="font-medium text-sm">Token Balance: {tokenBalance}</p>
               {isTokenEnforcementEnabled ? (
-                <p className="text-xs text-muted-foreground">
-                  Enforcement: {enforcementMode}
-                </p>
+                <p className="text-xs text-muted-foreground">Enforcement: {enforcementMode}</p>
               ) : (
-                <p className="text-xs text-muted-foreground">
-                  Token enforcement is disabled
-                </p>
+                <p className="text-xs text-muted-foreground">Token enforcement is disabled</p>
               )}
             </div>
           </TooltipContent>
@@ -111,3 +85,6 @@ export const TokenBalanceDisplay: React.FC<TokenBalanceDisplayProps> = ({
     </TokenAuthGuard>
   );
 };
+
+// Wrap with error boundary
+export const TokenBalanceDisplay = withTokenErrorBoundary(TokenBalanceDisplayComponent);

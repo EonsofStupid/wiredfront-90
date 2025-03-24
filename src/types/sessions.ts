@@ -1,22 +1,16 @@
 
 import { Json } from '@/integrations/supabase/types';
-import { ChatMode } from '@/integrations/supabase/types/enums';
 
 // Core session interface
 export interface Session {
   id: string;
   title: string;
   created_at: string;
-  updated_at?: string;
   last_accessed: string;
   message_count: number;
-  archived: boolean;
+  is_active?: boolean;
   metadata?: Json;
   user_id?: string;
-  mode?: ChatMode; // Use the standard ChatMode type
-  context?: Json;
-  project_id?: string;
-  provider_id?: string;
 }
 
 // Session status for UI representation
@@ -33,16 +27,11 @@ export interface SessionOperationResult {
 export interface CreateSessionParams {
   title?: string;
   metadata?: Json;
-  mode?: ChatMode; // Use the standard ChatMode type
-  project_id?: string;
-  provider_id?: string;
 }
 
 // Session update parameters
 export interface UpdateSessionParams {
   title?: string;
-  archived?: boolean;
+  is_active?: boolean;
   metadata?: Json;
-  last_accessed?: string;
-  context?: Json;
 }

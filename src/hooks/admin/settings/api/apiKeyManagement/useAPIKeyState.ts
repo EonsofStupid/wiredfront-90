@@ -9,7 +9,7 @@ import { useChatStore } from "@/components/chat/store/chatStore";
 export const useAPIKeyState = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [configurations, setConfigurations] = useState<APIConfiguration[]>([]);
-  const { updateAvailableProviders } = useChatStore(); // Use the available function
+  const { updateChatProvider } = useChatStore();
   
   const fetchConfigurations = useCallback(async () => {
     setIsLoading(true);
@@ -40,7 +40,7 @@ export const useAPIKeyState = () => {
           }));
         
         if (chatProviders.length > 0) {
-          updateAvailableProviders(chatProviders);
+          updateChatProvider(chatProviders);
           logger.info('Updated chat providers in store', { count: chatProviders.length });
         }
       }
@@ -50,7 +50,7 @@ export const useAPIKeyState = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [updateAvailableProviders]);
+  }, [updateChatProvider]);
 
   useEffect(() => {
     fetchConfigurations();

@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Session } from '@/services/sessions/types';
+import { Session } from '@/types/sessions';
 import { fetchUserSessions } from '@/services/sessions';
 import { logger } from '@/services/chat/LoggingService';
 
@@ -26,9 +26,7 @@ export function useSessionCore() {
     refetch: refreshSessions
   } = useQuery({
     queryKey: SESSION_QUERY_KEYS.SESSIONS,
-    queryFn: async () => {
-      return fetchUserSessions();
-    },
+    queryFn: fetchUserSessions,
     meta: {
       errorMessage: 'Failed to load chat sessions'
     }
