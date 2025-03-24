@@ -1,9 +1,9 @@
-import { cn } from "@/lib/utils";
-import { Bug, Activity } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
-import { WebSocketLogger } from '@/services/chat/websocket/monitoring/WebSocketLogger';
 import { DebugMetrics } from "@/components/debug/DebugPanel/DebugMetrics";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { WebSocketLogger } from "@/services/chat/websocket/monitoring/WebSocketLogger";
+import { Activity, Bug } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface BottomBarProps {
   className?: string;
@@ -16,9 +16,9 @@ export const BottomBar = ({ className }: BottomBarProps) => {
   useEffect(() => {
     const interval = setInterval(() => {
       const logger = WebSocketLogger.getInstance();
-      const recentLogs = logger.getLogs().filter(
-        log => Date.now() - log.timestamp < 5000
-      );
+      const recentLogs = logger
+        .getLogs()
+        .filter((log) => Date.now() - log.timestamp < 5000);
       setHasNewActivity(recentLogs.length > 0);
     }, 1000);
 
@@ -31,7 +31,13 @@ export const BottomBar = ({ className }: BottomBarProps) => {
   };
 
   return (
-    <footer className={cn("h-12 glass-card border-t border-neon-blue/20 px-6", className)}>
+    <footer
+      className={cn(
+        "h-12 glass-card border-t border-neon-blue/20 px-6",
+        className
+      )}
+      data-zlayer={`bottombar (z: var(--z-footer))`}
+    >
       <div className="h-full flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button
@@ -43,10 +49,11 @@ export const BottomBar = ({ className }: BottomBarProps) => {
               showDebug && "text-neon-blue",
               hasNewActivity && "animate-pulse"
             )}
+            data-zlayer={`debug-toggle (z: var(--z-footer))`}
           >
             <Bug className="w-5 h-5" />
           </Button>
-          
+
           <Button
             variant="ghost"
             size="icon"

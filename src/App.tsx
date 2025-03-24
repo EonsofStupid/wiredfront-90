@@ -4,7 +4,9 @@ import "./App.css";
 import { Chat } from "./components/chat";
 import { AppLayout } from "./components/layout/AppLayout";
 import { MainLayout } from "./components/layout/MainLayout";
+import "./styles/debug.css";
 import { setupZIndexVars } from "./styles/setup/injectZIndexVars";
+import { enableZIndexDebug } from "./utils/debug";
 
 // Import your page components here
 import Dashboard from "./pages/Dashboard";
@@ -14,10 +16,11 @@ import Index from "./pages/Index";
 import Settings from "./pages/Settings";
 
 function App() {
-  // Initialize z-index CSS variables
+  // Initialize z-index CSS variables and debug mode
   useEffect(() => {
     setupZIndexVars();
-    console.log("Z-index CSS variables injected");
+    enableZIndexDebug();
+    console.log("Z-index CSS variables injected and debug mode enabled");
   }, []);
 
   return (
