@@ -9,15 +9,10 @@
  * independent and prevents unintended side effects.
  */
 
+@import './Chat-Zlayer.css';
+
 :root {
-  /* Z-index hierarchy for chat components */
-  --chat-z-index-base: 9000;
-  --chat-z-index-container: 9500;
-  --chat-z-index-modal: 9600;
-  --chat-z-index-tooltip: 9700;
-  --chat-z-index-dropdown: 9800;
-  
-  /* Chat component color palette */
+  /* Color palette */
   --chat-bg-primary: rgba(16, 16, 28, 0.85);
   --chat-bg-secondary: rgba(30, 30, 46, 0.75);
   --chat-border-color: rgba(123, 97, 255, 0.3);

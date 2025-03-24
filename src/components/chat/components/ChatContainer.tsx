@@ -35,8 +35,11 @@ function ChatContainerBase({ scrollRef, isEditorPage }: ChatContainerProps) {
   const style = adjustedTransform
     ? {
         transform: `translate3d(${adjustedTransform.x}px, ${adjustedTransform.y}px, 0)`,
+        zIndex: `var(--z-chat-container)`,
       }
-    : undefined;
+    : {
+        zIndex: `var(--z-chat-container)`,
+      };
 
   return (
     <div

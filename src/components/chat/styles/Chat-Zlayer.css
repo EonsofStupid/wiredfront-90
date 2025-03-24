@@ -1,0 +1,23 @@
+
+/**
+ * Chat Z-Layer System
+ * 
+ * This file serves as the single source of truth for z-index values
+ * used throughout the chat components. It defines a structured layering
+ * system to ensure consistent stacking of UI elements.
+ */
+
+:root {
+  /* Base chat layering system */
+  --z-chat-base: 9000;              /* Base z-index for all chat components */
+  --z-chat-container: 9010;         /* Chat window container */
+  --z-chat-sticky: 9020;            /* Fixed elements within chat (headers, footers) */
+  --z-chat-toolbar: 9030;           /* Toolbars and action buttons inside chat */
+  --z-chat-sidebar: 9040;           /* Chat sidebar (sessions list, etc.) */
+  --z-chat-overlay: 9050;           /* Overlays like emoji picker, command palette */
+  --z-chat-modal: 9060;             /* Modal dialogs within chat */
+  --z-chat-tooltip: 9070;           /* Tooltips and small popovers */
+  --z-chat-notification: 9080;      /* Toast notifications */
+  --z-chat-toggle-button: 9090;     /* Chat toggle button (always on top) */
+  --z-chat-global-overlay: 9100;    /* System-wide overlays that should cover chat */
+}

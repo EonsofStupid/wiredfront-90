@@ -107,7 +107,7 @@ export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
         className={styleToUse.container}
         data-position={position}
         data-testid="chat-toggle-container"
-        style={{ zIndex: 9700 }} /* Using the z-index from CSS vars */
+        style={{ zIndex: "var(--z-chat-toggle-button)" }}
       >
         <Tooltip>
           <TooltipTrigger asChild>

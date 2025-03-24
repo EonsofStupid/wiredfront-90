@@ -23,6 +23,7 @@ export interface MainContentProps extends CoreLayoutProps {
   isRightSidebarVisible: boolean;
 }
 
+// Using our new z-index variables from Chat-Zlayer.css
 export enum LayoutZIndex {
   base = 0,
   content = 10,
