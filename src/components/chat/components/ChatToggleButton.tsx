@@ -1,7 +1,7 @@
 
 import { logger } from "@/services/chat/LoggingService";
 import { motion } from "framer-motion";
-import { Code, MessageSquare, MessagesSquare } from "lucide-react";
+import { Code, MessageSquare, MessagesSquare, Image, BrainCircuit } from "lucide-react";
 import React, { useEffect } from "react";
 import { useChatMode } from "../providers/ChatModeProvider";
 import { useChatStore } from "../store/chatStore";
@@ -11,6 +11,7 @@ import { wfpulseStyle } from "./styles/WFPulseStyle";
 import { retroStyle } from "./styles/RetroStyle";
 import { basicStyle } from "./styles/BasicStyle";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ChatMode } from "@/integrations/supabase/types/enums";
 
 interface ChatToggleButtonProps {
   onClick: () => void;
@@ -46,21 +47,41 @@ export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
   }
 
   // Pick icon based on mode
-  const Icon =
-    mode === "editor"
-      ? Code
-      : mode === "chat-only"
-      ? MessagesSquare
-      : MessageSquare;
+  const Icon = (() => {
+    switch (mode) {
+      case "dev":
+      case "code":
+        return Code;
+      case "image":
+        return Image;
+      case "planning":
+      case "training":
+        return BrainCircuit;
+      case "chat":
+      default:
+        return MessageSquare;
+    }
+  })();
 
   // Determine tooltip text based on mode and current state
   const tooltipText = isOpen
     ? "Close Chat"
-    : mode === "editor"
-    ? "Open Code Assistant"
-    : mode === "chat-only"
-    ? "Open Context Planning"
-    : "Open Chat";
+    : (() => {
+        switch (mode) {
+          case "dev":
+          case "code":
+            return "Open Code Assistant";
+          case "image":
+            return "Open Image Generator";
+          case "planning":
+            return "Open Planning Assistant";
+          case "training":
+            return "Open Training Assistant";
+          case "chat":
+          default:
+            return "Open Chat";
+        }
+      })();
 
   // Select style based on user preference
   const styleToUse = (() => {
