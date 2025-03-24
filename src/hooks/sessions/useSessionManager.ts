@@ -7,6 +7,7 @@ import { useSessionCreation } from './useSessionCreation';
 import { useSessionSwitching } from './useSessionSwitching';
 import { useSessionUpdates } from './useSessionUpdates';
 import { useSessionCleanup } from './useSessionCleanup';
+import { logger } from '@/services/chat/LoggingService';
 
 /**
  * Main session manager hook that composes all session-related functionality

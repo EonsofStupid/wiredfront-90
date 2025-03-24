@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "./types";
 import { UpdateSessionParams } from "@/types/sessions";
+import { logger } from "@/services/chat/LoggingService";
 
 /**
  * Update a chat session
@@ -15,7 +16,7 @@ export const updateSession = async (
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      console.error("No authenticated user found when updating session");
+      logger.error("No authenticated user found when updating session");
       return false;
     }
     
@@ -31,13 +32,13 @@ export const updateSession = async (
       .eq("user_id", user.id); // Security: Only allow updating own sessions
 
     if (error) {
-      console.error("Error updating session:", error);
+      logger.error("Error updating session:", error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error("Exception updating session:", error);
+    logger.error("Exception updating session:", error);
     return false;
   }
 };
@@ -51,7 +52,7 @@ export const switchToSession = async (sessionId: string): Promise<boolean> => {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      console.error("No authenticated user found when switching session");
+      logger.error("No authenticated user found when switching session");
       return false;
     }
     
@@ -67,13 +68,13 @@ export const switchToSession = async (sessionId: string): Promise<boolean> => {
       .eq("user_id", user.id); // Security: Only allow updating own sessions
 
     if (error) {
-      console.error("Error switching session:", error);
+      logger.error("Error switching session:", error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error("Exception switching session:", error);
+    logger.error("Exception switching session:", error);
     return false;
   }
 };

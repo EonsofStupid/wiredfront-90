@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Session } from "./types";
 import { SessionOperationResult } from "@/types/sessions";
+import { logger } from "@/services/chat/LoggingService";
 
 /**
  * Delete a chat session by ID
@@ -12,7 +12,7 @@ export const deleteSession = async (sessionId: string): Promise<boolean> => {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      console.error("No authenticated user found when deleting session");
+      logger.error("No authenticated user found when deleting session");
       return false;
     }
     
@@ -23,13 +23,13 @@ export const deleteSession = async (sessionId: string): Promise<boolean> => {
       .eq("user_id", user.id); // Security: Only allow deleting own sessions
 
     if (error) {
-      console.error("Error deleting session:", error);
+      logger.error("Error deleting session:", error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error("Exception deleting session:", error);
+    logger.error("Exception deleting session:", error);
     return false;
   }
 };
@@ -45,7 +45,7 @@ export const clearAllSessions = async (
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      console.error("No authenticated user found when clearing sessions");
+      logger.error("No authenticated user found when clearing sessions");
       return { success: false, error: new Error("No authenticated user") };
     }
     
@@ -62,13 +62,13 @@ export const clearAllSessions = async (
     const { error } = await query;
 
     if (error) {
-      console.error("Error clearing sessions:", error);
+      logger.error("Error clearing sessions:", error);
       return { success: false, error };
     }
 
     return { success: true };
   } catch (error) {
-    console.error("Exception clearing sessions:", error);
+    logger.error("Exception clearing sessions:", error);
     return { success: false, error };
   }
 };

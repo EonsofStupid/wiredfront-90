@@ -1,9 +1,7 @@
 
-// This is a partial fix. We need to address the excessive type depth error
-// by limiting recursive type definitions and adding explicit type annotations
-
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "./types";
+import { logger } from "@/services/chat/LoggingService";
 
 /**
  * Fetch a specific chat session by ID
@@ -17,13 +15,13 @@ export const fetchSessionById = async (sessionId: string): Promise<Session | nul
       .single();
 
     if (error) {
-      console.error("Error fetching session by ID:", error);
+      logger.error("Error fetching session by ID:", error);
       return null;
     }
 
     return data as Session;
   } catch (error) {
-    console.error("Exception fetching session by ID:", error);
+    logger.error("Exception fetching session by ID:", error);
     return null;
   }
 };
@@ -37,7 +35,7 @@ export const fetchUserSessions = async (): Promise<Session[]> => {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      console.warn("No authenticated user found when fetching sessions");
+      logger.warn("No authenticated user found when fetching sessions");
       return [];
     }
     
@@ -48,14 +46,13 @@ export const fetchUserSessions = async (): Promise<Session[]> => {
       .order("updated_at", { ascending: false });
 
     if (error) {
-      console.error("Error fetching user sessions:", error);
+      logger.error("Error fetching user sessions:", error);
       return [];
     }
 
-    // Use explicit type casting to Session[] to fix the type issue
     return (data || []) as Session[];
   } catch (error) {
-    console.error("Exception fetching user sessions:", error);
+    logger.error("Exception fetching user sessions:", error);
     return [];
   }
 };
@@ -71,7 +68,7 @@ export const fetchRecentSessions = async (
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      console.warn("No authenticated user found when fetching recent sessions");
+      logger.warn("No authenticated user found when fetching recent sessions");
       return [];
     }
     
@@ -83,14 +80,13 @@ export const fetchRecentSessions = async (
       .limit(limit);
 
     if (error) {
-      console.error("Error fetching recent sessions:", error);
+      logger.error("Error fetching recent sessions:", error);
       return [];
     }
 
-    // Use explicit type casting to Session[] to fix the type issue
     return (data || []) as Session[];
   } catch (error) {
-    console.error("Exception fetching recent sessions:", error);
+    logger.error("Exception fetching recent sessions:", error);
     return [];
   }
 };

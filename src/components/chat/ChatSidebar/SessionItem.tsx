@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Clock, Check, Hash, AlertCircle } from "lucide-react";
+import { MessageSquare, Clock, Check, Hash, AlertCircle, Archive } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMessageStore } from "../messaging/MessageManager";
@@ -12,6 +12,7 @@ interface SessionItemProps {
   isActive: boolean;
   messageCount?: number;
   title?: string;
+  archived?: boolean;
   onSelect: (id: string) => void;
   provider?: string;
 }
@@ -22,6 +23,7 @@ export const SessionItem = ({
   isActive, 
   messageCount = 0,
   title,
+  archived = false,
   onSelect,
   provider
 }: SessionItemProps) => {
@@ -34,7 +36,7 @@ export const SessionItem = ({
   // Get the first message for this session
   const messages = useMessageStore(state => state.messages);
   const sessionMessages = messages.filter(m => m.sessionId === id);
-  const firstMessage = sessionMessages[0]?.content || 'New Chat';
+  const firstMessage = sessionMessages[0]?.content || title || 'New Chat';
 
   // Truncate the first message for display
   const truncatedMessage = firstMessage.length > 50 
@@ -54,10 +56,14 @@ export const SessionItem = ({
               isActive 
                 ? "bg-chat-message-assistant-bg/50 text-chat-knowledge-text chat-cyber-border" 
                 : "hover:bg-chat-message-assistant-bg/20"
-            }`}
+            } ${archived ? "opacity-60" : ""}`}
             onClick={() => onSelect(id)}
           >
-            <MessageSquare className="h-4 w-4" />
+            {archived ? (
+              <Archive className="h-4 w-4" />
+            ) : (
+              <MessageSquare className="h-4 w-4" />
+            )}
             <div className="flex-1 text-left truncate flex flex-col">
               <span className="truncate">{truncatedMessage}</span>
               {provider && (
@@ -72,7 +78,7 @@ export const SessionItem = ({
                 {messageCount}
               </span>
             )}
-            {isRecent && <span className="h-2 w-2 rounded-full bg-green-500" />}
+            {isRecent && !archived && <span className="h-2 w-2 rounded-full bg-green-500" />}
             {isActive && <Check className="h-4 w-4 text-chat-knowledge-text" />}
             {isLongSession && (
               <Tooltip>
@@ -95,10 +101,10 @@ export const SessionItem = ({
           className="text-xs chat-dialog-content max-w-[300px]"
         >
           <div className="space-y-1">
-            <p className="font-medium">First Message:</p>
+            <p className="font-medium">Session: {title || 'Untitled'}</p>
             <p className="opacity-90">{firstMessage}</p>
             <p>Last accessed: {lastAccessed.toLocaleString()}</p>
-            <p>Status: {isActive ? 'Active' : 'Inactive'}</p>
+            <p>Status: {archived ? 'Archived' : isActive ? 'Active' : 'Inactive'}</p>
             {messageCount > 0 && <p>Messages: {messageCount}</p>}
             {provider && <p>Provider: {provider}</p>}
             {isLongSession && (

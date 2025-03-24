@@ -18,6 +18,7 @@ export const createNewSession = async (params?: CreateSessionParams): Promise<Se
 
     const title = params?.title || "New Chat";
     const metadata = params?.metadata || {};
+    const mode = params?.mode || "chat";
     
     const now = new Date().toISOString();
     
@@ -31,8 +32,11 @@ export const createNewSession = async (params?: CreateSessionParams): Promise<Se
           updated_at: now,
           last_accessed: now,
           message_count: 0,
-          archived: false, // Initialize as not archived
-          metadata 
+          archived: false,
+          metadata,
+          mode,
+          project_id: params?.project_id,
+          provider_id: params?.provider_id
         }
       ])
       .select()

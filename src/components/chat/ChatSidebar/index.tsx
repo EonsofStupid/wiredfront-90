@@ -30,7 +30,13 @@ export const ChatSidebar = () => {
     id: session.id,
     lastAccessed: new Date(session.last_accessed || new Date()),
     isActive: session.id === currentSessionId,
-    messageCount: session.message_count
+    messageCount: session.message_count,
+    title: session.title,
+    // Correctly use archived flag
+    archived: session.archived,
+    provider: session.metadata && typeof session.metadata === 'object' 
+      ? (session.metadata as Record<string, any>).providerId 
+      : undefined
   }));
 
   const handleClick = (e: React.MouseEvent) => {
@@ -48,7 +54,8 @@ export const ChatSidebar = () => {
       metadata: {
         mode,
         providerId
-      }
+      },
+      mode: mode
     });
   };
 

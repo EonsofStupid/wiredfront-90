@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Session } from "./types";
+import { logger } from "@/services/chat/LoggingService";
 
 /**
  * Archive a chat session
@@ -11,7 +11,7 @@ export const archiveSession = async (sessionId: string): Promise<boolean> => {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      console.error("No authenticated user found when archiving session");
+      logger.error("No authenticated user found when archiving session");
       return false;
     }
     
@@ -27,13 +27,13 @@ export const archiveSession = async (sessionId: string): Promise<boolean> => {
       .eq("user_id", user.id); // Security: Only allow archiving own sessions
 
     if (error) {
-      console.error("Error archiving session:", error);
+      logger.error("Error archiving session:", error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error("Exception archiving session:", error);
+    logger.error("Exception archiving session:", error);
     return false;
   }
 };
