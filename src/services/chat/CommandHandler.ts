@@ -1,5 +1,6 @@
 
-import { useChatStore, clearMiddlewareStorage } from '@/components/chat/store/chatStore';
+import { useChatStore } from '@/components/chat/store/chatStore';
+import { clearMiddlewareStorage } from '@/components/chat/store';
 import { logger } from './LoggingService';
 import { toast } from 'sonner';
 import { MessageManager } from '@/components/chat/messaging/MessageManager';
@@ -85,7 +86,7 @@ export const executeCommand = async (command: string, args: string[]): Promise<b
         const provider = providers.find(p => p.name.toLowerCase() === providerName);
         
         if (provider) {
-          useChatStore.getState().updateCurrentProvider(provider);
+          useChatStore.getState().setCurrentProvider(provider);
           toast.success(`Provider switched to ${provider.name}`);
         } else {
           toast.error(`Provider '${args[0]}' not found`);

@@ -1368,6 +1368,47 @@ export type Database = {
           },
         ]
       }
+      github_sync_logs: {
+        Row: {
+          created_at: string | null
+          duration_ms: number | null
+          id: string
+          message: string | null
+          repository_id: string | null
+          status: string
+          synced_at: string | null
+          triggered_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration_ms?: number | null
+          id?: string
+          message?: string | null
+          repository_id?: string | null
+          status: string
+          synced_at?: string | null
+          triggered_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          duration_ms?: number | null
+          id?: string
+          message?: string | null
+          repository_id?: string | null
+          status?: string
+          synced_at?: string | null
+          triggered_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "github_sync_logs_repository_id_fkey"
+            columns: ["repository_id"]
+            isOneToOne: false
+            referencedRelation: "github_repositories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       live_preview_status: {
         Row: {
           created_at: string | null

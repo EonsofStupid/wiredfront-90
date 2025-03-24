@@ -1,13 +1,5 @@
-import { GithubSyncLog } from "@/types/github/sync";
 
-/**
- * GitHub Connection Status Type
- */
-export type GitHubConnectionStatusType =
-  | "active"
-  | "inactive"
-  | "error"
-  | "expired";
+import { GithubSyncLog } from "@/types/github/sync";
 
 /**
  * GitHub Connection Status
@@ -36,66 +28,21 @@ export interface GitHubConnectionStatusProps {
 }
 
 /**
- * GitHub Linked Account
- */
-export interface GitHubLinkedAccount {
-  id: string;
-  username: string;
-  avatar_url?: string;
-  default: boolean;
-  status: GitHubConnectionStatusType;
-  last_used: string;
-  token_expires_at?: string;
-  scopes: string[];
-}
-
-/**
  * GitHub Repository
  */
 export interface GitHubRepository {
   id: string;
-  connection_id: string;
-  user_id: string;
-  repo_name: string;
-  repo_owner: string;
-  repo_url: string;
+  name: string;
+  full_name: string;
+  description: string | null;
+  private: boolean;
+  html_url: string;
+  language: string | null;
   default_branch: string;
-  is_active: boolean;
-  auto_sync: boolean;
-  webhook_secret?: string;
-  webhook_id?: string;
-  last_synced_at?: string;
-  sync_status: "pending" | "success" | "error" | "queued" | "skipped";
-  sync_frequency: "on_change" | "daily" | "weekly" | "monthly";
+  last_synced_at: string | null;
+  sync_status: string | null;
   created_at: string;
   updated_at: string;
-  metadata: Record<string, any>;
-  clone_from_repo_id?: string;
-}
-
-/**
- * GitHub Metric
- */
-export interface GitHubMetric {
-  id: string;
-  repository_id: string;
-  metric_type: string;
-  value: number;
-  timestamp: string;
-  metadata?: Record<string, any>;
-}
-
-/**
- * GitHub OAuth Log
- */
-export interface GitHubOAuthLog {
-  id: string;
-  user_id: string;
-  action: "connect" | "disconnect" | "refresh";
-  status: "success" | "failed";
-  error_message?: string;
-  created_at: string;
-  metadata?: Record<string, any>;
 }
 
 /**
@@ -110,7 +57,11 @@ export interface GithubState {
   isChecking: boolean;
   connectionStatus: GitHubConnectionStatusProps;
   githubUsername: string | null;
-  linkedAccounts: GitHubLinkedAccount[];
+  linkedAccounts: Array<{
+    id: string;
+    username: string;
+    default: boolean;
+  }>;
 
   // Repository state
   repositories: GitHubRepository[];
@@ -119,12 +70,12 @@ export interface GithubState {
   repositoriesError: string | null;
 
   // Metrics state
-  metrics: GitHubMetric[];
+  metrics: any[];
   isMetricsLoading: boolean;
   metricsError: string | null;
 
   // OAuth logs state
-  oauthLogs: GitHubOAuthLog[];
+  oauthLogs: any[];
   isOAuthLogsLoading: boolean;
   oauthLogsError: string | null;
 
@@ -146,47 +97,16 @@ export interface GithubActions {
   disconnectGitHub: (accountId?: string) => Promise<void>;
   setDefaultGitHubAccount: (accountId: string) => Promise<void>;
   fetchLinkedAccounts: () => Promise<void>;
-  updateConnectionStatus: (
-    status: Partial<GitHubConnectionStatusProps>
-  ) => Promise<void>;
 
   // Repository actions
-  fetchRepositories: (connectionId: string) => Promise<void>;
-  addRepository: (
-    repository: Omit<GitHubRepository, "id" | "created_at" | "updated_at">
-  ) => Promise<void>;
-  updateRepository: (
-    id: string,
-    updates: Partial<GitHubRepository>
-  ) => Promise<void>;
-  deleteRepository: (id: string) => Promise<void>;
-  setRepositoryActive: (id: string, isActive: boolean) => Promise<void>;
-  setRepositoryAutoSync: (id: string, autoSync: boolean) => Promise<void>;
-  updateRepositoryWebhook: (
-    id: string,
-    webhookSecret: string,
-    webhookId: string
-  ) => Promise<void>;
-  setRepositorySyncFrequency: (
-    id: string,
-    frequency: GitHubRepository["sync_frequency"]
-  ) => Promise<void>;
+  fetchRepositories: () => Promise<void>;
   setActiveRepository: (repository: GitHubRepository | null) => void;
-
+  
   // Metrics actions
-  fetchMetrics: (repositoryId: string, metricType?: string) => Promise<void>;
-  addMetric: (metric: Omit<GitHubMetric, "id" | "timestamp">) => Promise<void>;
-  getMetricHistory: (
-    repositoryId: string,
-    metricType: string,
-    timeRange: string
-  ) => Promise<GitHubMetric[]>;
-
+  fetchMetrics: () => Promise<void>;
+  
   // OAuth logs actions
-  fetchOAuthLogs: (userId?: string) => Promise<void>;
-  addOAuthLog: (
-    log: Omit<GitHubOAuthLog, "id" | "created_at">
-  ) => Promise<void>;
+  fetchOAuthLogs: () => Promise<void>;
 
   // Sync logs actions
   fetchLogs: (repositoryId: string) => Promise<void>;
