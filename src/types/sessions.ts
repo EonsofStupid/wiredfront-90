@@ -9,7 +9,7 @@ export interface Session {
   last_accessed: string;
   message_count: number;
   archived?: boolean; // Changed from is_active to archived
-  metadata?: Json;
+  metadata?: Json; // Changed from Json to match supabase Json type
   user_id?: string;
 }
 

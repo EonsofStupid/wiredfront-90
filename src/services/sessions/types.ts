@@ -1,4 +1,6 @@
 
+import { Json } from '@/integrations/supabase/types';
+
 export interface Session {
   id: string;
   user_id: string;
@@ -7,8 +9,8 @@ export interface Session {
   updated_at: string;
   mode: string;
   archived: boolean; // Changed from is_active to archived
-  context?: Record<string, any>;
-  metadata?: Record<string, any>;
+  context?: Json; // Changed from Record<string, any> to Json
+  metadata?: Json; // Changed from Record<string, any> to Json
   last_accessed?: string;
   message_count?: number;
 }

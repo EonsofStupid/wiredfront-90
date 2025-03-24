@@ -31,6 +31,7 @@ export const createNewSession = async (params?: CreateSessionParams): Promise<Se
           updated_at: now,
           last_accessed: now,
           message_count: 0,
+          archived: false, // Initialize as not archived
           metadata 
         }
       ])

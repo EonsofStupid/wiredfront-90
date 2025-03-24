@@ -52,9 +52,8 @@ export const fetchUserSessions = async (): Promise<Session[]> => {
       return [];
     }
 
-    // Use explicit type annotation to prevent excessive type depth
-    const sessions: Session[] = data || [];
-    return sessions;
+    // Use explicit type casting to Session[] to fix the type issue
+    return (data || []) as Session[];
   } catch (error) {
     console.error("Exception fetching user sessions:", error);
     return [];
@@ -88,9 +87,8 @@ export const fetchRecentSessions = async (
       return [];
     }
 
-    // Use explicit type annotation to prevent excessive type depth
-    const sessions: Session[] = data || [];
-    return sessions;
+    // Use explicit type casting to Session[] to fix the type issue
+    return (data || []) as Session[];
   } catch (error) {
     console.error("Exception fetching recent sessions:", error);
     return [];
