@@ -1,87 +1,35 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { ChatMode } from '@/integrations/supabase/types/enums';
-import { ChatProviderType } from '@/types/admin/settings/chat-provider';
+import { Code, MessageSquare, Image, BrainCircuit } from 'lucide-react';
 import { useChatStore } from '../store/chatStore';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import { Code, ImageIcon, MessageSquare, FileCode, Brain } from 'lucide-react';
 
-export interface ModeSelectionDialogProps {
+interface ModeSelectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateSession: (mode: ChatMode, provider: string) => Promise<void>;
+  onCreateSession: (mode: ChatMode, providerId: string) => Promise<void>;
 }
 
 export function ModeSelectionDialog({ 
   open, 
-  onOpenChange,
+  onOpenChange, 
   onCreateSession 
 }: ModeSelectionDialogProps) {
-  const navigate = useNavigate();
-  const { providers } = useChatStore();
   const [selectedMode, setSelectedMode] = useState<ChatMode>('chat');
-  const [selectedProvider, setSelectedProvider] = useState<string>(
-    providers.availableProviders.find(p => p.isEnabled)?.id || ''
-  );
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const availableChatProviders = providers.availableProviders.filter(
-    p => p.isEnabled && p.category === 'chat'
-  );
+  const { currentProvider } = useChatStore();
   
-  const availableImageProviders = providers.availableProviders.filter(
-    p => p.isEnabled && p.category === 'image'
-  );
-
-  // Filter providers based on selected mode
-  const filteredProviders = selectedMode === 'image' 
-    ? availableImageProviders 
-    : availableChatProviders;
-
-  // Set default provider when mode changes
-  React.useEffect(() => {
-    if (filteredProviders.length > 0) {
-      setSelectedProvider(filteredProviders[0].id);
-    } else {
-      setSelectedProvider('');
-    }
-  }, [selectedMode, filteredProviders]);
-
-  const handleModeSelect = async () => {
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-      
-      await onCreateSession(selectedMode, selectedProvider);
-      
-      // Navigate based on selected mode
-      switch (selectedMode) {
-        case 'dev':
-        case 'code':
-          navigate('/editor');
-          break;
-        case 'image':
-          navigate('/gallery');
-          break;
-        default:
-          // Stay on current page for standard chat mode
-          break;
-      }
-      
+      await onCreateSession(
+        selectedMode, 
+        currentProvider?.id || 'default'
+      );
       onOpenChange(false);
     } catch (error) {
       console.error('Failed to create session:', error);
@@ -90,131 +38,91 @@ export function ModeSelectionDialog({
     }
   };
 
+  const modeOptions: Array<{
+    value: ChatMode;
+    label: string;
+    icon: React.ReactNode;
+    description: string;
+  }> = [
+    {
+      value: 'chat',
+      label: 'Chat Assistant',
+      icon: <MessageSquare className="h-5 w-5 text-blue-500" />,
+      description: 'General conversation and information assistance'
+    },
+    {
+      value: 'code',
+      label: 'Code Assistant',
+      icon: <Code className="h-5 w-5 text-green-500" />,
+      description: 'Help with coding, debugging, and development'
+    },
+    {
+      value: 'image',
+      label: 'Image Generator',
+      icon: <Image className="h-5 w-5 text-purple-500" />,
+      description: 'Create and edit images based on your descriptions'
+    },
+    {
+      value: 'training',
+      label: 'Training Assistant',
+      icon: <BrainCircuit className="h-5 w-5 text-yellow-500" />,
+      description: 'Guided learning and educational content'
+    }
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#0EA5E9]/20 max-w-md" style={{ zIndex: 'var(--z-chat-dialogs)' }}>
+      <DialogContent className="glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#0EA5E9]/20">
         <DialogHeader>
-          <DialogTitle className="text-xl">New Chat Session</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Choose Session Mode</DialogTitle>
           <DialogDescription>
-            Select the chat mode and AI provider for your new conversation
+            Select the type of assistant you need for this session
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid gap-6 py-4">
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium">Select Mode</h3>
-            <div className="grid grid-cols-3 gap-2">
-              <Button
-                type="button"
-                variant={selectedMode === 'chat' ? 'default' : 'outline'}
-                className={`flex flex-col items-center justify-center p-4 h-auto ${
-                  selectedMode === 'chat' ? 'border-primary' : 'border-white/10'
-                }`}
-                onClick={() => setSelectedMode('chat')}
-              >
-                <MessageSquare className="h-5 w-5 mb-2" />
-                <span className="text-xs">Chat</span>
-              </Button>
-              <Button
-                type="button"
-                variant={selectedMode === 'code' ? 'default' : 'outline'}
-                className={`flex flex-col items-center justify-center p-4 h-auto ${
-                  selectedMode === 'code' ? 'border-primary' : 'border-white/10'
-                }`}
-                onClick={() => setSelectedMode('code')}
-              >
-                <FileCode className="h-5 w-5 mb-2" />
-                <span className="text-xs">Code</span>
-              </Button>
-              <Button
-                type="button"
-                variant={selectedMode === 'image' ? 'default' : 'outline'}
-                className={`flex flex-col items-center justify-center p-4 h-auto ${
-                  selectedMode === 'image' ? 'border-primary' : 'border-white/10'
-                }`}
-                onClick={() => setSelectedMode('image')}
-              >
-                <ImageIcon className="h-5 w-5 mb-2" />
-                <span className="text-xs">Image</span>
-              </Button>
-              <Button
-                type="button"
-                variant={selectedMode === 'dev' ? 'default' : 'outline'}
-                className={`flex flex-col items-center justify-center p-4 h-auto ${
-                  selectedMode === 'dev' ? 'border-primary' : 'border-white/10'
-                }`}
-                onClick={() => setSelectedMode('dev')}
-              >
-                <Code className="h-5 w-5 mb-2" />
-                <span className="text-xs">Dev</span>
-              </Button>
-              <Button
-                type="button"
-                variant={selectedMode === 'planning' ? 'default' : 'outline'}
-                className={`flex flex-col items-center justify-center p-4 h-auto ${
-                  selectedMode === 'planning' ? 'border-primary' : 'border-white/10'
-                }`}
-                onClick={() => setSelectedMode('planning')}
-              >
-                <Brain className="h-5 w-5 mb-2" />
-                <span className="text-xs">Plan</span>
-              </Button>
-              <Button
-                type="button"
-                variant={selectedMode === 'training' ? 'default' : 'outline'}
-                className={`flex flex-col items-center justify-center p-4 h-auto ${
-                  selectedMode === 'training' ? 'border-primary' : 'border-white/10'
-                }`}
-                onClick={() => setSelectedMode('training')}
-              >
-                <Brain className="h-5 w-5 mb-2" />
-                <span className="text-xs">Train</span>
-              </Button>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium">Select Provider</h3>
-            <Select 
-              value={selectedProvider} 
-              onValueChange={setSelectedProvider}
-              disabled={filteredProviders.length === 0}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select an AI provider" />
-              </SelectTrigger>
-              <SelectContent>
-                {filteredProviders.length > 0 ? (
-                  filteredProviders.map((provider) => (
-                    <SelectItem key={provider.id} value={provider.id}>
-                      {provider.name}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <SelectItem value="none" disabled>
-                    No available providers for this mode
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="flex justify-end space-x-2">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="border-white/10"
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleModeSelect}
-              disabled={isSubmitting || filteredProviders.length === 0}
-            >
-              {isSubmitting ? "Creating..." : "Create Chat"}
-            </Button>
-          </div>
+        <div className="py-4">
+          <RadioGroup 
+            value={selectedMode} 
+            onValueChange={(value) => setSelectedMode(value as ChatMode)}
+            className="space-y-3"
+          >
+            {modeOptions.map((option) => (
+              <div key={option.value} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                <RadioGroupItem value={option.value} id={option.value} className="mt-1" />
+                <div className="flex flex-1 items-start space-x-3">
+                  <div className="flex-shrink-0 bg-background/30 p-2 rounded-full">
+                    {option.icon}
+                  </div>
+                  <div className="flex-1">
+                    <Label htmlFor={option.value} className="text-base font-medium cursor-pointer">
+                      {option.label}
+                    </Label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {option.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </RadioGroup>
         </div>
+        
+        <DialogFooter>
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            className="border-white/10 hover:bg-white/10"
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={isSubmitting}
+            className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+          >
+            {isSubmitting ? 'Creating...' : 'Create Session'}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -2,103 +2,86 @@
 /**
  * Chat Component CSS Variables
  * 
- * This file defines CSS variables scoped to the chat component.
- * These variables should only be used within the chat component
- * to ensure style isolation from the rest of the application.
+ * These variables are prefixed with "--chat-" to avoid collision
+ * with other CSS variables in the application.
+ * 
+ * This isolation pattern helps keep the chat component's styling
+ * independent and prevents unintended side effects.
  */
 
 :root {
-  /* Base chat variables - these are overridden by theme tokens from the database */
-  --chat-bg-color: #1a1b26;
-  --chat-text-color: #c0caf5;
-  --chat-border-color: #414868;
-  --chat-accent-color: #7aa2f7;
-  --chat-secondary-color: #bb9af7;
-  --chat-error-color: #f7768e;
-  --chat-success-color: #9ece6a;
-  --chat-warning-color: #e0af68;
-  --chat-info-color: #7dcfff;
+  /* Z-index hierarchy for chat components */
+  --chat-z-index-base: 9000;
+  --chat-z-index-container: 9500;
+  --chat-z-index-modal: 9600;
+  --chat-z-index-tooltip: 9700;
+  --chat-z-index-dropdown: 9800;
   
-  /* Sizing variables */
-  --chat-border-radius: 8px;
-  --chat-padding-sm: 8px;
-  --chat-padding-md: 16px;
-  --chat-padding-lg: 24px;
-  --chat-margin-sm: 8px;
-  --chat-margin-md: 16px;
-  --chat-margin-lg: 24px;
-  
-  /* Font variables */
-  --chat-font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-  --chat-font-size-sm: 12px;
-  --chat-font-size-md: 14px;
-  --chat-font-size-lg: 16px;
-  --chat-font-weight-normal: 400;
-  --chat-font-weight-medium: 500;
-  --chat-font-weight-bold: 600;
-  
-  /* Animation variables */
-  --chat-transition-duration: 0.3s;
-  --chat-transition-timing: ease-in-out;
-  --chat-transition-fast: 150ms ease;
-  --chat-transition-normal: 250ms ease;
-  --chat-transition-slow: 350ms ease;
-  
-  /* Shadow variables */
-  --chat-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --chat-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
-  --chat-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
-  --chat-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  
-  /* Component-specific variables */
-  --chat-container-width: 400px;
-  --chat-container-height: 600px;
-  --chat-header-height: 48px;
-  --chat-input-height: 60px;
-  --chat-messages-max-width: 80%;
-  --chat-icon-size: 20px;
+  /* Chat component color palette */
+  --chat-bg-primary: rgba(16, 16, 28, 0.85);
+  --chat-bg-secondary: rgba(30, 30, 46, 0.75);
+  --chat-border-color: rgba(123, 97, 255, 0.3);
+  --chat-text-primary: rgb(236, 236, 241);
+  --chat-text-secondary: rgba(236, 236, 241, 0.7);
+  --chat-accent-color: rgb(123, 97, 255);
+  --chat-accent-hover: rgb(143, 123, 255);
   
   /* Message colors */
-  --chat-user-message-bg: rgba(122, 162, 247, 0.2);
-  --chat-assistant-message-bg: rgba(65, 72, 104, 0.5);
-  --chat-system-message-bg: rgba(224, 175, 104, 0.2);
+  --chat-message-user-bg: rgba(50, 50, 77, 0.5);
+  --chat-message-ai-bg: rgba(68, 70, 84, 0.5);
+  --chat-message-system-bg: rgba(15, 15, 35, 0.5);
+  --chat-message-user-text: var(--chat-text-primary);
+  --chat-message-ai-text: var(--chat-text-primary);
+  --chat-message-system-text: rgba(236, 236, 241, 0.9);
   
-  /* Input variables */
-  --chat-input-bg: rgba(26, 27, 38, 0.8);
-  --chat-input-border: 1px solid var(--chat-border-color);
-  --chat-input-focus-ring: 0 0 0 2px rgba(122, 162, 247, 0.5);
+  /* Common values */
+  --chat-border-radius: 0.75rem;
+  --chat-container-width: 85vw;
+  --chat-container-max-width: 1200px;
+  --chat-container-height: 600px;
+  --chat-sidebar-width: 300px;
   
-  /* Button variables */
-  --chat-button-bg: var(--chat-accent-color);
-  --chat-button-hover-bg: #5d80d3;
-  --chat-button-active-bg: #4b6cbf;
-  --chat-button-text: #ffffff;
-  --chat-button-hover: #ffffff;
-  --chat-button-primary-rgb: 122, 162, 247;
+  /* Animation durations */
+  --chat-animation-duration-xs: 150ms;
+  --chat-animation-duration-sm: 250ms;
+  --chat-animation-duration-md: 350ms;
+  --chat-animation-duration-lg: 450ms;
   
-  /* Glass effect variables */
-  --chat-glass-bg: rgba(26, 27, 38, 0.85);
-  --chat-glass-border: rgba(122, 162, 247, 0.2);
-  --chat-glass-blur: 10px;
-  --chat-bg-hover: rgba(30, 30, 46, 0.9);
+  /* Responsive breakpoints (matching tailwind) */
+  --chat-breakpoint-sm: 640px;
+  --chat-breakpoint-md: 768px;
+  --chat-breakpoint-lg: 1024px;
+  --chat-breakpoint-xl: 1280px;
   
-  /* Z-index values */
-  --z-chat: 9700;
+  /* Glass card effect */
+  --chat-glass-bg: rgba(16, 16, 32, 0.75);
+  --chat-glass-border: rgba(123, 97, 255, 0.2);
+  --chat-glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  --chat-glass-backdrop: blur(10px);
 }
 
-/* Dark mode overrides */
-[data-theme="dark"] {
-  /* Dark mode specific overrides */
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  :root {
+    --chat-container-width: 95vw;
+    --chat-container-height: 85vh;
+    --chat-sidebar-width: 250px;
+  }
 }
 
-/* Light mode overrides */
-[data-theme="light"] {
-  --chat-bg-color: #f7f7fb;
-  --chat-text-color: #1a1b26;
-  --chat-border-color: #d1d5db;
-  --chat-glass-bg: rgba(247, 247, 251, 0.9);
-  --chat-glass-border: rgba(59, 130, 246, 0.2);
-  --chat-bg-hover: rgba(240, 240, 250, 0.95);
-  --chat-user-message-bg: rgba(59, 130, 246, 0.1);
-  --chat-assistant-message-bg: rgba(209, 213, 219, 0.5);
+/* Dark theme adjustments if needed */
+.dark {
+  --chat-glass-bg: rgba(12, 12, 24, 0.85);
+}
+
+/* System theme-specific configs */
+@media (prefers-color-scheme: light) {
+  :root:not(.dark) {
+    --chat-glass-bg: rgba(240, 240, 250, 0.85);
+    --chat-text-primary: rgb(20, 20, 35);
+    --chat-text-secondary: rgba(20, 20, 35, 0.7);
+    --chat-message-user-bg: rgba(220, 220, 240, 0.5);
+    --chat-message-ai-bg: rgba(205, 205, 230, 0.5);
+    --chat-message-system-bg: rgba(240, 240, 250, 0.5);
+  }
 }

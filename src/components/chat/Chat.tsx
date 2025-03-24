@@ -1,5 +1,5 @@
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 import { ChatContainer } from "./components/ChatContainer";
 import { ChatProvider } from "./providers/ChatProvider";
 import { ChatToggleButton } from "./components/ChatToggleButton";
@@ -26,8 +26,6 @@ export function Chat() {
     toggleChat();
   }, [toggleChat]);
   
-  console.log("Chat component rendering with isolated CSS", { isOpen });
-
   return (
     <ChatProvider>
       {/* Only render the container when chat is open */}

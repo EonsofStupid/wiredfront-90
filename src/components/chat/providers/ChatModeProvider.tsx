@@ -5,7 +5,7 @@ import { ChatMode } from '@/integrations/supabase/types/enums';
 interface ChatModeContextType {
   mode: ChatMode;
   isEditorPage: boolean;
-  setMode?: (mode: ChatMode) => void;
+  setMode: (mode: ChatMode) => void;
 }
 
 const ChatModeContext = createContext<ChatModeContextType | undefined>(undefined);

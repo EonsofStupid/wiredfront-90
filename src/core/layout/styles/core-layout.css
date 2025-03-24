@@ -1,82 +1,125 @@
 
-/* CORE LAYOUT CSS - DO NOT MODIFY */
-/* These styles are critical for the layout system */
-
-:root {
-  /* Z-index variables - CRITICAL: these must be used consistently */
-  --z-user-menu: 9750;      /* Highest priority - above all */
-  --z-chat: 9700;           /* Chat components */
-  --z-projecthub: 9600;     /* Project hub components */
-  --z-modal: 1000;          /* Modal dialogs */
-  --z-dropdown: 900;        /* Dropdown menus */
-  --z-tooltip: 800;         /* Tooltips */
-  --z-navbar: 700;          /* Navigation bars */
-  --z-floating: 600;        /* Floating elements */
-  --z-content: 500;         /* Main content */
-  --z-background: 400;      /* Background elements */
-  --z-base: 300;            /* Base elements */
-}
+/**
+ * Core Layout CSS
+ * 
+ * This stylesheet contains global styles for the application layout
+ * including the topbar, sidebar, and main content area.
+ * 
+ * These styles have a higher specificity than component-level
+ * styles to ensure layout consistency across the app.
+ */
 
 /* Core layout container */
 .wf-core-layout-container {
-  position: relative;
+  --layout-topbar-height: 4rem; /* 64px */
+  --layout-bottombar-height: 3rem; /* 48px */
+  --layout-sidebar-expanded: 16rem; /* 256px */
+  --layout-sidebar-compact: 5rem; /* 80px */
+  --layout-rightsidebar-width: 16rem; /* 256px */
+  
+  /* Z-index layers */
+  --z-base: 0;
+  --z-content: 10;
+  --z-navbar: 50;
+  --z-sidebar: 40;
+  --z-dropdown: 100;
+  --z-modal: 200;
+  --z-toast: 300;
+  --z-tooltip: 400;
+  
+  /* Neon theme colors */
+  --neon-blue: rgb(123, 97, 255);
+  --neon-blue-dim: rgba(123, 97, 255, 0.3);
+  --neon-pink: rgb(255, 97, 180);
+  --neon-pink-dim: rgba(255, 97, 180, 0.3);
+  --neon-green: rgb(97, 255, 180);
+  --neon-green-dim: rgba(97, 255, 180, 0.3);
+  
+  /* Background colors */
+  --dark: rgb(12, 12, 20);
+  --dark-lighter: rgb(20, 20, 35);
+  
+  /* Common styling */
+  --card-border-radius: 0.75rem;
+  --button-border-radius: 0.5rem;
+  
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  width: 100%;
-  overflow-x: hidden;
+  background: linear-gradient(to bottom right, var(--dark), var(--dark-lighter));
+  color: white;
 }
 
-/* Core layout elements - these provide the fundamental structure */
-.wf-core-topbar {
-  height: 4rem; /* 64px */
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: var(--z-navbar);
+/* Glass card styling */
+.glass-card {
+  background: rgba(16, 16, 32, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(123, 97, 255, 0.2);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 }
 
-.wf-core-leftsidebar {
-  position: fixed;
-  top: 4rem; /* 64px */
-  bottom: 3rem; /* 48px */
-  left: 0;
-  z-index: var(--z-navbar);
-  transition: width 0.3s ease-in-out;
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(to right, var(--neon-blue), var(--neon-pink));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
 }
 
-.wf-core-rightsidebar {
-  position: fixed;
-  top: 4rem; /* 64px */
-  bottom: 3rem; /* 48px */
-  right: 0;
-  width: 16rem; /* 256px */
-  z-index: var(--z-projecthub);
-  transition: transform 0.3s ease-in-out;
+/* Neon border styling */
+.border-neon-blue {
+  border-color: var(--neon-blue-dim);
 }
 
-.wf-core-bottombar {
-  height: 3rem; /* 48px */
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: var(--z-navbar);
+.border-neon-pink {
+  border-color: var(--neon-pink-dim);
 }
 
-.wf-core-main-content {
-  flex: 1;
-  padding: 1.5rem;
-  margin-top: 4rem; /* 64px - topbar height */
-  margin-bottom: 3rem; /* 48px - bottombar height */
-  transition: 
-    margin-left 0.3s ease-in-out,
-    margin-right 0.3s ease-in-out;
-}
-
-/* Utility class to protect elements from z-index conflicts */
-.wf-protected {
+/* Hover animation for buttons */
+.animate-hover-button {
   position: relative;
-  z-index: var(--z-content);
+  overflow: hidden;
+}
+
+.animate-hover-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(123, 97, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.animate-hover-button:hover::before {
+  left: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .wf-core-layout-container {
+    --layout-sidebar-expanded: 14rem;
+    --layout-rightsidebar-width: 14rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .wf-core-layout-container {
+    --layout-sidebar-expanded: 12rem;
+    --layout-rightsidebar-width: 12rem;
+  }
+}
+
+/* Dark theme specific */
+.dark .wf-core-layout-container {
+  --dark: rgb(10, 10, 18);
+  --dark-lighter: rgb(18, 18, 30);
 }

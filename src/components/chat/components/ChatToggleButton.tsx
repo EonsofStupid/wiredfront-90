@@ -1,7 +1,7 @@
 
 import { logger } from "@/services/chat/LoggingService";
 import { motion } from "framer-motion";
-import { Code, MessageSquare, MessagesSquare, Image, BrainCircuit } from "lucide-react";
+import { Code, MessageSquare, Image, BrainCircuit } from "lucide-react";
 import React, { useEffect } from "react";
 import { useChatMode } from "../providers/ChatModeProvider";
 import { useChatStore } from "../store/chatStore";
@@ -30,8 +30,9 @@ export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
     }
   }, [isHidden, setIsHidden]);
 
+  // Log component mounting for debugging
   useEffect(() => {
-    console.log("ChatToggleButton mounted", { isHidden, position, mode, iconStyle, isOpen });
+    logger.info("ChatToggleButton mounted", { isHidden, position, mode, iconStyle, isOpen });
   }, [isHidden, position, mode, iconStyle, isOpen]);
 
   const handleClick = (e: React.MouseEvent) => {
@@ -42,7 +43,6 @@ export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
 
   // If hidden, don't render the button
   if (isHidden) {
-    console.log("Chat button is hidden, not rendering");
     return null;
   }
 
@@ -96,8 +96,6 @@ export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
         return defaultStyle;
     }
   })();
-
-  console.log("Rendering chat button", { position, mode, iconStyle, isOpen });
 
   return (
     <TooltipProvider>

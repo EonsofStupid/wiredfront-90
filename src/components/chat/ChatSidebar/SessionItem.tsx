@@ -1,9 +1,9 @@
-import React from "react";
-import { formatDistanceToNow } from "date-fns";
-import { MoreHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { SessionModeBadge } from "./SessionModeBadge";
-import { ChatMode } from "@/integrations/supabase/types/enums";
+
+import React from 'react';
+import { formatDistanceToNow } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { ChatMode } from '@/integrations/supabase/types/enums';
+import { SessionModeBadge } from './SessionModeBadge';
 
 interface SessionItemProps {
   id: string;
@@ -16,66 +16,48 @@ interface SessionItemProps {
   mode?: ChatMode;
 }
 
-export const SessionItem = ({ 
-  id, 
-  title = "New Chat", 
-  lastAccessed, 
-  isActive, 
+export const SessionItem: React.FC<SessionItemProps> = ({
+  id,
+  title,
+  lastAccessed,
+  isActive,
   onSelect,
   provider,
   messageCount = 0,
-  mode = "chat"
-}: SessionItemProps) => {
-  const timeAgo = formatDistanceToNow(lastAccessed, { addSuffix: true });
+  mode = 'chat'
+}) => {
+  // Format the session title
+  const sessionTitle = title || `Chat Session ${id.slice(0, 4)}`;
   
-  const handleClick = () => {
-    onSelect(id);
-  };
-  
+  // Format the time ago
+  const timeAgo = formatDistanceToNow(new Date(lastAccessed), { addSuffix: true });
+
   return (
-    <div
-      className={`rounded-md p-2 cursor-pointer transition-colors duration-200 ${
-        isActive
-          ? "bg-primary/10 text-primary-foreground"
-          : "hover:bg-muted/50 text-foreground/80"
-      }`}
-      onClick={handleClick}
+    <button
+      onClick={() => onSelect(id)}
+      className={cn(
+        "w-full text-left p-3 rounded-lg transition-all duration-200",
+        "border border-transparent hover:border-neon-blue/30",
+        "hover:bg-white/5",
+        isActive 
+          ? "bg-gradient-to-r from-[#1A1A1A] to-[#2A2A2A] border-neon-blue/30" 
+          : "bg-transparent",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-blue"
+      )}
+      data-session-id={id}
+      aria-selected={isActive}
     >
-      <div className="flex justify-between items-start">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center space-x-2">
-            <h3 className="font-medium truncate text-sm">
-              {title}
-            </h3>
-            {mode && <SessionModeBadge mode={mode} />}
-          </div>
-          
-          <div className="flex items-center mt-1 text-xs text-muted-foreground">
-            <span className="truncate">{timeAgo}</span>
-            {messageCount > 0 && (
-              <span className="ml-2 px-1.5 py-0.5 bg-muted/50 rounded-full text-[10px]">
-                {messageCount} msg{messageCount !== 1 ? 's' : ''}
-              </span>
-            )}
-            {provider && (
-              <span className="ml-2 opacity-70 truncate">{provider}</span>
-            )}
-          </div>
-        </div>
-        
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 rounded-full opacity-0 group-hover:opacity-100"
-          onClick={(e) => {
-            e.stopPropagation();
-            // TODO: Implement session actions menu
-          }}
-        >
-          <MoreHorizontal className="h-4 w-4" />
-          <span className="sr-only">Session actions</span>
-        </Button>
+      <div className="flex justify-between items-start mb-1">
+        <div className="font-medium truncate max-w-[150px]">{sessionTitle}</div>
+        <SessionModeBadge mode={mode} className="ml-1 shrink-0" />
       </div>
-    </div>
+      
+      <div className="flex justify-between items-center text-xs opacity-60">
+        <span>{timeAgo}</span>
+        {messageCount > 0 && (
+          <span className="bg-white/10 px-1.5 rounded-full">{messageCount} msg</span>
+        )}
+      </div>
+    </button>
   );
 };
