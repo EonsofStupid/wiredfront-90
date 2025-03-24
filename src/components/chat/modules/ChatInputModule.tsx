@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { executeCommand, parseCommand } from "@/services/chat/CommandHandler";
 import { Message } from "@/types/chat";
@@ -37,6 +38,7 @@ export function ChatInputModule({
 
     // Create new message ID
     const messageId = uuidv4();
+    const currentTime = new Date().toISOString();
 
     // Add the user message
     const userMessage: Message = {
@@ -45,16 +47,18 @@ export function ChatInputModule({
       user_id: null,
       type: "text",
       metadata: {},
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      created_at: currentTime,
+      updated_at: currentTime,
       chat_session_id: chatId || "default",
       is_minimized: false,
       position: {},
       window_state: {},
-      last_accessed: new Date().toISOString(),
+      last_accessed: currentTime,
       retry_count: 0,
       message_status: "sent",
       role: "user",
+      sessionId: chatId || "default", // Add required sessionId
+      timestamp: currentTime, // Add required timestamp
     };
     addMessage(userMessage);
 
@@ -91,6 +95,8 @@ export function ChatInputModule({
           retry_count: 0,
           message_status: "error",
           role: "assistant",
+          sessionId: chatId || "default", // Add required sessionId
+          timestamp: new Date().toISOString(), // Add required timestamp
         };
         addMessage(errorMessage);
 
@@ -114,6 +120,8 @@ export function ChatInputModule({
         retry_count: 0,
         message_status: "sent",
         role: "assistant",
+        sessionId: chatId || "default", // Add required sessionId
+        timestamp: new Date().toISOString(), // Add required timestamp
       };
       addMessage(assistantMessage);
     } catch (error) {
@@ -136,6 +144,8 @@ export function ChatInputModule({
         retry_count: 0,
         message_status: "error",
         role: "assistant",
+        sessionId: chatId || "default", // Add required sessionId
+        timestamp: new Date().toISOString(), // Add required timestamp
       };
       addMessage(errorMessage);
     } finally {

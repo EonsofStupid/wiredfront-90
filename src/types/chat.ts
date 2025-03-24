@@ -1,3 +1,4 @@
+
 import { Json } from "@/integrations/supabase/types";
 
 export type MessageStatus = "pending" | "sent" | "failed" | "error" | "cached";
@@ -12,8 +13,8 @@ export interface Message {
   created_at: string;
   updated_at: string;
   chat_session_id: string;
-  sessionId: string;
-  timestamp: string;
+  sessionId: string; // Required for message handling
+  timestamp: string; // Required for message handling
   is_minimized: boolean;
   position: Json;
   window_state: Json;

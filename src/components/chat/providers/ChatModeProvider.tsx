@@ -14,10 +14,10 @@ const ChatModeContext = createContext<ChatModeContextType | undefined>(undefined
 
 interface ChatModeProviderProps {
   children: ReactNode;
-  isEditorPage: boolean;
+  isEditorPage?: boolean; // Make this optional with a default value
 }
 
-export function ChatModeProvider({ children, isEditorPage }: ChatModeProviderProps) {
+export function ChatModeProvider({ children, isEditorPage = false }: ChatModeProviderProps) {
   // Default mode based on page context
   const defaultMode: ChatMode = isEditorPage ? 'editor' : 'standard';
   const [mode, setMode] = useState<ChatMode>(defaultMode);

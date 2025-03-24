@@ -1,17 +1,14 @@
+
 import { Spinner } from "@/components/shared/Spinner";
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogActionProps,
   AlertDialogCancel,
-  AlertDialogCancelProps,
   AlertDialogContent,
   AlertDialogDescription,
-  AlertDialogDescriptionProps,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTitleProps,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
@@ -22,7 +19,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Plus, Trash2, TrashIcon, X } from "lucide-react";
-import React, { forwardRef } from "react";
+import React from "react";
 
 interface SessionControlsProps {
   onNewSession: () => void;
@@ -32,47 +29,6 @@ interface SessionControlsProps {
   sessionCount: number;
   isLoading?: boolean;
 }
-
-// Custom components with proper typing
-const StyledAlertDialogTitle = forwardRef<
-  HTMLHeadingElement,
-  AlertDialogTitleProps
->(({ children, ...props }, ref) => (
-  <AlertDialogTitle ref={ref} {...props}>
-    {children}
-  </AlertDialogTitle>
-));
-StyledAlertDialogTitle.displayName = "StyledAlertDialogTitle";
-
-const StyledAlertDialogDescription = forwardRef<
-  HTMLParagraphElement,
-  AlertDialogDescriptionProps
->(({ children, ...props }, ref) => (
-  <AlertDialogDescription ref={ref} {...props}>
-    {children}
-  </AlertDialogDescription>
-));
-StyledAlertDialogDescription.displayName = "StyledAlertDialogDescription";
-
-const StyledAlertDialogCancel = forwardRef<
-  HTMLButtonElement,
-  AlertDialogCancelProps
->(({ children, ...props }, ref) => (
-  <AlertDialogCancel ref={ref} {...props}>
-    {children}
-  </AlertDialogCancel>
-));
-StyledAlertDialogCancel.displayName = "StyledAlertDialogCancel";
-
-const StyledAlertDialogAction = forwardRef<
-  HTMLButtonElement,
-  AlertDialogActionProps
->(({ children, ...props }, ref) => (
-  <AlertDialogAction ref={ref} {...props}>
-    {children}
-  </AlertDialogAction>
-));
-StyledAlertDialogAction.displayName = "StyledAlertDialogAction";
 
 export const SessionControls: React.FC<SessionControlsProps> = ({
   onNewSession,
@@ -154,24 +110,24 @@ export const SessionControls: React.FC<SessionControlsProps> = ({
               style={{ zIndex: 9900 }}
             >
               <AlertDialogHeader>
-                <StyledAlertDialogTitle>
+                <AlertDialogTitle>
                   Delete Other Sessions
-                </StyledAlertDialogTitle>
-                <StyledAlertDialogDescription>
+                </AlertDialogTitle>
+                <AlertDialogDescription>
                   This will delete ALL other chat sessions except the current
                   one. This action cannot be undone.
-                </StyledAlertDialogDescription>
+                </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <StyledAlertDialogCancel className="border-white/10 hover:bg-white/10">
+                <AlertDialogCancel className="border-white/10 hover:bg-white/10">
                   Cancel
-                </StyledAlertDialogCancel>
-                <StyledAlertDialogAction
+                </AlertDialogCancel>
+                <AlertDialogAction
                   onClick={onClearSessions}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
                   Delete Others
-                </StyledAlertDialogAction>
+                </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
@@ -201,25 +157,25 @@ export const SessionControls: React.FC<SessionControlsProps> = ({
               style={{ zIndex: 9900 }}
             >
               <AlertDialogHeader>
-                <StyledAlertDialogTitle>
+                <AlertDialogTitle>
                   Delete All Sessions
-                </StyledAlertDialogTitle>
-                <StyledAlertDialogDescription>
+                </AlertDialogTitle>
+                <AlertDialogDescription>
                   This will delete ALL chat sessions, including the current
                   active one, and create a new empty session. This action cannot
                   be undone.
-                </StyledAlertDialogDescription>
+                </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <StyledAlertDialogCancel className="border-white/10 hover:bg-white/10">
+                <AlertDialogCancel className="border-white/10 hover:bg-white/10">
                   Cancel
-                </StyledAlertDialogCancel>
-                <StyledAlertDialogAction
+                </AlertDialogCancel>
+                <AlertDialogAction
                   onClick={onClearAllSessions}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
                   Delete All
-                </StyledAlertDialogAction>
+                </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
