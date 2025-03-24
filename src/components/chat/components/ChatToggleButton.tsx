@@ -93,7 +93,7 @@ export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
       case "basic":
         return basicStyle;
       default:
-        return defaultStyle;
+        return wfpulseStyle; // Changed default to wfpulse
     }
   })();
 
@@ -105,7 +105,7 @@ export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
         exit={{ opacity: 0, scale: 0.8 }}
         transition={{ duration: 0.2 }}
         className={styleToUse.container}
-        data-position={position}
+        data-position={position || "bottom-right"} // Set bottom-right as fallback
         data-testid="chat-toggle-container"
         style={{ zIndex: "var(--z-chat-toggle-button)" }}
       >

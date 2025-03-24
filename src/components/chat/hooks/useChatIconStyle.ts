@@ -7,8 +7,8 @@ import { atom, useAtom } from "jotai";
 // Define a type for the icon style options
 export type ChatIconStyle = "default" | "wfpulse" | "retro" | "basic";
 
-// Create a Jotai atom for the chat icon style
-export const chatIconStyleAtom = atom<ChatIconStyle>("default");
+// Create a Jotai atom for the chat icon style with "wfpulse" as default
+export const chatIconStyleAtom = atom<ChatIconStyle>("wfpulse");
 
 export const useChatIconStyle = () => {
   const { user } = useSessionStore();
@@ -37,8 +37,8 @@ export const useChatIconStyle = () => {
           console.log("Loaded chat icon style from database:", data.icon_style);
           setIconStyle(data.icon_style as ChatIconStyle);
         } else {
-          // If no preference is found, create a default one
-          console.log("No chat icon style found, creating default");
+          // If no preference is found, create a default one using wfpulse
+          console.log("No chat icon style found, creating wfpulse default");
           await createDefaultPreference(user.id);
         }
       } catch (err) {
@@ -52,12 +52,12 @@ export const useChatIconStyle = () => {
     fetchIconStyle();
   }, [user?.id, setIconStyle]);
 
-  // Create a default chat icon style preference
+  // Create a default chat icon style preference with wfpulse
   const createDefaultPreference = async (userId: string) => {
     try {
       await supabase.from("user_chat_preferences").insert({
         user_id: userId,
-        icon_style: "default",
+        icon_style: "wfpulse",
       });
     } catch (err) {
       console.error("Error creating default chat icon style:", err);

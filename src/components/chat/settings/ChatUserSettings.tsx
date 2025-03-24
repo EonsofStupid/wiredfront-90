@@ -4,7 +4,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChatIconSettings } from "@/components/settings/sections/ChatIconSettings";
 import { useSessionStore } from "@/stores/session/store";
-import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { TokenBalanceDisplay } from "@/components/tokens/TokenBalanceDisplay";
 import { ChatFeatureSettings } from "@/components/admin/settings/ChatFeatureSettings";
@@ -18,22 +17,7 @@ export function ChatUserSettings({ adminView = false }: ChatUserSettingsProps) {
   const { user } = useSessionStore();
   const [isLoading, setIsLoading] = useState(false);
 
-  if (!user && !adminView) {
-    return (
-      <Card className="shadow-md">
-        <CardHeader>
-          <CardTitle>Chat Settings</CardTitle>
-          <CardDescription>
-            Please sign in to access your chat settings
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex justify-center py-6">
-          <Button variant="outline">Sign In</Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
+  // Always render settings even if not logged in
   return (
     <div className={adminView ? "" : "shadow-md"}>
       {!adminView && (
@@ -45,7 +29,7 @@ export function ChatUserSettings({ adminView = false }: ChatUserSettingsProps) {
                 Customize your chat experience
               </CardDescription>
             </div>
-            <TokenBalanceDisplay compact />
+            {user && <TokenBalanceDisplay compact />}
           </div>
         </CardHeader>
       )}

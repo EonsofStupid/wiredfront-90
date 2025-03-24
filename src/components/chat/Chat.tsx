@@ -7,6 +7,7 @@ import { useChatStore } from "./store/chatStore";
 
 // Import isolated CSS files
 import "./styles/chat-variables.css";  // CSS variables scoped to chat
+import "./styles/Chat-Zlayer.css";     // Z-layer variables
 import "./styles/container.css";       // Container styles
 import "./styles/theme.css";           // Theme-specific styles
 import "./styles/chat-animations.css"; // Animation styles
@@ -23,8 +24,9 @@ export function Chat() {
   const { isOpen, toggleChat } = useChatStore();
   
   const handleToggleChat = useCallback(() => {
+    console.log("Toggle chat button clicked, current state:", { isOpen: !isOpen });
     toggleChat();
-  }, [toggleChat]);
+  }, [toggleChat, isOpen]);
   
   return (
     <ChatProvider>
