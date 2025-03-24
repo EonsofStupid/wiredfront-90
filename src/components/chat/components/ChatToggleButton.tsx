@@ -5,7 +5,11 @@ import { Code, MessageSquare, MessagesSquare } from "lucide-react";
 import React, { useEffect } from "react";
 import { useChatMode } from "../providers/ChatModeProvider";
 import { useChatStore } from "../store/chatStore";
-import styles from "./ChatToggleButton.module.css";
+import { useChatIconStyle } from "../hooks/useChatIconStyle";
+import { defaultStyle } from "./styles/DefaultStyle";
+import { wfpulseStyle } from "./styles/WFPulseStyle";
+import { retroStyle } from "./styles/RetroStyle";
+import { basicStyle } from "./styles/BasicStyle";
 
 interface ChatToggleButtonProps {
   onClick: () => void;
@@ -13,15 +17,24 @@ interface ChatToggleButtonProps {
 
 export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
   const { mode } = useChatMode();
-  const { position, isHidden } = useChatStore();
+  const { position, isHidden, setIsHidden } = useChatStore();
+  const { iconStyle } = useChatIconStyle();
+
+  // Ensure the button is visible on mount
+  useEffect(() => {
+    if (isHidden) {
+      console.log("Chat button was hidden, making it visible");
+      setIsHidden(false);
+    }
+  }, [isHidden, setIsHidden]);
 
   useEffect(() => {
-    console.log("ChatToggleButton mounted", { isHidden, position, mode });
-  }, [isHidden, position, mode]);
+    console.log("ChatToggleButton mounted", { isHidden, position, mode, iconStyle });
+  }, [isHidden, position, mode, iconStyle]);
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    logger.info("Chat toggle button clicked", { mode, position });
+    logger.info("Chat toggle button clicked", { mode, position, iconStyle });
     onClick();
   };
 
@@ -47,7 +60,21 @@ export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
       ? "Open Context Planning"
       : "Open Chat";
 
-  console.log("Rendering chat button", { position, mode });
+  // Select style based on user preference
+  const styleToUse = (() => {
+    switch (iconStyle) {
+      case "wfpulse":
+        return wfpulseStyle;
+      case "retro":
+        return retroStyle;
+      case "basic":
+        return basicStyle;
+      default:
+        return defaultStyle;
+    }
+  })();
+
+  console.log("Rendering chat button", { position, mode, iconStyle });
 
   return (
     <motion.div
@@ -55,16 +82,19 @@ export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.8 }}
       transition={{ duration: 0.2 }}
-      className={styles.container}
+      className={styleToUse.container}
       data-position={position}
+      data-testid="chat-toggle-container"
     >
       <button
         onClick={handleClick}
-        className={`${styles.button} ${styles.pulsingGlow}`}
+        className={`${styleToUse.button} ${styleToUse.animation}`}
         title={tooltipText}
         data-testid="chat-toggle-button"
+        data-style={iconStyle}
+        aria-label={tooltipText}
       >
-        <Icon className="h-6 w-6" />
+        <Icon className={styleToUse.icon} />
       </button>
     </motion.div>
   );

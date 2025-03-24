@@ -4,6 +4,7 @@ import { useChatStore, initializeChatSettings } from "../store/chatStore";
 import { ChatModeProvider } from "./ChatModeProvider";
 import { logger } from "@/services/chat/LoggingService";
 import { useLocation } from "react-router-dom";
+import { Provider as JotaiProvider } from "jotai";
 
 interface ChatProviderProps {
   children: React.ReactNode;
@@ -31,5 +32,9 @@ export function ChatProvider({ children }: ChatProviderProps) {
     }
   }, [setIsHidden, isEditorPage]);
 
-  return <ChatModeProvider isEditorPage={isEditorPage}>{children}</ChatModeProvider>;
+  return (
+    <JotaiProvider>
+      <ChatModeProvider isEditorPage={isEditorPage}>{children}</ChatModeProvider>
+    </JotaiProvider>
+  );
 }

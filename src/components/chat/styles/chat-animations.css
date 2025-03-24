@@ -1,0 +1,65 @@
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 5px 0 rgba(123, 97, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px 5px rgba(123, 97, 255, 0.7);
+  }
+  100% {
+    box-shadow: 0 0 5px 0 rgba(123, 97, 255, 0.5);
+  }
+}
+
+@keyframes rainbow-border {
+  0%, 100% {
+    border-color: #ff0000;
+  }
+  14% {
+    border-color: #ff8000;
+  }
+  28% {
+    border-color: #ffff00;
+  }
+  42% {
+    border-color: #00ff00;
+  }
+  56% {
+    border-color: #00ffff;
+  }
+  70% {
+    border-color: #0000ff;
+  }
+  84% {
+    border-color: #8000ff;
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+.animate-rainbow-border {
+  animation: rainbow-border 6s linear infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+@media (prefers-reduced-motion) {
+  .animate-pulse-glow,
+  .animate-rainbow-border,
+  .animate-spin-slow {
+    animation: none;
+  }
+}

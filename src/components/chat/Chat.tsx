@@ -7,6 +7,7 @@ import { ChatProvider } from "./providers/ChatProvider";
 import "./styles/chat-variables.css";  // CSS variables scoped to chat
 import "./styles/container.css";       // Container styles
 import "./styles/theme.css";           // Theme-specific styles
+import "./styles/chat-animations.css"; // Animation styles
 
 /**
  * Main Chat component with isolated CSS

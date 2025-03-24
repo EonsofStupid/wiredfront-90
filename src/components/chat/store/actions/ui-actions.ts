@@ -1,4 +1,3 @@
-
 import { StateCreator } from 'zustand';
 import { ChatState, ChatProvider, ChatPosition } from '../types/chat-store-types';
 import { logProviderChange } from './feature/toggle/toggle-utils';
@@ -90,6 +89,8 @@ export const createUIActions: StateCreator<
       false,
       { type: 'ui/setIsHidden', hidden }
     );
+    
+    console.log(`Chat visibility set to: ${hidden ? 'hidden' : 'visible'}`);
   },
   setSessionLoading: (isLoading: boolean) => {
     set(
@@ -163,7 +164,6 @@ export const createUIActions: StateCreator<
   updateCurrentProvider: (provider: ChatProvider) => {
     set(
       (state) => {
-        // Log provider change if it's different
         if (state.currentProvider?.id !== provider.id) {
           logProviderChange(
             state.currentProvider?.name, 
