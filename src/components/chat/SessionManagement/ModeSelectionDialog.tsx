@@ -1,35 +1,37 @@
-
-// This is a new file, we'll create a minimal implementation to show how it should use the ProviderCategory type
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ProviderCategory } from '@/types/providers';
 import { ChatMode } from '@/components/chat/chatbridge/types';
 
+export type { ChatMode };
+
 interface ModeSelectionDialogProps {
   open: boolean;
   onClose: () => void;
-  onSelectMode: (mode: ChatMode, providerId?: string) => void;
-  availableProviders: ProviderCategory[];
-  currentProvider: ProviderCategory | null;
+  onSelectMode?: (mode: ChatMode, providerId?: string) => void;
+  onCreateSession?: (mode: ChatMode, providerId: string) => Promise<void>;
+  availableProviders?: ProviderCategory[];
+  currentProvider?: ProviderCategory | null;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function ModeSelectionDialog({
   open,
   onClose,
   onSelectMode,
+  onCreateSession,
   availableProviders,
-  currentProvider
+  currentProvider,
+  onOpenChange
 }: ModeSelectionDialogProps) {
   const [selectedProvider, setSelectedProvider] = useState<ProviderCategory | null>(currentProvider);
   const [selectedMode, setSelectedMode] = useState<ChatMode>('chat');
 
-  // Find available modes from the selected provider
   const availableModes = selectedProvider?.supportedModes || ['chat'];
 
-  // Find a default provider if none is selected
-  const defaultProvider = availableProviders.find(p => p.isDefault) || 
-                         availableProviders[0];
+  const defaultProvider = availableProviders?.find(p => p.isDefault) || 
+                         availableProviders?.[0];
 
   const handleSelectProvider = (provider: ProviderCategory) => {
     setSelectedProvider(provider);
@@ -37,13 +39,18 @@ export function ModeSelectionDialog({
 
   const handleConfirm = () => {
     if (selectedProvider) {
-      onSelectMode(selectedMode, selectedProvider.id);
+      if (onSelectMode) {
+        onSelectMode(selectedMode, selectedProvider.id);
+      }
+      if (onCreateSession) {
+        onCreateSession(selectedMode, selectedProvider.id);
+      }
       onClose();
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogTitle>Select Chat Mode</DialogTitle>
         <DialogDescription>
@@ -51,11 +58,10 @@ export function ModeSelectionDialog({
         </DialogDescription>
         
         <div className="space-y-4 py-4">
-          {/* Provider selection */}
           <div className="space-y-2">
             <h3 className="text-sm font-medium">Provider</h3>
             <div className="grid grid-cols-2 gap-2">
-              {availableProviders.map((provider) => (
+              {availableProviders?.map((provider) => (
                 <Button
                   key={provider.id}
                   variant={selectedProvider?.id === provider.id ? "default" : "outline"}
@@ -67,7 +73,6 @@ export function ModeSelectionDialog({
             </div>
           </div>
           
-          {/* Mode selection */}
           {selectedProvider && (
             <div className="space-y-2">
               <h3 className="text-sm font-medium">Mode</h3>

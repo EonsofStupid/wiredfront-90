@@ -5,7 +5,7 @@ import { Message, MessageRole, MessageStatus } from '@/types/chat';
 export type ChatMode = 'chat' | 'developer' | 'image' | 'training';
 
 // Message interface specific to the bridge
-export interface BridgeMessage extends Message {
+export interface BridgeMessage extends Omit<Message, 'type'> {
   processing?: boolean;
   error?: string;
   type?: 'text' | 'command' | 'system' | 'image' | 'training';
@@ -50,6 +50,6 @@ export interface BridgeSettings {
     sound: boolean;
     desktop: boolean;
   };
-  chatWidth?: number;
-  chatHeight?: number;
+  chatWidth: number;
+  chatHeight: number;
 }

@@ -52,12 +52,16 @@ const initialState: Omit<ChatState, keyof FeatureState | keyof Providers | keyof
   availableProviders: [],
   currentProvider: null,
   tokenControl: {
-    mode: 'NONE',
+    mode: TokenEnforcementMode.NONE,
     balance: 0,
   },
   providers: {
     loading: false,
     error: null,
+  },
+  ui: {
+    sessionLoading: false,
+    messageLoading: false,
   },
 };
 
@@ -121,7 +125,7 @@ export const clearMiddlewareStorage = () => {
   }
 };
 
-export const useChatStore = create<ChatState>((set) => ({
+export const useChatStore = create<ChatState>((set, get) => ({
   ...initialState,
   toggleChat: () => set((state) => ({ isOpen: !state.isOpen })),
   toggleMinimize: () => set((state) => ({ isMinimized: !state.isMinimized })),
@@ -189,4 +193,25 @@ export const useChatStore = create<ChatState>((set) => ({
     }));
     return true;
   },
+  setSessionLoading: (loading) => set((state) => ({
+    ui: { ...state.ui, sessionLoading: loading }
+  })),
+  setMessageLoading: (loading) => set((state) => ({
+    ui: { ...state.ui, messageLoading: loading }
+  })),
+  initializeChatSettings: () => {
+    const settings = getChatSettings();
+    set({ settings });
+  },
+  enableFeature: (feature) => set((state) => ({
+    features: { ...state.features, [feature]: true }
+  })),
+  disableFeature: (feature) => set((state) => ({
+    features: { ...state.features, [feature]: false }
+  })),
+  setFeatureState: (feature, enabled) => set((state) => ({
+    features: { ...state.features, [feature]: enabled }
+  })),
+  updateCurrentProvider: (provider) => set({ currentProvider: provider }),
+  updateAvailableProviders: (providers) => set({ availableProviders: providers }),
 }));

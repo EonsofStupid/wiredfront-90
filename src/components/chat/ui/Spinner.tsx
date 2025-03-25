@@ -3,11 +3,13 @@ import React from "react";
 interface SpinnerProps {
   size?: "sm" | "md" | "lg";
   className?: string;
+  label?: string;
 }
 
 export const Spinner: React.FC<SpinnerProps> = ({
   size = "md",
   className = "",
+  label,
 }) => {
   const sizeClasses = {
     sm: "w-4 h-4",
@@ -31,7 +33,7 @@ export const Spinner: React.FC<SpinnerProps> = ({
           }
         `}
       </style>
-      <div className={`relative ${sizeClasses[size]} ${className}`}>
+      <div className={`relative ${sizeClasses[size]} ${className}`} aria-label={label}>
         {/* Outer glow ring */}
         <div className="absolute inset-0 rounded-full bg-primary/20 animate-pulse" />
 
@@ -118,6 +120,7 @@ export const Spinner: React.FC<SpinnerProps> = ({
           </div>
         </div>
       </div>
+      {label && <span className="sr-only">{label}</span>}
     </>
   );
 };

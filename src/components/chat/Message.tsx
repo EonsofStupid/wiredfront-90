@@ -4,13 +4,14 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Check, Clock, AlertCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { MessageStatus } from "@/types/chat";
 
 interface MessageProps {
   content: string;
   role: 'user' | 'assistant' | 'system';
-  status?: 'pending' | 'sent' | 'failed';
+  status?: MessageStatus | 'pending' | 'sent' | 'failed';
   id?: string;
-  timestamp?: string;
+  timestamp?: string | Date;
   onRetry?: (id: string) => void;
 }
 

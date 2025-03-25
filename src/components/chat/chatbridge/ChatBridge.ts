@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { BridgeEvent, BridgeListener, BridgeMessage, BridgeSettings, ChatMode, ConnectionStatus } from './types';
 import { v4 as uuidv4 } from 'uuid';
@@ -11,7 +10,7 @@ class ChatBridge {
   private connectionStatus: ConnectionStatus = 'disconnected';
   private userId: string | null = null;
   private sessionId: string | null = null;
-  private settings: BridgeSettings = {
+  private _settings: BridgeSettings = {
     mode: 'chat',
     providers: {
       openai: true,
@@ -27,6 +26,8 @@ class ChatBridge {
       sound: true,
       desktop: false,
     },
+    chatWidth: 400,
+    chatHeight: 600
   };
 
   private constructor() {

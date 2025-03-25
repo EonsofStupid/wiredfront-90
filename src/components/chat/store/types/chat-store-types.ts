@@ -1,7 +1,7 @@
 import { Message } from '@/types/chat';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 import { ChatSettings } from '@/utils/storage/chat-settings';
-import { ChatMode } from '@/types/chat';
+import { ChatMode } from '@/components/chat/chatbridge/types';
 import { ProviderCategory } from '@/types/providers';
 
 export type ChatPosition = 'bottom-right' | 'bottom-left' | {
@@ -76,12 +76,27 @@ export interface Providers {
   error?: string | null;
 }
 
+export type ChatProvider = {
+  id: string;
+  name: string;
+  type: string;
+  models: string[];
+  isDefault: boolean;
+  isEnabled: boolean;
+  apiKey?: string;
+};
+
+export interface UIState {
+  sessionLoading: boolean;
+  messageLoading: boolean;
+}
+
 export interface ChatState {
   initialized: boolean;
   isOpen: boolean;
   isMinimized: boolean;
   isHidden: boolean;
-  position: 'bottom-right' | 'bottom-left';
+  position: ChatPosition;
   currentMode: ChatMode;
   features: FeatureState;
   settings: ChatSettings;
@@ -101,6 +116,7 @@ export interface ChatState {
   currentProvider: ProviderCategory | null;
   tokenControl: TokenControl;
   providers: Providers;
+  ui: UIState;
 
   // Actions
   toggleChat: () => void;
@@ -118,8 +134,18 @@ export interface ChatState {
   resetChatState: () => void;
   setAvailableProviders: (providers: ProviderCategory[]) => void;
   setCurrentProvider: (provider: ProviderCategory | null) => void;
-  setTokenEnforcementMode: (mode: TokenControl['mode']) => void;
+  setTokenEnforcementMode: (mode: TokenControl['mode']) => Promise<boolean>;
   addTokens: (amount: number) => Promise<boolean>;
   spendTokens: (amount: number) => Promise<boolean>;
   setTokenBalance: (amount: number) => Promise<boolean>;
+  
+  // New methods
+  setSessionLoading: (loading: boolean) => void;
+  setMessageLoading: (loading: boolean) => void;
+  initializeChatSettings: () => void;
+  enableFeature: (feature: keyof FeatureState) => void;
+  disableFeature: (feature: keyof FeatureState) => void;
+  setFeatureState: (feature: keyof FeatureState, enabled: boolean) => void;
+  updateCurrentProvider: (provider: ProviderCategory | null) => void;
+  updateAvailableProviders: (providers: ProviderCategory[]) => void;
 }

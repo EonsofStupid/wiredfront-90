@@ -1,11 +1,10 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useChatBridge } from './useChatBridge';
 import { MessageCircle, X } from 'lucide-react';
 import { ChatToggleButton } from '../ui/ChatToggleButton';
 import { Spinner } from '../ui/Spinner';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Message } from '../ui/Message';
+import { Message } from '../Message';
 import '../styles/chat-variables.css';
 
 interface ChatClientProps {

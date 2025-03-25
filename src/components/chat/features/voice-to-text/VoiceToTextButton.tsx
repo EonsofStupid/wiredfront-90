@@ -1,66 +1,47 @@
-
-import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Mic, Square, AlertCircle } from "lucide-react";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Mic, MicOff } from 'lucide-react';
 import { useVoiceRecognition } from './useVoiceRecognition';
-import { toast } from "sonner";
 
-interface VoiceToTextButtonProps {
-  onTranscription: (text: string) => void;
-  isProcessing: boolean;
+export interface VoiceToTextButtonProps {
+  onVoiceInput?: (input: string) => void;
 }
 
-export function VoiceToTextButton({ onTranscription, isProcessing }: VoiceToTextButtonProps) {
-  const {
-    isListening,
-    isError,
-    errorMessage,
-    startListening,
-    stopListening
-  } = useVoiceRecognition((text) => {
-    onTranscription(text);
-    toast.success('Voice transcription completed');
-  });
+export const VoiceToTextButton: React.FC<VoiceToTextButtonProps> = ({ onVoiceInput }) => {
+  const [isListening, setIsListening] = useState(false);
+  const { startRecognition, stopRecognition, transcript, resetTranscript, isError, errorMessage } = useVoiceRecognition();
 
-  const handleClick = () => {
+  const toggleListening = () => {
     if (isListening) {
-      stopListening();
+      stopRecognition();
+      setIsListening(false);
     } else {
-      startListening();
+      startRecognition();
+      setIsListening(true);
     }
   };
 
-  if (isError) {
-    return (
+  React.useEffect(() => {
+    if (transcript && onVoiceInput) {
+      onVoiceInput(transcript);
+      resetTranscript();
+      stopRecognition();
+      setIsListening(false);
+    }
+  }, [transcript, onVoiceInput, resetTranscript, stopRecognition]);
+
+  return (
+    <div>
       <Button
         variant="ghost"
         size="icon"
-        className="text-destructive hover:text-destructive/90 hover:bg-destructive/10 h-[var(--chat-input-height)]"
-        onClick={() => toast.error(errorMessage || 'Voice recognition error')}
-        title={errorMessage || 'Voice recognition error'}
+        onClick={toggleListening}
+        disabled={isError}
+        aria-label="Toggle voice input"
       >
-        <AlertCircle className="h-4 w-4" />
+        {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
       </Button>
-    );
-  }
-
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="relative chat-cyber-border h-[var(--chat-input-height)]"
-      onClick={handleClick}
-      disabled={isProcessing}
-      data-testid="voice-to-text-button"
-    >
-      {isListening ? (
-        <>
-          <Square className="h-4 w-4 text-red-500" />
-          <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-        </>
-      ) : (
-        <Mic className="h-4 w-4" />
-      )}
-    </Button>
+      {isError && <p className="text-xs text-red-500">{errorMessage}</p>}
+    </div>
   );
-}
+};

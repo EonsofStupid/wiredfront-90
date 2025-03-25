@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import { Toaster } from "sonner";
 import { ChatModeProvider } from './providers/ChatModeProvider';
@@ -36,6 +35,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         ChatBridge.getInstance();
         logger.info('ChatBridge initialized');
         
+        // Use the actual methods from the store
         initializeChatSettings();
         logger.info('Chat settings initialized');
         
