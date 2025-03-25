@@ -1,4 +1,5 @@
 
+
 import { Json } from '@/integrations/supabase/types';
 
 // Core session interface
@@ -36,3 +37,4 @@ export interface UpdateSessionParams {
   archived?: boolean; // Use archived instead of is_active
   metadata?: Json;
 }
+
