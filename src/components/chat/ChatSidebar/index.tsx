@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ModeSelectionDialog } from '../SessionManagement/ModeSelectionDialog';
 import { useChatStore } from '../store/chatStore';
@@ -16,16 +15,17 @@ export function ChatSidebar() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (availableProviders.length === 0) {
-      setIsLoading(true);
-    } else {
-      setIsLoading(false);
-    }
+    setIsLoading(availableProviders.length === 0);
   }, [availableProviders]);
 
   const handleCreateSession = async (mode: string, providerId: string) => {
     setIsModeDialogOpen(false);
-    await createSession({ mode, providerId });
+    await createSession({
+      metadata: {
+        mode,
+        providerId
+      }
+    });
   };
 
   return (
@@ -53,7 +53,7 @@ export function ChatSidebar() {
               messageCount={session.message_count}
               title={session.title}
               onSelect={() => switchSession(sessionId)}
-              provider={session.provider_id}
+              provider={session.providerId} // ✅ Fixed from provider_id
             />
           ))
         )}
@@ -61,7 +61,7 @@ export function ChatSidebar() {
       
       <ModeSelectionDialog
         open={isModeDialogOpen}
-        onClose={() => setIsModeDialogOpen(false)}
+        onClose={() => setIsModeDialogOpen(false)} // ✅ Required prop
         onOpenChange={setIsModeDialogOpen}
         onCreateSession={handleCreateSession}
         availableProviders={availableProviders}
