@@ -91,7 +91,7 @@ export interface ChatState {
   isOpen: boolean;
   isMinimized: boolean;
   isHidden: boolean;
-  position: "bottom-right" | "bottom-left";
+  position: ChatPosition;
   currentMode: ChatMode;
   features: FeatureState;
   settings: ChatSettings;
@@ -143,4 +143,5 @@ export type ChatProvider = {
   type: string;
   isActive: boolean;
   description?: string;
+  category: ProviderCategory;
 };
