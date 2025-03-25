@@ -1,57 +1,128 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ArrowRight, Github, Code, GitMerge, History } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { ExternalLink, GitBranch, GitPullRequest, RefreshCw, Share2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 interface GitHubConnectedActionsProps {
   isConnected: boolean;
+  username?: string | null;
+  repoCount?: number;
+  isLoading?: boolean;
 }
 
-export function GitHubConnectedActions({ isConnected }: GitHubConnectedActionsProps) {
-  const navigate = useNavigate();
-
-  if (!isConnected) {
-    return null;
-  }
-
-  const handleNavigateToRepos = () => {
-    navigate('/settings?tab=github-repos');
+export function GitHubConnectedActions({
+  isConnected,
+  username,
+  repoCount,
+  isLoading = false
+}: GitHubConnectedActionsProps) {
+  const [isSyncing, setIsSyncing] = useState(false);
+  
+  if (!isConnected) return null;
+  
+  const syncRepositories = async () => {
+    setIsSyncing(true);
+    try {
+      // In a real implementation, this would call an API to sync repositories
+      // For now we'll simulate it with a toast notification
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      toast.success("GitHub repositories synchronized successfully");
+    } catch (error) {
+      toast.error("Failed to sync repositories");
+      console.error("Repository sync error:", error);
+    } finally {
+      setIsSyncing(false);
+    }
   };
-
+  
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={handleNavigateToRepos}>
-        <div className="flex flex-col items-center text-center gap-2">
-          <Code className="h-10 w-10 text-blue-500" />
-          <h3 className="font-medium">Manage Repositories</h3>
-          <p className="text-sm text-muted-foreground">View and control synced repositories</p>
-          <Button variant="link" size="sm" className="mt-2">
-            Open <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
-        </div>
-      </Card>
-      
-      <Card className="p-4 hover:shadow-md transition-shadow">
-        <div className="flex flex-col items-center text-center gap-2">
-          <GitMerge className="h-10 w-10 text-green-500" />
-          <h3 className="font-medium">Sync Settings</h3>
-          <p className="text-sm text-muted-foreground">Configure automatic code synchronization</p>
-          <Button variant="link" size="sm" className="mt-2">
-            Configure <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
-        </div>
-      </Card>
-      
-      <Card className="p-4 hover:shadow-md transition-shadow">
-        <div className="flex flex-col items-center text-center gap-2">
-          <History className="h-10 w-10 text-purple-500" />
-          <h3 className="font-medium">Activity History</h3>
-          <p className="text-sm text-muted-foreground">View your GitHub activity timeline</p>
-          <Button variant="link" size="sm" className="mt-2">
-            View History <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
-        </div>
+    <div className="space-y-4">
+      <Card className="bg-card">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">GitHub Actions</CardTitle>
+          <CardDescription>
+            Manage your GitHub integration
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {isLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          ) : (
+            <div>
+              <p className="text-sm text-muted-foreground">
+                Connected as{" "}
+                {username ? (
+                  <a 
+                    href={`https://github.com/${username}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-[#8B5CF6] hover:text-[#7E69AB] transition-colors inline-flex items-center"
+                  >
+                    @{username}
+                    <ExternalLink className="h-3 w-3 ml-1" />
+                  </a>
+                ) : (
+                  <span className="font-medium text-primary">Unknown User</span>
+                )}
+              </p>
+              {repoCount !== undefined && (
+                <p className="text-sm text-muted-foreground">
+                  {repoCount} repositories available
+                </p>
+              )}
+            </div>
+          )}
+          
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="justify-start gap-2"
+              onClick={syncRepositories}
+              disabled={isSyncing}
+            >
+              {isSyncing ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              {isSyncing ? "Syncing..." : "Sync Repositories"}
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              className="justify-start gap-2"
+            >
+              <GitBranch className="h-4 w-4" />
+              Manage Branches
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              className="justify-start gap-2"
+            >
+              <GitPullRequest className="h-4 w-4" />
+              View Pull Requests
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              className="justify-start gap-2"
+            >
+              <Share2 className="h-4 w-4" />
+              Share Access
+            </Button>
+          </div>
+        </CardContent>
       </Card>
     </div>
   );

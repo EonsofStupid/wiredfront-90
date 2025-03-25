@@ -44,8 +44,6 @@ export interface BridgeSettings {
     buttonStyle: string;
     buttonSize: 'small' | 'medium' | 'large';
     buttonColor: string;
-    chatWidth: number;
-    chatHeight: number;
   };
   notifications: {
     sound: boolean;

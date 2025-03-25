@@ -1,39 +1,45 @@
-import { AdminCard, AdminCardContent } from "@/components/admin/ui/AdminCard";
-import { Button } from "@/components/ui/button";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { AIServicesSettings } from "./api/AIServicesSettings";
+import { CloudStorageSettings } from "./api/CloudStorageSettings";
+import { DevelopmentSettings } from "./api/DevelopmentSettings";
+import { VoiceSettings } from "./api/VoiceSettings";
+import { RAGKeysSettings } from "./api/RAGKeysSettings";
+import { OAuthConnectionsSettings } from "./api/oauth/OAuthConnectionsSettings";
+import { ChatProviderSettings } from "./api/chat/ChatProviderSettings";
 import { useAPISettings } from "@/hooks/admin/settings/api";
-import { useRoleStore } from "@/stores/role";
-import { KeyRound, MessageSquare, Save } from "lucide-react";
 import { toast } from "sonner";
-import { ChatSettings } from "../chat/ChatSettings";
-import { AIServicesSettings } from "./AIServicesSettings";
-import { APIKeyManagement } from "./APIKeyManagement";
-import { ChatProviderSettings } from "./chat/ChatProviderSettings";
-import { CloudStorageSettings } from "./CloudStorageSettings";
-import { DevelopmentSettings } from "./DevelopmentSettings";
-import { OAuthConnectionsSettings } from "./oauth/OAuthConnectionsSettings";
-import { RAGKeysSettings } from "./RAGKeysSettings";
-import { VoiceSettings } from "./VoiceSettings";
+import { AdminCard, AdminCardHeader, AdminCardTitle, AdminCardDescription, AdminCardContent } from "@/components/admin/ui/AdminCard";
+import { Save, MessageSquare, KeyRound, Shield } from "lucide-react";
+import { ChatSettings } from "./ChatSettings";
+import { APIKeyManagement } from "./api/APIKeyManagement";
+import { useRoleStore } from "@/stores/role";
 
 export function APISettings() {
-  const { settings, updateSetting, isSaving, handleSave, user } =
-    useAPISettings();
-
+  const {
+    settings,
+    updateSetting,
+    isSaving,
+    handleSave,
+    user
+  } = useAPISettings();
+  
   const { hasRole } = useRoleStore();
-  const isAdmin = hasRole("super_admin") || hasRole("admin");
+  const isAdmin = hasRole('super_admin') || hasRole('admin');
 
   const onSave = async () => {
     try {
       await handleSave();
       toast.success("API settings saved successfully", {
         className: "admin-toast",
-        description: "Your API configuration has been updated.",
+        description: "Your API configuration has been updated."
       });
     } catch (error) {
-      console.error("Failed to save API settings:", error);
+      console.error('Failed to save API settings:', error);
       toast.error("Failed to save API settings", {
         className: "admin-toast admin-toast-error",
-        description: "Please try again or check the console for details.",
+        description: "Please try again or check the console for details."
       });
     }
   };
@@ -45,9 +51,7 @@ export function APISettings() {
   return (
     <div className="admin-container space-y-6">
       <header className="space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight admin-heading">
-          API Settings
-        </h2>
+        <h2 className="text-3xl font-bold tracking-tight admin-heading">API Settings</h2>
         <p className="text-muted-foreground">
           Configure your API keys and tokens for various services.
         </p>
@@ -57,37 +61,23 @@ export function APISettings() {
         <AdminCardContent>
           <Tabs defaultValue="ai-services" className="space-y-4">
             <TabsList className="admin-tabs-list">
-              <TabsTrigger value="ai-services" className="admin-tab">
-                AI Services
-              </TabsTrigger>
-              <TabsTrigger value="chat-providers" className="admin-tab">
-                Chat Providers
-              </TabsTrigger>
+              <TabsTrigger value="ai-services" className="admin-tab">AI Services</TabsTrigger>
+              <TabsTrigger value="chat-providers" className="admin-tab">Chat Providers</TabsTrigger>
               <TabsTrigger value="chat-settings" className="admin-tab">
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Chat Settings
               </TabsTrigger>
-              {hasRole("super_admin") && (
+              {hasRole('super_admin') && (
                 <TabsTrigger value="api-keys" className="admin-tab">
                   <KeyRound className="h-4 w-4 mr-2" />
                   API Key Management
                 </TabsTrigger>
               )}
-              <TabsTrigger value="oauth" className="admin-tab">
-                OAuth Providers
-              </TabsTrigger>
-              <TabsTrigger value="rag-keys" className="admin-tab">
-                Vector DB Keys
-              </TabsTrigger>
-              <TabsTrigger value="voice" className="admin-tab">
-                Voice
-              </TabsTrigger>
-              <TabsTrigger value="cloud-storage" className="admin-tab">
-                Cloud Storage
-              </TabsTrigger>
-              <TabsTrigger value="development" className="admin-tab">
-                Development
-              </TabsTrigger>
+              <TabsTrigger value="oauth" className="admin-tab">OAuth Providers</TabsTrigger>
+              <TabsTrigger value="rag-keys" className="admin-tab">Vector DB Keys</TabsTrigger>
+              <TabsTrigger value="voice" className="admin-tab">Voice</TabsTrigger>
+              <TabsTrigger value="cloud-storage" className="admin-tab">Cloud Storage</TabsTrigger>
+              <TabsTrigger value="development" className="admin-tab">Development</TabsTrigger>
             </TabsList>
 
             <TabsContent value="ai-services" className="pt-4">
@@ -97,12 +87,12 @@ export function APISettings() {
             <TabsContent value="chat-providers" className="pt-4">
               <ChatProviderSettings />
             </TabsContent>
-
+            
             <TabsContent value="chat-settings" className="pt-4">
               <ChatSettings />
             </TabsContent>
-
-            {hasRole("super_admin") && (
+            
+            {hasRole('super_admin') && (
               <TabsContent value="api-keys" className="pt-4">
                 <APIKeyManagement />
               </TabsContent>
@@ -119,11 +109,9 @@ export function APISettings() {
             <TabsContent value="voice" className="pt-4">
               <VoiceSettings
                 elevenLabsKey={settings.elevenLabsKey}
-                onElevenLabsKeyChange={(value) =>
-                  updateSetting("elevenLabsKey", value)
-                }
+                onElevenLabsKeyChange={(value) => updateSetting('elevenLabsKey', value)}
                 selectedVoice={settings.selectedVoice}
-                onVoiceChange={(value) => updateSetting("selectedVoice", value)}
+                onVoiceChange={(value) => updateSetting('selectedVoice', value)}
               />
             </TabsContent>
 
@@ -133,18 +121,10 @@ export function APISettings() {
                 dropboxKey={settings.dropboxKey}
                 awsAccessKey={settings.awsAccessKey}
                 awsSecretKey={settings.awsSecretKey}
-                onGoogleDriveKeyChange={(value) =>
-                  updateSetting("googleDriveKey", value)
-                }
-                onDropboxKeyChange={(value) =>
-                  updateSetting("dropboxKey", value)
-                }
-                onAwsAccessKeyChange={(value) =>
-                  updateSetting("awsAccessKey", value)
-                }
-                onAwsSecretKeyChange={(value) =>
-                  updateSetting("awsSecretKey", value)
-                }
+                onGoogleDriveKeyChange={(value) => updateSetting('googleDriveKey', value)}
+                onDropboxKeyChange={(value) => updateSetting('dropboxKey', value)}
+                onAwsAccessKeyChange={(value) => updateSetting('awsAccessKey', value)}
+                onAwsSecretKeyChange={(value) => updateSetting('awsSecretKey', value)}
               />
             </TabsContent>
 
@@ -152,18 +132,14 @@ export function APISettings() {
               <DevelopmentSettings
                 githubToken={settings.githubToken}
                 dockerToken={settings.dockerToken}
-                onGithubTokenChange={(value) =>
-                  updateSetting("githubToken", value)
-                }
-                onDockerTokenChange={(value) =>
-                  updateSetting("dockerToken", value)
-                }
+                onGithubTokenChange={(value) => updateSetting('githubToken', value)}
+                onDockerTokenChange={(value) => updateSetting('dockerToken', value)}
               />
             </TabsContent>
           </Tabs>
 
           <div className="flex justify-end mt-8">
-            <Button
+            <Button 
               onClick={onSave}
               disabled={isSaving}
               className="admin-primary-button group"

@@ -1,12 +1,13 @@
-import { ChatMode, Message } from "@/types/chat";
-import { ProviderCategory } from "@/types/providers";
-import { ChatSettings } from "@/utils/storage/chat-settings";
+import { Message } from '@/types/chat';
+import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
+import { ChatSettings } from '@/utils/storage/chat-settings';
+import { ChatMode } from '@/types/chat';
+import { ProviderCategory } from '@/types/providers';
 
-export type ChatPosition =
-  | "bottom-right"
-  | "bottom-left"
-  | "top-right"
-  | "top-left";
+export type ChatPosition = {
+  x: number;
+  y: number;
+};
 
 export type MessageActions = {
   copy: boolean;
@@ -14,32 +15,27 @@ export type MessageActions = {
   delete: boolean;
 };
 
-export type ProviderType =
-  | "openai"
-  | "anthropic"
-  | "gemini"
-  | "huggingface"
-  | "pinecone"
-  | "weaviate"
-  | "openrouter"
-  | "github"
-  | "replicate"
-  | "stabilityai"
-  | "vector"
-  | "voice"
-  | "dalle"
-  | "perplexity"
-  | "qdrant"
-  | "elevenlabs"
-  | "whisper"
-  | "sonnet";
+export type ProviderType = 
+  | 'openai' 
+  | 'anthropic' 
+  | 'gemini' 
+  | 'huggingface' 
+  | 'pinecone' 
+  | 'weaviate' 
+  | 'openrouter' 
+  | 'github' 
+  | 'replicate' 
+  | 'stabilityai' 
+  | 'vector' 
+  | 'voice'
+  | 'dalle'
+  | 'perplexity'
+  | 'qdrant'
+  | 'elevenlabs'
+  | 'whisper'
+  | 'sonnet';
 
-export type ProviderCategoryType =
-  | "chat"
-  | "image"
-  | "other"
-  | "vector"
-  | "voice";
+export type ProviderCategoryType = 'chat' | 'image' | 'other' | 'vector' | 'voice';
 
 export type SidebarState = {
   isOpen: boolean;
@@ -51,7 +47,7 @@ export type SidebarItem = {
   id: string;
   label: string;
   icon?: string;
-  type: "session" | "setting" | "feature";
+  type: 'session' | 'setting' | 'feature';
 };
 
 export interface FeatureState {
@@ -67,23 +63,13 @@ export interface FeatureState {
 }
 
 export interface TokenControl {
-  mode: "NONE" | "ENFORCE" | "WARN";
+  mode: 'NONE' | 'ENFORCE' | 'WARN';
   balance: number;
-  queriesUsed: number;
-  enforcementMode: "NONE" | "ENFORCE" | "WARN";
-  tokenEnforcement?: boolean;
 }
 
 export interface Providers {
   loading: boolean;
   error?: string | null;
-  availableProviders: ProviderCategory[];
-}
-
-export interface UIState {
-  sessionLoading: boolean;
-  messageLoading: boolean;
-  providerLoading: boolean;
 }
 
 export interface ChatState {
@@ -91,7 +77,7 @@ export interface ChatState {
   isOpen: boolean;
   isMinimized: boolean;
   isHidden: boolean;
-  position: ChatPosition;
+  position: 'bottom-right' | 'bottom-left';
   currentMode: ChatMode;
   features: FeatureState;
   settings: ChatSettings;
@@ -103,7 +89,7 @@ export interface ChatState {
   isWaitingForResponse: boolean;
   selectedModel: string;
   selectedMode: string;
-  modelFetchStatus: "idle" | "loading" | "success" | "error";
+  modelFetchStatus: 'idle' | 'loading' | 'success' | 'error';
   error?: string | null;
   chatId: string | null;
   startTime: number;
@@ -111,7 +97,6 @@ export interface ChatState {
   currentProvider: ProviderCategory | null;
   tokenControl: TokenControl;
   providers: Providers;
-  ui: UIState;
 
   // Actions
   toggleChat: () => void;
@@ -129,23 +114,8 @@ export interface ChatState {
   resetChatState: () => void;
   setAvailableProviders: (providers: ProviderCategory[]) => void;
   setCurrentProvider: (provider: ProviderCategory | null) => void;
-  setTokenEnforcementMode: (mode: TokenControl["mode"]) => void;
+  setTokenEnforcementMode: (mode: TokenControl['mode']) => void;
   addTokens: (amount: number) => Promise<boolean>;
   spendTokens: (amount: number) => Promise<boolean>;
   setTokenBalance: (amount: number) => Promise<boolean>;
-  initializeChatSettings: () => void;
-  setSessionLoading: (isLoading: boolean) => void;
-  // UI Actions
-  updateCurrentProvider: (provider: ChatProvider) => void;
-  updateAvailableProviders: (providers: ChatProvider[]) => void;
 }
-
-export type ChatProvider = {
-  id: string;
-  name: string;
-  type: string;
-  isActive: boolean;
-  description?: string;
-  category: ProviderCategory;
-  isDefault?: boolean;
-};

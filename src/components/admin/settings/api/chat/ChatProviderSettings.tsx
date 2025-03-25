@@ -1,37 +1,26 @@
-import { useChatStore } from "@/components/chat/store/chatStore";
-import { ChatPosition } from "@/components/chat/store/types/chat-store-types";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Bot,
-  BotMessageSquare,
-  Braces,
-  MessagesSquare,
-  Save,
-  Settings,
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useChatStore } from "@/components/chat/store/chatStore";
+import { 
+  Bot, 
+  Settings, 
+  MessageCircle, 
+  BotMessageSquare, 
+  Braces, 
+  MessagesSquare, 
+  BrainCircuit,
+  Save
 } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
 import { SettingsContainer } from "../../layout/SettingsContainer";
+import { toast } from "sonner";
 
 // Define provider types for chat
-export type ChatProviderType =
-  | "openai"
-  | "anthropic"
-  | "gemini"
-  | "local"
-  | "perplexity"
-  | "llama";
+export type ChatProviderType = 'openai' | 'anthropic' | 'gemini' | 'local' | 'perplexity' | 'llama';
 
 interface ChatProvider {
   id: string;
@@ -42,89 +31,77 @@ interface ChatProvider {
   apiReference: string;
 }
 
-interface ChatProviderSettings {
-  position: "bottom-right" | "bottom-left" | ChatPosition;
-  // ... other settings
-}
-
 export function ChatProviderSettings() {
-  const {
-    features,
-    toggleFeature,
-    position,
-    togglePosition,
-    docked,
-    toggleDocked,
-  } = useChatStore();
-
+  const { features, toggleFeature, position, togglePosition, docked, toggleDocked } = useChatStore();
+  
   // Example providers - in a real app these would come from a database
   const [providers, setProviders] = useState<ChatProvider[]>([
-    {
-      id: "1",
-      name: "OpenAI",
-      type: "openai",
-      isEnabled: true,
+    { 
+      id: '1', 
+      name: 'OpenAI', 
+      type: 'openai', 
+      isEnabled: true, 
       isDefault: true,
-      apiReference: "openai",
+      apiReference: 'openai'
     },
-    {
-      id: "2",
-      name: "Claude",
-      type: "anthropic",
-      isEnabled: false,
+    { 
+      id: '2', 
+      name: 'Claude', 
+      type: 'anthropic', 
+      isEnabled: false, 
       isDefault: false,
-      apiReference: "anthropic",
+      apiReference: 'anthropic'
     },
-    {
-      id: "3",
-      name: "Gemini",
-      type: "gemini",
-      isEnabled: false,
+    { 
+      id: '3', 
+      name: 'Gemini', 
+      type: 'gemini', 
+      isEnabled: false, 
       isDefault: false,
-      apiReference: "gemini",
-    },
+      apiReference: 'gemini'
+    }
   ]);
-
+  
   const [newProvider, setNewProvider] = useState({
-    name: "",
-    type: "openai" as ChatProviderType,
-    apiReference: "",
+    name: '',
+    type: 'openai' as ChatProviderType,
+    apiReference: ''
   });
-
+  
   // Function to toggle provider enabled status
   const toggleProviderEnabled = (id: string) => {
-    setProviders((prev) =>
-      prev.map((provider) =>
-        provider.id === id
-          ? { ...provider, isEnabled: !provider.isEnabled }
+    setProviders(prev => 
+      prev.map(provider => 
+        provider.id === id 
+          ? { ...provider, isEnabled: !provider.isEnabled } 
           : provider
       )
     );
   };
-
+  
   // Function to set a provider as default
   const setDefaultProvider = (id: string) => {
-    setProviders((prev) =>
-      prev.map((provider) => ({
+    setProviders(prev => 
+      prev.map(provider => ({
         ...provider,
-        isDefault: provider.id === id,
+        isDefault: provider.id === id
       }))
     );
   };
-
+  
   // Function to save all provider settings
   const saveProviderSettings = () => {
     toast.success("Chat provider settings saved successfully");
   };
-
+  
   // Function to add a new provider
   const addNewProvider = () => {
     if (!newProvider.name || !newProvider.apiReference) {
       toast.error("Provider name and API reference are required");
       return;
     }
-
-    setProviders((prev) => [
+    
+    setProviders(prev => [
       ...prev,
       {
         id: Date.now().toString(),
@@ -132,29 +109,27 @@ export function ChatProviderSettings() {
         type: newProvider.type,
         isEnabled: false,
         isDefault: false,
-        apiReference: newProvider.apiReference,
-      },
+        apiReference: newProvider.apiReference
+      }
     ]);
-
+    
     setNewProvider({
-      name: "",
-      type: "openai" as ChatProviderType,
-      apiReference: "",
+      name: '',
+      type: 'openai' as ChatProviderType,
+      apiReference: ''
     });
-
+    
     toast.success("New provider added");
   };
-
+  
   // Determine position display text
   const getPositionDisplayText = () => {
-    if (typeof position === "string") {
-      return position === "bottom-right" ? "Bottom Right" : "Bottom Left";
+    if (typeof position === 'string') {
+      return position === 'bottom-right' ? 'Bottom Right' : 'Bottom Left';
     }
-    return `Custom (${(position as ChatPosition).x}, ${
-      (position as ChatPosition).y
-    })`;
+    return `Custom (${position.x}, ${position.y})`;
   };
-
+  
   return (
     <SettingsContainer
       title="Chat Provider Settings"
@@ -179,7 +154,7 @@ export function ChatProviderSettings() {
             Sessions
           </TabsTrigger>
         </TabsList>
-
+        
         {/* Providers Tab */}
         <TabsContent value="providers">
           <Card>
@@ -191,80 +166,60 @@ export function ChatProviderSettings() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {providers.map((provider) => (
-                  <div
-                    key={provider.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
-                  >
+                {providers.map(provider => (
+                  <div key={provider.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center gap-3">
                       <Bot className="h-5 w-5" />
                       <div>
                         <p className="font-medium">{provider.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          API: {provider.apiReference}
-                        </p>
+                        <p className="text-sm text-muted-foreground">API: {provider.apiReference}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
-                        <Label htmlFor={`enabled-${provider.id}`}>
-                          Enabled
-                        </Label>
-                        <Switch
-                          id={`enabled-${provider.id}`}
+                        <Label htmlFor={`enabled-${provider.id}`}>Enabled</Label>
+                        <Switch 
+                          id={`enabled-${provider.id}`} 
                           checked={provider.isEnabled}
-                          onCheckedChange={() =>
-                            toggleProviderEnabled(provider.id)
-                          }
+                          onCheckedChange={() => toggleProviderEnabled(provider.id)}
                         />
                       </div>
                       <div className="flex items-center gap-2">
-                        <Label htmlFor={`default-${provider.id}`}>
-                          Default
-                        </Label>
-                        <Switch
-                          id={`default-${provider.id}`}
+                        <Label htmlFor={`default-${provider.id}`}>Default</Label>
+                        <Switch 
+                          id={`default-${provider.id}`} 
                           checked={provider.isDefault}
-                          onCheckedChange={() =>
-                            setDefaultProvider(provider.id)
-                          }
+                          onCheckedChange={() => setDefaultProvider(provider.id)}
                           disabled={!provider.isEnabled}
                         />
                       </div>
                     </div>
                   </div>
                 ))}
-
+                
                 {/* Add new provider form */}
                 <div className="pt-6 border-t">
                   <h3 className="text-sm font-medium mb-4">Add New Provider</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="provider-name">Provider Name</Label>
-                      <Input
+                      <Input 
                         id="provider-name"
                         value={newProvider.name}
-                        onChange={(e) =>
-                          setNewProvider({
-                            ...newProvider,
-                            name: e.target.value,
-                          })
-                        }
+                        onChange={e => setNewProvider({...newProvider, name: e.target.value})}
                         placeholder="e.g. My Custom OpenAI"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="provider-type">Provider Type</Label>
-                      <select
+                      <select 
                         id="provider-type"
                         className="w-full h-10 px-3 py-2 bg-background border border-input rounded-md"
                         value={newProvider.type}
-                        onChange={(e) =>
-                          setNewProvider({
-                            ...newProvider,
-                            type: e.target.value as ChatProviderType,
-                          })
-                        }
+                        onChange={e => setNewProvider({
+                          ...newProvider, 
+                          type: e.target.value as ChatProviderType
+                        })}
                       >
                         <option value="openai">OpenAI</option>
                         <option value="anthropic">Anthropic</option>
@@ -276,24 +231,22 @@ export function ChatProviderSettings() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="api-reference">API Reference</Label>
-                      <Input
+                      <Input 
                         id="api-reference"
                         value={newProvider.apiReference}
-                        onChange={(e) =>
-                          setNewProvider({
-                            ...newProvider,
-                            apiReference: e.target.value,
-                          })
-                        }
+                        onChange={e => setNewProvider({...newProvider, apiReference: e.target.value})}
                         placeholder="e.g. openai_gpt4o"
                       />
                     </div>
                   </div>
-                  <Button onClick={addNewProvider} className="mt-4">
+                  <Button 
+                    onClick={addNewProvider} 
+                    className="mt-4"
+                  >
                     Add Provider
                   </Button>
                 </div>
-
+                
                 <div className="flex justify-end pt-4">
                   <Button onClick={saveProviderSettings}>
                     <Save className="mr-2 h-4 w-4" />
@@ -304,7 +257,7 @@ export function ChatProviderSettings() {
             </CardContent>
           </Card>
         </TabsContent>
-
+        
         {/* Features Tab */}
         <TabsContent value="features">
           <Card>
@@ -323,13 +276,13 @@ export function ChatProviderSettings() {
                       Enable code assistance in chat
                     </p>
                   </div>
-                  <Switch
-                    id="codeAssistant"
-                    checked={features.codeAssistant}
-                    onCheckedChange={() => toggleFeature("codeAssistant")}
+                  <Switch 
+                    id="codeAssistant" 
+                    checked={features.codeAssistant} 
+                    onCheckedChange={() => toggleFeature('codeAssistant')}
                   />
                 </div>
-
+                
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="ragSupport">RAG Support</Label>
@@ -337,13 +290,13 @@ export function ChatProviderSettings() {
                       Enable retrieval augmented generation
                     </p>
                   </div>
-                  <Switch
-                    id="ragSupport"
-                    checked={features.ragSupport}
-                    onCheckedChange={() => toggleFeature("ragSupport")}
+                  <Switch 
+                    id="ragSupport" 
+                    checked={features.ragSupport} 
+                    onCheckedChange={() => toggleFeature('ragSupport')}
                   />
                 </div>
-
+                
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="githubSync">GitHub Sync</Label>
@@ -351,13 +304,13 @@ export function ChatProviderSettings() {
                       Enable GitHub integration in chat
                     </p>
                   </div>
-                  <Switch
-                    id="githubSync"
-                    checked={features.githubSync}
-                    onCheckedChange={() => toggleFeature("githubSync")}
+                  <Switch 
+                    id="githubSync" 
+                    checked={features.githubSync} 
+                    onCheckedChange={() => toggleFeature('githubSync')}
                   />
                 </div>
-
+                
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="notifications">Notifications</Label>
@@ -365,17 +318,15 @@ export function ChatProviderSettings() {
                       Enable notification features
                     </p>
                   </div>
-                  <Switch
-                    id="notifications"
-                    checked={features.notifications}
-                    onCheckedChange={() => toggleFeature("notifications")}
+                  <Switch 
+                    id="notifications" 
+                    checked={features.notifications} 
+                    onCheckedChange={() => toggleFeature('notifications')}
                   />
                 </div>
-
+                
                 <div className="pt-4 flex justify-end">
-                  <Button
-                    onClick={() => toast.success("Feature settings saved")}
-                  >
+                  <Button onClick={() => toast.success("Feature settings saved")}>
                     <Save className="mr-2 h-4 w-4" />
                     Save Feature Settings
                   </Button>
@@ -384,7 +335,7 @@ export function ChatProviderSettings() {
             </CardContent>
           </Card>
         </TabsContent>
-
+        
         {/* Appearance Tab */}
         <TabsContent value="appearance">
           <Card>
@@ -403,27 +354,31 @@ export function ChatProviderSettings() {
                       Current position: {getPositionDisplayText()}
                     </p>
                   </div>
-                  <Button variant="outline" onClick={togglePosition}>
+                  <Button 
+                    variant="outline" 
+                    onClick={togglePosition}
+                  >
                     Toggle Position
                   </Button>
                 </div>
-
+                
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="docked">Default Docking</Label>
                     <p className="text-sm text-muted-foreground">
-                      {docked ? "Fixed in position" : "Freely draggable"}
+                      {docked ? 'Fixed in position' : 'Freely draggable'}
                     </p>
                   </div>
-                  <Button variant="outline" onClick={toggleDocked}>
-                    {docked ? "Make Draggable" : "Make Fixed"}
+                  <Button 
+                    variant="outline" 
+                    onClick={toggleDocked}
+                  >
+                    {docked ? 'Make Draggable' : 'Make Fixed'}
                   </Button>
                 </div>
-
+                
                 <div className="pt-4 flex justify-end">
-                  <Button
-                    onClick={() => toast.success("Appearance settings saved")}
-                  >
+                  <Button onClick={() => toast.success("Appearance settings saved")}>
                     <Save className="mr-2 h-4 w-4" />
                     Save Appearance Settings
                   </Button>
@@ -432,13 +387,15 @@ export function ChatProviderSettings() {
             </CardContent>
           </Card>
         </TabsContent>
-
+        
         {/* Sessions Tab */}
         <TabsContent value="sessions">
           <Card>
             <CardHeader>
               <CardTitle>Session Management</CardTitle>
-              <CardDescription>Configure chat session behavior</CardDescription>
+              <CardDescription>
+                Configure chat session behavior
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -449,16 +406,14 @@ export function ChatProviderSettings() {
                       Automatically clean up inactive sessions
                     </p>
                   </div>
-                  <Button
+                  <Button 
                     variant="destructive"
-                    onClick={() =>
-                      toast.success("All inactive sessions terminated")
-                    }
+                    onClick={() => toast.success("All inactive sessions terminated")}
                   >
                     Terminate Inactive Sessions
                   </Button>
                 </div>
-
+                
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
                     <h3 className="font-medium">Session Timeout</h3>
@@ -477,11 +432,9 @@ export function ChatProviderSettings() {
                     <span>minutes</span>
                   </div>
                 </div>
-
+                
                 <div className="pt-4 flex justify-end">
-                  <Button
-                    onClick={() => toast.success("Session settings saved")}
-                  >
+                  <Button onClick={() => toast.success("Session settings saved")}>
                     <Save className="mr-2 h-4 w-4" />
                     Save Session Settings
                   </Button>

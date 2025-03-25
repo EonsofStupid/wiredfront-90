@@ -3,13 +3,11 @@ import React from "react";
 interface SpinnerProps {
   size?: "sm" | "md" | "lg";
   className?: string;
-  label?: string;
 }
 
 export const Spinner: React.FC<SpinnerProps> = ({
   size = "md",
   className = "",
-  label,
 }) => {
   const sizeClasses = {
     sm: "w-4 h-4",
@@ -18,7 +16,21 @@ export const Spinner: React.FC<SpinnerProps> = ({
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <>
+      <style>
+        {`
+          @keyframes spark {
+            0%, 100% {
+              opacity: 0;
+              transform: rotate(var(--rotation)) translateY(-12px) scale(0);
+            }
+            50% {
+              opacity: 1;
+              transform: rotate(var(--rotation)) translateY(-12px) scale(1);
+            }
+          }
+        `}
+      </style>
       <div className={`relative ${sizeClasses[size]} ${className}`}>
         {/* Outer glow ring */}
         <div className="absolute inset-0 rounded-full bg-primary/20 animate-pulse" />
@@ -106,7 +118,6 @@ export const Spinner: React.FC<SpinnerProps> = ({
           </div>
         </div>
       </div>
-      {label && <span className="text-sm text-muted-foreground">{label}</span>}
-    </div>
+    </>
   );
 };

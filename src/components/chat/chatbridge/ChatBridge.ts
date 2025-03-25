@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { BridgeEvent, BridgeListener, BridgeMessage, BridgeSettings, ChatMode, ConnectionStatus } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/services/chat/LoggingService';
-import { MessageStatus } from '@/types/chat';
 
 class ChatBridge {
   private static instance: ChatBridge;
@@ -23,8 +22,6 @@ class ChatBridge {
       buttonStyle: 'wfpulse',
       buttonSize: 'medium',
       buttonColor: '#0EA5E9',
-      chatWidth: 380,
-      chatHeight: 600,
     },
     notifications: {
       sound: true,
@@ -108,17 +105,12 @@ class ChatBridge {
 
   private async logToSupabase(event: BridgeEvent) {
     try {
-      await supabase.from('system_logs').insert({
+      await supabase.from('chat_logs').insert({
         user_id: this.userId,
-        level: 'info',
-        source: 'chat_bridge',
-        message: `Chat event: ${event.type}`,
-        metadata: {
-          session_id: this.sessionId,
-          event_type: event.type,
-          payload: event.payload,
-          timestamp: new Date(event.timestamp).toISOString(),
-        }
+        session_id: this.sessionId,
+        event_type: event.type,
+        payload: event.payload,
+        timestamp: new Date(event.timestamp).toISOString(),
       });
     } catch (error) {
       logger.error('Failed to log to Supabase', error);

@@ -1,26 +1,26 @@
 
 import { AlertCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface GitHubErrorMessageProps {
   errorMessage: string | null;
   connectionStatus: 'idle' | 'connecting' | 'connected' | 'error';
 }
 
-export function GitHubErrorMessage({ 
-  errorMessage, 
-  connectionStatus 
-}: GitHubErrorMessageProps) {
-  if (connectionStatus !== 'error' || !errorMessage) {
-    return null;
-  }
-
+export function GitHubErrorMessage({ errorMessage, connectionStatus }: GitHubErrorMessageProps) {
+  if (!errorMessage || connectionStatus !== 'error') return null;
+  
   return (
-    <Alert variant="destructive">
-      <AlertCircle className="h-4 w-4" />
-      <AlertDescription>
-        {errorMessage}
-      </AlertDescription>
-    </Alert>
+    <div className="p-4 border border-red-300 bg-red-50/10 rounded-md flex items-start gap-3 text-red-500">
+      <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+      <div>
+        <p className="font-medium mb-1">GitHub Connection Error</p>
+        <p className="text-sm">{errorMessage}</p>
+        {errorMessage.includes('not configured') && (
+          <p className="text-sm mt-2">
+            Make sure the GitHub client ID and secret are configured in your Supabase Edge Function secrets.
+          </p>
+        )}
+      </div>
+    </div>
   );
 }

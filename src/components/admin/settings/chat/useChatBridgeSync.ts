@@ -17,8 +17,6 @@ export function useChatBridgeSync() {
           buttonStyle: storeSettings.appearance.buttonStyle,
           buttonSize: storeSettings.appearance.buttonSize,
           buttonColor: storeSettings.appearance.buttonColor,
-          chatWidth: storeSettings.appearance.chatWidth || 380,
-          chatHeight: storeSettings.appearance.chatHeight || 600
         },
         notifications: {
           sound: storeSettings.notifications.soundEnabled,
@@ -41,8 +39,6 @@ export function useChatBridgeSync() {
           buttonStyle: bridgeSettings.appearance.buttonStyle,
           buttonSize: bridgeSettings.appearance.buttonSize,
           buttonColor: bridgeSettings.appearance.buttonColor,
-          chatWidth: bridgeSettings.appearance.chatWidth || 380,
-          chatHeight: bridgeSettings.appearance.chatHeight || 600
         },
         notifications: {
           soundEnabled: bridgeSettings.notifications.sound,

@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, X, TrashIcon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Spinner } from "@/components/chat/ui/Spinner";
+import { Spinner } from '../components/Spinner';
 import { 
   AlertDialog,
   AlertDialogAction,

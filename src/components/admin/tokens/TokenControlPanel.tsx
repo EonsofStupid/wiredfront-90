@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -66,22 +67,7 @@ export function TokenControlPanel() {
     }
   };
   
-  // Update the enforcement mode conversion function
-  const convertToStoreMode = (mode: TokenEnforcementMode): "NONE" | "ENFORCE" | "WARN" => {
-    switch (mode) {
-      case "always":
-        return "ENFORCE";
-      case "never":
-        return "NONE";
-      case "role_based":
-      case "mode_based":
-        return "WARN";
-      default:
-        return "NONE";
-    }
-  };
-
-  // Updated handleUpdateEnforcementConfig function to use the conversion
+  // Handle global token enforcement configuration
   const handleUpdateEnforcementConfig = async (mode: TokenEnforcementMode) => {
     setIsSubmitting(true);
     try {
@@ -102,8 +88,8 @@ export function TokenControlPanel() {
       
       if (error) throw error;
       
-      // Update local state - convert the mode before setting it
-      setEnforcementMode(convertToStoreMode(mode));
+      // Update local state
+      setEnforcementMode(mode);
       toast.success('Token enforcement configuration updated');
     } catch (error) {
       console.error('Error updating token enforcement config:', error);
@@ -112,7 +98,7 @@ export function TokenControlPanel() {
       setIsSubmitting(false);
     }
   };
-
+  
   if (!isAdmin) {
     return <UserTokenCard tokenBalance={tokenBalance} />;
   }
