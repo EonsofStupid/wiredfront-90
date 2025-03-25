@@ -1,5 +1,5 @@
 
-// Import a specific Json type from Supabase, but we'll use a more specific type for our application
+
 import { Json } from '@/integrations/supabase/types';
 
 // Core session interface
@@ -11,17 +11,8 @@ export interface Session {
   message_count: number;
   is_active?: boolean; // Derived from !archived for backward compatibility
   archived?: boolean;  // The actual DB field
-  metadata?: SessionMetadata;  // Using a specific type instead of Json
+  metadata?: Json;
   user_id?: string;
-}
-
-// A specific type for session metadata to break the recursive Json type chain
-export interface SessionMetadata {
-  mode?: string;
-  context?: Record<string, unknown>;
-  settings?: Record<string, unknown>;
-  lastPosition?: { x: number; y: number };
-  [key: string]: unknown; // Allow other properties while keeping type safety
 }
 
 // Session status for UI representation
@@ -37,12 +28,13 @@ export interface SessionOperationResult {
 // Session creation parameters
 export interface CreateSessionParams {
   title?: string;
-  metadata?: Partial<SessionMetadata>;
+  metadata?: Json;
 }
 
 // Session update parameters
 export interface UpdateSessionParams {
   title?: string;
   archived?: boolean; // Use archived instead of is_active
-  metadata?: Partial<SessionMetadata>;
+  metadata?: Json;
 }
+

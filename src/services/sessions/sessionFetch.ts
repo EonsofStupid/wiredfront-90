@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Session, SessionMetadata } from '@/types/sessions';
+import { Session } from '@/types/sessions';
 import { logger } from '@/services/chat/LoggingService';
 
 /**
@@ -23,11 +23,6 @@ interface RawSessionData {
  * database schema and application domain model
  */
 function mapToSession(rawData: RawSessionData, messageCount: number = 0): Session {
-  // Validate and transform the metadata to ensure type safety
-  const safeMetadata: SessionMetadata = rawData.metadata 
-    ? validateAndTransformMetadata(rawData.metadata)
-    : {};
-  
   return {
     id: rawData.id,
     title: rawData.title,
@@ -36,23 +31,9 @@ function mapToSession(rawData: RawSessionData, messageCount: number = 0): Sessio
     message_count: messageCount,
     is_active: !rawData.archived,
     archived: rawData.archived,
-    metadata: safeMetadata,
+    metadata: rawData.metadata, // Already typed as 'any' in the interface
     user_id: rawData.user_id || undefined
   };
-}
-
-/**
- * Helper function to validate and transform raw metadata to a type-safe structure
- * This adds runtime validation to complement the TypeScript type checking
- */
-function validateAndTransformMetadata(rawMetadata: any): SessionMetadata {
-  if (!rawMetadata || typeof rawMetadata !== 'object') {
-    return {};
-  }
-  
-  // Here we could add additional validation logic if needed
-  
-  return rawMetadata as SessionMetadata;
 }
 
 /**
