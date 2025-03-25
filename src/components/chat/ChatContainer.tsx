@@ -2,15 +2,15 @@
 import React, { useRef, useEffect } from "react";
 import { DndContext } from "@dnd-kit/core";
 import { ChatSidebar } from "./ChatSidebar";
-import { ChatToggleButton } from "./components/ChatToggleButton";
-import { DraggableChatContainer } from "./components/DraggableChatContainer";
+import { ChatToggleButton } from "./ui/ChatToggleButton";
+import { DraggableChatContainer } from "./ui/DraggableChatContainer";
 import { useViewportAwareness } from "./hooks/useViewportAwareness";
 import { useChatStore } from "./store/chatStore";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { logger } from "@/services/chat/LoggingService";
 
-export function DraggableChat() {
+export function ChatContainer() {
   const { 
     isOpen, 
     toggleChat, 
@@ -86,4 +86,4 @@ export function DraggableChat() {
   );
 }
 
-export default DraggableChat;
+export default ChatContainer;

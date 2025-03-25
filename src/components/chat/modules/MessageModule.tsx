@@ -7,9 +7,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useAutoScroll } from '../hooks/useAutoScroll';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useErrorBoundary } from '../hooks/useErrorBoundary';
-import { Spinner } from '../components/Spinner';
+import { Spinner } from '../ui/Spinner';
 import { logger } from '@/services/chat/LoggingService';
-import { MessageSkeleton } from '../components/MessageSkeleton';
+import { MessageSkeleton } from '../ui/MessageSkeleton';
 import { useChatStore } from '../store/chatStore';
 
 interface MessageModuleProps {

@@ -24,7 +24,7 @@ import { LivePreviewSettings } from "@/components/admin/settings/LivePreviewSett
 import { ChatFeatureSettings } from "@/components/admin/settings/ChatFeatureSettings";
 import { GuestCTA } from "@/components/auth/GuestCTA";
 import Settings from "./pages/Settings";
-import { DraggableChat } from "@/components/chat/DraggableChat";
+import { ChatContainer } from "@/components/chat/ChatContainer";
 import { AdminTopNavOverlay } from "@/components/admin/navigation/AdminTopNavOverlay";
 import FeatureFlagsPage from "./pages/admin/FeatureFlagsPage";
 import MetricsOverview from "./pages/admin/MetricsOverview";
@@ -195,7 +195,7 @@ const App = () => {
           <GuestCTA />
         </CoreLayout>
       )}
-      <DraggableChat />
+      <ChatContainer />
       <Toaster />
     </ChatProvider>
   );
