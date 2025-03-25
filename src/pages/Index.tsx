@@ -1,45 +1,18 @@
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
-import { ModeSelectionDialog, ChatMode } from './ModeSelectionDialog';
-import { useSessionManager } from '@/hooks/sessions';
 
-interface NewChatButtonProps {
-  variant?: "default" | "outline" | "ghost";
-  fullWidth?: boolean;
-}
+import React from "react";
+import { HeroSection } from "@/components/home/HeroSection";
+import { FeaturesSection } from "@/components/home/FeaturesSection";
+import { MainLayout } from "@/components/layout/MainLayout";
 
-export function NewChatButton({ variant = "default", fullWidth = false }: NewChatButtonProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { createSession } = useSessionManager();
-
-  const handleCreateWithMode = async (mode: ChatMode, providerId: string) => {
-    await createSession({
-      metadata: {
-        mode,
-        providerId
-      }
-    });
-    setIsDialogOpen(false);
-  };
-
+export default function Index() {
+  console.log("Index page rendering");
+  
   return (
-    <>
-      <Button
-        variant={variant}
-        className={`flex items-center gap-2 ${fullWidth ? 'w-full justify-start' : ''}`}
-        onClick={() => setIsDialogOpen(true)}
-      >
-        <PlusCircle className="h-4 w-4" />
-        <span>New Chat</span>
-      </Button>
-
-      <ModeSelectionDialog
-        open={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)} // ✅ Required prop added
-        onOpenChange={setIsDialogOpen}
-        onCreateSession={handleCreateWithMode}
-      />
-    </>
+    <MainLayout>
+      <div className="container mx-auto px-0">
+        <HeroSection />
+        <FeaturesSection />
+      </div>
+    </MainLayout>
   );
 }
