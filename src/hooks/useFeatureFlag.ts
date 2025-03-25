@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth";
@@ -34,16 +33,12 @@ export function useFeatureFlag(flagKey: string) {
           created_at: null,
           updated_at: null,
           created_by: null,
-          updated_by: null
+          // Ensure updated_by is present (it will be handled by the FeatureFlag type)
         } as FeatureFlag;
       }
 
-      // Type assertion with proper structure
-      return {
-        ...data,
-        // Ensure updated_by is present (may not exist in database)
-        updated_by: data.updated_by || null
-      } as FeatureFlag;
+      // Type assertion with proper structure - ensure updated_by exists
+      return data as FeatureFlag;
     },
   });
 

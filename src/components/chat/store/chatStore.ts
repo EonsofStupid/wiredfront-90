@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
@@ -135,7 +136,7 @@ export const clearMiddlewareStorage = () => {
 
 export const useChatStore = create<FullChatStore>()(
   devtools(
-    (set, get) => ({
+    (set, get, api) => ({
       ...initialState,
       
       resetChatState: () => {
@@ -154,9 +155,9 @@ export const useChatStore = create<FullChatStore>()(
         set({ userInput: input }, false, 'chat/setUserInput');
       },
       
-      ...createInitializationActions(set, get),
-      ...createFeatureActions(set, get),
-      ...createUIActions(set, get),
+      ...createInitializationActions(set, get, api),
+      ...createFeatureActions(set, get, api),
+      ...createUIActions(set, get, api),
     }),
     {
       name: 'ChatStore',

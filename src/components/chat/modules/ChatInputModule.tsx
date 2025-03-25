@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useChatStore } from '../store/chatStore';
 import { useMessageStore } from '../messaging/MessageManager';
@@ -11,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send } from 'lucide-react';
 import { parseCommand, executeCommand } from '@/services/chat/CommandHandler';
-import { VoiceToTextButton } from '../ui/VoiceToTextButton';
+import { VoiceToTextButton } from '../features/voice-to-text/VoiceToTextButton';
 
 interface ChatInputModuleProps {
   isEditorPage: boolean;

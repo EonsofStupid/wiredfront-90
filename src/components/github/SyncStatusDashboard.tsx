@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -60,17 +61,29 @@ export function SyncStatusDashboard() {
         return;
       }
 
-      // Safely transform the data with type assertions
-      const transformedData = data.map(log => ({
-        id: log.id as string,
-        repo_id: log.repository_id as string,
-        repo_name: (log.github_repositories as any)?.repo_name as string || 'Unknown',
-        repo_owner: (log.github_repositories as any)?.repo_owner as string || 'Unknown',
-        sync_type: 'push', // Fallback until sync_type is added to the schema
-        status: log.status as string,
-        details: log.details as Record<string, any>,
-        created_at: log.created_at as string
-      }));
+      // Type assertion to ensure we have the expected structure
+      const transformedData = data.map(log => {
+        // Safely cast the result to include the expected fields
+        const typedLog = log as unknown as {
+          id: string;
+          repository_id: string;
+          status: string;
+          details: Record<string, any>;
+          created_at: string;
+          github_repositories: { repo_name: string; repo_owner: string } | null;
+        };
+        
+        return {
+          id: typedLog.id,
+          repo_id: typedLog.repository_id,
+          repo_name: typedLog.github_repositories?.repo_name || 'Unknown',
+          repo_owner: typedLog.github_repositories?.repo_owner || 'Unknown',
+          sync_type: 'push', // Fallback until sync_type is added to the schema
+          status: typedLog.status,
+          details: typedLog.details || {},
+          created_at: typedLog.created_at
+        } as SyncLog;
+      });
 
       setSyncLogs(transformedData);
     } catch (error) {
