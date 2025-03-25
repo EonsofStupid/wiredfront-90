@@ -2,10 +2,11 @@ import { ChatMode, Message } from "@/types/chat";
 import { ProviderCategory } from "@/types/providers";
 import { ChatSettings } from "@/utils/storage/chat-settings";
 
-export type ChatPosition = {
-  x: number;
-  y: number;
-};
+export type ChatPosition =
+  | "bottom-right"
+  | "bottom-left"
+  | "top-right"
+  | "top-left";
 
 export type MessageActions = {
   copy: boolean;
@@ -76,7 +77,7 @@ export interface TokenControl {
 export interface Providers {
   loading: boolean;
   error?: string | null;
-  availableProviders?: ProviderCategory[];
+  availableProviders: ProviderCategory[];
 }
 
 export interface UIState {
