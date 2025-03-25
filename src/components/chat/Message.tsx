@@ -24,12 +24,13 @@ const Message = memo(function Message({
   timestamp,
   onRetry
 }: MessageProps) {
-  // Map role to appropriate CSS classes
   const messageClass = role === 'user' 
-    ? 'chat-message-user' 
+    ? 'bg-primary text-primary-foreground' 
     : role === 'system' 
-      ? 'chat-message-system' 
-      : 'chat-message-assistant';
+      ? 'bg-muted text-muted-foreground' 
+      : 'bg-secondary text-secondary-foreground';
+
+  const alignment = role === 'user' ? 'justify-end' : 'justify-start';
   
   // Map status to icon and tooltip text
   const statusConfig = {
@@ -38,7 +39,7 @@ const Message = memo(function Message({
     failed: { icon: <AlertCircle className="h-3 w-3 text-destructive" />, tooltip: 'Failed to send' }
   };
   
-  const { icon, tooltip } = statusConfig[status];
+  const { icon, tooltip } = statusConfig[status as keyof typeof statusConfig] || statusConfig.sent;
 
   // Add proper ARIA attributes for accessibility
   const messageType = role === 'user' ? 'Sent' : 'Received';
@@ -56,7 +57,7 @@ const Message = memo(function Message({
     <div
       className={cn(
         "flex w-full mb-4",
-        role === "user" ? "justify-end" : "justify-start"
+        alignment
       )}
       role="listitem"
       aria-label={`${messageType} message: ${content}`}
@@ -92,7 +93,7 @@ const Message = memo(function Message({
                   {icon}
                 </span>
               </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs chat-dialog-content">
+              <TooltipContent side="top" className="text-xs">
                 <p>{tooltip}</p>
                 {timestamp && (
                   <p className="text-xs text-muted-foreground mt-1">

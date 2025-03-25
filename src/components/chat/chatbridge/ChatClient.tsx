@@ -1,17 +1,16 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useChatBridge } from './useChatBridge';
-import { MessageCircle, X, Send, Settings, Mic, MicOff } from 'lucide-react';
+import { MessageCircle, X, Send } from 'lucide-react';
 import { ChatToggleButton } from '../ui/ChatToggleButton';
 import { Spinner } from '@/components/ui/spinner';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Message } from '../Message';
-import { MessageModule } from '../modules/MessageModule';
-import { ChatInputModule } from '../modules/ChatInputModule';
 import { StatusButton } from '../features/status-button/StatusButton';
 import { ChatHeaderTopNav } from '../features/ChatHeaderTopNav';
-import { VoiceToTextButton } from '../features/voice-to-text/VoiceToTextButton';
+import { VoiceToTextButton } from '../features/voice-to-text';
+import { MessageModule } from '../modules/MessageModule';
 import '../styles/chat-variables.css';
+import '../styles/container.css';
 
 interface ChatClientProps {
   defaultOpen?: boolean;
@@ -77,11 +76,11 @@ export const ChatClient: React.FC<ChatClientProps> = ({ defaultOpen = false }) =
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-4 right-4 w-80 sm:w-96 h-[500px] bg-white dark:bg-gray-900 rounded-lg shadow-xl flex flex-col overflow-hidden"
+            className="chat-container chat-glass-card"
             style={{ zIndex: 'var(--z-chat)' }}
           >
             {/* Chat Header */}
-            <div className="flex items-center justify-between p-3 border-b bg-primary text-primary-foreground">
+            <div className="chat-header flex items-center justify-between p-3">
               <div className="flex items-center space-between w-full">
                 <div className="flex items-center">
                   <MessageCircle className="w-5 h-5 mr-2" />
@@ -107,7 +106,7 @@ export const ChatClient: React.FC<ChatClientProps> = ({ defaultOpen = false }) =
             {/* Messages Container */}
             <div 
               ref={messagesContainerRef}
-              className="flex-1 overflow-y-auto p-3 space-y-4"
+              className="chat-messages-container"
             >
               <MessageModule scrollRef={messagesContainerRef} />
             </div>

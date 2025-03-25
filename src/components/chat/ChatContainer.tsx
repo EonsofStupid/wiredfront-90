@@ -1,56 +1,22 @@
 
-import { logger } from "@/services/chat/LoggingService";
-import { DndContext } from "@dnd-kit/core";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { ChatSidebar } from "./ChatSidebar";
 import { ChatToggleButton } from "./ui/ChatToggleButton";
 import { useViewportAwareness } from "./hooks/useViewportAwareness";
 import { useChatStore } from "./store/chatStore";
 import { ChatClient } from "./chatbridge/ChatClient";
-import { useChatBridge } from "./chatbridge/useChatBridge";
+import { DndContext } from "@dnd-kit/core";
 
 export function ChatContainer() {
-  const { isOpen, toggleChat, position, isMinimized, showSidebar, scale } =
-    useChatStore();
-  const { settings } = useChatBridge();
-
+  const { isOpen, position, isMinimized, showSidebar, scale } = useChatStore();
   const { containerRef, isOverflowing } = useViewportAwareness();
   const scrollRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
-  const isEditorPage = location.pathname === "/editor";
-
-  // Scroll to bottom of messages when new message is added
-  useEffect(() => {
-    if (scrollRef.current && !isMinimized) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [isMinimized]);
-
-  // Log significant chat state changes
-  useEffect(() => {
-    logger.info("Chat state updated", {
-      isOpen,
-      position,
-      isMinimized,
-      showSidebar,
-      scale,
-      isOverflowing,
-      path: location.pathname,
-    });
-  }, [
-    isOpen,
-    position,
-    isMinimized,
-    showSidebar,
-    scale,
-    isOverflowing,
-    location.pathname,
-  ]);
 
   if (!isOpen) {
-    return <ChatClient defaultOpen={false} />;
+    return <ChatToggleButton />;
   }
 
   const positionClass = position === "bottom-right" ? "right-4" : "left-4";
@@ -85,12 +51,7 @@ export function ChatContainer() {
           )}
         </AnimatePresence>
 
-        <div
-          ref={scrollRef}
-          className="bg-white rounded-lg shadow-lg p-4 w-[400px] h-[600px] overflow-y-auto"
-        >
-          <ChatClient defaultOpen={true} />
-        </div>
+        <ChatClient defaultOpen={true} />
       </motion.div>
     </DndContext>
   );

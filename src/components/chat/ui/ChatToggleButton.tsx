@@ -28,8 +28,8 @@ export function ChatToggleButton({ className, onClickHandler, isLoading }: ChatT
       variant="outline"
       size="icon"
       className={cn(
-        "fixed bottom-4 right-4 h-12 w-12 rounded-full shadow-lg", 
-        isOpen ? "bg-primary text-primary-foreground" : "bg-background",
+        "fixed bottom-4 right-4 h-12 w-12 rounded-full shadow-lg chat-cyber-border", 
+        isOpen ? "bg-primary text-primary-foreground" : "bg-background hover:bg-primary/10",
         className
       )}
       aria-label={isOpen ? "Close chat" : "Open chat"}
