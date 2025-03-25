@@ -19,7 +19,11 @@ export function ChatPositionToggle() {
     if (typeof position === 'string') {
       return position;
     }
-    return `Custom (${position.x}, ${position.y})`;
+    // Ensure we're checking if position is an object with x and y properties
+    if (position && typeof position === 'object' && 'x' in position && 'y' in position) {
+      return `Custom (${position.x}, ${position.y})`;
+    }
+    return 'Unknown';
   };
   
   return (

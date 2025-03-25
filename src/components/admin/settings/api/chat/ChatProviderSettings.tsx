@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 import { SettingsContainer } from "../../layout/SettingsContainer";
 import { toast } from "sonner";
+import { ChatPosition } from "@/components/chat/store/types/chat-store-types";
 
 // Define provider types for chat
 export type ChatProviderType = 'openai' | 'anthropic' | 'gemini' | 'local' | 'perplexity' | 'llama';
@@ -127,7 +129,13 @@ export function ChatProviderSettings() {
     if (typeof position === 'string') {
       return position === 'bottom-right' ? 'Bottom Right' : 'Bottom Left';
     }
-    return `Custom (${position.x}, ${position.y})`;
+    
+    // Type guard to ensure position is an object with x and y properties
+    if (position && typeof position === 'object' && 'x' in position && 'y' in position) {
+      return `Custom (${position.x}, ${position.y})`;
+    }
+    
+    return 'Unknown';
   };
   
   return (

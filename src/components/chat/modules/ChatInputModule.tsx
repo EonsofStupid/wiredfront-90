@@ -5,11 +5,13 @@ import { useMessageStore } from '../messaging/MessageManager';
 import { v4 as uuidv4 } from 'uuid';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Mic } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { VoiceToTextButton } from '../features/voice-to-text';
 import { supabase } from '@/integrations/supabase/client';
 import { parseCommand, executeCommand } from '@/services/chat/CommandHandler';
 import { toast } from 'sonner';
+import { Message, MessageRole, MessageStatus } from '@/types/chat';
+import { Json } from '@/integrations/supabase/types';
 
 export const ChatInputModule = () => {
   const { userInput, setUserInput, isWaitingForResponse, chatId } = useChatStore();
@@ -35,16 +37,29 @@ export const ChatInputModule = () => {
 
     // Create new message ID
     const messageId = uuidv4();
+    const now = new Date();
+    
+    // Create a message object that conforms to the Message interface
+    const userMessage: Message = {
+      id: messageId,
+      role: 'user' as MessageRole,
+      content: userInput,
+      user_id: null,
+      type: 'text',
+      metadata: {} as Json,
+      created_at: now.toISOString(),
+      updated_at: now.toISOString(),
+      chat_session_id: chatId || 'default',
+      is_minimized: false,
+      position: {} as Json,
+      window_state: {} as Json,
+      last_accessed: now.toISOString(),
+      retry_count: 0,
+      message_status: 'sent' as MessageStatus
+    };
     
     // Add the user message
-    addMessage({
-      id: messageId,
-      role: 'user',
-      content: userInput,
-      timestamp: new Date(),
-      status: 'sent',
-      sessionId: chatId || 'default',
-    });
+    addMessage(userMessage);
 
     // Clear the input
     setUserInput('');
@@ -62,40 +77,72 @@ export const ChatInputModule = () => {
         toast.error('Error sending message');
         console.error('Error sending message:', error);
         
-        // Add error response
-        addMessage({
+        // Add error response that conforms to the Message interface
+        const errorMessage: Message = {
           id: uuidv4(),
-          role: 'assistant',
+          role: 'assistant' as MessageRole,
           content: `Error: ${error.message || 'Failed to send message'}`,
-          timestamp: new Date(),
-          status: 'error',
-          sessionId: chatId || 'default',
-        });
+          user_id: null,
+          type: 'text',
+          metadata: {} as Json,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          chat_session_id: chatId || 'default',
+          is_minimized: false,
+          position: {} as Json,
+          window_state: {} as Json,
+          last_accessed: new Date().toISOString(),
+          retry_count: 0,
+          message_status: 'error' as MessageStatus
+        };
         
+        addMessage(errorMessage);
         return;
       }
       
-      // Add the assistant response
-      addMessage({
+      // Add the assistant response that conforms to the Message interface
+      const responseMessage: Message = {
         id: uuidv4(),
-        role: 'assistant',
+        role: 'assistant' as MessageRole,
         content: data?.response || 'No response received',
-        timestamp: new Date(),
-        status: 'received',
-        sessionId: chatId || 'default',
-      });
-    } catch (error) {
+        user_id: null,
+        type: 'text',
+        metadata: {} as Json,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        chat_session_id: chatId || 'default',
+        is_minimized: false,
+        position: {} as Json,
+        window_state: {} as Json,
+        last_accessed: new Date().toISOString(),
+        retry_count: 0,
+        message_status: 'received' as MessageStatus
+      };
+      
+      addMessage(responseMessage);
+    } catch (error: any) {
       console.error('Error in chat flow:', error);
       
-      // Add error response
-      addMessage({
+      // Add error response that conforms to the Message interface
+      const errorMessage: Message = {
         id: uuidv4(),
-        role: 'assistant',
-        content: `Error: ${error.message || 'An unexpected error occurred'}`,
-        timestamp: new Date(),
-        status: 'error',
-        sessionId: chatId || 'default',
-      });
+        role: 'assistant' as MessageRole,
+        content: `Error: ${error?.message || 'An unexpected error occurred'}`,
+        user_id: null,
+        type: 'text',
+        metadata: {} as Json,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        chat_session_id: chatId || 'default',
+        is_minimized: false,
+        position: {} as Json,
+        window_state: {} as Json,
+        last_accessed: new Date().toISOString(),
+        retry_count: 0,
+        message_status: 'error' as MessageStatus
+      };
+      
+      addMessage(errorMessage);
     } finally {
       setIsProcessing(false);
     }
