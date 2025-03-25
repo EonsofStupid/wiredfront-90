@@ -8,6 +8,7 @@ export type ChatMode = 'chat' | 'developer' | 'image' | 'training';
 export interface BridgeMessage extends Message {
   processing?: boolean;
   error?: string;
+  type?: 'text' | 'command' | 'system' | 'image' | 'training';
 }
 
 // Event types for the bridge
@@ -49,4 +50,6 @@ export interface BridgeSettings {
     sound: boolean;
     desktop: boolean;
   };
+  chatWidth?: number;
+  chatHeight?: number;
 }

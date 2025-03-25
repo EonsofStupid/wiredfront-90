@@ -4,7 +4,7 @@ import { ChatSettings } from '@/utils/storage/chat-settings';
 import { ChatMode } from '@/types/chat';
 import { ProviderCategory } from '@/types/providers';
 
-export type ChatPosition = {
+export type ChatPosition = 'bottom-right' | 'bottom-left' | {
   x: number;
   y: number;
 };
@@ -63,8 +63,12 @@ export interface FeatureState {
 }
 
 export interface TokenControl {
-  mode: 'NONE' | 'ENFORCE' | 'WARN';
+  mode: TokenEnforcementMode;
   balance: number;
+  tokensPerQuery?: number;
+  freeQueryLimit?: number;
+  queriesUsed?: number;
+  enforcementMode: TokenEnforcementMode;
 }
 
 export interface Providers {

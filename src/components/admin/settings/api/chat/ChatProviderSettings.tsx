@@ -19,7 +19,6 @@ import {
 import { SettingsContainer } from "../../layout/SettingsContainer";
 import { toast } from "sonner";
 
-// Define provider types for chat
 export type ChatProviderType = 'openai' | 'anthropic' | 'gemini' | 'local' | 'perplexity' | 'llama';
 
 interface ChatProvider {
@@ -34,7 +33,6 @@ interface ChatProvider {
 export function ChatProviderSettings() {
   const { features, toggleFeature, position, togglePosition, docked, toggleDocked } = useChatStore();
   
-  // Example providers - in a real app these would come from a database
   const [providers, setProviders] = useState<ChatProvider[]>([
     { 
       id: '1', 
@@ -68,7 +66,6 @@ export function ChatProviderSettings() {
     apiReference: ''
   });
   
-  // Function to toggle provider enabled status
   const toggleProviderEnabled = (id: string) => {
     setProviders(prev => 
       prev.map(provider => 
@@ -79,7 +76,6 @@ export function ChatProviderSettings() {
     );
   };
   
-  // Function to set a provider as default
   const setDefaultProvider = (id: string) => {
     setProviders(prev => 
       prev.map(provider => ({
@@ -89,12 +85,10 @@ export function ChatProviderSettings() {
     );
   };
   
-  // Function to save all provider settings
   const saveProviderSettings = () => {
     toast.success("Chat provider settings saved successfully");
   };
   
-  // Function to add a new provider
   const addNewProvider = () => {
     if (!newProvider.name || !newProvider.apiReference) {
       toast.error("Provider name and API reference are required");
@@ -122,12 +116,16 @@ export function ChatProviderSettings() {
     toast.success("New provider added");
   };
   
-  // Determine position display text
   const getPositionDisplayText = () => {
     if (typeof position === 'string') {
       return position === 'bottom-right' ? 'Bottom Right' : 'Bottom Left';
     }
-    return `Custom (${position.x}, ${position.y})`;
+    
+    if (position && typeof position === 'object' && 'x' in position && 'y' in position) {
+      return `Custom (${position.x}, ${position.y})`;
+    }
+    
+    return 'Unknown Position';
   };
   
   return (
@@ -155,7 +153,6 @@ export function ChatProviderSettings() {
           </TabsTrigger>
         </TabsList>
         
-        {/* Providers Tab */}
         <TabsContent value="providers">
           <Card>
             <CardHeader>
@@ -197,7 +194,6 @@ export function ChatProviderSettings() {
                   </div>
                 ))}
                 
-                {/* Add new provider form */}
                 <div className="pt-6 border-t">
                   <h3 className="text-sm font-medium mb-4">Add New Provider</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -258,7 +254,6 @@ export function ChatProviderSettings() {
           </Card>
         </TabsContent>
         
-        {/* Features Tab */}
         <TabsContent value="features">
           <Card>
             <CardHeader>
@@ -336,7 +331,6 @@ export function ChatProviderSettings() {
           </Card>
         </TabsContent>
         
-        {/* Appearance Tab */}
         <TabsContent value="appearance">
           <Card>
             <CardHeader>
@@ -388,7 +382,6 @@ export function ChatProviderSettings() {
           </Card>
         </TabsContent>
         
-        {/* Sessions Tab */}
         <TabsContent value="sessions">
           <Card>
             <CardHeader>
