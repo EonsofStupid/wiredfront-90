@@ -1,8 +1,6 @@
-import { Message } from '@/types/chat';
-import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
-import { ChatSettings } from '@/utils/storage/chat-settings';
-import { ChatMode } from '@/types/chat';
-import { ProviderCategory } from '@/types/providers';
+import { ChatMode, Message } from "@/types/chat";
+import { ProviderCategory } from "@/types/providers";
+import { ChatSettings } from "@/utils/storage/chat-settings";
 
 export type ChatPosition = {
   x: number;
@@ -15,27 +13,32 @@ export type MessageActions = {
   delete: boolean;
 };
 
-export type ProviderType = 
-  | 'openai' 
-  | 'anthropic' 
-  | 'gemini' 
-  | 'huggingface' 
-  | 'pinecone' 
-  | 'weaviate' 
-  | 'openrouter' 
-  | 'github' 
-  | 'replicate' 
-  | 'stabilityai' 
-  | 'vector' 
-  | 'voice'
-  | 'dalle'
-  | 'perplexity'
-  | 'qdrant'
-  | 'elevenlabs'
-  | 'whisper'
-  | 'sonnet';
+export type ProviderType =
+  | "openai"
+  | "anthropic"
+  | "gemini"
+  | "huggingface"
+  | "pinecone"
+  | "weaviate"
+  | "openrouter"
+  | "github"
+  | "replicate"
+  | "stabilityai"
+  | "vector"
+  | "voice"
+  | "dalle"
+  | "perplexity"
+  | "qdrant"
+  | "elevenlabs"
+  | "whisper"
+  | "sonnet";
 
-export type ProviderCategoryType = 'chat' | 'image' | 'other' | 'vector' | 'voice';
+export type ProviderCategoryType =
+  | "chat"
+  | "image"
+  | "other"
+  | "vector"
+  | "voice";
 
 export type SidebarState = {
   isOpen: boolean;
@@ -47,7 +50,7 @@ export type SidebarItem = {
   id: string;
   label: string;
   icon?: string;
-  type: 'session' | 'setting' | 'feature';
+  type: "session" | "setting" | "feature";
 };
 
 export interface FeatureState {
@@ -63,13 +66,17 @@ export interface FeatureState {
 }
 
 export interface TokenControl {
-  mode: 'NONE' | 'ENFORCE' | 'WARN';
+  mode: "NONE" | "ENFORCE" | "WARN";
   balance: number;
+  queriesUsed: number;
+  enforcementMode: "NONE" | "ENFORCE" | "WARN";
+  tokenEnforcement?: boolean;
 }
 
 export interface Providers {
   loading: boolean;
   error?: string | null;
+  availableProviders?: ProviderCategory[];
 }
 
 export interface UIState {
@@ -83,7 +90,7 @@ export interface ChatState {
   isOpen: boolean;
   isMinimized: boolean;
   isHidden: boolean;
-  position: 'bottom-right' | 'bottom-left';
+  position: "bottom-right" | "bottom-left";
   currentMode: ChatMode;
   features: FeatureState;
   settings: ChatSettings;
@@ -95,7 +102,7 @@ export interface ChatState {
   isWaitingForResponse: boolean;
   selectedModel: string;
   selectedMode: string;
-  modelFetchStatus: 'idle' | 'loading' | 'success' | 'error';
+  modelFetchStatus: "idle" | "loading" | "success" | "error";
   error?: string | null;
   chatId: string | null;
   startTime: number;
@@ -121,7 +128,7 @@ export interface ChatState {
   resetChatState: () => void;
   setAvailableProviders: (providers: ProviderCategory[]) => void;
   setCurrentProvider: (provider: ProviderCategory | null) => void;
-  setTokenEnforcementMode: (mode: TokenControl['mode']) => void;
+  setTokenEnforcementMode: (mode: TokenControl["mode"]) => void;
   addTokens: (amount: number) => Promise<boolean>;
   spendTokens: (amount: number) => Promise<boolean>;
   setTokenBalance: (amount: number) => Promise<boolean>;

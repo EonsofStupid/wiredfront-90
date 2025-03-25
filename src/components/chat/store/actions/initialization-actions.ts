@@ -1,109 +1,130 @@
+import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/services/chat/LoggingService";
+import { Provider, ProviderCategory } from "@/types/providers";
+import { ChatState } from "../types/chat-store-types";
 
-import { supabase } from '@/integrations/supabase/client';
-import { ChatState } from '../types/chat-store-types';
-import { logger } from '@/services/chat/LoggingService';
-import type { StateCreator } from 'zustand';
-
-type SetState = (state: Partial<ChatState>, replace?: boolean, action?: any) => void;
+type SetState = (
+  state: Partial<ChatState>,
+  replace?: boolean,
+  action?: any
+) => void;
 type GetState = () => ChatState;
 
-export const createInitializationActions = (
-  set: SetState,
-  get: GetState,
-) => ({
+export const createInitializationActions = (set: SetState, get: GetState) => ({
   /**
    * Initialize chat settings from the database or local storage
    */
   initializeChatSettings: async () => {
     try {
-      logger.info('Initializing chat settings');
-      set({ initialized: false }, false, { type: 'initialization/start' });
+      logger.info("Initializing chat settings");
+      set({ initialized: false }, false, { type: "initialization/start" });
 
       // First, try to load providers from Supabase edge function
       try {
-        const { data, error } = await supabase.functions.invoke('initialize-providers');
-        
+        const { data, error } = await supabase.functions.invoke(
+          "initialize-providers"
+        );
+
         if (error) {
-          logger.error('Error initializing providers', error);
+          logger.error("Error initializing providers", error);
         } else if (data && data.availableProviders) {
-          logger.info('Loaded available providers', { count: data.availableProviders.length });
-          
-          // Always set OpenAI as the default provider if available
-          const openaiProvider = data.availableProviders.find((p: any) => p.type === 'openai');
-          
-          set({
-            availableProviders: data.availableProviders,
-            currentProvider: openaiProvider || data.defaultProvider,
-            providers: {
-              availableProviders: data.availableProviders
-            }
+          logger.info("Loaded available providers", {
+            count: data.availableProviders.length,
           });
-          
-          logger.info('Set current provider', { 
-            provider: openaiProvider ? openaiProvider.name : data.defaultProvider?.name 
+
+          // Initialize providers
+          const providers = data?.providers || [];
+          const providerCategories = providers.map(
+            (provider: Provider) => provider.category
+          );
+
+          // Find OpenAI provider category if available
+          const openaiProvider = providerCategories.find(
+            (category: ProviderCategory) => category === "ai"
+          );
+
+          set({
+            providers: {
+              loading: false,
+              error: null,
+              availableProviders: providerCategories,
+            },
+            availableProviders: providerCategories,
+            currentProvider: openaiProvider || providerCategories[0] || null,
+          });
+
+          logger.info("Set current provider", {
+            provider: openaiProvider
+              ? openaiProvider.name
+              : providerCategories[0]?.name,
           });
         }
       } catch (providerError) {
-        logger.error('Failed to load providers from edge function', providerError);
-        
+        logger.error(
+          "Failed to load providers from edge function",
+          providerError
+        );
+
         // Fallback to default OpenAI provider if edge function fails
-        const fallbackProvider = {
-          id: 'openai-default',
-          name: 'OpenAI',
-          type: 'openai',
-          isDefault: true,
-          category: 'chat'
-        };
-        
         set({
-          availableProviders: [fallbackProvider],
-          currentProvider: fallbackProvider
+          availableProviders: ["ai"],
+          currentProvider: "ai",
+          providers: {
+            loading: false,
+            error: null,
+            availableProviders: ["ai"],
+          },
         });
-        
-        logger.info('Set fallback OpenAI provider');
+
+        logger.info("Set fallback OpenAI provider");
       }
 
       // Then, try to load user chat settings from the database
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (session?.user?.id) {
-        logger.info('User authenticated, loading settings from database');
-        
+        logger.info("User authenticated, loading settings from database");
+
         const { data: chatSettings, error: settingsError } = await supabase
-          .from('chat_settings')
-          .select('*')
-          .eq('user_id', session.user.id)
+          .from("chat_settings")
+          .select("*")
+          .eq("user_id", session.user.id)
           .single();
 
-        if (settingsError && settingsError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
-          logger.error('Error loading chat settings', settingsError);
+        if (settingsError && settingsError.code !== "PGRST116") {
+          // PGRST116 is "no rows returned"
+          logger.error("Error loading chat settings", settingsError);
         }
 
         if (chatSettings) {
-          logger.info('Chat settings loaded from database');
-          
+          logger.info("Chat settings loaded from database");
+
           // Safely handle nested properties with proper type checking
           const uiCustomizations = chatSettings.ui_customizations || {};
           const currentState = get();
-          
+
           // Apply settings from database with proper type safety
           set({
             features: {
-              ...currentState.features,
-              ...(typeof uiCustomizations === 'object' && 
-                 uiCustomizations.features ? 
-                 uiCustomizations.features as Record<string, boolean> : {})
+              voice: uiCustomizations.voice || false,
+              rag: uiCustomizations.rag || false,
+              modeSwitch: uiCustomizations.modeSwitch || false,
+              notifications: uiCustomizations.notifications || false,
+              github: uiCustomizations.github || false,
+              codeAssistant: uiCustomizations.codeAssistant || false,
+              ragSupport: uiCustomizations.ragSupport || false,
+              githubSync: uiCustomizations.githubSync || false,
+              tokenEnforcement: uiCustomizations.tokenEnforcement || false,
             },
-            // Apply token control settings if available with proper type checks
             tokenControl: {
-              ...currentState.tokenControl,
-              enforcementMode: typeof uiCustomizations === 'object' && 
-                uiCustomizations.tokenEnforcement ? 
-                uiCustomizations.tokenEnforcement : 'never',
-              ...(typeof uiCustomizations === 'object' && 
-                 uiCustomizations.tokenControl ? 
-                 uiCustomizations.tokenControl as Record<string, any> : {})
-            }
+              mode: uiCustomizations.tokenControl?.mode || "NONE",
+              balance: uiCustomizations.tokenControl?.balance || 0,
+              queriesUsed: uiCustomizations.tokenControl?.queriesUsed || 0,
+              enforcementMode:
+                uiCustomizations.tokenControl?.enforcementMode || "NONE",
+            },
           });
         }
       }
@@ -111,31 +132,38 @@ export const createInitializationActions = (
       // If no provider is set, use OpenAI as default
       const currentState = get();
       if (!currentState.currentProvider) {
-        const defaultProvider = {
-          id: 'openai-default',
-          name: 'OpenAI',
-          type: 'openai',
-          isDefault: true,
-          category: 'chat'
-        };
-        
         set({
-          currentProvider: defaultProvider,
-          availableProviders: [...(currentState.availableProviders || []), defaultProvider]
+          currentProvider: "ai",
+          availableProviders: [
+            ...(currentState.availableProviders || []),
+            "ai",
+          ],
+          providers: {
+            loading: false,
+            error: null,
+            availableProviders: [
+              ...(currentState.availableProviders || []),
+              "ai",
+            ],
+          },
         });
-        
-        logger.info('Set default OpenAI provider as fallback');
+
+        logger.info("Set default OpenAI provider as fallback");
       }
 
       // Finally, mark initialization as complete
-      set({ initialized: true }, false, { type: 'initialization/complete' });
-      logger.info('Chat settings initialization complete');
+      set({ initialized: true }, false, { type: "initialization/complete" });
+      logger.info("Chat settings initialization complete");
     } catch (error) {
-      logger.error('Failed to initialize chat settings', error);
-      set({ initialized: true, error: 'Failed to initialize chat settings' }, false, {
-        type: 'initialization/error',
-        error,
-      });
+      logger.error("Failed to initialize chat settings", error);
+      set(
+        { initialized: true, error: "Failed to initialize chat settings" },
+        false,
+        {
+          type: "initialization/error",
+          error,
+        }
+      );
     }
   },
 });

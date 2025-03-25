@@ -138,7 +138,13 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
                     <MessageComponent
                       content={msg.content}
                       role={msg.role}
-                      status={mapMessageStatus(msg.message_status)}
+                      status={
+                        msg.message_status === "error"
+                          ? "failed"
+                          : msg.message_status === "cached"
+                          ? "sent"
+                          : msg.message_status
+                      }
                       id={msg.id}
                       timestamp={msg.created_at}
                       onRetry={handleRetry}

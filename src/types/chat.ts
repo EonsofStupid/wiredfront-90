@@ -1,29 +1,28 @@
+import { Json } from "@/integrations/supabase/types";
 
-import { Json } from '@/integrations/supabase/types';
-
-export type MessageStatus = 'pending' | 'sent' | 'failed' | 'error' | 'cached';
-export type MessageRole = 'user' | 'assistant' | 'system';
+export type MessageStatus = "pending" | "sent" | "failed" | "error" | "cached";
+export type MessageRole = "user" | "assistant" | "system";
+export type ChatMode =
+  | "chat"
+  | "dev"
+  | "image"
+  | "training"
+  | "planning"
+  | "code";
 
 export interface Message {
   id: string;
+  session_id?: string;
+  user_id: string;
+  role: MessageRole;
   content: string;
-  user_id: string | null;
-  type: 'text' | 'command' | 'system';
   metadata: Json;
+  status: MessageStatus;
+  retry_count: number;
+  last_retry?: string;
   created_at: string;
   updated_at: string;
-  chat_session_id: string;
-  is_minimized: boolean;
-  position: Json;
-  window_state: Json;
-  last_accessed: string;
-  retry_count: number;
-  message_status: MessageStatus;
-  role: MessageRole;
-  source_type?: string;
-  provider?: string;
-  processing_status?: string;
-  last_retry?: string;
-  rate_limit_window?: string;
-  sessionId?: string; // Added sessionId property
+  parent_message_id?: string;
+  last_edited?: string;
+  position_order: number;
 }
