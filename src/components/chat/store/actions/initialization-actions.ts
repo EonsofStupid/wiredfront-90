@@ -1,10 +1,16 @@
+
 import { QueryClient } from "@tanstack/react-query";
 import { v4 as uuidv4 } from "uuid";
 import { ChatState } from "../types/chat-store-types";
-import { StoreApi, SetState, GetState } from "zustand";
+import { StateCreator } from "zustand";
 
 // Define TokenEnforcementMode here if it's missing from the imports
 type TokenEnforcementMode = 'always' | 'never' | 'role_based' | 'mode_based';
+
+// Define proper types derived from StateCreator
+type SetState<T> = StateCreator<T, [], [], any>['setState'];
+type GetState<T> = StateCreator<T, [], [], any>['getState'];
+type StoreApi<T> = { setState: SetState<T>; getState: GetState<T>; subscribe: any };
 
 export const createInitializationActions = (
   set: SetState<ChatState>,

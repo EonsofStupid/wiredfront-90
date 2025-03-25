@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import { Toaster } from "sonner";
 import { ChatModeProvider } from './providers/ChatModeProvider';
@@ -19,7 +20,7 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export function ChatProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const isEditorPage = location.pathname === '/editor';
-  const { isOpen, initializeChatSettings, setSessionLoading } = useChatStore();
+  const { isOpen, initializeChat, setSessionLoading } = useChatStore();
   const { currentSessionId, refreshSessions } = useSessionManager();
   const messageStore = useMessageStore();
   const [isInitialized, setIsInitialized] = useState(false);
@@ -30,7 +31,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       try {
         setIsInitializing(true);
         
-        initializeChatSettings();
+        initializeChat();
         logger.info('Chat settings initialized');
         
         if (isEditorPage || location.pathname === '/') {
@@ -49,7 +50,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     };
     
     initialize();
-  }, [initializeChatSettings, isEditorPage, location.pathname, refreshSessions, setSessionLoading]);
+  }, [initializeChat, isEditorPage, location.pathname, refreshSessions, setSessionLoading]);
 
   useEffect(() => {
     logger.info('Chat context updated', { 
