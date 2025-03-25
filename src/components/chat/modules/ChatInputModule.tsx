@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { useChatStore } from '../store';
 import { useMessageStore } from '../messaging/MessageManager';
@@ -142,4 +143,35 @@ export const ChatInputModule = () => {
   };
 
   return (
-    <div className="p-4 border-t bg-background
+    <div className="p-4 border-t bg-background">
+      <div className="flex items-center gap-2">
+        <VoiceToTextButton 
+          onTranscription={(text) => setUserInput(text)} 
+          isProcessing={isProcessing}
+        />
+        
+        <Input
+          value={userInput}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          placeholder="Type your message..."
+          className="flex-1 bg-background/50"
+          disabled={isWaitingForResponse || isProcessing}
+          data-testid="chat-input"
+        />
+        
+        <Button
+          type="button"
+          size="icon"
+          onClick={sendMessage}
+          disabled={!userInput.trim() || isWaitingForResponse || isProcessing}
+          className="h-10 w-10"
+          title="Send message"
+          data-testid="send-button"
+        >
+          <Send className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+};
