@@ -3,19 +3,24 @@ import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@/types/sessions';
 import { logger } from '@/services/chat/LoggingService';
 
-// Define a simplified raw database record type that avoids recursive types
+/**
+ * Raw session data structure from database
+ * Using a completely decoupled interface to prevent type recursion issues
+ */
 interface RawSessionData {
   id: string;
   title: string;
   created_at: string;
   last_accessed: string;
   archived: boolean;
-  metadata: any; // Explicitly use any to break recursion
+  metadata: any; // Explicitly use any to break type recursion
   user_id: string | null;
 }
 
 /**
- * Maps raw database data to a Session object, breaking type recursion
+ * Clean mapping function to transform database records to application domain objects
+ * This function handles type conversion and provides a clear separation between 
+ * database schema and application domain model
  */
 function mapToSession(rawData: RawSessionData, messageCount: number = 0): Session {
   return {
@@ -26,7 +31,7 @@ function mapToSession(rawData: RawSessionData, messageCount: number = 0): Sessio
     message_count: messageCount,
     is_active: !rawData.archived,
     archived: rawData.archived,
-    metadata: rawData.metadata as any, // Force break type recursion
+    metadata: rawData.metadata, // Already typed as 'any' in the interface
     user_id: rawData.user_id || undefined
   };
 }
@@ -63,11 +68,21 @@ export async function fetchUserSessions(): Promise<Session[]> {
       return [];
     }
 
-    // Explicitly cast to RawSessionData[] to break recursive type analysis
-    const rawData = data as any as RawSessionData[];
+    // Transform the data to our internal type to break recursive type chains
+    // Use type assertion only at this boundary between external and internal types
+    const rawSessions: RawSessionData[] = data.map(item => ({
+      id: item.id,
+      title: item.title,
+      created_at: item.created_at,
+      last_accessed: item.last_accessed,
+      archived: item.archived,
+      metadata: item.metadata,
+      user_id: item.user_id
+    }));
     
-    // Get message counts for each session and map to Session objects
-    const sessionsWithCounts = await Promise.all(rawData.map(async (session) => {
+    // Get message counts for each session and map to final Session objects
+    const sessionsWithCounts = await Promise.all(rawSessions.map(async (session) => {
+      // Count messages for this session
       const { count, error: countError } = await supabase
         .from('messages')
         .select('id', { count: 'exact', head: true })
@@ -77,7 +92,7 @@ export async function fetchUserSessions(): Promise<Session[]> {
         logger.warn('Failed to get message count', { error: countError, sessionId: session.id });
       }
       
-      // Map to Session object using the helper function
+      // Convert to domain model using the mapper function
       return mapToSession(session, count || 0);
     }));
     
