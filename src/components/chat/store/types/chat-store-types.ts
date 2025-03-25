@@ -135,6 +135,9 @@ export interface ChatState {
   setTokenBalance: (amount: number) => Promise<boolean>;
   initializeChatSettings: () => void;
   setSessionLoading: (isLoading: boolean) => void;
+  // UI Actions
+  updateCurrentProvider: (provider: ChatProvider) => void;
+  updateAvailableProviders: (providers: ChatProvider[]) => void;
 }
 
 export type ChatProvider = {
@@ -144,4 +147,5 @@ export type ChatProvider = {
   isActive: boolean;
   description?: string;
   category: ProviderCategory;
+  isDefault?: boolean;
 };
