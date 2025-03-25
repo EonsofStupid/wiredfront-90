@@ -14,6 +14,7 @@ import { Save, MessageSquare, KeyRound, Shield } from "lucide-react";
 import { ChatSettingsTabs } from "../chat/ChatSettingsTabs";
 import { APIKeyManagement } from "./APIKeyManagement";
 import { useRoleStore } from "@/stores/role";
+import React from "react";
 
 export function APISettings() {
   const {
@@ -41,6 +42,15 @@ export function APISettings() {
         description: "Please try again or check the console for details."
       });
     }
+  };
+
+  // Add state for chat settings tab
+  const [activeTab, setActiveTab] = React.useState("general");
+  
+  // Handler for chat settings
+  const handleChatSettingChange = (key: string, value: any) => {
+    // This is a placeholder - you'll need to implement the actual logic
+    console.log('Chat setting changed:', key, value);
   };
 
   if (!user) {
@@ -88,7 +98,14 @@ export function APISettings() {
             </TabsContent>
             
             <TabsContent value="chat-settings" className="pt-4">
-              <ChatSettingsTabs />
+              <ChatSettingsTabs 
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                settings={settings}
+                handleSettingChange={handleChatSettingChange}
+                isSaving={isSaving}
+                onSave={handleSave}
+              />
             </TabsContent>
             
             {hasRole('super_admin') && (
