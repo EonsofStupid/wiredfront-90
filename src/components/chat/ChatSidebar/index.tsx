@@ -7,8 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { SessionItem } from './SessionItem';
-import { Spinner } from '@/components/chat/ui/Spinner';
-import { CreateSessionParams } from '@/types/sessions';
+import { Spinner } from '@/components/ui/spinner';
 
 export function ChatSidebar() {
   const [isModeDialogOpen, setIsModeDialogOpen] = useState(false);
@@ -26,14 +25,7 @@ export function ChatSidebar() {
 
   const handleCreateSession = async (mode: string, providerId: string) => {
     setIsModeDialogOpen(false);
-    // Create session with proper params
-    const params: CreateSessionParams = {
-      metadata: {
-        mode,
-        providerId
-      }
-    };
-    await createSession(params);
+    await createSession(mode);
   };
 
   return (
@@ -56,12 +48,12 @@ export function ChatSidebar() {
             <SessionItem
               key={sessionId}
               id={sessionId}
-              lastAccessed={new Date(session.last_accessed)}
+              lastAccessed={new Date(session.lastAccessed)}
               isActive={sessionId === currentSessionId}
-              messageCount={session.message_count}
+              messageCount={session.messageCount}
               title={session.title}
               onSelect={() => switchSession(sessionId)}
-              provider={session.metadata?.provider_name}
+              provider={session.provider}
             />
           ))
         )}

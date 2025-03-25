@@ -1,52 +1,63 @@
 
-import { useCallback, useEffect } from 'react';
-import { ChatBridge } from '@/components/chat/chatbridge/ChatBridge';
-import { useSettingsStore } from '@/stores/settings';
+import { useEffect } from 'react';
+import { useChatBridge } from '@/components/chat/chatbridge/useChatBridge';
+import { useChatStore } from '@/components/chat/store/chatStore';
 import { logger } from '@/services/chat/LoggingService';
-import { toast } from 'sonner';
-import { ChatSettings } from '@/utils/storage/chat-settings';
 
-/**
- * Hook for syncing settings between the chat bridge and settings store
- */
 export function useChatBridgeSync() {
-  const preferences = useSettingsStore(state => state.preferences);
-  const updatePreferences = useSettingsStore(state => state.updatePreferences);
+  const { updateSettings: updateBridgeSettings, settings: bridgeSettings } = useChatBridge();
+  const { settings: storeSettings, updateSettings: updateStoreSettings } = useChatStore();
 
-  // Sync store changes to bridge
-  const syncBridgeToStore = useCallback(() => {
-    try {
-      logger.info('Syncing settings from store to bridge');
-      
-      // Get chat interface settings
-      const chatSettings = preferences.chatSettings as unknown as ChatSettings;
-      
-      if (chatSettings?.appearance) {
-        // Update the chat bridge with the current settings
-        ChatBridge.configure({
-          appearance: {
-            position: chatSettings.appearance.position,
-            buttonStyle: chatSettings.appearance.buttonStyle,
-            buttonSize: chatSettings.appearance.buttonSize,
-            buttonColor: chatSettings.appearance.buttonColor,
-            chatWidth: chatSettings.appearance.chatWidth || 400, // Default value if not present
-            chatHeight: chatSettings.appearance.chatHeight || 500, // Default value if not present
-          },
-          behavior: chatSettings.behavior,
-          notifications: chatSettings.notifications,
-          providers: chatSettings.providers,
-        });
-      }
-    } catch (error) {
-      logger.error('Error syncing settings to bridge', { error });
-      toast.error('Failed to apply chat settings');
-    }
-  }, [preferences]);
-  
-  // Sync bridge to store on mount
+  // Sync store settings to bridge
   useEffect(() => {
-    syncBridgeToStore();
-  }, [syncBridgeToStore]);
-  
-  return { syncBridgeToStore };
+    try {
+      updateBridgeSettings({
+        appearance: {
+          position: storeSettings.appearance.position,
+          buttonStyle: storeSettings.appearance.buttonStyle,
+          buttonSize: storeSettings.appearance.buttonSize,
+          buttonColor: storeSettings.appearance.buttonColor,
+        },
+        notifications: {
+          sound: storeSettings.notifications.soundEnabled,
+          desktop: storeSettings.notifications.desktopNotifications,
+        },
+        chatWidth: storeSettings.chatWidth || 400,
+        chatHeight: storeSettings.chatHeight || 600
+      });
+      
+      logger.info('Synced store settings to bridge', { storeSettings });
+    } catch (error) {
+      logger.error('Failed to sync store settings to bridge', error);
+    }
+  }, [storeSettings, updateBridgeSettings]);
+
+  // Update store from bridge when it changes
+  const syncBridgeToStore = () => {
+    try {
+      updateStoreSettings({
+        appearance: {
+          position: bridgeSettings.appearance.position,
+          buttonStyle: bridgeSettings.appearance.buttonStyle,
+          buttonSize: bridgeSettings.appearance.buttonSize,
+          buttonColor: bridgeSettings.appearance.buttonColor,
+        },
+        notifications: {
+          soundEnabled: bridgeSettings.notifications.sound,
+          desktopNotifications: bridgeSettings.notifications.desktop,
+        },
+        chatWidth: bridgeSettings.chatWidth,
+        chatHeight: bridgeSettings.chatHeight
+      });
+      
+      logger.info('Synced bridge settings to store', { bridgeSettings });
+    } catch (error) {
+      logger.error('Failed to sync bridge settings to store', error);
+    }
+  };
+
+  return {
+    syncBridgeToStore,
+    bridgeSettings
+  };
 }
