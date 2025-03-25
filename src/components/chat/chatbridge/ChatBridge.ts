@@ -105,12 +105,17 @@ class ChatBridge {
 
   private async logToSupabase(event: BridgeEvent) {
     try {
-      await supabase.from('chat_logs').insert({
+      await supabase.from('system_logs').insert({
         user_id: this.userId,
-        session_id: this.sessionId,
-        event_type: event.type,
-        payload: event.payload,
-        timestamp: new Date(event.timestamp).toISOString(),
+        level: 'info',
+        source: 'chat_bridge',
+        message: `Chat event: ${event.type}`,
+        metadata: {
+          session_id: this.sessionId,
+          event_type: event.type,
+          payload: event.payload,
+          timestamp: new Date(event.timestamp).toISOString(),
+        }
       });
     } catch (error) {
       logger.error('Failed to log to Supabase', error);

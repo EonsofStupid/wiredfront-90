@@ -72,6 +72,12 @@ export interface Providers {
   error?: string | null;
 }
 
+export interface UIState {
+  sessionLoading: boolean;
+  messageLoading: boolean;
+  providerLoading: boolean;
+}
+
 export interface ChatState {
   initialized: boolean;
   isOpen: boolean;
@@ -97,6 +103,7 @@ export interface ChatState {
   currentProvider: ProviderCategory | null;
   tokenControl: TokenControl;
   providers: Providers;
+  ui: UIState;
 
   // Actions
   toggleChat: () => void;
@@ -118,4 +125,6 @@ export interface ChatState {
   addTokens: (amount: number) => Promise<boolean>;
   spendTokens: (amount: number) => Promise<boolean>;
   setTokenBalance: (amount: number) => Promise<boolean>;
+  initializeChatSettings: () => void;
+  setSessionLoading: (isLoading: boolean) => void;
 }

@@ -1,15 +1,16 @@
+
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { useChatStore } from "../store/chatStore";
-import { ChatPosition } from "../store/types/chat-store-types";
 
 // Temporary type until module is fixed
 type ChatMode = "chat" | "search" | "settings";
+type ChatPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
 
 // UI State Atoms
 export const chatPositionAtom = atomWithStorage<ChatPosition>(
   "chat-position",
-  ChatPosition["bottom-right"]
+  "bottom-right"
 );
 export const chatScaleAtom = atomWithStorage<number>("chat-scale", 1);
 export const isMinimizedAtom = atom<boolean>(false);

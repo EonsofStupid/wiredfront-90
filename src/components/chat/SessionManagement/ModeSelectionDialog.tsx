@@ -1,187 +1,120 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { ChatProviderType } from '@/types/admin/settings/chat-provider';
-import { useChatStore } from '../store/chatStore';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import { Code, ImageIcon, MessageSquare } from 'lucide-react';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { useChatStore } from "../store/chatStore";
 
-export type ChatMode = 'standard' | 'editor' | 'image';
+export type ChatMode = "chat" | "dev" | "image" | "training";
 
-export interface ModeSelectionDialogProps {
+interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateSession: (mode: ChatMode, provider: string) => Promise<void>;
+  onCreateSession: (mode: ChatMode, providerId: string) => void;
 }
 
-export function ModeSelectionDialog({ 
-  open, 
-  onOpenChange,
-  onCreateSession 
-}: ModeSelectionDialogProps) {
-  const navigate = useNavigate();
+export function ModeSelectionDialog({ open, onOpenChange, onCreateSession }: Props) {
+  const [selectedMode, setSelectedMode] = useState<ChatMode>("chat");
+  const [selectedProvider, setSelectedProvider] = useState<string>("");
   const { providers } = useChatStore();
-  const [selectedMode, setSelectedMode] = useState<ChatMode>('standard');
-  const [selectedProvider, setSelectedProvider] = useState<string>(
-    providers.availableProviders.find(p => p.isEnabled)?.id || ''
-  );
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const availableChatProviders = providers.availableProviders.filter(
-    p => p.isEnabled && p.category === 'chat'
-  );
   
-  const availableImageProviders = providers.availableProviders.filter(
-    p => p.isEnabled && p.category === 'image'
-  );
-
-  // Filter providers based on selected mode
-  const filteredProviders = selectedMode === 'image' 
-    ? availableImageProviders 
-    : availableChatProviders;
-
-  // Set default provider when mode changes
-  React.useEffect(() => {
-    if (filteredProviders.length > 0) {
-      setSelectedProvider(filteredProviders[0].id);
-    } else {
-      setSelectedProvider('');
+  const providersForMode = useMemo(() => {
+    // Return an empty array with proper fallback if providers.availableProviders doesn't exist
+    if (!providers || !providers.availableProviders) {
+      return [];
     }
-  }, [selectedMode, filteredProviders]);
+    
+    return providers.availableProviders.filter(
+      (p) => p.supportedModes?.includes(selectedMode)
+    );
+  }, [selectedMode, providers]);
 
-  const handleModeSelect = async () => {
-    try {
-      setIsSubmitting(true);
-      
-      await onCreateSession(selectedMode, selectedProvider);
-      
-      // Navigate based on selected mode
-      switch (selectedMode) {
-        case 'editor':
-          navigate('/editor');
-          break;
-        case 'image':
-          navigate('/gallery');
-          break;
-        default:
-          // Stay on current page for standard chat mode
-          break;
-      }
-      
+  // Set default provider when providers change
+  useEffect(() => {
+    const defaultProvider = providersForMode.find((p) => p.isDefault);
+    if (defaultProvider) {
+      setSelectedProvider(defaultProvider.id);
+    } else if (providersForMode.length > 0) {
+      setSelectedProvider(providersForMode[0].id);
+    }
+  }, [providersForMode]);
+
+  const handleCreateSession = () => {
+    if (selectedMode && selectedProvider) {
+      onCreateSession(selectedMode, selectedProvider);
       onOpenChange(false);
-    } catch (error) {
-      console.error('Failed to create session:', error);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#0EA5E9]/20 max-w-md" style={{ zIndex: 'var(--z-chat-dialogs)' }}>
-        <DialogHeader>
-          <DialogTitle className="text-xl">New Chat Session</DialogTitle>
-          <DialogDescription>
-            Select the chat mode and AI provider for your new conversation
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="grid gap-6 py-4">
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent className="glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#D946EF]/20">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Select Chat Mode</AlertDialogTitle>
+          <AlertDialogDescription>
+            Choose the mode for your new chat session.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="grid gap-4 py-4">
           <div className="space-y-2">
-            <h3 className="text-sm font-medium">Select Mode</h3>
-            <div className="grid grid-cols-3 gap-2">
-              <Button
-                type="button"
-                variant={selectedMode === 'standard' ? 'default' : 'outline'}
-                className={`flex flex-col items-center justify-center p-4 h-auto ${
-                  selectedMode === 'standard' ? 'border-primary' : 'border-white/10'
-                }`}
-                onClick={() => setSelectedMode('standard')}
+            <Label>Mode</Label>
+            <RadioGroup
+              defaultValue={selectedMode}
+              onValueChange={(value) => setSelectedMode(value as ChatMode)}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="chat" id="chat" />
+                <Label htmlFor="chat">Chat</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="dev" id="dev" />
+                <Label htmlFor="dev">Developer</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="image" id="image" />
+                <Label htmlFor="image">Image</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="training" id="training" />
+                <Label htmlFor="training">Training</Label>
+              </div>
+            </RadioGroup>
+          </div>
+          {providersForMode.length > 0 && (
+            <div className="space-y-2">
+              <Label>Provider</Label>
+              <RadioGroup
+                defaultValue={selectedProvider}
+                onValueChange={setSelectedProvider}
               >
-                <MessageSquare className="h-5 w-5 mb-2" />
-                <span className="text-xs">Chat</span>
-              </Button>
-              <Button
-                type="button"
-                variant={selectedMode === 'editor' ? 'default' : 'outline'}
-                className={`flex flex-col items-center justify-center p-4 h-auto ${
-                  selectedMode === 'editor' ? 'border-primary' : 'border-white/10'
-                }`}
-                onClick={() => setSelectedMode('editor')}
-              >
-                <Code className="h-5 w-5 mb-2" />
-                <span className="text-xs">Editor</span>
-              </Button>
-              <Button
-                type="button"
-                variant={selectedMode === 'image' ? 'default' : 'outline'}
-                className={`flex flex-col items-center justify-center p-4 h-auto ${
-                  selectedMode === 'image' ? 'border-primary' : 'border-white/10'
-                }`}
-                onClick={() => setSelectedMode('image')}
-              >
-                <ImageIcon className="h-5 w-5 mb-2" />
-                <span className="text-xs">Image</span>
-              </Button>
+                <div className="flex flex-col space-y-2">
+                  {providersForMode.map((provider) => (
+                    <div key={provider.id} className="flex items-center space-x-2">
+                      <RadioGroupItem value={provider.id} id={provider.id} />
+                      <Label htmlFor={provider.id}>{provider.name}</Label>
+                    </div>
+                  ))}
+                </div>
+              </RadioGroup>
             </div>
-          </div>
-          
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium">Select Provider</h3>
-            <Select 
-              value={selectedProvider} 
-              onValueChange={setSelectedProvider}
-              disabled={filteredProviders.length === 0}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select an AI provider" />
-              </SelectTrigger>
-              <SelectContent>
-                {filteredProviders.length > 0 ? (
-                  filteredProviders.map((provider) => (
-                    <SelectItem key={provider.id} value={provider.id}>
-                      {provider.name}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <SelectItem value="none" disabled>
-                    No available providers for this mode
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="flex justify-end space-x-2">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="border-white/10"
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleModeSelect}
-              disabled={isSubmitting || filteredProviders.length === 0}
-            >
-              {isSubmitting ? "Creating..." : "Create Chat"}
-            </Button>
-          </div>
+          )}
         </div>
-      </DialogContent>
-    </Dialog>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleCreateSession}>
+            Create Session
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

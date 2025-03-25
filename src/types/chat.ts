@@ -1,3 +1,4 @@
+
 import { Json } from '@/integrations/supabase/types';
 
 export type MessageStatus = 'pending' | 'sent' | 'failed' | 'error' | 'cached';
@@ -24,4 +25,5 @@ export interface Message {
   processing_status?: string;
   last_retry?: string;
   rate_limit_window?: string;
+  sessionId?: string; // Added sessionId property
 }

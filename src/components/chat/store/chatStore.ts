@@ -59,6 +59,11 @@ const initialState: Omit<ChatState, keyof FeatureState | keyof Providers | keyof
     loading: false,
     error: null,
   },
+  ui: {
+    sessionLoading: false,
+    messageLoading: false,
+    providerLoading: false,
+  },
 };
 
 export const clearMiddlewareStorage = () => {
@@ -189,4 +194,14 @@ export const useChatStore = create<ChatState>((set) => ({
     }));
     return true;
   },
+  initializeChatSettings: () => {
+    const settings = getChatSettings();
+    set({ settings, initialized: true });
+  },
+  setSessionLoading: (isLoading: boolean) => set((state) => ({
+    ui: {
+      ...state.ui,
+      sessionLoading: isLoading,
+    }
+  })),
 }));
