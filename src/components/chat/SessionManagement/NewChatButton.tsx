@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
@@ -13,7 +12,7 @@ interface NewChatButtonProps {
 export function NewChatButton({ variant = "default", fullWidth = false }: NewChatButtonProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { createSession } = useSessionManager();
-  
+
   const handleCreateWithMode = async (mode: ChatMode, providerId: string) => {
     await createSession({
       metadata: {
@@ -21,8 +20,9 @@ export function NewChatButton({ variant = "default", fullWidth = false }: NewCha
         providerId
       }
     });
+    setIsDialogOpen(false);
   };
-  
+
   return (
     <>
       <Button
@@ -33,9 +33,10 @@ export function NewChatButton({ variant = "default", fullWidth = false }: NewCha
         <PlusCircle className="h-4 w-4" />
         <span>New Chat</span>
       </Button>
-      
-      <ModeSelectionDialog 
+
+      <ModeSelectionDialog
         open={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)} // ✅ Required prop added
         onOpenChange={setIsDialogOpen}
         onCreateSession={handleCreateWithMode}
       />
