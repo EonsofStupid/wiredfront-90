@@ -26,7 +26,7 @@ export const useFeatureFlags = () => {
       // Transform the data to match the FeatureFlag interface
       const formattedFlags = data.map(flag => ({
         ...flag,
-        updated_by: flag.updated_by || null // Ensure this property exists
+        updated_by: flag.updated_by || null // Ensure this property exists if it doesn't in the database
       })) as unknown as FeatureFlag[]; // Use unknown to safely cast to FeatureFlag[]
       
       return formattedFlags;

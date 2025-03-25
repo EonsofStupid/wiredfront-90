@@ -4,7 +4,7 @@ import { ChatState } from '../types/chat-store-types';
 import { logger } from '@/services/chat/LoggingService';
 import type { StateCreator } from 'zustand';
 import { ChatProvider } from '../types/chat-store-types';
-import { TokenEnforcementMode } from '@/integrations/supabase/types';
+import { ChatMode } from '@/integrations/supabase/types/enums';
 
 type SetState = (state: Partial<ChatState>, replace?: boolean, action?: any) => void;
 type GetState = () => ChatState;
@@ -84,39 +84,47 @@ export const createInitializationActions = (
         if (chatSettings) {
           logger.info('Chat settings loaded from database');
           
-          // Safely handle nested properties with proper type checking
-          const uiCustomizations = chatSettings.ui_customizations || {};
           const currentState = get();
           
-          // Fix type assertion issues - explicitly check and cast
-          const settingsFeatures = typeof uiCustomizations === 'object' && 
-            !Array.isArray(uiCustomizations) && 
-            'features' in uiCustomizations ? 
-            uiCustomizations.features as Record<string, boolean> : {};
+          // Safely handle nested properties with proper type checking
+          if (chatSettings.ui_customizations && 
+              typeof chatSettings.ui_customizations === 'object' && 
+              !Array.isArray(chatSettings.ui_customizations)) {
+                
+            const uiCustomizations = chatSettings.ui_customizations;
+            
+            // Properly type features
+            const settingsFeatures = typeof uiCustomizations === 'object' && 
+              !Array.isArray(uiCustomizations) && 
+              'features' in uiCustomizations ? 
+              uiCustomizations.features as Record<string, boolean> : {};
 
-          const settingsTokenEnforcement = typeof uiCustomizations === 'object' && 
-            !Array.isArray(uiCustomizations) && 
-            'tokenEnforcement' in uiCustomizations ? 
-            uiCustomizations.tokenEnforcement as TokenEnforcementMode : 'never';
+            // Properly type tokenEnforcement
+            const settingsTokenEnforcement = typeof uiCustomizations === 'object' && 
+              !Array.isArray(uiCustomizations) && 
+              'tokenEnforcement' in uiCustomizations ? 
+              uiCustomizations.tokenEnforcement as string : 'never';
 
-          const settingsTokenControl = typeof uiCustomizations === 'object' && 
-            !Array.isArray(uiCustomizations) && 
-            'tokenControl' in uiCustomizations ? 
-            uiCustomizations.tokenControl as Record<string, any> : {};
+            // Properly type tokenControl
+            const settingsTokenControl = typeof uiCustomizations === 'object' && 
+              !Array.isArray(uiCustomizations) && 
+              'tokenControl' in uiCustomizations ? 
+              uiCustomizations.tokenControl as Record<string, any> : {};
 
-          // Apply settings from database with proper type safety
-          set({
-            features: {
-              ...currentState.features,
-              ...settingsFeatures
-            },
-            // Apply token control settings if available with proper type checks
-            tokenControl: {
-              ...currentState.tokenControl,
-              enforcementMode: settingsTokenEnforcement,
-              ...settingsTokenControl
-            }
-          });
+            // Apply settings from database with proper type safety
+            set({
+              features: {
+                ...currentState.features,
+                ...settingsFeatures
+              },
+              // Apply token control settings if available with proper type checks
+              tokenControl: {
+                ...currentState.tokenControl,
+                enforcementMode: settingsTokenEnforcement as any,
+                ...settingsTokenControl
+              }
+            });
+          }
         }
       }
 
@@ -128,7 +136,7 @@ export const createInitializationActions = (
           name: 'OpenAI',
           type: 'openai',
           isDefault: true,
-          category: 'chat' // Using valid category value
+          category: 'chat' 
         };
         
         set({

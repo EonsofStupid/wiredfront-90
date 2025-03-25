@@ -41,7 +41,7 @@ export function useFeatureFlag(flagKey: string) {
       // Type assertion with proper structure
       return {
         ...data,
-        // Ensure any required properties from FeatureFlag are present
+        // Ensure updated_by is present (may not exist in database)
         updated_by: data.updated_by || null
       } as FeatureFlag;
     },

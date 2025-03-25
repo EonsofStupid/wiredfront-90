@@ -15,7 +15,7 @@ export async function updateSession(
       .from('chat_sessions')
       .update({
         ...(params.title && { title: params.title }),
-        ...(params.is_active !== undefined && { is_active: params.is_active }),
+        ...(params.archived !== undefined && { archived: params.archived }),
         ...(params.metadata && { metadata: params.metadata }),
         last_accessed: new Date().toISOString()
       })
