@@ -1,34 +1,50 @@
-import React, { useState, useEffect } from 'react';
+import { ChatProvider } from "@/components/chat/store/types/chat-store-types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
-  DialogFooter
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Bot, Check, RefreshCw, History } from 'lucide-react';
-import { useAIProviders } from '@/hooks/chat/useAIProviders';
-import { ChatProvider } from '@/components/chat/store/types/chat-store-types';
-import { logger } from '@/services/chat/LoggingService';
-import { AIProviderService } from '@/services/chat/AIProviderService';
-import { toast } from 'sonner';
-import { useProviderChanges } from '@/hooks/useProviderChanges';
-import { formatDistanceToNow } from 'date-fns';
+} from "@/components/ui/dialog";
+import { useAIProviders } from "@/hooks/chat/useAIProviders";
+import { useProviderChanges } from "@/hooks/useProviderChanges";
+import { AIProviderService } from "@/services/chat/AIProviderService";
+import { logger } from "@/services/chat/LoggingService";
+import { formatDistanceToNow } from "date-fns";
+import { Bot, Check, History, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
-type ProviderType = 'openai' | 'anthropic' | 'gemini' | 'huggingface' | 'pinecone' | 
-  'weaviate' | 'openrouter' | 'replicate' | 'sonnet' | 'elevenlabs' | 'whisper' | 'github';
+type ProviderType =
+  | "openai"
+  | "anthropic"
+  | "gemini"
+  | "huggingface"
+  | "pinecone"
+  | "weaviate"
+  | "openrouter"
+  | "replicate"
+  | "sonnet"
+  | "elevenlabs"
+  | "whisper"
+  | "github";
+
+interface ExtendedChatProvider extends ChatProvider {
+  isDefault?: boolean;
+}
 
 export function AIProviderStatusDialog() {
-  const { providers, selectedProvider, isLoading, refreshProviders } = useAIProviders();
-  const { 
-    changeProvider, 
-    isChanging, 
-    changeHistory, 
-    isLoadingHistory, 
-    fetchProviderChanges, 
-    rollbackToProvider 
+  const { providers, selectedProvider, isLoading, refreshProviders } =
+    useAIProviders();
+  const {
+    changeProvider,
+    isChanging,
+    changeHistory,
+    isLoadingHistory,
+    fetchProviderChanges,
+    rollbackToProvider,
   } = useProviderChanges();
   const [testingProvider, setTestingProvider] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -80,7 +96,10 @@ export function AIProviderStatusDialog() {
       } else {
         toast.error(`Connection failed: ${result.message}`);
       }
-      logger.info("Provider connection test", { id: providerId, success: result.success });
+      logger.info("Provider connection test", {
+        id: providerId,
+        success: result.success,
+      });
     } catch (error) {
       toast.error("Error testing provider connection");
       logger.error("Error testing provider connection", error);
@@ -89,29 +108,31 @@ export function AIProviderStatusDialog() {
     }
   };
 
-  const groupedProviders = providers.reduce<Record<ProviderType, ChatProvider[]>>((acc, provider) => {
+  const groupedProviders = (providers as ExtendedChatProvider[]).reduce<
+    Record<ProviderType, ExtendedChatProvider[]>
+  >((acc, provider) => {
     const type = provider.type as ProviderType;
     if (!acc[type]) {
       acc[type] = [];
     }
     acc[type].push(provider);
     return acc;
-  }, {} as Record<ProviderType, ChatProvider[]>);
+  }, {} as Record<ProviderType, ExtendedChatProvider[]>);
 
   const getProviderTypeDisplayName = (type: ProviderType): string => {
     const displayNames: Record<ProviderType, string> = {
-      'openai': 'OpenAI',
-      'anthropic': 'Anthropic',
-      'gemini': 'Google Gemini',
-      'huggingface': 'Hugging Face',
-      'pinecone': 'Pinecone',
-      'weaviate': 'Weaviate',
-      'openrouter': 'OpenRouter',
-      'replicate': 'Replicate',
-      'sonnet': 'Adept Sonnet',
-      'elevenlabs': 'Eleven Labs',
-      'whisper': 'Whisper',
-      'github': 'GitHub'
+      openai: "OpenAI",
+      anthropic: "Anthropic",
+      gemini: "Google Gemini",
+      huggingface: "Hugging Face",
+      pinecone: "Pinecone",
+      weaviate: "Weaviate",
+      openrouter: "OpenRouter",
+      replicate: "Replicate",
+      sonnet: "Adept Sonnet",
+      elevenlabs: "Eleven Labs",
+      whisper: "Whisper",
+      github: "GitHub",
     };
     return displayNames[type] || type.charAt(0).toUpperCase() + type.slice(1);
   };
@@ -124,13 +145,13 @@ export function AIProviderStatusDialog() {
             <Bot className="h-5 w-5" />
             <DialogTitle>AI Provider Settings</DialogTitle>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setShowHistory(!showHistory)}
           >
             <History className="h-4 w-4 mr-2" />
-            {showHistory ? 'Hide History' : 'Show History'}
+            {showHistory ? "Hide History" : "Show History"}
           </Button>
         </div>
         <DialogDescription>
@@ -153,12 +174,16 @@ export function AIProviderStatusDialog() {
                     {getProviderTypeDisplayName(type as ProviderType)}
                   </h3>
                   <div className="grid grid-cols-1 gap-2">
-                    {typeProviders.map(provider => (
-                      <div 
-                        key={provider.id} 
+                    {typeProviders.map((provider) => (
+                      <div
+                        key={provider.id}
                         className={`
-                          flex items-center justify-between p-3 rounded-md border 
-                          ${selectedProvider?.id === provider.id ? 'border-primary bg-primary/5' : 'border-border'}
+                          flex items-center justify-between p-3 rounded-md border
+                          ${
+                            selectedProvider?.id === provider.id
+                              ? "border-primary bg-primary/5"
+                              : "border-border"
+                          }
                           hover:border-primary/50 transition-colors
                         `}
                       >
@@ -167,11 +192,17 @@ export function AIProviderStatusDialog() {
                             <Bot className="h-4 w-4 text-primary" />
                           </div>
                           <div>
-                            <p className="font-medium text-sm">{provider.name}</p>
-                            <p className="text-xs text-muted-foreground">{type}</p>
+                            <p className="font-medium text-sm">
+                              {provider.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {type}
+                            </p>
                           </div>
                           {provider.isDefault && (
-                            <Badge variant="outline" className="ml-2 text-xs">Default</Badge>
+                            <Badge variant="outline" className="ml-2 text-xs">
+                              Default
+                            </Badge>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
@@ -188,10 +219,16 @@ export function AIProviderStatusDialog() {
                             )}
                           </Button>
                           <Button
-                            variant={selectedProvider?.id === provider.id ? "default" : "outline"}
+                            variant={
+                              selectedProvider?.id === provider.id
+                                ? "default"
+                                : "outline"
+                            }
                             size="sm"
                             onClick={() => handleProviderSelect(provider.id)}
-                            disabled={selectedProvider?.id === provider.id || isChanging}
+                            disabled={
+                              selectedProvider?.id === provider.id || isChanging
+                            }
                           >
                             {selectedProvider?.id === provider.id ? (
                               <>
@@ -223,27 +260,31 @@ export function AIProviderStatusDialog() {
             </div>
           ) : changeHistory.length === 0 ? (
             <div className="text-center p-6 border rounded-md bg-muted/10">
-              <p className="text-muted-foreground">No provider changes have been recorded yet</p>
+              <p className="text-muted-foreground">
+                No provider changes have been recorded yet
+              </p>
             </div>
           ) : (
             <div className="space-y-2">
-              {changeHistory.map(entry => (
+              {changeHistory.map((entry) => (
                 <div key={entry.id} className="p-3 border rounded-md">
                   <div className="flex justify-between">
                     <div>
                       <p className="text-sm font-medium">
-                        {entry.new_provider} 
+                        {entry.new_provider}
                         <span className="text-xs text-muted-foreground ml-2">
-                          {entry.old_provider ? `(from ${entry.old_provider})` : '(initial)'}
+                          {entry.old_provider
+                            ? `(from ${entry.old_provider})`
+                            : "(initial)"}
                         </span>
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(entry.changed_at), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(entry.changed_at), {
+                          addSuffix: true,
+                        })}
                       </p>
                       {entry.reason && (
-                        <p className="text-xs">
-                          Reason: {entry.reason}
-                        </p>
+                        <p className="text-xs">Reason: {entry.reason}</p>
                       )}
                     </div>
                     {entry.old_provider && (
@@ -266,7 +307,9 @@ export function AIProviderStatusDialog() {
 
       <DialogFooter>
         {showHistory ? (
-          <Button onClick={() => setShowHistory(false)}>Back to Providers</Button>
+          <Button onClick={() => setShowHistory(false)}>
+            Back to Providers
+          </Button>
         ) : (
           <Button onClick={refreshProviders}>
             <RefreshCw className="h-4 w-4 mr-2" />
