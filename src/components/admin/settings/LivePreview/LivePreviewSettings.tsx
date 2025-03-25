@@ -1,29 +1,29 @@
-import { Switch } from "@/components/ui/switch";
-import { SettingsContainer } from "./layout/SettingsContainer";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
-import { useSettingsStore } from "@/stores/settings";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
+import { useSettingsStore } from "@/stores/settings";
+import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { SettingsContainer } from "../layout/SettingsContainer";
 
 interface StatusIndicatorProps {
   status: string;
 }
 
 const StatusIndicator = ({ status }: StatusIndicatorProps) => {
-  if (status === 'active') {
+  if (status === "active") {
     return <CheckCircle className="h-4 w-4 text-green-500" />;
   }
-  if (status === 'error') {
+  if (status === "error") {
     return <AlertCircle className="h-4 w-4 text-red-500" />;
   }
   return <Loader2 className="h-4 w-4 animate-spin" />;
 };
 
 interface LogEntryProps {
-  type: 'success' | 'info' | 'error';
+  type: "success" | "info" | "error";
   message: string;
 }
 
@@ -31,7 +31,7 @@ const LogEntry = ({ type, message }: LogEntryProps) => {
   const iconMap = {
     success: <CheckCircle className="h-4 w-4 text-green-500" />,
     info: <Loader2 className="h-4 w-4 text-blue-500" />,
-    error: <AlertCircle className="h-4 w-4 text-red-500" />
+    error: <AlertCircle className="h-4 w-4 text-red-500" />,
   };
 
   return (
@@ -47,34 +47,32 @@ export function LivePreviewSettings() {
   const livePreviewEnabled = preferences?.livePreview?.enabled || false;
 
   const handleToggleLivePreview = async (enabled: boolean) => {
-    updatePreferences({ 
-      livePreview: { 
+    updatePreferences({
+      livePreview: {
         ...preferences?.livePreview,
-        enabled 
-      } 
+        enabled,
+      },
     });
 
     try {
-      const { error } = await supabase
-        .from('live_preview_status')
-        .upsert({ 
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-          status: enabled ? 'initializing' : 'inactive',
-          current_step: enabled ? 'Starting initialization...' : null,
-          logs: []
-        });
+      const { error } = await supabase.from("live_preview_status").upsert({
+        user_id: (await supabase.auth.getUser()).data.user?.id,
+        status: enabled ? "initializing" : "inactive",
+        current_step: enabled ? "Starting initialization..." : null,
+        logs: [],
+      });
 
       if (error) throw error;
-      toast.success(`Live Preview ${enabled ? 'enabled' : 'disabled'}`);
+      toast.success(`Live Preview ${enabled ? "enabled" : "disabled"}`);
     } catch (error) {
-      console.error('Error updating live preview status:', error);
-      updatePreferences({ 
-        livePreview: { 
+      console.error("Error updating live preview status:", error);
+      updatePreferences({
+        livePreview: {
           ...preferences?.livePreview,
-          enabled: !enabled 
-        } 
+          enabled: !enabled,
+        },
       });
-      toast.error('Failed to update Live Preview status');
+      toast.error("Failed to update Live Preview status");
     }
   };
 
@@ -112,10 +110,7 @@ export function LivePreviewSettings() {
                   type="success"
                   message="Live Preview initialized successfully"
                 />
-                <LogEntry
-                  type="info"
-                  message="Watching for file changes..."
-                />
+                <LogEntry type="info" message="Watching for file changes..." />
               </div>
             </ScrollArea>
           </Card>

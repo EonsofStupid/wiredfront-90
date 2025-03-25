@@ -1,21 +1,25 @@
-
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SettingsContainer } from "./layout/SettingsContainer";
 import { useSettingsStore } from "@/stores/settings";
 import { useCallback } from "react";
 import { useChatBridgeSync } from "../chat/useChatBridgeSync";
+import { SettingsContainer } from "../layout/SettingsContainer";
 
 export function GeneralSettings() {
-  const preferences = useSettingsStore(state => state.preferences);
-  const updatePreferences = useSettingsStore(state => state.updatePreferences);
+  const preferences = useSettingsStore((state) => state.preferences);
+  const updatePreferences = useSettingsStore(
+    (state) => state.updatePreferences
+  );
   const { syncBridgeToStore } = useChatBridgeSync();
 
-  const handlePreferenceChange = useCallback((key: string, value: string) => {
-    updatePreferences({ [key]: value });
-    // Sync changes to chat bridge
-    syncBridgeToStore();
-  }, [updatePreferences, syncBridgeToStore]);
+  const handlePreferenceChange = useCallback(
+    (key: string, value: string) => {
+      updatePreferences({ [key]: value });
+      // Sync changes to chat bridge
+      syncBridgeToStore();
+    },
+    [updatePreferences, syncBridgeToStore]
+  );
 
   return (
     <SettingsContainer
@@ -28,7 +32,7 @@ export function GeneralSettings() {
           <Input
             id="username"
             value={preferences.username}
-            onChange={(e) => handlePreferenceChange('username', e.target.value)}
+            onChange={(e) => handlePreferenceChange("username", e.target.value)}
           />
         </div>
 
@@ -37,7 +41,7 @@ export function GeneralSettings() {
           <Input
             id="language"
             value={preferences.language}
-            onChange={(e) => handlePreferenceChange('language', e.target.value)}
+            onChange={(e) => handlePreferenceChange("language", e.target.value)}
           />
         </div>
 
@@ -46,7 +50,7 @@ export function GeneralSettings() {
           <Input
             id="timezone"
             value={preferences.timezone}
-            onChange={(e) => handlePreferenceChange('timezone', e.target.value)}
+            onChange={(e) => handlePreferenceChange("timezone", e.target.value)}
           />
         </div>
       </div>
