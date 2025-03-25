@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { BridgeEvent, BridgeListener, BridgeMessage, BridgeSettings, ChatMode, ConnectionStatus } from './types';
+import { MessageStatus } from '@/types/chat';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/services/chat/LoggingService';
 

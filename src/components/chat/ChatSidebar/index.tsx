@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ModeSelectionDialog } from '../SessionManagement/ModeSelectionDialog';
 import { useChatStore } from '../store/chatStore';
@@ -22,7 +23,6 @@ export function ChatSidebar() {
     setIsModeDialogOpen(false);
     await createSession({
       metadata: {
-        mode,
         providerId
       }
     });
@@ -53,7 +53,7 @@ export function ChatSidebar() {
               messageCount={session.message_count}
               title={session.title}
               onSelect={() => switchSession(sessionId)}
-              provider={session.providerId} // ✅ Fixed from provider_id
+              provider={session.providerId} // Fixed from provider_id
             />
           ))
         )}
@@ -61,7 +61,7 @@ export function ChatSidebar() {
       
       <ModeSelectionDialog
         open={isModeDialogOpen}
-        onClose={() => setIsModeDialogOpen(false)} // ✅ Required prop
+        onClose={() => setIsModeDialogOpen(false)}
         onOpenChange={setIsModeDialogOpen}
         onCreateSession={handleCreateSession}
         availableProviders={availableProviders}

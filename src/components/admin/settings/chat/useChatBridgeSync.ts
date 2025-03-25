@@ -22,8 +22,8 @@ export function useChatBridgeSync() {
           sound: storeSettings.notifications.soundEnabled,
           desktop: storeSettings.notifications.desktopNotifications,
         },
-        chatWidth: storeSettings.chatWidth || 400,
-        chatHeight: storeSettings.chatHeight || 600
+        chatWidth: storeSettings.appearance.chatWidth,
+        chatHeight: storeSettings.appearance.chatHeight
       });
       
       logger.info('Synced store settings to bridge', { storeSettings });
@@ -41,13 +41,13 @@ export function useChatBridgeSync() {
           buttonStyle: bridgeSettings.appearance.buttonStyle,
           buttonSize: bridgeSettings.appearance.buttonSize,
           buttonColor: bridgeSettings.appearance.buttonColor,
+          chatWidth: bridgeSettings.chatWidth,
+          chatHeight: bridgeSettings.chatHeight
         },
         notifications: {
           soundEnabled: bridgeSettings.notifications.sound,
           desktopNotifications: bridgeSettings.notifications.desktop,
-        },
-        chatWidth: bridgeSettings.chatWidth,
-        chatHeight: bridgeSettings.chatHeight
+        }
       });
       
       logger.info('Synced bridge settings to store', { bridgeSettings });

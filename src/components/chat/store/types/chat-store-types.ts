@@ -1,14 +1,10 @@
-
 import { Message } from '@/types/chat';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 import { ChatSettings } from '@/utils/storage/chat-settings';
 import { ChatMode } from '@/components/chat/chatbridge/types';
 import { ProviderCategory } from '@/types/providers';
 
-export type ChatPosition = 'bottom-right' | 'bottom-left' | {
-  x: number;
-  y: number;
-};
+export type ChatPosition = 'bottom-right' | 'bottom-left';
 
 export type MessageActions = {
   copy: boolean;
@@ -36,7 +32,7 @@ export type ProviderType =
   | 'whisper'
   | 'sonnet';
 
-export type ProviderCategoryType = 'chat' | 'image' | 'other' | 'vector' | 'voice';
+export type ProviderCategoryType = 'chat' | 'image' | 'vector' | 'voice' | 'other' | string;
 
 export type SidebarState = {
   isOpen: boolean;
@@ -81,11 +77,12 @@ export interface Providers {
 export interface ChatProvider {
   id: string;
   name: string;
-  type: ProviderCategoryType;
+  type: ProviderType;
   models: string[];
   isDefault: boolean;
   isEnabled: boolean;
   apiKey?: string;
+  category?: string;
 }
 
 export interface UIState {

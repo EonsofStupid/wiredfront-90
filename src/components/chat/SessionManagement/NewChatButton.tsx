@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { ModeSelectionDialog, ChatMode } from './ModeSelectionDialog';
+import { ModeSelectionDialog } from './ModeSelectionDialog';
 import { useSessionManager } from '@/hooks/sessions';
+import { ChatMode } from '@/components/chat/chatbridge/types';
 
 interface NewChatButtonProps {
   variant?: "default" | "outline" | "ghost";
@@ -16,7 +18,6 @@ export function NewChatButton({ variant = "default", fullWidth = false }: NewCha
   const handleCreateWithMode = async (mode: ChatMode, providerId: string) => {
     await createSession({
       metadata: {
-        mode,
         providerId
       }
     });
@@ -36,7 +37,7 @@ export function NewChatButton({ variant = "default", fullWidth = false }: NewCha
 
       <ModeSelectionDialog
         open={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)} // ✅ Required prop added
+        onClose={() => setIsDialogOpen(false)}
         onOpenChange={setIsDialogOpen}
         onCreateSession={handleCreateWithMode}
       />

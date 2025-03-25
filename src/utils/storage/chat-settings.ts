@@ -1,4 +1,6 @@
+
 import { ChatButtonSettings } from '@/types/chat/button-styles';
+import { Json } from '@/types/json';
 
 const CHAT_SETTINGS_KEY = 'chat_settings';
 

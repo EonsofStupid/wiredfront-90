@@ -1,5 +1,7 @@
 
-export type MessageStatus = 'pending' | 'sent' | 'failed' | 'error' | 'cached';
+import { Json } from '@/types/json';
+
+export type MessageStatus = 'pending' | 'sent' | 'received' | 'failed' | 'error' | 'cached';
 export type MessageRole = 'user' | 'assistant' | 'system';
 
 export interface Message {
@@ -17,6 +19,7 @@ export interface Message {
   last_accessed: string;
   retry_count: number;
   message_status: MessageStatus;
+  status?: MessageStatus; // Adding this for backward compatibility
   role: MessageRole;
   source_type?: string;
   provider?: string;

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useChatStore } from '../store';
 import { useMessageStore } from '../messaging/MessageManager';
@@ -42,7 +41,7 @@ export const ChatInputModule = () => {
       role: 'user',
       content: userInput,
       timestamp: new Date(),
-      status: 'sent',
+      message_status: 'sent',
       sessionId: chatId || 'default',
     });
 
@@ -68,7 +67,7 @@ export const ChatInputModule = () => {
           role: 'assistant',
           content: `Error: ${error.message || 'Failed to send message'}`,
           timestamp: new Date(),
-          status: 'error',
+          message_status: 'error',
           sessionId: chatId || 'default',
         });
         
@@ -81,7 +80,7 @@ export const ChatInputModule = () => {
         role: 'assistant',
         content: data?.response || 'No response received',
         timestamp: new Date(),
-        status: 'received',
+        message_status: 'received',
         sessionId: chatId || 'default',
       });
     } catch (error) {
@@ -93,7 +92,7 @@ export const ChatInputModule = () => {
         role: 'assistant',
         content: `Error: ${error.message || 'An unexpected error occurred'}`,
         timestamp: new Date(),
-        status: 'error',
+        message_status: 'error',
         sessionId: chatId || 'default',
       });
     } finally {

@@ -1,14 +1,28 @@
 
-// Create this file if it doesn't exist
-export type ProviderCategoryType = 'chat' | 'image' | 'other' | 'vector' | 'voice';
+import { ProviderCategoryType } from '@/components/chat/store/types/chat-store-types';
 
 export interface ProviderCategory {
   id: string;
   name: string;
   type: ProviderCategoryType;
-  isEnabled?: boolean;
-  isDefault?: boolean;
-  supportedModes?: string[];
+  isDefault: boolean;
+  category?: string;
   models?: string[];
-  icon?: string;
+  isEnabled?: boolean;
+}
+
+export interface ProviderModel {
+  id: string;
+  name: string;
+  context_length: number;
+  isDefault: boolean;
+  provider: string;
+}
+
+export interface ProviderConfig {
+  apiKey?: string;
+  baseUrl?: string;
+  organization?: string;
+  defaultModel?: string;
+  models?: string[];
 }
