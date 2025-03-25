@@ -1,4 +1,3 @@
-
 import { QueryClient } from "@tanstack/react-query";
 import { v4 as uuidv4 } from "uuid";
 import { ChatState } from "../types/chat-store-types";
@@ -46,7 +45,7 @@ export const createInitializationActions = (
           type: 'openai',
           isDefault: true,
           isEnabled: true,
-          category: 'chat'
+          category: 'chat' as const
         },
         {
           id: uuidv4(),
@@ -54,7 +53,7 @@ export const createInitializationActions = (
           type: 'openai',
           isDefault: false,
           isEnabled: true,
-          category: 'image'
+          category: 'image' as const
         }
       ];
 
