@@ -47,7 +47,10 @@ export async function fetchUserSessions(): Promise<Session[]> {
     }
 
     // Get message counts for each session
-    const sessionsWithCounts = await Promise.all(data.map(async (session: RawSessionData) => {
+    // Force-cast data to RawSessionData[] to break recursive type analysis
+    const rawData = data as unknown as RawSessionData[];
+    
+    const sessionsWithCounts = await Promise.all(rawData.map(async (session) => {
       const { count, error: countError } = await supabase
         .from('messages')
         .select('id', { count: 'exact', head: true })
@@ -57,8 +60,7 @@ export async function fetchUserSessions(): Promise<Session[]> {
         logger.warn('Failed to get message count', { error: countError, sessionId: session.id });
       }
       
-      // Explicitly map the database record to our Session interface
-      // This avoids recursive type analysis by creating a new object with known types
+      // Create a new object with explicit typing to avoid deep type analysis
       const sessionObject: Session = {
         id: session.id,
         title: session.title,
