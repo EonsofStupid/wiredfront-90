@@ -8,9 +8,19 @@ import { StateCreator } from "zustand";
 type TokenEnforcementMode = 'always' | 'never' | 'role_based' | 'mode_based';
 
 // Define proper types derived from StateCreator
-type SetState<T> = StateCreator<T, [], [], any>['setState'];
-type GetState<T> = StateCreator<T, [], [], any>['getState'];
-type StoreApi<T> = { setState: SetState<T>; getState: GetState<T>; subscribe: any };
+type SetState<T> = (
+  partial: T | Partial<T> | ((state: T) => T | Partial<T>), 
+  replace?: boolean,
+  action?: string
+) => void;
+
+type GetState<T> = () => T;
+
+type StoreApi<T> = { 
+  setState: SetState<T>; 
+  getState: GetState<T>; 
+  subscribe: any 
+};
 
 export const createInitializationActions = (
   set: SetState<ChatState>,

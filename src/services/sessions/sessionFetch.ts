@@ -46,6 +46,7 @@ export async function fetchUserSessions(): Promise<Session[]> {
         logger.warn('Failed to get message count', { error: countError, sessionId: session.id });
       }
       
+      // Use type assertion to break potential circular reference
       return {
         ...session,
         message_count: count || 0,
