@@ -10,7 +10,7 @@ export function useChatBridge() {
     bridge.current.getConnectionStatus()
   );
   const [settings, setSettings] = useState<BridgeSettings>(
-    bridge.current.getSettings()
+    bridge.current.settings
   );
 
   // Set up event listeners
@@ -18,7 +18,7 @@ export function useChatBridge() {
     // Get initial state
     setMessages(bridge.current.getMessages());
     setConnectionStatus(bridge.current.getConnectionStatus());
-    setSettings(bridge.current.getSettings());
+    setSettings(bridge.current.settings);
 
     // Set up event listener
     const unsubscribe = bridge.current.addListener((event: BridgeEvent) => {

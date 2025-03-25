@@ -1,6 +1,6 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { BridgeEvent, BridgeListener, BridgeMessage, BridgeSettings, ChatMode, ConnectionStatus } from './types';
-import { MessageStatus } from '@/types/chat';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/services/chat/LoggingService';
 
@@ -222,13 +222,13 @@ class ChatBridge {
       }
       
       return message;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to save message', error);
       
       // Update message status
       const updatedMessage = { 
         ...message, 
-        message_status: 'failed' as MessageStatus,
+        message_status: 'failed',
         processing: false,
         error: error.message 
       };

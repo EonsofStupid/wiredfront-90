@@ -7,14 +7,24 @@ import { useChatStore } from '../store/chatStore';
 
 interface ChatToggleButtonProps {
   className?: string;
+  onClick?: () => void;
+  isLoading?: boolean;
 }
 
-export function ChatToggleButton({ className }: ChatToggleButtonProps) {
+export function ChatToggleButton({ className, onClick, isLoading }: ChatToggleButtonProps) {
   const { toggleChat, isOpen } = useChatStore();
+  
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    } else {
+      toggleChat();
+    }
+  };
 
   return (
     <Button 
-      onClick={toggleChat}
+      onClick={handleClick}
       variant="outline"
       size="icon"
       className={cn(
@@ -23,8 +33,13 @@ export function ChatToggleButton({ className }: ChatToggleButtonProps) {
         className
       )}
       aria-label={isOpen ? "Close chat" : "Open chat"}
+      disabled={isLoading}
     >
-      <MessageSquare className="h-5 w-5" />
+      {isLoading ? (
+        <span className="h-5 w-5 animate-spin rounded-full border-2 border-t-transparent" />
+      ) : (
+        <MessageSquare className="h-5 w-5" />
+      )}
     </Button>
   );
 }

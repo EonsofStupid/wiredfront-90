@@ -1,8 +1,9 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useChatBridge } from './useChatBridge';
 import { MessageCircle, X } from 'lucide-react';
 import { ChatToggleButton } from '../ui/ChatToggleButton';
-import { Spinner } from '../ui/Spinner';
+import { Spinner } from '@/components/ui/spinner';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Message } from '../Message';
 import '../styles/chat-variables.css';
@@ -54,7 +55,10 @@ export const ChatClient: React.FC<ChatClientProps> = ({ defaultOpen = false }) =
   return (
     <>
       {!isOpen && (
-        <ChatToggleButton onClick={toggleChat} isLoading={isLoading} />
+        <ChatToggleButton 
+          onClick={toggleChat} 
+          isLoading={isLoading} 
+        />
       )}
       
       <AnimatePresence>

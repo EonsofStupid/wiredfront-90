@@ -1,10 +1,11 @@
+
 import React, { useState, useCallback } from 'react';
 import { useChatStore } from '../store';
 import { useMessageStore } from '../messaging/MessageManager';
 import { v4 as uuidv4 } from 'uuid';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Mic } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { VoiceToTextButton } from '../features/voice-to-text';
 import { supabase } from '@/integrations/supabase/client';
 import { parseCommand, executeCommand } from '@/services/chat/CommandHandler';
@@ -42,7 +43,7 @@ export const ChatInputModule = () => {
       content: userInput,
       timestamp: new Date(),
       message_status: 'sent',
-      sessionId: chatId || 'default',
+      chat_session_id: chatId || 'default',
     });
 
     // Clear the input
@@ -68,7 +69,7 @@ export const ChatInputModule = () => {
           content: `Error: ${error.message || 'Failed to send message'}`,
           timestamp: new Date(),
           message_status: 'error',
-          sessionId: chatId || 'default',
+          chat_session_id: chatId || 'default',
         });
         
         return;
@@ -81,7 +82,7 @@ export const ChatInputModule = () => {
         content: data?.response || 'No response received',
         timestamp: new Date(),
         message_status: 'received',
-        sessionId: chatId || 'default',
+        chat_session_id: chatId || 'default',
       });
     } catch (error) {
       console.error('Error in chat flow:', error);
@@ -93,7 +94,7 @@ export const ChatInputModule = () => {
         content: `Error: ${error.message || 'An unexpected error occurred'}`,
         timestamp: new Date(),
         message_status: 'error',
-        sessionId: chatId || 'default',
+        chat_session_id: chatId || 'default',
       });
     } finally {
       setIsProcessing(false);

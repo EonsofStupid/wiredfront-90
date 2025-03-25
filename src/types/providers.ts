@@ -1,5 +1,6 @@
 
 import { ProviderCategoryType } from '@/components/chat/store/types/chat-store-types';
+import { ChatMode } from '@/components/chat/chatbridge/types';
 
 export interface ProviderCategory {
   id: string;
@@ -9,6 +10,7 @@ export interface ProviderCategory {
   category?: string;
   models?: string[];
   isEnabled?: boolean;
+  supportedModes?: ChatMode[];
 }
 
 export interface ProviderModel {

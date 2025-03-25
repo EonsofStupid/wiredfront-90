@@ -4,7 +4,7 @@ import { ChatSettings } from '@/utils/storage/chat-settings';
 import { ChatMode } from '@/components/chat/chatbridge/types';
 import { ProviderCategory } from '@/types/providers';
 
-export type ChatPosition = 'bottom-right' | 'bottom-left';
+export type ChatPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
 
 export type MessageActions = {
   copy: boolean;

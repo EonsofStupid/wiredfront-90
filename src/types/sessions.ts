@@ -1,5 +1,6 @@
 
 import { Json } from '@/integrations/supabase/types';
+import { ChatMode } from '@/components/chat/chatbridge/types';
 
 // Core session interface
 export interface Session {
@@ -11,6 +12,8 @@ export interface Session {
   is_active?: boolean;
   metadata?: Json;
   user_id?: string;
+  providerId?: string;  // Added providerId property
+  mode?: ChatMode;      // Added mode property
 }
 
 // Session status for UI representation
@@ -27,6 +30,8 @@ export interface SessionOperationResult {
 export interface CreateSessionParams {
   title?: string;
   metadata?: Json;
+  mode?: ChatMode;
+  providerId?: string;
 }
 
 // Session update parameters
