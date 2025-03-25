@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { BridgeEvent, BridgeListener, BridgeMessage, BridgeSettings, ChatMode, ConnectionStatus } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/services/chat/LoggingService';
+import { MessageStatus } from '@/types/chat';
 
 class ChatBridge {
   private static instance: ChatBridge;
@@ -22,6 +23,8 @@ class ChatBridge {
       buttonStyle: 'wfpulse',
       buttonSize: 'medium',
       buttonColor: '#0EA5E9',
+      chatWidth: 380,
+      chatHeight: 600,
     },
     notifications: {
       sound: true,

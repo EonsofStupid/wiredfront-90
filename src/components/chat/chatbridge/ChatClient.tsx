@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useChatBridge } from './useChatBridge';
 import { MessageCircle, X } from 'lucide-react';
@@ -41,7 +40,6 @@ export const ChatClient: React.FC<ChatClientProps> = ({ defaultOpen = false }) =
     }
   };
 
-  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
@@ -68,7 +66,6 @@ export const ChatClient: React.FC<ChatClientProps> = ({ defaultOpen = false }) =
             className="fixed bottom-4 right-4 w-80 sm:w-96 h-[500px] bg-white dark:bg-gray-900 rounded-lg shadow-xl flex flex-col overflow-hidden"
             style={{ zIndex: 'var(--z-chat)' }}
           >
-            {/* Chat Header */}
             <div className="flex items-center justify-between p-3 border-b bg-primary text-primary-foreground">
               <div className="flex items-center">
                 <MessageCircle className="w-5 h-5 mr-2" />
@@ -82,7 +79,6 @@ export const ChatClient: React.FC<ChatClientProps> = ({ defaultOpen = false }) =
               </button>
             </div>
             
-            {/* Messages Container */}
             <div 
               ref={messagesContainerRef}
               className="flex-1 overflow-y-auto p-3 space-y-4"
@@ -112,7 +108,6 @@ export const ChatClient: React.FC<ChatClientProps> = ({ defaultOpen = false }) =
               )}
             </div>
             
-            {/* Input Form */}
             <form onSubmit={handleSubmit} className="p-3 border-t bg-background">
               <div className="flex space-x-2">
                 <input

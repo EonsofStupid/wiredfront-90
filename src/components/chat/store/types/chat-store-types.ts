@@ -128,3 +128,11 @@ export interface ChatState {
   initializeChatSettings: () => void;
   setSessionLoading: (isLoading: boolean) => void;
 }
+
+export type ChatProvider = {
+  id: string;
+  name: string;
+  type: string;
+  isActive: boolean;
+  description?: string;
+};

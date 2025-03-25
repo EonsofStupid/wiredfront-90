@@ -66,7 +66,22 @@ export function TokenControlPanel() {
     }
   };
   
-  // Handle global token enforcement configuration
+  // Update the enforcement mode conversion function
+  const convertToStoreMode = (mode: TokenEnforcementMode): "NONE" | "ENFORCE" | "WARN" => {
+    switch (mode) {
+      case "always":
+        return "ENFORCE";
+      case "never":
+        return "NONE";
+      case "role_based":
+      case "mode_based":
+        return "WARN";
+      default:
+        return "NONE";
+    }
+  };
+
+  // Updated handleUpdateEnforcementConfig function to use the conversion
   const handleUpdateEnforcementConfig = async (mode: TokenEnforcementMode) => {
     setIsSubmitting(true);
     try {
@@ -87,29 +102,14 @@ export function TokenControlPanel() {
       
       if (error) throw error;
       
-      // Update local state
-      setEnforcementMode(mode);
+      // Update local state - convert the mode before setting it
+      setEnforcementMode(convertToStoreMode(mode));
       toast.success('Token enforcement configuration updated');
     } catch (error) {
       console.error('Error updating token enforcement config:', error);
       toast.error('Failed to update token configuration');
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  // Update the enforcement mode conversion function
-  const convertToStoreMode = (mode: TokenEnforcementMode): "NONE" | "ENFORCE" | "WARN" => {
-    switch (mode) {
-      case "always":
-        return "ENFORCE";
-      case "never":
-        return "NONE";
-      case "role_based":
-      case "mode_based":
-        return "WARN";
-      default:
-        return "NONE";
     }
   };
 

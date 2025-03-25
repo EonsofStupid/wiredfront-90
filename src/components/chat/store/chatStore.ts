@@ -1,10 +1,11 @@
+
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { createInitializationActions } from './actions/initialization-actions';
 import { createFeatureActions } from './actions/feature';
 import { createUIActions } from './actions/ui-actions';
-import { ChatState, FeatureState, Providers, TokenControl } from './types/chat-store-types';
+import { ChatState, FeatureState, Providers, TokenControl, ChatPosition } from './types/chat-store-types';
 import { Message } from '@/types/chat';
 import { getChatSettings, saveChatSettings, ChatSettings } from '@/utils/storage/chat-settings';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
@@ -58,6 +59,7 @@ const initialState: Omit<ChatState, keyof FeatureState | keyof Providers | keyof
   providers: {
     loading: false,
     error: null,
+    availableProviders: [], // Add this property
   },
   ui: {
     sessionLoading: false,

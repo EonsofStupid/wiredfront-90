@@ -25,18 +25,18 @@ interface Props {
 export function ModeSelectionDialog({ open, onOpenChange, onCreateSession }: Props) {
   const [selectedMode, setSelectedMode] = useState<ChatMode>("chat");
   const [selectedProvider, setSelectedProvider] = useState<string>("");
-  const { providers } = useChatStore();
+  const { availableProviders } = useChatStore();
   
   const providersForMode = useMemo(() => {
-    // Return an empty array with proper fallback if providers.availableProviders doesn't exist
-    if (!providers || !providers.availableProviders) {
+    // Return an empty array with proper fallback if availableProviders doesn't exist
+    if (!availableProviders) {
       return [];
     }
     
-    return providers.availableProviders.filter(
+    return availableProviders.filter(
       (p) => p.supportedModes?.includes(selectedMode)
     );
-  }, [selectedMode, providers]);
+  }, [selectedMode, availableProviders]);
 
   // Set default provider when providers change
   useEffect(() => {
