@@ -1,3 +1,4 @@
+
 import { SettingsLayout } from "@/components/settings/layout/SettingsLayout";
 import { SettingsNavigation } from "@/components/settings/layout/SettingsNavigation";
 import { ApiSettings } from "@/components/settings/sections/api/ApiSettings";
@@ -6,7 +7,7 @@ import { GeneralSettings } from "@/components/settings/sections/general/GeneralS
 import { GitHubRepositorySettings } from "@/components/settings/sections/github/GitHubRepositorySettings";
 import { GitHubSettings } from "@/components/settings/sections/github/GitHubSettings";
 import { ProfileSettings } from "@/components/settings/sections/Profile/ProfileSettings";
-import { ProjectHubSettings } from "@/components/settings/sections/UserProjectHub/ProjectHubSettings";
+import { ProjectHubSettings } from "@/components/settings/sections/userprojecthub/ProjectHubSettings";
 import { RouteLoggingService } from "@/services/navigation/RouteLoggingService";
 import { useEffect } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";

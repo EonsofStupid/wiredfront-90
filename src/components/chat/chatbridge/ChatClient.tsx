@@ -1,3 +1,4 @@
+
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageCircle, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
@@ -91,7 +92,7 @@ export const ChatClient: React.FC<ChatClientProps> = ({
                     key={message.id}
                     content={message.content}
                     role={message.role}
-                    status={message.message_status}
+                    status={message.message_status ? message.message_status : 'sent'}
                     id={message.id}
                     timestamp={message.created_at}
                     onRetry={() => {}}
