@@ -91,7 +91,7 @@ export const ChatInputModule = () => {
       addMessage({
         id: uuidv4(),
         role: 'assistant',
-        content: `Error: ${error.message || 'An unexpected error occurred'}`,
+        content: `Error: ${error instanceof Error ? error.message : 'An unexpected error occurred'}`,
         timestamp: new Date(),
         message_status: 'error',
         chat_session_id: chatId || 'default',

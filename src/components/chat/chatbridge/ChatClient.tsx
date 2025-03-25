@@ -1,11 +1,16 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useChatBridge } from './useChatBridge';
-import { MessageCircle, X } from 'lucide-react';
+import { MessageCircle, X, Send, Settings, Mic, MicOff } from 'lucide-react';
 import { ChatToggleButton } from '../ui/ChatToggleButton';
 import { Spinner } from '@/components/ui/spinner';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Message } from '../Message';
+import { MessageModule } from '../modules/MessageModule';
+import { ChatInputModule } from '../modules/ChatInputModule';
+import { StatusButton } from '../features/status-button/StatusButton';
+import { ChatHeaderTopNav } from '../features/ChatHeaderTopNav';
+import { VoiceToTextButton } from '../features/voice-to-text/VoiceToTextButton';
 import '../styles/chat-variables.css';
 
 interface ChatClientProps {
@@ -52,11 +57,15 @@ export const ChatClient: React.FC<ChatClientProps> = ({ defaultOpen = false }) =
     setIsOpen(prev => !prev);
   };
 
+  const handleVoiceInput = (text: string) => {
+    setInputValue(text);
+  };
+
   return (
     <>
       {!isOpen && (
         <ChatToggleButton 
-          onClick={toggleChat} 
+          onClickHandler={toggleChat} 
           isLoading={isLoading} 
         />
       )}
@@ -73,16 +82,26 @@ export const ChatClient: React.FC<ChatClientProps> = ({ defaultOpen = false }) =
           >
             {/* Chat Header */}
             <div className="flex items-center justify-between p-3 border-b bg-primary text-primary-foreground">
-              <div className="flex items-center">
-                <MessageCircle className="w-5 h-5 mr-2" />
-                <span className="font-medium">Chat</span>
+              <div className="flex items-center space-between w-full">
+                <div className="flex items-center">
+                  <MessageCircle className="w-5 h-5 mr-2" />
+                  <span className="font-medium">Chat</span>
+                </div>
+                
+                <div className="flex-1 flex justify-center">
+                  <ChatHeaderTopNav />
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <StatusButton />
+                  <button 
+                    onClick={toggleChat}
+                    className="p-1 rounded-full hover:bg-primary-foreground/10 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
-              <button 
-                onClick={toggleChat}
-                className="p-1 rounded-full hover:bg-primary-foreground/10 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
             </div>
             
             {/* Messages Container */}
@@ -90,34 +109,13 @@ export const ChatClient: React.FC<ChatClientProps> = ({ defaultOpen = false }) =
               ref={messagesContainerRef}
               className="flex-1 overflow-y-auto p-3 space-y-4"
             >
-              {messages.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-muted-foreground">
-                  <p>No messages yet. Start a conversation!</p>
-                </div>
-              ) : (
-                messages.map(message => (
-                  <Message
-                    key={message.id}
-                    content={message.content}
-                    role={message.role}
-                    status={message.message_status}
-                    id={message.id}
-                    timestamp={message.created_at}
-                    onRetry={() => {}}
-                  />
-                ))
-              )}
-              
-              {isLoading && (
-                <div className="flex justify-center p-2">
-                  <Spinner size="sm" />
-                </div>
-              )}
+              <MessageModule scrollRef={messagesContainerRef} />
             </div>
             
             {/* Input Form */}
             <form onSubmit={handleSubmit} className="p-3 border-t bg-background">
-              <div className="flex space-x-2">
+              <div className="flex items-center space-x-2">
+                <VoiceToTextButton onVoiceInput={handleVoiceInput} />
                 <input
                   type="text"
                   value={inputValue}
@@ -128,10 +126,10 @@ export const ChatClient: React.FC<ChatClientProps> = ({ defaultOpen = false }) =
                 />
                 <button 
                   type="submit"
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isLoading || !inputValue.trim() || connectionStatus === 'disconnected'}
                 >
-                  Send
+                  <Send className="w-5 h-5" />
                 </button>
               </div>
             </form>

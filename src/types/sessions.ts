@@ -1,4 +1,3 @@
-
 import { Json } from '@/integrations/supabase/types';
 import { ChatMode } from '@/components/chat/chatbridge/types';
 

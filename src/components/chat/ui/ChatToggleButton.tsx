@@ -5,18 +5,18 @@ import { MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useChatStore } from '../store/chatStore';
 
-interface ChatToggleButtonProps {
+export interface ChatToggleButtonProps {
   className?: string;
-  onClick?: () => void;
+  onClickHandler?: () => void;
   isLoading?: boolean;
 }
 
-export function ChatToggleButton({ className, onClick, isLoading }: ChatToggleButtonProps) {
+export function ChatToggleButton({ className, onClickHandler, isLoading }: ChatToggleButtonProps) {
   const { toggleChat, isOpen } = useChatStore();
   
   const handleClick = () => {
-    if (onClick) {
-      onClick();
+    if (onClickHandler) {
+      onClickHandler();
     } else {
       toggleChat();
     }
