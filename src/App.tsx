@@ -189,7 +189,7 @@ const App = () => {
             <Route path="/admin/settings/chat" element={<ChatSettingsTabs />} />
             <Route
               path="/admin/settings/chat-features"
-              element={<UISettings />}
+              element={<ChatSettingsTabs activeTab="ui" />}
             />
             <Route
               path="/admin/settings/live-preview"
