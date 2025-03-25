@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertCircle, CheckCircle, Clock, Github, RefreshCw, Search, Trash, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { Spinner } from "@/components/chat/components/Spinner";
+import { Spinner } from "@/components/ui/spinner";
 import { GitHubOAuthConnection, GitHubConnectionStatus } from "@/types/admin/settings/github";
 import { useSessionStore } from "@/stores/session/store";
 

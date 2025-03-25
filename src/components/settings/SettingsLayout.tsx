@@ -4,25 +4,24 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GitHubSettings } from "@/components/settings/sections/GitHubSettings";
 import { GitHubRepositorySettings } from "@/components/settings/sections/GitHubRepositorySettings";
-import { ProfileSettings } from "@/components/settings/sections/ProfileSettings";
-import { ApiSettings } from "@/components/settings/sections/ApiSettings";
-import { GeneralSettings } from "@/components/settings/sections/GeneralSettings";
-import { ProjectHubSettings } from "@/components/settings/sections/ProjectHubSettings";
-import { useRouter } from "next/router";
+import { ProfileSettings } from "@/components/settings/sections/Profile/ProfileSettings";
+import { ApiSettings } from "@/components/settings/sections/api/ApiSettings";
+import { GeneralSettings } from "@/components/settings/sections/general/GeneralSettings";
+import { ProjectHubSettings } from "@/components/settings/sections/UserProjectHub/ProjectHubSettings";
+import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 
 export function SettingsLayout() {
-  const router = useRouter();
-  const { tab } = router.query;
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const tab = searchParams.get('tab');
   
   // Set the active tab based on the URL query parameter
-  const defaultTab = typeof tab === 'string' ? tab : 'account';
+  const defaultTab = tab || 'account';
   
   // Update URL when tab changes
   const handleTabChange = (value: string) => {
-    router.push({
-      pathname: router.pathname,
-      query: { ...router.query, tab: value }
-    }, undefined, { shallow: true });
+    navigate(`/settings?tab=${value}`, { replace: true });
   };
   
   return (
