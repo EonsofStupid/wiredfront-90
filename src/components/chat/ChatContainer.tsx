@@ -1,16 +1,20 @@
+
 import { logger } from "@/services/chat/LoggingService";
 import { DndContext } from "@dnd-kit/core";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { ChatSidebar } from "./ChatSidebar";
-import { ChatToggleButton } from "./components/ChatToggleButton";
+import { ChatToggleButton } from "./ui/ChatToggleButton";
 import { useViewportAwareness } from "./hooks/useViewportAwareness";
 import { useChatStore } from "./store/chatStore";
+import { ChatClient } from "./chatbridge/ChatClient";
+import { useChatBridge } from "./chatbridge/useChatBridge";
 
 export function ChatContainer() {
   const { isOpen, toggleChat, position, isMinimized, showSidebar, scale } =
     useChatStore();
+  const { settings } = useChatBridge();
 
   const { containerRef, isOverflowing } = useViewportAwareness();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -46,7 +50,7 @@ export function ChatContainer() {
   ]);
 
   if (!isOpen) {
-    return <ChatToggleButton onClick={toggleChat} />;
+    return <ChatClient defaultOpen={false} />;
   }
 
   const positionClass = position === "bottom-right" ? "right-4" : "left-4";
@@ -85,7 +89,7 @@ export function ChatContainer() {
           ref={scrollRef}
           className="bg-white rounded-lg shadow-lg p-4 w-[400px] h-[600px] overflow-y-auto"
         >
-          {/* Chat content will go here */}
+          <ChatClient defaultOpen={true} />
         </div>
       </motion.div>
     </DndContext>

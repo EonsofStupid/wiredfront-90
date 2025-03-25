@@ -1,12 +1,22 @@
+
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useSettingsStore } from "@/stores/settings";
+import { useChatBridgeSync } from "../chat/useChatBridgeSync";
 
 export function NotificationSettings() {
   const { notifications, updateNotifications } = useSettingsStore((state) => ({
     notifications: state.notifications,
     updateNotifications: state.updateNotifications,
   }));
+  
+  const { syncBridgeToStore } = useChatBridgeSync();
+  
+  const handleNotificationChange = (key: string, value: boolean) => {
+    updateNotifications({ [key]: value });
+    // Sync to chat bridge
+    syncBridgeToStore();
+  };
 
   return (
     <div className="space-y-6">
@@ -29,7 +39,7 @@ export function NotificationSettings() {
             id="email-notifications"
             checked={notifications.email}
             onCheckedChange={(checked) =>
-              updateNotifications({ email: checked })
+              handleNotificationChange('email', checked)
             }
           />
         </div>
@@ -45,7 +55,7 @@ export function NotificationSettings() {
             id="push-notifications"
             checked={notifications.push}
             onCheckedChange={(checked) =>
-              updateNotifications({ push: checked })
+              handleNotificationChange('push', checked)
             }
           />
         </div>
@@ -61,7 +71,7 @@ export function NotificationSettings() {
             id="marketing-notifications"
             checked={notifications.marketing}
             onCheckedChange={(checked) =>
-              updateNotifications({ marketing: checked })
+              handleNotificationChange('marketing', checked)
             }
           />
         </div>

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import { Toaster } from "sonner";
 import { ChatModeProvider } from './providers/ChatModeProvider';
@@ -6,7 +7,8 @@ import { useChatStore } from './store/chatStore';
 import { useSessionManager } from '@/hooks/useSessionManager';
 import { logger } from '@/services/chat/LoggingService';
 import { useMessageStore } from './messaging/MessageManager';
-import { Spinner } from './components/Spinner';
+import { Spinner } from './ui/Spinner';
+import ChatBridge from './chatbridge/ChatBridge';
 
 interface ChatContextType {
   isEditorPage: boolean;
@@ -29,6 +31,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     const initialize = async () => {
       try {
         setIsInitializing(true);
+        
+        // Initialize the ChatBridge instance
+        ChatBridge.getInstance();
+        logger.info('ChatBridge initialized');
         
         initializeChatSettings();
         logger.info('Chat settings initialized');
