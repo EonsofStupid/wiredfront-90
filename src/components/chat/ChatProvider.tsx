@@ -6,7 +6,7 @@ import { useChatStore } from './store/chatStore';
 import { useSessionManager } from '@/hooks/useSessionManager';
 import { logger } from '@/services/chat/LoggingService';
 import { useMessageStore } from './messaging/MessageManager';
-import { Spinner } from './components/Spinner';
+import { Spinner } from './ui/Spinner';
 
 interface ChatContextType {
   isEditorPage: boolean;
