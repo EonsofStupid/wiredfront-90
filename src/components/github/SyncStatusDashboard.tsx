@@ -43,8 +43,7 @@ export function SyncStatusDashboard() {
         .from("github_sync_logs")
         .select(`
           id,
-          repo_id,
-          sync_type,
+          repository_id,
           status,
           details,
           created_at,
@@ -64,10 +63,10 @@ export function SyncStatusDashboard() {
       // Safely transform the data with type assertions
       const transformedData = data.map(log => ({
         id: log.id as string,
-        repo_id: log.repo_id as string,
-        repo_name: log.github_repositories?.repo_name as string || 'Unknown',
-        repo_owner: log.github_repositories?.repo_owner as string || 'Unknown',
-        sync_type: log.sync_type as string,
+        repo_id: log.repository_id as string,
+        repo_name: (log.github_repositories as any)?.repo_name as string || 'Unknown',
+        repo_owner: (log.github_repositories as any)?.repo_owner as string || 'Unknown',
+        sync_type: 'push', // Fallback until sync_type is added to the schema
         status: log.status as string,
         details: log.details as Record<string, any>,
         created_at: log.created_at as string

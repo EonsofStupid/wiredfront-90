@@ -1,23 +1,10 @@
-
-import React, { useState, useCallback } from 'react';
-import { useChatStore } from '../store';
-import { useMessageStore } from '../messaging/MessageManager';
-import { v4 as uuidv4 } from 'uuid';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Send } from 'lucide-react';
-import { VoiceToTextButton } from '../features/voice-to-text';
-import { supabase } from '@/integrations/supabase/client';
-import { parseCommand, executeCommand } from '@/services/chat/CommandHandler';
-import { toast } from 'sonner';
-import { Message, MessageRole, MessageStatus } from '@/types/chat';
-import { Json } from '@/integrations/supabase/types';
+import React from 'react';
 
 interface ChatInputModuleProps {
-  isEditorPage?: boolean;
+  isEditorPage: boolean;
 }
 
-export const ChatInputModule = ({ isEditorPage = false }: ChatInputModuleProps) => {
+export const ChatInputModule: React.FC<ChatInputModuleProps> = ({ isEditorPage }) => {
   const { userInput, setUserInput, isWaitingForResponse, chatId } = useChatStore();
   const addMessage = useMessageStore((state) => state.addMessage);
   const [isProcessing, setIsProcessing] = useState(false);

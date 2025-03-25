@@ -116,7 +116,7 @@ export async function clearAllSessions(currentSessionId: string | null = null): 
       });
       
       logger.info('Cleared sessions except current', { 
-        count: count, 
+        count, 
         preservedSessionId: currentSessionId 
       });
     } else {
@@ -131,14 +131,14 @@ export async function clearAllSessions(currentSessionId: string | null = null): 
       }
       
       // Delete all sessions for the user
-      const { error, count } = await query.eq('user_id', user.id);
+      const { error } = await query.eq('user_id', user.id);
       
       if (error) throw error;
       
       // Clear all Zustand persistence
       clearMiddlewareStorage();
       
-      logger.info('Cleared all sessions', { count });
+      logger.info('Cleared all sessions');
     }
     
     return { success: true };

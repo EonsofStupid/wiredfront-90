@@ -4,7 +4,7 @@ import { ChatState } from '../types/chat-store-types';
 import { logger } from '@/services/chat/LoggingService';
 import type { StateCreator } from 'zustand';
 import { ChatProvider } from '../types/chat-store-types';
-import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
+import { TokenEnforcementMode } from '@/integrations/supabase/types';
 
 type SetState = (state: Partial<ChatState>, replace?: boolean, action?: any) => void;
 type GetState = () => ChatState;
@@ -90,14 +90,17 @@ export const createInitializationActions = (
           
           // Fix type assertion issues - explicitly check and cast
           const settingsFeatures = typeof uiCustomizations === 'object' && 
+            !Array.isArray(uiCustomizations) && 
             'features' in uiCustomizations ? 
             uiCustomizations.features as Record<string, boolean> : {};
 
           const settingsTokenEnforcement = typeof uiCustomizations === 'object' && 
+            !Array.isArray(uiCustomizations) && 
             'tokenEnforcement' in uiCustomizations ? 
             uiCustomizations.tokenEnforcement as TokenEnforcementMode : 'never';
 
           const settingsTokenControl = typeof uiCustomizations === 'object' && 
+            !Array.isArray(uiCustomizations) && 
             'tokenControl' in uiCustomizations ? 
             uiCustomizations.tokenControl as Record<string, any> : {};
 
