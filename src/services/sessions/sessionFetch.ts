@@ -22,7 +22,7 @@ export async function fetchUserSessions(): Promise<Session[]> {
         title,
         created_at,
         last_accessed,
-        is_active,
+        archived,
         metadata,
         user_id
       `)
@@ -31,8 +31,12 @@ export async function fetchUserSessions(): Promise<Session[]> {
 
     if (error) throw error;
 
+    if (!data) {
+      return [];
+    }
+
     // Get message counts for each session
-    const sessionsWithCounts = await Promise.all((data || []).map(async (session) => {
+    const sessionsWithCounts = await Promise.all(data.map(async (session) => {
       const { count, error: countError } = await supabase
         .from('messages')
         .select('id', { count: 'exact', head: true })
@@ -44,8 +48,9 @@ export async function fetchUserSessions(): Promise<Session[]> {
       
       return {
         ...session,
-        message_count: count || 0
-      };
+        message_count: count || 0,
+        is_active: !session.archived // Map archived to is_active for backward compatibility
+      } as Session;
     }));
     
     logger.info('Sessions fetched', { count: sessionsWithCounts.length });

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -56,22 +55,29 @@ export function SyncStatusDashboard() {
 
       if (error) throw error;
 
-      // Transform the data to include repo name and owner
+      // Handle the case where data might be null or undefined
+      if (!data) {
+        setSyncLogs([]);
+        return;
+      }
+
+      // Safely transform the data with type assertions
       const transformedData = data.map(log => ({
-        id: log.id,
-        repo_id: log.repo_id,
-        repo_name: log.github_repositories?.repo_name || 'Unknown',
-        repo_owner: log.github_repositories?.repo_owner || 'Unknown',
-        sync_type: log.sync_type,
-        status: log.status,
-        details: log.details,
-        created_at: log.created_at
+        id: log.id as string,
+        repo_id: log.repo_id as string,
+        repo_name: log.github_repositories?.repo_name as string || 'Unknown',
+        repo_owner: log.github_repositories?.repo_owner as string || 'Unknown',
+        sync_type: log.sync_type as string,
+        status: log.status as string,
+        details: log.details as Record<string, any>,
+        created_at: log.created_at as string
       }));
 
       setSyncLogs(transformedData);
     } catch (error) {
       console.error("Error fetching sync logs:", error);
       toast.error("Failed to load sync history");
+      setSyncLogs([]); // Set empty array on error
     } finally {
       setLoading(false);
     }

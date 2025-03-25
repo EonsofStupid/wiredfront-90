@@ -38,7 +38,12 @@ export function useFeatureFlag(flagKey: string) {
         } as FeatureFlag;
       }
 
-      return data as FeatureFlag;
+      // Type assertion with proper structure
+      return {
+        ...data,
+        // Ensure any required properties from FeatureFlag are present
+        updated_by: data.updated_by || null
+      } as FeatureFlag;
     },
   });
 

@@ -1,7 +1,10 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ChatState } from '../types/chat-store-types';
 import { logger } from '@/services/chat/LoggingService';
 import type { StateCreator } from 'zustand';
+import { ChatProvider } from '../types/chat-store-types';
+import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 
 type SetState = (state: Partial<ChatState>, replace?: boolean, action?: any) => void;
 type GetState = () => ChatState;
@@ -20,26 +23,26 @@ export const createInitializationActions = (
 
       // First, try to load providers from Supabase edge function
       try {
-        const { data, error } = await supabase.functions.invoke('initialize-providers');
+        const { data: providerData, error } = await supabase.functions.invoke('initialize-providers');
         
         if (error) {
           logger.error('Error initializing providers', error);
-        } else if (data && data.availableProviders) {
-          logger.info('Loaded available providers', { count: data.availableProviders.length });
+        } else if (providerData && providerData.availableProviders) {
+          logger.info('Loaded available providers', { count: providerData.availableProviders.length });
           
           // Always set OpenAI as the default provider if available
-          const openaiProvider = data.availableProviders.find((p: any) => p.type === 'openai');
+          const openaiProvider = providerData.availableProviders.find((p: any) => p.type === 'openai');
           
           set({
-            availableProviders: data.availableProviders,
-            currentProvider: openaiProvider || data.defaultProvider,
+            availableProviders: providerData.availableProviders,
+            currentProvider: openaiProvider || providerData.defaultProvider,
             providers: {
-              availableProviders: data.availableProviders
+              availableProviders: providerData.availableProviders
             }
           });
           
           logger.info('Set current provider', { 
-            provider: openaiProvider ? openaiProvider.name : data.defaultProvider?.name 
+            provider: openaiProvider ? openaiProvider.name : providerData.defaultProvider?.name 
           });
         }
       } catch (providerError) {
@@ -51,7 +54,7 @@ export const createInitializationActions = (
           name: 'OpenAI',
           type: 'openai',
           isDefault: true,
-          category: 'chat' // Using a valid category value
+          category: 'chat' // Using valid category value
         };
         
         set({
@@ -85,47 +88,30 @@ export const createInitializationActions = (
           const uiCustomizations = chatSettings.ui_customizations || {};
           const currentState = get();
           
-          // Type assertion to handle potential JSON structure issues
-          const settingsData = data as unknown as { 
-            features?: {
-              voice: boolean,
-              rag: boolean,
-              modeSwitch: boolean,
-              notifications: boolean,
-              github: boolean,
-              codeAssistant: boolean,
-              ragSupport: boolean,
-              githubSync: boolean,
-              tokenEnforcement: boolean
-            },
-            tokenControl?: {
-              balance: number,
-              enforcementMode: TokenEnforcementMode,
-              lastUpdated: string | null,
-              tokensPerQuery: number,
-              freeQueryLimit: number,
-              queriesUsed: number
-            },
-            tokenEnforcement?: boolean
-          };
+          // Fix type assertion issues - explicitly check and cast
+          const settingsFeatures = typeof uiCustomizations === 'object' && 
+            'features' in uiCustomizations ? 
+            uiCustomizations.features as Record<string, boolean> : {};
+
+          const settingsTokenEnforcement = typeof uiCustomizations === 'object' && 
+            'tokenEnforcement' in uiCustomizations ? 
+            uiCustomizations.tokenEnforcement as TokenEnforcementMode : 'never';
+
+          const settingsTokenControl = typeof uiCustomizations === 'object' && 
+            'tokenControl' in uiCustomizations ? 
+            uiCustomizations.tokenControl as Record<string, any> : {};
 
           // Apply settings from database with proper type safety
           set({
             features: {
               ...currentState.features,
-              ...(typeof uiCustomizations === 'object' && 
-                 uiCustomizations.features ? 
-                 uiCustomizations.features as Record<string, boolean> : {})
+              ...settingsFeatures
             },
             // Apply token control settings if available with proper type checks
             tokenControl: {
               ...currentState.tokenControl,
-              enforcementMode: typeof uiCustomizations === 'object' && 
-                uiCustomizations.tokenEnforcement ? 
-                uiCustomizations.tokenEnforcement : 'never',
-              ...(typeof uiCustomizations === 'object' && 
-                 uiCustomizations.tokenControl ? 
-                 uiCustomizations.tokenControl as Record<string, any> : {})
+              enforcementMode: settingsTokenEnforcement,
+              ...settingsTokenControl
             }
           });
         }
@@ -139,7 +125,7 @@ export const createInitializationActions = (
           name: 'OpenAI',
           type: 'openai',
           isDefault: true,
-          category: 'chat' // Using a valid category value
+          category: 'chat' // Using valid category value
         };
         
         set({

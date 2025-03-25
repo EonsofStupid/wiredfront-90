@@ -13,8 +13,12 @@ export interface FeatureFlag {
   created_at: string | null;
   updated_at: string | null;
   created_by: string | null;
-  updated_by: string | null;
+  updated_by?: string | null; // Make this optional
   metadata?: Json;
+  // Add any additional fields from the DB that might be needed
+  category_id?: string;
+  config_schema?: Json;
+  target_tiers?: string[];
 }
 
 export interface FeatureFlagFormValues {

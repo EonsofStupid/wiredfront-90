@@ -135,7 +135,7 @@ export const clearMiddlewareStorage = () => {
 
 export const useChatStore = create<FullChatStore>()(
   devtools(
-    (set, get, api) => ({
+    (set, get) => ({
       ...initialState,
       
       resetChatState: () => {
@@ -154,9 +154,9 @@ export const useChatStore = create<FullChatStore>()(
         set({ userInput: input }, false, 'chat/setUserInput');
       },
       
-      ...createInitializationActions(set, get, api),
-      ...createFeatureActions(set, get, api),
-      ...createUIActions(set, get, api),
+      ...createInitializationActions(set, get),
+      ...createFeatureActions(set, get),
+      ...createUIActions(set, get),
     }),
     {
       name: 'ChatStore',

@@ -4,13 +4,13 @@ import { SessionOperationResult } from '@/types/sessions';
 import { logger } from '@/services/chat/LoggingService';
 
 /**
- * Archives a session by setting is_active to false
+ * Archives a session by setting archived to true
  */
 export async function archiveSession(sessionId: string): Promise<SessionOperationResult> {
   try {
     const { error } = await supabase
       .from('chat_sessions')
-      .update({ is_active: false })
+      .update({ archived: true })
       .eq('id', sessionId);
       
     if (error) throw error;

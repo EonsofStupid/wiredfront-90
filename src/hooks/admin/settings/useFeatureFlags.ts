@@ -22,7 +22,14 @@ export const useFeatureFlags = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as FeatureFlag[];
+      
+      // Transform the data to match the FeatureFlag interface
+      const formattedFlags = data.map(flag => ({
+        ...flag,
+        updated_by: flag.updated_by || null // Ensure this property exists
+      })) as FeatureFlag[];
+      
+      return formattedFlags;
     },
     enabled: isAdmin
   });

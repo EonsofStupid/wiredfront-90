@@ -13,7 +13,11 @@ import { toast } from 'sonner';
 import { Message, MessageRole, MessageStatus } from '@/types/chat';
 import { Json } from '@/integrations/supabase/types';
 
-export const ChatInputModule = () => {
+interface ChatInputModuleProps {
+  isEditorPage?: boolean;
+}
+
+export const ChatInputModule = ({ isEditorPage = false }: ChatInputModuleProps) => {
   const { userInput, setUserInput, isWaitingForResponse, chatId } = useChatStore();
   const addMessage = useMessageStore((state) => state.addMessage);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -60,7 +64,11 @@ export const ChatInputModule = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke('chat', {
-        body: { message: userInput, chatId }
+        body: { 
+          message: userInput, 
+          chatId,
+          isEditorPage // Pass this to the API if needed
+        }
       });
 
       if (error) {
@@ -133,7 +141,7 @@ export const ChatInputModule = () => {
     } finally {
       setIsProcessing(false);
     }
-  }, [userInput, isWaitingForResponse, isProcessing, chatId, addMessage, setUserInput]);
+  }, [userInput, isWaitingForResponse, isProcessing, chatId, addMessage, setUserInput, isEditorPage]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
