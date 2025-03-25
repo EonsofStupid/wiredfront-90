@@ -6,8 +6,8 @@ import { RepositoryManagement } from "@/components/github/RepositoryManagement";
 import { SyncStatusDashboard } from "@/components/github/SyncStatusDashboard";
 import { AccountSwitcher } from "@/components/github/AccountSwitcher";
 import { useGitHubConnection } from "@/hooks/github/useGitHubConnection";
-import { GitHubConnectionStatus } from "./github/GitHubConnectionStatus";
-import { GitHubErrorMessage } from "./github/GitHubErrorMessage";
+import { GitHubConnectionStatus } from "../github/GitHubConnectionStatus";
+import { GitHubErrorMessage } from "../github/GitHubErrorMessage";
 
 export function GitHubRepositorySettings() {
   const {

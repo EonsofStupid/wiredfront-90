@@ -1,10 +1,10 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GitHubConnectionStatus } from "./github/GitHubConnectionStatus";
-import { GitHubErrorMessage } from "./github/GitHubErrorMessage";
-import { GitHubConnectedActions } from "./github/GitHubConnectedActions";
-import { useGitHubConnection } from "@/hooks/useGitHubConnection";
+import { GitHubConnectionStatus } from "../github/GitHubConnectionStatus";
+import { GitHubErrorMessage } from "../github/GitHubErrorMessage";
+import { GitHubConnectedActions } from "../github/GitHubConnectedActions";
+import { useGitHubConnection } from "@/hooks/github/useGitHubConnection";
 
 export function GitHubSettings() {
   const {
