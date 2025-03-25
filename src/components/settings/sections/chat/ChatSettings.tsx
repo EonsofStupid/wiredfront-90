@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -6,13 +5,14 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { ChatToggleButton } from "@/components/chat/components/ChatToggleButton";
+import { ChatToggleButton } from "@/components/chat/ui/ChatToggleButton";
 import { buttonStyles } from "@/constants/chat/button-styles";
 import { getChatSettings, saveChatSettings, resetChatSettings, ChatSettings as ChatSettingsType } from "@/utils/storage/chat-settings";
 import { ArrowLeftRight, RotateCcw, Palette, Save } from "lucide-react";
 import { toast } from "sonner";
 import styles from "../../styles/ChatSettings.module.css";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useChatBridge } from "@/components/chat/chatbridge/useChatBridge";
 
 export const ChatSettings = () => {
   const [settings, setSettings] = useState<ChatSettingsType>(getChatSettings());
@@ -20,6 +20,7 @@ export const ChatSettings = () => {
   const [buttonPreviewColor, setButtonPreviewColor] = useState(settings.appearance.buttonColor);
   const [previewSize, setPreviewSize] = useState(settings.appearance.buttonSize);
   const [previewStyle, setPreviewStyle] = useState(settings.appearance.buttonStyle);
+  const { updateSettings: updateBridgeSettings } = useChatBridge();
   
   const handleTogglePosition = () => {
     const newPosition = settings.appearance.position === 'bottom-right' ? 'bottom-left' : 'bottom-right';
@@ -55,8 +56,31 @@ export const ChatSettings = () => {
     
     setSettings(updatedSettings);
     saveChatSettings(updatedSettings);
+    
+    // Update ChatBridge settings
+    updateBridgeSettings({
+      appearance: {
+        position: updatedSettings.appearance.position,
+        buttonStyle: updatedSettings.appearance.buttonStyle,
+        buttonSize: updatedSettings.appearance.buttonSize,
+        buttonColor: updatedSettings.appearance.buttonColor
+      }
+    });
+    
     toast.success("Chat settings saved successfully");
   };
+  
+  // Sync with ChatBridge on mount
+  useEffect(() => {
+    updateBridgeSettings({
+      appearance: {
+        position: settings.appearance.position,
+        buttonStyle: settings.appearance.buttonStyle,
+        buttonSize: settings.appearance.buttonSize,
+        buttonColor: settings.appearance.buttonColor
+      }
+    });
+  }, []);
   
   return (
     <Card className="p-6">

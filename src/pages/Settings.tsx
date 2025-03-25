@@ -1,3 +1,4 @@
+
 import { SettingsLayout } from "@/components/settings/layout/SettingsLayout";
 import { SettingsNavigation } from "@/components/settings/layout/SettingsNavigation";
 import { ApiSettings } from "@/components/settings/sections/ApiSettings";
@@ -6,6 +7,7 @@ import { GitHubRepositorySettings } from "@/components/settings/sections/GitHubR
 import { GitHubSettings } from "@/components/settings/sections/GitHubSettings";
 import { ProfileSettings } from "@/components/settings/sections/ProfileSettings";
 import { ProjectHubSettings } from "@/components/settings/sections/ProjectHubSettings";
+import { ChatSettings } from "@/components/settings/sections/chat/ChatSettings";
 import { RouteLoggingService } from "@/services/navigation/RouteLoggingService";
 import { useEffect } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -69,6 +71,11 @@ export default function Settings() {
       value: "general",
       label: "General",
       content: <GeneralSettings />,
+    },
+    {
+      value: "chat",
+      label: "Chat",
+      content: <ChatSettings />,
     },
   ];
 

@@ -1,11 +1,14 @@
+
 import { useSettingsStore } from "@/stores/settings";
 import { useState } from "react";
 import { SettingsContainer } from "../layout/SettingsContainer";
 import { ChatSettingsTabs } from "./ChatSettingsTabs";
+import { useChatBridgeSync } from "./useChatBridgeSync";
 
 export function ChatSettings() {
   const { preferences, updatePreferences } = useSettingsStore();
   const [activeTab, setActiveTab] = useState("general");
+  const { syncBridgeToStore } = useChatBridgeSync();
 
   const handleSettingChange = (
     section: string,
@@ -18,6 +21,9 @@ export function ChatSettings() {
         [setting]: value,
       },
     });
+    
+    // Sync changes to ChatBridge
+    syncBridgeToStore();
   };
 
   const handleClearHistory = () => {
@@ -26,7 +32,8 @@ export function ChatSettings() {
   };
 
   const handleSave = () => {
-    // Implement save logic
+    // Sync settings to ChatBridge
+    syncBridgeToStore();
     console.log("Saving chat settings...");
   };
 
