@@ -34,7 +34,7 @@ export const SessionItem = ({
   // Get the first message for this session
   const messages = useMessageStore(state => state.messages);
   const sessionMessages = messages.filter(m => m.chat_session_id === id);
-  const firstMessage = sessionMessages[0]?.content || 'New Chat';
+  const firstMessage = sessionMessages[0]?.content || title || 'New Chat';
 
   // Truncate the first message for display
   const truncatedMessage = firstMessage.length > 50 

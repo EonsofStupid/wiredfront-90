@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import { Toaster } from "sonner";
 import { ChatModeProvider } from './providers/ChatModeProvider';
@@ -6,7 +7,7 @@ import { useChatStore } from './store/chatStore';
 import { useSessionManager } from '@/hooks/useSessionManager';
 import { logger } from '@/services/chat/LoggingService';
 import { useMessageStore } from './messaging/MessageManager';
-import { Spinner } from './ui/Spinner';
+import { Spinner } from '@/components/ui/spinner';
 import ChatBridge from './chatbridge/ChatBridge';
 
 interface ChatContextType {
@@ -20,7 +21,7 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export function ChatProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const isEditorPage = location.pathname === '/editor';
-  const { isOpen, initializeChatSettings, setSessionLoading } = useChatStore();
+  const { isOpen, updateSettings, setSessionLoading } = useChatStore();
   const { currentSessionId, refreshSessions } = useSessionManager();
   const messageStore = useMessageStore();
   const [isInitialized, setIsInitialized] = useState(false);
@@ -35,8 +36,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         ChatBridge.getInstance();
         logger.info('ChatBridge initialized');
         
-        // Use the actual methods from the store
-        initializeChatSettings();
+        // Initialize chat settings
+        updateSettings();
         logger.info('Chat settings initialized');
         
         if (isEditorPage || location.pathname === '/') {
@@ -55,7 +56,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     };
     
     initialize();
-  }, [initializeChatSettings, isEditorPage, location.pathname, refreshSessions, setSessionLoading]);
+  }, [updateSettings, isEditorPage, location.pathname, refreshSessions, setSessionLoading]);
 
   useEffect(() => {
     logger.info('Chat context updated', { 

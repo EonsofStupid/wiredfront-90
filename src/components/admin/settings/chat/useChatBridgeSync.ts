@@ -21,7 +21,9 @@ export function useChatBridgeSync() {
         notifications: {
           sound: storeSettings.notifications.soundEnabled,
           desktop: storeSettings.notifications.desktopNotifications,
-        }
+        },
+        chatWidth: storeSettings.chatWidth || 400,
+        chatHeight: storeSettings.chatHeight || 600
       });
       
       logger.info('Synced store settings to bridge', { storeSettings });
@@ -43,7 +45,9 @@ export function useChatBridgeSync() {
         notifications: {
           soundEnabled: bridgeSettings.notifications.sound,
           desktopNotifications: bridgeSettings.notifications.desktop,
-        }
+        },
+        chatWidth: bridgeSettings.chatWidth,
+        chatHeight: bridgeSettings.chatHeight
       });
       
       logger.info('Synced bridge settings to store', { bridgeSettings });

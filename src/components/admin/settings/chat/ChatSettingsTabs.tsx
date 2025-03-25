@@ -121,3 +121,6 @@ export const ChatSettingsTabs: React.FC<ChatSettingsTabsProps> = ({
     </Tabs>
   );
 };
+
+// Export ChatSettings for backward compatibility
+export const ChatSettings = ChatSettingsTabs;

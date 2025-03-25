@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
@@ -52,8 +53,9 @@ const initialState: Omit<ChatState, keyof FeatureState | keyof Providers | keyof
   availableProviders: [],
   currentProvider: null,
   tokenControl: {
-    mode: TokenEnforcementMode.NONE,
+    mode: 'never',
     balance: 0,
+    enforcementMode: 'never'
   },
   providers: {
     loading: false,
@@ -163,9 +165,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
   resetChatState: () => set((state) => ({ messages: [] })),
   setAvailableProviders: (providers) => set({ availableProviders: providers }),
   setCurrentProvider: (provider) => set({ currentProvider: provider }),
-  setTokenEnforcementMode: (mode) => set((state) => ({
-    tokenControl: { ...state.tokenControl, mode },
-  })),
+  setTokenEnforcementMode: async (mode) => {
+    set((state) => ({
+      tokenControl: { ...state.tokenControl, mode },
+    }));
+    return true;
+  },
   addTokens: async (amount) => {
     set((state) => ({
       tokenControl: {

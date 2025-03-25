@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff } from 'lucide-react';
@@ -9,26 +10,25 @@ export interface VoiceToTextButtonProps {
 
 export const VoiceToTextButton: React.FC<VoiceToTextButtonProps> = ({ onVoiceInput }) => {
   const [isListening, setIsListening] = useState(false);
-  const { startRecognition, stopRecognition, transcript, resetTranscript, isError, errorMessage } = useVoiceRecognition();
+  
+  const handleTranscription = (text: string) => {
+    if (text && onVoiceInput) {
+      onVoiceInput(text);
+      setIsListening(false);
+    }
+  };
+  
+  const { startListening, stopListening, isError, errorMessage } = useVoiceRecognition(handleTranscription);
 
   const toggleListening = () => {
     if (isListening) {
-      stopRecognition();
+      stopListening();
       setIsListening(false);
     } else {
-      startRecognition();
+      startListening();
       setIsListening(true);
     }
   };
-
-  React.useEffect(() => {
-    if (transcript && onVoiceInput) {
-      onVoiceInput(transcript);
-      resetTranscript();
-      stopRecognition();
-      setIsListening(false);
-    }
-  }, [transcript, onVoiceInput, resetTranscript, stopRecognition]);
 
   return (
     <div>

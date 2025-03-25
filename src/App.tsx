@@ -1,11 +1,12 @@
+
 import { UsageMonitoringPanel } from "@/components/admin/analytics/UsageMonitoringPanel";
 import { CustomerManagementPanel } from "@/components/admin/customers/CustomerManagementPanel";
 import { FeatureManagementPanel } from "@/components/admin/features/FeatureManagementPanel";
 import { AdminTopNavOverlay } from "@/components/admin/navigation/AdminTopNavOverlay";
 import { APISettings } from "@/components/admin/settings/api/APISettings";
 import { AccessibilitySettings } from "@/components/admin/settings/Accessibility/AccessibilitySettings";
-import { ChatFeatureSettings } from "@/components/admin/settings/chat/UISettings";
-import { ChatSettings } from "@/components/admin/settings/chat/ChatSettingsTabs";
+import { UISettings } from "@/components/admin/settings/chat/UISettings";
+import { ChatSettingsTabs } from "@/components/admin/settings/chat/ChatSettingsTabs";
 import { EnhancedSystemSettingsPanel } from "@/components/admin/settings/EnhancedSystemSettingsPanel";
 import { LivePreviewSettings } from "@/components/admin/settings/LivePreview/LivePreviewSettings";
 import { NotificationSettings } from "@/components/admin/settings/Notifications/NotificationSettings";

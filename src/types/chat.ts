@@ -23,6 +23,6 @@ export interface Message {
   processing_status?: string;
   last_retry?: string;
   rate_limit_window?: string;
-  timestamp?: Date | string; // Add timestamp property
+  timestamp?: Date | string; // Added timestamp property
   session_id?: string; // Alias for chat_session_id for compatibility
 }

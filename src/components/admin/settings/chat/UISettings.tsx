@@ -91,3 +91,6 @@ export const UISettings: React.FC<UISettingsProps> = ({
     </Card>
   );
 };
+
+// Export as ChatFeatureSettings for backward compatibility
+export const ChatFeatureSettings = UISettings;

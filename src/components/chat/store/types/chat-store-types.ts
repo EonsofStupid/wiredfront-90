@@ -1,3 +1,4 @@
+
 import { Message } from '@/types/chat';
 import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 import { ChatSettings } from '@/utils/storage/chat-settings';
@@ -74,17 +75,18 @@ export interface TokenControl {
 export interface Providers {
   loading: boolean;
   error?: string | null;
+  availableProviders?: ProviderCategory[];
 }
 
-export type ChatProvider = {
+export interface ChatProvider {
   id: string;
   name: string;
-  type: string;
+  type: ProviderCategoryType;
   models: string[];
   isDefault: boolean;
   isEnabled: boolean;
   apiKey?: string;
-};
+}
 
 export interface UIState {
   sessionLoading: boolean;
@@ -124,7 +126,7 @@ export interface ChatState {
   togglePosition: () => void;
   setCurrentMode: (mode: ChatMode) => void;
   toggleFeature: (feature: keyof FeatureState) => void;
-  updateSettings: (newSettings: Partial<ChatSettings>) => void;
+  updateSettings: (newSettings?: Partial<ChatSettings>) => void;
   resetSettings: () => void;
   toggleDocked: () => void;
   setScale: (scale: number) => void;
@@ -142,7 +144,7 @@ export interface ChatState {
   // New methods
   setSessionLoading: (loading: boolean) => void;
   setMessageLoading: (loading: boolean) => void;
-  initializeChatSettings: () => void;
+  initializeChatSettings?: () => void;
   enableFeature: (feature: keyof FeatureState) => void;
   disableFeature: (feature: keyof FeatureState) => void;
   setFeatureState: (feature: keyof FeatureState, enabled: boolean) => void;

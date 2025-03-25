@@ -69,8 +69,8 @@ class ChatBridge {
       const storedSettings = localStorage.getItem('chat_settings');
       if (storedSettings) {
         const parsedSettings = JSON.parse(storedSettings);
-        this.settings = {
-          ...this.settings,
+        this._settings = {
+          ...this._settings,
           ...parsedSettings,
         };
       }
@@ -106,12 +106,16 @@ class ChatBridge {
 
   private async logToSupabase(event: BridgeEvent) {
     try {
-      await supabase.from('chat_logs').insert({
+      await supabase.from('system_logs').insert({
         user_id: this.userId,
-        session_id: this.sessionId,
-        event_type: event.type,
-        payload: event.payload,
-        timestamp: new Date(event.timestamp).toISOString(),
+        source: 'chat_bridge',
+        level: 'info',
+        message: `Event: ${event.type}`,
+        metadata: { 
+          session_id: this.sessionId,
+          payload: event.payload,
+          timestamp: new Date(event.timestamp).toISOString()
+        },
       });
     } catch (error) {
       logger.error('Failed to log to Supabase', error);
@@ -129,31 +133,31 @@ class ChatBridge {
     return this.connectionStatus;
   }
 
-  public getSettings(): BridgeSettings {
-    return { ...this.settings };
+  public get settings(): BridgeSettings {
+    return { ...this._settings };
   }
 
   public updateSettings(settings: Partial<BridgeSettings>) {
-    this.settings = {
-      ...this.settings,
+    this._settings = {
+      ...this._settings,
       ...settings,
     };
     
     // Save to localStorage
-    localStorage.setItem('chat_settings', JSON.stringify(this.settings));
+    localStorage.setItem('chat_settings', JSON.stringify(this._settings));
     
     // Emit event
     this.emit({
       type: 'settings:update',
-      payload: this.settings,
+      payload: this._settings,
       timestamp: Date.now(),
     });
 
-    return this.settings;
+    return this._settings;
   }
 
   public setMode(mode: ChatMode) {
-    this.settings.mode = mode;
+    this._settings.mode = mode;
     
     // Emit event
     this.emit({

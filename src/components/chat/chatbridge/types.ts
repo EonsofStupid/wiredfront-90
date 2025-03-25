@@ -2,7 +2,7 @@
 import { Message, MessageRole, MessageStatus } from '@/types/chat';
 
 // Defining the different chat modes
-export type ChatMode = 'chat' | 'developer' | 'image' | 'training';
+export type ChatMode = 'chat' | 'developer' | 'image' | 'training' | 'dev';
 
 // Message interface specific to the bridge
 export interface BridgeMessage extends Omit<Message, 'type'> {

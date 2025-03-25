@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ModeSelectionDialog } from '../SessionManagement/ModeSelectionDialog';
 import { useChatStore } from '../store/chatStore';
@@ -6,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { SessionItem } from './SessionItem';
-import { Spinner } from '../ui/Spinner';
+import { Spinner } from '@/components/ui/spinner';
 
 export function ChatSidebar() {
   const [isModeDialogOpen, setIsModeDialogOpen] = useState(false);
@@ -24,7 +25,7 @@ export function ChatSidebar() {
 
   const handleCreateSession = async (mode: string, providerId: string) => {
     setIsModeDialogOpen(false);
-    await createSession(mode, providerId);
+    await createSession(mode);
   };
 
   return (
@@ -39,16 +40,20 @@ export function ChatSidebar() {
       <ScrollArea className="flex-1 p-4 space-y-2">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
-            <Spinner size="sm" label="Loading providers..." />
+            <Spinner size="sm" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading providers...</span>
           </div>
         ) : (
           sessions && Object.entries(sessions).map(([sessionId, session]) => (
             <SessionItem
               key={sessionId}
-              sessionId={sessionId}
-              session={session}
+              id={sessionId}
+              lastAccessed={new Date(session.lastAccessed)}
               isActive={sessionId === currentSessionId}
+              messageCount={session.messageCount}
+              title={session.title}
               onSelect={() => switchSession(sessionId)}
+              provider={session.provider}
             />
           ))
         )}
