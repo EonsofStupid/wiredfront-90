@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageCircle, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
-import { Message } from "../../Message";
+import { Message } from "../Message";
 import "../styles/chat-variables.css";
 import { ChatToggleButton } from "../ui/ChatToggleButton";
 import { Spinner } from "../ui/Spinner";
