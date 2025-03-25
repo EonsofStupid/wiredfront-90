@@ -1,18 +1,19 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { AIServicesSettings } from "./AIServicesSettings";
-import { CloudStorageSettings } from "./CloudStorageSettings";
-import { DevelopmentSettings } from "./DevelopmentSettings";
-import { VoiceSettings } from "./VoiceSettings";
-import { RAGKeysSettings } from "./RAGKeysSettings";
-import { OAuthConnectionsSettings } from "./oauth/OAuthConnectionsSettings";
-import { ChatProviderSettings } from "./chat/ChatProviderSettings";
+import { AIServicesSettings } from "./api/AIServicesSettings";
+import { CloudStorageSettings } from "./api/CloudStorageSettings";
+import { DevelopmentSettings } from "./api/DevelopmentSettings";
+import { VoiceSettings } from "./api/VoiceSettings";
+import { RAGKeysSettings } from "./api/RAGKeysSettings";
+import { OAuthConnectionsSettings } from "./api/oauth/OAuthConnectionsSettings";
+import { ChatProviderSettings } from "./api/chat/ChatProviderSettings";
 import { useAPISettings } from "@/hooks/admin/settings/api";
 import { toast } from "sonner";
 import { AdminCard, AdminCardHeader, AdminCardTitle, AdminCardDescription, AdminCardContent } from "@/components/admin/ui/AdminCard";
 import { Save, MessageSquare, KeyRound, Shield } from "lucide-react";
-import { ChatSettingsTabs } from "../chat/ChatSettingsTabs";
-import { APIKeyManagement } from "./APIKeyManagement";
+import { ChatSettings } from "./ChatSettings";
+import { APIKeyManagement } from "./api/APIKeyManagement";
 import { useRoleStore } from "@/stores/role";
 
 export function APISettings() {
@@ -88,7 +89,7 @@ export function APISettings() {
             </TabsContent>
             
             <TabsContent value="chat-settings" className="pt-4">
-              <ChatSettingsTabs />
+              <ChatSettings />
             </TabsContent>
             
             {hasRole('super_admin') && (

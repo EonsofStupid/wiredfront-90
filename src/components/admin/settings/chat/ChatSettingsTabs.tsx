@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Key, 
@@ -23,32 +23,25 @@ import { NotificationSettings } from "./NotificationSettings";
 import { APIKeyManagement } from "../api/APIKeyManagement";
 import { Button } from "@/components/ui/button";
 
-export interface ChatSettingsTabsProps {
-  activeTab?: string;
-  setActiveTab?: (tab: string) => void;
-  settings?: any;
-  handleSettingChange?: (section: string, setting: string, value: any) => void;
-  handleClearHistory?: () => void;
-  handleSave?: () => void;
+interface ChatSettingsTabsProps {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  settings: any;
+  handleSettingChange: (section: string, setting: string, value: any) => void;
+  handleClearHistory: () => void;
+  handleSave: () => void;
 }
 
 export const ChatSettingsTabs: React.FC<ChatSettingsTabsProps> = ({
-  activeTab = "general",
-  setActiveTab = () => {},
-  settings = {},
-  handleSettingChange = () => {},
-  handleClearHistory = () => {},
-  handleSave = () => {}
+  activeTab,
+  setActiveTab,
+  settings,
+  handleSettingChange,
+  handleClearHistory,
+  handleSave
 }) => {
-  const [localActiveTab, setLocalActiveTab] = useState(activeTab);
-  
-  const handleTabChange = (value: string) => {
-    setLocalActiveTab(value);
-    setActiveTab(value);
-  };
-
   return (
-    <Tabs value={localActiveTab} onValueChange={handleTabChange} className="w-full">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <TabsList className="grid grid-cols-2 md:grid-cols-6 gap-1">
         <TabsTrigger value="general" className="flex items-center gap-2">
           <MessageSquare className="h-4 w-4" />
@@ -128,6 +121,3 @@ export const ChatSettingsTabs: React.FC<ChatSettingsTabsProps> = ({
     </Tabs>
   );
 };
-
-// Export ChatSettings for backward compatibility
-export const ChatSettings = ChatSettingsTabs;

@@ -4,14 +4,13 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Check, Clock, AlertCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { MessageStatus } from "@/types/chat";
 
 interface MessageProps {
   content: string;
   role: 'user' | 'assistant' | 'system';
-  status?: MessageStatus | 'pending' | 'sent' | 'failed';
+  status?: 'pending' | 'sent' | 'failed';
   id?: string;
-  timestamp?: string | Date;
+  timestamp?: string;
   onRetry?: (id: string) => void;
 }
 
@@ -24,13 +23,12 @@ const Message = memo(function Message({
   timestamp,
   onRetry
 }: MessageProps) {
+  // Map role to appropriate CSS classes
   const messageClass = role === 'user' 
-    ? 'bg-primary text-primary-foreground' 
+    ? 'chat-message-user' 
     : role === 'system' 
-      ? 'bg-muted text-muted-foreground' 
-      : 'bg-secondary text-secondary-foreground';
-
-  const alignment = role === 'user' ? 'justify-end' : 'justify-start';
+      ? 'chat-message-system' 
+      : 'chat-message-assistant';
   
   // Map status to icon and tooltip text
   const statusConfig = {
@@ -39,7 +37,7 @@ const Message = memo(function Message({
     failed: { icon: <AlertCircle className="h-3 w-3 text-destructive" />, tooltip: 'Failed to send' }
   };
   
-  const { icon, tooltip } = statusConfig[status as keyof typeof statusConfig] || statusConfig.sent;
+  const { icon, tooltip } = statusConfig[status];
 
   // Add proper ARIA attributes for accessibility
   const messageType = role === 'user' ? 'Sent' : 'Received';
@@ -57,7 +55,7 @@ const Message = memo(function Message({
     <div
       className={cn(
         "flex w-full mb-4",
-        alignment
+        role === "user" ? "justify-end" : "justify-start"
       )}
       role="listitem"
       aria-label={`${messageType} message: ${content}`}
@@ -93,7 +91,7 @@ const Message = memo(function Message({
                   {icon}
                 </span>
               </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs">
+              <TooltipContent side="top" className="text-xs chat-dialog-content">
                 <p>{tooltip}</p>
                 {timestamp && (
                   <p className="text-xs text-muted-foreground mt-1">

@@ -1,64 +1,57 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@/types/sessions';
-import { toast } from 'sonner';
-import { logger } from '../chat/LoggingService';
+import { logger } from '@/services/chat/LoggingService';
 
 /**
- * Fetch all chat sessions for the current user
+ * Fetches all sessions for the current authenticated user
  */
-export const fetchUserSessions = async (): Promise<Session[]> => {
+export async function fetchUserSessions(): Promise<Session[]> {
   try {
+    // Get user from Supabase auth
     const { data: { user } } = await supabase.auth.getUser();
-    
     if (!user) {
-      logger.warn('No authenticated user found when fetching sessions');
-      return [];
+      throw new Error('User not authenticated');
     }
-    
-    // Get active sessions (not archived)
+
+    // Fetch chat sessions for the current user
     const { data, error } = await supabase
       .from('chat_sessions')
       .select(`
-        id, 
+        id,
         title,
-        message_count,
         created_at,
         last_accessed,
-        archived,
-        mode,
-        provider_id,
-        metadata
+        is_active,
+        metadata,
+        user_id
       `)
       .eq('user_id', user.id)
-      .eq('archived', false)
       .order('last_accessed', { ascending: false });
-    
-    if (error) {
-      logger.error('Error fetching chat sessions', { error });
-      return [];
-    }
-    
-    // Convert to Session objects
-    const sessions = data.map(session => ({
-      id: session.id,
-      title: session.title || 'Untitled Chat',
-      messageCount: session.message_count || 0,
-      lastAccessed: new Date(session.last_accessed),
-      createdAt: new Date(session.created_at),
-      mode: session.mode || 'chat',
-      providerId: session.provider_id,
-      provider: session.metadata?.provider_name || undefined,
-      isArchived: session.archived
+
+    if (error) throw error;
+
+    // Get message counts for each session
+    const sessionsWithCounts = await Promise.all((data || []).map(async (session) => {
+      const { count, error: countError } = await supabase
+        .from('messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('chat_session_id', session.id);
+      
+      if (countError) {
+        logger.warn('Failed to get message count', { error: countError, sessionId: session.id });
+      }
+      
+      return {
+        ...session,
+        message_count: count || 0
+      };
     }));
     
-    logger.info(`Fetched ${sessions.length} chat sessions`);
-    return sessions;
+    logger.info('Sessions fetched', { count: sessionsWithCounts.length });
+    return sessionsWithCounts;
   } catch (error) {
-    logger.error('Failed to fetch chat sessions', { error });
-    toast.error('Failed to load chat sessions');
-    return [];
+    logger.error('Failed to fetch sessions', { error });
+    throw error;
   }
-};
-
-// Additional session fetch functions can be exported from here...
+}

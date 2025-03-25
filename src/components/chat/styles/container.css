@@ -87,7 +87,6 @@
   scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
   overflow-y: auto;
   flex: 1;
-  padding: 1rem;
 }
 
 .chat-messages-container::-webkit-scrollbar {
@@ -101,11 +100,4 @@
 .chat-messages-container::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.1);
   border-radius: 10px;
-}
-
-/* Dialog styling */
-.chat-dialog-content {
-  background: var(--chat-knowledge-bg);
-  border: 1px solid var(--chat-knowledge-border);
-  color: var(--chat-text);
 }

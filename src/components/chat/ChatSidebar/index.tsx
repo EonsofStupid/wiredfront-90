@@ -1,72 +1,119 @@
 
-import React, { useState, useEffect } from 'react';
-import { ModeSelectionDialog } from '../SessionManagement/ModeSelectionDialog';
-import { useChatStore } from '../store/chatStore';
-import { useSessionManager } from '@/hooks/useSessionManager';
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import { SessionItem } from './SessionItem';
-import { Spinner } from '@/components/ui/spinner';
+import React, { Suspense, lazy, useState } from "react";
+import { SessionControls } from "./SessionControls";
+import { useSessionManager } from "@/hooks/sessions"; // Updated import
+import { SessionHeader } from "./SessionHeader";
+import { useChatStore } from "../store/chatStore";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useErrorBoundary } from "../hooks/useErrorBoundary";
+import { ChatMode, ModeSelectionDialog } from "../SessionManagement/ModeSelectionDialog";
 
-export function ChatSidebar() {
-  const [isModeDialogOpen, setIsModeDialogOpen] = useState(false);
-  const { availableProviders, currentProvider } = useChatStore();
-  const { sessions, currentSessionId, switchSession, createSession } = useSessionManager();
-  const [isLoading, setIsLoading] = useState(false);
+// Lazy load SessionList for performance
+const SessionList = lazy(() => import("./SessionList").then(mod => ({ default: mod.SessionList })));
+const SessionSkeleton = lazy(() => import("./SessionSkeleton"));
 
-  useEffect(() => {
-    setIsLoading(availableProviders.length === 0);
-  }, [availableProviders]);
+export const ChatSidebar = () => {
+  const {
+    sessions,
+    currentSessionId,
+    switchSession,
+    createSession,
+    cleanupInactiveSessions,
+    clearSessions,
+    isLoading,
+  } = useSessionManager();
+  const { ui } = useChatStore();
+  const { ErrorBoundary } = useErrorBoundary();
+  const [modeDialogOpen, setModeDialogOpen] = useState(false);
 
-  const handleCreateSession = async (mode: string, providerId: string) => {
-    setIsModeDialogOpen(false);
+  const formattedSessions = sessions.map(session => ({
+    id: session.id,
+    lastAccessed: new Date(session.last_accessed),
+    isActive: session.id === currentSessionId
+  }));
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
+  const handleCreateSession = async () => {
+    // Open mode selection dialog instead of directly creating a session
+    setModeDialogOpen(true);
+  };
+
+  const handleCreateWithMode = async (mode: ChatMode, providerId: string) => {
+    // Create session with metadata for the selected mode
     await createSession({
       metadata: {
+        mode,
         providerId
       }
     });
   };
 
+  // Explicit handlers for different deletion operations
+  const handleClearOtherSessions = async () => {
+    await clearSessions(true); // Preserve current session
+  };
+
+  const handleClearAllSessions = async () => {
+    await clearSessions(false); // Clear ALL sessions including current
+  };
+
   return (
-    <div className="flex flex-col h-full bg-sidebar-background border-r border-separator w-64">
-      <div className="p-4 flex items-center justify-between">
-        <h2 className="text-sm font-semibold tracking-tight">Chat Sessions</h2>
-        <Button variant="ghost" size="icon" onClick={() => setIsModeDialogOpen(true)}>
-          <Plus className="h-4 w-4" />
-        </Button>
+    <div 
+      className="w-[300px] chat-glass-card chat-neon-border h-[500px] flex flex-col" 
+      onClick={handleClick}
+      data-testid="chat-sidebar"
+    >
+      <SessionHeader sessionCount={sessions.length} />
+      
+      <div className="flex-1 overflow-hidden">
+        <ErrorBoundary
+          fallback={
+            <div className="p-4 text-center">
+              <p className="text-sm text-destructive">Failed to load sessions</p>
+              <button 
+                className="mt-2 px-3 py-1 text-xs bg-primary/80 text-primary-foreground rounded"
+                onClick={() => window.location.reload()}
+              >
+                Retry
+              </button>
+            </div>
+          }
+        >
+          <Suspense fallback={
+            <div className="p-4">
+              <Skeleton className="h-6 w-24 mb-4" />
+              <SessionSkeleton count={4} />
+            </div>
+          }>
+            {isLoading || ui.sessionLoading ? (
+              <SessionSkeleton count={4} />
+            ) : (
+              <SessionList
+                sessions={formattedSessions}
+                onSelectSession={switchSession}
+              />
+            )}
+          </Suspense>
+        </ErrorBoundary>
       </div>
       
-      <ScrollArea className="flex-1 p-4 space-y-2">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-full">
-            <Spinner size="sm" />
-            <span className="ml-2 text-sm text-muted-foreground">Loading providers...</span>
-          </div>
-        ) : (
-          sessions && Object.entries(sessions).map(([sessionId, session]) => (
-            <SessionItem
-              key={sessionId}
-              id={sessionId}
-              lastAccessed={new Date(session.last_accessed)}
-              isActive={sessionId === currentSessionId}
-              messageCount={session.message_count}
-              title={session.title}
-              onSelect={() => switchSession(sessionId)}
-              provider={session.providerId} // Fixed from provider_id
-            />
-          ))
-        )}
-      </ScrollArea>
-      
+      <SessionControls
+        onNewSession={handleCreateSession}
+        onClearSessions={handleClearOtherSessions}
+        onCleanupSessions={cleanupInactiveSessions}
+        onClearAllSessions={handleClearAllSessions}
+        sessionCount={sessions.length}
+        isLoading={isLoading || ui.sessionLoading}
+      />
+
       <ModeSelectionDialog
-        open={isModeDialogOpen}
-        onClose={() => setIsModeDialogOpen(false)}
-        onOpenChange={setIsModeDialogOpen}
-        onCreateSession={handleCreateSession}
-        availableProviders={availableProviders}
-        currentProvider={currentProvider}
+        open={modeDialogOpen}
+        onOpenChange={setModeDialogOpen}
+        onCreateSession={handleCreateWithMode}
       />
     </div>
   );
-}
+};

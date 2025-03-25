@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import { Toaster } from "sonner";
 import { ChatModeProvider } from './providers/ChatModeProvider';
@@ -7,8 +6,7 @@ import { useChatStore } from './store/chatStore';
 import { useSessionManager } from '@/hooks/useSessionManager';
 import { logger } from '@/services/chat/LoggingService';
 import { useMessageStore } from './messaging/MessageManager';
-import { Spinner } from '../ui/spinner';
-import ChatBridge from './chatbridge/ChatBridge';
+import { Spinner } from './components/Spinner';
 
 interface ChatContextType {
   isEditorPage: boolean;
@@ -21,7 +19,7 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export function ChatProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const isEditorPage = location.pathname === '/editor';
-  const { isOpen, updateSettings, setSessionLoading } = useChatStore();
+  const { isOpen, initializeChatSettings, setSessionLoading } = useChatStore();
   const { currentSessionId, refreshSessions } = useSessionManager();
   const messageStore = useMessageStore();
   const [isInitialized, setIsInitialized] = useState(false);
@@ -32,12 +30,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       try {
         setIsInitializing(true);
         
-        // Initialize the ChatBridge instance
-        ChatBridge.getInstance();
-        logger.info('ChatBridge initialized');
-        
-        // Initialize chat settings
-        updateSettings();
+        initializeChatSettings();
         logger.info('Chat settings initialized');
         
         if (isEditorPage || location.pathname === '/') {
@@ -56,7 +49,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     };
     
     initialize();
-  }, [updateSettings, isEditorPage, location.pathname, refreshSessions, setSessionLoading]);
+  }, [initializeChatSettings, isEditorPage, location.pathname, refreshSessions, setSessionLoading]);
 
   useEffect(() => {
     logger.info('Chat context updated', { 

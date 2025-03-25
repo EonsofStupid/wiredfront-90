@@ -1,25 +1,45 @@
 
 import React from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
-export interface MessageSkeletonProps {
+interface MessageSkeletonProps {
   role?: 'user' | 'assistant';
   lines?: number;
+  className?: string;
 }
 
-export function MessageSkeleton({ role = 'assistant', lines = 3 }: MessageSkeletonProps) {
+export const MessageSkeleton: React.FC<MessageSkeletonProps> = ({ 
+  role = 'assistant', 
+  lines = 3,
+  className 
+}) => {
+  const isUser = role === 'user';
+  
   return (
-    <div className={`flex ${role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
-      <div className={`flex items-start max-w-[80%] ${role === 'user' ? 'bg-primary/10' : 'bg-muted'} rounded-lg p-3`}>
-        <div className="space-y-2">
-          {Array.from({ length: lines }).map((_, i) => (
-            <Skeleton 
-              key={i} 
-              className={`h-4 w-${24 + Math.floor(Math.random() * 24)}`} 
-            />
-          ))}
-        </div>
+    <div 
+      className={cn(
+        'flex flex-col gap-2 p-4 rounded-lg max-w-[85%] animate-pulse',
+        isUser ? 'chat-message-user ml-auto' : 'chat-message-assistant',
+        className
+      )}
+    >
+      <div className="flex items-center gap-2">
+        {!isUser && <Skeleton className="h-6 w-6 rounded-full" />}
+        <Skeleton className="h-4 w-24" />
+      </div>
+      
+      <div className="space-y-2">
+        {Array.from({ length: lines }).map((_, i) => (
+          <Skeleton 
+            key={i} 
+            className={cn(
+              'h-4',
+              i === lines - 1 && lines > 1 ? 'w-[70%]' : 'w-full'
+            )} 
+          />
+        ))}
       </div>
     </div>
   );
-}
+};

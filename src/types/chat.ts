@@ -1,7 +1,6 @@
+import { Json } from '@/integrations/supabase/types';
 
-import { Json } from '@/types/json';
-
-export type MessageStatus = 'pending' | 'sent' | 'received' | 'failed' | 'error' | 'cached';
+export type MessageStatus = 'pending' | 'sent' | 'failed' | 'error' | 'cached';
 export type MessageRole = 'user' | 'assistant' | 'system';
 
 export interface Message {
@@ -19,13 +18,10 @@ export interface Message {
   last_accessed: string;
   retry_count: number;
   message_status: MessageStatus;
-  status?: MessageStatus; // Adding this for backward compatibility
   role: MessageRole;
   source_type?: string;
   provider?: string;
   processing_status?: string;
   last_retry?: string;
   rate_limit_window?: string;
-  timestamp?: Date | string; // Added timestamp property
-  session_id?: string; // Alias for chat_session_id for compatibility
 }

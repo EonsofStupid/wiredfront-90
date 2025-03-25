@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Clock, Check, Hash, AlertCircle } from "lucide-react";
@@ -33,8 +32,8 @@ export const SessionItem = ({
 
   // Get the first message for this session
   const messages = useMessageStore(state => state.messages);
-  const sessionMessages = messages.filter(m => m.chat_session_id === id);
-  const firstMessage = sessionMessages[0]?.content || title || 'New Chat';
+  const sessionMessages = messages.filter(m => m.sessionId === id);
+  const firstMessage = sessionMessages[0]?.content || 'New Chat';
 
   // Truncate the first message for display
   const truncatedMessage = firstMessage.length > 50 
