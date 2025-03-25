@@ -3,6 +3,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@/types/sessions';
 import { logger } from '@/services/chat/LoggingService';
 
+// Define a type for the raw database record to prevent excessive type depth
+interface RawSessionData {
+  id: string;
+  title: string;
+  created_at: string;
+  last_accessed: string;
+  archived: boolean;
+  metadata: any; // Use any here to break the recursive Json type
+  user_id: string | null;
+}
+
 /**
  * Fetches all sessions for the current authenticated user
  */
@@ -36,7 +47,7 @@ export async function fetchUserSessions(): Promise<Session[]> {
     }
 
     // Get message counts for each session
-    const sessionsWithCounts = await Promise.all(data.map(async (session) => {
+    const sessionsWithCounts = await Promise.all(data.map(async (session: RawSessionData) => {
       const { count, error: countError } = await supabase
         .from('messages')
         .select('id', { count: 'exact', head: true })
@@ -46,13 +57,21 @@ export async function fetchUserSessions(): Promise<Session[]> {
         logger.warn('Failed to get message count', { error: countError, sessionId: session.id });
       }
       
-      // Break circular type reference by using a direct type conversion
-      // instead of relying on complex nested Json type resolution
-      return {
-        ...session,
+      // Explicitly map the database record to our Session interface
+      // This avoids recursive type analysis by creating a new object with known types
+      const sessionObject: Session = {
+        id: session.id,
+        title: session.title,
+        created_at: session.created_at,
+        last_accessed: session.last_accessed,
         message_count: count || 0,
-        is_active: !session.archived
-      } as unknown as Session; // Use unknown as intermediate step to avoid deep type analysis
+        is_active: !session.archived,
+        archived: session.archived,
+        metadata: session.metadata,
+        user_id: session.user_id || undefined
+      };
+      
+      return sessionObject;
     }));
     
     logger.info('Sessions fetched', { count: sessionsWithCounts.length });
