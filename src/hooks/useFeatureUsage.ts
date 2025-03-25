@@ -22,9 +22,11 @@ export function useFeatureUsage() {
       
       setIsLogging(true);
       try {
-        await supabase.from('feature_usage').insert({
+        await supabase.from('feature_toggle_history').insert({
           user_id: user.id,
           feature_name: featureName,
+          old_value: null,
+          new_value: true,
           context
         });
         

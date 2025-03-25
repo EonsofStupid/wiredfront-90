@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ChatState } from '../types/chat-store-types';
 import { logger } from '@/services/chat/LoggingService';
@@ -47,12 +46,12 @@ export const createInitializationActions = (
         logger.error('Failed to load providers from edge function', providerError);
         
         // Fallback to default OpenAI provider if edge function fails
-        const fallbackProvider = {
+        const fallbackProvider: ChatProvider = {
           id: 'openai-default',
           name: 'OpenAI',
           type: 'openai',
           isDefault: true,
-          category: 'chat'
+          category: 'chat' // Using a valid category value
         };
         
         set({
@@ -86,6 +85,30 @@ export const createInitializationActions = (
           const uiCustomizations = chatSettings.ui_customizations || {};
           const currentState = get();
           
+          // Type assertion to handle potential JSON structure issues
+          const settingsData = data as unknown as { 
+            features?: {
+              voice: boolean,
+              rag: boolean,
+              modeSwitch: boolean,
+              notifications: boolean,
+              github: boolean,
+              codeAssistant: boolean,
+              ragSupport: boolean,
+              githubSync: boolean,
+              tokenEnforcement: boolean
+            },
+            tokenControl?: {
+              balance: number,
+              enforcementMode: TokenEnforcementMode,
+              lastUpdated: string | null,
+              tokensPerQuery: number,
+              freeQueryLimit: number,
+              queriesUsed: number
+            },
+            tokenEnforcement?: boolean
+          };
+
           // Apply settings from database with proper type safety
           set({
             features: {
@@ -111,12 +134,12 @@ export const createInitializationActions = (
       // If no provider is set, use OpenAI as default
       const currentState = get();
       if (!currentState.currentProvider) {
-        const defaultProvider = {
+        const defaultProvider: ChatProvider = {
           id: 'openai-default',
           name: 'OpenAI',
           type: 'openai',
           isDefault: true,
-          category: 'chat'
+          category: 'chat' // Using a valid category value
         };
         
         set({

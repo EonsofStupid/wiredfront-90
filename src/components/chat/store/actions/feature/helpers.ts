@@ -22,13 +22,6 @@ export const logFeatureToggle = async (
       metadata: { source: 'client_app' }
     });
 
-    // Log feature usage
-    await supabase.from('feature_usage').insert({
-      user_id: userData.user.id,
-      feature_name: feature,
-      context: { action: 'toggle', new_state: newValue }
-    });
-
     logger.info(`Feature ${feature} ${newValue ? 'enabled' : 'disabled'}`, { feature, value: newValue });
   } catch (error) {
     logger.error('Error logging feature toggle:', error);

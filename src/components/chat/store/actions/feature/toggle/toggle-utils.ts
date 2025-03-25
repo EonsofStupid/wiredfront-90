@@ -65,10 +65,11 @@ export const logCommandUsage = async (commandName: string, args: string[]) => {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (user) {
-      await supabase.from('feature_usage').insert({
+      await supabase.from('feature_toggle_history').insert({
         user_id: user.id,
         feature_name: `command_${commandName}`,
-        count: 1,
+        old_value: null,
+        new_value: true,
         context: {
           command: commandName,
           args: args,
