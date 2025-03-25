@@ -46,12 +46,13 @@ export async function fetchUserSessions(): Promise<Session[]> {
         logger.warn('Failed to get message count', { error: countError, sessionId: session.id });
       }
       
-      // Use type assertion to break potential circular reference
+      // Break circular type reference by using a direct type conversion
+      // instead of relying on complex nested Json type resolution
       return {
         ...session,
         message_count: count || 0,
-        is_active: !session.archived // Map archived to is_active for backward compatibility
-      } as Session;
+        is_active: !session.archived
+      } as unknown as Session; // Use unknown as intermediate step to avoid deep type analysis
     }));
     
     logger.info('Sessions fetched', { count: sessionsWithCounts.length });
