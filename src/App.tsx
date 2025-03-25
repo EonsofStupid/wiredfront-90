@@ -1,4 +1,3 @@
-
 import { UsageMonitoringPanel } from "@/components/admin/analytics/UsageMonitoringPanel";
 import { CustomerManagementPanel } from "@/components/admin/customers/CustomerManagementPanel";
 import { FeatureManagementPanel } from "@/components/admin/features/FeatureManagementPanel";
@@ -187,10 +186,10 @@ const App = () => {
               path="/admin/settings/general"
               element={<EnhancedSystemSettingsPanel />}
             />
-            <Route path="/admin/settings/chat" element={<ChatSettings />} />
+            <Route path="/admin/settings/chat" element={<ChatSettingsTabs />} />
             <Route
               path="/admin/settings/chat-features"
-              element={<ChatFeatureSettings />}
+              element={<UISettings />}
             />
             <Route
               path="/admin/settings/live-preview"
@@ -232,7 +231,7 @@ const App = () => {
               path="/admin/projects"
               element={<div>Project Management</div>}
             />
-            <Route path="/admin/chat-settings" element={<ChatSettings />} />
+            <Route path="/admin/chat-settings" element={<ChatSettingsTabs />} />
             <Route
               path="/admin/models"
               element={<div>Models Configuration</div>}

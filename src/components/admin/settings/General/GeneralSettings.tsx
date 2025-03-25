@@ -1,7 +1,7 @@
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SettingsContainer } from "./layout/SettingsContainer";
+import { SettingsContainer } from "../layout/SettingsContainer";
 import { useSettingsStore } from "@/stores/settings";
 import { useCallback } from "react";
 import { useChatBridgeSync } from "../chat/useChatBridgeSync";
