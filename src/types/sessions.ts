@@ -1,6 +1,17 @@
 
+/**
+ * Clean types for session management without recursive dependencies
+ */
 
-import { Json } from '@/integrations/supabase/types';
+// Define our own metadata type instead of using Json to avoid recursive dependencies
+export type SessionMetadata = {
+  providerId?: string;
+  mode?: string;
+  models?: string[];
+  tags?: string[];
+  projectId?: string;
+  [key: string]: any;
+};
 
 // Core session interface
 export interface Session {
@@ -9,9 +20,9 @@ export interface Session {
   created_at: string;
   last_accessed: string;
   message_count: number;
-  is_active?: boolean; // Derived from !archived for backward compatibility
-  archived?: boolean;  // The actual DB field
-  metadata?: Json;
+  is_active?: boolean; 
+  archived?: boolean;  
+  metadata?: SessionMetadata;
   user_id?: string;
 }
 
@@ -28,13 +39,12 @@ export interface SessionOperationResult {
 // Session creation parameters
 export interface CreateSessionParams {
   title?: string;
-  metadata?: Json;
+  metadata?: SessionMetadata;
 }
 
 // Session update parameters
 export interface UpdateSessionParams {
   title?: string;
-  archived?: boolean; // Use archived instead of is_active
-  metadata?: Json;
+  archived?: boolean;
+  metadata?: SessionMetadata;
 }
-
