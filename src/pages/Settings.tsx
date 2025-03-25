@@ -1,14 +1,13 @@
-
 import { useEffect } from "react";
 import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 import { SettingsLayout } from "@/components/settings/layout/SettingsLayout";
 import { SettingsNavigation } from "@/components/settings/layout/SettingsNavigation";
-import { GeneralSettings } from "@/components/settings/sections/GeneralSettings";
-import { ApiSettings } from "@/components/settings/sections/ApiSettings";
+import { GeneralSettings } from "@/components/settings/sections/general/GeneralSettings";
+import { ApiSettings } from "@/components/settings/sections/api/ApiSettings";
 import { GitHubSettings } from "@/components/settings/sections/GitHubSettings";
 import { GitHubRepositorySettings } from "@/components/settings/sections/GitHubRepositorySettings";
-import { ProfileSettings } from "@/components/settings/sections/ProfileSettings";
-import { ProjectHubSettings } from "@/components/settings/sections/ProjectHubSettings";
+import { ProfileSettings } from "@/components/settings/sections/Profile/ProfileSettings";
+import { ProjectHubSettings } from "@/components/settings/sections/UserProjectHub/ProjectHubSettings";
 import { RouteLoggingService } from "@/services/navigation/RouteLoggingService";
 
 export default function Settings() {
