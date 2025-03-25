@@ -1,4 +1,3 @@
-
 import { ChatButtonSettings } from '@/types/chat/button-styles';
 
 const CHAT_SETTINGS_KEY = 'chat_settings';
@@ -29,10 +28,10 @@ export interface ChatSettings {
   };
 }
 
-const defaultSettings: ChatSettings = {
+export const defaultSettings: ChatSettings = {
   appearance: {
     position: 'bottom-right',
-    buttonStyle: 'ultra',  // Set "Ultra" as default
+    buttonStyle: 'ultra', // Default to 'ultra' style
     buttonSize: 'medium',
     buttonColor: '#0EA5E9',
     chatWidth: 400,
@@ -52,14 +51,40 @@ const defaultSettings: ChatSettings = {
   providers: {
     defaultProvider: 'openai',
     defaultModel: 'gpt-3.5-turbo',
-  }
+  },
 };
 
+/**
+ * Returns a fully merged and type-safe settings object.
+ * Ensures backward compatibility with evolving settings shape.
+ */
 export const getChatSettings = (): ChatSettings => {
   try {
     const stored = localStorage.getItem(CHAT_SETTINGS_KEY);
     if (stored) {
-      return JSON.parse(stored);
+      const parsed = JSON.parse(stored);
+
+      // Safely merge with defaults
+      return {
+        ...defaultSettings,
+        ...parsed,
+        appearance: {
+          ...defaultSettings.appearance,
+          ...parsed.appearance,
+        },
+        behavior: {
+          ...defaultSettings.behavior,
+          ...parsed.behavior,
+        },
+        notifications: {
+          ...defaultSettings.notifications,
+          ...parsed.notifications,
+        },
+        providers: {
+          ...defaultSettings.providers,
+          ...parsed.providers,
+        },
+      };
     }
     return defaultSettings;
   } catch (error) {
@@ -82,4 +107,4 @@ export const resetChatSettings = (): void => {
   } catch (error) {
     console.error('Error resetting chat settings:', error);
   }
-}; 
+};
