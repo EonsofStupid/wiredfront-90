@@ -25,7 +25,7 @@ export function ChatSidebar() {
 
   const handleCreateSession = async (mode: string, providerId: string) => {
     setIsModeDialogOpen(false);
-    await createSession(mode);
+    await createSession({ mode, providerId });
   };
 
   return (
@@ -48,12 +48,12 @@ export function ChatSidebar() {
             <SessionItem
               key={sessionId}
               id={sessionId}
-              lastAccessed={new Date(session.lastAccessed)}
+              lastAccessed={new Date(session.last_accessed)}
               isActive={sessionId === currentSessionId}
-              messageCount={session.messageCount}
+              messageCount={session.message_count}
               title={session.title}
               onSelect={() => switchSession(sessionId)}
-              provider={session.provider}
+              provider={session.provider_id}
             />
           ))
         )}

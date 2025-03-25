@@ -7,7 +7,7 @@ import { useChatStore } from './store/chatStore';
 import { useSessionManager } from '@/hooks/useSessionManager';
 import { logger } from '@/services/chat/LoggingService';
 import { useMessageStore } from './messaging/MessageManager';
-import { Spinner } from '@/components/ui/spinner';
+import { Spinner } from '../ui/spinner';
 import ChatBridge from './chatbridge/ChatBridge';
 
 interface ChatContextType {
