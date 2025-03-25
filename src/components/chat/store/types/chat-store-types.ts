@@ -1,3 +1,4 @@
+
 import { Message } from "@/types/chat";
 import { ChatMode, TokenEnforcementMode } from "@/integrations/supabase/types/enums";
 
@@ -72,6 +73,7 @@ export interface ChatState {
 
   // Store actions
   resetChatState: () => void;
+  setUserInput: (input: string) => void; // Added this action
 }
 
 export interface UIStateActions {

@@ -103,7 +103,7 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
                       role={msg.role}
                       status={msg.message_status}
                       id={msg.id}
-                      timestamp={msg.timestamp}
+                      timestamp={msg.created_at}
                       onRetry={handleRetry}
                     />
                   </motion.div>

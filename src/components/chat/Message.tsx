@@ -4,11 +4,12 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Check, Clock, AlertCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { MessageStatus } from "@/types/chat";
 
 interface MessageProps {
   content: string;
   role: 'user' | 'assistant' | 'system';
-  status?: 'pending' | 'sent' | 'failed';
+  status?: MessageStatus;
   id?: string;
   timestamp?: string;
   onRetry?: (id: string) => void;
@@ -31,22 +32,32 @@ const Message = memo(function Message({
       : 'chat-message-assistant';
   
   // Map status to icon and tooltip text
-  const statusConfig = {
-    pending: { icon: <Clock className="h-3 w-3 animate-pulse" />, tooltip: 'Sending message...' },
-    sent: { icon: <Check className="h-3 w-3" />, tooltip: 'Message sent' },
-    failed: { icon: <AlertCircle className="h-3 w-3 text-destructive" />, tooltip: 'Failed to send' }
+  const getStatusConfig = (status: MessageStatus) => {
+    switch (status) {
+      case 'pending':
+        return { icon: <Clock className="h-3 w-3 animate-pulse" />, tooltip: 'Sending message...' };
+      case 'sent':
+      case 'received': // Add handling for received status
+      case 'cached': // Add handling for cached status
+        return { icon: <Check className="h-3 w-3" />, tooltip: 'Message sent' };
+      case 'failed':
+      case 'error': // Add handling for error status
+        return { icon: <AlertCircle className="h-3 w-3 text-destructive" />, tooltip: 'Failed to send' };
+      default:
+        return { icon: <Check className="h-3 w-3" />, tooltip: 'Message sent' };
+    }
   };
-  
-  const { icon, tooltip } = statusConfig[status];
+
+  const { icon, tooltip } = getStatusConfig(status);
 
   // Add proper ARIA attributes for accessibility
   const messageType = role === 'user' ? 'Sent' : 'Received';
   const statusText = status === 'pending' ? 'Sending...' : 
-                   status === 'sent' ? 'Sent' : 'Failed to send';
+                   status === 'sent' || status === 'received' || status === 'cached' ? 'Sent' : 'Failed to send';
                    
   // Handle retry click with memoization to prevent rerenders
   const handleRetryClick = useCallback(() => {
-    if (status === 'failed' && id && onRetry) {
+    if ((status === 'failed' || status === 'error') && id && onRetry) {
       onRetry(id);
     }
   }, [id, status, onRetry]);
@@ -67,13 +78,13 @@ const Message = memo(function Message({
         className={cn(
           "max-w-[80%] px-4 py-2 shadow-sm transition-all duration-200",
           messageClass,
-          status === 'failed' && "border-destructive hover:border-destructive/70 cursor-pointer"
+          (status === 'failed' || status === 'error') && "border-destructive hover:border-destructive/70 cursor-pointer"
         )}
-        onClick={status === 'failed' ? handleRetryClick : undefined}
-        tabIndex={status === 'failed' ? 0 : undefined}
-        role={status === 'failed' ? 'button' : undefined}
-        aria-label={status === 'failed' ? 'Retry sending message' : undefined}
-        onKeyDown={status === 'failed' ? (e) => {
+        onClick={(status === 'failed' || status === 'error') ? handleRetryClick : undefined}
+        tabIndex={(status === 'failed' || status === 'error') ? 0 : undefined}
+        role={(status === 'failed' || status === 'error') ? 'button' : undefined}
+        aria-label={(status === 'failed' || status === 'error') ? 'Retry sending message' : undefined}
+        onKeyDown={(status === 'failed' || status === 'error') ? (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             handleRetryClick();
           }
@@ -98,7 +109,7 @@ const Message = memo(function Message({
                     {new Date(timestamp).toLocaleTimeString()}
                   </p>
                 )}
-                {status === 'failed' && (
+                {(status === 'failed' || status === 'error') && (
                   <p className="text-xs text-destructive mt-1">Click to retry</p>
                 )}
               </TooltipContent>

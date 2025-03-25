@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
@@ -63,6 +64,10 @@ const initialState: ChatState = {
     messageLoading: false,
     providerLoading: false,
   },
+  
+  // Required actions
+  resetChatState: () => {},
+  setUserInput: () => {},
 };
 
 // Enhanced function to clear all Zustand middleware storage
@@ -144,6 +149,10 @@ export const useChatStore = create<FullChatStore>()(
           currentProvider: get().currentProvider,
           features: get().features,
         }, false, 'chat/resetState');
+      },
+      
+      setUserInput: (input: string) => {
+        set({ userInput: input }, false, 'chat/setUserInput');
       },
       
       ...createInitializationActions(set, get),
