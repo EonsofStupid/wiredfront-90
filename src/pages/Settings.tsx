@@ -1,83 +1,82 @@
-
-import { useEffect } from "react";
-import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 import { SettingsLayout } from "@/components/settings/layout/SettingsLayout";
 import { SettingsNavigation } from "@/components/settings/layout/SettingsNavigation";
-import { GeneralSettings } from "@/components/settings/sections/GeneralSettings";
 import { ApiSettings } from "@/components/settings/sections/ApiSettings";
-import { GitHubSettings } from "@/components/settings/sections/GitHubSettings";
+import { GeneralSettings } from "@/components/settings/sections/general/GeneralSettings";
 import { GitHubRepositorySettings } from "@/components/settings/sections/GitHubRepositorySettings";
+import { GitHubSettings } from "@/components/settings/sections/GitHubSettings";
 import { ProfileSettings } from "@/components/settings/sections/ProfileSettings";
 import { ProjectHubSettings } from "@/components/settings/sections/ProjectHubSettings";
 import { RouteLoggingService } from "@/services/navigation/RouteLoggingService";
+import { useEffect } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 export default function Settings() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const tabParam = searchParams.get('tab');
-  
+  const tabParam = searchParams.get("tab");
+
   // Default to 'account' tab if no tab specified
-  const currentTab = tabParam || 'account';
-  
+  const currentTab = tabParam || "account";
+
   // Log navigation to this page
   useEffect(() => {
     const previousRoute = document.referrer;
     RouteLoggingService.logRouteChange(
-      previousRoute || 'unknown', 
+      previousRoute || "unknown",
       `${location.pathname}?tab=${currentTab}`
     );
   }, [location.pathname, currentTab]);
-  
+
   // Handle tab change
   const handleTabChange = (tab: string) => {
     navigate(`/settings?tab=${tab}`, { replace: true });
-    
+
     // Log tab change
     RouteLoggingService.logRouteChange(
       `${location.pathname}?tab=${currentTab}`,
       `${location.pathname}?tab=${tab}`
     );
   };
-  
+
   const tabs = [
     {
       value: "account",
       label: "Account",
-      content: <ProfileSettings />
+      content: <ProfileSettings />,
     },
     {
       value: "api",
       label: "API",
-      content: <ApiSettings />
+      content: <ApiSettings />,
     },
     {
       value: "github",
       label: "GitHub",
-      content: <GitHubSettings />
+      content: <GitHubSettings />,
     },
     {
       value: "github-repos",
       label: "GitHub Repos",
-      content: <GitHubRepositorySettings />
+      content: <GitHubRepositorySettings />,
     },
     {
       value: "project-hub",
       label: "Project Hub",
-      content: <ProjectHubSettings />
+      content: <ProjectHubSettings />,
     },
     {
       value: "general",
       label: "General",
-      content: <GeneralSettings />
-    }
+      content: <GeneralSettings />,
+    },
   ];
-  
+
   return (
     <SettingsLayout>
-      <SettingsNavigation 
-        tabs={tabs} 
-        defaultValue={currentTab} 
+      <SettingsNavigation
+        tabs={tabs}
+        defaultValue={currentTab}
         onTabChange={handleTabChange}
       />
     </SettingsLayout>
