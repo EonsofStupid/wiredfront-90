@@ -1,5 +1,5 @@
-
 import { SafeJson } from '@/types/json';
+import { DbMessage } from '@/types/messages';
 import { 
   Message, 
   MessageMetadata, 
@@ -14,7 +14,7 @@ import { validateWithZod, safeValidate } from '@/utils/validation';
 /**
  * Maps a database message to the application Message type
  */
-export function mapDbMessageToMessage(dbMessage: any): Message {
+export function mapDbMessageToMessage(dbMessage: DbMessage): Message {
   // Create a structure that matches our schema
   const mappedMessage = {
     id: dbMessage.id || '',
@@ -24,13 +24,13 @@ export function mapDbMessageToMessage(dbMessage: any): Message {
     metadata: mapDbMetadataToMessageMetadata(dbMessage.metadata),
     created_at: dbMessage.created_at || new Date().toISOString(),
     updated_at: dbMessage.updated_at || new Date().toISOString(),
-    chat_session_id: dbMessage.chat_session_id || '',
+    chat_session_id: dbMessage.chat_session_id || dbMessage.session_id || '',
     is_minimized: dbMessage.is_minimized || false,
     position: dbMessage.position || {},
     window_state: dbMessage.window_state || {},
     last_accessed: dbMessage.last_accessed || new Date().toISOString(),
     retry_count: dbMessage.retry_count || 0,
-    message_status: mapDbStatusToMessageStatus(dbMessage.message_status || 'sent'),
+    message_status: mapDbStatusToMessageStatus(dbMessage.message_status || dbMessage.status || 'sent'),
     role: mapDbRoleToMessageRole(dbMessage.role || 'user'),
     source_type: dbMessage.source_type,
     provider: dbMessage.provider,
@@ -46,31 +46,28 @@ export function mapDbMessageToMessage(dbMessage: any): Message {
 
 /**
  * Maps application Message to database format
- * Uses explicit any type for db message to avoid circular references
  */
-export function mapMessageToDbMessage(message: Message): Record<string, any> {
-  // Create a new object to avoid direct references
+export function mapMessageToDbMessage(message: Message): DbMessage {
+  // Create a new object with the right DB structure to avoid type mismatch issues
   return {
     id: message.id,
     content: message.content,
-    user_id: message.user_id,
+    user_id: message.user_id || 'anonymous',
     type: mapMessageTypeToDbType(message.type),
     metadata: mapMessageMetadataToDbMetadata(message.metadata),
     created_at: message.created_at,
     updated_at: message.updated_at,
     chat_session_id: message.chat_session_id,
+    session_id: message.chat_session_id, // Add session_id (aliases chat_session_id)
     is_minimized: message.is_minimized,
-    position: { ...message.position },
-    window_state: { ...message.window_state },
+    position: message.position,
+    window_state: message.window_state,
     last_accessed: message.last_accessed,
     retry_count: message.retry_count,
-    message_status: mapMessageStatusToDbStatus(message.message_status),
+    message_status: mapMessageStatusToDbStatus(message.status || message.message_status),
+    status: mapMessageStatusToDbStatus(message.message_status), // Add status (aliases message_status)
     role: mapMessageRoleToDbRole(message.role),
-    source_type: message.source_type,
-    provider: message.provider,
-    processing_status: message.processing_status,
-    last_retry: message.last_retry,
-    rate_limit_window: message.rate_limit_window
+    tokens: message.tokens || 0
   };
 }
 

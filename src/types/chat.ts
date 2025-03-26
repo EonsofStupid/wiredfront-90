@@ -41,6 +41,10 @@ export interface Message {
   processing_status?: string;
   last_retry?: string;
   rate_limit_window?: string;
+  // Support for database format fields
+  session_id?: string;
+  tokens?: number;
+  status?: string;
 }
 
 export interface ChatState {

@@ -18,7 +18,7 @@ export type SafeJson =
 export type AsSafeJson<T> = T extends string | number | boolean | null
   ? T
   : T extends Array<infer U>
-  ? AsSafeJson<U>[]
+  ? Array<AsSafeJson<U>>
   : T extends object
   ? { [K in keyof T]: AsSafeJson<T[K]> }
   : never;

@@ -8,6 +8,7 @@ import {
   MessageRole, 
   MessageStatus
 } from '@/schemas/messages';
+import { DbMessage } from '@/types/messages';
 import { supabase } from '@/integrations/supabase/client';
 import { mapMessageToDbMessage, mapDbMessageToMessage } from '@/services/messages/mappers';
 import { logger } from '@/services/chat/LoggingService';
@@ -56,7 +57,7 @@ export const useMessageStore = create<MessageStore>()(
             
           if (error) throw error;
           
-          const messages = data ? data.map((dbMsg) => mapDbMessageToMessage(dbMsg)) : [];
+          const messages = data ? data.map((dbMsg) => mapDbMessageToMessage(dbMsg as DbMessage)) : [];
           
           set({ 
             messages, 
@@ -97,9 +98,20 @@ export const useMessageStore = create<MessageStore>()(
         }));
         
         try {
+          const dbMessage = mapMessageToDbMessage(message);
+          
           supabase
             .from('messages')
-            .insert(mapMessageToDbMessage(message))
+            .insert({
+              id: dbMessage.id,
+              content: dbMessage.content,
+              user_id: dbMessage.user_id,
+              session_id: dbMessage.session_id,
+              role: dbMessage.role,
+              status: dbMessage.status,
+              type: dbMessage.type,
+              metadata: dbMessage.metadata
+            })
             .then(({ error }) => {
               if (error) {
                 logger.error('Failed to save user message', { error, messageId });
@@ -259,9 +271,16 @@ export const useMessageStore = create<MessageStore>()(
           } as Message;
           
           try {
+            const dbMessage = mapMessageToDbMessage(updatedMessage);
+            
             supabase
               .from('messages')
-              .update(mapMessageToDbMessage(updatedMessage))
+              .update({
+                content: dbMessage.content,
+                metadata: dbMessage.metadata,
+                status: dbMessage.status,
+                updated_at: dbMessage.updated_at
+              })
               .eq('id', messageId)
               .then(({ error }) => {
                 if (error) {
