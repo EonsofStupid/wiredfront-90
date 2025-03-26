@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { SafeJson } from '@/types/utils/json';
+import { SafeJson } from '@/types/json';
 
 // Define non-recursive metadata schema to avoid deep type instantiation
 export const messageMetadataSchema = z.object({
@@ -32,8 +32,8 @@ export const messageSchema = z.object({
   updated_at: z.string(),
   chat_session_id: z.string(),
   is_minimized: z.boolean().default(false),
-  position: z.any(), // Using z.any() instead of Json to avoid recursion
-  window_state: z.any(), // Using z.any() instead of Json to avoid recursion
+  position: z.any(), // Using z.any() to avoid recursion with Json type
+  window_state: z.any(), // Using z.any() to avoid recursion with Json type
   last_accessed: z.string(),
   retry_count: z.number().default(0),
   message_status: messageStatusSchema,
@@ -45,42 +45,12 @@ export const messageSchema = z.object({
   rate_limit_window: z.string().optional(),
 });
 
-// Define specific types for database interactions
-export const messageInsertSchema = z.object({
-  id: z.string(),
-  content: z.string(),
-  user_id: z.string().nullable(),
-  type: messageTypeSchema,
-  metadata: z.any().default({}), // Using any instead of Json
-  chat_session_id: z.string(),
-  role: messageRoleSchema,
-  message_status: messageStatusSchema.default('sent'),
-  created_at: z.string().optional(),
-  updated_at: z.string().optional(),
-  is_minimized: z.boolean().optional(),
-  position: z.any().optional(),
-  window_state: z.any().optional(),
-  last_accessed: z.string().optional(),
-  retry_count: z.number().optional(),
-  source_type: z.string().optional(),
-  provider: z.string().optional(),
-  processing_status: z.string().optional(),
-  last_retry: z.string().optional(),
-  rate_limit_window: z.string().optional(),
-});
-
-export const messageUpdateSchema = messageInsertSchema.partial().extend({
-  id: z.string(),
-});
-
 // Create TypeScript types from Zod schemas
 export type MessageMetadata = z.infer<typeof messageMetadataSchema>;
 export type MessageRole = z.infer<typeof messageRoleSchema>;
 export type MessageType = z.infer<typeof messageTypeSchema>;
 export type MessageStatus = z.infer<typeof messageStatusSchema>;
 export type Message = z.infer<typeof messageSchema>;
-export type MessageInsert = z.infer<typeof messageInsertSchema>;
-export type MessageUpdate = z.infer<typeof messageUpdateSchema>;
 
 // Message request and response schemas
 export const messageRequestSchema = z.object({
@@ -105,26 +75,6 @@ export const validateMessage = (data: unknown): Message | null => {
     return messageSchema.parse(data);
   } catch (error) {
     console.error('Message validation failed:', error);
-    return null;
-  }
-};
-
-// Utility function to validate message insert data
-export const validateMessageInsert = (data: unknown): MessageInsert | null => {
-  try {
-    return messageInsertSchema.parse(data);
-  } catch (error) {
-    console.error('Message insert validation failed:', error);
-    return null;
-  }
-};
-
-// Utility function to validate message update data
-export const validateMessageUpdate = (data: unknown): MessageUpdate | null => {
-  try {
-    return messageUpdateSchema.parse(data);
-  } catch (error) {
-    console.error('Message update validation failed:', error);
     return null;
   }
 };
