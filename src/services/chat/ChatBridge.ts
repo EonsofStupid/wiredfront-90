@@ -1,5 +1,5 @@
 
-import { useSessionStore } from '@/stores/session';
+import { useChatSessionStore } from '@/components/chat/store/chat-sessions/store';
 import { useMessageStore } from '@/components/chat/store/message';
 import { useChatStore } from '@/components/chat/store/chatStore';
 import { 
@@ -26,7 +26,7 @@ export const ChatBridge = {
   // Session operations
   createSession: async (params: CreateSessionParams = {}): Promise<string> => {
     try {
-      const sessionId = await useSessionStore.getState().createSession(params);
+      const sessionId = await useChatSessionStore.getState().createSession(params);
       return sessionId;
     } catch (error) {
       logger.error('ChatBridge: Failed to create session', { error });
@@ -36,7 +36,7 @@ export const ChatBridge = {
   
   switchSession: async (sessionId: string): Promise<void> => {
     try {
-      await useSessionStore.getState().switchSession(sessionId);
+      await useChatSessionStore.getState().switchSession(sessionId);
       
       // Load messages for this session
       await useMessageStore.getState().fetchSessionMessages(sessionId);
@@ -48,7 +48,7 @@ export const ChatBridge = {
   
   updateSession: async (sessionId: string, params: UpdateSessionParams): Promise<void> => {
     try {
-      await useSessionStore.getState().updateSession(sessionId, params);
+      await useChatSessionStore.getState().updateSession(sessionId, params);
     } catch (error) {
       logger.error('ChatBridge: Failed to update session', { error });
       throw error;
@@ -57,7 +57,7 @@ export const ChatBridge = {
   
   archiveSession: async (sessionId: string): Promise<void> => {
     try {
-      await useSessionStore.getState().archiveSession(sessionId);
+      await useChatSessionStore.getState().archiveSession(sessionId);
     } catch (error) {
       logger.error('ChatBridge: Failed to archive session', { error });
       throw error;
@@ -70,7 +70,7 @@ export const ChatBridge = {
       const { content, sessionId, mode, metadata = {} } = request;
       
       // Get current sessionId if not provided
-      const currentSessionId = sessionId || useSessionStore.getState().currentSessionId;
+      const currentSessionId = sessionId || useChatSessionStore.getState().currentSessionId;
       
       // If no session exists, create one
       if (!currentSessionId) {
@@ -194,7 +194,7 @@ export const useChatBridge = () => {
     archiveSession,
     currentSessionId,
     sessions
-  } = useSessionStore();
+  } = useChatSessionStore();
   
   // Messages
   const {

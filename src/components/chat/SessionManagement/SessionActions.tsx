@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Trash2, X } from "lucide-react";
-import { useSessionManager } from '@/hooks/useSessionManager';
+import { useSessionManager } from '@/hooks/sessions';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog';
 import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';

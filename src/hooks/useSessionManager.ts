@@ -1,3 +1,3 @@
 
 // Re-export the refactored session manager hook
-export { useSessionManager } from './sessions/useSessionManager';
+export { useChatSessionManager as useSessionManager } from '@/components/chat/hooks/chat-sessions';
