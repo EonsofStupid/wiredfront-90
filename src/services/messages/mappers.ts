@@ -7,9 +7,11 @@ import {
   MessageStatus,
   MessageType,
   validateMessage,
-  messageMetadataSchema
+  messageMetadataSchema,
+  MessageInsert
 } from '@/schemas/messages';
 import { validateWithZod } from '@/utils/validation';
+import { toSafeJson } from '@/types/utils/json';
 
 /**
  * Maps a database message to the application Message type
@@ -46,10 +48,21 @@ export function mapDbMessageToMessage(dbMessage: any): Message {
 
 /**
  * Maps application Message to database format
+ * Ensures all required fields are present
  */
 export function mapMessageToDbMessage(message: Message): any {
+  if (!message.content) {
+    console.error('Missing required field: content');
+    throw new Error('Missing required field: content');
+  }
+  
+  if (!message.chat_session_id) {
+    console.error('Missing required field: chat_session_id');
+    throw new Error('Missing required field: chat_session_id');
+  }
+
   // Create a new object to avoid direct references
-  const dbMessage = {
+  const dbMessage: any = {
     id: message.id,
     content: message.content,
     user_id: message.user_id,
@@ -65,14 +78,49 @@ export function mapMessageToDbMessage(message: Message): any {
     retry_count: message.retry_count,
     message_status: mapMessageStatusToDbStatus(message.message_status),
     role: mapMessageRoleToDbRole(message.role),
-    source_type: message.source_type,
-    provider: message.provider,
-    processing_status: message.processing_status,
-    last_retry: message.last_retry,
-    rate_limit_window: message.rate_limit_window
   };
 
+  // Add optional fields only if they exist
+  if (message.source_type) dbMessage.source_type = message.source_type;
+  if (message.provider) dbMessage.provider = message.provider;
+  if (message.processing_status) dbMessage.processing_status = message.processing_status;
+  if (message.last_retry) dbMessage.last_retry = message.last_retry;
+  if (message.rate_limit_window) dbMessage.rate_limit_window = message.rate_limit_window;
+
   return dbMessage;
+}
+
+/**
+ * Maps an application Message to a database-safe insert object
+ * for Supabase operations
+ */
+export function mapMessageToDbInsert(message: Message): MessageInsert {
+  const dbInsert: any = {
+    id: message.id,
+    content: message.content,
+    user_id: message.user_id,
+    type: mapMessageTypeToDbType(message.type),
+    metadata: mapMessageMetadataToDbMetadata(message.metadata),
+    chat_session_id: message.chat_session_id,
+    role: mapMessageRoleToDbRole(message.role),
+    message_status: mapMessageStatusToDbStatus(message.message_status),
+  };
+
+  // Add optional fields only if they exist
+  if (message.created_at) dbInsert.created_at = message.created_at;
+  if (message.updated_at) dbInsert.updated_at = message.updated_at;
+  if (message.is_minimized !== undefined) dbInsert.is_minimized = message.is_minimized;
+  if (message.position) dbInsert.position = { ...message.position };
+  if (message.window_state) dbInsert.window_state = { ...message.window_state };
+  if (message.last_accessed) dbInsert.last_accessed = message.last_accessed;
+  if (message.retry_count !== undefined) dbInsert.retry_count = message.retry_count;
+  if (message.source_type) dbInsert.source_type = message.source_type;
+  if (message.provider) dbInsert.provider = message.provider;
+  if (message.processing_status) dbInsert.processing_status = message.processing_status;
+  if (message.last_retry) dbInsert.last_retry = message.last_retry;
+  if (message.rate_limit_window) dbInsert.rate_limit_window = message.rate_limit_window;
+
+  return dbInsert as MessageInsert;
 }
 
 // Type mappers
@@ -145,55 +193,6 @@ export function mapDbMetadataToMessageMetadata(metadata: Json | null): MessageMe
 export function mapMessageMetadataToDbMetadata(metadata: MessageMetadata): Json {
   if (!metadata) return {};
   
-  // Create a safe representation for storage
-  const safeMetadata: Record<string, any> = {};
-  
-  // Add known top-level properties
-  if (metadata.model) {
-    safeMetadata.model = metadata.model;
-  }
-  
-  // Handle tokens object
-  if (metadata.tokens) {
-    safeMetadata.tokens = {
-      prompt: metadata.tokens.prompt || 0,
-      completion: metadata.tokens.completion || 0,
-      total: metadata.tokens.total || 0
-    };
-  }
-  
-  // Handle processing object
-  if (metadata.processing) {
-    safeMetadata.processing = {
-      startTime: metadata.processing.startTime || '',
-      endTime: metadata.processing.endTime || '',
-      duration: metadata.processing.duration || 0
-    };
-  }
-  
-  // Handle other properties, limiting nesting depth
-  Object.entries(metadata).forEach(([key, value]) => {
-    if (key !== 'model' && key !== 'tokens' && key !== 'processing' && value !== undefined) {
-      if (typeof value !== 'object' || value === null) {
-        safeMetadata[key] = value;
-      } else if (Array.isArray(value)) {
-        // For arrays, create a shallow copy
-        safeMetadata[key] = [...value];
-      } else {
-        // For objects, create a flattened representation to avoid deep nesting
-        const flattenedObject: Record<string, any> = {};
-        Object.entries(value).forEach(([subKey, subValue]) => {
-          if (typeof subValue !== 'object' || subValue === null) {
-            flattenedObject[subKey] = subValue;
-          } else {
-            // For nested objects, just store as JSON string
-            flattenedObject[subKey] = JSON.stringify(subValue);
-          }
-        });
-        safeMetadata[key] = flattenedObject;
-      }
-    }
-  });
-  
-  return safeMetadata as Json;
+  // Convert to safe JSON representation
+  return toSafeJson(metadata) as Json;
 }

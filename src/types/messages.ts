@@ -9,5 +9,10 @@ export type {
   MessageType, 
   MessageStatus,
   MessageRequest,
-  MessageResponse
+  MessageResponse,
+  MessageInsert,
+  MessageUpdate
 } from '@/schemas/messages';
+
+// Export the SafeJson type
+export { SafeJson, toSafeJson, isSafeJson } from '@/types/utils/json';

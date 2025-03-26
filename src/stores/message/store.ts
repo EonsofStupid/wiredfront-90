@@ -7,10 +7,12 @@ import {
   MessageMetadata, 
   MessageRole, 
   MessageStatus, 
-  createMessage 
+  createMessage,
+  MessageInsert,
+  MessageUpdate
 } from '@/schemas/messages';
 import { supabase } from '@/integrations/supabase/client';
-import { mapMessageToDbMessage, mapDbMessageToMessage } from '@/services/messages/mappers';
+import { mapMessageToDbInsert, mapDbMessageToMessage } from '@/services/messages/mappers';
 import { logger } from '@/services/chat/LoggingService';
 
 interface MessageState {
@@ -97,9 +99,12 @@ export const useMessageStore = create<MessageStore>()(
         }));
         
         try {
+          // Convert message to a database-safe object
+          const dbMessage = mapMessageToDbInsert(message);
+          
           supabase
             .from('messages')
-            .insert(mapMessageToDbMessage(message))
+            .insert(dbMessage)
             .then(({ error }) => {
               if (error) {
                 logger.error('Failed to save user message', { error, messageId });
@@ -139,9 +144,12 @@ export const useMessageStore = create<MessageStore>()(
         }));
         
         try {
+          // Convert message to a database-safe object
+          const dbMessage = mapMessageToDbInsert(message);
+          
           supabase
             .from('messages')
-            .insert(mapMessageToDbMessage(message))
+            .insert(dbMessage)
             .then(({ error }) => {
               if (error) {
                 logger.error('Failed to save assistant message', { error, messageId });
@@ -181,9 +189,12 @@ export const useMessageStore = create<MessageStore>()(
         }));
         
         try {
+          // Convert message to a database-safe object
+          const dbMessage = mapMessageToDbInsert(message);
+          
           supabase
             .from('messages')
-            .insert(mapMessageToDbMessage(message))
+            .insert(dbMessage)
             .then(({ error }) => {
               if (error) {
                 logger.error('Failed to save system message', { error, messageId });
@@ -223,9 +234,12 @@ export const useMessageStore = create<MessageStore>()(
         }));
         
         try {
+          // Convert message to a database-safe object
+          const dbMessage = mapMessageToDbInsert(message);
+          
           supabase
             .from('messages')
-            .insert(mapMessageToDbMessage(message))
+            .insert(dbMessage)
             .then(({ error }) => {
               if (error) {
                 logger.error('Failed to save error message', { error, messageId });
@@ -259,9 +273,29 @@ export const useMessageStore = create<MessageStore>()(
           };
           
           try {
+            // Only update the fields that have changed
+            const updateFields: Partial<Message> = {
+              updated_at: updatedMessage.updated_at
+            };
+            
+            // Add specific fields that have been updated
+            if (updates.content !== undefined) updateFields.content = updates.content;
+            if (updates.message_status !== undefined) updateFields.message_status = updates.message_status;
+            if (updates.metadata !== undefined) updateFields.metadata = updatedMessage.metadata;
+            if (updates.retry_count !== undefined) updateFields.retry_count = updates.retry_count;
+            if (updates.is_minimized !== undefined) updateFields.is_minimized = updates.is_minimized;
+            if (updates.position !== undefined) updateFields.position = updates.position;
+            if (updates.window_state !== undefined) updateFields.window_state = updates.window_state;
+            if (updates.last_accessed !== undefined) updateFields.last_accessed = updates.last_accessed;
+            if (updates.source_type !== undefined) updateFields.source_type = updates.source_type;
+            if (updates.provider !== undefined) updateFields.provider = updates.provider;
+            if (updates.processing_status !== undefined) updateFields.processing_status = updates.processing_status;
+            if (updates.last_retry !== undefined) updateFields.last_retry = updates.last_retry;
+            if (updates.rate_limit_window !== undefined) updateFields.rate_limit_window = updates.rate_limit_window;
+            
             supabase
               .from('messages')
-              .update(mapMessageToDbMessage(updatedMessage))
+              .update(updateFields)
               .eq('id', messageId)
               .then(({ error }) => {
                 if (error) {
