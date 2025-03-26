@@ -7,17 +7,17 @@ import {
   MessageMetadata, 
   MessageRole, 
   MessageStatus
-} from '@/schemas/messages';
-import { DbMessage } from '@/types/messages';
+} from '@/components/chat/schemas/messages';
+import { DbMessage } from '@/components/chat/types/messages';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   mapMessageToDbMessage, 
   mapDbMessageToMessage, 
   mapMessageMetadataToDbMetadata, 
   mapMessageStatusToDbStatus 
-} from '@/services/messages/mappers';
+} from '@/components/chat/services/messages/mappers';
 import { logger } from '@/services/chat/LoggingService';
-import { SafeJson } from '@/types/json';
+import { SafeJson } from '@/components/chat/types/json';
 
 // Define a type for the data we send to Supabase
 // Avoiding deep nesting by using simplified types

@@ -11,10 +11,10 @@ export type {
   MessageStatus,
   MessageRequest,
   MessageResponse
-} from '@/schemas/messages';
+} from '@/components/chat/schemas/messages';
 
 // Import and re-export SafeJson type for use in message-related interfaces
-import { type SafeJson } from '@/types/json';
+import { type SafeJson } from '@/components/chat/types/json';
 export { type SafeJson };
 
 // Define database-specific message types for Supabase operations

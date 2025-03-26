@@ -1,6 +1,6 @@
 
-import { SafeJson } from '@/types/json';
-import { DbMessage } from '@/types/messages';
+import { SafeJson } from '@/components/chat/types/json';
+import { DbMessage } from '@/components/chat/types/messages';
 import { 
   Message, 
   MessageMetadata, 
@@ -9,7 +9,7 @@ import {
   MessageType,
   validateMessage,
   messageMetadataSchema
-} from '@/schemas/messages';
+} from '@/components/chat/schemas/messages';
 import { validateWithZod, safeValidate } from '@/utils/validation';
 
 /**

@@ -1,5 +1,6 @@
+
 import { useSessionStore } from '@/stores/session';
-import { useMessageStore } from '@/stores/message/store';
+import { useMessageStore } from '@/components/chat/store/message';
 import { useChatStore } from '@/components/chat/store/chatStore';
 import { 
   CreateSessionParams, 
@@ -10,7 +11,7 @@ import {
   MessageMetadata,
   MessageRequest,
   MessageResponse 
-} from '@/schemas/messages';
+} from '@/components/chat/schemas/messages';
 import { logger } from './LoggingService';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -240,4 +241,3 @@ export const useChatBridge = () => {
     docked: chatStore.docked
   };
 };
-

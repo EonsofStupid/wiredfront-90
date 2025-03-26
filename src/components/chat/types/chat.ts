@@ -1,23 +1,22 @@
 
-import { SafeJson } from '@/types/json';
 import { 
   MessageRole, 
   MessageType, 
   MessageStatus, 
   MessageMetadata as SchemaMessageMetadata
-} from '@/schemas/messages';
+} from '@/components/chat/schemas/messages';
 
 // Re-export schema types to avoid duplication
 export type { 
   MessageRole, 
   MessageType, 
   MessageStatus 
-} from '@/schemas/messages';
+} from '@/components/chat/schemas/messages';
 
 // Use the same MessageMetadata type as in the schemas
 export type { 
   MessageMetadata 
-} from '@/schemas/messages';
+} from '@/components/chat/schemas/messages';
 
 // Define a Message interface that matches our schema
 export interface Message {

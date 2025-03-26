@@ -1,9 +1,9 @@
 
 import React, { useState, useCallback } from 'react';
 import { useChatStore } from '../store/chatStore';
-import { useMessageStore } from '../messaging/MessageManager';
+import { useMessageStore } from "@/components/chat/store/message";
 import { v4 as uuidv4 } from 'uuid';
-import { Message, MessageRole, MessageStatus, MessageMetadata } from '@/schemas/messages';
+import { Message, MessageRole, MessageStatus, MessageMetadata } from '@/components/chat/schemas/messages';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
