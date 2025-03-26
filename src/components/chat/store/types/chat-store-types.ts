@@ -1,88 +1,50 @@
 
-import { Message } from "@/types/chat";
-import { ChatMode, TokenEnforcementMode } from "@/integrations/supabase/types/enums";
-
-export interface ChatProvider {
-  id: string;
-  name: string;
-  type: string;
-  isDefault: boolean;
-  isEnabled?: boolean;
-  category?: 'chat' | 'image' | 'integration';
-}
-
-export type ChatPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-
-export interface TokenControl {
-  balance: number;
-  enforcementMode: TokenEnforcementMode;
-  lastUpdated: string | null;
-  tokensPerQuery: number;
-  freeQueryLimit: number;
-  queriesUsed: number;
-}
+import { Message, ConnectionState, ChatPosition } from '@/types/chat';
 
 export interface ChatState {
-  initialized: boolean;
-  messages: Message[];
+  // UI state
+  isOpen: boolean;
+  isMinimized: boolean;
+  position: ChatPosition;
+  docked: boolean;
+  scale: number;
+  showSidebar: boolean;
+  
+  // Chat state
+  chatId: string | null;
   userInput: string;
   isWaitingForResponse: boolean;
-  selectedModel: string;
-  selectedMode: string;
-  modelFetchStatus: 'idle' | 'loading' | 'success' | 'error';
-  error: string | null;
-  chatId: string | null;
-  docked: boolean;
-  isOpen: boolean;
-  isHidden: boolean;
-  position: ChatPosition | { x: number; y: number };
-  startTime: number;
-  features: {
-    voice: boolean;
-    rag: boolean;
-    modeSwitch: boolean;
-    notifications: boolean;
-    github: boolean;
-    // Feature flags that components expect
-    codeAssistant: boolean;
-    ragSupport: boolean;
-    githubSync: boolean;
-    tokenEnforcement: boolean;
-  };
-  currentMode: ChatMode;
-  availableProviders: ChatProvider[];
-  currentProvider: ChatProvider | null;
+  isInitialized: boolean;
+  connectionState: ConnectionState;
   
-  // Token control system
-  tokenControl: TokenControl;
-  
-  // Add providers mapping for session management
-  providers?: {
-    availableProviders: ChatProvider[];
-  };
-  
-  // UI state properties
-  isMinimized: boolean;
-  showSidebar: boolean;
-  scale: number;
+  // UI state object for components to consume
   ui: {
     sessionLoading: boolean;
     messageLoading: boolean;
-    providerLoading: boolean;
+    isChatLoaded: boolean;
+    isChatInitialized: boolean;
   };
-
-  // Store actions
-  resetChatState: () => void;
-  setUserInput: (input: string) => void; // Added this action
-}
-
-export interface UIStateActions {
+  
+  // Action creators
+  setUserInput: (input: string) => void;
+  toggleChat: () => void;
   toggleMinimize: () => void;
   toggleSidebar: () => void;
-  toggleChat: () => void;
-  setSessionLoading: (isLoading: boolean) => void;
-  setMessageLoading: (isLoading: boolean) => void;
-  setProviderLoading: (isLoading: boolean) => void;
+  setPosition: (position: ChatPosition) => void;
+  toggleDock: () => void;
   setScale: (scale: number) => void;
-  setCurrentMode: (mode: ChatMode) => void;
+  setChatId: (id: string | null) => void;
+  toggleUIState: (key: keyof ChatState, value?: boolean) => void;
+  
+  // Feature flags and UI state
+  features: {
+    voiceEnabled: boolean;
+    imageGenEnabled: boolean;
+    githubEnabled: boolean;
+    codeCompletionEnabled: boolean;
+    ragEnabled: boolean;
+  };
+  
+  // Toggle feature flags
+  toggleFeature: (featureName: keyof ChatState['features']) => void;
 }

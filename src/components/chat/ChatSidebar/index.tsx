@@ -1,7 +1,7 @@
 
 import React, { Suspense, lazy, useState } from "react";
 import { SessionControls } from "./SessionControls";
-import { useSessionManager } from "@/hooks/sessions"; // This now points to the chat-sessions module
+import { useChatSessionManager } from "@/hooks/sessions"; 
 import { SessionHeader } from "./SessionHeader";
 import { useChatStore } from "../store/chatStore";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,7 +21,7 @@ export const ChatSidebar = () => {
     cleanupInactiveSessions,
     clearSessions,
     isLoading,
-  } = useSessionManager();
+  } = useChatSessionManager();
   const { ui } = useChatStore();
   const { ErrorBoundary } = useErrorBoundary();
   const [modeDialogOpen, setModeDialogOpen] = useState(false);

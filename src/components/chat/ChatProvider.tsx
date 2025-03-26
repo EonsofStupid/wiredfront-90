@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { useSessionStore } from '@/components/chat/store/chat-sessions';
+import { useChatSessionStore } from '@/components/chat/store/chat-sessions';
 import { useThemeInit } from '@/hooks/useThemeInit';
 import { logger } from '@/services/chat/LoggingService';
 
@@ -9,7 +9,7 @@ interface ChatProviderProps {
 }
 
 export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
-  const { fetchSessions } = useSessionStore();
+  const { fetchSessions } = useChatSessionStore();
   const { initialized, error } = useThemeInit();
 
   // Initialize sessions

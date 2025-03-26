@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { ModeSelectionDialog, ChatMode } from './ModeSelectionDialog';
-import { useSessionManager } from '@/hooks/sessions';
+import { useChatSessionManager } from '@/hooks/sessions';
 
 interface NewChatButtonProps {
   variant?: "default" | "outline" | "ghost";
@@ -12,7 +12,7 @@ interface NewChatButtonProps {
 
 export function NewChatButton({ variant = "default", fullWidth = false }: NewChatButtonProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { createSession } = useSessionManager();
+  const { createSession } = useChatSessionManager();
   
   const handleCreateWithMode = async (mode: ChatMode, providerId: string) => {
     await createSession({

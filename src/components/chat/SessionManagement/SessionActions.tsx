@@ -2,13 +2,13 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Trash2, X } from "lucide-react";
-import { useSessionManager } from '@/hooks/sessions';
+import { useChatSessionManager } from '@/hooks/sessions';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog';
 import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';
 
 export function SessionActions() {
-  const { sessions, currentSessionId, clearSessions, refreshSessions } = useSessionManager();
+  const { sessions, currentSessionId, clearSessions, refreshSessions } = useChatSessionManager();
   const [isDeleteOthersDialogOpen, setIsDeleteOthersDialogOpen] = React.useState(false);
   const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = React.useState(false);
 
