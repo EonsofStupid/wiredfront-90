@@ -65,7 +65,7 @@ export function mapMessageToDbMessage(message: Message): DbMessage {
     window_state: message.window_state,
     last_accessed: message.last_accessed,
     retry_count: message.retry_count,
-    message_status: mapMessageStatusToDbStatus(message.status || message.message_status),
+    message_status: mapMessageStatusToDbStatus(message.message_status),
     status: mapMessageStatusToDbStatus(message.message_status), // Add status (aliases message_status)
     role: mapMessageRoleToDbRole(message.role),
     tokens: message.tokens || 0,

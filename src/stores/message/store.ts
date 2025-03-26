@@ -98,18 +98,16 @@ export const useMessageStore = create<MessageStore>()(
         }));
         
         try {
-          const dbMessage = mapMessageToDbMessage(message);
-          
-          // Extract only the fields we need for the insert
+          // Prepare data for Supabase insert
           const insertData = {
-            id: dbMessage.id,
-            content: dbMessage.content,
-            user_id: dbMessage.user_id,
-            session_id: dbMessage.session_id || dbMessage.chat_session_id,
-            role: dbMessage.role,
-            status: dbMessage.status || dbMessage.message_status,
-            type: dbMessage.type,
-            metadata: dbMessage.metadata
+            id: message.id,
+            content: message.content,
+            user_id: message.user_id || 'anonymous',
+            session_id: sessionId, // Use session_id for Supabase
+            role: message.role,
+            status: message.message_status,
+            type: message.type,
+            metadata: message.metadata
           };
           
           supabase
@@ -154,18 +152,16 @@ export const useMessageStore = create<MessageStore>()(
         }));
         
         try {
-          const dbMessage = mapMessageToDbMessage(message);
-          
-          // Extract only the fields we need for the insert
+          // Prepare data for Supabase insert
           const insertData = {
-            id: dbMessage.id,
-            content: dbMessage.content,
-            user_id: dbMessage.user_id,
-            session_id: dbMessage.session_id || dbMessage.chat_session_id,
-            role: dbMessage.role,
-            status: dbMessage.status || dbMessage.message_status,
-            type: dbMessage.type,
-            metadata: dbMessage.metadata
+            id: message.id,
+            content: message.content,
+            user_id: message.user_id || 'anonymous',
+            session_id: sessionId, // Use session_id for Supabase
+            role: message.role,
+            status: message.message_status,
+            type: message.type,
+            metadata: message.metadata
           };
           
           supabase
@@ -210,18 +206,16 @@ export const useMessageStore = create<MessageStore>()(
         }));
         
         try {
-          const dbMessage = mapMessageToDbMessage(message);
-          
-          // Extract only the fields we need for the insert
+          // Prepare data for Supabase insert
           const insertData = {
-            id: dbMessage.id,
-            content: dbMessage.content,
-            user_id: dbMessage.user_id,
-            session_id: dbMessage.session_id || dbMessage.chat_session_id,
-            role: dbMessage.role,
-            status: dbMessage.status || dbMessage.message_status,
-            type: dbMessage.type,
-            metadata: dbMessage.metadata
+            id: message.id,
+            content: message.content,
+            user_id: message.user_id || 'anonymous',
+            session_id: sessionId, // Use session_id for Supabase
+            role: message.role,
+            status: message.message_status,
+            type: message.type,
+            metadata: message.metadata
           };
           
           supabase
@@ -266,18 +260,16 @@ export const useMessageStore = create<MessageStore>()(
         }));
         
         try {
-          const dbMessage = mapMessageToDbMessage(message);
-          
-          // Extract only the fields we need for the insert
+          // Prepare data for Supabase insert
           const insertData = {
-            id: dbMessage.id,
-            content: dbMessage.content,
-            user_id: dbMessage.user_id,
-            session_id: dbMessage.session_id || dbMessage.chat_session_id,
-            role: dbMessage.role,
-            status: dbMessage.status || dbMessage.message_status,
-            type: dbMessage.type,
-            metadata: dbMessage.metadata
+            id: message.id,
+            content: message.content,
+            user_id: message.user_id || 'anonymous',
+            session_id: sessionId, // Use session_id for Supabase
+            role: message.role,
+            status: message.message_status,
+            type: message.type,
+            metadata: message.metadata
           };
           
           supabase
@@ -316,15 +308,13 @@ export const useMessageStore = create<MessageStore>()(
           } as Message;
           
           try {
-            const dbMessage = mapMessageToDbMessage(updatedMessage);
-            
             supabase
               .from('messages')
               .update({
-                content: dbMessage.content,
-                metadata: dbMessage.metadata,
-                status: dbMessage.status || dbMessage.message_status,
-                updated_at: dbMessage.updated_at
+                content: updatedMessage.content,
+                metadata: updatedMessage.metadata,
+                status: updatedMessage.message_status,
+                updated_at: updatedMessage.updated_at
               })
               .eq('id', messageId)
               .then(({ error }) => {
