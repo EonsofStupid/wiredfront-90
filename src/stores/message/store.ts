@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
@@ -24,9 +23,9 @@ interface SupabaseMessageInsert {
   id: string;
   content: string;
   user_id: string;
-  session_id: string; // Changed: Now required as per database schema
+  session_id: string; // Required as per database schema
   chat_session_id?: string; // Optional for backward compatibility
-  role: "system" | "user" | "assistant" | "tool"; // Fixed: Using exact enum values
+  role: "system" | "user" | "assistant" | "tool"; // Using exact enum values
   status?: string;
   message_status?: string;
   type: string;
@@ -34,10 +33,11 @@ interface SupabaseMessageInsert {
   created_at?: string;
   updated_at?: string;
   is_minimized?: boolean;
-  position: number; // Fixed: Changed from SafeJson to number
+  position: number; // Using number instead of SafeJson
   window_state?: SafeJson;
   last_accessed?: string;
   retry_count?: number;
+  tokens?: number; // Added tokens field
 }
 
 interface MessageState {

@@ -37,7 +37,8 @@ export function mapDbMessageToMessage(dbMessage: DbMessage): Message {
     provider: dbMessage.provider,
     processing_status: dbMessage.processing_status,
     last_retry: dbMessage.last_retry,
-    rate_limit_window: dbMessage.rate_limit_window
+    rate_limit_window: dbMessage.rate_limit_window,
+    tokens: dbMessage.tokens || 0 // Added tokens property mapping
   };
 
   // Validate and return - if invalid, log error but return best attempt
@@ -68,7 +69,7 @@ export function mapMessageToDbMessage(message: Message): DbMessage {
     message_status: mapMessageStatusToDbStatus(message.message_status),
     status: mapMessageStatusToDbStatus(message.message_status), // Add status (aliases message_status)
     role: mapMessageRoleToDbRole(message.role),
-    tokens: message.tokens || 0,
+    tokens: message.tokens || 0, // Add tokens mapping
     source_type: message.source_type,
     provider: message.provider,
     processing_status: message.processing_status,

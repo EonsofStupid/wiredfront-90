@@ -17,7 +17,7 @@ export const messageMetadataSchema = z.object({
   }).optional()
 }).catchall(z.unknown()); // Allow additional properties with unknown type
 
-export const messageRoleSchema = z.enum(['user', 'assistant', 'system']);
+export const messageRoleSchema = z.enum(['user', 'assistant', 'system', 'tool']);
 export const messageTypeSchema = z.enum(['text', 'command', 'system', 'image']);
 export const messageStatusSchema = z.enum(['pending', 'sent', 'failed', 'error', 'cached', 'received']);
 
@@ -43,6 +43,7 @@ export const messageSchema = z.object({
   processing_status: z.string().optional(),
   last_retry: z.string().optional(),
   rate_limit_window: z.string().optional(),
+  tokens: z.number().optional(), // Added tokens field
 });
 
 // Create TypeScript types from Zod schemas
@@ -101,6 +102,7 @@ export const createMessage = (
     last_accessed: now,
     retry_count: 0,
     message_status: 'sent',
+    tokens: 0, // Added default value for tokens
   };
   
   return { ...defaultMessage, ...partial };
