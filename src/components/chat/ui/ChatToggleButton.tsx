@@ -21,7 +21,6 @@ export function ChatToggleButton({ onClick }: ChatToggleButtonProps) {
   };
 
   // Position the button based on the selected position
-  // Ensure position is typed correctly
   const positionClass = typeof position === 'string' && position === 'bottom-right' ? 'right-4' : 'left-4';
 
   // Pick icon based on mode

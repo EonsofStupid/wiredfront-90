@@ -17,6 +17,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     const loadSessions = async () => {
       try {
         await fetchSessions(); // This will also set the user property in the session store
+        logger.info('Sessions initialized in ChatProvider');
       } catch (error) {
         logger.error('Error initializing sessions', { error });
       }
@@ -29,8 +30,10 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   useEffect(() => {
     if (error) {
       logger.error('Error initializing theme', { error });
+    } else if (initialized) {
+      logger.info('Theme initialized successfully in ChatProvider');
     }
-  }, [error]);
+  }, [error, initialized]);
 
   return <>{children}</>;
 };

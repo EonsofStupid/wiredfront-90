@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { logger } from "@/services/chat/LoggingService";
 
 // Extended mode types to include 'image'
 export type ChatMode = 'standard' | 'editor' | 'chat-only' | 'image';
@@ -25,7 +26,13 @@ export function ChatModeProvider({ children, isEditorPage }: ChatModeProviderPro
   // Reset mode when switching pages
   useEffect(() => {
     setMode(isEditorPage ? 'editor' : 'standard');
+    logger.info('ChatModeProvider: Mode updated', { mode: isEditorPage ? 'editor' : 'standard' });
   }, [isEditorPage]);
+
+  // Log provider initialization
+  useEffect(() => {
+    logger.info('ChatModeProvider initialized', { isEditorPage, defaultMode });
+  }, []);
 
   return (
     <ChatModeContext.Provider value={{ mode, isEditorPage, setMode }}>

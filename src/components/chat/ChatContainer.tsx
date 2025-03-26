@@ -9,6 +9,7 @@ import { useChatStore } from "./store/chatStore";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { logger } from "@/services/chat/LoggingService";
+import { ChatModeProvider } from "./providers/ChatModeProvider";
 
 export function ChatContainer() {
   const { 
@@ -46,43 +47,49 @@ export function ChatContainer() {
   }, [isOpen, position, isMinimized, showSidebar, scale, isOverflowing, location.pathname]);
 
   if (!isOpen) {
-    return <ChatToggleButton onClick={toggleChat} />;
+    return (
+      <ChatModeProvider isEditorPage={isEditorPage}>
+        <ChatToggleButton onClick={toggleChat} />
+      </ChatModeProvider>
+    );
   }
 
   const positionClass = position === 'bottom-right' ? 'right-4' : 'left-4';
 
   return (
-    <DndContext>
-      <motion.div 
-        className={`fixed bottom-4 ${positionClass} flex gap-4 z-[var(--z-chat)]`}
-        style={{ 
-          transformOrigin: position === 'bottom-right' ? 'bottom right' : 'bottom left'
-        }}
-        animate={{ 
-          scale: isOverflowing ? scale : 1,
-          transition: { duration: 0.3, ease: "easeOut" }
-        }}
-        ref={containerRef}
-      >
-        <AnimatePresence>
-          {showSidebar && (
-            <motion.div
-              initial={{ opacity: 0, x: position === 'bottom-right' ? 20 : -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: position === 'bottom-right' ? 20 : -20 }}
-              transition={{ duration: 0.2 }}
-            >
-              <ChatSidebar />
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
-        <DraggableChatContainer
-          scrollRef={scrollRef}
-          isEditorPage={isEditorPage}
-        />
-      </motion.div>
-    </DndContext>
+    <ChatModeProvider isEditorPage={isEditorPage}>
+      <DndContext>
+        <motion.div 
+          className={`fixed bottom-4 ${positionClass} flex gap-4 z-[var(--z-chat)]`}
+          style={{ 
+            transformOrigin: position === 'bottom-right' ? 'bottom right' : 'bottom left'
+          }}
+          animate={{ 
+            scale: isOverflowing ? scale : 1,
+            transition: { duration: 0.3, ease: "easeOut" }
+          }}
+          ref={containerRef}
+        >
+          <AnimatePresence>
+            {showSidebar && (
+              <motion.div
+                initial={{ opacity: 0, x: position === 'bottom-right' ? 20 : -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: position === 'bottom-right' ? 20 : -20 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ChatSidebar />
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
+          <DraggableChatContainer
+            scrollRef={scrollRef}
+            isEditorPage={isEditorPage}
+          />
+        </motion.div>
+      </DndContext>
+    </ChatModeProvider>
   );
 }
 
