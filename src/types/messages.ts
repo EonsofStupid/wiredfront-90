@@ -1,6 +1,7 @@
 
 /**
  * Re-export message types from schemas (type-only)
+ * This file avoids circular dependencies by only importing types
  */
 export type { 
   Message, 
@@ -11,3 +12,6 @@ export type {
   MessageRequest,
   MessageResponse
 } from '@/schemas/messages';
+
+// Import SafeJson type for use in message-related interfaces
+export { type SafeJson } from '@/types/json';

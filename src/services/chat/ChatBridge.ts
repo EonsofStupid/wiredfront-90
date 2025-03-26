@@ -1,10 +1,9 @@
 import { useSessionStore } from '@/stores/session';
-import { useMessageStore } from '@/stores/message';
+import { useMessageStore } from '@/stores/message/store';
 import { useChatStore } from '@/components/chat/store/chatStore';
 import { 
   CreateSessionParams, 
-  UpdateSessionParams,
-  SessionMetadata 
+  UpdateSessionParams
 } from '@/types/sessions';
 import { 
   Message, 
@@ -241,3 +240,4 @@ export const useChatBridge = () => {
     docked: chatStore.docked
   };
 };
+

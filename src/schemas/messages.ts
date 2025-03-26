@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { Json } from '@/integrations/supabase/types';
+import { SafeJson } from '@/types/json';
 
 // Define non-recursive metadata schema to avoid deep type instantiation
 export const messageMetadataSchema = z.object({

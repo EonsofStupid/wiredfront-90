@@ -1,29 +1,25 @@
 
-import { Json } from '@/integrations/supabase/types';
+import { SafeJson } from '@/types/json';
+import { 
+  MessageRole, 
+  MessageType, 
+  MessageStatus, 
+  MessageMetadata as SchemaMessageMetadata
+} from '@/schemas/messages';
 
-export type MessageRole = 'user' | 'assistant' | 'system';
-export type MessageType = 'text' | 'command' | 'system' | 'image';
-export type MessageStatus = 'pending' | 'sent' | 'received' | 'error' | 'failed' | 'cached';
+// Re-export schema types to avoid duplication
+export type { 
+  MessageRole, 
+  MessageType, 
+  MessageStatus 
+} from '@/schemas/messages';
 
-export interface MessageTokens {
-  prompt: number;
-  completion: number;
-  total: number;
-}
+// Use the same MessageMetadata type as in the schemas
+export type { 
+  MessageMetadata 
+} from '@/schemas/messages';
 
-export interface MessageProcessing {
-  startTime: string;
-  endTime: string;
-  duration: number;
-}
-
-export interface MessageMetadata {
-  model?: string;
-  tokens?: MessageTokens;
-  processing?: MessageProcessing;
-  [key: string]: any;
-}
-
+// Define a Message interface that matches our schema
 export interface Message {
   id: string;
   content: string;
@@ -33,13 +29,13 @@ export interface Message {
   updated_at: string;
   user_id: string | null;
   is_minimized: boolean;
-  position: Json;
-  window_state: Json;
+  position: SafeJson;
+  window_state: SafeJson;
   last_accessed: string;
   chat_session_id: string;
   retry_count: number;
   message_status: MessageStatus;
-  metadata: MessageMetadata;
+  metadata: SchemaMessageMetadata;
   source_type?: string;
   provider?: string;
   processing_status?: string;
