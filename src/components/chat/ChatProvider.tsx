@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { useSessionStore } from '@/stores/session';
+import { useSessionStore } from '@/components/chat/store/chat-sessions';
 import { useThemeInit } from '@/hooks/useThemeInit';
 import { logger } from '@/services/chat/LoggingService';
 
