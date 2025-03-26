@@ -21,10 +21,10 @@ const DEFAULT_THEME_VARIABLES: ThemeVariables = {
   borderRadius: '0.75rem',
   
   // Z-index management
-  zLayer: 10000,
+  zLayer: 1000,
   
   // Effects
-  glowEffect: '0 0 15px rgba(139, 92, 246, 0.5), 0 0 30px rgba(255, 0, 127, 0.3)',
+  glowEffect: '0 0 10px',
   animationSpeed: '0.3s',
   
   // UI features
@@ -33,32 +33,24 @@ const DEFAULT_THEME_VARIABLES: ThemeVariables = {
   animations: true
 };
 
-export interface ThemeState {
+interface ThemeState {
+  themes: Theme[];
+  currentThemeId: string | null;
   variables: ThemeVariables;
   darkMode: boolean;
   highContrast: boolean;
   reducedMotion: boolean;
-  availableThemes: Theme[];
-  currentThemeId: string | null;
   isLoading: boolean;
   error: Error | null;
 }
 
-export interface ThemeActions {
-  // UI preferences
-  setDarkMode: (isDark: boolean) => void;
-  setHighContrast: (isHighContrast: boolean) => void;
-  setReducedMotion: (reducedMotion: boolean) => void;
-  
-  // Theme variables
-  updateVariables: (updates: Partial<ThemeVariables>) => void;
-  resetToDefaults: () => void;
-  
-  // Theme management
+interface ThemeActions {
   fetchThemes: () => Promise<void>;
   setTheme: (themeId: string) => Promise<void>;
-  applyTheme: (theme: Theme) => void;
-  loadThemeTokens: (themeId: string) => Promise<ThemeToken[]>;
+  updateVariables: (updates: Partial<ThemeVariables>) => void;
+  toggleDarkMode: () => void;
+  toggleHighContrast: () => void;
+  toggleReducedMotion: () => void;
 }
 
 export type ThemeStore = ThemeState & ThemeActions;
@@ -68,161 +60,115 @@ export const useThemeStore = create<ThemeStore>()(
     persist(
       (set, get) => ({
         // Initial state
+        themes: [],
+        currentThemeId: null,
         variables: DEFAULT_THEME_VARIABLES,
         darkMode: true,
         highContrast: false,
         reducedMotion: false,
-        availableThemes: [],
-        currentThemeId: null,
         isLoading: false,
         error: null,
-        
-        // UI preferences
-        setDarkMode: (isDark) => set({ darkMode: isDark }),
-        
-        setHighContrast: (isHighContrast) => set({ 
-          highContrast: isHighContrast,
-          variables: isHighContrast ? 
-            {
-              ...DEFAULT_THEME_VARIABLES,
-              glowEffect: 'none',
-              glassMorphism: false,
-              neonEffects: false,
-              background: 'black',
-              foreground: 'white',
-              primary: '#ffffff',
-              secondary: '#cccccc'
-            } : 
-            get().variables
-        }),
-        
-        setReducedMotion: (reducedMotion) => set({ 
-          reducedMotion,
-          variables: {
-            ...get().variables,
-            animations: !reducedMotion,
-            glowEffect: reducedMotion ? 'none' : get().variables.glowEffect
-          }
-        }),
-        
-        // Theme variables
-        updateVariables: (updates) => set((state) => ({
-          variables: { ...state.variables, ...updates }
-        })),
-        
-        resetToDefaults: () => set({ variables: DEFAULT_THEME_VARIABLES }),
-        
-        // Theme management
+
+        // Actions
         fetchThemes: async () => {
           try {
             set({ isLoading: true, error: null });
             
             // Fetch themes from Supabase
-            const { data, error } = await supabase
+            const { data: themes, error } = await supabase
               .from('themes')
-              .select('*')
-              .order('is_default', { ascending: false })
-              .order('name', { ascending: true });
+              .select('*, tokens:theme_tokens(*)');
 
             if (error) throw error;
 
-            if (!data) {
-              set({ availableThemes: [], isLoading: false });
-              return;
-            }
+            // Set default theme if available
+            const defaultTheme = themes?.find(theme => theme.is_default);
             
-            const themes = data as Theme[];
-            set({ availableThemes: themes, isLoading: false });
+            set({ 
+              themes: themes || [],
+              currentThemeId: defaultTheme?.id || null,
+              isLoading: false
+            });
             
-            // If we have a default theme and no current theme is set, use the default
-            const defaultTheme = themes.find(theme => theme.is_default);
-            if (defaultTheme && !get().currentThemeId) {
+            // If we found a default theme, apply it
+            if (defaultTheme) {
               await get().setTheme(defaultTheme.id);
             }
             
-            logger.info(`Fetched ${themes.length} themes`);
+            logger.info('Themes fetched successfully', { count: themes?.length || 0 });
           } catch (error) {
             logger.error('Failed to fetch themes', { error });
             set({ error: error as Error, isLoading: false });
           }
         },
-        
+
         setTheme: async (themeId) => {
           try {
             set({ isLoading: true, error: null });
             
-            // Find theme in available themes
-            const theme = get().availableThemes.find(theme => theme.id === themeId);
+            // Find theme in state
+            const theme = get().themes.find(t => t.id === themeId);
+            
             if (!theme) {
-              throw new Error(`Theme with ID ${themeId} not found`);
+              throw new Error(`Theme with id ${themeId} not found`);
             }
             
-            // Load theme tokens
-            const tokens = await get().loadThemeTokens(themeId);
-            theme.tokens = tokens;
+            // Extract CSS variables from tokens
+            const themeVariables = { ...DEFAULT_THEME_VARIABLES };
             
-            // Apply theme
-            get().applyTheme(theme);
+            // Apply token values to variables
+            if (theme.tokens) {
+              theme.tokens.forEach((token: ThemeToken) => {
+                const key = token.token_name as keyof ThemeVariables;
+                if (key in themeVariables) {
+                  // Type conversion based on variable type
+                  if (typeof themeVariables[key] === 'boolean') {
+                    themeVariables[key] = token.token_value === 'true';
+                  } else if (typeof themeVariables[key] === 'number') {
+                    themeVariables[key] = Number(token.token_value);
+                  } else {
+                    themeVariables[key] = token.token_value;
+                  }
+                }
+              });
+            }
             
-            set({ currentThemeId: themeId, isLoading: false });
+            set({ 
+              currentThemeId: themeId,
+              variables: themeVariables,
+              isLoading: false
+            });
+            
+            logger.info('Theme set successfully', { themeId, themeName: theme.name });
           } catch (error) {
-            logger.error('Failed to set theme', { error });
+            logger.error('Failed to set theme', { error, themeId });
             set({ error: error as Error, isLoading: false });
           }
         },
-        
-        applyTheme: (theme) => {
-          // Map tokens to variables
-          const variables: Partial<ThemeVariables> = {};
-          
-          // Only process if tokens exist
-          if (theme.tokens && theme.tokens.length > 0) {
-            theme.tokens.forEach(token => {
-              // Map token_name to variable name, converting from CSS custom property format
-              // Example: --chat-primary -> primary
-              const tokenName = token.token_name.replace('--chat-', '');
-              
-              // Only set if it's a key in ThemeVariables
-              if (tokenName in DEFAULT_THEME_VARIABLES) {
-                (variables as any)[tokenName] = token.token_value;
-              }
-            });
-            
-            // Apply variables
-            set({ variables: { ...DEFAULT_THEME_VARIABLES, ...variables } });
-          }
-          
-          logger.info(`Applied theme: ${theme.name}`);
+
+        updateVariables: (updates) => {
+          set({ variables: { ...get().variables, ...updates } });
         },
-        
-        loadThemeTokens: async (themeId) => {
-          try {
-            // Fetch theme tokens from Supabase
-            const { data, error } = await supabase
-              .from('theme_tokens')
-              .select('*')
-              .eq('theme_id', themeId);
 
-            if (error) throw error;
+        toggleDarkMode: () => {
+          set({ darkMode: !get().darkMode });
+        },
 
-            if (!data) {
-              return [];
-            }
-            
-            return data as ThemeToken[];
-          } catch (error) {
-            logger.error('Failed to load theme tokens', { error });
-            throw error;
-          }
+        toggleHighContrast: () => {
+          set({ highContrast: !get().highContrast });
+        },
+
+        toggleReducedMotion: () => {
+          set({ reducedMotion: !get().reducedMotion });
         }
       }),
       {
-        name: 'chat-theme',
+        name: 'theme-storage',
         partialize: (state) => ({
+          currentThemeId: state.currentThemeId,
           darkMode: state.darkMode,
           highContrast: state.highContrast,
           reducedMotion: state.reducedMotion,
-          currentThemeId: state.currentThemeId,
         }),
       }
     ),

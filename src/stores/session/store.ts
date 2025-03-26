@@ -12,6 +12,11 @@ import {
   SessionMetadata 
 } from '@/types/sessions';
 import { logger } from '@/services/chat/LoggingService';
+import {
+  mapDbSessionToSession,
+  mapSessionToDbSession,
+  mapSessionMetadataToDbMetadata
+} from '@/services/sessions/mappers';
 
 export interface SessionState {
   sessions: Session[];
@@ -97,18 +102,13 @@ export const useSessionStore = create<SessionStore>()(
                 logger.warn('Failed to get message count', { error: countError, sessionId: session.id });
               }
               
-              // Convert to domain model
-              return {
-                id: session.id,
-                title: session.title,
-                created_at: session.created_at,
-                last_accessed: session.last_accessed,
-                message_count: count || 0,
-                is_active: !session.archived,
-                archived: session.archived,
-                metadata: session.metadata as SessionMetadata,
-                user_id: session.user_id || undefined
-              } as Session;
+              // Use mapper to convert DB session to domain model
+              const dbSession = {
+                ...session,
+                message_count: count || 0
+              };
+              
+              return mapDbSessionToSession(dbSession);
             }));
             
             set({ sessions: sessionsWithCounts, isLoading: false });
@@ -133,7 +133,7 @@ export const useSessionStore = create<SessionStore>()(
             const now = new Date().toISOString();
             const sessionId = uuidv4();
             
-            // Create new session
+            // Create new session using DB format
             const { error } = await supabase
               .from('chat_sessions')
               .insert({
@@ -142,7 +142,7 @@ export const useSessionStore = create<SessionStore>()(
                 created_at: now,
                 last_accessed: now,
                 archived: false,
-                metadata: params.metadata || {},
+                metadata: mapSessionMetadataToDbMetadata(params.metadata || {}),
                 user_id: user.id
               });
 
@@ -191,7 +191,9 @@ export const useSessionStore = create<SessionStore>()(
             const updates: any = {};
             if (params.title !== undefined) updates.title = params.title;
             if (params.archived !== undefined) updates.archived = params.archived;
-            if (params.metadata !== undefined) updates.metadata = params.metadata;
+            if (params.metadata !== undefined) {
+              updates.metadata = mapSessionMetadataToDbMetadata(params.metadata);
+            }
             
             // Update session
             const { error } = await supabase

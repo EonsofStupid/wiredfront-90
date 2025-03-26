@@ -1,6 +1,6 @@
 
-import { useSessionStore } from '@/stores/session/store';
-import { useMessageStore } from '@/stores/message/store';
+import { useSessionStore } from '@/stores/session';
+import { useMessageStore } from '@/stores/message';
 import { useChatStore } from '@/components/chat/store/chatStore';
 import { 
   CreateSessionParams, 

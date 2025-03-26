@@ -12,6 +12,11 @@ import {
   MessageMetadata 
 } from '@/types/messages';
 import { logger } from '@/services/chat/LoggingService';
+import {
+  mapDbMessageToMessage,
+  mapMessageToDbMessage,
+  mapMessageMetadataToDbMetadata
+} from '@/services/messages/mappers';
 
 export interface MessageState {
   messages: Message[];
@@ -119,13 +124,8 @@ export const useMessageStore = create<MessageStore>()(
             return;
           }
           
-          // Map to Message type
-          const messages = data.map(m => ({
-            ...m,
-            metadata: m.metadata || {},
-            position: m.position || {},
-            window_state: m.window_state || {}
-          })) as Message[];
+          // Map to Message type using our mapper
+          const messages = data.map(m => mapDbMessageToMessage(m));
           
           set({ messages, isLoading: false });
           logger.info(`Fetched ${messages.length} messages for session ${sessionId}`);
@@ -236,25 +236,12 @@ export const useMessageStore = create<MessageStore>()(
 // Helper function to save message to Supabase
 async function saveMessageToSupabase(message: Message) {
   try {
+    // Convert to DB format using our mapper
+    const dbMessage = mapMessageToDbMessage(message);
+    
     const { error } = await supabase
       .from('messages')
-      .insert({
-        id: message.id,
-        content: message.content,
-        user_id: message.user_id,
-        type: message.type,
-        metadata: message.metadata,
-        created_at: message.created_at,
-        updated_at: message.updated_at,
-        chat_session_id: message.chat_session_id,
-        is_minimized: message.is_minimized,
-        position: message.position,
-        window_state: message.window_state,
-        last_accessed: message.last_accessed,
-        retry_count: message.retry_count,
-        message_status: message.message_status,
-        role: message.role
-      });
+      .insert(dbMessage);
       
     if (error) {
       logger.error('Failed to save message to Supabase', { error, message });
@@ -267,12 +254,17 @@ async function saveMessageToSupabase(message: Message) {
 // Helper function to update message in Supabase
 async function updateMessageInSupabase(id: string, updates: Partial<Message>) {
   try {
+    // Convert updates to DB format if necessary
+    const dbUpdates = { ...updates, updated_at: new Date().toISOString() };
+    
+    // If metadata is updated, convert it
+    if ('metadata' in updates) {
+      dbUpdates.metadata = mapMessageMetadataToDbMetadata(updates.metadata || {});
+    }
+    
     const { error } = await supabase
       .from('messages')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
+      .update(dbUpdates)
       .eq('id', id);
       
     if (error) {
