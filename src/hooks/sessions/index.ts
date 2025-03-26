@@ -1,2 +1,2 @@
 
-export { useSessionManager } from './useSessionManager';
+export * from './useSessionManager';

@@ -75,17 +75,30 @@ export const useThemeStore = create<ThemeStore>()(
             set({ isLoading: true, error: null });
             
             // Fetch themes from Supabase
-            const { data: themes, error } = await supabase
+            const { data: themesData, error } = await supabase
               .from('themes')
               .select('*, tokens:theme_tokens(*)');
 
             if (error) throw error;
 
+            // Convert DB themes to application Theme type
+            const themes: Theme[] = themesData?.map((dbTheme) => ({
+              id: dbTheme.id,
+              name: dbTheme.name,
+              description: dbTheme.description,
+              is_default: dbTheme.is_default,
+              is_system: dbTheme.is_built_in || false, // Handle field name difference
+              created_at: dbTheme.created_at,
+              updated_at: dbTheme.updated_at,
+              user_id: dbTheme.created_by,
+              tokens: dbTheme.tokens
+            })) || [];
+            
             // Set default theme if available
             const defaultTheme = themes?.find(theme => theme.is_default);
             
             set({ 
-              themes: themes || [],
+              themes,
               currentThemeId: defaultTheme?.id || null,
               isLoading: false
             });
@@ -121,12 +134,15 @@ export const useThemeStore = create<ThemeStore>()(
               theme.tokens.forEach((token: ThemeToken) => {
                 const key = token.token_name as keyof ThemeVariables;
                 if (key in themeVariables) {
-                  // Type conversion based on variable type
-                  if (typeof themeVariables[key] === 'boolean') {
+                  // Handle type conversion properly based on the key type
+                  if (key === 'glassMorphism' || key === 'neonEffects' || key === 'animations') {
+                    // For boolean properties
                     themeVariables[key] = token.token_value === 'true';
-                  } else if (typeof themeVariables[key] === 'number') {
+                  } else if (key === 'zLayer') {
+                    // For number properties
                     themeVariables[key] = Number(token.token_value);
                   } else {
+                    // For string properties
                     themeVariables[key] = token.token_value;
                   }
                 }

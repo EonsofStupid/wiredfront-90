@@ -1,44 +1,29 @@
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
+import { Message, MessageMetadata, MessageRole, MessageStatus } from '@/types/messages';
+import { Json } from '@/integrations/supabase/types';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Message, 
-  MessageRole, 
-  MessageStatus, 
-  MessageType,
-  MessageMetadata 
-} from '@/types/messages';
+import { mapMessageToDbMessage, mapDbMessageToMessage } from '@/services/messages/mappers';
 import { logger } from '@/services/chat/LoggingService';
-import {
-  mapDbMessageToMessage,
-  mapMessageToDbMessage,
-  mapMessageMetadataToDbMetadata
-} from '@/services/messages/mappers';
 
-export interface MessageState {
+interface MessageState {
   messages: Message[];
   isLoading: boolean;
   error: Error | null;
 }
 
-export interface MessageActions {
-  // Core actions
-  addMessage: (message: Partial<Message>) => void;
-  updateMessage: (id: string, updates: Partial<Message>) => void;
-  getMessageById: (id: string) => Message | undefined;
-  
-  // Session-related actions
+interface MessageActions {
   fetchSessionMessages: (sessionId: string) => Promise<void>;
-  clearMessages: () => void;
-  
-  // Message creation helpers
   createUserMessage: (content: string, sessionId: string, metadata?: MessageMetadata) => Message;
   createAssistantMessage: (content: string, sessionId: string, metadata?: MessageMetadata) => Message;
   createSystemMessage: (content: string, sessionId: string, metadata?: MessageMetadata) => Message;
-  createErrorMessage: (content: string, sessionId: string, metadata?: MessageMetadata) => Message;
+  createErrorMessage: (content: string, sessionId: string) => Message;
+  updateMessage: (messageId: string, updates: Partial<Message>) => void;
+  deleteMessage: (messageId: string) => Promise<void>;
+  clearMessages: () => void;
+  addMessage: (message: Message) => void;
 }
 
 export type MessageStore = MessageState & MessageActions;
@@ -51,64 +36,10 @@ export const useMessageStore = create<MessageStore>()(
       isLoading: false,
       error: null,
 
-      // Core actions
-      addMessage: (message) => {
-        // Create a complete message from partial data
-        const completeMessage: Message = {
-          id: message.id || uuidv4(),
-          content: message.content || '',
-          user_id: message.user_id || null,
-          type: message.type || 'text',
-          metadata: message.metadata || {},
-          created_at: message.created_at || new Date().toISOString(),
-          updated_at: message.updated_at || new Date().toISOString(),
-          chat_session_id: message.chat_session_id || '',
-          is_minimized: message.is_minimized || false,
-          position: message.position || {},
-          window_state: message.window_state || {},
-          last_accessed: message.last_accessed || new Date().toISOString(),
-          retry_count: message.retry_count || 0,
-          message_status: message.message_status || 'sent',
-          role: message.role || 'user',
-          ...message
-        } as Message;
-
-        // Save to Supabase
-        saveMessageToSupabase(completeMessage);
-        
-        // Update local state
-        set((state) => ({
-          messages: [...state.messages, completeMessage],
-        }));
-      },
-
-      updateMessage: (id, updates) => {
-        // Get current message
-        const message = get().messages.find(m => m.id === id);
-        if (!message) return;
-        
-        // Create updated message
-        const updatedMessage = { ...message, ...updates };
-        
-        // Update in Supabase
-        updateMessageInSupabase(id, updates);
-        
-        // Update local state
-        set((state) => ({
-          messages: state.messages.map((message) => 
-            message.id === id ? updatedMessage : message
-          ),
-        }));
-      },
-
-      getMessageById: (id) => {
-        return get().messages.find((message) => message.id === id);
-      },
-
-      // Session-related actions
+      // Actions
       fetchSessionMessages: async (sessionId) => {
         try {
-          set({ isLoading: true, messages: [] });
+          set({ isLoading: true, error: null });
           
           // Fetch messages from Supabase
           const { data, error } = await supabase
@@ -116,161 +47,263 @@ export const useMessageStore = create<MessageStore>()(
             .select('*')
             .eq('chat_session_id', sessionId)
             .order('created_at', { ascending: true });
-
+            
           if (error) throw error;
-
-          if (!data) {
-            set({ messages: [], isLoading: false });
-            return;
-          }
           
-          // Map to Message type using our mapper
-          const messages = data.map(m => mapDbMessageToMessage(m));
+          // Map DB messages to application Message type
+          const messages = data ? data.map(mapDbMessageToMessage) : [];
           
-          set({ messages, isLoading: false });
-          logger.info(`Fetched ${messages.length} messages for session ${sessionId}`);
+          set({ 
+            messages, 
+            isLoading: false 
+          });
+          
+          logger.info('Messages fetched', { count: messages.length, sessionId });
         } catch (error) {
-          logger.error('Failed to fetch session messages', { error });
+          logger.error('Failed to fetch messages', { error, sessionId });
           set({ error: error as Error, isLoading: false });
         }
       },
-      
-      clearMessages: () => {
-        set({ messages: [] });
-        logger.info("Message store cleared");
-      },
-      
-      // Message creation helpers
+
       createUserMessage: (content, sessionId, metadata = {}) => {
+        const now = new Date();
+        const messageId = uuidv4();
+        
         const message: Message = {
-          id: uuidv4(),
+          id: messageId,
           content,
-          user_id: null, // Will be set from auth
+          role: 'user',
           type: 'text',
-          metadata: metadata,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          created_at: now.toISOString(),
+          updated_at: now.toISOString(),
           chat_session_id: sessionId,
+          user_id: null, // Will be set by server
           is_minimized: false,
           position: {},
           window_state: {},
-          last_accessed: new Date().toISOString(),
+          last_accessed: now.toISOString(),
           retry_count: 0,
           message_status: 'sent',
-          role: 'user'
+          metadata
         };
-        get().addMessage(message);
+        
+        // Add message to state
+        set(state => ({
+          messages: [...state.messages, message]
+        }));
+        
+        // Save to database
+        try {
+          supabase
+            .from('messages')
+            .insert(mapMessageToDbMessage(message))
+            .then(({ error }) => {
+              if (error) {
+                logger.error('Failed to save user message', { error, messageId });
+              }
+            });
+        } catch (error) {
+          logger.error('Error saving user message', { error, messageId });
+        }
+        
         return message;
       },
-      
+
       createAssistantMessage: (content, sessionId, metadata = {}) => {
+        const now = new Date();
+        const messageId = uuidv4();
+        
         const message: Message = {
-          id: uuidv4(),
+          id: messageId,
           content,
-          user_id: null,
+          role: 'assistant',
           type: 'text',
-          metadata: metadata,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          created_at: now.toISOString(),
+          updated_at: now.toISOString(),
           chat_session_id: sessionId,
+          user_id: null,
           is_minimized: false,
           position: {},
           window_state: {},
-          last_accessed: new Date().toISOString(),
+          last_accessed: now.toISOString(),
           retry_count: 0,
-          message_status: 'sent',
-          role: 'assistant'
+          message_status: 'received',
+          metadata
         };
-        get().addMessage(message);
+        
+        // Add message to state
+        set(state => ({
+          messages: [...state.messages, message]
+        }));
+        
+        // Save to database
+        try {
+          supabase
+            .from('messages')
+            .insert(mapMessageToDbMessage(message))
+            .then(({ error }) => {
+              if (error) {
+                logger.error('Failed to save assistant message', { error, messageId });
+              }
+            });
+        } catch (error) {
+          logger.error('Error saving assistant message', { error, messageId });
+        }
+        
         return message;
       },
-      
+
       createSystemMessage: (content, sessionId, metadata = {}) => {
+        const now = new Date();
+        const messageId = uuidv4();
+        
         const message: Message = {
-          id: uuidv4(),
+          id: messageId,
           content,
-          user_id: null,
+          role: 'system',
           type: 'system',
-          metadata: metadata,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          created_at: now.toISOString(),
+          updated_at: now.toISOString(),
           chat_session_id: sessionId,
+          user_id: null,
           is_minimized: false,
           position: {},
           window_state: {},
-          last_accessed: new Date().toISOString(),
+          last_accessed: now.toISOString(),
           retry_count: 0,
           message_status: 'sent',
-          role: 'system'
+          metadata
         };
-        get().addMessage(message);
+        
+        // Add message to state
+        set(state => ({
+          messages: [...state.messages, message]
+        }));
+        
+        // Save to database
+        try {
+          supabase
+            .from('messages')
+            .insert(mapMessageToDbMessage(message))
+            .then(({ error }) => {
+              if (error) {
+                logger.error('Failed to save system message', { error, messageId });
+              }
+            });
+        } catch (error) {
+          logger.error('Error saving system message', { error, messageId });
+        }
+        
         return message;
       },
-      
-      createErrorMessage: (content, sessionId, metadata = {}) => {
+
+      createErrorMessage: (content, sessionId) => {
+        const now = new Date();
+        const messageId = uuidv4();
+        
         const message: Message = {
-          id: uuidv4(),
+          id: messageId,
           content,
-          user_id: null,
+          role: 'system',
           type: 'system',
-          metadata: { ...metadata, isError: true },
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          created_at: now.toISOString(),
+          updated_at: now.toISOString(),
           chat_session_id: sessionId,
+          user_id: null,
           is_minimized: false,
           position: {},
           window_state: {},
-          last_accessed: new Date().toISOString(),
+          last_accessed: now.toISOString(),
           retry_count: 0,
           message_status: 'error',
-          role: 'system'
+          metadata: {}
         };
-        get().addMessage(message);
+        
+        // Add message to state
+        set(state => ({
+          messages: [...state.messages, message]
+        }));
+        
+        // Save to database
+        try {
+          supabase
+            .from('messages')
+            .insert(mapMessageToDbMessage(message))
+            .then(({ error }) => {
+              if (error) {
+                logger.error('Failed to save error message', { error, messageId });
+              }
+            });
+        } catch (error) {
+          logger.error('Error saving error message', { error, messageId });
+        }
+        
         return message;
+      },
+
+      updateMessage: (messageId, updates) => {
+        set(state => ({
+          messages: state.messages.map(message => 
+            message.id === messageId 
+              ? { ...message, ...updates, updated_at: new Date().toISOString() }
+              : message
+          )
+        }));
+        
+        // Update in database
+        try {
+          const message = get().messages.find(m => m.id === messageId);
+          
+          if (message) {
+            const updatedMessage = { ...message, ...updates };
+            
+            supabase
+              .from('messages')
+              .update(mapMessageToDbMessage(updatedMessage))
+              .eq('id', messageId)
+              .then(({ error }) => {
+                if (error) {
+                  logger.error('Failed to update message', { error, messageId });
+                }
+              });
+          }
+        } catch (error) {
+          logger.error('Error updating message', { error, messageId });
+        }
+      },
+
+      deleteMessage: async (messageId) => {
+        try {
+          // Delete from database
+          const { error } = await supabase
+            .from('messages')
+            .delete()
+            .eq('id', messageId);
+            
+          if (error) throw error;
+          
+          // Remove from state
+          set(state => ({
+            messages: state.messages.filter(message => message.id !== messageId)
+          }));
+          
+          logger.info('Message deleted', { messageId });
+        } catch (error) {
+          logger.error('Failed to delete message', { error, messageId });
+          throw error;
+        }
+      },
+
+      clearMessages: () => {
+        set({ messages: [] });
+      },
+
+      addMessage: (message) => {
+        set(state => ({
+          messages: [...state.messages, message]
+        }));
       }
     }),
     { name: 'MessageStore' }
   )
 );
-
-// Helper function to save message to Supabase
-async function saveMessageToSupabase(message: Message) {
-  try {
-    // Convert to DB format using our mapper
-    const dbMessage = mapMessageToDbMessage(message);
-    
-    const { error } = await supabase
-      .from('messages')
-      .insert(dbMessage);
-      
-    if (error) {
-      logger.error('Failed to save message to Supabase', { error, message });
-    }
-  } catch (error) {
-    logger.error('Exception saving message to Supabase', { error, message });
-  }
-}
-
-// Helper function to update message in Supabase
-async function updateMessageInSupabase(id: string, updates: Partial<Message>) {
-  try {
-    // Convert updates to DB format if necessary
-    const dbUpdates = { ...updates, updated_at: new Date().toISOString() };
-    
-    // If metadata is updated, convert it
-    if ('metadata' in updates) {
-      dbUpdates.metadata = mapMessageMetadataToDbMetadata(updates.metadata || {});
-    }
-    
-    const { error } = await supabase
-      .from('messages')
-      .update(dbUpdates)
-      .eq('id', id);
-      
-    if (error) {
-      logger.error('Failed to update message in Supabase', { error, id, updates });
-    }
-  } catch (error) {
-    logger.error('Exception updating message in Supabase', { error, id, updates });
-  }
-}

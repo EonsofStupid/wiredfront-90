@@ -112,11 +112,11 @@ export function mapDbMetadataToMessageMetadata(metadata: Json | null): MessageMe
   const result: MessageMetadata = {};
   
   // Map known fields
-  if (typeof metadata === 'object' && metadata !== null) {
+  if (typeof metadata === 'object' && metadata !== null && !Array.isArray(metadata)) {
     if ('model' in metadata) result.model = String(metadata.model);
     
     // Map token info if present
-    if ('tokens' in metadata && typeof metadata.tokens === 'object' && metadata.tokens !== null) {
+    if ('tokens' in metadata && typeof metadata.tokens === 'object' && metadata.tokens !== null && !Array.isArray(metadata.tokens)) {
       result.tokens = {
         prompt: Number(metadata.tokens.prompt) || 0,
         completion: Number(metadata.tokens.completion) || 0,
@@ -125,10 +125,10 @@ export function mapDbMetadataToMessageMetadata(metadata: Json | null): MessageMe
     }
     
     // Map processing info if present
-    if ('processing' in metadata && typeof metadata.processing === 'object' && metadata.processing !== null) {
+    if ('processing' in metadata && typeof metadata.processing === 'object' && metadata.processing !== null && !Array.isArray(metadata.processing)) {
       result.processing = {
-        startTime: metadata.processing.startTime as string,
-        endTime: metadata.processing.endTime as string,
+        startTime: String(metadata.processing.startTime || ''),
+        endTime: String(metadata.processing.endTime || ''),
         duration: Number(metadata.processing.duration) || 0
       };
     }
@@ -148,5 +148,6 @@ export function mapDbMetadataToMessageMetadata(metadata: Json | null): MessageMe
  * Maps MessageMetadata to database Json format
  */
 export function mapMessageMetadataToDbMetadata(metadata: MessageMetadata): Json {
-  return metadata as Json;
+  // Make a deep copy to avoid mutation
+  return JSON.parse(JSON.stringify(metadata)) as Json;
 }

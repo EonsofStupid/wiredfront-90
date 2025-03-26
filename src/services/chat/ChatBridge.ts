@@ -122,15 +122,17 @@ export const ChatBridge = {
   
   openChat: () => {
     const chatStore = useChatStore.getState();
-    if (chatStore.isOpen === false && chatStore.setIsOpen) {
-      chatStore.setIsOpen(true);
+    // Use toggleUIState action for opening the chat
+    if (chatStore.isOpen === false && chatStore.toggleUIState) {
+      chatStore.toggleUIState('isOpen', true);
     }
   },
   
   closeChat: () => {
     const chatStore = useChatStore.getState();
-    if (chatStore.isOpen === true && chatStore.setIsOpen) {
-      chatStore.setIsOpen(false);
+    // Use toggleUIState action for closing the chat
+    if (chatStore.isOpen === true && chatStore.toggleUIState) {
+      chatStore.toggleUIState('isOpen', false);
     }
   }
 };
@@ -233,12 +235,10 @@ export const useChatBridge = () => {
     // UI
     toggleChat: chatStore.toggleChat,
     isOpen: chatStore.isOpen,
-    setIsOpen: chatStore.setIsOpen,
+    // Use appropriate UI actions from the store
+    toggleUIState: chatStore.toggleUIState,
     isMinimized: chatStore.isMinimized,
-    setIsMinimized: chatStore.setIsMinimized,
     position: chatStore.position,
-    setPosition: chatStore.setPosition,
-    docked: chatStore.docked,
-    setDocked: chatStore.setDocked
+    docked: chatStore.docked
   };
 };

@@ -1,68 +1,125 @@
-
-import { useMessageStore } from '@/components/chat/messaging/MessageManager';
-import { useChatStore } from '@/components/chat/store/chatStore';
-import { CreateSessionParams, UpdateSessionParams } from '@/types/sessions';
-import { useSessionCore } from './useSessionCore';
-import { useSessionCreation } from './useSessionCreation';
-import { useSessionSwitching } from './useSessionSwitching';
-import { useSessionUpdates } from './useSessionUpdates';
-import { useSessionCleanup } from './useSessionCleanup';
+import { useSessionStore } from '@/stores/session';
+import { useMessageStore } from '@/stores/message';
+import { useCallback, useEffect, useState } from 'react';
+import { Session, CreateSessionParams } from '@/types/sessions';
+import { toast } from 'sonner';
 
 /**
- * Main session manager hook that composes all session-related functionality
+ * Hook for managing chat sessions
  */
 export function useSessionManager() {
-  const { clearMessages, fetchSessionMessages } = useMessageStore();
-  const { setSessionLoading } = useChatStore();
-  
-  // Get core session state
   const {
     sessions,
     currentSessionId,
-    setCurrentSessionId,
-    currentSession,
     isLoading,
-    isError,
-    error,
-    refreshSessions,
-  } = useSessionCore();
-
-  // Create specialized hooks
-  const { createSession } = useSessionCreation(
-    setCurrentSessionId,
-    clearMessages
-  );
-
-  const { switchSession } = useSessionSwitching(
-    setCurrentSessionId,
-    fetchSessionMessages,
-    setSessionLoading,
-    currentSessionId
-  );
-
-  const { updateSession, archiveSession } = useSessionUpdates();
-
-  const { clearSessions, cleanupInactiveSessions } = useSessionCleanup(
-    currentSessionId,
-    clearMessages,
-    createSession,
-    refreshSessions
-  );
-
-  // Return a unified API
-  return {
-    sessions,
-    currentSessionId,
-    currentSession,
-    isLoading,
-    isError,
-    error,
+    fetchSessions,
     createSession,
     switchSession,
     updateSession,
     archiveSession,
     clearSessions,
-    cleanupInactiveSessions,
-    refreshSessions
+    cleanupInactiveSessions
+  } = useSessionStore();
+
+  const { clearMessages, fetchSessionMessages } = useMessageStore();
+  const [initialized, setInitialized] = useState(false);
+
+  // Initialize hook by fetching sessions
+  useEffect(() => {
+    const initialize = async () => {
+      if (!initialized) {
+        try {
+          await fetchSessions();
+          
+          // Load messages for current session if any
+          if (currentSessionId) {
+            await fetchSessionMessages(currentSessionId);
+          }
+          
+          setInitialized(true);
+        } catch (error) {
+          console.error('Failed to initialize sessions:', error);
+          toast.error('Failed to load chat sessions');
+        }
+      }
+    };
+    
+    initialize();
+  }, [fetchSessions, currentSessionId, fetchSessionMessages, initialized]);
+
+  // Handle switching sessions with message loading
+  const handleSwitchSession = useCallback(async (sessionId: string) => {
+    try {
+      clearMessages(); // Clear current messages before switching
+      await switchSession(sessionId);
+      await fetchSessionMessages(sessionId);
+      toast.success('Switched to session');
+    } catch (error) {
+      console.error('Failed to switch session:', error);
+      toast.error('Failed to switch session');
+    }
+  }, [clearMessages, switchSession, fetchSessionMessages]);
+
+  // Create a new session with defaults
+  const handleCreateSession = useCallback(async (params: CreateSessionParams = {}) => {
+    try {
+      clearMessages(); // Clear current messages
+      const sessionId = await createSession({
+        title: params.title || 'New Chat',
+        metadata: params.metadata || {}
+      });
+      toast.success('Created new chat session');
+      return sessionId;
+    } catch (error) {
+      console.error('Failed to create session:', error);
+      toast.error('Failed to create new session');
+      throw error;
+    }
+  }, [clearMessages, createSession]);
+
+  // Clean up old/inactive sessions
+  const handleCleanupSessions = useCallback(async () => {
+    try {
+      await cleanupInactiveSessions();
+      toast.success('Cleaned up inactive sessions');
+    } catch (error) {
+      console.error('Failed to cleanup sessions:', error);
+      toast.error('Failed to cleanup sessions');
+    }
+  }, [cleanupInactiveSessions]);
+
+  // Clear sessions, optionally keeping the current one
+  const handleClearSessions = useCallback(async (preserveCurrentSession: boolean = true) => {
+    try {
+      await clearSessions(preserveCurrentSession);
+      
+      if (!preserveCurrentSession) {
+        clearMessages();
+      }
+      
+      toast.success(
+        preserveCurrentSession
+          ? 'Cleared other sessions'
+          : 'Cleared all sessions'
+      );
+    } catch (error) {
+      console.error('Failed to clear sessions:', error);
+      toast.error('Failed to clear sessions');
+    }
+  }, [clearSessions, clearMessages]);
+
+  return {
+    // Data
+    sessions,
+    currentSessionId,
+    isLoading,
+    
+    // Actions
+    createSession: handleCreateSession,
+    switchSession: handleSwitchSession,
+    updateSession,
+    archiveSession,
+    clearSessions: handleClearSessions,
+    cleanupInactiveSessions: handleCleanupSessions
   };
 }
