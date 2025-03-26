@@ -1,8 +1,7 @@
-
 import { useSessionStore } from '@/stores/session';
 import { useMessageStore } from '@/stores/message';
 import { useCallback, useEffect, useState } from 'react';
-import { Session, CreateSessionParams } from '@/types/sessions';
+import { CreateSessionParams } from '@/types/sessions';
 import { toast } from 'sonner';
 
 /**
@@ -122,7 +121,6 @@ export function useSessionManager() {
     archiveSession,
     clearSessions: handleClearSessions,
     cleanupInactiveSessions: handleCleanupSessions,
-    // Add refreshSessions to fix the missing property error
     refreshSessions: fetchSessions
   };
 }

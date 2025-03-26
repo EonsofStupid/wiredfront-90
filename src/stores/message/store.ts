@@ -1,9 +1,7 @@
-
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { Message, MessageMetadata, MessageRole, MessageStatus } from '@/types/messages';
-import { Json } from '@/integrations/supabase/types';
 import { supabase } from '@/integrations/supabase/client';
 import { mapMessageToDbMessage, mapDbMessageToMessage } from '@/services/messages/mappers';
 import { logger } from '@/services/chat/LoggingService';
@@ -14,13 +12,17 @@ interface MessageState {
   error: Error | null;
 }
 
+type MessageUpdates = Partial<Omit<Message, 'id' | 'metadata'>> & { 
+  metadata?: Partial<MessageMetadata>; 
+};
+
 interface MessageActions {
   fetchSessionMessages: (sessionId: string) => Promise<void>;
   createUserMessage: (content: string, sessionId: string, metadata?: MessageMetadata) => Message;
   createAssistantMessage: (content: string, sessionId: string, metadata?: MessageMetadata) => Message;
   createSystemMessage: (content: string, sessionId: string, metadata?: MessageMetadata) => Message;
   createErrorMessage: (content: string, sessionId: string) => Message;
-  updateMessage: (messageId: string, updates: Partial<Message>) => void;
+  updateMessage: (messageId: string, updates: MessageUpdates) => void;
   deleteMessage: (messageId: string) => Promise<void>;
   clearMessages: () => void;
   addMessage: (message: Message) => void;
@@ -84,7 +86,7 @@ export const useMessageStore = create<MessageStore>()(
           last_accessed: now.toISOString(),
           retry_count: 0,
           message_status: 'sent',
-          metadata
+          metadata: { ...metadata } // Create a fresh copy
         };
         
         // Add message to state
@@ -128,7 +130,7 @@ export const useMessageStore = create<MessageStore>()(
           last_accessed: now.toISOString(),
           retry_count: 0,
           message_status: 'received',
-          metadata
+          metadata: { ...metadata } // Create a fresh copy
         };
         
         // Add message to state
@@ -172,7 +174,7 @@ export const useMessageStore = create<MessageStore>()(
           last_accessed: now.toISOString(),
           retry_count: 0,
           message_status: 'sent',
-          metadata
+          metadata: { ...metadata } // Create a fresh copy
         };
         
         // Add message to state
@@ -242,31 +244,39 @@ export const useMessageStore = create<MessageStore>()(
       },
 
       updateMessage: (messageId, updates) => {
+        // Find the message to update
+        const message = get().messages.find(m => m.id === messageId);
+        if (!message) return;
+
+        // Create a new message object with updates
+        const updatedMessage = { 
+          ...message,
+          ...updates,
+          // Merge metadata objects safely
+          metadata: updates.metadata 
+            ? { ...message.metadata, ...updates.metadata }
+            : message.metadata,
+          updated_at: new Date().toISOString()
+        };
+        
+        // Update state
         set(state => ({
-          messages: state.messages.map(message => 
-            message.id === messageId 
-              ? { ...message, ...updates, updated_at: new Date().toISOString() }
-              : message
+          messages: state.messages.map(m => 
+            m.id === messageId ? updatedMessage : m
           )
         }));
         
         // Update in database
         try {
-          const message = get().messages.find(m => m.id === messageId);
-          
-          if (message) {
-            const updatedMessage = { ...message, ...updates };
-            
-            supabase
-              .from('messages')
-              .update(mapMessageToDbMessage(updatedMessage))
-              .eq('id', messageId)
-              .then(({ error }) => {
-                if (error) {
-                  logger.error('Failed to update message', { error, messageId });
-                }
-              });
-          }
+          supabase
+            .from('messages')
+            .update(mapMessageToDbMessage(updatedMessage))
+            .eq('id', messageId)
+            .then(({ error }) => {
+              if (error) {
+                logger.error('Failed to update message', { error, messageId });
+              }
+            });
         } catch (error) {
           logger.error('Error updating message', { error, messageId });
         }

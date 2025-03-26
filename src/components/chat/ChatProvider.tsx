@@ -9,14 +9,14 @@ interface ChatProviderProps {
 }
 
 export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
-  const { fetchSessions } = useSessionStore(); // Use fetchSessions directly
+  const { fetchSessions } = useSessionStore();
   const { initialized, error } = useThemeInit();
 
   // Initialize sessions
   useEffect(() => {
     const loadSessions = async () => {
       try {
-        await fetchSessions(); // Use fetchSessions instead of refreshSessions
+        await fetchSessions(); // This will also set the user property in the session store
       } catch (error) {
         logger.error('Error initializing sessions', { error });
       }

@@ -2,7 +2,7 @@
 import { StateCreator } from 'zustand';
 import { ChatState } from '../types/chat-store-types';
 
-export const createUIActions: StateCreator<ChatState, [], [], any> = (set) => ({
+export const createUIActions: StateCreator<ChatState, [], [], any> = (set, get) => ({
   toggleMinimize: () => {
     set((state) => ({ isMinimized: !state.isMinimized }));
   },
@@ -26,8 +26,8 @@ export const createUIActions: StateCreator<ChatState, [], [], any> = (set) => ({
     set({ 
       ui: {
         sessionLoading: isLoading,
-        messageLoading: set.getState().ui.messageLoading,
-        providerLoading: set.getState().ui.providerLoading
+        messageLoading: get().ui.messageLoading,
+        providerLoading: get().ui.providerLoading
       }
     });
   },
@@ -35,9 +35,9 @@ export const createUIActions: StateCreator<ChatState, [], [], any> = (set) => ({
   setMessageLoading: (isLoading: boolean) => {
     set({ 
       ui: {
-        sessionLoading: set.getState().ui.sessionLoading,
+        sessionLoading: get().ui.sessionLoading,
         messageLoading: isLoading,
-        providerLoading: set.getState().ui.providerLoading
+        providerLoading: get().ui.providerLoading
       }
     });
   },
@@ -45,8 +45,8 @@ export const createUIActions: StateCreator<ChatState, [], [], any> = (set) => ({
   setProviderLoading: (isLoading: boolean) => {
     set({ 
       ui: {
-        sessionLoading: set.getState().ui.sessionLoading,
-        messageLoading: set.getState().ui.messageLoading,
+        sessionLoading: get().ui.sessionLoading,
+        messageLoading: get().ui.messageLoading,
         providerLoading: isLoading
       }
     });

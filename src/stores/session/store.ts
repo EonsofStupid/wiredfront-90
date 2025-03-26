@@ -3,16 +3,20 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { Session, CreateSessionParams, UpdateSessionParams } from '@/types/sessions';
 import { fetchAllSessions } from '@/services/sessions/sessionFetch';
-import { createSession } from '@/services/sessions/sessionCreate';
-import { updateSession as updateSessionService, updateSessionMetadata } from '@/services/sessions/sessionUpdate';
+import { createNewSession } from '@/services/sessions/sessionCreate';
+import { updateSession as updateSessionService } from '@/services/sessions/sessionUpdate';
 import { archiveSession as archiveSessionService } from '@/services/sessions/sessionArchive';
 import { logger } from '@/services/chat/LoggingService';
+import { clearAllSessions } from '@/services/sessions/sessionDelete';
+import { User } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 export type SessionStore = {
   sessions: Session[];
   currentSessionId: string | null;
   isLoading: boolean;
   error: Error | null;
+  user: User | null;
   
   // Actions
   fetchSessions: () => Promise<void>;
@@ -20,6 +24,8 @@ export type SessionStore = {
   switchSession: (sessionId: string) => Promise<void>;
   updateSession: (sessionId: string, params: UpdateSessionParams) => Promise<boolean>;
   archiveSession: (sessionId: string) => Promise<boolean>;
+  clearSessions: (preserveCurrentSession?: boolean) => Promise<void>;
+  cleanupInactiveSessions: () => Promise<void>;
 };
 
 export const useSessionStore = create<SessionStore>()(
@@ -29,10 +35,15 @@ export const useSessionStore = create<SessionStore>()(
       currentSessionId: null,
       isLoading: false,
       error: null,
+      user: null,
       
       fetchSessions: async () => {
         try {
           set({ isLoading: true, error: null });
+          
+          // Get current user and set it in the store
+          const { data: { user } } = await supabase.auth.getUser();
+          set({ user });
           
           const sessions = await fetchAllSessions();
           set({ sessions, isLoading: false });
@@ -56,7 +67,11 @@ export const useSessionStore = create<SessionStore>()(
         try {
           set({ isLoading: true, error: null });
           
-          const sessionId = await createSession(params);
+          const { success, sessionId, error } = await createNewSession(params);
+          
+          if (!success || !sessionId) {
+            throw error || new Error('Failed to create session');
+          }
           
           // Add the new session to the store (simplified version)
           // In a real app, you'd fetch the fresh session or use the returned data
@@ -168,6 +183,57 @@ export const useSessionStore = create<SessionStore>()(
           logger.error('Failed to archive session', { error, sessionId });
           set({ error: error as Error, isLoading: false });
           return false;
+        }
+      },
+      
+      // Add the missing methods
+      clearSessions: async (preserveCurrentSession = true) => {
+        try {
+          const currentId = get().currentSessionId;
+          
+          // Clear sessions from database
+          await clearAllSessions(preserveCurrentSession ? currentId : null);
+          
+          // Update store state
+          if (preserveCurrentSession && currentId) {
+            const currentSession = get().sessions.find(s => s.id === currentId);
+            set({ 
+              sessions: currentSession ? [currentSession] : [],
+              currentSessionId: currentId
+            });
+          } else {
+            set({ sessions: [], currentSessionId: null });
+          }
+          
+          logger.info('Sessions cleared', { preserveCurrentSession });
+          return;
+        } catch (error) {
+          logger.error('Failed to clear sessions', { error });
+          throw error;
+        }
+      },
+      
+      cleanupInactiveSessions: async () => {
+        try {
+          const currentId = get().currentSessionId;
+          
+          if (!currentId) {
+            throw new Error('No active session to preserve');
+          }
+          
+          await clearAllSessions(currentId);
+          
+          // Update store to remove inactive sessions
+          const currentSession = get().sessions.find(s => s.id === currentId);
+          if (currentSession) {
+            set({ sessions: [currentSession] });
+          }
+          
+          logger.info('Inactive sessions cleaned up');
+          return;
+        } catch (error) {
+          logger.error('Failed to cleanup inactive sessions', { error });
+          throw error;
         }
       }
     }),

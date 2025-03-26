@@ -36,7 +36,8 @@ export function mapDbMessageToMessage(dbMessage: any): Message {
  * Maps application Message to database format
  */
 export function mapMessageToDbMessage(message: Message): any {
-  return {
+  // Create a new object to avoid direct references
+  const dbMessage = {
     id: message.id,
     content: message.content,
     user_id: message.user_id,
@@ -46,8 +47,8 @@ export function mapMessageToDbMessage(message: Message): any {
     updated_at: message.updated_at,
     chat_session_id: message.chat_session_id,
     is_minimized: message.is_minimized,
-    position: message.position,
-    window_state: message.window_state,
+    position: { ...message.position },
+    window_state: { ...message.window_state },
     last_accessed: message.last_accessed,
     retry_count: message.retry_count,
     message_status: mapMessageStatusToDbStatus(message.message_status),
@@ -58,6 +59,8 @@ export function mapMessageToDbMessage(message: Message): any {
     last_retry: message.last_retry,
     rate_limit_window: message.rate_limit_window
   };
+
+  return dbMessage;
 }
 
 // Type mappers
@@ -110,35 +113,45 @@ function mapMessageRoleToDbRole(role: MessageRole): string {
 export function mapDbMetadataToMessageMetadata(metadata: Json | null): MessageMetadata {
   if (!metadata) return {};
   
-  // Type safety: ensure we return the correct type
+  // Type safety: ensure we return a new object
   const result: MessageMetadata = {};
   
   // Map known fields
   if (typeof metadata === 'object' && metadata !== null && !Array.isArray(metadata)) {
-    if ('model' in metadata && metadata.model) result.model = String(metadata.model);
+    // Safely copy model
+    if ('model' in metadata && metadata.model) {
+      result.model = String(metadata.model);
+    }
     
-    // Map token info if present
+    // Safely copy token info
     if ('tokens' in metadata && typeof metadata.tokens === 'object' && metadata.tokens !== null && !Array.isArray(metadata.tokens)) {
+      const tokenData = metadata.tokens as any;
       result.tokens = {
-        prompt: Number((metadata.tokens as any).prompt) || 0,
-        completion: Number((metadata.tokens as any).completion) || 0,
-        total: Number((metadata.tokens as any).total) || 0
+        prompt: Number(tokenData.prompt) || 0,
+        completion: Number(tokenData.completion) || 0,
+        total: Number(tokenData.total) || 0
       };
     }
     
-    // Map processing info if present
+    // Safely copy processing info
     if ('processing' in metadata && typeof metadata.processing === 'object' && metadata.processing !== null && !Array.isArray(metadata.processing)) {
+      const processingData = metadata.processing as any;
       result.processing = {
-        startTime: String((metadata.processing as any).startTime || ''),
-        endTime: String((metadata.processing as any).endTime || ''),
-        duration: Number((metadata.processing as any).duration) || 0
+        startTime: String(processingData.startTime || ''),
+        endTime: String(processingData.endTime || ''),
+        duration: Number(processingData.duration) || 0
       };
     }
     
-    // Copy other properties safely
+    // Copy other properties safely, excluding already processed ones
     Object.entries(metadata).forEach(([key, value]) => {
       if (key !== 'model' && key !== 'tokens' && key !== 'processing') {
-        result[key] = value as any;
+        // Deep copy to avoid reference issues
+        if (typeof value === 'object' && value !== null) {
+          result[key] = JSON.parse(JSON.stringify(value));
+        } else {
+          result[key] = value as any;
+        }
       }
     });
   }
@@ -150,13 +163,9 @@ export function mapDbMetadataToMessageMetadata(metadata: Json | null): MessageMe
  * Maps MessageMetadata to database Json format
  */
 export function mapMessageMetadataToDbMetadata(metadata: MessageMetadata): Json {
-  // Make a shallow copy to avoid direct mutation
+  // Type safety: create a fresh object
   const result: Record<string, any> = {};
   
-  // Copy all properties
-  Object.entries(metadata).forEach(([key, value]) => {
-    result[key] = value;
-  });
-  
-  return result as Json;
+  // Create deep copy to avoid reference issues
+  return JSON.parse(JSON.stringify(metadata)) as Json;
 }

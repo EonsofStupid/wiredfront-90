@@ -2,6 +2,7 @@
 import { Session } from '@/types/sessions';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
+import { mapDbSessionToSession } from './mappers';
 
 /**
  * Fetch all sessions for the current user
@@ -28,18 +29,8 @@ export async function fetchAllSessions(): Promise<Session[]> {
       throw error;
     }
     
-    // Format the sessions to match our Session type
-    const sessions: Session[] = data.map(session => ({
-      id: session.id,
-      title: session.title || 'Untitled Chat',
-      created_at: session.created_at,
-      last_accessed: session.last_accessed,
-      message_count: session.message_count || 0,
-      is_active: true,
-      archived: session.archived || false,
-      metadata: session.metadata || {},
-      user_id: session.user_id
-    }));
+    // Use the mapper to convert DB format to Session type
+    const sessions: Session[] = data.map(session => mapDbSessionToSession(session));
     
     logger.info('Successfully fetched sessions', { count: sessions.length });
     
@@ -69,18 +60,8 @@ export async function fetchSessionById(sessionId: string): Promise<Session | nul
       return null;
     }
     
-    // Format the session to match our Session type
-    const session: Session = {
-      id: data.id,
-      title: data.title || 'Untitled Chat',
-      created_at: data.created_at,
-      last_accessed: data.last_accessed,
-      message_count: data.message_count || 0,
-      is_active: true,
-      archived: data.archived || false,
-      metadata: data.metadata || {},
-      user_id: data.user_id
-    };
+    // Use the mapper to convert DB format to Session type
+    const session: Session = mapDbSessionToSession(data);
     
     logger.info('Successfully fetched session', { sessionId });
     
