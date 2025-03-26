@@ -1,10 +1,9 @@
-
 import React, { memo, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Check, Clock, AlertCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { MessageRole, MessageStatus } from "@/components/chat/schemas/messages";
+import { MessageRole, MessageStatus } from "@/components/chat/shared/schemas/messages";
 
 interface MessageProps {
   content: string;
@@ -15,7 +14,6 @@ interface MessageProps {
   onRetry?: (id: string) => void;
 }
 
-// Use memo to prevent unnecessary re-renders
 const Message = memo(function Message({ 
   content, 
   role, 
@@ -24,14 +22,12 @@ const Message = memo(function Message({
   timestamp,
   onRetry
 }: MessageProps) {
-  // Map role to appropriate CSS classes
   const messageClass = role === 'user' 
     ? 'chat-message-user' 
     : role === 'system' 
       ? 'chat-message-system' 
       : 'chat-message-assistant';
   
-  // Map status to icon and tooltip text
   const getStatusConfig = (status: MessageStatus) => {
     switch (status) {
       case 'pending':
@@ -50,12 +46,10 @@ const Message = memo(function Message({
 
   const { icon, tooltip } = getStatusConfig(status);
 
-  // Add proper ARIA attributes for accessibility
   const messageType = role === 'user' ? 'Sent' : 'Received';
   const statusText = status === 'pending' ? 'Sending...' : 
                    status === 'sent' || status === 'received' || status === 'cached' ? 'Sent' : 'Failed to send';
                    
-  // Handle retry click with memoization to prevent rerenders
   const handleRetryClick = useCallback(() => {
     if ((status === 'failed' || status === 'error') && id && onRetry) {
       onRetry(id);
