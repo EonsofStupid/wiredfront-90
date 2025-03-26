@@ -9,21 +9,21 @@ interface ChatProviderProps {
 }
 
 export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
-  const { refreshSessions } = useSessionStore();
+  const { fetchSessions } = useSessionStore(); // Use fetchSessions directly
   const { initialized, error } = useThemeInit();
 
   // Initialize sessions
   useEffect(() => {
     const loadSessions = async () => {
       try {
-        await refreshSessions();
+        await fetchSessions(); // Use fetchSessions instead of refreshSessions
       } catch (error) {
         logger.error('Error initializing sessions', { error });
       }
     };
 
     loadSessions();
-  }, [refreshSessions]);
+  }, [fetchSessions]);
 
   // Log any theme initialization errors
   useEffect(() => {

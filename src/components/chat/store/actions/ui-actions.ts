@@ -4,22 +4,22 @@ import { ChatState } from '../types/chat-store-types';
 
 export const createUIActions: StateCreator<ChatState, [], [], any> = (set) => ({
   toggleMinimize: () => {
-    set((state) => ({ isMinimized: !state.isMinimized }), false, 'chat/toggleMinimize');
+    set((state) => ({ isMinimized: !state.isMinimized }));
   },
 
   toggleSidebar: () => {
-    set((state) => ({ showSidebar: !state.showSidebar }), false, 'chat/toggleSidebar');
+    set((state) => ({ showSidebar: !state.showSidebar }));
   },
 
   toggleChat: () => {
-    set((state) => ({ isOpen: !state.isOpen }), false, 'chat/toggleChat');
+    set((state) => ({ isOpen: !state.isOpen }));
   },
 
   // Generic UI state toggler
   toggleUIState: (key: keyof ChatState, value?: any) => {
     set((state) => ({ 
       [key]: value !== undefined ? value : !state[key] 
-    }), false, `chat/toggleUIState/${String(key)}`);
+    }));
   },
 
   setSessionLoading: (isLoading: boolean) => {
@@ -28,7 +28,7 @@ export const createUIActions: StateCreator<ChatState, [], [], any> = (set) => ({
         ...state.ui,
         sessionLoading: isLoading
       }
-    }), false, 'chat/setSessionLoading');
+    }));
   },
 
   setMessageLoading: (isLoading: boolean) => {
@@ -37,7 +37,7 @@ export const createUIActions: StateCreator<ChatState, [], [], any> = (set) => ({
         ...state.ui,
         messageLoading: isLoading
       }
-    }), false, 'chat/setMessageLoading');
+    }));
   },
 
   setProviderLoading: (isLoading: boolean) => {
@@ -46,14 +46,14 @@ export const createUIActions: StateCreator<ChatState, [], [], any> = (set) => ({
         ...state.ui,
         providerLoading: isLoading
       }
-    }), false, 'chat/setProviderLoading');
+    }));
   },
 
   setScale: (scale: number) => {
-    set({ scale }, false, 'chat/setScale');
+    set({ scale });
   },
 
   setCurrentMode: (mode) => {
-    set({ currentMode: mode }, false, 'chat/setCurrentMode');
+    set({ currentMode: mode });
   }
 });

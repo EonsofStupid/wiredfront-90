@@ -27,7 +27,7 @@ export function SessionActions() {
       }
       
       await clearSessions(true); // Keep current session
-      await refreshSessions();
+      await refreshSessions(); // Now using the exposed refreshSessions method
       
       toast.success("Other sessions deleted successfully");
     } catch (error) {
@@ -40,7 +40,7 @@ export function SessionActions() {
     try {
       setIsDeleteAllDialogOpen(false);
       await clearSessions(false); // Don't preserve any sessions
-      await refreshSessions();
+      await refreshSessions(); // Now using the exposed refreshSessions method
       
       toast.success("All sessions deleted successfully");
     } catch (error) {

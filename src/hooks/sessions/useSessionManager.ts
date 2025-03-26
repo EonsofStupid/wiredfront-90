@@ -1,3 +1,4 @@
+
 import { useSessionStore } from '@/stores/session';
 import { useMessageStore } from '@/stores/message';
 import { useCallback, useEffect, useState } from 'react';
@@ -120,6 +121,8 @@ export function useSessionManager() {
     updateSession,
     archiveSession,
     clearSessions: handleClearSessions,
-    cleanupInactiveSessions: handleCleanupSessions
+    cleanupInactiveSessions: handleCleanupSessions,
+    // Add refreshSessions to fix the missing property error
+    refreshSessions: fetchSessions
   };
 }

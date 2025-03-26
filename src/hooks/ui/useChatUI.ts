@@ -1,88 +1,62 @@
 
-import { useChatStore } from '@/components/chat/store/chatStore';
-import { useThemeController } from '@/services/theme/ThemeController';
-import { useCallback, useEffect } from 'react';
+import { useChatStore } from '@/components/chat/store';
+import { ChatMode } from '@/integrations/supabase/types/enums';
+import { ChatPosition } from '@/components/chat/store/types/chat-store-types';
 
 /**
- * Hook for managing chat UI state and interactions
+ * Hook for accessing and controlling the chat UI state
  */
 export function useChatUI() {
   const {
     isOpen,
-    isMinimized,
     toggleChat,
+    isMinimized,
     toggleMinimize,
+    showSidebar,
+    toggleSidebar,
+    toggleUIState,
     position,
     scale,
     setScale,
-    showSidebar,
-    toggleSidebar,
+    docked,
+    currentMode,
+    setCurrentMode,
+    ui: { sessionLoading, messageLoading, providerLoading },
+    setSessionLoading,
+    setMessageLoading,
+    setProviderLoading
   } = useChatStore();
 
-  const { applyTheme, variables } = useThemeController();
-
-  // Apply theme when component mounts
-  useEffect(() => {
-    applyTheme();
-  }, [applyTheme]);
-
-  // Handle responsive scaling
-  const adjustScale = useCallback((scaleValue: number) => {
-    setScale(scaleValue);
-  }, [setScale]);
-
-  // Monitor window size for responsive adjustments
-  useEffect(() => {
-    const handleResize = () => {
-      // Simple responsive scaling logic
-      const width = window.innerWidth;
-      if (width < 640) { // Mobile
-        adjustScale(0.85);
-      } else if (width < 1024) { // Tablet
-        adjustScale(0.9);
-      } else { // Desktop
-        adjustScale(1);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    handleResize(); // Initial check
-    
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [adjustScale]);
-
-  // Keyboard shortcuts for chat interactions
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Escape to close/minimize chat
-      if (e.key === 'Escape' && isOpen && !isMinimized) {
-        toggleMinimize();
-      }
-      
-      // Cmd/Ctrl + / to toggle chat
-      if ((e.metaKey || e.ctrlKey) && e.key === '/') {
-        e.preventDefault();
-        toggleChat();
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen, isMinimized, toggleChat, toggleMinimize]);
-
   return {
+    // Basic UI state
     isOpen,
-    isMinimized,
     toggleChat,
+    isMinimized,
     toggleMinimize,
-    position,
-    scale,
     showSidebar,
     toggleSidebar,
-    themeVariables: variables
+    
+    // Position controls
+    position,
+    docked,
+    
+    // UI customization
+    scale,
+    setScale,
+    
+    // Mode controls
+    currentMode,
+    setMode: (mode: ChatMode) => setCurrentMode(mode),
+    
+    // Loading states
+    isSessionLoading: sessionLoading,
+    isMessageLoading: messageLoading,
+    isProviderLoading: providerLoading,
+    setSessionLoading,
+    setMessageLoading,
+    setProviderLoading,
+    
+    // Generic state control
+    toggleUIState
   };
 }

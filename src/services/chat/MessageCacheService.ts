@@ -1,104 +1,77 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { Message } from '@/types/chat';
 
-interface CacheMetrics {
-  cacheHits: number;
-  cacheMisses: number;
-  syncAttempts: number;
-  syncSuccesses: number;
-  errors: Array<{ timestamp: number; error: string }>;
-}
-
-interface MessageCacheState {
-  messages: Map<string, Message>;
-  metrics: CacheMetrics;
-  addMessage: (message: Message) => void;
-  getMessage: (id: string) => Message | undefined;
-  clearAllCache: () => void;
-  getMetrics: () => CacheMetrics;
-  recordError: (error: string) => void;
-}
-
-const useMessageCacheStore = create<MessageCacheState>()(
-  persist(
-    (set, get) => ({
-      messages: new Map(),
-      metrics: {
-        cacheHits: 0,
-        cacheMisses: 0,
-        syncAttempts: 0,
-        syncSuccesses: 0,
-        errors: [],
-      },
-
-      addMessage: (message) => {
-        set((state) => {
-          const messages = new Map(state.messages);
-          messages.set(message.id, message);
-          return { messages };
-        });
-      },
-
-      getMessage: (id) => {
-        const state = get();
-        const message = state.messages.get(id);
-        set((state) => ({
-          metrics: {
-            ...state.metrics,
-            [message ? 'cacheHits' : 'cacheMisses']: 
-              state.metrics[message ? 'cacheHits' : 'cacheMisses'] + 1
-          }
-        }));
-        return message;
-      },
-
-      clearAllCache: () => {
-        set({ 
-          messages: new Map(),
-          metrics: {
-            cacheHits: 0,
-            cacheMisses: 0,
-            syncAttempts: 0,
-            syncSuccesses: 0,
-            errors: [],
-          }
-        });
-      },
-
-      getMetrics: () => get().metrics,
-
-      recordError: (error: string) => {
-        set((state) => ({
-          metrics: {
-            ...state.metrics,
-            errors: [
-              { timestamp: Date.now(), error },
-              ...state.metrics.errors
-            ].slice(0, 50) // Keep last 50 errors
-          }
-        }));
-      },
-    }),
-    {
-      name: 'message-cache',
-      partialize: (state) => ({
-        messages: Array.from(state.messages.entries()),
-        metrics: state.metrics,
-      }),
-      merge: (persistedState: any, currentState) => ({
-        ...currentState,
-        messages: new Map(persistedState.messages || []),
-        metrics: persistedState.metrics || currentState.metrics,
-      }),
-    }
-  )
-);
-
+/**
+ * Service for caching and retrieving messages locally
+ * to reduce database load and improve performance
+ */
 export const messageCache = {
-  addMessage: useMessageCacheStore.getState().addMessage,
-  getMessage: useMessageCacheStore.getState().getMessage,
-  clearAllCache: useMessageCacheStore.getState().clearAllCache,
-  getMetrics: useMessageCacheStore.getState().getMetrics,
-  recordError: useMessageCacheStore.getState().recordError,
+  /**
+   * Store a message in the cache
+   */
+  cacheMessage: (sessionId: string, messageId: string, message: any) => {
+    try {
+      const sessionKey = `chat-messages-${sessionId}`;
+      const existingMessages = JSON.parse(localStorage.getItem(sessionKey) || '[]');
+      
+      // Add or update message
+      const existingIndex = existingMessages.findIndex((m: any) => m.id === messageId);
+      
+      if (existingIndex >= 0) {
+        existingMessages[existingIndex] = message;
+      } else {
+        existingMessages.push(message);
+      }
+      
+      // Store updated messages
+      localStorage.setItem(sessionKey, JSON.stringify(existingMessages));
+      return true;
+    } catch (error) {
+      console.error('Error caching message:', error);
+      return false;
+    }
+  },
+  
+  /**
+   * Retrieve all messages for a session
+   */
+  getSessionMessages: (sessionId: string) => {
+    try {
+      const sessionKey = `chat-messages-${sessionId}`;
+      return JSON.parse(localStorage.getItem(sessionKey) || '[]');
+    } catch (error) {
+      console.error('Error retrieving cached messages:', error);
+      return [];
+    }
+  },
+  
+  /**
+   * Clear the cache for a specific session
+   */
+  clearSessionCache: (sessionId: string) => {
+    try {
+      const sessionKey = `chat-messages-${sessionId}`;
+      localStorage.removeItem(sessionKey);
+      return true;
+    } catch (error) {
+      console.error('Error clearing session cache:', error);
+      return false;
+    }
+  },
+  
+  /**
+   * Clear all message caches
+   */
+  clearAllCache: () => {
+    try {
+      // Find all message cache keys
+      const keys = Object.keys(localStorage);
+      const messageCacheKeys = keys.filter(k => k.startsWith('chat-messages-'));
+      
+      // Remove each key
+      messageCacheKeys.forEach(key => localStorage.removeItem(key));
+      return true;
+    } catch (error) {
+      console.error('Error clearing all message caches:', error);
+      return false;
+    }
+  }
 };

@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
@@ -83,7 +82,6 @@ export const useSessionStore = create<SessionStore>()(
           return [];
         }
       },
-
       createSession: async (params = {}) => {
         try {
           set({ isLoading: true, error: null });

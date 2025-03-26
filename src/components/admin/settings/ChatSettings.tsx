@@ -8,7 +8,7 @@ import { ChatSettingsTabs } from "./chat/ChatSettingsTabs";
 
 export function ChatSettings() {
   const { clearMessages } = useMessageStore();
-  const { refreshSessions } = useSessionManager();
+  const { refreshSessions } = useSessionManager(); // Now correctly accessing refreshSessions
   const [activeTab, setActiveTab] = useState("general");
   
   const [settings, setSettings] = useState({

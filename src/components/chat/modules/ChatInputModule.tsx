@@ -1,9 +1,9 @@
+
 import React, { useState, useCallback } from 'react';
 import { useChatStore } from '../store/chatStore';
 import { useMessageStore } from '../messaging/MessageManager';
 import { v4 as uuidv4 } from 'uuid';
-import { Message, MessageRole, MessageStatus } from '@/types/chat';
-import { Json } from '@/integrations/supabase/types';
+import { Message, MessageRole, MessageStatus, MessageMetadata } from '@/types/chat';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -45,13 +45,13 @@ export const ChatInputModule: React.FC<ChatInputModuleProps> = ({ isEditorPage }
       content: userInput,
       user_id: null,
       type: 'text',
-      metadata: {} as Json,
+      metadata: {} as MessageMetadata, // Fixed: using MessageMetadata instead of Json
       created_at: now.toISOString(),
       updated_at: now.toISOString(),
       chat_session_id: chatId || 'default',
       is_minimized: false,
-      position: {} as Json,
-      window_state: {} as Json,
+      position: {},
+      window_state: {},
       last_accessed: now.toISOString(),
       retry_count: 0,
       message_status: 'sent' as MessageStatus
@@ -80,13 +80,13 @@ export const ChatInputModule: React.FC<ChatInputModuleProps> = ({ isEditorPage }
           content: `Error: ${error.message || 'Failed to send message'}`,
           user_id: null,
           type: 'text',
-          metadata: {} as Json,
+          metadata: {} as MessageMetadata, // Fixed: using MessageMetadata instead of Json
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           chat_session_id: chatId || 'default',
           is_minimized: false,
-          position: {} as Json,
-          window_state: {} as Json,
+          position: {},
+          window_state: {},
           last_accessed: new Date().toISOString(),
           retry_count: 0,
           message_status: 'error' as MessageStatus
@@ -102,13 +102,13 @@ export const ChatInputModule: React.FC<ChatInputModuleProps> = ({ isEditorPage }
         content: data?.response || 'No response received',
         user_id: null,
         type: 'text',
-        metadata: {} as Json,
+        metadata: {} as MessageMetadata, // Fixed: using MessageMetadata instead of Json
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         chat_session_id: chatId || 'default',
         is_minimized: false,
-        position: {} as Json,
-        window_state: {} as Json,
+        position: {},
+        window_state: {},
         last_accessed: new Date().toISOString(),
         retry_count: 0,
         message_status: 'received' as MessageStatus
@@ -124,13 +124,13 @@ export const ChatInputModule: React.FC<ChatInputModuleProps> = ({ isEditorPage }
         content: `Error: ${error?.message || 'An unexpected error occurred'}`,
         user_id: null,
         type: 'text',
-        metadata: {} as Json,
+        metadata: {} as MessageMetadata, // Fixed: using MessageMetadata instead of Json
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         chat_session_id: chatId || 'default',
         is_minimized: false,
-        position: {} as Json,
-        window_state: {} as Json,
+        position: {},
+        window_state: {},
         last_accessed: new Date().toISOString(),
         retry_count: 0,
         message_status: 'error' as MessageStatus

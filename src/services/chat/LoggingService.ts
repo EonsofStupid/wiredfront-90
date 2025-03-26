@@ -1,113 +1,189 @@
 
-import { supabase } from "@/integrations/supabase/client";
+/**
+ * Centralized logging service
+ */
 
-export interface LogOptions {
-  source?: string;
-  metadata?: Record<string, any>;
-  userId?: string;
-  [key: string]: any; // Allow any additional properties
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+interface LogPayload {
+  message: string;
+  level: LogLevel;
+  timestamp: string;
+  data?: any;
 }
 
+// Configuration for logging behavior
+const config = {
+  // Minimum log level to display in console
+  consoleLevel: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
+  
+  // Whether to send logs to server
+  enableServerLogging: true,
+  
+  // Log retention in localStorage
+  localRetentionCount: 100,
+  
+  // Whether to add source information (file, line)
+  includeSource: process.env.NODE_ENV === 'development',
+};
+
+// Logger implementation
 class Logger {
-  private defaultSource: string = 'application';
-
-  /**
-   * Logs an informational message
-   */
-  async info(message: string, options?: LogOptions) {
-    return this.log('info', message, options);
-  }
-
-  /**
-   * Logs a warning message
-   */
-  async warn(message: string, options?: LogOptions) {
-    return this.log('warn', message, options);
-  }
-
-  /**
-   * Logs an error message
-   */
-  async error(message: string, options?: LogOptions) {
-    return this.log('error', message, options);
-  }
-
-  /**
-   * Logs a debug message (only recorded in development environment or when debug mode is enabled)
-   */
-  async debug(message: string, options?: LogOptions) {
-    // Check if we're in development mode or if debug is enabled
-    const isDev = import.meta.env.DEV;
-    if (isDev) {
-      console.debug(`[DEBUG] ${message}`, options?.metadata || {});
-    }
-    
-    return this.log('debug', message, options);
-  }
-
-  /**
-   * Logs a message to console and Supabase system_logs table
-   */
-  private async log(level: 'info' | 'warn' | 'error' | 'debug', message: string, options?: LogOptions) {
-    const source = options?.source || this.defaultSource;
-    const metadata = options?.metadata || {};
-    const userId = options?.userId || await this.getCurrentUserId();
-    
-    // Always log to console
-    this.logToConsole(level, message, source, metadata);
-    
-    // Try to log to database
+  private logQueue: LogPayload[] = [];
+  private isSending = false;
+  private localLogs: LogPayload[] = [];
+  
+  constructor() {
+    // Load saved logs from localStorage if available
     try {
-      const { error } = await supabase.from('system_logs').insert({
-        level,
-        source,
-        message,
-        metadata,
-        user_id: userId
-      } as any); // Type assertion since table might not be in types
-      
-      if (error) {
-        console.error('Failed to write log to database:', error);
+      const savedLogs = localStorage.getItem('app_logs');
+      if (savedLogs) {
+        this.localLogs = JSON.parse(savedLogs);
       }
-    } catch (err) {
-      console.error('Error logging to database:', err);
+    } catch (e) {
+      console.error('Failed to load saved logs', e);
+      this.localLogs = [];
     }
   }
-
+  
   /**
-   * Logs a message to the console with appropriate formatting
+   * Log at debug level
    */
-  private logToConsole(level: 'info' | 'warn' | 'error' | 'debug', message: string, source: string, metadata: any) {
+  debug(message: string, data?: any) {
+    this.log('debug', message, data);
+  }
+  
+  /**
+   * Log at info level
+   */
+  info(message: string, data?: any) {
+    this.log('info', message, data);
+  }
+  
+  /**
+   * Log at warn level
+   */
+  warn(message: string, data?: any) {
+    this.log('warn', message, data);
+  }
+  
+  /**
+   * Log at error level
+   */
+  error(message: string, data?: any) {
+    this.log('error', message, data);
+  }
+  
+  /**
+   * Central logging method
+   */
+  private log(level: LogLevel, message: string, data?: any) {
     const timestamp = new Date().toISOString();
-    const logPrefix = `[${timestamp}] [${level.toUpperCase()}] [${source}]`;
     
-    switch (level) {
-      case 'info':
-        console.info(`${logPrefix} ${message}`, metadata);
-        break;
-      case 'warn':
-        console.warn(`${logPrefix} ${message}`, metadata);
-        break;
-      case 'error':
-        console.error(`${logPrefix} ${message}`, metadata);
-        break;
-      case 'debug':
-        console.debug(`${logPrefix} ${message}`, metadata);
-        break;
+    // Create log payload
+    const payload: LogPayload = {
+      message,
+      level,
+      timestamp,
+      data
+    };
+    
+    // Console output
+    this.consoleOutput(level, message, data);
+    
+    // Store locally
+    this.storeLocally(payload);
+    
+    // Queue for server if enabled
+    if (config.enableServerLogging) {
+      this.queueForServer(payload);
     }
   }
-
+  
   /**
-   * Gets the current user ID if available
+   * Output to console based on configured level
    */
-  private async getCurrentUserId(): Promise<string | null> {
-    try {
-      const { data } = await supabase.auth.getSession();
-      return data?.session?.user?.id || null;
-    } catch {
-      return null;
+  private consoleOutput(level: LogLevel, message: string, data?: any) {
+    const levelPriority = { debug: 0, info: 1, warn: 2, error: 3 };
+    const configLevelPriority = levelPriority[config.consoleLevel];
+    
+    if (levelPriority[level] >= configLevelPriority) {
+      const consoleMethod = console[level] || console.log;
+      
+      if (data !== undefined) {
+        consoleMethod(`[${level.toUpperCase()}] ${message}`, data);
+      } else {
+        consoleMethod(`[${level.toUpperCase()}] ${message}`);
+      }
     }
+  }
+  
+  /**
+   * Store logs locally for persistence between sessions
+   */
+  private storeLocally(payload: LogPayload) {
+    this.localLogs.unshift(payload);
+    
+    // Trim to configured limit
+    if (this.localLogs.length > config.localRetentionCount) {
+      this.localLogs = this.localLogs.slice(0, config.localRetentionCount);
+    }
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem('app_logs', JSON.stringify(this.localLogs));
+    } catch (e) {
+      console.error('Failed to save logs to localStorage', e);
+    }
+  }
+  
+  /**
+   * Queue log for sending to server
+   */
+  private queueForServer(payload: LogPayload) {
+    this.logQueue.push(payload);
+    this.processSendQueue();
+  }
+  
+  /**
+   * Process the send queue
+   */
+  private async processSendQueue() {
+    if (this.isSending || this.logQueue.length === 0) return;
+    
+    this.isSending = true;
+    
+    try {
+      // TODO: Implement actual server logging with Supabase
+      // For now, just clear the queue
+      this.logQueue = [];
+    } catch (e) {
+      console.error('Failed to send logs to server', e);
+    } finally {
+      this.isSending = false;
+      
+      // Process any new logs that came in while sending
+      if (this.logQueue.length > 0) {
+        setTimeout(() => this.processSendQueue(), 1000);
+      }
+    }
+  }
+  
+  /**
+   * Get locally stored logs
+   */
+  getLocalLogs() {
+    return [...this.localLogs];
+  }
+  
+  /**
+   * Clear locally stored logs
+   */
+  clearLocalLogs() {
+    this.localLogs = [];
+    localStorage.removeItem('app_logs');
   }
 }
 
+// Create singleton instance
 export const logger = new Logger();
