@@ -1,11 +1,12 @@
 
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { Message, MessageMetadata } from '@/types/messages';
+import { Message, MessageMetadata } from '@/schemas/messages';
+import { logger } from '@/services/chat/LoggingService';
 
 interface MessageState {
   messages: Message[];
-  addMessage: (message: Message) => void;
+  addMessage: (message: Partial<Message> & { content: string; role: Message['role'] }) => void;
   updateMessage: (id: string, updates: Partial<Message>) => void;
   getMessageById: (id: string) => Message | undefined;
   clearMessages: () => void;
@@ -16,20 +17,64 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   messages: [],
   
   addMessage: (message) => {
+    const now = new Date().toISOString();
+    const newMessage: Message = {
+      id: message.id || uuidv4(),
+      content: message.content,
+      role: message.role,
+      user_id: message.user_id || null,
+      type: message.type || 'text',
+      metadata: message.metadata || {},
+      created_at: message.created_at || now,
+      updated_at: message.updated_at || now,
+      chat_session_id: message.chat_session_id || '',
+      is_minimized: message.is_minimized || false,
+      position: message.position || {},
+      window_state: message.window_state || {},
+      last_accessed: message.last_accessed || now,
+      retry_count: message.retry_count || 0,
+      message_status: message.message_status || 'sent',
+      source_type: message.source_type,
+      provider: message.provider,
+      processing_status: message.processing_status,
+      last_retry: message.last_retry,
+      rate_limit_window: message.rate_limit_window
+    };
+    
     set((state) => ({
-      messages: [...state.messages, {
-        id: message.id || uuidv4(),
-        ...message,
-      }],
+      messages: [...state.messages, newMessage],
     }));
+    
+    logger.debug('Added message', { id: newMessage.id, role: newMessage.role });
   },
   
   updateMessage: (id, updates) => {
-    set((state) => ({
-      messages: state.messages.map((message) => 
-        message.id === id ? { ...message, ...updates } : message
-      ),
-    }));
+    set((state) => {
+      const message = state.messages.find(message => message.id === id);
+      if (!message) {
+        logger.warn('Tried to update non-existent message', { id });
+        return state;
+      }
+      
+      // Update metadata as a merge, not a replacement
+      const updatedMetadata = updates.metadata
+        ? { ...message.metadata, ...updates.metadata }
+        : message.metadata;
+        
+      // Create updated message with all properties
+      const updatedMessage = { 
+        ...message,
+        ...updates,
+        metadata: updatedMetadata,
+        updated_at: new Date().toISOString()
+      };
+      
+      return {
+        messages: state.messages.map(msg => 
+          msg.id === id ? updatedMessage : msg
+        )
+      };
+    });
   },
   
   getMessageById: (id) => {
@@ -38,7 +83,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   
   clearMessages: () => {
     set({ messages: [] });
-    console.log("Message store cleared");
+    logger.info("Message store cleared");
   },
   
   fetchSessionMessages: async (sessionId: string) => {
@@ -48,16 +93,16 @@ export const useMessageStore = create<MessageState>((set, get) => ({
       
       // In the future, we can fetch messages from Supabase here
       // For now, just reset to empty array
-      console.log(`Fetched messages for session ${sessionId}`);
+      logger.info(`Fetched messages for session ${sessionId}`);
     } catch (error) {
-      console.error('Failed to fetch session messages:', error);
+      logger.error('Failed to fetch session messages:', error);
     }
   }
 }));
 
 // Static methods for easier access outside of React components
 export const MessageManager = {
-  addMessage: (message: Message) => {
+  addMessage: (message: Partial<Message> & { content: string; role: Message['role'] }) => {
     useMessageStore.getState().addMessage(message);
   },
   

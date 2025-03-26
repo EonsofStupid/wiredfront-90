@@ -1,12 +1,19 @@
-import { Message, MessageMetadata, MessageRole, MessageStatus, MessageType } from '@/types/messages';
+
 import { Json } from '@/integrations/supabase/types';
+import { 
+  Message, 
+  MessageMetadata, 
+  validateMessage,
+  messageMetadataSchema
+} from '@/schemas/messages';
+import { validateWithZod } from '@/utils/validation';
 
 /**
  * Maps a database message to the application Message type
  */
 export function mapDbMessageToMessage(dbMessage: any): Message {
-  // Create a new object to avoid reference issues
-  const mappedMessage: Message = {
+  // Create a structure that matches our schema
+  const mappedMessage = {
     id: dbMessage.id || '',
     content: dbMessage.content || '',
     user_id: dbMessage.user_id,
@@ -29,7 +36,9 @@ export function mapDbMessageToMessage(dbMessage: any): Message {
     rate_limit_window: dbMessage.rate_limit_window
   };
 
-  return mappedMessage;
+  // Validate and return - if invalid, log error but return best attempt
+  const validatedMessage = validateMessage(mappedMessage);
+  return validatedMessage || mappedMessage as Message;
 }
 
 /**
@@ -109,89 +118,39 @@ function mapMessageRoleToDbRole(role: MessageRole): string {
 
 /**
  * Maps database metadata (Json) to MessageMetadata
- * Breaking the recursive type by using a safe non-recursive mapping
+ * Using Zod to validate and handle the structure safely
  */
 export function mapDbMetadataToMessageMetadata(metadata: Json | null): MessageMetadata {
   if (!metadata) return {};
   
-  // Type safety: ensure we return a new object
-  const result: MessageMetadata = {};
-  
-  // Map known fields
-  if (typeof metadata === 'object' && metadata !== null && !Array.isArray(metadata)) {
-    // Safely copy model
-    if ('model' in metadata && metadata.model) {
-      result.model = String(metadata.model);
+  // Validate with Zod, return empty object on failure
+  return validateWithZod(
+    messageMetadataSchema, 
+    metadata, 
+    { 
+      logErrors: true, 
+      showToast: false, 
+      context: 'MessageMetadata' 
     }
-    
-    // Safely copy token info
-    if ('tokens' in metadata && typeof metadata.tokens === 'object' && metadata.tokens !== null && !Array.isArray(metadata.tokens)) {
-      const tokenData = metadata.tokens as any;
-      result.tokens = {
-        prompt: Number(tokenData.prompt) || 0,
-        completion: Number(tokenData.completion) || 0,
-        total: Number(tokenData.total) || 0
-      };
-    }
-    
-    // Safely copy processing info
-    if ('processing' in metadata && typeof metadata.processing === 'object' && metadata.processing !== null && !Array.isArray(metadata.processing)) {
-      const processingData = metadata.processing as any;
-      result.processing = {
-        startTime: String(processingData.startTime || ''),
-        endTime: String(processingData.endTime || ''),
-        duration: Number(processingData.duration) || 0
-      };
-    }
-    
-    // Copy other properties safely, excluding already processed ones
-    Object.entries(metadata).forEach(([key, value]) => {
-      if (key !== 'model' && key !== 'tokens' && key !== 'processing') {
-        // For primitives, copy directly
-        if (typeof value !== 'object' || value === null) {
-          result[key] = value as any;
-        } 
-        // For arrays, create a shallow copy
-        else if (Array.isArray(value)) {
-          result[key] = [...value] as any;
-        }
-        // For objects, create a shallow copy to avoid deep nesting
-        else {
-          // Use a limited copy to avoid recursive objects
-          const limitedCopy: Record<string, any> = {};
-          Object.entries(value).forEach(([subKey, subValue]) => {
-            if (typeof subValue !== 'object' || subValue === null) {
-              limitedCopy[subKey] = subValue;
-            } else {
-              // For nested objects, just store a placeholder
-              limitedCopy[subKey] = Array.isArray(subValue) ? [] : {};
-            }
-          });
-          result[key] = limitedCopy;
-        }
-      }
-    });
-  }
-  
-  return result;
+  ) || {};
 }
 
 /**
  * Maps MessageMetadata to database Json format
- * Breaking the recursive type by handling each property explicitly
+ * Creating a safe, non-recursive structure
  */
 export function mapMessageMetadataToDbMetadata(metadata: MessageMetadata): Json {
   if (!metadata) return {};
   
-  // Create a safe copy to avoid mutation issues
+  // Create a safe representation for storage
   const safeMetadata: Record<string, any> = {};
   
-  // Handle known fields explicitly
+  // Add known top-level properties
   if (metadata.model) {
     safeMetadata.model = metadata.model;
   }
   
-  // Handle tokens explicitly to avoid deep nesting
+  // Handle tokens object
   if (metadata.tokens) {
     safeMetadata.tokens = {
       prompt: metadata.tokens.prompt || 0,
@@ -200,7 +159,7 @@ export function mapMessageMetadataToDbMetadata(metadata: MessageMetadata): Json 
     };
   }
   
-  // Handle processing explicitly to avoid deep nesting
+  // Handle processing object
   if (metadata.processing) {
     safeMetadata.processing = {
       startTime: metadata.processing.startTime || '',
@@ -209,28 +168,26 @@ export function mapMessageMetadataToDbMetadata(metadata: MessageMetadata): Json 
     };
   }
   
-  // Copy other primitive properties, but limit object nesting
+  // Handle other properties, limiting nesting depth
   Object.entries(metadata).forEach(([key, value]) => {
     if (key !== 'model' && key !== 'tokens' && key !== 'processing' && value !== undefined) {
       if (typeof value !== 'object' || value === null) {
         safeMetadata[key] = value;
-      } 
-      // For arrays, create a shallow copy
-      else if (Array.isArray(value)) {
+      } else if (Array.isArray(value)) {
+        // For arrays, create a shallow copy
         safeMetadata[key] = [...value];
-      }
-      // For objects, create a limited copy to avoid deep recursion
-      else {
-        const limitedCopy: Record<string, any> = {};
+      } else {
+        // For objects, create a flattened representation to avoid deep nesting
+        const flattenedObject: Record<string, any> = {};
         Object.entries(value).forEach(([subKey, subValue]) => {
           if (typeof subValue !== 'object' || subValue === null) {
-            limitedCopy[subKey] = subValue;
+            flattenedObject[subKey] = subValue;
           } else {
-            // For nested objects, just store a placeholder
-            limitedCopy[subKey] = '{}';
+            // For nested objects, just store as JSON string
+            flattenedObject[subKey] = JSON.stringify(subValue);
           }
         });
-        safeMetadata[key] = limitedCopy;
+        safeMetadata[key] = flattenedObject;
       }
     }
   });

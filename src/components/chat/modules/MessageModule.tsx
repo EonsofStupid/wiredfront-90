@@ -7,11 +7,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useAutoScroll } from '../hooks/useAutoScroll';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useErrorBoundary } from '../hooks/useErrorBoundary';
-import { Spinner } from '../ui/Spinner';
 import { logger } from '@/services/chat/LoggingService';
 import { MessageSkeleton } from '../ui/MessageSkeleton';
 import { useChatStore } from '../store/chatStore';
-import { Message } from '@/types/messages';
+import { Message } from '@/schemas/messages';
 
 interface MessageModuleProps {
   scrollRef: React.RefObject<HTMLDivElement>;
@@ -99,7 +98,7 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <Message
+                    <MessageComponent
                       content={msg.content}
                       role={msg.role}
                       status={msg.message_status}

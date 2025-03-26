@@ -4,12 +4,15 @@
  * to reduce database load and improve performance
  */
 import { CacheMetricsService } from './CacheMetricsService';
+import { Message } from '@/schemas/messages';
+import { validateMessage } from '@/schemas/messages';
+import { logger } from './LoggingService';
 
 export const messageCache = {
   /**
    * Store a message in the cache
    */
-  cacheMessage: (sessionId: string, messageId: string, message: any) => {
+  cacheMessage: (sessionId: string, messageId: string, message: Message) => {
     try {
       const sessionKey = `chat-messages-${sessionId}`;
       const existingMessages = JSON.parse(localStorage.getItem(sessionKey) || '[]');
@@ -28,7 +31,7 @@ export const messageCache = {
       CacheMetricsService.updateMetric('syncSuccesses');
       return true;
     } catch (error) {
-      console.error('Error caching message:', error);
+      logger.error('Error caching message:', error);
       CacheMetricsService.updateMetric('errors', error);
       return false;
     }
@@ -37,18 +40,35 @@ export const messageCache = {
   /**
    * Retrieve all messages for a session
    */
-  getSessionMessages: (sessionId: string) => {
+  getSessionMessages: (sessionId: string): Message[] => {
     try {
       const sessionKey = `chat-messages-${sessionId}`;
-      const messages = JSON.parse(localStorage.getItem(sessionKey) || '[]');
-      if (messages.length > 0) {
+      const rawMessages = JSON.parse(localStorage.getItem(sessionKey) || '[]');
+      
+      // Validate messages using our schema
+      const validMessages: Message[] = [];
+      
+      for (const rawMessage of rawMessages) {
+        const validatedMessage = validateMessage(rawMessage);
+        if (validatedMessage) {
+          validMessages.push(validatedMessage);
+        } else {
+          logger.warn('Found invalid cached message, skipping', { 
+            sessionId, 
+            messageId: rawMessage?.id || 'unknown' 
+          });
+        }
+      }
+      
+      if (validMessages.length > 0) {
         CacheMetricsService.updateMetric('cacheHits');
       } else {
         CacheMetricsService.updateMetric('cacheMisses');
       }
-      return messages;
+      
+      return validMessages;
     } catch (error) {
-      console.error('Error retrieving cached messages:', error);
+      logger.error('Error retrieving cached messages:', error);
       CacheMetricsService.updateMetric('errors', error);
       CacheMetricsService.updateMetric('cacheMisses');
       return [];
@@ -64,7 +84,7 @@ export const messageCache = {
       localStorage.removeItem(sessionKey);
       return true;
     } catch (error) {
-      console.error('Error clearing session cache:', error);
+      logger.error('Error clearing session cache:', error);
       CacheMetricsService.updateMetric('errors', error);
       return false;
     }
@@ -87,7 +107,7 @@ export const messageCache = {
       
       return true;
     } catch (error) {
-      console.error('Error clearing all message caches:', error);
+      logger.error('Error clearing all message caches:', error);
       CacheMetricsService.updateMetric('errors', error);
       return false;
     }
@@ -108,7 +128,7 @@ export const messageCache = {
       CacheMetricsService.resetMetrics();
       return true;
     } catch (error) {
-      console.error('Error resetting cache metrics:', error);
+      logger.error('Error resetting cache metrics:', error);
       return false;
     }
   }

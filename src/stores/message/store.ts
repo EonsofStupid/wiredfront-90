@@ -1,7 +1,8 @@
+
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import { Message, MessageMetadata, MessageRole, MessageStatus } from '@/types/messages';
+import { Message, MessageMetadata, MessageRole, MessageStatus } from '@/schemas/messages';
 import { supabase } from '@/integrations/supabase/client';
 import { mapMessageToDbMessage, mapDbMessageToMessage } from '@/services/messages/mappers';
 import { logger } from '@/services/chat/LoggingService';
@@ -25,7 +26,7 @@ interface MessageActions {
   updateMessage: (messageId: string, updates: MessageUpdates) => void;
   deleteMessage: (messageId: string) => Promise<void>;
   clearMessages: () => void;
-  addMessage: (message: Message) => void;
+  addMessage: (message: Partial<Message> & { id: string; content: string; role: MessageRole }) => void;
 }
 
 export type MessageStore = MessageState & MessageActions;
@@ -232,37 +233,45 @@ export const useMessageStore = create<MessageStore>()(
       },
 
       updateMessage: (messageId, updates) => {
-        const message = get().messages.find(m => m.id === messageId);
-        if (!message) return;
+        set(state => {
+          const message = state.messages.find(m => m.id === messageId);
+          if (!message) {
+            logger.warn('Tried to update non-existent message', { messageId });
+            return state;
+          }
 
-        const updatedMessage = { 
-          ...message,
-          ...updates,
-          metadata: updates.metadata 
+          // Update metadata as a merge, not a replacement
+          const updatedMetadata = updates.metadata
             ? { ...message.metadata, ...updates.metadata }
-            : message.metadata,
-          updated_at: new Date().toISOString()
-        };
-        
-        set(state => ({
-          messages: state.messages.map(m => 
-            m.id === messageId ? updatedMessage : m
-          )
-        }));
-        
-        try {
-          supabase
-            .from('messages')
-            .update(mapMessageToDbMessage(updatedMessage))
-            .eq('id', messageId)
-            .then(({ error }) => {
-              if (error) {
-                logger.error('Failed to update message', { error, messageId });
-              }
-            });
-        } catch (error) {
-          logger.error('Error updating message', { error, messageId });
-        }
+            : message.metadata;
+            
+          const updatedMessage = { 
+            ...message,
+            ...updates,
+            metadata: updatedMetadata,
+            updated_at: new Date().toISOString()
+          };
+          
+          try {
+            supabase
+              .from('messages')
+              .update(mapMessageToDbMessage(updatedMessage))
+              .eq('id', messageId)
+              .then(({ error }) => {
+                if (error) {
+                  logger.error('Failed to update message in DB', { error, messageId });
+                }
+              });
+          } catch (error) {
+            logger.error('Error updating message in DB', { error, messageId });
+          }
+          
+          return {
+            messages: state.messages.map(m => 
+              m.id === messageId ? updatedMessage : m
+            )
+          };
+        });
       },
 
       deleteMessage: async (messageId) => {
@@ -290,8 +299,33 @@ export const useMessageStore = create<MessageStore>()(
       },
 
       addMessage: (message) => {
+        const now = new Date().toISOString();
+        
+        const fullMessage: Message = {
+          id: message.id,
+          content: message.content,
+          role: message.role,
+          type: message.type || 'text',
+          metadata: message.metadata || {},
+          created_at: message.created_at || now,
+          updated_at: message.updated_at || now,
+          chat_session_id: message.chat_session_id || '',
+          user_id: message.user_id || null,
+          is_minimized: message.is_minimized || false,
+          position: message.position || {},
+          window_state: message.window_state || {},
+          last_accessed: message.last_accessed || now,
+          retry_count: message.retry_count || 0,
+          message_status: message.message_status || 'sent',
+          source_type: message.source_type,
+          provider: message.provider,
+          processing_status: message.processing_status,
+          last_retry: message.last_retry,
+          rate_limit_window: message.rate_limit_window
+        };
+        
         set(state => ({
-          messages: [...state.messages, message]
+          messages: [...state.messages, fullMessage]
         }));
       }
     }),
