@@ -124,20 +124,23 @@ export const useMessageStore = create<MessageStore>()(
         }));
         
         try {
-          // Convert to DB format
           const dbMessage = mapMessageToDbMessage(message);
           
-          // Prepare data for Supabase insert with proper typing
           const insertData: SupabaseMessageInsert = {
             id: dbMessage.id,
             content: dbMessage.content,
-            user_id: dbMessage.user_id || 'anonymous', // Ensure user_id is never null
-            session_id: sessionId, // Use session_id for Supabase (required)
-            role: dbMessage.role as "user" | "system" | "assistant" | "tool", // Cast to allowed values
+            user_id: dbMessage.user_id || 'anonymous',
+            session_id: sessionId,
+            role: dbMessage.role as "user" | "system" | "assistant" | "tool",
             status: dbMessage.status,
             type: dbMessage.type,
             metadata: dbMessage.metadata,
-            position: 0 // Use numeric position
+            position: 0,
+            window_state: {},
+            last_accessed: now.toISOString(),
+            retry_count: 0,
+            message_status: 'sent',
+            tokens: 0
           };
           
           supabase
@@ -182,20 +185,23 @@ export const useMessageStore = create<MessageStore>()(
         }));
         
         try {
-          // Convert to DB format
           const dbMessage = mapMessageToDbMessage(message);
           
-          // Prepare data for Supabase insert with proper typing
           const insertData: SupabaseMessageInsert = {
             id: dbMessage.id,
             content: dbMessage.content,
-            user_id: dbMessage.user_id || 'anonymous', // Ensure user_id is never null
-            session_id: sessionId, // Use session_id for Supabase (required)
-            role: "assistant", // Use exact string literal
+            user_id: dbMessage.user_id || 'anonymous',
+            session_id: sessionId,
+            role: "assistant",
             status: dbMessage.status,
             type: dbMessage.type,
             metadata: dbMessage.metadata,
-            position: 0 // Use numeric position
+            position: 0,
+            window_state: {},
+            last_accessed: now.toISOString(),
+            retry_count: 0,
+            message_status: 'received',
+            tokens: 0
           };
           
           supabase
@@ -240,20 +246,23 @@ export const useMessageStore = create<MessageStore>()(
         }));
         
         try {
-          // Convert to DB format
           const dbMessage = mapMessageToDbMessage(message);
           
-          // Prepare data for Supabase insert with proper typing
           const insertData: SupabaseMessageInsert = {
             id: dbMessage.id,
             content: dbMessage.content,
-            user_id: dbMessage.user_id || 'anonymous', // Ensure user_id is never null
-            session_id: sessionId, // Use session_id for Supabase (required)
-            role: "system", // Use exact string literal
+            user_id: dbMessage.user_id || 'anonymous',
+            session_id: sessionId,
+            role: "system",
             status: dbMessage.status,
             type: dbMessage.type,
             metadata: dbMessage.metadata,
-            position: 0 // Use numeric position
+            position: 0,
+            window_state: {},
+            last_accessed: now.toISOString(),
+            retry_count: 0,
+            message_status: 'sent',
+            tokens: 0
           };
           
           supabase
@@ -298,20 +307,23 @@ export const useMessageStore = create<MessageStore>()(
         }));
         
         try {
-          // Convert to DB format
           const dbMessage = mapMessageToDbMessage(message);
           
-          // Prepare data for Supabase insert with proper typing
           const insertData: SupabaseMessageInsert = {
             id: dbMessage.id,
             content: dbMessage.content,
-            user_id: dbMessage.user_id || 'anonymous', // Ensure user_id is never null
-            session_id: sessionId, // Use session_id for Supabase (required)
-            role: "system", // Use exact string literal
+            user_id: dbMessage.user_id || 'anonymous',
+            session_id: sessionId,
+            role: "system",
             status: dbMessage.status,
             type: dbMessage.type,
             metadata: dbMessage.metadata,
-            position: 0 // Use numeric position
+            position: 0,
+            window_state: {},
+            last_accessed: now.toISOString(),
+            retry_count: 0,
+            message_status: 'error',
+            tokens: 0
           };
           
           supabase
@@ -337,7 +349,6 @@ export const useMessageStore = create<MessageStore>()(
             return state;
           }
 
-          // Update metadata as a merge, not a replacement
           const updatedMetadata = updates.metadata
             ? { ...message.metadata, ...updates.metadata }
             : message.metadata;
@@ -350,7 +361,6 @@ export const useMessageStore = create<MessageStore>()(
           } as Message;
           
           try {
-            // Convert message properties for DB update
             const dbUpdateData = {
               content: updatedMessage.content,
               metadata: mapMessageMetadataToDbMetadata(updatedMessage.metadata),
@@ -426,7 +436,8 @@ export const useMessageStore = create<MessageStore>()(
           provider: message.provider,
           processing_status: message.processing_status,
           last_retry: message.last_retry,
-          rate_limit_window: message.rate_limit_window
+          rate_limit_window: message.rate_limit_window,
+          tokens: message.tokens || 0
         };
         
         set(state => ({

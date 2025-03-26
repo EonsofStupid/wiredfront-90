@@ -15,7 +15,7 @@ export const messageMetadataSchema = z.object({
     endTime: z.string().optional(),
     duration: z.number().optional()
   }).optional()
-}).catchall(z.unknown()); // Allow additional properties with unknown type
+}).passthrough(); // Use passthrough instead of catchall(z.unknown())
 
 export const messageRoleSchema = z.enum(['user', 'assistant', 'system', 'tool']);
 export const messageTypeSchema = z.enum(['text', 'command', 'system', 'image']);
@@ -32,8 +32,8 @@ export const messageSchema = z.object({
   updated_at: z.string(),
   chat_session_id: z.string(),
   is_minimized: z.boolean().default(false),
-  position: z.any(), // Using z.any() to avoid recursion with Json type
-  window_state: z.any(), // Using z.any() to avoid recursion with Json type
+  position: z.record(z.string(), z.unknown()).default({}), // More specific than z.any()
+  window_state: z.record(z.string(), z.unknown()).default({}), // More specific than z.any()
   last_accessed: z.string(),
   retry_count: z.number().default(0),
   message_status: messageStatusSchema,
