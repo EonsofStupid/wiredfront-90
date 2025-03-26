@@ -1,3 +1,4 @@
+
 import { SafeJson } from '@/types/json';
 import { DbMessage } from '@/types/messages';
 import { 
@@ -67,7 +68,12 @@ export function mapMessageToDbMessage(message: Message): DbMessage {
     message_status: mapMessageStatusToDbStatus(message.status || message.message_status),
     status: mapMessageStatusToDbStatus(message.message_status), // Add status (aliases message_status)
     role: mapMessageRoleToDbRole(message.role),
-    tokens: message.tokens || 0
+    tokens: message.tokens || 0,
+    source_type: message.source_type,
+    provider: message.provider,
+    processing_status: message.processing_status,
+    last_retry: message.last_retry,
+    rate_limit_window: message.rate_limit_window
   };
 }
 

@@ -42,9 +42,9 @@ export interface Message {
   last_retry?: string;
   rate_limit_window?: string;
   // Support for database format fields
-  session_id?: string;
+  status?: MessageStatus;
   tokens?: number;
-  status?: string;
+  session_id?: string;
 }
 
 export interface ChatState {

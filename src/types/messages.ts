@@ -37,4 +37,10 @@ export interface DbMessage {
   status?: string;
   tokens?: number;
   session_id?: string;
+  // Add missing properties
+  source_type?: string;
+  provider?: string;
+  processing_status?: string;
+  last_retry?: string;
+  rate_limit_window?: string;
 }

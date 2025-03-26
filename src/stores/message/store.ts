@@ -100,18 +100,21 @@ export const useMessageStore = create<MessageStore>()(
         try {
           const dbMessage = mapMessageToDbMessage(message);
           
+          // Extract only the fields we need for the insert
+          const insertData = {
+            id: dbMessage.id,
+            content: dbMessage.content,
+            user_id: dbMessage.user_id,
+            session_id: dbMessage.session_id || dbMessage.chat_session_id,
+            role: dbMessage.role,
+            status: dbMessage.status || dbMessage.message_status,
+            type: dbMessage.type,
+            metadata: dbMessage.metadata
+          };
+          
           supabase
             .from('messages')
-            .insert({
-              id: dbMessage.id,
-              content: dbMessage.content,
-              user_id: dbMessage.user_id,
-              session_id: dbMessage.session_id,
-              role: dbMessage.role,
-              status: dbMessage.status,
-              type: dbMessage.type,
-              metadata: dbMessage.metadata
-            })
+            .insert(insertData)
             .then(({ error }) => {
               if (error) {
                 logger.error('Failed to save user message', { error, messageId });
@@ -151,9 +154,23 @@ export const useMessageStore = create<MessageStore>()(
         }));
         
         try {
+          const dbMessage = mapMessageToDbMessage(message);
+          
+          // Extract only the fields we need for the insert
+          const insertData = {
+            id: dbMessage.id,
+            content: dbMessage.content,
+            user_id: dbMessage.user_id,
+            session_id: dbMessage.session_id || dbMessage.chat_session_id,
+            role: dbMessage.role,
+            status: dbMessage.status || dbMessage.message_status,
+            type: dbMessage.type,
+            metadata: dbMessage.metadata
+          };
+          
           supabase
             .from('messages')
-            .insert(mapMessageToDbMessage(message))
+            .insert(insertData)
             .then(({ error }) => {
               if (error) {
                 logger.error('Failed to save assistant message', { error, messageId });
@@ -193,9 +210,23 @@ export const useMessageStore = create<MessageStore>()(
         }));
         
         try {
+          const dbMessage = mapMessageToDbMessage(message);
+          
+          // Extract only the fields we need for the insert
+          const insertData = {
+            id: dbMessage.id,
+            content: dbMessage.content,
+            user_id: dbMessage.user_id,
+            session_id: dbMessage.session_id || dbMessage.chat_session_id,
+            role: dbMessage.role,
+            status: dbMessage.status || dbMessage.message_status,
+            type: dbMessage.type,
+            metadata: dbMessage.metadata
+          };
+          
           supabase
             .from('messages')
-            .insert(mapMessageToDbMessage(message))
+            .insert(insertData)
             .then(({ error }) => {
               if (error) {
                 logger.error('Failed to save system message', { error, messageId });
@@ -235,9 +266,23 @@ export const useMessageStore = create<MessageStore>()(
         }));
         
         try {
+          const dbMessage = mapMessageToDbMessage(message);
+          
+          // Extract only the fields we need for the insert
+          const insertData = {
+            id: dbMessage.id,
+            content: dbMessage.content,
+            user_id: dbMessage.user_id,
+            session_id: dbMessage.session_id || dbMessage.chat_session_id,
+            role: dbMessage.role,
+            status: dbMessage.status || dbMessage.message_status,
+            type: dbMessage.type,
+            metadata: dbMessage.metadata
+          };
+          
           supabase
             .from('messages')
-            .insert(mapMessageToDbMessage(message))
+            .insert(insertData)
             .then(({ error }) => {
               if (error) {
                 logger.error('Failed to save error message', { error, messageId });
@@ -278,7 +323,7 @@ export const useMessageStore = create<MessageStore>()(
               .update({
                 content: dbMessage.content,
                 metadata: dbMessage.metadata,
-                status: dbMessage.status,
+                status: dbMessage.status || dbMessage.message_status,
                 updated_at: dbMessage.updated_at
               })
               .eq('id', messageId)
