@@ -21,7 +21,7 @@ export const messageRoleSchema = z.enum(['user', 'assistant', 'system']);
 export const messageTypeSchema = z.enum(['text', 'command', 'system', 'image']);
 export const messageStatusSchema = z.enum(['pending', 'sent', 'failed', 'error', 'cached', 'received']);
 
-// Main message schema
+// Main message schema with explicit types to avoid recursion
 export const messageSchema = z.object({
   id: z.string(),
   content: z.string(),
@@ -32,8 +32,8 @@ export const messageSchema = z.object({
   updated_at: z.string(),
   chat_session_id: z.string(),
   is_minimized: z.boolean().default(false),
-  position: z.any(),
-  window_state: z.any(),
+  position: z.any(), // Using z.any() to avoid recursion with Json type
+  window_state: z.any(), // Using z.any() to avoid recursion with Json type
   last_accessed: z.string(),
   retry_count: z.number().default(0),
   message_status: messageStatusSchema,

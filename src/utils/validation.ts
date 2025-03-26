@@ -41,3 +41,17 @@ export function validateWithZod<T>(
     return null;
   }
 }
+
+/**
+ * Safe validation utility that returns a default value if validation fails
+ * This is useful for non-critical validations where we want to fall back to a default
+ */
+export function safeValidate<T>(
+  schema: z.ZodType<T>,
+  data: unknown,
+  defaultValue: T,
+  options: ValidationOptions = {}
+): T {
+  const validated = validateWithZod(schema, data, options);
+  return validated !== null ? validated : defaultValue;
+}
