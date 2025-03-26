@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
@@ -9,9 +10,35 @@ import {
 } from '@/schemas/messages';
 import { DbMessage } from '@/types/messages';
 import { supabase } from '@/integrations/supabase/client';
-import { mapMessageToDbMessage, mapDbMessageToMessage } from '@/services/messages/mappers';
+import { 
+  mapMessageToDbMessage, 
+  mapDbMessageToMessage, 
+  mapMessageMetadataToDbMetadata, 
+  mapMessageStatusToDbStatus 
+} from '@/services/messages/mappers';
 import { logger } from '@/services/chat/LoggingService';
 import { SafeJson } from '@/types/json';
+
+// Define a type for the data we send to Supabase
+interface SupabaseMessageInsert {
+  id: string;
+  content: string;
+  user_id: string;
+  session_id?: string; 
+  chat_session_id?: string;
+  role: string;
+  status?: string;
+  message_status?: string;
+  type: string;
+  metadata: SafeJson;
+  created_at?: string;
+  updated_at?: string;
+  is_minimized?: boolean;
+  position?: SafeJson;
+  window_state?: SafeJson;
+  last_accessed?: string;
+  retry_count?: number;
+}
 
 interface MessageState {
   messages: Message[];
@@ -101,7 +128,7 @@ export const useMessageStore = create<MessageStore>()(
           const dbMessage = mapMessageToDbMessage(message);
           
           // Prepare data for Supabase insert
-          const insertData = {
+          const insertData: SupabaseMessageInsert = {
             id: dbMessage.id,
             content: dbMessage.content,
             user_id: dbMessage.user_id,
@@ -158,7 +185,7 @@ export const useMessageStore = create<MessageStore>()(
           const dbMessage = mapMessageToDbMessage(message);
           
           // Prepare data for Supabase insert
-          const insertData = {
+          const insertData: SupabaseMessageInsert = {
             id: dbMessage.id,
             content: dbMessage.content,
             user_id: dbMessage.user_id,
@@ -215,7 +242,7 @@ export const useMessageStore = create<MessageStore>()(
           const dbMessage = mapMessageToDbMessage(message);
           
           // Prepare data for Supabase insert
-          const insertData = {
+          const insertData: SupabaseMessageInsert = {
             id: dbMessage.id,
             content: dbMessage.content,
             user_id: dbMessage.user_id,
@@ -272,7 +299,7 @@ export const useMessageStore = create<MessageStore>()(
           const dbMessage = mapMessageToDbMessage(message);
           
           // Prepare data for Supabase insert
-          const insertData = {
+          const insertData: SupabaseMessageInsert = {
             id: dbMessage.id,
             content: dbMessage.content,
             user_id: dbMessage.user_id,

@@ -92,7 +92,11 @@ function mapMessageTypeToDbType(type: MessageType): string {
   return type;
 }
 
-function mapDbStatusToMessageStatus(status: string): MessageStatus {
+/**
+ * Maps database status to MessageStatus enum
+ * Export so it can be used by store
+ */
+export function mapDbStatusToMessageStatus(status: string): MessageStatus {
   switch (status) {
     case 'pending': return 'pending';
     case 'sent': return 'sent';
@@ -104,7 +108,11 @@ function mapDbStatusToMessageStatus(status: string): MessageStatus {
   }
 }
 
-function mapMessageStatusToDbStatus(status: MessageStatus): string {
+/**
+ * Maps MessageStatus enum to database status string
+ * Export so it can be used by store
+ */
+export function mapMessageStatusToDbStatus(status: MessageStatus): string {
   return status;
 }
 
@@ -124,6 +132,7 @@ function mapMessageRoleToDbRole(role: MessageRole): string {
 /**
  * Maps database metadata to MessageMetadata
  * Using safeValidate to ensure we always return a valid object
+ * Export so it can be used by store
  */
 export function mapDbMetadataToMessageMetadata(metadata: any): MessageMetadata {
   if (!metadata) return {};
@@ -143,6 +152,7 @@ export function mapDbMetadataToMessageMetadata(metadata: any): MessageMetadata {
 /**
  * Maps MessageMetadata to database format
  * Creating a safe, non-recursive structure
+ * Export so it can be used by store
  */
 export function mapMessageMetadataToDbMetadata(metadata: MessageMetadata): SafeJson {
   if (!metadata) return {};
