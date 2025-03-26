@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { Message } from '@/types/chat';
+import { Message, MessageMetadata } from '@/types/messages';
 
 interface MessageState {
   messages: Message[];

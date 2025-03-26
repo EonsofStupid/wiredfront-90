@@ -33,17 +33,14 @@ export type MessageStore = MessageState & MessageActions;
 export const useMessageStore = create<MessageStore>()(
   devtools(
     (set, get) => ({
-      // Initial state
       messages: [],
       isLoading: false,
       error: null,
 
-      // Actions
       fetchSessionMessages: async (sessionId) => {
         try {
           set({ isLoading: true, error: null });
           
-          // Fetch messages from Supabase
           const { data, error } = await supabase
             .from('messages')
             .select('*')
@@ -52,7 +49,6 @@ export const useMessageStore = create<MessageStore>()(
             
           if (error) throw error;
           
-          // Map DB messages to application Message type
           const messages = data ? data.map(mapDbMessageToMessage) : [];
           
           set({ 
@@ -79,22 +75,20 @@ export const useMessageStore = create<MessageStore>()(
           created_at: now.toISOString(),
           updated_at: now.toISOString(),
           chat_session_id: sessionId,
-          user_id: null, // Will be set by server
+          user_id: null,
           is_minimized: false,
           position: {},
           window_state: {},
           last_accessed: now.toISOString(),
           retry_count: 0,
           message_status: 'sent',
-          metadata: { ...metadata } // Create a fresh copy
+          metadata: { ...metadata }
         };
         
-        // Add message to state
         set(state => ({
           messages: [...state.messages, message]
         }));
         
-        // Save to database
         try {
           supabase
             .from('messages')
@@ -130,15 +124,13 @@ export const useMessageStore = create<MessageStore>()(
           last_accessed: now.toISOString(),
           retry_count: 0,
           message_status: 'received',
-          metadata: { ...metadata } // Create a fresh copy
+          metadata: { ...metadata }
         };
         
-        // Add message to state
         set(state => ({
           messages: [...state.messages, message]
         }));
         
-        // Save to database
         try {
           supabase
             .from('messages')
@@ -174,15 +166,13 @@ export const useMessageStore = create<MessageStore>()(
           last_accessed: now.toISOString(),
           retry_count: 0,
           message_status: 'sent',
-          metadata: { ...metadata } // Create a fresh copy
+          metadata: { ...metadata }
         };
         
-        // Add message to state
         set(state => ({
           messages: [...state.messages, message]
         }));
         
-        // Save to database
         try {
           supabase
             .from('messages')
@@ -221,12 +211,10 @@ export const useMessageStore = create<MessageStore>()(
           metadata: {}
         };
         
-        // Add message to state
         set(state => ({
           messages: [...state.messages, message]
         }));
         
-        // Save to database
         try {
           supabase
             .from('messages')
@@ -244,29 +232,24 @@ export const useMessageStore = create<MessageStore>()(
       },
 
       updateMessage: (messageId, updates) => {
-        // Find the message to update
         const message = get().messages.find(m => m.id === messageId);
         if (!message) return;
 
-        // Create a new message object with updates
         const updatedMessage = { 
           ...message,
           ...updates,
-          // Merge metadata objects safely
           metadata: updates.metadata 
             ? { ...message.metadata, ...updates.metadata }
             : message.metadata,
           updated_at: new Date().toISOString()
         };
         
-        // Update state
         set(state => ({
           messages: state.messages.map(m => 
             m.id === messageId ? updatedMessage : m
           )
         }));
         
-        // Update in database
         try {
           supabase
             .from('messages')
@@ -284,7 +267,6 @@ export const useMessageStore = create<MessageStore>()(
 
       deleteMessage: async (messageId) => {
         try {
-          // Delete from database
           const { error } = await supabase
             .from('messages')
             .delete()
@@ -292,7 +274,6 @@ export const useMessageStore = create<MessageStore>()(
             
           if (error) throw error;
           
-          // Remove from state
           set(state => ({
             messages: state.messages.filter(message => message.id !== messageId)
           }));

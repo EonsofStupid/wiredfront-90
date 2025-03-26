@@ -1,87 +1,9 @@
+
 /**
  * Service for caching and retrieving messages locally
  * to reduce database load and improve performance
  */
-
-// Metrics type definition
-interface CacheMetrics {
-  cacheHits: number;
-  cacheMisses: number;
-  syncAttempts: number;
-  syncSuccesses: number;
-  errors: Array<{ timestamp: number; error: string }>;
-}
-
-// Initialize metrics in localStorage if not present
-const initializeMetrics = (): CacheMetrics => {
-  const defaultMetrics: CacheMetrics = {
-    cacheHits: 0,
-    cacheMisses: 0,
-    syncAttempts: 0,
-    syncSuccesses: 0,
-    errors: []
-  };
-
-  try {
-    const existingMetrics = localStorage.getItem('chat-message-cache-metrics');
-    if (!existingMetrics) {
-      localStorage.setItem('chat-message-cache-metrics', JSON.stringify(defaultMetrics));
-      return defaultMetrics;
-    }
-    return JSON.parse(existingMetrics);
-  } catch (error) {
-    console.error('Error initializing cache metrics:', error);
-    return defaultMetrics;
-  }
-};
-
-// Get metrics from localStorage
-const getMetricsFromStorage = (): CacheMetrics => {
-  try {
-    const metricsString = localStorage.getItem('chat-message-cache-metrics');
-    if (!metricsString) {
-      return initializeMetrics();
-    }
-    return JSON.parse(metricsString);
-  } catch (error) {
-    console.error('Error retrieving cache metrics:', error);
-    return initializeMetrics();
-  }
-};
-
-// Save metrics to localStorage
-const saveMetricsToStorage = (metrics: CacheMetrics): void => {
-  try {
-    localStorage.setItem('chat-message-cache-metrics', JSON.stringify(metrics));
-  } catch (error) {
-    console.error('Error saving cache metrics:', error);
-  }
-};
-
-// Update metrics
-const updateMetrics = (metricType: keyof CacheMetrics, value: any = 1): void => {
-  try {
-    const metrics = getMetricsFromStorage();
-    
-    if (metricType === 'errors') {
-      if (Array.isArray(metrics.errors)) {
-        metrics.errors.unshift({
-          timestamp: Date.now(),
-          error: value.toString()
-        });
-        
-        // Keep only the last 10 errors
-        metrics.errors = metrics.errors.slice(0, 10);
-      }
-    } else if (typeof metrics[metricType] === 'number') {
-      (metrics[metricType] as number) += value;
-    }
-    
-    saveMetricsToStorage(metrics);
-  } catch (error) {
-    console.error('Error updating cache metrics:', error);
-  }
-};
+import { CacheMetricsService } from './CacheMetricsService';
 
 export const messageCache = {
   /**
@@ -103,11 +25,11 @@ export const messageCache = {
       
       // Store updated messages
       localStorage.setItem(sessionKey, JSON.stringify(existingMessages));
-      updateMetrics('syncSuccesses');
+      CacheMetricsService.updateMetric('syncSuccesses');
       return true;
     } catch (error) {
       console.error('Error caching message:', error);
-      updateMetrics('errors', error);
+      CacheMetricsService.updateMetric('errors', error);
       return false;
     }
   },
@@ -120,15 +42,15 @@ export const messageCache = {
       const sessionKey = `chat-messages-${sessionId}`;
       const messages = JSON.parse(localStorage.getItem(sessionKey) || '[]');
       if (messages.length > 0) {
-        updateMetrics('cacheHits');
+        CacheMetricsService.updateMetric('cacheHits');
       } else {
-        updateMetrics('cacheMisses');
+        CacheMetricsService.updateMetric('cacheMisses');
       }
       return messages;
     } catch (error) {
       console.error('Error retrieving cached messages:', error);
-      updateMetrics('errors', error);
-      updateMetrics('cacheMisses');
+      CacheMetricsService.updateMetric('errors', error);
+      CacheMetricsService.updateMetric('cacheMisses');
       return [];
     }
   },
@@ -143,7 +65,7 @@ export const messageCache = {
       return true;
     } catch (error) {
       console.error('Error clearing session cache:', error);
-      updateMetrics('errors', error);
+      CacheMetricsService.updateMetric('errors', error);
       return false;
     }
   },
@@ -161,12 +83,12 @@ export const messageCache = {
       messageCacheKeys.forEach(key => localStorage.removeItem(key));
       
       // Reset metrics
-      initializeMetrics();
+      CacheMetricsService.initializeMetrics();
       
       return true;
     } catch (error) {
       console.error('Error clearing all message caches:', error);
-      updateMetrics('errors', error);
+      CacheMetricsService.updateMetric('errors', error);
       return false;
     }
   },
@@ -175,7 +97,7 @@ export const messageCache = {
    * Get cache metrics
    */
   getMetrics: () => {
-    return getMetricsFromStorage();
+    return CacheMetricsService.getMetrics();
   },
   
   /**
@@ -183,7 +105,7 @@ export const messageCache = {
    */
   resetMetrics: () => {
     try {
-      initializeMetrics();
+      CacheMetricsService.resetMetrics();
       return true;
     } catch (error) {
       console.error('Error resetting cache metrics:', error);

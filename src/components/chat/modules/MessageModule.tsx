@@ -1,7 +1,7 @@
 
 import React, { useEffect, useCallback } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Message } from "../Message";
+import { Message as MessageComponent } from "../Message";
 import { useMessageStore } from "../messaging/MessageManager";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAutoScroll } from '../hooks/useAutoScroll';
@@ -11,6 +11,7 @@ import { Spinner } from '../ui/Spinner';
 import { logger } from '@/services/chat/LoggingService';
 import { MessageSkeleton } from '../ui/MessageSkeleton';
 import { useChatStore } from '../store/chatStore';
+import { Message } from '@/types/messages';
 
 interface MessageModuleProps {
   scrollRef: React.RefObject<HTMLDivElement>;

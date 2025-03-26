@@ -1,4 +1,3 @@
-
 import { Message, MessageMetadata, MessageRole, MessageStatus, MessageType } from '@/types/messages';
 import { Json } from '@/integrations/supabase/types';
 
@@ -110,7 +109,7 @@ function mapMessageRoleToDbRole(role: MessageRole): string {
 
 /**
  * Maps database metadata (Json) to MessageMetadata
- * Avoiding recursive type by handling explicitly
+ * Breaking the recursive type by using a safe non-recursive mapping
  */
 export function mapDbMetadataToMessageMetadata(metadata: Json | null): MessageMetadata {
   if (!metadata) return {};
@@ -148,17 +147,27 @@ export function mapDbMetadataToMessageMetadata(metadata: Json | null): MessageMe
     // Copy other properties safely, excluding already processed ones
     Object.entries(metadata).forEach(([key, value]) => {
       if (key !== 'model' && key !== 'tokens' && key !== 'processing') {
-        // Deep copy to avoid reference issues
-        if (typeof value === 'object' && value !== null) {
-          // Use a non-recursive approach for safety
-          try {
-            result[key] = JSON.parse(JSON.stringify(value));
-          } catch (e) {
-            // If circular reference, just use a simple object
-            result[key] = {};
-          }
-        } else {
+        // For primitives, copy directly
+        if (typeof value !== 'object' || value === null) {
           result[key] = value as any;
+        } 
+        // For arrays, create a shallow copy
+        else if (Array.isArray(value)) {
+          result[key] = [...value] as any;
+        }
+        // For objects, create a shallow copy to avoid deep nesting
+        else {
+          // Use a limited copy to avoid recursive objects
+          const limitedCopy: Record<string, any> = {};
+          Object.entries(value).forEach(([subKey, subValue]) => {
+            if (typeof subValue !== 'object' || subValue === null) {
+              limitedCopy[subKey] = subValue;
+            } else {
+              // For nested objects, just store a placeholder
+              limitedCopy[subKey] = Array.isArray(subValue) ? [] : {};
+            }
+          });
+          result[key] = limitedCopy;
         }
       }
     });
@@ -169,7 +178,7 @@ export function mapDbMetadataToMessageMetadata(metadata: Json | null): MessageMe
 
 /**
  * Maps MessageMetadata to database Json format
- * Avoiding recursive type by handling explicitly
+ * Breaking the recursive type by handling each property explicitly
  */
 export function mapMessageMetadataToDbMetadata(metadata: MessageMetadata): Json {
   if (!metadata) return {};
@@ -177,19 +186,51 @@ export function mapMessageMetadataToDbMetadata(metadata: MessageMetadata): Json 
   // Create a safe copy to avoid mutation issues
   const safeMetadata: Record<string, any> = {};
   
-  // Copy primitive values and handle objects with deep copy
+  // Handle known fields explicitly
+  if (metadata.model) {
+    safeMetadata.model = metadata.model;
+  }
+  
+  // Handle tokens explicitly to avoid deep nesting
+  if (metadata.tokens) {
+    safeMetadata.tokens = {
+      prompt: metadata.tokens.prompt || 0,
+      completion: metadata.tokens.completion || 0,
+      total: metadata.tokens.total || 0
+    };
+  }
+  
+  // Handle processing explicitly to avoid deep nesting
+  if (metadata.processing) {
+    safeMetadata.processing = {
+      startTime: metadata.processing.startTime || '',
+      endTime: metadata.processing.endTime || '',
+      duration: metadata.processing.duration || 0
+    };
+  }
+  
+  // Copy other primitive properties, but limit object nesting
   Object.entries(metadata).forEach(([key, value]) => {
-    if (value !== undefined) {
-      if (typeof value === 'object' && value !== null) {
-        try {
-          // Use stringify/parse for deep copy
-          safeMetadata[key] = JSON.parse(JSON.stringify(value));
-        } catch (e) {
-          // Fallback for any circular references
-          safeMetadata[key] = {};
-        }
-      } else {
+    if (key !== 'model' && key !== 'tokens' && key !== 'processing' && value !== undefined) {
+      if (typeof value !== 'object' || value === null) {
         safeMetadata[key] = value;
+      } 
+      // For arrays, create a shallow copy
+      else if (Array.isArray(value)) {
+        safeMetadata[key] = [...value];
+      }
+      // For objects, create a limited copy to avoid deep recursion
+      else {
+        const limitedCopy: Record<string, any> = {};
+        Object.entries(value).forEach(([subKey, subValue]) => {
+          if (typeof subValue !== 'object' || subValue === null) {
+            limitedCopy[subKey] = subValue;
+          } else {
+            // For nested objects, just store a placeholder
+            limitedCopy[subKey] = '{}';
+          }
+        });
+        safeMetadata[key] = limitedCopy;
       }
     }
   });
