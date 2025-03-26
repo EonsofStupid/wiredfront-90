@@ -4,11 +4,11 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Check, Clock, AlertCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { MessageStatus } from "@/types/chat";
+import { MessageRole, MessageStatus } from "@/schemas/messages";
 
 interface MessageProps {
   content: string;
-  role: 'user' | 'assistant' | 'system';
+  role: MessageRole;
   status?: MessageStatus;
   id?: string;
   timestamp?: string;

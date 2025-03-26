@@ -1,115 +1,43 @@
 
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { logger } from '@/services/chat/LoggingService';
 
-/**
- * Validate data against a Zod schema
- * 
- * @param schema The Zod schema to validate against
- * @param data The data to validate
- * @param options Configuration options
- * @returns The validated data or null if validation fails
- */
-export function validateWithZod<T extends z.ZodType>(
-  schema: T,
+interface ValidationOptions {
+  logErrors?: boolean;
+  showToast?: boolean;
+  context?: string;
+}
+
+export function validateWithZod<T>(
+  schema: z.ZodType<T>,
   data: unknown,
-  options: {
-    logErrors?: boolean;
-    showToast?: boolean;
-    context?: string;
-  } = {}
-): z.infer<T> | null {
-  const { logErrors = true, showToast = true, context = 'Data' } = options;
+  options: ValidationOptions = {}
+): T | null {
+  const { logErrors = true, showToast = false, context = 'Data' } = options;
   
   try {
     return schema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const formattedErrors = error.errors.map(err => 
-        `${err.path.join('.')}: ${err.message}`
-      ).join('; ');
-      
-      const errorMessage = `${context} validation failed: ${formattedErrors}`;
+      const issues = error.issues.map(i => i.message).join(', ');
       
       if (logErrors) {
-        logger.error(errorMessage, { zodErrors: error.errors });
+        console.error(`Validation error in ${context}:`, issues);
       }
       
       if (showToast) {
-        toast.error(`Validation Error: ${formattedErrors}`);
+        toast.error(`Validation error: ${issues}`);
       }
-    } else if (logErrors) {
-      logger.error(`Unexpected validation error for ${context}`, error);
+    } else {
+      if (logErrors) {
+        console.error(`Unknown validation error in ${context}:`, error);
+      }
       
       if (showToast) {
-        toast.error('An unexpected validation error occurred');
+        toast.error('Unknown validation error occurred');
       }
     }
     
     return null;
   }
-}
-
-/**
- * Safely validate data against a schema, returning a default value if validation fails
- * 
- * @param schema The Zod schema to validate against
- * @param data The data to validate
- * @param defaultValue The default value to return if validation fails
- * @param options Configuration options
- * @returns The validated data or the default value if validation fails
- */
-export function safeValidate<T extends z.ZodType>(
-  schema: T,
-  data: unknown,
-  defaultValue: z.infer<T>,
-  options: {
-    logErrors?: boolean;
-    showToast?: boolean;
-    context?: string;
-  } = {}
-): z.infer<T> {
-  const result = validateWithZod(schema, data, options);
-  return result !== null ? result : defaultValue;
-}
-
-/**
- * Create a form validation handler for React Hook Form
- * 
- * @param schema The Zod schema to validate against
- * @returns A validation resolver for React Hook Form
- */
-export function createZodResolver<T extends z.ZodType>(schema: T) {
-  return async (values: unknown) => {
-    try {
-      const validData = schema.parse(values);
-      return { values: validData, errors: {} };
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const errors = error.errors.reduce((acc, curr) => {
-          const path = curr.path.join('.');
-          return { 
-            ...acc, 
-            [path]: { 
-              type: 'validation', 
-              message: curr.message 
-            } 
-          };
-        }, {});
-        
-        return { values: {}, errors };
-      }
-      
-      return { 
-        values: {}, 
-        errors: { 
-          root: { 
-            type: 'validation', 
-            message: 'Form validation failed' 
-          } 
-        } 
-      };
-    }
-  };
 }

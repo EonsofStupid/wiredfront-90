@@ -3,7 +3,7 @@ import React, { useState, useCallback } from 'react';
 import { useChatStore } from '../store/chatStore';
 import { useMessageStore } from '../messaging/MessageManager';
 import { v4 as uuidv4 } from 'uuid';
-import { Message, MessageRole, MessageStatus, MessageMetadata } from '@/types/chat';
+import { Message, MessageRole, MessageStatus, MessageMetadata } from '@/schemas/messages';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -39,25 +39,19 @@ export const ChatInputModule: React.FC<ChatInputModuleProps> = ({ isEditorPage }
     const messageId = uuidv4();
     const now = new Date();
 
-    const userMessage: Message = {
+    // Using our schema-compliant types
+    addMessage({
       id: messageId,
-      role: 'user' as MessageRole,
       content: userInput,
-      user_id: null,
+      role: 'user',
       type: 'text',
-      metadata: {} as MessageMetadata, // Fixed: using MessageMetadata instead of Json
+      metadata: {},
       created_at: now.toISOString(),
       updated_at: now.toISOString(),
       chat_session_id: chatId || 'default',
-      is_minimized: false,
-      position: {},
-      window_state: {},
-      last_accessed: now.toISOString(),
-      retry_count: 0,
-      message_status: 'sent' as MessageStatus
-    };
-
-    addMessage(userMessage);
+      message_status: 'sent'
+    });
+    
     setUserInput('');
     setIsProcessing(true);
 
@@ -66,7 +60,7 @@ export const ChatInputModule: React.FC<ChatInputModuleProps> = ({ isEditorPage }
         body: { 
           message: userInput, 
           chatId,
-          isEditorPage // Pass this to the API if needed
+          isEditorPage
         }
       });
 
@@ -74,69 +68,40 @@ export const ChatInputModule: React.FC<ChatInputModuleProps> = ({ isEditorPage }
         toast.error('Error sending message');
         console.error('Error sending message:', error);
 
-        const errorMessage: Message = {
+        // Create error message
+        addMessage({
           id: uuidv4(),
-          role: 'assistant' as MessageRole,
           content: `Error: ${error.message || 'Failed to send message'}`,
-          user_id: null,
-          type: 'text',
-          metadata: {} as MessageMetadata, // Fixed: using MessageMetadata instead of Json
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          chat_session_id: chatId || 'default',
-          is_minimized: false,
-          position: {},
-          window_state: {},
-          last_accessed: new Date().toISOString(),
-          retry_count: 0,
-          message_status: 'error' as MessageStatus
-        };
-
-        addMessage(errorMessage);
+          role: 'assistant',
+          type: 'system',
+          message_status: 'error'
+        });
+        
         return;
       }
 
-      const responseMessage: Message = {
+      // Add assistant response
+      addMessage({
         id: uuidv4(),
-        role: 'assistant' as MessageRole,
         content: data?.response || 'No response received',
-        user_id: null,
+        role: 'assistant',
         type: 'text',
-        metadata: {} as MessageMetadata, // Fixed: using MessageMetadata instead of Json
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        chat_session_id: chatId || 'default',
-        is_minimized: false,
-        position: {},
-        window_state: {},
-        last_accessed: new Date().toISOString(),
-        retry_count: 0,
-        message_status: 'received' as MessageStatus
-      };
-
-      addMessage(responseMessage);
+        message_status: 'received',
+        metadata: data?.metadata || {}
+      });
+      
     } catch (error: any) {
       console.error('Error in chat flow:', error);
 
-      const errorMessage: Message = {
+      // Add error message
+      addMessage({
         id: uuidv4(),
-        role: 'assistant' as MessageRole,
         content: `Error: ${error?.message || 'An unexpected error occurred'}`,
-        user_id: null,
-        type: 'text',
-        metadata: {} as MessageMetadata, // Fixed: using MessageMetadata instead of Json
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        chat_session_id: chatId || 'default',
-        is_minimized: false,
-        position: {},
-        window_state: {},
-        last_accessed: new Date().toISOString(),
-        retry_count: 0,
-        message_status: 'error' as MessageStatus
-      };
-
-      addMessage(errorMessage);
+        role: 'assistant',
+        type: 'system',
+        message_status: 'error'
+      });
+      
     } finally {
       setIsProcessing(false);
     }

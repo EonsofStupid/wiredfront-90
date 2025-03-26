@@ -10,7 +10,7 @@ import { useErrorBoundary } from '../hooks/useErrorBoundary';
 import { logger } from '@/services/chat/LoggingService';
 import { MessageSkeleton } from '../ui/MessageSkeleton';
 import { useChatStore } from '../store/chatStore';
-import { Message } from '@/schemas/messages';
+import { Message, MessageRole, MessageStatus } from '@/schemas/messages';
 
 interface MessageModuleProps {
   scrollRef: React.RefObject<HTMLDivElement>;
@@ -100,8 +100,8 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
                   >
                     <MessageComponent
                       content={msg.content}
-                      role={msg.role}
-                      status={msg.message_status}
+                      role={msg.role as MessageRole}
+                      status={msg.message_status as MessageStatus}
                       id={msg.id}
                       timestamp={msg.created_at}
                       onRetry={handleRetry}

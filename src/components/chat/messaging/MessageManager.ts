@@ -1,12 +1,12 @@
 
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { Message, MessageMetadata } from '@/schemas/messages';
+import { Message, MessageMetadata, MessageRole, createMessage } from '@/schemas/messages';
 import { logger } from '@/services/chat/LoggingService';
 
 interface MessageState {
   messages: Message[];
-  addMessage: (message: Partial<Message> & { content: string; role: Message['role'] }) => void;
+  addMessage: (message: Partial<Message> & { content: string; role: MessageRole }) => void;
   updateMessage: (id: string, updates: Partial<Message>) => void;
   getMessageById: (id: string) => Message | undefined;
   clearMessages: () => void;
@@ -17,29 +17,12 @@ export const useMessageStore = create<MessageState>((set, get) => ({
   messages: [],
   
   addMessage: (message) => {
-    const now = new Date().toISOString();
-    const newMessage: Message = {
+    const newMessage = createMessage({
       id: message.id || uuidv4(),
       content: message.content,
       role: message.role,
-      user_id: message.user_id || null,
-      type: message.type || 'text',
-      metadata: message.metadata || {},
-      created_at: message.created_at || now,
-      updated_at: message.updated_at || now,
-      chat_session_id: message.chat_session_id || '',
-      is_minimized: message.is_minimized || false,
-      position: message.position || {},
-      window_state: message.window_state || {},
-      last_accessed: message.last_accessed || now,
-      retry_count: message.retry_count || 0,
-      message_status: message.message_status || 'sent',
-      source_type: message.source_type,
-      provider: message.provider,
-      processing_status: message.processing_status,
-      last_retry: message.last_retry,
-      rate_limit_window: message.rate_limit_window
-    };
+      ...(message as any) // Include any other properties passed in
+    });
     
     set((state) => ({
       messages: [...state.messages, newMessage],
@@ -102,7 +85,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
 
 // Static methods for easier access outside of React components
 export const MessageManager = {
-  addMessage: (message: Partial<Message> & { content: string; role: Message['role'] }) => {
+  addMessage: (message: Partial<Message> & { content: string; role: MessageRole }) => {
     useMessageStore.getState().addMessage(message);
   },
   

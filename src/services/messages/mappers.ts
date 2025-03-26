@@ -3,6 +3,9 @@ import { Json } from '@/integrations/supabase/types';
 import { 
   Message, 
   MessageMetadata, 
+  MessageRole,
+  MessageStatus,
+  MessageType,
   validateMessage,
   messageMetadataSchema
 } from '@/schemas/messages';

@@ -4,8 +4,7 @@
  * to reduce database load and improve performance
  */
 import { CacheMetricsService } from './CacheMetricsService';
-import { Message } from '@/schemas/messages';
-import { validateMessage } from '@/schemas/messages';
+import { Message, validateMessage } from '@/schemas/messages';
 import { logger } from './LoggingService';
 
 export const messageCache = {

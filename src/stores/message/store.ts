@@ -2,7 +2,13 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import { Message, MessageMetadata, MessageRole, MessageStatus } from '@/schemas/messages';
+import { 
+  Message, 
+  MessageMetadata, 
+  MessageRole, 
+  MessageStatus, 
+  createMessage 
+} from '@/schemas/messages';
 import { supabase } from '@/integrations/supabase/client';
 import { mapMessageToDbMessage, mapDbMessageToMessage } from '@/services/messages/mappers';
 import { logger } from '@/services/chat/LoggingService';
