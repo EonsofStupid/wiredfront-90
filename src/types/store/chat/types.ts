@@ -1,5 +1,5 @@
-import { Message } from '@/types/chat';
-import { ConnectionState } from '@/types/websocket';
+import { Message } from '@/components/chat/shared/schemas/messages';
+import { ConnectionState } from '@/components/chat/store/types/chat-store-types';
 
 export interface ChatSession {
   id: string;

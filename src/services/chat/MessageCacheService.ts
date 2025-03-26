@@ -1,134 +1,102 @@
-
-/**
- * Service for caching and retrieving messages locally
- * to reduce database load and improve performance
- */
-import { CacheMetricsService } from './CacheMetricsService';
-import { Message, validateMessage } from '@/schemas/messages';
+import { Message } from '@/components/chat/shared/schemas/messages';
 import { logger } from './LoggingService';
 
-export const messageCache = {
+interface CacheEntry {
+  message: Message;
+  timestamp: number;
+}
+
+class MessageCacheService {
+  private cache: Map<string, CacheEntry>;
+  private maxCacheSize: number;
+  private cacheDuration: number;
+
+  constructor(maxSize: number = 500, duration: number = 60 * 60 * 1000) {
+    this.cache = new Map();
+    this.maxCacheSize = maxSize;
+    this.cacheDuration = duration;
+  }
+
   /**
-   * Store a message in the cache
+   * Adds a message to the cache.
+   * @param message The message to cache.
    */
-  cacheMessage: (sessionId: string, messageId: string, message: Message) => {
-    try {
-      const sessionKey = `chat-messages-${sessionId}`;
-      const existingMessages = JSON.parse(localStorage.getItem(sessionKey) || '[]');
-      
-      // Add or update message
-      const existingIndex = existingMessages.findIndex((m: any) => m.id === messageId);
-      
-      if (existingIndex >= 0) {
-        existingMessages[existingIndex] = message;
-      } else {
-        existingMessages.push(message);
-      }
-      
-      // Store updated messages
-      localStorage.setItem(sessionKey, JSON.stringify(existingMessages));
-      CacheMetricsService.updateMetric('syncSuccesses');
-      return true;
-    } catch (error) {
-      logger.error('Error caching message:', error);
-      CacheMetricsService.updateMetric('errors', error);
-      return false;
+  public cacheMessage(message: Message): void {
+    if (this.cache.size >= this.maxCacheSize) {
+      this.removeOldestEntry();
     }
-  },
-  
+
+    this.cache.set(message.id, { message, timestamp: Date.now() });
+    logger.debug('Cached message', { messageId: message.id });
+  }
+
   /**
-   * Retrieve all messages for a session
+   * Retrieves a message from the cache.
+   * @param messageId The ID of the message to retrieve.
+   * @returns The cached message, or null if not found or expired.
    */
-  getSessionMessages: (sessionId: string): Message[] => {
-    try {
-      const sessionKey = `chat-messages-${sessionId}`;
-      const rawMessages = JSON.parse(localStorage.getItem(sessionKey) || '[]');
-      
-      // Validate messages using our schema
-      const validMessages: Message[] = [];
-      
-      for (const rawMessage of rawMessages) {
-        const validatedMessage = validateMessage(rawMessage);
-        if (validatedMessage) {
-          validMessages.push(validatedMessage);
-        } else {
-          logger.warn('Found invalid cached message, skipping', { 
-            sessionId, 
-            messageId: rawMessage?.id || 'unknown' 
-          });
-        }
-      }
-      
-      if (validMessages.length > 0) {
-        CacheMetricsService.updateMetric('cacheHits');
-      } else {
-        CacheMetricsService.updateMetric('cacheMisses');
-      }
-      
-      return validMessages;
-    } catch (error) {
-      logger.error('Error retrieving cached messages:', error);
-      CacheMetricsService.updateMetric('errors', error);
-      CacheMetricsService.updateMetric('cacheMisses');
-      return [];
+  public getMessage(messageId: string): Message | null {
+    const entry = this.cache.get(messageId);
+
+    if (!entry) {
+      return null;
     }
-  },
-  
-  /**
-   * Clear the cache for a specific session
-   */
-  clearSessionCache: (sessionId: string) => {
-    try {
-      const sessionKey = `chat-messages-${sessionId}`;
-      localStorage.removeItem(sessionKey);
-      return true;
-    } catch (error) {
-      logger.error('Error clearing session cache:', error);
-      CacheMetricsService.updateMetric('errors', error);
-      return false;
+
+    if (Date.now() - entry.timestamp > this.cacheDuration) {
+      this.cache.delete(messageId);
+      logger.debug('Cache entry expired', { messageId });
+      return null;
     }
-  },
-  
+
+    logger.debug('Retrieved message from cache', { messageId });
+    return entry.message;
+  }
+
   /**
-   * Clear all message caches
+   * Removes a message from the cache.
+   * @param messageId The ID of the message to remove.
    */
-  clearAllCache: () => {
-    try {
-      // Find all message cache keys
-      const keys = Object.keys(localStorage);
-      const messageCacheKeys = keys.filter(k => k.startsWith('chat-messages-'));
-      
-      // Remove each key
-      messageCacheKeys.forEach(key => localStorage.removeItem(key));
-      
-      // Reset metrics
-      CacheMetricsService.initializeMetrics();
-      
-      return true;
-    } catch (error) {
-      logger.error('Error clearing all message caches:', error);
-      CacheMetricsService.updateMetric('errors', error);
-      return false;
-    }
-  },
-  
-  /**
-   * Get cache metrics
-   */
-  getMetrics: () => {
-    return CacheMetricsService.getMetrics();
-  },
-  
-  /**
-   * Reset cache metrics
-   */
-  resetMetrics: () => {
-    try {
-      CacheMetricsService.resetMetrics();
-      return true;
-    } catch (error) {
-      logger.error('Error resetting cache metrics:', error);
-      return false;
+  public removeMessage(messageId: string): void {
+    if (this.cache.delete(messageId)) {
+      logger.debug('Removed message from cache', { messageId });
     }
   }
-};
+
+  /**
+   * Clears the entire cache.
+   */
+  public clearAllCache(): void {
+    this.cache.clear();
+    logger.info('Cleared all message cache');
+  }
+
+  /**
+   * Returns the current size of the cache.
+   * @returns The number of messages currently in the cache.
+   */
+  public getCacheSize(): number {
+    return this.cache.size;
+  }
+
+  /**
+   * Removes the oldest entry from the cache to maintain the cache size.
+   */
+  private removeOldestEntry(): void {
+    let oldestKey: string | null = null;
+    let oldestTimestamp: number = Date.now();
+
+    this.cache.forEach((entry, key) => {
+      if (entry.timestamp < oldestTimestamp) {
+        oldestTimestamp = entry.timestamp;
+        oldestKey = key;
+      }
+    });
+
+    if (oldestKey) {
+      this.cache.delete(oldestKey);
+      logger.debug('Removed oldest entry from cache', { messageId: oldestKey });
+    }
+  }
+}
+
+export const messageCache = new MessageCacheService();

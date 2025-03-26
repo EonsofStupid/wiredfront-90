@@ -1,6 +1,7 @@
+import { useMessageStore } from '@/components/chat/store/message';
+import { useChatStore } from '@/components/chat/store/chatStore';
 
-// Re-export stores
-export * from './session';
-export * from './message';
-export * from './theme';
-export * from './ui';
+export {
+  useMessageStore,
+  useChatStore,
+};

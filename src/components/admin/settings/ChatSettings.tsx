@@ -1,14 +1,13 @@
-
 import { useState } from "react";
 import { useMessageStore } from "@/components/chat/messaging/MessageManager";
-import { useChatSessionManager } from "@/hooks/useSessionManager";
+import { useChatSessionManager } from "@/components/chat/hooks/chat-sessions";
 import { SettingsContainer } from "./layout/SettingsContainer";
 import { toast } from "sonner";
 import { ChatSettingsTabs } from "./chat/ChatSettingsTabs";
 
 export function ChatSettings() {
   const { clearMessages } = useMessageStore();
-  const { refreshSessions } = useChatSessionManager(); // Now correctly accessing refreshSessions
+  const { refreshSessions } = useChatSessionManager();
   const [activeTab, setActiveTab] = useState("general");
   
   const [settings, setSettings] = useState({

@@ -1,5 +1,16 @@
+import { Message } from '@/components/chat/shared/schemas/messages';
 
-import { Message, ConnectionState, ChatPosition } from '@/types/chat';
+export interface ChatPosition {
+  x?: number;
+  y?: number;
+  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+}
+
+export interface ConnectionState {
+  status: 'connected' | 'disconnected' | 'connecting' | 'error';
+  lastPing?: number;
+  error?: Error | null;
+}
 
 export interface ChatState {
   // UI state
