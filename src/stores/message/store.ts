@@ -24,9 +24,9 @@ interface SupabaseMessageInsert {
   id: string;
   content: string;
   user_id: string;
-  session_id?: string; 
-  chat_session_id?: string;
-  role: "system" | "user" | "assistant" | "tool";
+  session_id: string; // Changed: Now required as per database schema
+  chat_session_id?: string; // Optional for backward compatibility
+  role: "system" | "user" | "assistant" | "tool"; // Fixed: Using exact enum values
   status?: string;
   message_status?: string;
   type: string;
@@ -34,7 +34,7 @@ interface SupabaseMessageInsert {
   created_at?: string;
   updated_at?: string;
   is_minimized?: boolean;
-  position?: number; // Changed from SafeJson to number
+  position: number; // Fixed: Changed from SafeJson to number
   window_state?: SafeJson;
   last_accessed?: string;
   retry_count?: number;
@@ -131,13 +131,13 @@ export const useMessageStore = create<MessageStore>()(
           const insertData: SupabaseMessageInsert = {
             id: dbMessage.id,
             content: dbMessage.content,
-            user_id: dbMessage.user_id,
-            session_id: sessionId, // Use session_id for Supabase
+            user_id: dbMessage.user_id || 'anonymous', // Ensure user_id is never null
+            session_id: sessionId, // Use session_id for Supabase (required)
             role: dbMessage.role as "user" | "system" | "assistant" | "tool", // Cast to allowed values
             status: dbMessage.status,
             type: dbMessage.type,
             metadata: dbMessage.metadata,
-            position: 0 // Use numeric position instead of JSON
+            position: 0 // Use numeric position
           };
           
           supabase
@@ -189,13 +189,13 @@ export const useMessageStore = create<MessageStore>()(
           const insertData: SupabaseMessageInsert = {
             id: dbMessage.id,
             content: dbMessage.content,
-            user_id: dbMessage.user_id,
-            session_id: sessionId, // Use session_id for Supabase
-            role: dbMessage.role as "assistant" | "system" | "user" | "tool", // Cast to allowed values
+            user_id: dbMessage.user_id || 'anonymous', // Ensure user_id is never null
+            session_id: sessionId, // Use session_id for Supabase (required)
+            role: "assistant", // Use exact string literal
             status: dbMessage.status,
             type: dbMessage.type,
             metadata: dbMessage.metadata,
-            position: 0 // Use numeric position instead of JSON
+            position: 0 // Use numeric position
           };
           
           supabase
@@ -247,13 +247,13 @@ export const useMessageStore = create<MessageStore>()(
           const insertData: SupabaseMessageInsert = {
             id: dbMessage.id,
             content: dbMessage.content,
-            user_id: dbMessage.user_id,
-            session_id: sessionId, // Use session_id for Supabase
-            role: "system" as "system" | "user" | "assistant" | "tool", // Force to system
+            user_id: dbMessage.user_id || 'anonymous', // Ensure user_id is never null
+            session_id: sessionId, // Use session_id for Supabase (required)
+            role: "system", // Use exact string literal
             status: dbMessage.status,
             type: dbMessage.type,
             metadata: dbMessage.metadata,
-            position: 0 // Use numeric position instead of JSON
+            position: 0 // Use numeric position
           };
           
           supabase
@@ -305,13 +305,13 @@ export const useMessageStore = create<MessageStore>()(
           const insertData: SupabaseMessageInsert = {
             id: dbMessage.id,
             content: dbMessage.content,
-            user_id: dbMessage.user_id,
-            session_id: sessionId, // Use session_id for Supabase
-            role: "system" as "system" | "user" | "assistant" | "tool", // Force to system
+            user_id: dbMessage.user_id || 'anonymous', // Ensure user_id is never null
+            session_id: sessionId, // Use session_id for Supabase (required)
+            role: "system", // Use exact string literal
             status: dbMessage.status,
             type: dbMessage.type,
             metadata: dbMessage.metadata,
-            position: 0 // Use numeric position instead of JSON
+            position: 0 // Use numeric position
           };
           
           supabase
