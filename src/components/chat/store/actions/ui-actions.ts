@@ -23,30 +23,33 @@ export const createUIActions: StateCreator<ChatState, [], [], any> = (set) => ({
   },
 
   setSessionLoading: (isLoading: boolean) => {
-    set((state) => ({
+    set({ 
       ui: {
-        ...state.ui,
-        sessionLoading: isLoading
+        sessionLoading: isLoading,
+        messageLoading: set.getState().ui.messageLoading,
+        providerLoading: set.getState().ui.providerLoading
       }
-    }));
+    });
   },
 
   setMessageLoading: (isLoading: boolean) => {
-    set((state) => ({
+    set({ 
       ui: {
-        ...state.ui,
-        messageLoading: isLoading
+        sessionLoading: set.getState().ui.sessionLoading,
+        messageLoading: isLoading,
+        providerLoading: set.getState().ui.providerLoading
       }
-    }));
+    });
   },
 
   setProviderLoading: (isLoading: boolean) => {
-    set((state) => ({
+    set({ 
       ui: {
-        ...state.ui,
+        sessionLoading: set.getState().ui.sessionLoading,
+        messageLoading: set.getState().ui.messageLoading,
         providerLoading: isLoading
       }
-    }));
+    });
   },
 
   setScale: (scale: number) => {

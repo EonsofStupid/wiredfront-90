@@ -1,99 +1,65 @@
+
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { v4 as uuidv4 } from 'uuid';
-import { 
-  Session, 
-  CreateSessionParams, 
-  UpdateSessionParams 
-} from '@/types/sessions';
-import { 
-  createNewSession, 
-  fetchUserSessions, 
-  switchToSession, 
-  updateSession as updateSessionApi,
-  archiveSession as archiveSessionApi,
-  clearAllSessions as clearAllSessionsApi
-} from '@/services/sessions';
-import { mapDbSessionToSession } from '@/services/sessions/mappers';
+import { Session, CreateSessionParams, UpdateSessionParams } from '@/types/sessions';
+import { fetchAllSessions } from '@/services/sessions/sessionFetch';
+import { createSession } from '@/services/sessions/sessionCreate';
+import { updateSession as updateSessionService, updateSessionMetadata } from '@/services/sessions/sessionUpdate';
+import { archiveSession as archiveSessionService } from '@/services/sessions/sessionArchive';
 import { logger } from '@/services/chat/LoggingService';
 
-export interface SessionState {
+export type SessionStore = {
   sessions: Session[];
   currentSessionId: string | null;
   isLoading: boolean;
   error: Error | null;
-  // User property for auth integration
-  user: {
-    id: string | null;
-    email: string | null;
-    isAuthenticated: boolean;
-  };
-}
-
-export interface SessionActions {
+  
+  // Actions
   fetchSessions: () => Promise<void>;
   createSession: (params?: CreateSessionParams) => Promise<string>;
   switchSession: (sessionId: string) => Promise<void>;
-  updateSession: (sessionId: string, params: UpdateSessionParams) => Promise<void>;
-  archiveSession: (sessionId: string) => Promise<void>;
-  clearSessions: (preserveCurrentSession?: boolean) => Promise<void>;
-  cleanupInactiveSessions: () => Promise<void>;
-  setCurrentSessionId: (sessionId: string | null) => void;
-}
-
-export type SessionStore = SessionState & SessionActions;
+  updateSession: (sessionId: string, params: UpdateSessionParams) => Promise<boolean>;
+  archiveSession: (sessionId: string) => Promise<boolean>;
+};
 
 export const useSessionStore = create<SessionStore>()(
   devtools(
     (set, get) => ({
-      // Initial state
       sessions: [],
       currentSessionId: null,
       isLoading: false,
       error: null,
-      user: {
-        id: null,
-        email: null,
-        isAuthenticated: false
-      },
-
-      // Actions
+      
       fetchSessions: async () => {
         try {
           set({ isLoading: true, error: null });
           
-          const sessionsData = await fetchUserSessions();
-          
-          // Map to proper Session type
-          const sessions = Array.isArray(sessionsData) 
-            ? sessionsData.map(mapDbSessionToSession)
-            : [];
-            
-          set({ 
-            sessions,
-            isLoading: false 
-          });
+          const sessions = await fetchAllSessions();
+          set({ sessions, isLoading: false });
           
           logger.info('Sessions fetched', { count: sessions.length });
-          return sessions;
+          
+          // If no current session is set but we have sessions, set the first one as current
+          if (!get().currentSessionId && sessions.length > 0) {
+            set({ currentSessionId: sessions[0].id });
+          }
+          
+          return;
         } catch (error) {
           logger.error('Failed to fetch sessions', { error });
           set({ error: error as Error, isLoading: false });
-          return [];
+          throw error;
         }
       },
+      
       createSession: async (params = {}) => {
         try {
           set({ isLoading: true, error: null });
           
-          // Call API to create a new session
-          const { success, sessionId } = await createNewSession(params);
+          const sessionId = await createSession(params);
           
-          if (!success || !sessionId) {
-            throw new Error('Failed to create session');
-          }
-          
-          // Create a new session object
+          // Add the new session to the store (simplified version)
+          // In a real app, you'd fetch the fresh session or use the returned data
           const newSession: Session = {
             id: sessionId,
             title: params.title || 'New Chat',
@@ -101,12 +67,9 @@ export const useSessionStore = create<SessionStore>()(
             last_accessed: new Date().toISOString(),
             message_count: 0,
             is_active: true,
-            archived: false,
-            metadata: params.metadata || {},
-            user_id: get().user.id || undefined
+            metadata: params.metadata || {}
           };
           
-          // Add to sessions list
           set(state => ({ 
             sessions: [newSession, ...state.sessions],
             currentSessionId: sessionId,
@@ -114,6 +77,7 @@ export const useSessionStore = create<SessionStore>()(
           }));
           
           logger.info('Session created', { sessionId });
+          
           return sessionId;
         } catch (error) {
           logger.error('Failed to create session', { error });
@@ -121,153 +85,90 @@ export const useSessionStore = create<SessionStore>()(
           throw error;
         }
       },
-
+      
       switchSession: async (sessionId) => {
         try {
-          set({ isLoading: true, error: null });
+          // Check if session exists
+          const session = get().sessions.find(s => s.id === sessionId);
           
-          // Call API to switch session
-          const { success } = await switchToSession(sessionId);
-          
-          if (!success) {
-            throw new Error('Failed to switch session');
+          if (!session) {
+            throw new Error(`Session with ID ${sessionId} not found`);
           }
           
-          // Update last_accessed for this session
-          const now = new Date().toISOString();
+          // Update current session in the store
+          set({ currentSessionId: sessionId });
           
-          set(state => ({
-            currentSessionId: sessionId,
-            sessions: state.sessions.map(session => 
-              session.id === sessionId 
-                ? { ...session, last_accessed: now, is_active: true }
-                : { ...session, is_active: false }
-            ),
-            isLoading: false
-          }));
+          // Update last_accessed time in the database
+          await updateSessionService(sessionId, {
+            metadata: {
+              ...session.metadata,
+              last_accessed: new Date().toISOString()
+            }
+          });
           
           logger.info('Switched to session', { sessionId });
+          
+          return;
         } catch (error) {
-          logger.error('Failed to switch session', { error });
-          set({ error: error as Error, isLoading: false });
+          logger.error('Failed to switch session', { error, sessionId });
           throw error;
         }
       },
-
+      
       updateSession: async (sessionId, params) => {
         try {
           set({ isLoading: true, error: null });
           
-          // Call API to update session
-          const { success } = await updateSessionApi(sessionId, params);
+          // Update in database
+          await updateSessionService(sessionId, params);
           
-          if (!success) {
-            throw new Error('Failed to update session');
-          }
-          
-          // Update session in state
+          // Update in store
           set(state => ({
             sessions: state.sessions.map(session => 
               session.id === sessionId 
-                ? { ...session, ...params }
+                ? { ...session, ...params, metadata: { ...session.metadata, ...params.metadata } }
                 : session
             ),
             isLoading: false
           }));
           
           logger.info('Session updated', { sessionId });
+          
+          return true;
         } catch (error) {
-          logger.error('Failed to update session', { error });
+          logger.error('Failed to update session', { error, sessionId });
           set({ error: error as Error, isLoading: false });
-          throw error;
+          return false;
         }
       },
-
+      
       archiveSession: async (sessionId) => {
         try {
           set({ isLoading: true, error: null });
           
-          // Call API to archive session
-          const { success } = await archiveSessionApi(sessionId);
+          // Archive in database
+          await archiveSessionService(sessionId);
           
-          if (!success) {
-            throw new Error('Failed to archive session');
-          }
-          
-          // Update session in state
+          // Update in store
           set(state => ({
             sessions: state.sessions.map(session => 
               session.id === sessionId 
-                ? { ...session, archived: true, is_active: false }
+                ? { ...session, archived: true }
                 : session
             ),
-            currentSessionId: state.currentSessionId === sessionId ? null : state.currentSessionId,
-            isLoading: false
+            isLoading: false,
+            // If the archived session was the current one, set currentSessionId to null
+            currentSessionId: state.currentSessionId === sessionId ? null : state.currentSessionId
           }));
           
           logger.info('Session archived', { sessionId });
+          
+          return true;
         } catch (error) {
-          logger.error('Failed to archive session', { error });
+          logger.error('Failed to archive session', { error, sessionId });
           set({ error: error as Error, isLoading: false });
-          throw error;
+          return false;
         }
-      },
-
-      clearSessions: async (preserveCurrentSession = true) => {
-        try {
-          set({ isLoading: true, error: null });
-          
-          const currentSessionId = get().currentSessionId;
-          
-          // Call API to clear sessions
-          const { success } = await clearAllSessionsApi(
-            preserveCurrentSession ? currentSessionId : null
-          );
-          
-          if (!success) {
-            throw new Error('Failed to clear sessions');
-          }
-          
-          // Update state
-          set(state => ({
-            sessions: preserveCurrentSession && currentSessionId
-              ? state.sessions.filter(session => session.id === currentSessionId)
-              : [],
-            currentSessionId: preserveCurrentSession ? currentSessionId : null,
-            isLoading: false
-          }));
-          
-          logger.info('Sessions cleared', { 
-            preserveCurrentSession, 
-            currentSessionId 
-          });
-        } catch (error) {
-          logger.error('Failed to clear sessions', { error });
-          set({ error: error as Error, isLoading: false });
-          throw error;
-        }
-      },
-
-      cleanupInactiveSessions: async () => {
-        try {
-          set({ isLoading: true, error: null });
-          
-          // Filter out archived sessions
-          set(state => ({
-            sessions: state.sessions.filter(session => !session.archived),
-            isLoading: false
-          }));
-          
-          logger.info('Inactive sessions cleaned up');
-        } catch (error) {
-          logger.error('Failed to cleanup inactive sessions', { error });
-          set({ error: error as Error, isLoading: false });
-          throw error;
-        }
-      },
-
-      setCurrentSessionId: (sessionId) => {
-        set({ currentSessionId: sessionId });
       }
     }),
     { name: 'SessionStore' }

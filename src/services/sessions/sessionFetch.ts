@@ -1,105 +1,92 @@
 
-import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@/types/sessions';
+import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 
 /**
- * Raw session data structure from database
- * Using a completely decoupled interface to prevent type recursion issues
+ * Fetch all sessions for the current user
  */
-interface RawSessionData {
-  id: string;
-  title: string;
-  created_at: string;
-  last_accessed: string;
-  archived: boolean;
-  metadata: any; // Explicitly use any to break type recursion
-  user_id: string | null;
-}
-
-/**
- * Clean mapping function to transform database records to application domain objects
- * This function handles type conversion and provides a clear separation between 
- * database schema and application domain model
- */
-function mapToSession(rawData: RawSessionData, messageCount: number = 0): Session {
-  return {
-    id: rawData.id,
-    title: rawData.title,
-    created_at: rawData.created_at,
-    last_accessed: rawData.last_accessed,
-    message_count: messageCount,
-    is_active: !rawData.archived,
-    archived: rawData.archived,
-    metadata: rawData.metadata, // Already typed as 'any' in the interface
-    user_id: rawData.user_id || undefined
-  };
-}
-
-/**
- * Fetches all sessions for the current authenticated user
- */
-export async function fetchUserSessions(): Promise<Session[]> {
+export async function fetchAllSessions(): Promise<Session[]> {
   try {
-    // Get user from Supabase auth
+    // Get current user
     const { data: { user } } = await supabase.auth.getUser();
+    
     if (!user) {
-      throw new Error('User not authenticated');
-    }
-
-    // Fetch chat sessions for the current user
-    const { data, error } = await supabase
-      .from('chat_sessions')
-      .select(`
-        id,
-        title,
-        created_at,
-        last_accessed,
-        archived,
-        metadata,
-        user_id
-      `)
-      .eq('user_id', user.id)
-      .order('last_accessed', { ascending: false });
-
-    if (error) throw error;
-
-    if (!data || data.length === 0) {
+      logger.warn('No authenticated user found when fetching sessions');
       return [];
     }
-
-    // Transform the data to our internal type to break recursive type chains
-    // Use type assertion only at this boundary between external and internal types
-    const rawSessions: RawSessionData[] = data.map(item => ({
-      id: item.id,
-      title: item.title,
-      created_at: item.created_at,
-      last_accessed: item.last_accessed,
-      archived: item.archived,
-      metadata: item.metadata,
-      user_id: item.user_id
+    
+    // Fetch sessions from Supabase
+    const { data, error } = await supabase
+      .from('chat_sessions')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('archived', false)
+      .order('last_accessed', { ascending: false });
+      
+    if (error) {
+      throw error;
+    }
+    
+    // Format the sessions to match our Session type
+    const sessions: Session[] = data.map(session => ({
+      id: session.id,
+      title: session.title || 'Untitled Chat',
+      created_at: session.created_at,
+      last_accessed: session.last_accessed,
+      message_count: session.message_count || 0,
+      is_active: true,
+      archived: session.archived || false,
+      metadata: session.metadata || {},
+      user_id: session.user_id
     }));
     
-    // Get message counts for each session and map to final Session objects
-    const sessionsWithCounts = await Promise.all(rawSessions.map(async (session) => {
-      // Count messages for this session
-      const { count, error: countError } = await supabase
-        .from('messages')
-        .select('id', { count: 'exact', head: true })
-        .eq('chat_session_id', session.id);
-      
-      if (countError) {
-        logger.warn('Failed to get message count', { error: countError, sessionId: session.id });
-      }
-      
-      // Convert to domain model using the mapper function
-      return mapToSession(session, count || 0);
-    }));
+    logger.info('Successfully fetched sessions', { count: sessions.length });
     
-    logger.info('Sessions fetched', { count: sessionsWithCounts.length });
-    return sessionsWithCounts;
+    return sessions;
   } catch (error) {
-    logger.error('Failed to fetch sessions', { error });
+    logger.error('Error fetching sessions', { error });
+    throw error;
+  }
+}
+
+/**
+ * Fetch a specific session by ID
+ */
+export async function fetchSessionById(sessionId: string): Promise<Session | null> {
+  try {
+    const { data, error } = await supabase
+      .from('chat_sessions')
+      .select('*')
+      .eq('id', sessionId)
+      .single();
+      
+    if (error) {
+      throw error;
+    }
+    
+    if (!data) {
+      return null;
+    }
+    
+    // Format the session to match our Session type
+    const session: Session = {
+      id: data.id,
+      title: data.title || 'Untitled Chat',
+      created_at: data.created_at,
+      last_accessed: data.last_accessed,
+      message_count: data.message_count || 0,
+      is_active: true,
+      archived: data.archived || false,
+      metadata: data.metadata || {},
+      user_id: data.user_id
+    };
+    
+    logger.info('Successfully fetched session', { sessionId });
+    
+    return session;
+  } catch (error) {
+    logger.error('Error fetching session', { error, sessionId });
     throw error;
   }
 }

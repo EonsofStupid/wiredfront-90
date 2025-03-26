@@ -6,11 +6,11 @@ import { Json } from '@/integrations/supabase/types';
  * Maps a database message to the application Message type
  */
 export function mapDbMessageToMessage(dbMessage: any): Message {
-  return {
-    id: dbMessage.id,
+  const mappedMessage: Message = {
+    id: dbMessage.id || '',
     content: dbMessage.content || '',
     user_id: dbMessage.user_id,
-    type: mapDbTypeToMessageType(dbMessage.type),
+    type: mapDbTypeToMessageType(dbMessage.type || 'text'),
     metadata: mapDbMetadataToMessageMetadata(dbMessage.metadata),
     created_at: dbMessage.created_at || new Date().toISOString(),
     updated_at: dbMessage.updated_at || new Date().toISOString(),
@@ -20,14 +20,16 @@ export function mapDbMessageToMessage(dbMessage: any): Message {
     window_state: dbMessage.window_state || {},
     last_accessed: dbMessage.last_accessed || new Date().toISOString(),
     retry_count: dbMessage.retry_count || 0,
-    message_status: mapDbStatusToMessageStatus(dbMessage.message_status),
-    role: mapDbRoleToMessageRole(dbMessage.role),
+    message_status: mapDbStatusToMessageStatus(dbMessage.message_status || 'sent'),
+    role: mapDbRoleToMessageRole(dbMessage.role || 'user'),
     source_type: dbMessage.source_type,
     provider: dbMessage.provider,
     processing_status: dbMessage.processing_status,
     last_retry: dbMessage.last_retry,
     rate_limit_window: dbMessage.rate_limit_window
   };
+
+  return mappedMessage;
 }
 
 /**
@@ -113,30 +115,30 @@ export function mapDbMetadataToMessageMetadata(metadata: Json | null): MessageMe
   
   // Map known fields
   if (typeof metadata === 'object' && metadata !== null && !Array.isArray(metadata)) {
-    if ('model' in metadata) result.model = String(metadata.model);
+    if ('model' in metadata && metadata.model) result.model = String(metadata.model);
     
     // Map token info if present
     if ('tokens' in metadata && typeof metadata.tokens === 'object' && metadata.tokens !== null && !Array.isArray(metadata.tokens)) {
       result.tokens = {
-        prompt: Number(metadata.tokens.prompt) || 0,
-        completion: Number(metadata.tokens.completion) || 0,
-        total: Number(metadata.tokens.total) || 0
+        prompt: Number((metadata.tokens as any).prompt) || 0,
+        completion: Number((metadata.tokens as any).completion) || 0,
+        total: Number((metadata.tokens as any).total) || 0
       };
     }
     
     // Map processing info if present
     if ('processing' in metadata && typeof metadata.processing === 'object' && metadata.processing !== null && !Array.isArray(metadata.processing)) {
       result.processing = {
-        startTime: String(metadata.processing.startTime || ''),
-        endTime: String(metadata.processing.endTime || ''),
-        duration: Number(metadata.processing.duration) || 0
+        startTime: String((metadata.processing as any).startTime || ''),
+        endTime: String((metadata.processing as any).endTime || ''),
+        duration: Number((metadata.processing as any).duration) || 0
       };
     }
     
-    // Copy other properties
+    // Copy other properties safely
     Object.entries(metadata).forEach(([key, value]) => {
-      if (!(key in result)) {
-        result[key] = value;
+      if (key !== 'model' && key !== 'tokens' && key !== 'processing') {
+        result[key] = value as any;
       }
     });
   }
@@ -148,6 +150,13 @@ export function mapDbMetadataToMessageMetadata(metadata: Json | null): MessageMe
  * Maps MessageMetadata to database Json format
  */
 export function mapMessageMetadataToDbMetadata(metadata: MessageMetadata): Json {
-  // Make a deep copy to avoid mutation
-  return JSON.parse(JSON.stringify(metadata)) as Json;
+  // Make a shallow copy to avoid direct mutation
+  const result: Record<string, any> = {};
+  
+  // Copy all properties
+  Object.entries(metadata).forEach(([key, value]) => {
+    result[key] = value;
+  });
+  
+  return result as Json;
 }
