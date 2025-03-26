@@ -37,11 +37,11 @@ const Message = memo(function Message({
       case 'pending':
         return { icon: <Clock className="h-3 w-3 animate-pulse" />, tooltip: 'Sending message...' };
       case 'sent':
-      case 'received': 
-      case 'cached': 
+      case 'received': // Add handling for received status
+      case 'cached': // Add handling for cached status
         return { icon: <Check className="h-3 w-3" />, tooltip: 'Message sent' };
       case 'failed':
-      case 'error': 
+      case 'error': // Add handling for error status
         return { icon: <AlertCircle className="h-3 w-3 text-destructive" />, tooltip: 'Failed to send' };
       default:
         return { icon: <Check className="h-3 w-3" />, tooltip: 'Message sent' };

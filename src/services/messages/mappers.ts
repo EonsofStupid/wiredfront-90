@@ -1,5 +1,5 @@
 
-import { SafeJson } from '@/types/json';
+import { Json } from '@/integrations/supabase/types';
 import { 
   Message, 
   MessageMetadata, 
@@ -9,7 +9,7 @@ import {
   validateMessage,
   messageMetadataSchema
 } from '@/schemas/messages';
-import { validateWithZod, safeValidate } from '@/utils/validation';
+import { validateWithZod } from '@/utils/validation';
 
 /**
  * Maps a database message to the application Message type
@@ -46,11 +46,10 @@ export function mapDbMessageToMessage(dbMessage: any): Message {
 
 /**
  * Maps application Message to database format
- * Uses explicit any type for db message to avoid circular references
  */
-export function mapMessageToDbMessage(message: Message): Record<string, any> {
+export function mapMessageToDbMessage(message: Message): any {
   // Create a new object to avoid direct references
-  return {
+  const dbMessage = {
     id: message.id,
     content: message.content,
     user_id: message.user_id,
@@ -72,6 +71,8 @@ export function mapMessageToDbMessage(message: Message): Record<string, any> {
     last_retry: message.last_retry,
     rate_limit_window: message.rate_limit_window
   };
+
+  return dbMessage;
 }
 
 // Type mappers
@@ -119,29 +120,29 @@ function mapMessageRoleToDbRole(role: MessageRole): string {
 }
 
 /**
- * Maps database metadata to MessageMetadata
- * Using safeValidate to ensure we always return a valid object
+ * Maps database metadata (Json) to MessageMetadata
+ * Using Zod to validate and handle the structure safely
  */
-export function mapDbMetadataToMessageMetadata(metadata: any): MessageMetadata {
+export function mapDbMetadataToMessageMetadata(metadata: Json | null): MessageMetadata {
   if (!metadata) return {};
   
-  // Use safeValidate to ensure we always return a valid object
-  return safeValidate(
+  // Validate with Zod, return empty object on failure
+  return validateWithZod(
     messageMetadataSchema, 
     metadata, 
-    {}, // default empty object if validation fails
     { 
       logErrors: true, 
+      showToast: false, 
       context: 'MessageMetadata' 
     }
-  );
+  ) || {};
 }
 
 /**
- * Maps MessageMetadata to database format
+ * Maps MessageMetadata to database Json format
  * Creating a safe, non-recursive structure
  */
-export function mapMessageMetadataToDbMetadata(metadata: MessageMetadata): SafeJson {
+export function mapMessageMetadataToDbMetadata(metadata: MessageMetadata): Json {
   if (!metadata) return {};
   
   // Create a safe representation for storage
@@ -194,5 +195,5 @@ export function mapMessageMetadataToDbMetadata(metadata: MessageMetadata): SafeJ
     }
   });
   
-  return safeMetadata as SafeJson;
+  return safeMetadata as Json;
 }

@@ -6,12 +6,12 @@ import {
   Message, 
   MessageMetadata, 
   MessageRole, 
-  MessageStatus
+  MessageStatus, 
+  createMessage 
 } from '@/schemas/messages';
 import { supabase } from '@/integrations/supabase/client';
 import { mapMessageToDbMessage, mapDbMessageToMessage } from '@/services/messages/mappers';
 import { logger } from '@/services/chat/LoggingService';
-import { SafeJson } from '@/types/json';
 
 interface MessageState {
   messages: Message[];
@@ -56,7 +56,7 @@ export const useMessageStore = create<MessageStore>()(
             
           if (error) throw error;
           
-          const messages = data ? data.map((dbMsg) => mapDbMessageToMessage(dbMsg)) : [];
+          const messages = data ? data.map(mapDbMessageToMessage) : [];
           
           set({ 
             messages, 
@@ -251,12 +251,12 @@ export const useMessageStore = create<MessageStore>()(
             ? { ...message.metadata, ...updates.metadata }
             : message.metadata;
             
-          const updatedMessage: Message = { 
+          const updatedMessage = { 
             ...message,
             ...updates,
             metadata: updatedMetadata,
             updated_at: new Date().toISOString()
-          } as Message;
+          };
           
           try {
             supabase
