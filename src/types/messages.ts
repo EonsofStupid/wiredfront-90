@@ -23,23 +23,23 @@ export interface DbMessage {
   content: string;
   user_id: string;
   type: string;
-  metadata: any;
+  metadata: SafeJson;
   created_at: string | null;
   updated_at: string | null;
   chat_session_id: string | null;
+  session_id?: string | null; // Alias for chat_session_id in DB
   is_minimized: boolean | null;
-  position: any;
-  window_state: any;
+  position: SafeJson | null;
+  window_state: SafeJson | null;
   last_accessed: string | null;
-  retry_count?: number;
-  message_status?: string;
-  role: string;
-  status?: string;
-  tokens?: number;
-  session_id?: string;
-  source_type?: string;
-  provider?: string;
-  processing_status?: string;
-  last_retry?: string;
-  rate_limit_window?: string;
+  retry_count?: number | null;
+  message_status?: string | null;
+  status?: string | null; // Alias for message_status in DB
+  role: string; // DB uses string, not enum
+  tokens?: number | null;
+  source_type?: string | null;
+  provider?: string | null;
+  processing_status?: string | null;
+  last_retry?: string | null;
+  rate_limit_window?: string | null;
 }

@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
@@ -98,16 +97,19 @@ export const useMessageStore = create<MessageStore>()(
         }));
         
         try {
+          // Convert to DB format
+          const dbMessage = mapMessageToDbMessage(message);
+          
           // Prepare data for Supabase insert
           const insertData = {
-            id: message.id,
-            content: message.content,
-            user_id: message.user_id || 'anonymous',
+            id: dbMessage.id,
+            content: dbMessage.content,
+            user_id: dbMessage.user_id,
             session_id: sessionId, // Use session_id for Supabase
-            role: message.role,
-            status: message.message_status,
-            type: message.type,
-            metadata: message.metadata
+            role: dbMessage.role,
+            status: dbMessage.status,
+            type: dbMessage.type,
+            metadata: dbMessage.metadata
           };
           
           supabase
@@ -152,16 +154,19 @@ export const useMessageStore = create<MessageStore>()(
         }));
         
         try {
+          // Convert to DB format
+          const dbMessage = mapMessageToDbMessage(message);
+          
           // Prepare data for Supabase insert
           const insertData = {
-            id: message.id,
-            content: message.content,
-            user_id: message.user_id || 'anonymous',
+            id: dbMessage.id,
+            content: dbMessage.content,
+            user_id: dbMessage.user_id,
             session_id: sessionId, // Use session_id for Supabase
-            role: message.role,
-            status: message.message_status,
-            type: message.type,
-            metadata: message.metadata
+            role: dbMessage.role,
+            status: dbMessage.status,
+            type: dbMessage.type,
+            metadata: dbMessage.metadata
           };
           
           supabase
@@ -206,16 +211,19 @@ export const useMessageStore = create<MessageStore>()(
         }));
         
         try {
+          // Convert to DB format
+          const dbMessage = mapMessageToDbMessage(message);
+          
           // Prepare data for Supabase insert
           const insertData = {
-            id: message.id,
-            content: message.content,
-            user_id: message.user_id || 'anonymous',
+            id: dbMessage.id,
+            content: dbMessage.content,
+            user_id: dbMessage.user_id,
             session_id: sessionId, // Use session_id for Supabase
-            role: message.role,
-            status: message.message_status,
-            type: message.type,
-            metadata: message.metadata
+            role: dbMessage.role,
+            status: dbMessage.status,
+            type: dbMessage.type,
+            metadata: dbMessage.metadata
           };
           
           supabase
@@ -260,16 +268,19 @@ export const useMessageStore = create<MessageStore>()(
         }));
         
         try {
+          // Convert to DB format
+          const dbMessage = mapMessageToDbMessage(message);
+          
           // Prepare data for Supabase insert
           const insertData = {
-            id: message.id,
-            content: message.content,
-            user_id: message.user_id || 'anonymous',
+            id: dbMessage.id,
+            content: dbMessage.content,
+            user_id: dbMessage.user_id,
             session_id: sessionId, // Use session_id for Supabase
-            role: message.role,
-            status: message.message_status,
-            type: message.type,
-            metadata: message.metadata
+            role: dbMessage.role,
+            status: dbMessage.status,
+            type: dbMessage.type,
+            metadata: dbMessage.metadata
           };
           
           supabase
@@ -308,14 +319,17 @@ export const useMessageStore = create<MessageStore>()(
           } as Message;
           
           try {
+            // Convert message properties for DB update
+            const dbUpdateData = {
+              content: updatedMessage.content,
+              metadata: mapMessageMetadataToDbMetadata(updatedMessage.metadata),
+              status: mapMessageStatusToDbStatus(updatedMessage.message_status),
+              updated_at: updatedMessage.updated_at
+            };
+            
             supabase
               .from('messages')
-              .update({
-                content: updatedMessage.content,
-                metadata: updatedMessage.metadata,
-                status: updatedMessage.message_status,
-                updated_at: updatedMessage.updated_at
-              })
+              .update(dbUpdateData)
               .eq('id', messageId)
               .then(({ error }) => {
                 if (error) {
