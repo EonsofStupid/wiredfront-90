@@ -62,17 +62,4 @@ export function mapSessionMetadataToDbMetadata(metadata?: SessionMetadata): Json
   return JSON.parse(JSON.stringify(metadata));
 }
 
-/**
- * Utility for deleting all sessions
- */
-export async function clearAllSessions(preserveSessionId: string | null = null): Promise<{success: boolean, error?: Error}> {
-  try {
-    // This is a stub that will be fully implemented later
-    return { success: true };
-  } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error : new Error('Failed to clear sessions')
-    };
-  }
-}
+// Removed clearAllSessions function from here to avoid duplicate exports

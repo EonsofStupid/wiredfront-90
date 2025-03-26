@@ -6,6 +6,7 @@ import { Json } from '@/integrations/supabase/types';
  * Maps a database message to the application Message type
  */
 export function mapDbMessageToMessage(dbMessage: any): Message {
+  // Create a new object to avoid reference issues
   const mappedMessage: Message = {
     id: dbMessage.id || '',
     content: dbMessage.content || '',
@@ -109,6 +110,7 @@ function mapMessageRoleToDbRole(role: MessageRole): string {
 
 /**
  * Maps database metadata (Json) to MessageMetadata
+ * Avoiding recursive type by handling explicitly
  */
 export function mapDbMetadataToMessageMetadata(metadata: Json | null): MessageMetadata {
   if (!metadata) return {};
@@ -148,7 +150,13 @@ export function mapDbMetadataToMessageMetadata(metadata: Json | null): MessageMe
       if (key !== 'model' && key !== 'tokens' && key !== 'processing') {
         // Deep copy to avoid reference issues
         if (typeof value === 'object' && value !== null) {
-          result[key] = JSON.parse(JSON.stringify(value));
+          // Use a non-recursive approach for safety
+          try {
+            result[key] = JSON.parse(JSON.stringify(value));
+          } catch (e) {
+            // If circular reference, just use a simple object
+            result[key] = {};
+          }
         } else {
           result[key] = value as any;
         }
@@ -161,11 +169,30 @@ export function mapDbMetadataToMessageMetadata(metadata: Json | null): MessageMe
 
 /**
  * Maps MessageMetadata to database Json format
+ * Avoiding recursive type by handling explicitly
  */
 export function mapMessageMetadataToDbMetadata(metadata: MessageMetadata): Json {
-  // Type safety: create a fresh object
-  const result: Record<string, any> = {};
+  if (!metadata) return {};
   
-  // Create deep copy to avoid reference issues
-  return JSON.parse(JSON.stringify(metadata)) as Json;
+  // Create a safe copy to avoid mutation issues
+  const safeMetadata: Record<string, any> = {};
+  
+  // Copy primitive values and handle objects with deep copy
+  Object.entries(metadata).forEach(([key, value]) => {
+    if (value !== undefined) {
+      if (typeof value === 'object' && value !== null) {
+        try {
+          // Use stringify/parse for deep copy
+          safeMetadata[key] = JSON.parse(JSON.stringify(value));
+        } catch (e) {
+          // Fallback for any circular references
+          safeMetadata[key] = {};
+        }
+      } else {
+        safeMetadata[key] = value;
+      }
+    }
+  });
+  
+  return safeMetadata as Json;
 }

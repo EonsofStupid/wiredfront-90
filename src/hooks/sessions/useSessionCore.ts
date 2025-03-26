@@ -19,7 +19,7 @@ export function useSessionCore() {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
   const { 
-    data: sessions = [], 
+    data: sessions = [] as Session[], // Explicitly type as Session[]
     isLoading,
     isError,
     error,
@@ -32,7 +32,7 @@ export function useSessionCore() {
     }
   });
 
-  // Find current session based on ID
+  // Find current session based on ID - this now has proper typing
   const currentSession = useCallback(() => {
     if (!currentSessionId) return null;
     return sessions.find(session => session.id === currentSessionId) || null;
