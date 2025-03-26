@@ -15,7 +15,7 @@ export const messageMetadataSchema = z.object({
     endTime: z.string().optional(),
     duration: z.number().optional()
   }).optional()
-}).passthrough(); // Use passthrough instead of catchall(z.unknown())
+}).passthrough(); // Use passthrough instead of catchall
 
 export const messageRoleSchema = z.enum(['user', 'assistant', 'system', 'tool']);
 export const messageTypeSchema = z.enum(['text', 'command', 'system', 'image']);
@@ -43,7 +43,7 @@ export const messageSchema = z.object({
   processing_status: z.string().optional(),
   last_retry: z.string().optional(),
   rate_limit_window: z.string().optional(),
-  tokens: z.number().optional(), // Added tokens field
+  tokens: z.number().optional(),
 });
 
 // Create TypeScript types from Zod schemas
@@ -102,7 +102,7 @@ export const createMessage = (
     last_accessed: now,
     retry_count: 0,
     message_status: 'sent',
-    tokens: 0, // Added default value for tokens
+    tokens: 0,
   };
   
   return { ...defaultMessage, ...partial };

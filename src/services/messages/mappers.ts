@@ -38,7 +38,7 @@ export function mapDbMessageToMessage(dbMessage: DbMessage): Message {
     processing_status: dbMessage.processing_status,
     last_retry: dbMessage.last_retry,
     rate_limit_window: dbMessage.rate_limit_window,
-    tokens: dbMessage.tokens || 0 // Added tokens property mapping
+    tokens: dbMessage.tokens || 0
   };
 
   // Validate and return - if invalid, log error but return best attempt
@@ -62,8 +62,8 @@ export function mapMessageToDbMessage(message: Message): DbMessage {
     chat_session_id: message.chat_session_id,
     session_id: message.chat_session_id, // Add session_id (aliases chat_session_id)
     is_minimized: message.is_minimized,
-    position: message.position,
-    window_state: message.window_state,
+    position: message.position as SafeJson,
+    window_state: message.window_state as SafeJson,
     last_accessed: message.last_accessed,
     retry_count: message.retry_count,
     message_status: mapMessageStatusToDbStatus(message.message_status),

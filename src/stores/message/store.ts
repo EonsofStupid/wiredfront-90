@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
@@ -19,6 +20,7 @@ import { logger } from '@/services/chat/LoggingService';
 import { SafeJson } from '@/types/json';
 
 // Define a type for the data we send to Supabase
+// Avoiding deep nesting by using simplified types
 interface SupabaseMessageInsert {
   id: string;
   content: string;
@@ -37,7 +39,7 @@ interface SupabaseMessageInsert {
   window_state?: SafeJson;
   last_accessed?: string;
   retry_count?: number;
-  tokens?: number; // Added tokens field
+  tokens?: number;
 }
 
 interface MessageState {
@@ -135,7 +137,7 @@ export const useMessageStore = create<MessageStore>()(
             status: dbMessage.status,
             type: dbMessage.type,
             metadata: dbMessage.metadata,
-            position: 0,
+            position: 0, // Using number instead of object to avoid deep type recursion
             window_state: {},
             last_accessed: now.toISOString(),
             retry_count: 0,
@@ -196,7 +198,7 @@ export const useMessageStore = create<MessageStore>()(
             status: dbMessage.status,
             type: dbMessage.type,
             metadata: dbMessage.metadata,
-            position: 0,
+            position: 0, // Using number instead of object to avoid deep type recursion
             window_state: {},
             last_accessed: now.toISOString(),
             retry_count: 0,
@@ -257,7 +259,7 @@ export const useMessageStore = create<MessageStore>()(
             status: dbMessage.status,
             type: dbMessage.type,
             metadata: dbMessage.metadata,
-            position: 0,
+            position: 0, // Using number instead of object to avoid deep type recursion
             window_state: {},
             last_accessed: now.toISOString(),
             retry_count: 0,
@@ -318,7 +320,7 @@ export const useMessageStore = create<MessageStore>()(
             status: dbMessage.status,
             type: dbMessage.type,
             metadata: dbMessage.metadata,
-            position: 0,
+            position: 0, // Using number instead of object to avoid deep type recursion
             window_state: {},
             last_accessed: now.toISOString(),
             retry_count: 0,

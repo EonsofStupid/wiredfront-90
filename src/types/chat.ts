@@ -29,8 +29,8 @@ export interface Message {
   updated_at: string;
   user_id: string | null;
   is_minimized: boolean;
-  position: SafeJson;
-  window_state: SafeJson;
+  position: Record<string, unknown>;
+  window_state: Record<string, unknown>;
   last_accessed: string;
   chat_session_id: string;
   retry_count: number;
