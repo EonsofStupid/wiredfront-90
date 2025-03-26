@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
@@ -26,7 +25,7 @@ interface SupabaseMessageInsert {
   user_id: string;
   session_id?: string; 
   chat_session_id?: string;
-  role: string;
+  role: "system" | "user" | "assistant" | "tool";
   status?: string;
   message_status?: string;
   type: string;
@@ -34,7 +33,7 @@ interface SupabaseMessageInsert {
   created_at?: string;
   updated_at?: string;
   is_minimized?: boolean;
-  position?: SafeJson;
+  position?: number; // Changed from SafeJson to number
   window_state?: SafeJson;
   last_accessed?: string;
   retry_count?: number;
@@ -127,16 +126,17 @@ export const useMessageStore = create<MessageStore>()(
           // Convert to DB format
           const dbMessage = mapMessageToDbMessage(message);
           
-          // Prepare data for Supabase insert
+          // Prepare data for Supabase insert with proper typing
           const insertData: SupabaseMessageInsert = {
             id: dbMessage.id,
             content: dbMessage.content,
             user_id: dbMessage.user_id,
             session_id: sessionId, // Use session_id for Supabase
-            role: dbMessage.role,
+            role: dbMessage.role as "user" | "system" | "assistant" | "tool", // Cast to allowed values
             status: dbMessage.status,
             type: dbMessage.type,
-            metadata: dbMessage.metadata
+            metadata: dbMessage.metadata,
+            position: 0 // Use numeric position instead of JSON
           };
           
           supabase
@@ -184,16 +184,17 @@ export const useMessageStore = create<MessageStore>()(
           // Convert to DB format
           const dbMessage = mapMessageToDbMessage(message);
           
-          // Prepare data for Supabase insert
+          // Prepare data for Supabase insert with proper typing
           const insertData: SupabaseMessageInsert = {
             id: dbMessage.id,
             content: dbMessage.content,
             user_id: dbMessage.user_id,
             session_id: sessionId, // Use session_id for Supabase
-            role: dbMessage.role,
+            role: dbMessage.role as "assistant" | "system" | "user" | "tool", // Cast to allowed values
             status: dbMessage.status,
             type: dbMessage.type,
-            metadata: dbMessage.metadata
+            metadata: dbMessage.metadata,
+            position: 0 // Use numeric position instead of JSON
           };
           
           supabase
@@ -241,16 +242,17 @@ export const useMessageStore = create<MessageStore>()(
           // Convert to DB format
           const dbMessage = mapMessageToDbMessage(message);
           
-          // Prepare data for Supabase insert
+          // Prepare data for Supabase insert with proper typing
           const insertData: SupabaseMessageInsert = {
             id: dbMessage.id,
             content: dbMessage.content,
             user_id: dbMessage.user_id,
             session_id: sessionId, // Use session_id for Supabase
-            role: dbMessage.role,
+            role: "system" as "system" | "user" | "assistant" | "tool", // Force to system
             status: dbMessage.status,
             type: dbMessage.type,
-            metadata: dbMessage.metadata
+            metadata: dbMessage.metadata,
+            position: 0 // Use numeric position instead of JSON
           };
           
           supabase
@@ -298,16 +300,17 @@ export const useMessageStore = create<MessageStore>()(
           // Convert to DB format
           const dbMessage = mapMessageToDbMessage(message);
           
-          // Prepare data for Supabase insert
+          // Prepare data for Supabase insert with proper typing
           const insertData: SupabaseMessageInsert = {
             id: dbMessage.id,
             content: dbMessage.content,
             user_id: dbMessage.user_id,
             session_id: sessionId, // Use session_id for Supabase
-            role: dbMessage.role,
+            role: "system" as "system" | "user" | "assistant" | "tool", // Force to system
             status: dbMessage.status,
             type: dbMessage.type,
-            metadata: dbMessage.metadata
+            metadata: dbMessage.metadata,
+            position: 0 // Use numeric position instead of JSON
           };
           
           supabase
