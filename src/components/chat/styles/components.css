@@ -1,0 +1,173 @@
+
+/* ---------- Chat Component Styles ---------- */
+
+/* Chat container */
+.chat-container {
+  width: var(--chat-width);
+  max-width: var(--chat-max-width);
+  min-width: var(--chat-min-width);
+  height: var(--chat-height);
+  min-height: var(--chat-min-height);
+  max-height: var(--chat-max-height);
+  border-radius: var(--chat-border-radius);
+  box-shadow: var(--chat-box-shadow);
+  transition: all var(--chat-transition-speed) var(--chat-animation-timing);
+  color: var(--chat-text);
+  background: var(--chat-bg);
+  position: relative;
+  z-index: var(--z-chat);
+}
+
+.chat-glass {
+  background: var(--chat-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--chat-border);
+}
+
+/* Chat header */
+.chat-header {
+  background: var(--chat-header-bg);
+  border-bottom: 1px solid var(--chat-border);
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: var(--chat-header-height);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-chat-header);
+}
+
+/* Chat footer */
+.chat-footer {
+  background: var(--chat-footer-bg);
+  border-top: 1px solid var(--chat-border);
+  padding: 0.75rem 1rem;
+  height: var(--chat-footer-height);
+  position: sticky;
+  bottom: 0;
+  z-index: var(--z-chat-header);
+}
+
+/* Chat input */
+.chat-input {
+  background: var(--chat-input-bg);
+  color: var(--chat-input-text);
+  border: 1px solid var(--chat-border);
+  border-radius: var(--chat-border-radius);
+  padding: 0.5rem 1rem;
+  width: 100%;
+  transition: all var(--chat-transition-speed) var(--chat-animation-timing);
+}
+
+.chat-input:focus {
+  border-color: var(--chat-accent-primary);
+  box-shadow: 0 0 0 2px var(--chat-accent-primary);
+  outline: none;
+}
+
+/* Chat messages container */
+.chat-messages-container {
+  overflow-y: auto;
+  height: calc(100% - var(--chat-header-height) - var(--chat-footer-height));
+  padding: 1rem;
+}
+
+/* Chat message */
+.chat-message {
+  margin-bottom: 1rem;
+  max-width: 80%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--chat-border-radius);
+  position: relative;
+}
+
+.chat-message-user {
+  background: var(--chat-message-user-bg);
+  color: var(--chat-message-user-text);
+  border: 1px solid var(--chat-message-user-border);
+  border-top-right-radius: 0;
+  margin-left: auto;
+}
+
+.chat-message-assistant {
+  background: var(--chat-message-assistant-bg);
+  color: var(--chat-message-assistant-text);
+  border: 1px solid var(--chat-message-assistant-border);
+  border-top-left-radius: 0;
+  margin-right: auto;
+}
+
+.chat-message-system {
+  background: var(--chat-message-system-bg);
+  color: var(--chat-message-system-text);
+  border: 1px solid var(--chat-message-system-border);
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+/* Dialog */
+.chat-dialog {
+  background: var(--chat-dialog-bg);
+  color: var(--chat-dialog-text);
+  border: 1px solid var(--chat-dialog-border);
+  border-radius: var(--chat-border-radius);
+  box-shadow: var(--chat-box-shadow);
+  z-index: var(--z-chat-dialog);
+}
+
+.chat-dialog-content {
+  background: var(--chat-dialog-content);
+  border-radius: var(--chat-border-radius);
+  padding: 1rem;
+}
+
+/* Button */
+.chat-button {
+  background-color: var(--chat-accent-primary);
+  color: white;
+  border: none;
+  border-radius: var(--chat-border-radius);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all var(--chat-transition-speed) var(--chat-animation-timing);
+}
+
+.chat-button:hover {
+  background-color: var(--chat-accent-secondary);
+}
+
+.chat-icon-button {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--chat-text);
+  transition: all var(--chat-transition-speed) var(--chat-animation-timing);
+}
+
+.chat-icon-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Scrollbar styles for chat elements */
+.chat-scrollbar::-webkit-scrollbar {
+  width: var(--chat-scrollbar-width);
+}
+
+.chat-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--chat-border);
+  border-radius: var(--chat-border-radius);
+}
+
+.chat-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--chat-accent-primary);
+}

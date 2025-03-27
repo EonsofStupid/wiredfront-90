@@ -1,0 +1,107 @@
+
+:root {
+  /* ---------- Chat Token System ---------- */
+  
+  /* Layout & Dimensions */
+  --chat-width: 500px;
+  --chat-height: 500px;
+  --chat-min-width: 350px;
+  --chat-max-width: 800px;
+  --chat-min-height: 350px;
+  --chat-max-height: 800px;
+  --chat-border-radius: 0.5rem;
+  --chat-header-height: 3rem;
+  --chat-footer-height: 4rem;
+  --chat-scrollbar-width: 8px;
+  
+  /* Z-index System - All chat z-indexes use this as base */
+  --z-chat: var(--z-chat, 1000);
+  --z-chat-header: calc(var(--z-chat) + 10);
+  --z-chat-dialog: calc(var(--z-chat) + 100);
+  --z-chat-tooltip: calc(var(--z-chat) + 50);
+  --z-chat-popup: calc(var(--z-chat) + 200);
+  
+  /* Animation & Transitions */
+  --chat-transition-speed: 0.2s;
+  --chat-animation-timing: ease-in-out;
+  
+  /* Shadows & Effects */
+  --chat-box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  --chat-inner-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  --chat-neon-glow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 15px rgba(0, 255, 255, 0.2);
+  --chat-cyber-glow: 0 0 15px rgba(255, 0, 127, 0.5), 0 0 30px rgba(255, 0, 127, 0.2);
+  
+  /* Colors - Base */
+  --chat-bg: hsl(220, 10%, 10%, 0.85);
+  --chat-text: hsl(210, 10%, 90%);
+  --chat-border: hsl(220, 10%, 30%);
+  --chat-header-bg: hsl(220, 10%, 12%, 0.95);
+  --chat-header-text: hsl(210, 10%, 90%);
+  --chat-footer-bg: hsl(220, 10%, 12%, 0.95);
+  --chat-input-bg: hsl(220, 10%, 15%, 0.8);
+  --chat-input-text: hsl(210, 10%, 90%);
+  
+  /* Colors - Messages */
+  --chat-message-user-bg: hsl(240, 20%, 20%, 0.8);
+  --chat-message-user-text: hsl(210, 10%, 95%);
+  --chat-message-user-border: hsl(240, 30%, 30%);
+  
+  --chat-message-assistant-bg: hsl(210, 20%, 15%, 0.8);
+  --chat-message-assistant-text: hsl(210, 10%, 95%);
+  --chat-message-assistant-border: hsl(210, 30%, 30%);
+  
+  --chat-message-system-bg: hsl(280, 20%, 15%, 0.8);
+  --chat-message-system-text: hsl(280, 10%, 95%);
+  --chat-message-system-border: hsl(280, 30%, 30%);
+  
+  /* Colors - Accents */
+  --chat-accent-primary: hsl(200, 100%, 50%);
+  --chat-accent-secondary: hsl(280, 100%, 50%);
+  --chat-accent-success: hsl(120, 70%, 45%);
+  --chat-accent-warning: hsl(40, 100%, 50%);
+  --chat-accent-error: hsl(0, 100%, 60%);
+  
+  /* Colors - Features */
+  --chat-knowledge-background: hsl(200, 70%, 20%);
+  --chat-knowledge-text: hsl(200, 70%, 70%);
+  --chat-knowledge-border: hsl(200, 70%, 40%);
+  
+  --chat-notification-background: hsl(340, 70%, 20%);
+  --chat-notification-text: hsl(340, 70%, 70%);
+  --chat-notification-border: hsl(340, 70%, 40%);
+  
+  /* Colors - Dialog */
+  --chat-dialog-bg: hsl(220, 10%, 12%, 0.95);
+  --chat-dialog-text: hsl(210, 10%, 90%);
+  --chat-dialog-border: hsl(220, 10%, 30%);
+  --chat-dialog-content: hsl(210, 10%, 15%, 0.95);
+}
+
+/* Dark mode adjustments if needed */
+.dark {
+  /* We can add dark mode specific overrides here if needed */
+  /* For now, the default theme is already dark-oriented */
+}
+
+/* WFPULSE theme */
+.wfpulse {
+  --chat-message-user-bg: hsl(260, 20%, 20%, 0.8);
+  --chat-message-user-text: hsl(210, 10%, 95%);
+  --chat-message-user-border: hsl(260, 30%, 40%);
+  
+  --chat-message-assistant-bg: hsl(210, 20%, 15%, 0.8);
+  --chat-message-assistant-text: hsl(210, 10%, 95%);
+  --chat-message-assistant-border: hsl(210, 30%, 40%);
+  
+  --chat-message-system-bg: hsl(280, 20%, 15%, 0.8);
+  --chat-message-system-text: hsl(280, 10%, 95%);
+  --chat-message-system-border: hsl(280, 30%, 40%);
+  
+  /* WFPULSE specific accent colors */
+  --chat-accent-primary: hsl(260, 80%, 50%);
+  --chat-accent-secondary: hsl(280, 80%, 60%);
+  
+  /* Neon glows */
+  --chat-neon-glow: 0 0 10px rgba(139, 92, 246, 0.7), 0 0 15px rgba(139, 92, 246, 0.3);
+  --chat-cyber-glow: 0 0 15px rgba(217, 70, 239, 0.7), 0 0 30px rgba(217, 70, 239, 0.3);
+}

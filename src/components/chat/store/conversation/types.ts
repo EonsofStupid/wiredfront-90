@@ -1,72 +1,80 @@
 
-import { ConversationMetadata } from '@/types/conversations';
+import { Json } from '@/integrations/supabase/types';
+import { ChatMode, TokenEnforcementMode } from '@/integrations/supabase/types/enums';
 
-// Define the conversation state shape
+// Define a more specific type for conversation metadata
+export interface ConversationMetadata {
+  mode?: ChatMode;
+  context?: Record<string, unknown>;
+  settings?: Record<string, unknown>;
+  lastPosition?: { x: number; y: number };
+  providerId?: string;
+  [key: string]: unknown;
+}
+
+// Core conversation interface
 export interface Conversation {
   id: string;
   title: string;
   created_at: string;
   last_accessed: string;
   message_count: number;
-  is_active: boolean;
   archived: boolean;
   metadata?: ConversationMetadata;
   user_id?: string;
 }
 
-// Core state for the conversation store
-export interface ConversationState {
-  conversations: Conversation[];
-  currentConversationId: string | null;
-  isLoading: boolean;
-  isError: boolean;
-  error: Error | null;
-}
+// Conversation status for UI representation
+export type ConversationStatus = 'active' | 'archived' | 'pending';
 
-// Actions for managing conversations
-export interface ConversationActions {
-  // Core actions
-  refreshConversations: () => Promise<void>;
-  setCurrentConversationId: (id: string | null) => void;
-  setLoading: (isLoading: boolean) => void;
-  
-  // CRUD operations
-  createConversation: (params?: CreateConversationParams) => Promise<string>;
-  switchConversation: (conversationId: string) => Promise<void>;
-  updateConversation: (params: { conversationId: string, params: UpdateConversationParams }) => Promise<void>;
-  archiveConversation: (conversationId: string) => Promise<void>;
-  
-  // Cleanup operations
-  clearConversations: (preserveCurrentConversation?: boolean) => Promise<void>;
-  cleanupInactiveConversations: () => Promise<void>;
-}
-
-// Combined store type
-export type ConversationStore = ConversationState & ConversationActions;
-
-// Parameters for creating a new conversation
-export interface CreateConversationParams {
-  title?: string;
-  metadata?: Partial<ConversationMetadata>;
-}
-
-// Parameters for updating an existing conversation
-export interface UpdateConversationParams {
-  title?: string;
-  archived?: boolean;
-  metadata?: Partial<ConversationMetadata>;
-}
-
-// Operation result
+// Conversation operation result interface
 export interface ConversationOperationResult {
   success: boolean;
   conversationId?: string;
   error?: Error | unknown;
 }
 
-// Query keys for React Query
-export const CONVERSATION_QUERY_KEYS = {
-  CONVERSATIONS: ['conversations'],
-  CONVERSATION: (id: string) => ['conversation', id],
-  MESSAGES: (conversationId: string) => ['messages', conversationId],
-};
+// Conversation creation parameters
+export interface CreateConversationParams {
+  title?: string;
+  metadata?: Partial<ConversationMetadata>;
+}
+
+// Conversation update parameters
+export interface UpdateConversationParams {
+  title?: string;
+  archived?: boolean;
+  metadata?: Partial<ConversationMetadata>;
+}
+
+// Conversation store state
+export interface ConversationState {
+  conversations: Record<string, Conversation>;
+  currentConversationId: string | null;
+  isLoading: boolean;
+  error: Error | null;
+  initialized: boolean;
+}
+
+// Conversation store actions
+export interface ConversationActions {
+  // Core actions
+  initialize: () => Promise<void>;
+  reset: () => void;
+  setError: (error: Error | null) => void;
+  setLoading: (isLoading: boolean) => void;
+  
+  // Conversation CRUD
+  fetchConversations: () => Promise<void>;
+  createConversation: (params?: CreateConversationParams) => Promise<string | null>;
+  updateConversation: (id: string, updates: UpdateConversationParams) => Promise<boolean>;
+  archiveConversation: (id: string) => Promise<boolean>;
+  deleteConversation: (id: string) => Promise<boolean>;
+  
+  // Current conversation
+  setCurrentConversationId: (id: string | null) => void;
+  getCurrentConversation: () => Conversation | null;
+}
+
+// Full conversation store type
+export type ConversationStore = ConversationState & ConversationActions;

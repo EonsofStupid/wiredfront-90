@@ -3,8 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { AlignLeft, AlignRight } from "lucide-react";
 import { useChatStore } from "../store/chatStore";
-
-export type ChatPosition = 'bottom-left' | 'bottom-right';
+import { ChatPosition } from "../store/types/chat-store-types";
 
 export function ChatPositionToggle() {
   const { position, setPosition } = useChatStore();

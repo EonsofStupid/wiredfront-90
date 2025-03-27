@@ -1,214 +1,254 @@
 
 import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
-import { useMessageStore } from '@/components/chat/messaging/MessageManager';
-import { useChatStore } from '@/components/chat/store/chatStore';
-import { ConversationStore } from './types';
-import * as conversationService from '@/services/conversations';
+import { devtools } from 'zustand/middleware';
+import { 
+  ConversationStore, 
+  Conversation, 
+  CreateConversationParams, 
+  UpdateConversationParams 
+} from './types';
+import { 
+  fetchConversationsService, 
+  createConversationService, 
+  updateConversationService,
+  archiveConversationService,
+  deleteConversationService
+} from '@/services/conversations';
 import { logger } from '@/services/chat/LoggingService';
 import { toast } from 'sonner';
 
-/**
- * Zustand store for managing all conversation state and actions
- */
+// Initial state
+const initialState = {
+  conversations: {},
+  currentConversationId: null,
+  isLoading: false,
+  error: null,
+  initialized: false
+};
+
 export const useConversationStore = create<ConversationStore>()(
-  immer((set, get) => ({
-    // Initial state
-    conversations: [],
-    currentConversationId: null,
-    isLoading: false,
-    isError: false,
-    error: null,
-    
-    // Core actions
-    setCurrentConversationId: (id) => {
-      set(state => {
-        state.currentConversationId = id;
-      });
-    },
-    
-    setLoading: (isLoading) => {
-      set(state => {
-        state.isLoading = isLoading;
-      });
-    },
-    
-    refreshConversations: async () => {
-      set(state => {
-        state.isLoading = true;
-        state.isError = false;
-        state.error = null;
-      });
-      
-      try {
-        const conversations = await conversationService.fetchUserConversations();
-        set(state => {
-          state.conversations = conversations;
-          state.isLoading = false;
-        });
-      } catch (error) {
-        logger.error('Failed to fetch conversations', { error });
-        set(state => {
-          state.isError = true;
-          state.error = error instanceof Error ? error : new Error(String(error));
-          state.isLoading = false;
-        });
-        toast.error('Failed to load chat conversations');
-      }
-    },
-    
-    // CRUD operations
-    createConversation: async (params) => {
-      const clearMessages = useMessageStore.getState().clearMessages;
-      
-      try {
-        const result = await conversationService.createNewConversation(params);
-        if (result.success && result.conversationId) {
-          const conversationId = result.conversationId;
-          set(state => {
-            state.currentConversationId = conversationId;
+  devtools(
+    (set, get) => ({
+      ...initialState,
+
+      // Core actions
+      initialize: async () => {
+        try {
+          set({ isLoading: true, error: null });
+          await get().fetchConversations();
+          set({ initialized: true, isLoading: false });
+        } catch (error) {
+          logger.error('Failed to initialize conversation store', { error });
+          set({ 
+            error: error instanceof Error ? error : new Error('Failed to initialize'), 
+            isLoading: false 
+          });
+        }
+      },
+
+      reset: () => {
+        set(initialState);
+      },
+
+      setError: (error) => {
+        set({ error });
+      },
+
+      setLoading: (isLoading) => {
+        set({ isLoading });
+      },
+
+      // Conversation CRUD
+      fetchConversations: async () => {
+        try {
+          set({ isLoading: true, error: null });
+          const conversations = await fetchConversationsService();
+          
+          // Convert array to record with conversation id as key
+          const conversationsRecord: Record<string, Conversation> = {};
+          conversations.forEach(conversation => {
+            conversationsRecord[conversation.id] = conversation;
           });
           
-          clearMessages();
-          await get().refreshConversations();
+          set({ conversations: conversationsRecord, isLoading: false });
           
-          toast.success('New chat conversation created');
-          return conversationId;
-        }
-        
-        throw new Error('Failed to create conversation');
-      } catch (error) {
-        logger.error('Error creating conversation', { error });
-        toast.error('Failed to create new conversation');
-        return '';
-      }
-    },
-    
-    switchConversation: async (conversationId) => {
-      const { setSessionLoading } = useChatStore.getState();
-      const { fetchSessionMessages } = useMessageStore.getState();
-      const currentConversationId = get().currentConversationId;
-      
-      try {
-        setSessionLoading(true);
-        
-        // If already on this conversation, just refresh messages
-        if (conversationId === currentConversationId) {
-          setSessionLoading(false);
-          return;
-        }
-        
-        set(state => {
-          state.currentConversationId = conversationId;
-        });
-        
-        await fetchSessionMessages(conversationId);
-        await conversationService.switchToConversation(conversationId);
-        await get().refreshConversations();
-        
-      } catch (error) {
-        logger.error('Error switching conversation', { error, conversationId });
-        toast.error('Failed to switch conversation');
-      } finally {
-        setSessionLoading(false);
-      }
-    },
-    
-    updateConversation: async ({ conversationId, params }) => {
-      try {
-        const result = await conversationService.updateConversation(conversationId, params);
-        if (result.success) {
-          await get().refreshConversations();
-        } else {
-          throw new Error('Failed to update conversation');
-        }
-      } catch (error) {
-        logger.error('Error updating conversation', { error, conversationId });
-        toast.error('Failed to update conversation');
-      }
-    },
-    
-    archiveConversation: async (conversationId) => {
-      try {
-        const result = await conversationService.archiveConversation(conversationId);
-        if (result.success) {
-          await get().refreshConversations();
-          toast.success('Conversation archived');
-        } else {
-          throw new Error('Failed to archive conversation');
-        }
-      } catch (error) {
-        logger.error('Error archiving conversation', { error, conversationId });
-        toast.error('Failed to archive conversation');
-      }
-    },
-    
-    // Cleanup operations
-    clearConversations: async (preserveCurrentConversation = false) => {
-      try {
-        const currentId = get().currentConversationId;
-        const { clearMessages } = useMessageStore.getState();
-        const { resetChatState, clearMiddlewareStorage } = useChatStore.getState();
-        
-        // Clear DB conversations
-        const preserveId = preserveCurrentConversation ? currentId : null;
-        await conversationService.clearAllConversations(preserveId);
-        
-        // Clear local state
-        clearMessages();
-        resetChatState();
-        clearMiddlewareStorage();
-        
-        // If we're not preserving conversations, create a new one
-        if (!preserveCurrentConversation) {
-          const newConversationId = await get().createConversation();
-          logger.info('New conversation created after clearing all', { newConversationId });
-        }
-        
-        // Refresh conversations list
-        await get().refreshConversations();
-        
-        toast.success(
-          preserveCurrentConversation 
-            ? 'All conversations except current cleared' 
-            : 'All conversations cleared, new conversation created'
-        );
-      } catch (error) {
-        logger.error('Error clearing conversations', { error });
-        toast.error('Error clearing conversations');
-      }
-    },
-    
-    cleanupInactiveConversations: async () => {
-      try {
-        const currentId = get().currentConversationId;
-        if (!currentId) {
-          toast.error('No active conversation');
-          return;
-        }
-        
-        const result = await conversationService.clearAllConversations(currentId);
-        if (result.success) {
-          toast.success('Inactive conversations cleared');
-          logger.info('Inactive conversations cleared', { preservedConversation: currentId });
-          
-          // Also clear local storage for inactive conversations
-          const keys = Object.keys(localStorage);
-          keys.forEach(key => {
-            if (key.startsWith('chat-conversation-') && !key.includes(currentId)) {
-              localStorage.removeItem(key);
+          // If no current conversation is set but we have conversations, set the first active one
+          const currentId = get().currentConversationId;
+          if (!currentId && Object.keys(conversationsRecord).length > 0) {
+            // Find the first non-archived conversation
+            const firstActiveId = Object.values(conversationsRecord)
+              .filter(conv => !conv.archived)
+              .sort((a, b) => new Date(b.last_accessed).getTime() - new Date(a.last_accessed).getTime())
+              .map(conv => conv.id)[0];
+            
+            if (firstActiveId) {
+              get().setCurrentConversationId(firstActiveId);
             }
+          }
+        } catch (error) {
+          logger.error('Failed to fetch conversations', { error });
+          set({ 
+            error: error instanceof Error ? error : new Error('Failed to fetch conversations'), 
+            isLoading: false 
+          });
+        }
+      },
+
+      createConversation: async (params = {}) => {
+        try {
+          set({ isLoading: true, error: null });
+          const result = await createConversationService(params);
+          
+          if (!result.success || !result.conversationId) {
+            throw new Error('Failed to create conversation');
+          }
+          
+          await get().fetchConversations();
+          get().setCurrentConversationId(result.conversationId);
+          set({ isLoading: false });
+          
+          return result.conversationId;
+        } catch (error) {
+          logger.error('Failed to create conversation', { error });
+          set({ 
+            error: error instanceof Error ? error : new Error('Failed to create conversation'), 
+            isLoading: false 
+          });
+          return null;
+        }
+      },
+
+      updateConversation: async (id, updates) => {
+        try {
+          const result = await updateConversationService(id, updates);
+          
+          if (!result.success) {
+            throw result.error || new Error('Failed to update conversation');
+          }
+          
+          // Update the conversation in the store directly without refetching all
+          const updatedConversation = {
+            ...get().conversations[id],
+            ...updates,
+            // Update last_accessed if it's not part of the explicit updates
+            last_accessed: updates.last_accessed || new Date().toISOString()
+          };
+          
+          set(state => ({
+            conversations: {
+              ...state.conversations,
+              [id]: updatedConversation
+            }
+          }));
+          
+          return true;
+        } catch (error) {
+          logger.error('Failed to update conversation', { error, conversationId: id });
+          toast.error('Failed to update conversation');
+          return false;
+        }
+      },
+
+      archiveConversation: async (id) => {
+        try {
+          const result = await archiveConversationService(id);
+          
+          if (!result.success) {
+            throw result.error || new Error('Failed to archive conversation');
+          }
+          
+          // Update the conversation in the store
+          const updatedConversation = {
+            ...get().conversations[id],
+            archived: true
+          };
+          
+          set(state => ({
+            conversations: {
+              ...state.conversations,
+              [id]: updatedConversation
+            }
+          }));
+          
+          // If this was the current conversation, select another active one
+          if (get().currentConversationId === id) {
+            const activeConversations = Object.values(get().conversations)
+              .filter(conv => !conv.archived && conv.id !== id);
+              
+            if (activeConversations.length > 0) {
+              // Sort by last accessed and get most recent
+              const nextConversationId = activeConversations
+                .sort((a, b) => new Date(b.last_accessed).getTime() - new Date(a.last_accessed).getTime())[0].id;
+              get().setCurrentConversationId(nextConversationId);
+            } else {
+              get().setCurrentConversationId(null);
+            }
+          }
+          
+          return true;
+        } catch (error) {
+          logger.error('Failed to archive conversation', { error, conversationId: id });
+          toast.error('Failed to archive conversation');
+          return false;
+        }
+      },
+
+      deleteConversation: async (id) => {
+        try {
+          const result = await deleteConversationService(id);
+          
+          if (!result.success) {
+            throw result.error || new Error('Failed to delete conversation');
+          }
+          
+          // Remove the conversation from the store
+          set(state => {
+            const { [id]: removedConversation, ...remainingConversations } = state.conversations;
+            return { conversations: remainingConversations };
           });
           
-          await get().refreshConversations();
-        } else {
-          toast.error('Failed to clear inactive conversations');
-          logger.error('Failed to clear inactive conversations', result.error);
+          // If this was the current conversation, select another one
+          if (get().currentConversationId === id) {
+            const activeConversations = Object.values(get().conversations)
+              .filter(conv => !conv.archived);
+              
+            if (activeConversations.length > 0) {
+              // Sort by last accessed and get most recent
+              const nextConversationId = activeConversations
+                .sort((a, b) => new Date(b.last_accessed).getTime() - new Date(a.last_accessed).getTime())[0].id;
+              get().setCurrentConversationId(nextConversationId);
+            } else {
+              get().setCurrentConversationId(null);
+            }
+          }
+          
+          return true;
+        } catch (error) {
+          logger.error('Failed to delete conversation', { error, conversationId: id });
+          toast.error('Failed to delete conversation');
+          return false;
         }
-      } catch (error) {
-        toast.error('Error cleaning up conversations');
-        logger.error('Error in cleanupInactiveConversations', error);
+      },
+
+      // Current conversation
+      setCurrentConversationId: (id) => {
+        set({ currentConversationId: id });
+        
+        // If we have a valid ID, update the last_accessed time
+        if (id && get().conversations[id]) {
+          get().updateConversation(id, { last_accessed: new Date().toISOString() });
+        }
+      },
+
+      getCurrentConversation: () => {
+        const { currentConversationId, conversations } = get();
+        if (!currentConversationId) return null;
+        return conversations[currentConversationId] || null;
       }
-    },
-  }))
+    }),
+    {
+      name: 'conversation-store',
+      enabled: process.env.NODE_ENV !== 'production'
+    }
+  )
 );

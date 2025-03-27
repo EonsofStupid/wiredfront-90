@@ -1,48 +1,58 @@
 
 import { useConversationStore } from './store';
 
-// Get the current conversation
+// Selectors for core state
+export const useConversationState = () => useConversationStore(state => ({
+  conversations: state.conversations,
+  currentConversationId: state.currentConversationId,
+  isLoading: state.isLoading,
+  error: state.error,
+  initialized: state.initialized
+}));
+
+// Selector for the current conversation
 export const useCurrentConversation = () => {
   return useConversationStore(state => {
-    const { conversations, currentConversationId } = state;
+    const { currentConversationId, conversations } = state;
     if (!currentConversationId) return null;
-    return conversations.find(conversation => conversation.id === currentConversationId) || null;
+    return conversations[currentConversationId] || null;
   });
 };
 
-// Get the current conversation ID
-export const useCurrentConversationId = () => {
-  return useConversationStore(state => state.currentConversationId);
-};
+// Selector for just the current conversation ID
+export const useCurrentConversationId = () => 
+  useConversationStore(state => state.currentConversationId);
 
-// Get all conversations
-export const useConversations = () => {
-  return useConversationStore(state => state.conversations);
-};
-
-// Get active conversations
-export const useActiveConversations = () => {
-  return useConversationStore(state => 
-    state.conversations.filter(conversation => !conversation.archived)
+// Selector for active conversations (not archived)
+export const useActiveConversations = () => 
+  useConversationStore(state => 
+    Object.values(state.conversations)
+      .filter(conversation => !conversation.archived)
+      .sort((a, b) => new Date(b.last_accessed).getTime() - new Date(a.last_accessed).getTime())
   );
-};
 
-// Get archived conversations
-export const useArchivedConversations = () => {
-  return useConversationStore(state => 
-    state.conversations.filter(conversation => conversation.archived)
+// Selector for archived conversations
+export const useArchivedConversations = () => 
+  useConversationStore(state => 
+    Object.values(state.conversations)
+      .filter(conversation => conversation.archived)
+      .sort((a, b) => new Date(b.last_accessed).getTime() - new Date(a.last_accessed).getTime())
   );
-};
 
-// Get loading state
-export const useConversationsLoading = () => {
-  return useConversationStore(state => state.isLoading);
-};
+// Selector for all conversations
+export const useAllConversations = () => 
+  useConversationStore(state => 
+    Object.values(state.conversations)
+      .sort((a, b) => new Date(b.last_accessed).getTime() - new Date(a.last_accessed).getTime())
+  );
 
-// Get error state
-export const useConversationsError = () => {
-  return useConversationStore(state => ({
-    isError: state.isError,
-    error: state.error
-  }));
-};
+// Action selectors
+export const useConversationActions = () => useConversationStore(state => ({
+  initialize: state.initialize,
+  fetchConversations: state.fetchConversations,
+  createConversation: state.createConversation,
+  updateConversation: state.updateConversation,
+  archiveConversation: state.archiveConversation,
+  deleteConversation: state.deleteConversation,
+  setCurrentConversationId: state.setCurrentConversationId
+}));
