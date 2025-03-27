@@ -1,6 +1,6 @@
 
 import { cn } from "@/lib/utils";
-import { ProjectIndexingStatus } from "@/components/projects/ProjectIndexingStatus";
+import { ProjectIndexingStatus } from "@/components/features/projects/ProjectIndexingStatus";
 
 interface IndexingStatusSectionProps {
   isIndexing: boolean;
