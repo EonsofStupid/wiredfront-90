@@ -2,7 +2,7 @@ import React, { RefObject } from 'react';
 import { useChatStore } from '@/components/chat/store/chatStore';
 import { ChatHeaderTopNav } from '@/components/chat/chat-structure/chatheadertopnav';
 import { ChatInput } from '@/components/chat/chat-structure/chatinput';
-import { ChatMessages } from '@/components/chat/chat-structure/messages';
+import { ChatMessages } from '@chat/chat-structure/messages;
 import styles from '@/components/chat/styles/chat.module.css';
 import { cn } from '@/lib/utils';
 
