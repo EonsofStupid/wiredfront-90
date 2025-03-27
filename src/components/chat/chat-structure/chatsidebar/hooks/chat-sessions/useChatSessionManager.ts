@@ -2,7 +2,7 @@
 import { useMessageStore } from '@/components/chat/store/message';
 import { useChatSessionStore } from '@/components/chat/store/chat-sessions/store';
 import { useCallback, useEffect, useState } from 'react';
-import { CreateSessionParams } from '@/types/chatsessions';
+import { CreateSessionParams } from '@/components/chat/shared/types/sessions';
 import { toast } from 'sonner';
 
 /**

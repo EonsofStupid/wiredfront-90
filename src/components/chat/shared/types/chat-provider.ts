@@ -10,6 +10,7 @@ export interface ChatProvider {
   baseUrl?: string;
   requiresAuth?: boolean;
   icon?: string;
+  category?: string; // 'chat', 'image', etc.
   metadata?: Record<string, any>;
 }
 

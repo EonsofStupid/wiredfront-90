@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -8,7 +9,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ChatProviderType } from '@/types/admin/settings/chat-provider';
+import { ChatProviderType } from '@/components/chat/shared/types/chat-provider';
 import { useChatStore } from '@/components/chat/store/chatStore';
 import { 
   Select,

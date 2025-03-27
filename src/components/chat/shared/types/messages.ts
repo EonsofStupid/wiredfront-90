@@ -1,55 +1,27 @@
-/**
- * Re-export message types from schemas (type-only)
- * This file avoids circular dependencies by only importing types
- */
-import { 
-  Message, 
-  MessageMetadata, 
-  MessageRole, 
-  MessageType, 
-  MessageStatus,
-  MessageRequest,
-  MessageResponse 
-} from '@/components/chat/shared/schemas/messages';
 
-// Import and re-export SafeJson type for use in message-related interfaces
-import { type SafeJson } from '@/components/chat/shared/types/json';
-export { type SafeJson };
+import { MessageRole, MessageStatus, MessageType, MessageMetadata } from '../schemas/messages';
 
-// Re-export message types
-export type {
-  Message,
-  MessageMetadata,
-  MessageRole,
-  MessageType,
-  MessageStatus,
-  MessageRequest,
-  MessageResponse
-};
-
-// Define database-specific message types for Supabase operations
-export interface DbMessage {
+export interface Message {
   id: string;
   content: string;
-  user_id: string;
-  type: string;
-  metadata: SafeJson;
-  created_at: string | null;
-  updated_at: string | null;
-  chat_session_id: string | null;
-  session_id?: string | null; // Alias for chat_session_id in DB
-  is_minimized: boolean | null;
-  position: SafeJson | null;
-  window_state: SafeJson | null;
-  last_accessed: string | null;
-  retry_count?: number | null;
-  message_status?: string | null;
-  status?: string | null; // Alias for message_status in DB
-  role: string; // DB uses string, not enum
-  tokens?: number | null;
-  source_type?: string | null;
-  provider?: string | null;
-  processing_status?: string | null;
-  last_retry?: string | null;
-  rate_limit_window?: string | null;
+  role: MessageRole;
+  type: MessageType;
+  chat_session_id: string;
+  created_at: string;
+  updated_at: string;
+  message_status: MessageStatus;
+  metadata: MessageMetadata;
+}
+
+export interface MessageRequest {
+  content: string;
+  sessionId?: string;
+  mode?: string;
+  metadata?: MessageMetadata;
+}
+
+export interface MessageResponse {
+  success: boolean;
+  message?: Message;
+  error?: Error;
 }
