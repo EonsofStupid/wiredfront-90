@@ -1,10 +1,9 @@
-
 import React, { useState } from "react";
 import { Menu, Search, Bell, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMobileMenu } from "../hooks/useMobileMenu";
 import { MobilePageTitle } from "./MobilePageTitle";
-import { useGitHubConnection } from "@/hooks/github/useGitHubConnection";
+import { useGitHubConnection } from '@/components/features/github/hooks/useGitHubConnection';
 import { MobileGitHubConnectModal } from "../components/github/MobileGitHubConnectModal";
 
 /**

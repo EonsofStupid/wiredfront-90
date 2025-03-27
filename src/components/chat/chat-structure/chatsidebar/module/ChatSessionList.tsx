@@ -1,8 +1,8 @@
 import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { SessionItem } from "./SessionItem";
+import { SessionItem } from "./ChatSessionItem";
 import { motion } from "framer-motion";
-import { useChatStore } from "../store/chatStore";
+import { useChatStore } from "@/components/chat/store/chatStore";
 
 interface SessionListProps {
   sessions: Array<{

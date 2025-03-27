@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { MobileLayout } from "./layout/MobileLayout";
@@ -10,7 +9,7 @@ import { MobileChat } from "./components/chat/MobileChat";
 import { MobileErrorBoundary } from "./components/error/MobileErrorBoundary";
 import { MobileGitHubCallback } from "./screens/MobileGitHubCallback";
 import { toast } from "sonner";
-import { useGitHubConnection } from "@/hooks/github/useGitHubConnection";
+import { useGitHubConnection } from '@/components/features/github/hooks/useGitHubConnection';
 
 /**
  * Primary mobile application component that handles routing

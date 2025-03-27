@@ -1,16 +1,15 @@
-
 import React, { Suspense, lazy, useState } from "react";
-import { SessionControls } from "./SessionControls";
-import { useChatSessionManager } from "@/hooks/sessions"; 
-import { SessionHeader } from "./SessionHeader";
-import { useChatStore } from "../store/chatStore";
+import { SessionControls } from "./module/ChatSessionControls";
+import { useChatSessionManager } from "./hooks/chat-sessions/useChatSessionManager";
+import { SessionHeader } from "./module/ChatSessionHeader";
+import { useChatStore } from "@/components/chat/store/chatStore";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useErrorBoundary } from "../hooks/useErrorBoundary";
-import { ChatMode, ModeSelectionDialog } from "../SessionManagement/ModeSelectionDialog";
+import { useErrorBoundary } from "@/components/chat/shared/hooks/useErrorBoundary";
+import { ChatMode, ModeSelectionDialog } from "./module/ModeSelectionDialog";
 
 // Lazy load SessionList for performance
-const SessionList = lazy(() => import("./SessionList").then(mod => ({ default: mod.SessionList })));
-const SessionSkeleton = lazy(() => import("./SessionSkeleton"));
+const SessionList = lazy(() => import("./module/ChatSessionList").then(mod => ({ default: mod.SessionList })));
+const SessionSkeleton = lazy(() => import("./module/ChatSessionSkeleton"));
 
 export const ChatSidebar = () => {
   const {
