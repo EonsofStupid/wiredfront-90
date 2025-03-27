@@ -1,9 +1,9 @@
 import React, { RefObject } from 'react';
-import { useChatStore } from '@/components/chat/store/chatStore';
-import { ChatHeaderTopNav } from '@/components/chat/chat-structure/chatheadertopnav';
-import { ChatInput } from '@/components/chat/chat-structure/chatinput';
+import { useChatStore } from '@chat/store/chatStore';
+import { ChatHeaderTopNav } from '@chat/chat-structure/chatheadertopnav';
+import { ChatInput } from '@chat/chat-structure/chatinput';
 import { ChatMessages } from '@chat/chat-structure/messages;
-import styles from '@/components/chat/styles/chat.module.css';
+import styles from '@chat/styles/chat.module.css';
 import { cn } from '@/lib/utils';
 
 interface ChatContainerProps {
