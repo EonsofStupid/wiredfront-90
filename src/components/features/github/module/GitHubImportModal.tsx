@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ErrorMessage } from "@/components/ui/error-message";
-import { ProjectIndexingStatus } from "@/components/projects/ProjectIndexingStatus";
+import { ProjectIndexingStatus } from "@/components/features/projects/ProjectIndexingStatus";
 import { supabase } from "@/integrations/supabase/client";
 import { useGitHubConnection } from "@/hooks/github/useGitHubConnection";
 import { toast } from "sonner";
