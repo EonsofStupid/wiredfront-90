@@ -12,12 +12,14 @@ import Documents from "./pages/Documents";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import { ChatProvider } from "@/components/chat/ChatProvider";
 import { ChatModeProvider } from "@/components/chat/providers/ChatModeProvider";
+import { AdminTopNavOverlay } from "@/components/admin/navigation/AdminTopNavOverlay";
 
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const isEditorPage = location.pathname === '/editor';
+  const isAdminRoute = location.pathname.startsWith('/admin');
   
   // Optional: Redirect to login if not authenticated
   // useEffect(() => {
@@ -28,6 +30,7 @@ function App() {
     <>
       <ChatProvider>
         <ChatModeProvider isEditorPage={isEditorPage}>
+          {isAdminRoute && <AdminTopNavOverlay />}
           <Routes>
             <Route path="/" element={<AppLayout><Index /></AppLayout>} />
             <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
