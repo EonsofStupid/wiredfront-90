@@ -27,4 +27,5 @@ export interface MessageCreateParams {
   type?: MessageType;
   metadata?: Record<string, any>;
   conversation_id: string;
+  parent_message_id?: string;
 }

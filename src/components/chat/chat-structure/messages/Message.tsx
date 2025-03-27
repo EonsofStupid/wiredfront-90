@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { atom, useAtom } from 'jotai';
 import { cn } from '@/lib/utils';
-import { MessageRole, MessageType } from '@/types/chat/enums';
+import { MessageRole, MessageType, MessageStatus } from '@/types/chat/enums';
 import { Spinner } from '@/components/chat/shared/Spinner';
 import { Avatar } from '@/components/ui/avatar';
 import { MessageActions } from './MessageActions';
@@ -12,10 +12,12 @@ interface MessageProps {
   role: MessageRole;
   content: string;
   type?: MessageType;
+  status?: MessageStatus;
   isLoading?: boolean;
   timestamp?: string;
   onEdit?: (id: string, content: string) => void;
   onDelete?: (id: string) => void;
+  onRetry?: (id: string) => void;
   className?: string;
 }
 
@@ -37,10 +39,12 @@ export const Message = ({
   role,
   content,
   type = 'text',
+  status,
   isLoading = false,
   timestamp,
   onEdit,
   onDelete,
+  onRetry,
   className,
 }: MessageProps) => {
   // Create atoms for this specific message instance
@@ -95,7 +99,7 @@ export const Message = ({
   }
   
   return (
-    <div className={messageClasses}>
+    <div className={messageClasses} id={`message-${id}`}>
       <div className="flex items-center justify-between">
         <div className="text-sm font-medium">
           {isUser ? 'You' : 'Assistant'}
@@ -111,6 +115,7 @@ export const Message = ({
               id={id}
               onEdit={onEdit ? handleEditStart : undefined}
               onDelete={onDelete}
+              onRegenerate={status === 'failed' || status === 'error' ? onRetry : undefined}
               messageRole={role}
             />
           )}

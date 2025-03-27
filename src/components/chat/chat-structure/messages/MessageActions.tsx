@@ -7,7 +7,8 @@ import {
   Edit, 
   Trash, 
   MessageSquare, 
-  Download 
+  Download,
+  RefreshCw
 } from 'lucide-react';
 import { 
   DropdownMenu, 
@@ -93,7 +94,7 @@ export const MessageActions = ({
         
         {isAssistant && onRegenerate && (
           <DropdownMenuItem onClick={onRegenerate}>
-            <MessageSquare className="h-4 w-4 mr-2" />
+            <RefreshCw className="h-4 w-4 mr-2" />
             <span>Regenerate</span>
           </DropdownMenuItem>
         )}

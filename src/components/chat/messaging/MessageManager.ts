@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { Message, MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
+import { Message, MessageRole, MessageStatus, MessageType } from '@/types/chat/message';
 import { logger } from '@/services/chat/LoggingService';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';

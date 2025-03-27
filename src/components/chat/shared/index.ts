@@ -8,3 +8,4 @@ export { ProviderSelector } from './ProviderSelector';
 export { ModelSelector } from './ModelSelector';
 export { EmptyState } from './EmptyState';
 export { LoadingIndicator } from './LoadingIndicator';
+export { TokenBalanceDisplay } from './TokenBalanceDisplay';

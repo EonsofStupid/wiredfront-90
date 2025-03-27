@@ -1,57 +1,42 @@
 
 import React from 'react';
-import { atom, useAtom } from 'jotai';
-import { 
-  AlignStartHorizontal, 
-  AlignEndHorizontal 
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { ChatPosition } from '@/types/chat/enums';
+import { ArrowLeftRight } from "lucide-react";
+import { useChatStore } from '../store/chatStore';
+import { logger } from '@/services/chat/LoggingService';
+import { isChatPosition, isChatPositionCoordinates } from '@/types/chat/enums';
 
-interface ChatPositionToggleProps {
-  position: ChatPosition;
-  onPositionChange: (position: ChatPosition) => void;
-  className?: string;
-}
-
-// Create local atoms for component state
-const isHoveringAtom = atom(false);
-
-export function ChatPositionToggle({
-  position,
-  onPositionChange,
-  className
-}: ChatPositionToggleProps) {
-  const [isHovering, setIsHovering] = useAtom(isHoveringAtom);
+export function ChatPositionToggle() {
+  const { position, setPosition } = useChatStore();
   
-  const togglePosition = () => {
-    const newPosition: ChatPosition = 
-      position === 'bottom-right' ? 'bottom-left' : 'bottom-right';
-    onPositionChange(newPosition);
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // Toggle between bottom-left and bottom-right
+    const newPosition = position === 'bottom-right' ? 'bottom-left' : 'bottom-right';
+    logger.info('Position toggled', { from: position, to: newPosition });
+    setPosition(newPosition);
+  };
+  
+  // Get a display string for the position
+  const getPositionDisplay = (): string => {
+    if (isChatPosition(position)) {
+      return position;
+    }
+    // Ensure we're checking if position is an object with x and y properties
+    if (isChatPositionCoordinates(position)) {
+      return `Custom (${position.x}, ${position.y})`;
+    }
+    return 'Unknown';
   };
   
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className={cn('rounded-full', className)}
-      onClick={togglePosition}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
-      title={`Move to ${position === 'bottom-right' ? 'left' : 'right'} side`}
+    <button
+      className="h-8 w-8 hover:bg-white/10 text-chat-text transition-colors duration-200"
+      onClick={handleClick}
+      title={`Toggle chat position (currently ${getPositionDisplay()})`}
+      data-testid="chat-position-toggle"
     >
-      {position === 'bottom-right' ? (
-        <AlignStartHorizontal className={cn(
-          'h-4 w-4',
-          isHovering && 'text-primary'
-        )} />
-      ) : (
-        <AlignEndHorizontal className={cn(
-          'h-4 w-4',
-          isHovering && 'text-primary'
-        )} />
-      )}
-    </Button>
+      <ArrowLeftRight className="h-4 w-4" />
+    </button>
   );
 }
