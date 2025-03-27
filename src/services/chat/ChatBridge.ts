@@ -10,7 +10,7 @@ import {
   MessageMetadata,
   MessageRequest,
   MessageResponse 
-} from '@/components/chat/shared/types/messages';
+} from '@/components/chat/shared/schemas/messages';
 import { logger } from './LoggingService';
 import { supabase } from '@/integrations/supabase/client';
 

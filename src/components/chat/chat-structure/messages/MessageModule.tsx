@@ -1,14 +1,15 @@
+
 import React, { useEffect, useCallback } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Message as MessageComponent } from "../Message";
+import { Message as MessageComponent } from "./Message";
 import { useMessageStore } from "@/components/chat/store/message";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAutoScroll } from '../hooks/useAutoScroll';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useErrorBoundary } from '../hooks/useErrorBoundary';
+import { useErrorBoundary } from '@/components/chat/shared/hooks/useErrorBoundary';
 import { logger } from '@/services/chat/LoggingService';
 import { MessageSkeleton } from '../ui/MessageSkeleton';
-import { useChatStore } from '../store/chatStore';
+import { useChatStore } from '@/components/chat/store/chatStore';
 import { MessageRole, MessageStatus } from '@/components/chat/shared/schemas/messages';
 
 interface MessageModuleProps {
