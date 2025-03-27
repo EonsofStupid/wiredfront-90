@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { logger } from '@/services/chat/LoggingService';
 import { AIProviderService } from '@/components/chat/shared/services/llm/aiprovider-service/AIProviderService';
-import { ChatProvider } from '@/components/chat/shared/types/chat-provider';
+import { ChatProvider } from '@chat/shared/types/chat-provider';
 import { useChatStore } from '@/components/chat/store';
 
 /**
