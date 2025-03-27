@@ -1,8 +1,9 @@
+
 import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SessionItem } from "./SessionItem";
 import { motion } from "framer-motion";
-import { useChatStore } from "../store/chatStore";
+import { useChatStore } from "../../store/chatStore";
 
 interface SessionListProps {
   sessions: Array<{
@@ -68,3 +69,5 @@ export const SessionList = ({ sessions, onSelectSession }: SessionListProps) => 
     </ScrollArea>
   );
 };
+
+export default SessionList;

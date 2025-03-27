@@ -2,22 +2,22 @@
 import React, { useRef, useEffect, memo } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { Card, CardHeader } from "@/components/ui/card";
-import { ChatHeader } from "./ChatHeader";
-import { ChatContent } from "./ChatContent";
-import { useChatMode } from "../providers/ChatModeProvider";
-import { useChatStore } from "../store/chatStore";
+import { ChatHeader } from "../../chat-structure/header/ChatHeader";
+import { ChatContent } from "../../chat-structure/content/ChatContent";
+import { useChatMode } from "../../providers/ChatModeProvider";
+import { useChatStore } from "../../store/chatStore";
 import { motion } from "framer-motion";
 import { logger } from "@/services/chat/LoggingService";
 
-interface DraggableChatContainerProps {
+interface ChatContainerProps {
   scrollRef: React.RefObject<HTMLDivElement>;
   isEditorPage: boolean;
 }
 
-function DraggableChatContainerBase({
+function ChatContainerBase({
   scrollRef,
   isEditorPage,
-}: DraggableChatContainerProps) {
+}: ChatContainerProps) {
   const { mode } = useChatMode();
   const chatRef = useRef<HTMLDivElement>(null);
   const { isMinimized, showSidebar, toggleSidebar, toggleMinimize, toggleChat, docked, position } = useChatStore();
@@ -136,4 +136,4 @@ function DraggableChatContainerBase({
 }
 
 // Optimize with memo to prevent unnecessary re-renders
-export const DraggableChatContainer = memo(DraggableChatContainerBase);
+export const ChatContainer = memo(ChatContainerBase);

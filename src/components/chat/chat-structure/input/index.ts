@@ -1,0 +1,2 @@
+
+export { ChatInputModule } from './ChatInputModule';

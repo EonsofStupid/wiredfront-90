@@ -2,13 +2,13 @@
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight, Minus, X, Pin, PinOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ChatPositionToggle } from "./ChatPositionToggle";
-import { useChatStore } from "../store/chatStore";
+import { ChatPositionToggle } from "../../shared/ChatPositionToggle";
+import { useChatStore } from "../../store/chatStore";
 import { motion } from "framer-motion";
 import { useLocation } from "react-router-dom";
-import { ChatHeaderTopNav } from "../features/ChatHeaderTopNav";
+import { ChatHeaderTopNav } from "../../features/ChatHeaderTopNav";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { ChatModeDialog } from "../features/ModeSwitch";
+import { ChatModeDialog } from "../../features/ModeSwitch";
 
 interface ChatHeaderProps {
   title: string;

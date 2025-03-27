@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -8,8 +9,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ChatProviderType } from '@/types/admin/settings/chat-provider';
-import { useChatStore } from '../store/chatStore';
+import { useChatStore } from '../../store/chatStore';
 import { 
   Select,
   SelectContent,
@@ -173,11 +173,21 @@ export function ModeSelectionDialog({
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleModeSelect}
-              disabled={isSubmitting || filteredProviders.length === 0}
+              disabled={!selectedProvider || isSubmitting}
+              className="relative"
             >
-              {isSubmitting ? "Creating..." : "Create Chat"}
+              {isSubmitting ? (
+                <>
+                  <span className="opacity-0">Create</span>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                </>
+              ) : (
+                'Create'
+              )}
             </Button>
           </div>
         </div>

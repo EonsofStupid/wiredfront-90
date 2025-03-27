@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useChatMode } from "../providers/ChatModeProvider";
+import { useChatMode } from "../../providers/ChatModeProvider";
 
 export function ModeSwitchModule() {
   const { isEditorPage } = useChatMode();
