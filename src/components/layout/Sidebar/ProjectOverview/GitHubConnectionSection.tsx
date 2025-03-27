@@ -2,7 +2,7 @@
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { GithubIcon } from "lucide-react";
-import { GitHubUserBadge } from "@/components/github/GitHubUserBadge";
+import { GitHubUserBadge } from "@/components/features/github/module/GitHubUserBadge";
 import { GitHubConnectionStatusProps } from "@/types/admin/settings/github";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
