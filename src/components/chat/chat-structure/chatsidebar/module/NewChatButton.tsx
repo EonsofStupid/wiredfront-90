@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { ModeSelectionDialog, ChatMode } from './ModeSelectionDialog';
-import { useChatSessionManager } from '@/hooks/sessions';
+import { useChatSessionManager } from '@/components/chat/hooks/chat-sessions';
 
 interface NewChatButtonProps {
   variant?: "default" | "outline" | "ghost";

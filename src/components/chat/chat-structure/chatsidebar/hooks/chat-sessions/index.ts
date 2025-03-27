@@ -1,7 +1,3 @@
 
-export * from './useChatSessionManager';
-export * from './useChatSessionCore';
-export * from './useChatSessionUpdates';
-export * from './useChatSessionCreation';
-export * from './useChatSessionSwitching';
-export * from './useChatSessionCleanup';
+export { useChatSessionManager } from '@/components/chat/hooks/chat-sessions';
+export { useChatSessionManager as useSessionManager } from '@/components/chat/hooks/chat-sessions';
