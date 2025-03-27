@@ -1,6 +1,7 @@
+
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { Session, CreateSessionParams, UpdateSessionParams } from '@/types/chatsessions';
+import { Session, CreateSessionParams, UpdateSessionParams } from '@/components/chat/shared/types/sessions';
 import { fetchUserSessions } from '@/components/chat/shared/services/chat-sessions/chat-sessionFetch';
 import { createNewSession } from '@/components/chat/shared/services/chat-sessions/chat-sessionCreate';
 import { updateSession as updateSessionService } from '@/components/chat/shared/services/chat-sessions/chat-sessionUpdate';

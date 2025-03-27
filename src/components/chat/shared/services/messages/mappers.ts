@@ -8,7 +8,7 @@ import {
   MessageType,
   validateMessage,
   messageMetadataSchema
-} from '@/components/chat/schemas/messages';
+} from '@/components/chat/shared/schemas/messages';
 import { validateWithZod, safeValidate } from '@/utils/validation';
 import { 
   MessageRequest,
