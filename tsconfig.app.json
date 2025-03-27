@@ -23,7 +23,13 @@
 
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@components/*": ["./src/components/*"],
+      "@chat/*": ["./src/components/chat/*"],
+      "@chat-structure/*": ["./src/components/chat/chat-structure/*"],
+      "@lib/*": ["./src/lib/*"],
+      "@services/*": ["./src/services/*"],
+      "@stores/*": ["./src/stores/*"]
     }
   },
   "include": ["src"]

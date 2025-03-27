@@ -1,0 +1,1 @@
+export { ChatInputModule as ChatInput } from './module/ChatInputModule'; 

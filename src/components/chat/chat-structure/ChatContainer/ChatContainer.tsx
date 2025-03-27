@@ -1,15 +1,14 @@
-
 import React, { useRef, useEffect } from "react";
 import { DndContext } from "@dnd-kit/core";
-import { ChatSidebar } from "./ChatSidebar";
-import { ChatToggleButton } from "./ui/ChatToggleButton";
-import { DraggableChatContainer } from "./ui/DraggableChatContainer";
-import { useViewportAwareness } from "./hooks/useViewportAwareness";
-import { useChatStore } from "./store/chatStore";
+import { ChatSidebar } from "../chatsidebar";
+import { ChatToggleButton } from "../chat-toggle-button/ChatToggleButton";
+import { ChatContainer as DraggableChat } from "@/components/chat/chat-structure/chat-toggle-button/module/ChatContainer";
+import { useViewportAwareness } from "@/components/chat/shared/hooks/useViewportAwareness";
+import { useChatStore } from "@/components/chat/store/chatStore";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { logger } from "@/services/chat/LoggingService";
-import { ChatModeProvider } from "./providers/ChatModeProvider";
+import { ChatModeProvider } from "@/components/chat/providers/ChatModeProvider";
 
 export function ChatContainer() {
   const { 
@@ -83,7 +82,7 @@ export function ChatContainer() {
             )}
           </AnimatePresence>
           
-          <DraggableChatContainer
+          <DraggableChat
             scrollRef={scrollRef}
             isEditorPage={isEditorPage}
           />
