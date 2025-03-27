@@ -3,7 +3,7 @@
  * Unified chat mode enumerations
  */
 
-// Unified ChatMode type
+// Unified ChatMode type - this is the central definition
 export type ChatMode = 
   | 'chat'      // Standard chat mode
   | 'dev'       // Development/code mode (equivalent to 'editor' in UI)
