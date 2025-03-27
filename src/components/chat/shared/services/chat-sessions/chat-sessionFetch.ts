@@ -1,4 +1,4 @@
-import { Session } from '@/types/sessions';
+import { Session } from '@/types/chatsessions';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { mapDbSessionToSession } from './mappers';

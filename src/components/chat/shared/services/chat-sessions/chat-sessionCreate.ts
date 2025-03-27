@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { CreateSessionParams, SessionOperationResult } from '@/types/sessions';
+import { CreateSessionParams, SessionOperationResult } from '@/types/chatsessions';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/services/chat/LoggingService';
 

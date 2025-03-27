@@ -1,7 +1,8 @@
+
 import { useMessageStore } from '@/components/chat/store/message';
 import { useChatSessionStore } from '@/components/chat/store/chat-sessions/store';
 import { useCallback, useEffect, useState } from 'react';
-import { CreateSessionParams } from '@/types/sessions';
+import { CreateSessionParams } from '@/types/chatsessions';
 import { toast } from 'sonner';
 
 /**

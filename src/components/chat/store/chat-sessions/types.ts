@@ -1,6 +1,6 @@
 
 import { User } from '@supabase/supabase-js';
-import { Session, CreateSessionParams, UpdateSessionParams } from '@/types/sessions';
+import { Session, CreateSessionParams, UpdateSessionParams } from '@/types/chatsessions';
 
 export type ChatSessionStore = {
   sessions: Session[];

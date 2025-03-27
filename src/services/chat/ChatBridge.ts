@@ -1,11 +1,10 @@
-
 import { useChatSessionStore } from '@/components/chat/store/chat-sessions/store';
 import { useMessageStore } from '@/components/chat/store/message';
 import { useChatStore } from '@/components/chat/store/chatStore';
 import { 
   CreateSessionParams, 
   UpdateSessionParams
-} from '@/types/sessions';
+} from '@/types/chatsessions';
 import { 
   Message, 
   MessageMetadata,

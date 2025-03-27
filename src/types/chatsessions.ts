@@ -1,3 +1,4 @@
+
 export interface Session {
   id: string;
   title: string;
@@ -10,7 +11,9 @@ export interface Session {
   context: Record<string, any>;
   metadata: Record<string, any>;
   mode: string;
-  is_active?: boolean; // Add this property to fix the error
+  is_active?: boolean;
+  tokens_used?: number;
+  provider_id?: string;
 }
 
 export interface SessionOperationResult {
@@ -29,4 +32,19 @@ export interface UpdateSessionParams {
   title?: string;
   metadata?: Record<string, any>;
   archived?: boolean;
+}
+
+export interface DBSession {
+  id: string;
+  user_id: string;
+  title: string;
+  created_at: string;
+  last_accessed: string;
+  tokens_used?: number;
+  message_count?: number;
+  metadata?: Record<string, any>;
+  archived: boolean;
+  mode: string;
+  provider_id?: string;
+  updated_at?: string;
 }
