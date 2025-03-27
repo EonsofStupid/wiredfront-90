@@ -1,14 +1,14 @@
 
 import { useState } from "react";
 import { useMessageStore } from "@/components/chat/store/message";
-// import { useChatSessionManager } from "@/components/chat/hooks/chat-sessions"; // Removing since module not found
+import { useChatSessionManager } from "@/components/chat/chat-structure/chatsidebar/hooks/chat-sessions";
 import { SettingsContainer } from "./layout/SettingsContainer";
 import { toast } from "sonner";
 import { ChatSettingsTabs } from "./chat/ChatSettingsTabs";
 
 export function ChatSettings() {
   const { clearMessages } = useMessageStore();
-  // Removing useChatSessionManager since module not found
+  const { clearSessions } = useChatSessionManager();
   const [activeTab, setActiveTab] = useState("general");
   
   const [settings, setSettings] = useState({

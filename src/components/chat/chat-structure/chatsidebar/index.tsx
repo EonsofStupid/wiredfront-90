@@ -1,6 +1,7 @@
+
 import React, { Suspense, lazy, useState } from "react";
 import { SessionControls } from "./module/ChatSessionControls";
-import { useChatSessionManager } from "./hooks/chat-sessions/useChatSessionManager";
+import { useChatSessionManager } from "./hooks/chat-sessions";
 import { SessionHeader } from "./module/ChatSessionHeader";
 import { useChatStore } from "@/components/chat/store/chatStore";
 import { Skeleton } from "@/components/ui/skeleton";
