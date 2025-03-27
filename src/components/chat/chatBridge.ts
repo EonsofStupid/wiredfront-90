@@ -5,7 +5,6 @@ import { useMessageStore } from './messaging/MessageManager';
 import { useChatStore } from './store/chatStore';
 import { logger } from '@/services/chat/LoggingService';
 import { 
-  Message, 
   MessageRole, 
   MessageType, 
   MessageStatus,
@@ -14,7 +13,8 @@ import {
   TokenEnforcementMode,
   uiModeToDatabaseMode,
   databaseModeToUiMode,
-  isTokenEnforcementMode
+  isTokenEnforcementMode,
+  isChatMode
 } from '@/types/chat/enums';
 import { Json } from '@/integrations/supabase/types';
 import { Provider } from './store/types/chat-store-types';
@@ -34,7 +34,7 @@ export class ChatBridge {
     role?: MessageRole;
     type?: MessageType;
     metadata?: Record<string, any>;
-  } = {}) {
+  } = {}): string {
     const messageStore = useMessageStore.getState();
     const conversationStore = useConversationStore.getState();
     const chatStore = useChatStore.getState();
@@ -54,7 +54,7 @@ export class ChatBridge {
         // Create a new conversation if needed
         const chatMode = chatStore.currentMode as ChatMode;
         
-        conversationId = conversationStore.createConversation({
+        const newConversationId = conversationStore.createConversation({
           title: content.substring(0, 30) + (content.length > 30 ? '...' : ''),
           metadata: {
             mode: chatMode,
@@ -62,15 +62,17 @@ export class ChatBridge {
           }
         });
         
-        if (!conversationId) {
+        if (!newConversationId) {
           throw new Error('Failed to create conversation');
         }
+        
+        conversationId = newConversationId;
       }
       
       const now = new Date().toISOString();
       
       // Create the message
-      const message: Message = {
+      const message = {
         id: uuidv4(),
         role,
         content,
@@ -86,7 +88,7 @@ export class ChatBridge {
         window_state: {} as Json,
         last_accessed: now,
         retry_count: 0,
-        message_status: 'sent'
+        message_status: 'sent' as MessageStatus
       };
       
       // Add the message to the store
@@ -105,7 +107,7 @@ export class ChatBridge {
     } catch (error) {
       logger.error('Failed to send message through ChatBridge', { error });
       toast.error('Failed to send message');
-      return null;
+      return '';
     }
   }
   
@@ -116,7 +118,7 @@ export class ChatBridge {
     title?: string;
     metadata?: Record<string, any>;
     project_id?: string;
-  } = {}) {
+  } = {}): string {
     const conversationStore = useConversationStore.getState();
     const chatStore = useChatStore.getState();
     
@@ -139,18 +141,19 @@ export class ChatBridge {
         project_id: options.project_id
       };
       
-      return conversationStore.createConversation(params);
+      const conversationId = conversationStore.createConversation(params);
+      return conversationId || '';
     } catch (error) {
       logger.error('Failed to create conversation through ChatBridge', { error });
       toast.error('Failed to create conversation');
-      return null;
+      return '';
     }
   }
   
   /**
    * Switches to a different conversation
    */
-  static switchConversation(conversationId: string) {
+  static switchConversation(conversationId: string): boolean {
     const conversationStore = useConversationStore.getState();
     const messageStore = useMessageStore.getState();
     
@@ -173,7 +176,7 @@ export class ChatBridge {
   /**
    * Archives a conversation
    */
-  static archiveConversation(conversationId: string) {
+  static archiveConversation(conversationId: string): boolean {
     const conversationStore = useConversationStore.getState();
     
     try {
@@ -188,7 +191,7 @@ export class ChatBridge {
   /**
    * Deletes a conversation
    */
-  static deleteConversation(conversationId: string) {
+  static deleteConversation(conversationId: string): boolean {
     const conversationStore = useConversationStore.getState();
     
     try {
@@ -203,7 +206,7 @@ export class ChatBridge {
   /**
    * Updates chat settings
    */
-  static updateChatSettings(settings: Record<string, any>) {
+  static updateChatSettings(settings: Record<string, any>): boolean {
     const chatStore = useChatStore.getState();
     
     try {
@@ -216,20 +219,40 @@ export class ChatBridge {
           uiModeToDatabaseMode[settings.currentMode] : 
           settings.currentMode;
           
-        chatStore.setSelectedMode(mode);
+        // Update the store using the correct action method
+        if (chatStore.setMode) {
+          chatStore.setMode(mode);
+        } else {
+          // Fallback for older code structure
+          chatStore.setState({ currentMode: mode });
+        }
       }
       
       if (settings.selectedModel && typeof settings.selectedModel === 'string') {
-        chatStore.setSelectedModel(settings.selectedModel);
+        // Update the store using the correct action method
+        if (chatStore.setModel) {
+          chatStore.setModel(settings.selectedModel);
+        } else {
+          // Fallback for older code structure
+          chatStore.setState({ selectedModel: settings.selectedModel });
+        }
       }
       
       if (settings.providers && Array.isArray(settings.providers)) {
-        chatStore.updateChatProvider(settings.providers);
+        if (chatStore.updateProviders) {
+          chatStore.updateProviders(settings.providers);
+        } else {
+          chatStore.setState({ availableProviders: settings.providers });
+        }
       }
       
       if (settings.position && 
          (settings.position === 'bottom-left' || settings.position === 'bottom-right')) {
-        chatStore.setPosition(settings.position as ChatPosition);
+        if (chatStore.setPosition) {
+          chatStore.setPosition(settings.position as ChatPosition);
+        } else {
+          chatStore.setState({ position: settings.position as ChatPosition });
+        }
       }
       
       if (settings.tokenEnforcementMode) {
@@ -237,13 +260,31 @@ export class ChatBridge {
           settings.tokenEnforcementMode as TokenEnforcementMode : 
           'never' as TokenEnforcementMode;
         
-        chatStore.setTokenEnforcementMode(enforcementMode);
+        if (chatStore.setTokenEnforcementMode) {
+          chatStore.setTokenEnforcementMode(enforcementMode);
+        } else {
+          chatStore.setState({ 
+            tokenControl: {
+              ...chatStore.tokenControl,
+              enforcementMode
+            }
+          });
+        }
       }
       
       if (settings.features && typeof settings.features === 'object') {
         Object.entries(settings.features).forEach(([key, value]) => {
           if (typeof value === 'boolean' && key in chatStore.features) {
-            chatStore.setFeatureState(key as any, value as boolean);
+            if (chatStore.setFeatureState) {
+              chatStore.setFeatureState(key as any, value as boolean);
+            } else {
+              chatStore.setState({
+                features: {
+                  ...chatStore.features,
+                  [key]: value
+                }
+              });
+            }
           }
         });
       }
@@ -260,7 +301,7 @@ export class ChatBridge {
   /**
    * Sets the current chat mode
    */
-  static setMode(mode: string) {
+  static setMode(mode: string): boolean {
     const chatStore = useChatStore.getState();
     
     try {
@@ -269,7 +310,13 @@ export class ChatBridge {
         uiModeToDatabaseMode[mode] : 
         mode;
         
-      chatStore.setSelectedMode(dbMode);
+      // Use the appropriate store method
+      if (chatStore.setMode) {
+        chatStore.setMode(dbMode);
+      } else {
+        // Fallback for older code structure
+        chatStore.setState({ currentMode: dbMode });
+      }
       
       logger.info('Set chat mode through ChatBridge', { mode, dbMode });
       return true;
@@ -283,11 +330,17 @@ export class ChatBridge {
   /**
    * Sets the current model
    */
-  static setModel(model: string) {
+  static setModel(model: string): boolean {
     const chatStore = useChatStore.getState();
     
     try {
-      chatStore.setSelectedModel(model);
+      // Use the appropriate store method
+      if (chatStore.setModel) {
+        chatStore.setModel(model);
+      } else {
+        // Fallback for older code structure
+        chatStore.setState({ selectedModel: model });
+      }
       
       logger.info('Set chat model through ChatBridge', { model });
       return true;
@@ -301,11 +354,15 @@ export class ChatBridge {
   /**
    * Sets the chat position
    */
-  static setPosition(position: ChatPosition) {
+  static setPosition(position: ChatPosition): boolean {
     const chatStore = useChatStore.getState();
     
     try {
-      chatStore.setPosition(position);
+      if (chatStore.setPosition) {
+        chatStore.setPosition(position);
+      } else {
+        chatStore.setState({ position });
+      }
       
       logger.info('Set chat position through ChatBridge', { position });
       return true;
@@ -319,14 +376,35 @@ export class ChatBridge {
   /**
    * Toggles a chat feature on/off
    */
-  static toggleFeature(featureKey: string, value?: boolean) {
+  static toggleFeature(featureKey: string, value?: boolean): boolean {
     const chatStore = useChatStore.getState();
     
     try {
       if (typeof value === 'boolean') {
-        chatStore.setFeatureState(featureKey as any, value);
+        if (chatStore.setFeatureState) {
+          chatStore.setFeatureState(featureKey as any, value);
+        } else {
+          // Fallback
+          chatStore.setState({
+            features: {
+              ...chatStore.features,
+              [featureKey]: value
+            }
+          });
+        }
       } else {
-        chatStore.toggleFeature(featureKey as any);
+        if (chatStore.toggleFeature) {
+          chatStore.toggleFeature(featureKey as any);
+        } else {
+          // Fallback
+          const currentValue = chatStore.features[featureKey as keyof typeof chatStore.features];
+          chatStore.setState({
+            features: {
+              ...chatStore.features,
+              [featureKey]: !currentValue
+            }
+          });
+        }
       }
       
       logger.info('Toggled feature through ChatBridge', { featureKey, value });
@@ -373,11 +451,41 @@ export class ChatBridge {
     try {
       switch (operation) {
         case 'add':
-          return await chatStore.addTokens(amount);
+          if (chatStore.addTokens) {
+            return await chatStore.addTokens(amount);
+          } else {
+            chatStore.setState({
+              tokenControl: {
+                ...chatStore.tokenControl,
+                balance: chatStore.tokenControl.balance + amount
+              }
+            });
+            return true;
+          }
         case 'spend':
-          return await chatStore.spendTokens(amount);
+          if (chatStore.spendTokens) {
+            return await chatStore.spendTokens(amount);
+          } else {
+            chatStore.setState({
+              tokenControl: {
+                ...chatStore.tokenControl,
+                balance: Math.max(0, chatStore.tokenControl.balance - amount)
+              }
+            });
+            return true;
+          }
         case 'set':
-          return await chatStore.setTokenBalance(amount);
+          if (chatStore.setTokenBalance) {
+            return await chatStore.setTokenBalance(amount);
+          } else {
+            chatStore.setState({
+              tokenControl: {
+                ...chatStore.tokenControl,
+                balance: amount
+              }
+            });
+            return true;
+          }
         default:
           throw new Error(`Unknown token operation: ${operation}`);
       }

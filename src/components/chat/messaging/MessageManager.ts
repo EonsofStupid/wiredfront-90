@@ -1,9 +1,10 @@
 
 import { create } from 'zustand';
-import { Message } from '@/types/chat/message';
+import { Message, MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
 import { logger } from '@/services/chat/LoggingService';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
+import { Json } from '@/integrations/supabase/types';
 
 interface MessageState {
   messages: Message[];
@@ -59,13 +60,27 @@ export const useMessageStore = create<MessageState>((set, get) => ({
       }
       
       // Transform to our Message type
-      const messages: Message[] = data.map(msg => ({
-        ...msg,
-        // Ensure both IDs are set for backward compatibility
-        conversation_id: conversationId,
-        chat_session_id: conversationId,
-        message_status: 'received'
-      }));
+      const messages = data.map(msg => {
+        // Create complete Message objects with all required fields
+        return {
+          id: msg.id,
+          role: msg.role as MessageRole,
+          content: msg.content,
+          type: (msg.type as MessageType) || 'text',
+          user_id: msg.user_id,
+          metadata: msg.metadata as Json || {},
+          created_at: msg.created_at,
+          updated_at: msg.updated_at,
+          conversation_id: conversationId,
+          chat_session_id: conversationId,
+          is_minimized: false,
+          position: {} as Json,
+          window_state: {} as Json,
+          last_accessed: msg.last_accessed || new Date().toISOString(),
+          retry_count: msg.retry_count || 0,
+          message_status: (msg.status as MessageStatus) || 'received'
+        };
+      });
       
       logger.info('Fetched messages', { count: messages.length });
       set({ messages });
@@ -77,17 +92,18 @@ export const useMessageStore = create<MessageState>((set, get) => ({
         role: 'system',
         content: 'Failed to load messages. Please try again.',
         type: 'text',
-        metadata: {},
+        metadata: {} as Json,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         chat_session_id: conversationId,
         conversation_id: conversationId,
         is_minimized: false,
-        position: {},
-        window_state: {},
+        position: {} as Json,
+        window_state: {} as Json,
         last_accessed: new Date().toISOString(),
         retry_count: 0,
-        message_status: 'error'
+        message_status: 'error',
+        user_id: null
       };
       
       set({ messages: [errorMessage] });
