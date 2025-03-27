@@ -1,7 +1,6 @@
-
 import { useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { Message } from '@/components/chat/types/chat';
+import { Message } from '@/components/chat/shared/types/messages';
 import { logger } from '@/services/chat/LoggingService';
 
 export const useMessageSubscription = (

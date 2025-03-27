@@ -1,7 +1,6 @@
-
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { Message, MessageRole, createMessage } from '@/components/chat/schemas/messages';
+import { Message, MessageRole, createMessage } from '@/components/chat/shared/schemas/messages';
 import { logger } from '@/services/chat/LoggingService';
 
 interface MessageState {

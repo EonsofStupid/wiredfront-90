@@ -1,4 +1,3 @@
-
 import { useChatSessionStore } from '@/components/chat/store/chat-sessions';
 import { useMessageStore } from '@/components/chat/store/message';
 import { useChatStore } from '@/components/chat/store/chatStore';
@@ -11,7 +10,7 @@ import {
   MessageMetadata,
   MessageRequest,
   MessageResponse 
-} from '@/components/chat/schemas/messages';
+} from '@/components/chat/shared/types/messages';
 import { logger } from './LoggingService';
 import { supabase } from '@/integrations/supabase/client';
 

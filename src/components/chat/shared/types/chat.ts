@@ -1,22 +1,26 @@
+import { 
+  Message, 
+  MessageRole, 
+  MessageMetadata,
+  MessageRequest,
+  MessageResponse 
+} from '@/components/chat/shared/schemas/messages';
 
 import { 
-  MessageRole, 
   MessageType, 
-  MessageStatus, 
-  MessageMetadata as SchemaMessageMetadata
-} from '@/components/chat/schemas/messages';
+  MessageStatus 
+} from '@/components/chat/shared/schemas/messages';
 
 // Re-export schema types to avoid duplication
 export type { 
-  MessageRole, 
   MessageType, 
   MessageStatus 
-} from '@/components/chat/schemas/messages';
+};
 
 // Use the same MessageMetadata type as in the schemas
 export type { 
   MessageMetadata 
-} from '@/components/chat/schemas/messages';
+} from '@/components/chat/shared/schemas/messages';
 
 // Define a Message interface that matches our schema
 export interface Message {

@@ -1,6 +1,5 @@
-
-import { SafeJson } from '@/components/chat/types/json';
-import { DbMessage } from '@/components/chat/types/messages';
+import { SafeJson } from '@/components/chat/shared/types/json';
+import { DbMessage } from '@/components/chat/shared/types/messages';
 import { 
   Message, 
   MessageMetadata, 
@@ -11,6 +10,10 @@ import {
   messageMetadataSchema
 } from '@/components/chat/schemas/messages';
 import { validateWithZod, safeValidate } from '@/utils/validation';
+import { 
+  MessageRequest,
+  MessageResponse 
+} from '@/components/chat/shared/schemas/messages';
 
 /**
  * Maps a database message to the application Message type

@@ -1,8 +1,7 @@
-
 import { useChatStore, clearMiddlewareStorage } from '@/components/chat/store/chatStore';
 import { logger } from './LoggingService';
 import { toast } from 'sonner';
-import { MessageManager } from '@/components/chat/messaging/MessageManager';
+import { MessageManager } from '@/components/chat/shared/services/messages/MessageManager';
 import { messageCache } from './MessageCacheService';
 
 /**

@@ -1,13 +1,12 @@
-
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { Session, CreateSessionParams, UpdateSessionParams } from '@/types/sessions';
-import { fetchAllSessions } from '@/services/sessions/sessionFetch';
-import { createNewSession } from '@/services/sessions/sessionCreate';
-import { updateSession as updateSessionService } from '@/services/sessions/sessionUpdate';
-import { archiveSession as archiveSessionService } from '@/services/sessions/sessionArchive';
+import { fetchAllSessions } from '@/components/chat/shared/services/chat-sessions/sessionFetch';
+import { createNewSession } from '@/components/chat/shared/services/chat-sessions/sessionCreate';
+import { updateSession as updateSessionService } from '@/components/chat/shared/services/chat-sessions/sessionUpdate';
+import { archiveSession as archiveSessionService } from '@/components/chat/shared/services/chat-sessions/sessionArchive';
 import { logger } from '@/services/chat/LoggingService';
-import { clearAllSessions } from '@/services/sessions/sessionDelete';
+import { clearAllSessions } from '@/components/chat/shared/services/chat-sessions/sessionDelete';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 

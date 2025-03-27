@@ -1,21 +1,31 @@
-
 /**
  * Re-export message types from schemas (type-only)
  * This file avoids circular dependencies by only importing types
  */
-export type { 
+import { 
   Message, 
   MessageMetadata, 
   MessageRole, 
   MessageType, 
   MessageStatus,
   MessageRequest,
-  MessageResponse
-} from '@/components/chat/schemas/messages';
+  MessageResponse 
+} from '@/components/chat/shared/schemas/messages';
 
 // Import and re-export SafeJson type for use in message-related interfaces
-import { type SafeJson } from '@/components/chat/types/json';
+import { type SafeJson } from '@/components/chat/shared/types/json';
 export { type SafeJson };
+
+// Re-export message types
+export type {
+  Message,
+  MessageMetadata,
+  MessageRole,
+  MessageType,
+  MessageStatus,
+  MessageRequest,
+  MessageResponse
+};
 
 // Define database-specific message types for Supabase operations
 export interface DbMessage {
