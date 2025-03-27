@@ -1,4 +1,3 @@
-
 import React, { useEffect, useCallback } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Message as MessageComponent } from "../Message";
@@ -10,7 +9,7 @@ import { useErrorBoundary } from '../hooks/useErrorBoundary';
 import { logger } from '@/services/chat/LoggingService';
 import { MessageSkeleton } from '../ui/MessageSkeleton';
 import { useChatStore } from '../store/chatStore';
-import { MessageRole, MessageStatus } from '@/components/chat/schemas/messages';
+import { MessageRole, MessageStatus } from '@/components/chat/shared/schemas/messages';
 
 interface MessageModuleProps {
   scrollRef: React.RefObject<HTMLDivElement>;
@@ -22,22 +21,17 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
   const { scrollToBottom } = useAutoScroll(scrollRef);
   const { ErrorBoundary, DefaultErrorFallback } = useErrorBoundary();
   
-  // Handle retry logic for failed messages
   const handleRetry = useCallback((messageId: string) => {
     logger.info('Attempting to retry message', { messageId });
-    // In a real implementation, we would call a function from useMessageStore 
-    // to retry sending the message
   }, []);
   
-  // Virtual list implementation for performance optimization
   const rowVirtualizer = useVirtualizer({
     count: messages.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => 80, // Estimated height of each message
-    overscan: 5, // Number of items to render outside of the visible area
+    estimateSize: () => 80,
+    overscan: 5,
   });
   
-  // Scroll to bottom when new messages arrive
   useEffect(() => {
     if (messages.length > 0) {
       scrollToBottom();
@@ -112,7 +106,6 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
             );
           })}
           
-          {/* Render loading indicator for new message */}
           {ui.messageLoading && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
