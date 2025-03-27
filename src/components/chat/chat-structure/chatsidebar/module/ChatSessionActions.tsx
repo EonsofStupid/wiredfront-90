@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Trash2, X } from "lucide-react";
-import { useChatSessionManager } from '@/hooks/sessions';
+import { useChatSessionManager } from '@/components/chat/chat-structure/chatsidebar/hooks/chat-sessions/useChatSessionManager';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog';
 import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';
