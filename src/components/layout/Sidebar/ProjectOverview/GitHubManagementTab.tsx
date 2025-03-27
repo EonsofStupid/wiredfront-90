@@ -18,7 +18,7 @@ import { GitHubAccountCard } from "./github/GitHubAccountCard";
 import { GitHubQuickActions } from "./github/GitHubQuickActions";
 import { GitHubRecentActivity } from "./github/GitHubRecentActivity";
 import { NavigationService } from "@/services/navigation/NavigationService";
-import { GitHubErrorBoundary } from "@/components/github/GitHubErrorBoundary";
+import { GitHubErrorBoundary } from "@/components/features/github/module/GitHubErrorBoundary";
 
 interface GitHubManagementTabProps {
   isConnected: boolean;
