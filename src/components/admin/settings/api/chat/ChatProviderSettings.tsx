@@ -24,7 +24,7 @@ import { ChatPosition } from "@/components/chat/store/types/chat-store-types";
 // Define provider types for chat
 export type ChatProviderType = 'openai' | 'anthropic' | 'gemini' | 'local' | 'perplexity' | 'llama';
 
-interface ChatProvider {
+export interface ChatProvider {
   id: string;
   name: string;
   type: ChatProviderType;
