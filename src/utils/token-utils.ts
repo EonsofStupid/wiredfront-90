@@ -1,47 +1,51 @@
 
-import { Json, TokenEnforcementMode } from '@/integrations/supabase/types';
+import { Json } from '@/integrations/supabase/types';
+import { TokenEnforcementMode } from '@/types/chat/enums';
 
 /**
- * Checks if a string is a valid TokenEnforcementMode
+ * Safely extracts a mode value from metadata
  */
-export function isTokenEnforcementMode(value: string): value is TokenEnforcementMode {
-  return ['always', 'never', 'role_based', 'mode_based'].includes(value);
+export function extractMode(metadata: Record<string, any> | null): string | null {
+  if (!metadata) return null;
+  
+  return metadata.mode || null;
 }
 
 /**
- * Extracts a valid TokenEnforcementMode from metadata or returns a default
+ * Extracts the token enforcement mode from feature flag metadata
  */
-export function extractEnforcementMode(metadata: Json): TokenEnforcementMode {
-  if (!metadata || typeof metadata !== 'object') {
-    return 'never';
+export function extractEnforcementMode(metadata: Record<string, any> | null): TokenEnforcementMode | null {
+  if (!metadata) return null;
+  
+  const mode = typeof metadata === 'object' && 'mode' in metadata 
+    ? metadata.mode as string
+    : null;
+    
+  if (mode && isValidEnforcementMode(mode)) {
+    return mode as TokenEnforcementMode;
   }
   
-  // Try to get the mode from metadata
-  const mode = typeof metadata.mode === 'string' ? metadata.mode : null;
-  
-  if (mode && isTokenEnforcementMode(mode)) {
-    return mode;
+  const enforcementMode = typeof metadata === 'object' && 'enforcement_mode' in metadata
+    ? metadata.enforcement_mode as string
+    : null;
+    
+  if (enforcementMode && isValidEnforcementMode(enforcementMode)) {
+    return enforcementMode as TokenEnforcementMode;
   }
   
-  // Try to get the enforcement_mode directly
-  const enforcementMode = typeof metadata.enforcement_mode === 'string' ? metadata.enforcement_mode : null;
-  
-  if (enforcementMode && isTokenEnforcementMode(enforcementMode)) {
-    return enforcementMode;
-  }
-  
-  return 'never';
+  return null;
 }
 
 /**
- * Format token count for display
+ * Check if a string is a valid TokenEnforcementMode
  */
-export function formatTokenCount(count: number): string {
-  if (count >= 1000000) {
-    return `${(count / 1000000).toFixed(1)}M`;
-  }
-  if (count >= 1000) {
-    return `${(count / 1000).toFixed(1)}K`;
-  }
-  return count.toString();
+function isValidEnforcementMode(mode: string): boolean {
+  return ['always', 'never', 'role_based', 'mode_based', 'warn', 'strict'].includes(mode);
+}
+
+/**
+ * Format token balance for display
+ */
+export function formatTokenBalance(balance: number): string {
+  return new Intl.NumberFormat().format(balance);
 }

@@ -1,7 +1,16 @@
 
-import { Provider } from '../../types/chat-store-types';
+import { ChatState } from '../../types/chat-store-types';
+import { StateCreator } from 'zustand';
 
-// Define the allowed feature keys
+// Define types for state management functions
+export type SetState<T> = (
+  partial: T | Partial<T> | ((state: T) => T | Partial<T>),
+  replace?: boolean
+) => void;
+
+export type GetState<T> = () => T;
+
+// Define feature action keys
 export type FeatureKey = 
   | 'voice'
   | 'rag'
@@ -11,26 +20,36 @@ export type FeatureKey =
   | 'codeAssistant'
   | 'ragSupport'
   | 'githubSync'
-  | 'tokenEnforcement';
+  | 'tokenEnforcement'
+  | string;
 
-// Provider types
-export interface ProviderConfig {
-  id: string;
-  name: string;
-  description?: string;
-  category: 'chat' | 'image' | 'audio' | 'code';
-  isEnabled: boolean;
-  maxTokens?: number;
-  contextSize?: number;
-}
+// Common feature actions
+export interface FeatureActions {
+  // Feature toggle actions
+  toggleFeature: (key: FeatureKey) => void;
+  enableFeature: (key: FeatureKey) => void;
+  disableFeature: (key: FeatureKey) => void;
+  setFeatureState: (key: FeatureKey, enabled: boolean) => void;
 
-// Action parameters
-export interface FeatureActionParams {
-  featureKey: FeatureKey;
-  value?: boolean;
-}
-
-export interface ProviderActionParams {
-  providers: Provider[];
-  currentProviderId?: string;
+  // Position actions
+  togglePosition: () => void;
+  setPosition: (position: any) => void;
+  
+  // Mode actions
+  toggleMode: () => void;
+  setMode: (mode: string) => void;
+  
+  // Model actions
+  setModel: (model: string) => void;
+  
+  // Token actions
+  setTokenBalance: (balance: number) => void;
+  
+  // Dock actions
+  toggleDocked: () => void;
+  setDocked: (docked: boolean) => void;
+  
+  // Provider actions
+  updateProviders: (providers: any[]) => void;
+  updateCurrentProvider: (provider: any) => void;
 }

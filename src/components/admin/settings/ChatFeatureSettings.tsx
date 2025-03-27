@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { FeatureKey } from "@/components/chat/store/actions/feature-actions";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ChatPosition, ChatPositionCoordinates } from "@/types/chat/enums";
 
 export const ChatFeatureSettings = () => {
   const { position, togglePosition, docked, toggleDocked } = useChatStore();
@@ -23,6 +24,16 @@ export const ChatFeatureSettings = () => {
     if (!features.notifications) toggleFeature('notifications' as FeatureKey);
     
     toast.success("Chat features reset to defaults");
+  };
+
+  // Safely determine the position display text
+  const getPositionDisplayText = () => {
+    if (typeof position === 'string') {
+      return position === 'bottom-right' ? 'Bottom Right' : 'Bottom Left';
+    } else if (position && typeof position === 'object') {
+      return `Custom (${position.x}, ${position.y})`;
+    }
+    return 'Unknown';
   };
 
   return (
@@ -43,9 +54,7 @@ export const ChatFeatureSettings = () => {
               <div className="space-y-0.5">
                 <Label htmlFor="position">Position</Label>
                 <p className="text-sm text-muted-foreground">
-                  Current position: {typeof position === 'string' 
-                    ? (position === 'bottom-right' ? 'Bottom Right' : 'Bottom Left') 
-                    : `Custom (${position.x}, ${position.y})`}
+                  Current position: {getPositionDisplayText()}
                 </p>
               </div>
               <Button 

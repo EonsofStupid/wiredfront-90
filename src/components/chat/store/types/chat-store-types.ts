@@ -1,16 +1,17 @@
 
-import { SessionMetadata } from '@/types/sessions';
+import { Json } from '@/integrations/supabase/types';
+import { ChatMode, ChatPosition, ChatPositionCoordinates, TokenEnforcementMode } from '@/types/chat/enums';
 
-export type ChatPosition = 'bottom-left' | 'bottom-right';
-
+// Define Provider type (previously named ChatProvider in some places)
 export interface Provider {
   id: string;
   name: string;
-  description: string;
-  category: 'chat' | 'image' | 'audio' | 'code';
   isEnabled: boolean;
+  category: 'chat' | 'image' | 'audio' | 'video';
+  models?: string[];
   maxTokens?: number;
   contextSize?: number;
+  isDefault?: boolean;
 }
 
 export interface ChatState {
@@ -20,15 +21,14 @@ export interface ChatState {
   isWaitingForResponse: boolean;
   selectedModel: string;
   selectedMode: string;
-  modelFetchStatus: 'idle' | 'loading' | 'success' | 'error';
-  error: Error | null;
+  modelFetchStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
+  error: string | null;
   chatId: string | null;
   docked: boolean;
   isOpen: boolean;
   isHidden: boolean;
-  position: ChatPosition;
+  position: ChatPosition | ChatPositionCoordinates;
   startTime: number;
-  
   features: {
     voice: boolean;
     rag: boolean;
@@ -39,15 +39,15 @@ export interface ChatState {
     ragSupport: boolean;
     githubSync: boolean;
     tokenEnforcement: boolean;
+    [key: string]: boolean;
   };
-  
-  currentMode: string;
+  currentMode: ChatMode;
   availableProviders: Provider[];
   currentProvider: Provider | null;
   
   tokenControl: {
     balance: number;
-    enforcementMode: 'never' | 'warn' | 'strict';
+    enforcementMode: TokenEnforcementMode;
     lastUpdated: string | null;
     tokensPerQuery: number;
     freeQueryLimit: number;
@@ -61,7 +61,6 @@ export interface ChatState {
   isMinimized: boolean;
   showSidebar: boolean;
   scale: number;
-  
   ui: {
     sessionLoading: boolean;
     messageLoading: boolean;

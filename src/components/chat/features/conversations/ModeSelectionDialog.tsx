@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
@@ -9,7 +9,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useChatStore } from '../../store/chatStore';
+import { useChatStore } from '@/components/chat/store/chatStore';
 import { 
   Select,
   SelectContent,
@@ -18,8 +18,11 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Code, ImageIcon, MessageSquare } from 'lucide-react';
+import { useChatBridge } from '@/components/chat/chatBridge';
+import { ChatMode, uiModeToDatabaseMode } from '@/types/chat/enums';
 
-export type ChatMode = 'standard' | 'editor' | 'image';
+// UI representation of the chat mode - will be mapped to database modes
+export type UIMode = 'standard' | 'editor' | 'image' | 'training';
 
 export interface ModeSelectionDialogProps {
   open: boolean;
@@ -34,11 +37,12 @@ export function ModeSelectionDialog({
 }: ModeSelectionDialogProps) {
   const navigate = useNavigate();
   const { providers } = useChatStore();
-  const [selectedMode, setSelectedMode] = useState<ChatMode>('standard');
+  const [selectedMode, setSelectedMode] = useState<UIMode>('standard');
   const [selectedProvider, setSelectedProvider] = useState<string>(
     providers.availableProviders.find(p => p.isEnabled)?.id || ''
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const chatBridge = useChatBridge();
 
   const availableChatProviders = providers.availableProviders.filter(
     p => p.isEnabled && p.category === 'chat'
@@ -54,7 +58,7 @@ export function ModeSelectionDialog({
     : availableChatProviders;
 
   // Set default provider when mode changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (filteredProviders.length > 0) {
       setSelectedProvider(filteredProviders[0].id);
     } else {
@@ -66,7 +70,10 @@ export function ModeSelectionDialog({
     try {
       setIsSubmitting(true);
       
-      await onCreateSession(selectedMode, selectedProvider);
+      // Convert UI mode to database mode
+      const dbMode = uiModeToDatabaseMode[selectedMode] as ChatMode || selectedMode;
+      
+      await onCreateSession(dbMode, selectedProvider);
       
       // Navigate based on selected mode
       switch (selectedMode) {

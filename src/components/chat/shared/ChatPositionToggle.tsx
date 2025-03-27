@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { AlignLeft, AlignRight } from "lucide-react";
 import { useChatStore } from "../store/chatStore";
-import { ChatPosition } from "@/types/chat/enums";
+import { ChatPosition, ChatPositionCoordinates } from "@/types/chat/enums";
 import { logger } from '@/services/chat/LoggingService';
 import { useChatBridge } from '../chatBridge';
 
@@ -12,16 +12,22 @@ export function ChatPositionToggle() {
   const chatBridge = useChatBridge();
   
   const togglePosition = () => {
-    // Ensure we're dealing with a string position
-    const currentPosition = typeof position === 'string' 
-      ? position as ChatPosition 
-      : 'bottom-right' as ChatPosition;
-    
-    const newPosition: ChatPosition = 
-      currentPosition === 'bottom-right' ? 'bottom-left' : 'bottom-right';
-    
-    logger.info('Toggling chat position', { from: currentPosition, to: newPosition });
-    chatBridge.setPosition(newPosition);
+    // Check if position is a string type (ChatPosition)
+    if (typeof position === 'string') {
+      const currentPosition = position as ChatPosition;
+      const newPosition: ChatPosition = 
+        currentPosition === 'bottom-right' ? 'bottom-left' : 'bottom-right';
+      
+      logger.info('Toggling chat position', { from: currentPosition, to: newPosition });
+      chatBridge.setPosition(newPosition);
+    } 
+    // If it's an object with x,y coordinates
+    else if (position && typeof position === 'object') {
+      // Default to bottom-right if we need to convert from coordinates to position
+      const newPosition: ChatPosition = 'bottom-right';
+      logger.info('Switching from coordinates to fixed position', { to: newPosition });
+      chatBridge.setPosition(newPosition);
+    }
   };
   
   // Get the current position for display

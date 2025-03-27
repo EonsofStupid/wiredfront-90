@@ -226,30 +226,22 @@ export class ChatBridge {
           uiModeToDatabaseMode[settings.currentMode] : 
           settings.currentMode;
           
-        // Update the store using the correct action method
+        // Update the mode using setMode action
         if (chatStore.setMode) {
           chatStore.setMode(mode);
-        } else {
-          // Fallback for older code structure
-          chatStore.setState({ currentMode: mode });
         }
       }
       
       if (settings.selectedModel && typeof settings.selectedModel === 'string') {
-        // Update the store using the correct action method
+        // Update the model using the setModel action
         if (chatStore.setModel) {
           chatStore.setModel(settings.selectedModel);
-        } else {
-          // Fallback for older code structure
-          chatStore.setState({ selectedModel: settings.selectedModel });
         }
       }
       
       if (settings.providers && Array.isArray(settings.providers)) {
         if (chatStore.updateProviders) {
           chatStore.updateProviders(settings.providers);
-        } else {
-          chatStore.setState({ availableProviders: settings.providers });
         }
       }
       
@@ -257,8 +249,6 @@ export class ChatBridge {
          (settings.position === 'bottom-left' || settings.position === 'bottom-right')) {
         if (chatStore.setPosition) {
           chatStore.setPosition(settings.position as ChatPosition);
-        } else {
-          chatStore.setState({ position: settings.position as ChatPosition });
         }
       }
       
@@ -275,19 +265,6 @@ export class ChatBridge {
           if (typeof value === 'boolean' && key in chatStore.features) {
             if (chatStore.setFeatureState) {
               chatStore.setFeatureState(key as any, value as boolean);
-              
-              // If setting token enforcement feature, update the token store too
-              if (key === 'tokenEnforcement') {
-                tokenStore.setEnforcementEnabled(value as boolean);
-              }
-            } else {
-              // Fallback
-              chatStore.setState({
-                features: {
-                  ...chatStore.features,
-                  [key]: value
-                }
-              });
               
               // If setting token enforcement feature, update the token store too
               if (key === 'tokenEnforcement') {
@@ -322,9 +299,6 @@ export class ChatBridge {
       // Use the appropriate store method
       if (chatStore.setMode) {
         chatStore.setMode(dbMode);
-      } else {
-        // Fallback for older code structure
-        chatStore.setState({ currentMode: dbMode });
       }
       
       logger.info('Set chat mode through ChatBridge', { mode, dbMode });
@@ -346,9 +320,6 @@ export class ChatBridge {
       // Use the appropriate store method
       if (chatStore.setModel) {
         chatStore.setModel(model);
-      } else {
-        // Fallback for older code structure
-        chatStore.setState({ selectedModel: model });
       }
       
       logger.info('Set chat model through ChatBridge', { model });
@@ -369,8 +340,6 @@ export class ChatBridge {
     try {
       if (chatStore.setPosition) {
         chatStore.setPosition(position);
-      } else {
-        chatStore.setState({ position });
       }
       
       logger.info('Set chat position through ChatBridge', { position });
@@ -392,27 +361,10 @@ export class ChatBridge {
       if (typeof value === 'boolean') {
         if (chatStore.setFeatureState) {
           chatStore.setFeatureState(featureKey as any, value);
-        } else {
-          // Fallback
-          chatStore.setState({
-            features: {
-              ...chatStore.features,
-              [featureKey]: value
-            }
-          });
         }
       } else {
         if (chatStore.toggleFeature) {
           chatStore.toggleFeature(featureKey as any);
-        } else {
-          // Fallback
-          const currentValue = chatStore.features[featureKey as keyof typeof chatStore.features];
-          chatStore.setState({
-            features: {
-              ...chatStore.features,
-              [featureKey]: !currentValue
-            }
-          });
         }
       }
       
