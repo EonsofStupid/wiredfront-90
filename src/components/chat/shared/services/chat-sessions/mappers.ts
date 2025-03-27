@@ -1,65 +1,41 @@
 
-import { Session, SessionMetadata } from '@/types/sessions';
-import { Json } from '@/integrations/supabase/types';
+import { Session, DBSession } from '@/types/sessions';
 
 /**
- * Maps a database session to the application Session type
+ * Maps a database session to our front-end Session type
  */
-export function mapDbSessionToSession(dbSession: any): Session {
+export function mapDbSessionToSession(dbSession: DBSession): Session {
   return {
     id: dbSession.id,
-    title: dbSession.title || 'Unnamed Session',
-    created_at: dbSession.created_at || new Date().toISOString(),
-    last_accessed: dbSession.last_accessed || new Date().toISOString(),
+    user_id: dbSession.user_id,
+    title: dbSession.title,
+    created_at: dbSession.created_at,
+    last_accessed: dbSession.last_accessed,
+    tokens_used: dbSession.tokens_used || 0,
     message_count: dbSession.message_count || 0,
-    is_active: dbSession.is_active !== false,
-    archived: dbSession.archived === true,
-    metadata: mapDbMetadataToSessionMetadata(dbSession.metadata),
-    user_id: dbSession.user_id
+    metadata: dbSession.metadata || {},
+    archived: dbSession.archived,
+    mode: dbSession.mode,
+    provider_id: dbSession.provider_id,
   };
 }
 
 /**
- * Maps application Session to database format
+ * Maps our front-end Session type to the database format
  */
-export function mapSessionToDbSession(session: Session): any {
+export function mapSessionToDbSession(session: Session): DBSession {
   return {
     id: session.id,
+    user_id: session.user_id,
     title: session.title,
     created_at: session.created_at,
     last_accessed: session.last_accessed,
+    tokens_used: session.tokens_used,
     message_count: session.message_count,
-    is_active: session.is_active,
+    metadata: session.metadata,
     archived: session.archived,
-    metadata: mapSessionMetadataToDbMetadata(session.metadata),
-    user_id: session.user_id
+    mode: session.mode,
+    provider_id: session.provider_id,
+    updated_at: new Date().toISOString(),
   };
 }
-
-/**
- * Maps database metadata to SessionMetadata
- */
-export function mapDbMetadataToSessionMetadata(metadata: Json | null): SessionMetadata {
-  if (!metadata) return {};
-  
-  if (typeof metadata === 'object' && metadata !== null && !Array.isArray(metadata)) {
-    // Extract known fields as needed
-    return {
-      ...(metadata as any)
-    };
-  }
-  
-  return {};
-}
-
-/**
- * Maps SessionMetadata to database format
- */
-export function mapSessionMetadataToDbMetadata(metadata?: SessionMetadata): Json {
-  if (!metadata) return {};
-  
-  // Make a deep copy to avoid mutation
-  return JSON.parse(JSON.stringify(metadata));
-}
-
-// Removed clearAllSessions function from here to avoid duplicate exports

@@ -1,50 +1,46 @@
 
-/**
- * Clean types for session management without recursive dependencies
- */
-
-// Define our own metadata type instead of using Json to avoid recursive dependencies
-export type SessionMetadata = {
-  providerId?: string;
-  mode?: string;
-  models?: string[];
-  tags?: string[];
-  projectId?: string;
-  [key: string]: any;
-};
-
-// Core session interface
 export interface Session {
   id: string;
+  user_id: string;
   title: string;
   created_at: string;
   last_accessed: string;
+  tokens_used: number;
   message_count: number;
-  is_active?: boolean; 
-  archived?: boolean;  
-  metadata?: SessionMetadata;
-  user_id?: string;
+  metadata: Record<string, any>;
+  archived: boolean;
+  mode?: string;
+  provider_id?: string;
 }
 
-// Session status for UI representation
-export type SessionStatus = 'active' | 'archived' | 'pending';
-
-// Session operation result interface
-export interface SessionOperationResult {
-  success: boolean;
-  sessionId?: string;
-  error?: Error | unknown;
-}
-
-// Session creation parameters
 export interface CreateSessionParams {
   title?: string;
-  metadata?: SessionMetadata;
+  metadata?: Record<string, any>;
 }
 
-// Session update parameters
 export interface UpdateSessionParams {
   title?: string;
   archived?: boolean;
-  metadata?: SessionMetadata;
+  metadata?: Record<string, any>;
+}
+
+export interface SessionOperationResult {
+  success: boolean;
+  sessionId?: string;
+  error?: any;
+}
+
+export interface DBSession {
+  id: string;
+  user_id: string;
+  title: string;
+  created_at: string;
+  last_accessed: string;
+  tokens_used?: number;
+  message_count?: number;
+  metadata?: Record<string, any>;
+  mode?: string;
+  archived: boolean;
+  provider_id?: string;
+  updated_at: string;
 }

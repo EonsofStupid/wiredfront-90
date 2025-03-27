@@ -1,4 +1,5 @@
-import { useChatSessionStore } from '@/components/chat/store/chat-sessions';
+
+import { useChatSessionStore } from '@/components/chat/store/chat-sessions/store';
 import { useMessageStore } from '@/components/chat/store/message';
 import { useChatStore } from '@/components/chat/store/chatStore';
 import { 
@@ -232,11 +233,6 @@ export const useChatBridge = () => {
     
     // UI
     toggleChat: chatStore.toggleChat,
-    isOpen: chatStore.isOpen,
-    // Use appropriate UI actions from the store
-    toggleUIState: chatStore.toggleUIState,
-    isMinimized: chatStore.isMinimized,
-    position: chatStore.position,
-    docked: chatStore.docked
+    isOpen: chatStore.isOpen
   };
 };
