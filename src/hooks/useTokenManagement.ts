@@ -1,27 +1,34 @@
+
 import { useEffect, useState } from 'react';
 import { useChatStore } from '@/components/chat/store/chatStore';
+import { useTokenStore } from '@/components/chat/store/token';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/auth';
 import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';
 import { useCombinedFeatureFlag } from './useFeatureFlags';
 import { FeatureKey } from '@/components/chat/store/actions/feature-actions';
-import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
-import { Json } from '@/integrations/supabase/types';
-import { isTokenEnforcementMode, extractEnforcementMode } from '@/utils/token-utils';
+import { TokenEnforcementMode } from '@/types/chat/enums';
+import { extractEnforcementMode } from '@/utils/token-utils';
 import { withTokenErrorBoundary } from '@/components/tokens/TokenErrorBoundary';
 
 export function useTokenManagement() {
   const { user } = useAuthStore();
+  const { features, setFeatureState } = useChatStore();
   const { 
-    tokenControl, 
-    features,
-    addTokens, 
-    spendTokens, 
+    balance,
+    enforcementMode,
+    isEnforcementEnabled,
+    tokensPerQuery,
+    freeQueryLimit,
+    queriesUsed,
+    addTokens,
+    spendTokens,
     setTokenBalance,
-    setTokenEnforcementMode,
-    setFeatureState 
-  } = useChatStore();
+    setEnforcementMode,
+    setEnforcementEnabled
+  } = useTokenStore();
+  
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   
@@ -96,12 +103,13 @@ export function useTokenManagement() {
         if (data) {
           // Enable/disable token enforcement based on global flag
           setFeatureState('tokenEnforcement', data.enabled);
+          setEnforcementEnabled(data.enabled);
           
           // Set enforcement mode from metadata if available
           if (data.metadata) {
             const mode = extractEnforcementMode(data.metadata);
             if (mode) {
-              setTokenEnforcementMode(mode);
+              setEnforcementMode(mode);
             } else {
               logger.warn('No valid enforcement mode found in metadata');
             }
@@ -113,60 +121,72 @@ export function useTokenManagement() {
     };
     
     fetchTokenConfig();
-  }, [user?.id, setFeatureState, setTokenEnforcementMode]);
+  }, [user?.id, setFeatureState, setEnforcementMode, setEnforcementEnabled]);
   
   // Function to check if a user has enough tokens for an operation
   const hasEnoughTokens = (amount = 1) => {
     // If token enforcement is disabled, always return true
-    if (!features.tokenEnforcement) return true;
+    if (!features.tokenEnforcement || !isEnforcementEnabled || enforcementMode === 'never') {
+      return true;
+    }
     
-    return tokenControl.balance >= amount;
+    // If mode is 'warn', allow but will warn
+    if (enforcementMode === 'warn') {
+      return true;
+    }
+    
+    return balance >= amount;
   };
   
   // Function to handle token spending with error handling
   const handleSpendTokens = async (amount = 1) => {
     // If token enforcement is disabled, allow the operation
-    if (!features.tokenEnforcement) return true;
+    if (!features.tokenEnforcement || !isEnforcementEnabled || enforcementMode === 'never') {
+      return true;
+    }
     
     if (!user) {
       toast.error('You must be logged in to use this feature');
       return false;
     }
     
-    if (!hasEnoughTokens(amount)) {
+    if (!hasEnoughTokens(amount) && enforcementMode !== 'warn') {
       toast.error(`Not enough tokens. You need ${amount} tokens for this operation.`);
       return false;
     }
     
     try {
       const success = await spendTokens(amount);
-      if (!success) {
+      if (!success && enforcementMode !== 'warn') {
         toast.error('Failed to process tokens. Please try again.');
       }
-      return success;
+      return success || enforcementMode === 'warn';
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('Error spending tokens:', error);
       toast.error(`Error processing tokens: ${errorMessage}`);
-      return false;
+      return enforcementMode === 'warn'; // Allow operation to proceed if in warn mode
     }
   };
   
   return {
-    tokenBalance: tokenControl.balance,
-    enforcementMode: tokenControl.enforcementMode,
-    isTokenEnforcementEnabled: features.tokenEnforcement,
-    tokensPerQuery: tokenControl.tokensPerQuery,
-    freeQueryLimit: tokenControl.freeQueryLimit,
-    queriesUsed: tokenControl.queriesUsed,
+    tokenBalance: balance,
+    enforcementMode,
+    isTokenEnforcementEnabled: features.tokenEnforcement && isEnforcementEnabled,
+    tokensPerQuery,
+    freeQueryLimit,
+    queriesUsed,
     isLoading,
     error,
     addTokens,
     spendTokens: handleSpendTokens,
     setTokenBalance,
     hasEnoughTokens,
-    setEnforcementMode: setTokenEnforcementMode,
-    toggleTokenEnforcement: () => setFeatureState('tokenEnforcement', !features.tokenEnforcement)
+    setEnforcementMode,
+    toggleTokenEnforcement: () => {
+      setFeatureState('tokenEnforcement', !features.tokenEnforcement);
+      setEnforcementEnabled(!isEnforcementEnabled);
+    }
   };
 }
 

@@ -1,6 +1,6 @@
 
 import { useCallback } from 'react';
-import { useChatStore } from '@/components/chat/store/chatStore';
+import { useTokenStore } from '@/components/chat/store/token';
 import { useChatBridge } from '@/components/chat/chatBridge';
 import { TokenEnforcementMode } from '@/types/chat/enums';
 import { toast } from 'sonner';
@@ -9,7 +9,16 @@ import { toast } from 'sonner';
  * Hook to manage token operations
  */
 export const useTokens = () => {
-  const { tokenControl } = useChatStore();
+  const { 
+    balance, 
+    enforcementMode, 
+    isEnforcementEnabled,
+    tokensPerQuery,
+    freeQueryLimit,
+    queriesUsed,
+    lastUpdated
+  } = useTokenStore();
+  
   const chatBridge = useChatBridge();
   
   // Add tokens to the user's balance
@@ -33,7 +42,7 @@ export const useTokens = () => {
       return false;
     }
     
-    if (tokenControl.balance < amount) {
+    if (balance < amount && isEnforcementEnabled && enforcementMode !== 'never' && enforcementMode !== 'warn') {
       toast.error('Not enough tokens');
       return false;
     }
@@ -43,7 +52,7 @@ export const useTokens = () => {
       toast.success(`Spent ${amount} tokens`);
     }
     return success;
-  }, [chatBridge, tokenControl.balance]);
+  }, [chatBridge, balance, isEnforcementEnabled, enforcementMode]);
   
   // Set token balance to a specific amount
   const setTokenBalance = useCallback(async (amount: number) => {
@@ -64,22 +73,40 @@ export const useTokens = () => {
     return chatBridge.updateChatSettings({ tokenEnforcementMode: mode });
   }, [chatBridge]);
   
+  // Toggle token enforcement
+  const toggleEnforcement = useCallback(() => {
+    return chatBridge.toggleFeature('tokenEnforcement');
+  }, [chatBridge]);
+  
   // Check if user has enough tokens for an operation
   const hasEnoughTokens = useCallback((amount: number) => {
-    return tokenControl.balance >= amount;
-  }, [tokenControl.balance]);
+    if (!isEnforcementEnabled || enforcementMode === 'never' || enforcementMode === 'warn') {
+      return true;
+    }
+    return balance >= amount;
+  }, [balance, isEnforcementEnabled, enforcementMode]);
   
   // Check if the enforcement is active
   const isEnforcementActive = useCallback(() => {
-    return tokenControl.enforcementMode !== 'never';
-  }, [tokenControl.enforcementMode]);
+    return isEnforcementEnabled && enforcementMode !== 'never';
+  }, [isEnforcementEnabled, enforcementMode]);
   
   return {
-    tokenControl,
+    // State
+    balance,
+    enforcementMode,
+    isEnforcementEnabled,
+    tokensPerQuery,
+    freeQueryLimit,
+    queriesUsed,
+    lastUpdated,
+    
+    // Actions
     addTokens,
     spendTokens,
     setTokenBalance,
     setEnforcementMode,
+    toggleEnforcement,
     hasEnoughTokens,
     isEnforcementActive
   };

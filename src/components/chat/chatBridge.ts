@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import { useConversationStore } from './store/conversation/store';
 import { useMessageStore } from './messaging/MessageManager';
@@ -21,6 +20,7 @@ import { Provider } from './store/types/chat-store-types';
 import { v4 as uuidv4 } from 'uuid';
 import { MessageCreateParams } from '@/types/chat/message';
 import { CreateConversationParams } from '@/types/chat/conversation';
+import { useTokenStore } from './store/token';
 
 /**
  * ChatBridge is the central communication layer between the app and the chat client.
@@ -208,10 +208,21 @@ export class ChatBridge {
    */
   static updateChatSettings(settings: Record<string, any>): boolean {
     const chatStore = useChatStore.getState();
+    const tokenStore = useTokenStore.getState();
     
     try {
-      // For now, this is a simple pass-through to the chat store
-      // In the future, this can handle more complex logic
+      // Map UI mode to database mode if needed
+      const currentMode = chatStore.currentMode;
+      const uiMode = currentMode in databaseModeToUiMode ? 
+        databaseModeToUiMode[currentMode as ChatMode] : 
+        currentMode;
+      
+      // Add chat store context to metadata
+      const metadata = {
+        ...options.metadata,
+        mode: uiMode,
+        providerId: chatStore.currentProvider?.id
+      };
       
       if (settings.currentMode && typeof settings.currentMode === 'string') {
         // Map UI mode to database mode if needed
@@ -260,16 +271,7 @@ export class ChatBridge {
           settings.tokenEnforcementMode as TokenEnforcementMode : 
           'never' as TokenEnforcementMode;
         
-        if (chatStore.setTokenEnforcementMode) {
-          chatStore.setTokenEnforcementMode(enforcementMode);
-        } else {
-          chatStore.setState({ 
-            tokenControl: {
-              ...chatStore.tokenControl,
-              enforcementMode
-            }
-          });
-        }
+        tokenStore.setEnforcementMode(enforcementMode);
       }
       
       if (settings.features && typeof settings.features === 'object') {
@@ -277,13 +279,24 @@ export class ChatBridge {
           if (typeof value === 'boolean' && key in chatStore.features) {
             if (chatStore.setFeatureState) {
               chatStore.setFeatureState(key as any, value as boolean);
+              
+              // If setting token enforcement feature, update the token store too
+              if (key === 'tokenEnforcement') {
+                tokenStore.setEnforcementEnabled(value as boolean);
+              }
             } else {
+              // Fallback
               chatStore.setState({
                 features: {
                   ...chatStore.features,
                   [key]: value
                 }
               });
+              
+              // If setting token enforcement feature, update the token store too
+              if (key === 'tokenEnforcement') {
+                tokenStore.setEnforcementEnabled(value as boolean);
+              }
             }
           }
         });
@@ -446,46 +459,16 @@ export class ChatBridge {
    * Handle token operations
    */
   static async updateTokens(amount: number, operation: 'add' | 'spend' | 'set'): Promise<boolean> {
-    const chatStore = useChatStore.getState();
+    const tokenStore = useTokenStore.getState();
     
     try {
       switch (operation) {
         case 'add':
-          if (chatStore.addTokens) {
-            return await chatStore.addTokens(amount);
-          } else {
-            chatStore.setState({
-              tokenControl: {
-                ...chatStore.tokenControl,
-                balance: chatStore.tokenControl.balance + amount
-              }
-            });
-            return true;
-          }
+          return await tokenStore.addTokens(amount);
         case 'spend':
-          if (chatStore.spendTokens) {
-            return await chatStore.spendTokens(amount);
-          } else {
-            chatStore.setState({
-              tokenControl: {
-                ...chatStore.tokenControl,
-                balance: Math.max(0, chatStore.tokenControl.balance - amount)
-              }
-            });
-            return true;
-          }
+          return await tokenStore.spendTokens(amount);
         case 'set':
-          if (chatStore.setTokenBalance) {
-            return await chatStore.setTokenBalance(amount);
-          } else {
-            chatStore.setState({
-              tokenControl: {
-                ...chatStore.tokenControl,
-                balance: amount
-              }
-            });
-            return true;
-          }
+          return await tokenStore.setTokenBalance(amount);
         default:
           throw new Error(`Unknown token operation: ${operation}`);
       }
