@@ -21,6 +21,8 @@ import { Code, ImageIcon, MessageSquare } from 'lucide-react';
 import { useChatBridge } from '@/components/chat/chatBridge';
 import { ChatMode, uiModeToDatabaseMode } from '@/types/chat/enums';
 
+export type UIMode = 'standard' | 'editor' | 'image' | 'training';
+
 export interface ModeSelectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -34,7 +36,7 @@ export function ModeSelectionDialog({
 }: ModeSelectionDialogProps) {
   const navigate = useNavigate();
   const { providers } = useChatStore();
-  const [selectedMode, setSelectedMode] = useState<string>('standard');
+  const [selectedMode, setSelectedMode] = useState<UIMode>('standard');
   const [selectedProvider, setSelectedProvider] = useState<string>(
     providers.availableProviders.find(p => p.isEnabled)?.id || ''
   );

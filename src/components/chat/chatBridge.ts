@@ -217,12 +217,8 @@ export class ChatBridge {
         databaseModeToUiMode[currentMode as ChatMode] : 
         currentMode;
       
-      // Add chat store context to metadata
-      const metadata = {
-        ...options.metadata,
-        mode: uiMode,
-        providerId: chatStore.currentProvider?.id
-      };
+      // Create metadata from settings if provided
+      const metadata = settings.metadata || {};
       
       if (settings.currentMode && typeof settings.currentMode === 'string') {
         // Map UI mode to database mode if needed

@@ -12,10 +12,22 @@ export function ChatPositionToggle() {
   const chatBridge = useChatBridge();
   
   const togglePosition = () => {
-    const newPosition: ChatPosition = position === 'bottom-right' ? 'bottom-left' : 'bottom-right';
-    logger.info('Toggling chat position', { from: position, to: newPosition });
+    // Ensure we're dealing with a string position
+    const currentPosition = typeof position === 'string' 
+      ? position as ChatPosition 
+      : 'bottom-right' as ChatPosition;
+    
+    const newPosition: ChatPosition = 
+      currentPosition === 'bottom-right' ? 'bottom-left' : 'bottom-right';
+    
+    logger.info('Toggling chat position', { from: currentPosition, to: newPosition });
     chatBridge.setPosition(newPosition);
   };
+  
+  // Get the current position for display
+  const currentPosition = typeof position === 'string'
+    ? position as ChatPosition 
+    : 'bottom-right' as ChatPosition;
   
   return (
     <Button
@@ -23,10 +35,10 @@ export function ChatPositionToggle() {
       size="icon"
       className="h-8 w-8 hover:bg-white/10 transition-colors duration-200"
       onClick={togglePosition}
-      title={position === 'bottom-right' ? "Move to left side" : "Move to right side"}
+      title={currentPosition === 'bottom-right' ? "Move to left side" : "Move to right side"}
       data-testid="position-toggle"
     >
-      {position === 'bottom-right' ? (
+      {currentPosition === 'bottom-right' ? (
         <AlignLeft className="h-4 w-4" />
       ) : (
         <AlignRight className="h-4 w-4" />
