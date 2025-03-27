@@ -1,6 +1,5 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { CreateSessionParams, SessionOperationResult } from '@/components/chat/shared/types/sessions';
+import { CreateSessionParams, SessionOperationResult } from '@/components/chat/chat-structure/chatsidebar/types/chatsessions';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/services/chat/LoggingService';
 

@@ -1,5 +1,5 @@
 
-import { Session, DBSession } from '@/components/chat/shared/types/sessions';
+import { Session, DBSession } from '@/components/chat/chat-structure/chatsidebar/types/chatsessions';
 
 /**
  * Maps a database session to our front-end Session type

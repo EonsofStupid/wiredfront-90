@@ -1,5 +1,5 @@
 
-import { Session } from '@/components/chat/shared/types/sessions';
+import { Session } from '@/components/chat/chat-structure/chatsidebar/types/chatsessions';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { mapDbSessionToSession } from './mappers';

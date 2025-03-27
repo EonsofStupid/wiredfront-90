@@ -1,7 +1,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { UpdateSessionParams } from '@/components/chat/shared/types/sessions';
+import { UpdateSessionParams } from '@/components/chat/chat-structure/chatsidebar/types/chatsessions';
 import { updateSession, archiveSession } from '@/components/chat/shared/services/chat-sessions';
 import { logger } from '@/services/chat/LoggingService';
 import { CHAT_SESSION_QUERY_KEYS } from './useChatSessionCore';
