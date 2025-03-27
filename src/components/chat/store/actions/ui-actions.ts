@@ -1,6 +1,6 @@
 
 import { StateCreator } from 'zustand';
-import { ChatState } from '../types/chat-store-types';
+import { ChatState, ChatPosition } from '../types/chat-store-types';
 import { logger } from '@/services/chat/LoggingService';
 
 export const createUIActions = (
@@ -13,7 +13,7 @@ export const createUIActions = (
         ...get().ui,
         sessionLoading: isLoading
       }
-    }, false, 'chat/setSessionLoading');
+    }, false, { type: 'ui/setSessionLoading', isLoading });
   },
   
   setMessageLoading: (isLoading: boolean) => {
@@ -22,7 +22,7 @@ export const createUIActions = (
         ...get().ui,
         messageLoading: isLoading
       }
-    }, false, 'chat/setMessageLoading');
+    }, false, { type: 'ui/setMessageLoading', isLoading });
   },
   
   setProviderLoading: (isLoading: boolean) => {
@@ -31,7 +31,7 @@ export const createUIActions = (
         ...get().ui,
         providerLoading: isLoading
       }
-    }, false, 'chat/setProviderLoading');
+    }, false, { type: 'ui/setProviderLoading', isLoading });
   },
   
   toggleChat: () => {
@@ -41,7 +41,7 @@ export const createUIActions = (
     
     set({
       isOpen: !isOpen
-    }, false, 'chat/toggleChat');
+    }, false, { type: 'ui/toggleChat', isOpen: !isOpen });
   },
   
   toggleMinimize: () => {
@@ -51,7 +51,7 @@ export const createUIActions = (
     
     set({
       isMinimized: !isMinimized
-    }, false, 'chat/toggleMinimize');
+    }, false, { type: 'ui/toggleMinimize', isMinimized: !isMinimized });
   },
   
   toggleSidebar: () => {
@@ -61,7 +61,7 @@ export const createUIActions = (
     
     set({
       showSidebar: !showSidebar
-    }, false, 'chat/toggleSidebar');
+    }, false, { type: 'ui/toggleSidebar', showSidebar: !showSidebar });
   },
   
   toggleDocked: () => {
@@ -71,15 +71,26 @@ export const createUIActions = (
     
     set({
       docked: !docked
-    }, false, 'chat/toggleDocked');
+    }, false, { type: 'ui/toggleDocked', docked: !docked });
   },
   
-  setPosition: (position: 'bottom-left' | 'bottom-right') => {
+  setPosition: (position: ChatPosition) => {
     logger.info(`Setting chat position`, { position });
     
     set({
       position
-    }, false, 'chat/setPosition');
+    }, false, { type: 'ui/setPosition', position });
+  },
+  
+  togglePosition: () => {
+    const currentPosition = get().position;
+    const newPosition: ChatPosition = currentPosition === 'bottom-right' ? 'bottom-left' : 'bottom-right';
+    
+    logger.info(`Toggling chat position`, { from: currentPosition, to: newPosition });
+    
+    set({
+      position: newPosition
+    }, false, { type: 'ui/togglePosition', from: currentPosition, to: newPosition });
   },
   
   setScale: (scale: number) => {
@@ -90,6 +101,39 @@ export const createUIActions = (
     
     set({
       scale: validScale
-    }, false, 'chat/setScale');
+    }, false, { type: 'ui/setScale', scale: validScale });
   },
+  
+  openChat: () => {
+    if (!get().isOpen) {
+      logger.info('Opening chat');
+      set({ isOpen: true }, false, { type: 'ui/openChat' });
+    }
+    
+    if (get().isMinimized) {
+      logger.info('Maximizing chat');
+      set({ isMinimized: false }, false, { type: 'ui/maximizeChat' });
+    }
+  },
+  
+  closeChat: () => {
+    if (get().isOpen) {
+      logger.info('Closing chat');
+      set({ isOpen: false }, false, { type: 'ui/closeChat' });
+    }
+  },
+  
+  minimizeChat: () => {
+    if (!get().isMinimized) {
+      logger.info('Minimizing chat');
+      set({ isMinimized: true }, false, { type: 'ui/minimizeChat' });
+    }
+  },
+  
+  maximizeChat: () => {
+    if (get().isMinimized) {
+      logger.info('Maximizing chat');
+      set({ isMinimized: false }, false, { type: 'ui/maximizeChat' });
+    }
+  }
 });

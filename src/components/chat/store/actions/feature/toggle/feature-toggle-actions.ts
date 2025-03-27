@@ -1,7 +1,8 @@
 
 import { ChatState } from '../../../types/chat-store-types';
-import { SetState, GetState, FeatureKey } from '../types';
+import { FeatureKey, SetState, GetState } from '../types';
 import { logger } from '@/services/chat/LoggingService';
+import { logFeatureToggle } from './toggle-utils';
 
 /**
  * Creates feature toggle actions for the chat store
@@ -13,59 +14,96 @@ export const createFeatureToggleActions = (
   /**
    * Toggle a feature on/off
    */
-  toggleFeature: (featureKey: FeatureKey) => {
+  toggleFeature: (feature: FeatureKey) => {
     const features = get().features;
-    const newValue = !features[featureKey];
+    const oldValue = features[feature as keyof typeof features];
+    const newValue = !oldValue;
     
-    logger.info(`Toggling feature ${featureKey}`, { newValue });
+    logger.info(`Toggling feature ${feature}`, { newValue });
+    
+    // Log the change to analytics/database
+    logFeatureToggle(feature, oldValue, newValue);
     
     set({
       features: {
         ...features,
-        [featureKey]: newValue
+        [feature]: newValue
       }
-    }, false, { type: 'features/toggle', feature: featureKey, value: newValue });
+    }, false, { type: 'features/toggle', feature, value: newValue });
   },
   
   /**
    * Enable a feature
    */
-  enableFeature: (featureKey: FeatureKey) => {
-    logger.info(`Enabling feature ${featureKey}`);
+  enableFeature: (feature: FeatureKey) => {
+    const features = get().features;
+    const oldValue = features[feature as keyof typeof features];
     
-    set(state => ({
+    // Don't do anything if already enabled
+    if (oldValue === true) {
+      return;
+    }
+    
+    logger.info(`Enabling feature ${feature}`);
+    
+    // Log the change to analytics/database
+    logFeatureToggle(feature, oldValue, true);
+    
+    set({
       features: {
-        ...state.features,
-        [featureKey]: true
+        ...features,
+        [feature]: true
       }
-    }), false, { type: 'features/enable', feature: featureKey });
+    }, false, { type: 'features/enable', feature });
   },
   
   /**
    * Disable a feature
    */
-  disableFeature: (featureKey: FeatureKey) => {
-    logger.info(`Disabling feature ${featureKey}`);
+  disableFeature: (feature: FeatureKey) => {
+    const features = get().features;
+    const oldValue = features[feature as keyof typeof features];
     
-    set(state => ({
+    // Don't do anything if already disabled
+    if (oldValue === false) {
+      return;
+    }
+    
+    logger.info(`Disabling feature ${feature}`);
+    
+    // Log the change to analytics/database
+    logFeatureToggle(feature, oldValue, false);
+    
+    set({
       features: {
-        ...state.features,
-        [featureKey]: false
+        ...features,
+        [feature]: false
       }
-    }), false, { type: 'features/disable', feature: featureKey });
+    }, false, { type: 'features/disable', feature });
   },
   
   /**
-   * Set a feature state directly
+   * Set a feature's state directly
    */
-  setFeatureState: (featureKey: FeatureKey, isEnabled: boolean) => {
-    logger.info(`Setting feature ${featureKey}`, { isEnabled });
+  setFeatureState: (feature: FeatureKey, isEnabled: boolean) => {
+    const features = get().features;
+    const oldValue = features[feature as keyof typeof features];
     
-    set(state => ({
+    // Don't do anything if the value is the same
+    if (oldValue === isEnabled) {
+      return;
+    }
+    
+    logger.info(`Setting feature ${feature} to ${isEnabled}`);
+    
+    // Log the change to analytics/database
+    logFeatureToggle(feature, oldValue, isEnabled);
+    
+    set({
       features: {
-        ...state.features,
-        [featureKey]: isEnabled
+        ...features,
+        [feature]: isEnabled
       }
-    }), false, { type: 'features/setState', feature: featureKey, value: isEnabled });
+    }, false, { type: 'features/setState', feature, value: isEnabled });
   }
 });

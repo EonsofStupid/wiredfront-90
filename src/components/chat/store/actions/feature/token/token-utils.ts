@@ -3,61 +3,77 @@ import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 
 /**
- * Updates a user's token balance in the database
+ * Update user tokens in the database
  */
-export async function updateUserTokens(
-  userId: string,
-  newBalance: number
-): Promise<boolean> {
+export const updateUserTokens = async (amount: number, isDirectSet: boolean = false): Promise<boolean> => {
   try {
-    // Update the user's token balance
-    const { error } = await supabase
-      .from('user_tokens')
-      .update({ balance: newBalance, updated_at: new Date().toISOString() })
-      .eq('user_id', userId);
-    
-    if (error) {
-      logger.error('Failed to update user tokens', { error, userId, newBalance });
-      return false;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('No authenticated user');
+    }
+
+    if (isDirectSet) {
+      // For direct setting of balance
+      const { error } = await supabase.rpc('set_token_balance', {
+        user_uuid: user.id,
+        token_amount: amount
+      });
+      
+      if (error) throw error;
+    } else if (amount > 0) {
+      // For adding tokens
+      const { error } = await supabase.rpc('add_tokens', {
+        user_uuid: user.id,
+        token_amount: amount
+      });
+      
+      if (error) throw error;
+    } else if (amount < 0) {
+      // For spending tokens
+      const { error } = await supabase.rpc('spend_tokens', {
+        user_uuid: user.id,
+        token_amount: Math.abs(amount)
+      });
+      
+      if (error) throw error;
     }
     
     return true;
   } catch (error) {
-    logger.error('Exception updating user tokens', { error, userId, newBalance });
+    logger.error('Error updating user tokens', { error, amount });
     return false;
   }
-}
+};
 
 /**
- * Logs a token transaction
+ * Log a token transaction
  */
-export async function logTokenTransaction(
-  userId: string,
-  amount: number,
-  type: 'add' | 'spend',
-  description: string = '',
-  metadata: Record<string, any> = {}
-): Promise<boolean> {
+export const logTokenTransaction = async (
+  amount: number, 
+  type: 'add' | 'spend' | 'set', 
+  description: string = ''
+): Promise<boolean> => {
   try {
-    // Log the transaction
-    const { error } = await supabase
-      .from('token_transactions')
-      .insert({
-        user_id: userId,
-        amount: type === 'add' ? amount : -amount,
-        transaction_type: type,
-        description,
-        metadata
-      });
-    
-    if (error) {
-      logger.error('Failed to log token transaction', { error, userId, amount, type });
-      return false;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('No authenticated user');
     }
+
+    const { error } = await supabase.from('token_transactions').insert({
+      user_id: user.id,
+      amount,
+      transaction_type: type,
+      description: description || `Tokens ${type === 'add' ? 'added' : type === 'spend' ? 'spent' : 'set'} via API`,
+      metadata: {
+        source: 'chat_bridge',
+        timestamp: new Date().toISOString()
+      }
+    });
     
+    if (error) throw error;
     return true;
   } catch (error) {
-    logger.error('Exception logging token transaction', { error, userId, amount, type });
+    logger.error('Error logging token transaction', { error, amount, type });
     return false;
   }
-}
+};

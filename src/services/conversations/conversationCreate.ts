@@ -21,7 +21,7 @@ export async function createNewConversation(params?: CreateConversationParams): 
     // Extract mode from metadata if available - with proper type checking
     const metadata = params?.metadata || {};
     const mode = typeof metadata === 'object' && 'mode' in metadata ? 
-      metadata.mode as string : 'standard';
+      metadata.mode as string : 'chat';
     const providerId = typeof metadata === 'object' && 'providerId' in metadata ? 
       metadata.providerId as string : undefined;
     
@@ -37,11 +37,15 @@ export async function createNewConversation(params?: CreateConversationParams): 
       });
       
       switch (mode) {
+        case 'dev':
         case 'editor':
           defaultTitle = `Code Session (${dateStr})`;
           break;
         case 'image':
           defaultTitle = `Image Generation (${dateStr})`;
+          break;
+        case 'training':
+          defaultTitle = `Training Session (${dateStr})`;
           break;
         default:
           defaultTitle = `Chat ${dateStr}`;
@@ -58,11 +62,10 @@ export async function createNewConversation(params?: CreateConversationParams): 
         created_at: now,
         last_accessed: now,
         archived: false,
+        mode: mode,
+        provider_id: providerId,
         // Ensure metadata is JSON compatible
         metadata: {
-          mode,
-          providerId: providerId || null,
-          // Convert complex objects to strings if needed
           ...(typeof metadata === 'object' ? 
             Object.fromEntries(
               Object.entries(metadata)

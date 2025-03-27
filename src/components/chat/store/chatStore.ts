@@ -1,11 +1,11 @@
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { v4 as uuidv4 } from 'uuid';
 import { createInitializationActions } from './actions/initialization-actions';
-import { createFeatureActions } from './actions/feature';
+import { createFeatureActions } from './actions/feature/index';
 import { createUIActions } from './actions/ui-actions';
 import { ChatState } from './types/chat-store-types';
+import { TokenEnforcementMode } from '@/integrations/supabase/types';
 
 // Define the full store type with all action slices
 type FullChatStore = ChatState & 
@@ -45,7 +45,7 @@ const initialState: ChatState = {
   
   tokenControl: {
     balance: 0,
-    enforcementMode: 'never',
+    enforcementMode: 'never' as TokenEnforcementMode,
     lastUpdated: null,
     tokensPerQuery: 1,
     freeQueryLimit: 5,
@@ -148,16 +148,16 @@ export const useChatStore = create<FullChatStore>()(
           availableProviders: get().availableProviders,
           currentProvider: get().currentProvider,
           features: get().features,
-        }, false, 'chat/resetState');
+        }, false, { type: 'chat/resetState' });
       },
       
       setUserInput: (input: string) => {
-        set({ userInput: input }, false, 'chat/setUserInput');
+        set({ userInput: input }, false, { type: 'chat/setUserInput', input });
       },
       
-      ...createInitializationActions(set, get, api),
+      ...createInitializationActions(set, get),
       ...createFeatureActions(set, get, api),
-      ...createUIActions(set, get, api),
+      ...createUIActions(set, get),
     }),
     {
       name: 'ChatStore',

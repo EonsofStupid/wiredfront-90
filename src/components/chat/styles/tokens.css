@@ -1,107 +1,158 @@
 
+/* Chat theme tokens - WFPULSE theme */
 :root {
-  /* ---------- Chat Token System ---------- */
+  /* Base colors */
+  --chat-primary: #7c3aed;
+  --chat-primary-hover: #6d28d9;
+  --chat-secondary: #ec4899;
+  --chat-secondary-hover: #db2777;
   
-  /* Layout & Dimensions */
-  --chat-width: 500px;
-  --chat-height: 500px;
-  --chat-min-width: 350px;
-  --chat-max-width: 800px;
-  --chat-min-height: 350px;
-  --chat-max-height: 800px;
+  /* Text colors */
+  --chat-text: #f8fafc;
+  --chat-text-muted: #cbd5e1;
+  --chat-text-dimmed: #94a3b8;
+  --chat-text-highlight: #f1f5f9;
+  
+  /* Background colors */
+  --chat-bg: #1e293b;
+  --chat-bg-hover: #334155;
+  --chat-bg-light: #334155;
+  --chat-bg-lighter: #475569;
+  --chat-bg-dark: #0f172a;
+  --chat-bg-darkest: #020617;
+  
+  /* Dialog & UI elements */
+  --chat-dialog-content: #1e293b;
+  --chat-dialog-header: #0f172a;
+  --chat-dialog-footer: #0f172a;
+  --chat-sidebar-bg: #0f172a;
+  --chat-input-bg: #334155;
+  --chat-message-user-bg: #334155;
+  --chat-message-assistant-bg: #1e293b;
+  --chat-separator: #475569;
+  
+  /* Accents & Indicators */
+  --chat-success: #22c55e;
+  --chat-warning: #eab308;
+  --chat-error: #ef4444;
+  --chat-info: #3b82f6;
+  
+  /* Effects */
+  --chat-border: rgba(148, 163, 184, 0.2);
+  --chat-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --chat-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --chat-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+  --chat-box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  
+  /* Layout & Sizing */
   --chat-border-radius: 0.5rem;
-  --chat-header-height: 3rem;
-  --chat-footer-height: 4rem;
-  --chat-scrollbar-width: 8px;
+  --chat-border-radius-sm: 0.25rem;
+  --chat-border-radius-lg: 0.75rem;
+  --chat-z-index-base: 1000;
+  --chat-z-index-overlay: 1050;
+  --chat-z-index-dropdown: 1030;
+  --chat-z-index-modal: 1100;
+  --chat-z-index-toast: 1200;
   
-  /* Z-index System - All chat z-indexes use this as base */
-  --z-chat: var(--z-chat, 1000);
-  --z-chat-header: calc(var(--z-chat) + 10);
-  --z-chat-dialog: calc(var(--z-chat) + 100);
-  --z-chat-tooltip: calc(var(--z-chat) + 50);
-  --z-chat-popup: calc(var(--z-chat) + 200);
+  /* Animation & Timing */
+  --chat-duration-short: 150ms;
+  --chat-duration-normal: 300ms;
+  --chat-duration-long: 500ms;
+  --chat-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --chat-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --chat-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --chat-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   
-  /* Animation & Transitions */
-  --chat-transition-speed: 0.2s;
-  --chat-animation-timing: ease-in-out;
-  
-  /* Shadows & Effects */
-  --chat-box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  --chat-inner-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-  --chat-neon-glow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 15px rgba(0, 255, 255, 0.2);
-  --chat-cyber-glow: 0 0 15px rgba(255, 0, 127, 0.5), 0 0 30px rgba(255, 0, 127, 0.2);
-  
-  /* Colors - Base */
-  --chat-bg: hsl(220, 10%, 10%, 0.85);
-  --chat-text: hsl(210, 10%, 90%);
-  --chat-border: hsl(220, 10%, 30%);
-  --chat-header-bg: hsl(220, 10%, 12%, 0.95);
-  --chat-header-text: hsl(210, 10%, 90%);
-  --chat-footer-bg: hsl(220, 10%, 12%, 0.95);
-  --chat-input-bg: hsl(220, 10%, 15%, 0.8);
-  --chat-input-text: hsl(210, 10%, 90%);
-  
-  /* Colors - Messages */
-  --chat-message-user-bg: hsl(240, 20%, 20%, 0.8);
-  --chat-message-user-text: hsl(210, 10%, 95%);
-  --chat-message-user-border: hsl(240, 30%, 30%);
-  
-  --chat-message-assistant-bg: hsl(210, 20%, 15%, 0.8);
-  --chat-message-assistant-text: hsl(210, 10%, 95%);
-  --chat-message-assistant-border: hsl(210, 30%, 30%);
-  
-  --chat-message-system-bg: hsl(280, 20%, 15%, 0.8);
-  --chat-message-system-text: hsl(280, 10%, 95%);
-  --chat-message-system-border: hsl(280, 30%, 30%);
-  
-  /* Colors - Accents */
-  --chat-accent-primary: hsl(200, 100%, 50%);
-  --chat-accent-secondary: hsl(280, 100%, 50%);
-  --chat-accent-success: hsl(120, 70%, 45%);
-  --chat-accent-warning: hsl(40, 100%, 50%);
-  --chat-accent-error: hsl(0, 100%, 60%);
-  
-  /* Colors - Features */
-  --chat-knowledge-background: hsl(200, 70%, 20%);
-  --chat-knowledge-text: hsl(200, 70%, 70%);
-  --chat-knowledge-border: hsl(200, 70%, 40%);
-  
-  --chat-notification-background: hsl(340, 70%, 20%);
-  --chat-notification-text: hsl(340, 70%, 70%);
-  --chat-notification-border: hsl(340, 70%, 40%);
-  
-  /* Colors - Dialog */
-  --chat-dialog-bg: hsl(220, 10%, 12%, 0.95);
-  --chat-dialog-text: hsl(210, 10%, 90%);
-  --chat-dialog-border: hsl(220, 10%, 30%);
-  --chat-dialog-content: hsl(210, 10%, 15%, 0.95);
+  /* Component specifics */
+  --chat-max-width: 500px;
+  --chat-min-width: 300px;
+  --chat-max-height: 600px;
+  --chat-min-height: 400px;
+  --chat-message-spacing: 1rem;
+  --chat-sidebar-width: 280px;
+  --z-chat: var(--chat-z-index-base);
 }
 
-/* Dark mode adjustments if needed */
-.dark {
-  /* We can add dark mode specific overrides here if needed */
-  /* For now, the default theme is already dark-oriented */
+/* Dark theme overrides (default above is already dark) */
+.theme-dark {
+  /* No need for overrides as default is already dark */
 }
 
-/* WFPULSE theme */
-.wfpulse {
-  --chat-message-user-bg: hsl(260, 20%, 20%, 0.8);
-  --chat-message-user-text: hsl(210, 10%, 95%);
-  --chat-message-user-border: hsl(260, 30%, 40%);
+/* Light theme overrides */
+.theme-light {
+  --chat-primary: #8b5cf6;
+  --chat-primary-hover: #7c3aed;
+  --chat-secondary: #ec4899;
+  --chat-secondary-hover: #db2777;
   
-  --chat-message-assistant-bg: hsl(210, 20%, 15%, 0.8);
-  --chat-message-assistant-text: hsl(210, 10%, 95%);
-  --chat-message-assistant-border: hsl(210, 30%, 40%);
+  --chat-text: #0f172a;
+  --chat-text-muted: #475569;
+  --chat-text-dimmed: #64748b;
+  --chat-text-highlight: #1e293b;
   
-  --chat-message-system-bg: hsl(280, 20%, 15%, 0.8);
-  --chat-message-system-text: hsl(280, 10%, 95%);
-  --chat-message-system-border: hsl(280, 30%, 40%);
+  --chat-bg: #f8fafc;
+  --chat-bg-hover: #f1f5f9;
+  --chat-bg-light: #f1f5f9;
+  --chat-bg-lighter: #e2e8f0;
+  --chat-bg-dark: #e2e8f0;
+  --chat-bg-darkest: #cbd5e1;
   
-  /* WFPULSE specific accent colors */
-  --chat-accent-primary: hsl(260, 80%, 50%);
-  --chat-accent-secondary: hsl(280, 80%, 60%);
+  --chat-dialog-content: #ffffff;
+  --chat-dialog-header: #f1f5f9;
+  --chat-dialog-footer: #f1f5f9;
+  --chat-sidebar-bg: #f1f5f9;
+  --chat-input-bg: #f8fafc;
+  --chat-message-user-bg: #e2e8f0;
+  --chat-message-assistant-bg: #f8fafc;
+  --chat-separator: #cbd5e1;
   
-  /* Neon glows */
-  --chat-neon-glow: 0 0 10px rgba(139, 92, 246, 0.7), 0 0 15px rgba(139, 92, 246, 0.3);
-  --chat-cyber-glow: 0 0 15px rgba(217, 70, 239, 0.7), 0 0 30px rgba(217, 70, 239, 0.3);
+  --chat-border: rgba(203, 213, 225, 0.8);
+  --chat-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --chat-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --chat-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --chat-box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* System theme follows system preference */
+@media (prefers-color-scheme: dark) {
+  .theme-system {
+    /* Use dark theme variables by default (already set above) */
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .theme-system {
+    /* Override with light theme variables */
+    --chat-primary: #8b5cf6;
+    --chat-primary-hover: #7c3aed;
+    --chat-secondary: #ec4899;
+    --chat-secondary-hover: #db2777;
+    
+    --chat-text: #0f172a;
+    --chat-text-muted: #475569;
+    --chat-text-dimmed: #64748b;
+    --chat-text-highlight: #1e293b;
+    
+    --chat-bg: #f8fafc;
+    --chat-bg-hover: #f1f5f9;
+    --chat-bg-light: #f1f5f9;
+    --chat-bg-lighter: #e2e8f0;
+    --chat-bg-dark: #e2e8f0;
+    --chat-bg-darkest: #cbd5e1;
+    
+    --chat-dialog-content: #ffffff;
+    --chat-dialog-header: #f1f5f9;
+    --chat-dialog-footer: #f1f5f9;
+    --chat-sidebar-bg: #f1f5f9;
+    --chat-input-bg: #f8fafc;
+    --chat-message-user-bg: #e2e8f0;
+    --chat-message-assistant-bg: #f8fafc;
+    --chat-separator: #cbd5e1;
+    
+    --chat-border: rgba(203, 213, 225, 0.8);
+    --chat-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --chat-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --chat-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --chat-box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
 }

@@ -6,6 +6,8 @@ import { useChatStore } from './store/chatStore';
 import { logger } from '@/services/chat/LoggingService';
 import { Message, MessageRole, MessageType, MessageStatus } from '@/types/chat';
 import { Json } from '@/integrations/supabase/types';
+import { Provider, ChatPosition } from './store/types/chat-store-types';
+import { TokenEnforcementMode } from '@/integrations/supabase/types';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -44,7 +46,7 @@ export class ChatBridge {
             mode: chatStore.currentMode,
             providerId: chatStore.currentProvider?.id
           }
-        }) as unknown as string;
+        });
         
         if (!conversationId) {
           throw new Error('Failed to create conversation');
@@ -193,11 +195,97 @@ export class ChatBridge {
         chatStore.setSelectedModel(settings.selectedModel);
       }
       
+      if (settings.providers && Array.isArray(settings.providers)) {
+        chatStore.updateChatProvider(settings.providers);
+      }
+      
+      if (settings.position && (settings.position === 'bottom-left' || settings.position === 'bottom-right')) {
+        chatStore.setPosition(settings.position as ChatPosition);
+      }
+      
+      if (settings.tokenEnforcementMode) {
+        chatStore.setTokenEnforcementMode(settings.tokenEnforcementMode as TokenEnforcementMode);
+      }
+      
+      if (settings.features && typeof settings.features === 'object') {
+        Object.entries(settings.features).forEach(([key, value]) => {
+          if (typeof value === 'boolean' && key in chatStore.features) {
+            chatStore.setFeatureState(key as any, value as boolean);
+          }
+        });
+      }
+      
       logger.info('Updated chat settings through ChatBridge', { settings });
       return true;
     } catch (error) {
       logger.error('Failed to update chat settings through ChatBridge', { error });
       toast.error('Failed to update chat settings');
+      return false;
+    }
+  }
+  
+  /**
+   * Toggles a chat feature on/off
+   */
+  static toggleFeature(featureKey: string, value?: boolean) {
+    const chatStore = useChatStore.getState();
+    
+    try {
+      if (typeof value === 'boolean') {
+        chatStore.setFeatureState(featureKey as any, value);
+      } else {
+        chatStore.toggleFeature(featureKey as any);
+      }
+      
+      logger.info('Toggled feature through ChatBridge', { featureKey, value });
+      return true;
+    } catch (error) {
+      logger.error('Failed to toggle feature through ChatBridge', { error, featureKey });
+      toast.error('Failed to toggle feature');
+      return false;
+    }
+  }
+  
+  /**
+   * Fetches current chat state
+   */
+  static getChatState() {
+    const chatStore = useChatStore.getState();
+    const conversationStore = useConversationStore.getState();
+    
+    return {
+      isOpen: chatStore.isOpen,
+      isMinimized: chatStore.isMinimized,
+      position: chatStore.position,
+      currentMode: chatStore.currentMode,
+      currentProvider: chatStore.currentProvider,
+      features: chatStore.features,
+      tokenControl: chatStore.tokenControl,
+      currentConversationId: conversationStore.currentConversationId,
+      docked: chatStore.docked
+    };
+  }
+  
+  /**
+   * Handle token operations
+   */
+  static async updateTokens(amount: number, operation: 'add' | 'spend' | 'set'): Promise<boolean> {
+    const chatStore = useChatStore.getState();
+    
+    try {
+      switch (operation) {
+        case 'add':
+          return await chatStore.addTokens(amount);
+        case 'spend':
+          return await chatStore.spendTokens(amount);
+        case 'set':
+          return await chatStore.setTokenBalance(amount);
+        default:
+          throw new Error(`Unknown token operation: ${operation}`);
+      }
+    } catch (error) {
+      logger.error('Failed to update tokens through ChatBridge', { error, amount, operation });
+      toast.error('Failed to update tokens');
       return false;
     }
   }
@@ -211,6 +299,9 @@ export const useChatBridge = () => {
     switchConversation: ChatBridge.switchConversation,
     archiveConversation: ChatBridge.archiveConversation,
     deleteConversation: ChatBridge.deleteConversation,
-    updateChatSettings: ChatBridge.updateChatSettings
+    updateChatSettings: ChatBridge.updateChatSettings,
+    toggleFeature: ChatBridge.toggleFeature,
+    getChatState: ChatBridge.getChatState,
+    updateTokens: ChatBridge.updateTokens
   };
 };
