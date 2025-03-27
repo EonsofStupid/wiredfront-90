@@ -4,6 +4,8 @@ import { logger } from '@/services/chat/LoggingService';
 
 /**
  * Update user tokens in the database
+ * @param amount Amount to update (positive to add, negative to spend, or direct set if isDirectSet=true)
+ * @param isDirectSet If true, sets the balance directly instead of adding/subtracting
  */
 export const updateUserTokens = async (
   amount: number, 
@@ -70,11 +72,16 @@ export const updateUserTokens = async (
 
 /**
  * Log a token transaction
+ * @param amount Amount of tokens
+ * @param type Transaction type (add, spend, set)
+ * @param description Optional description
+ * @param metadata Optional metadata
  */
 export const logTokenTransaction = async (
   amount: number, 
   type: 'add' | 'spend' | 'set', 
-  description: string = ''
+  description: string = '',
+  metadata: Record<string, any> = {}
 ): Promise<boolean> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -86,24 +93,24 @@ export const logTokenTransaction = async (
     const { error } = await supabase.from('token_transactions')
       .insert({
         user_id: user.id,
-        amount,
+        amount: type === 'spend' ? -Math.abs(amount) : Math.abs(amount),
         transaction_type: type,
         description: description || `Tokens ${type === 'add' ? 'added' : type === 'spend' ? 'spent' : 'set'}`,
         metadata: {
           source: 'token_store',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          ...metadata
         }
       });
     
     if (error) {
-      // If the table doesn't exist yet, log the error but don't throw
-      logger.error('Error logging token transaction - table might not exist', { error });
-      return true; // Return true to not break the flow if this is just a logging issue
+      logger.error('Error logging token transaction', { error });
+      return false;
     }
     
     return true;
   } catch (error) {
     logger.error('Error logging token transaction', { error, amount, type });
-    return false; // Only return false for critical errors
+    return false;
   }
 };

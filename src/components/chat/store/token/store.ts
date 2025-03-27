@@ -33,3 +33,16 @@ export const useTokenStore = create<TokenStore>()(
     }
   )
 );
+
+// Export a function to clear the token store state
+export const clearTokenStore = () => {
+  try {
+    // Reset the store to initial state
+    useTokenStore.setState(initialState, false, { type: 'tokens/clearState' });
+    logger.info('Token store state cleared');
+    return true;
+  } catch (error) {
+    logger.error('Error clearing token store state', error);
+    return false;
+  }
+};

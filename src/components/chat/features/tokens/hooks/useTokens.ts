@@ -48,7 +48,7 @@ export const useTokens = () => {
     }
     
     const success = await chatBridge.updateTokens(amount, 'spend');
-    if (success) {
+    if (success && enforcementMode !== 'never') {
       toast.success(`Spent ${amount} tokens`);
     }
     return success;

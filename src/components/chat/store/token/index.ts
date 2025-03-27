@@ -1,3 +1,3 @@
 
-export { useTokenStore } from './store';
+export { useTokenStore, clearTokenStore } from './store';
 export type { TokenState } from './types';
