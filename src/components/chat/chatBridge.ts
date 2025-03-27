@@ -356,15 +356,27 @@ export class ChatBridge {
    */
   static toggleFeature(featureKey: string, value?: boolean): boolean {
     const chatStore = useChatStore.getState();
+    const tokenStore = useTokenStore.getState();
     
     try {
       if (typeof value === 'boolean') {
         if (chatStore.setFeatureState) {
           chatStore.setFeatureState(featureKey as any, value);
+          
+          // If toggling token enforcement, update token store too
+          if (featureKey === 'tokenEnforcement') {
+            tokenStore.setEnforcementEnabled(value);
+          }
         }
       } else {
         if (chatStore.toggleFeature) {
           chatStore.toggleFeature(featureKey as any);
+          
+          // If toggling token enforcement, update token store too
+          if (featureKey === 'tokenEnforcement') {
+            const newValue = !chatStore.features[featureKey as keyof typeof chatStore.features];
+            tokenStore.setEnforcementEnabled(newValue);
+          }
         }
       }
       
@@ -383,6 +395,7 @@ export class ChatBridge {
   static getChatState() {
     const chatStore = useChatStore.getState();
     const conversationStore = useConversationStore.getState();
+    const tokenStore = useTokenStore.getState();
     
     // Map the database mode to UI mode for consistency in the UI
     const currentMode = chatStore.currentMode;
@@ -397,7 +410,14 @@ export class ChatBridge {
       currentMode: uiMode,
       currentProvider: chatStore.currentProvider,
       features: chatStore.features,
-      tokenControl: chatStore.tokenControl,
+      tokenControl: {
+        balance: tokenStore.balance,
+        enforcementMode: tokenStore.enforcementMode,
+        lastUpdated: tokenStore.lastUpdated,
+        tokensPerQuery: tokenStore.tokensPerQuery,
+        freeQueryLimit: tokenStore.freeQueryLimit,
+        queriesUsed: tokenStore.queriesUsed,
+      },
       currentConversationId: conversationStore.currentConversationId,
       docked: chatStore.docked
     };

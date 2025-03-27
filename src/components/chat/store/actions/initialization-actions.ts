@@ -3,8 +3,6 @@ import { StateCreator } from 'zustand';
 import { ChatState } from '../types/chat-store-types';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
-import { TokenEnforcementMode } from '@/integrations/supabase/types';
-import { extractEnforcementMode } from '@/utils/token-utils';
 
 export const createInitializationActions = (
   set: StateCreator<ChatState>['setState'],
@@ -14,44 +12,10 @@ export const createInitializationActions = (
     try {
       logger.info('Initializing chat state...');
       
-      // Fetch user token balance
+      // Fetch user auth info
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
-        // Get token balance
-        const { data: tokenData } = await supabase
-          .from('user_tokens')
-          .select('balance, enforcement_mode, tokens_per_query, free_query_limit, queries_used')
-          .eq('user_id', user.id)
-          .single();
-        
-        if (tokenData) {
-          // Extract enforcement mode with type safety
-          const enforcementMode: TokenEnforcementMode = extractEnforcementMode(tokenData.enforcement_mode);
-          
-          set({
-            tokenControl: {
-              ...get().tokenControl,
-              balance: tokenData.balance || 0,
-              enforcementMode,
-              tokensPerQuery: tokenData.tokens_per_query || 1,
-              freeQueryLimit: tokenData.free_query_limit || 5,
-              queriesUsed: tokenData.queries_used || 0,
-              lastUpdated: new Date().toISOString()
-            }
-          }, false, { type: 'chat/initializeTokens' });
-          
-          logger.info('Token data initialized', { 
-            balance: tokenData.balance,
-            enforcementMode,
-            tokensPerQuery: tokenData.tokens_per_query,
-            freeQueryLimit: tokenData.free_query_limit,
-            queriesUsed: tokenData.queries_used
-          });
-        } else {
-          logger.warn('No token data found for user', { userId: user.id });
-        }
-        
         // Get user chat preferences
         const { data: prefsData } = await supabase
           .from('user_chat_preferences')

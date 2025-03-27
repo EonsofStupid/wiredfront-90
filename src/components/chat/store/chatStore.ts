@@ -5,7 +5,6 @@ import { createInitializationActions } from './actions/initialization-actions';
 import { createFeatureActions } from './actions/feature/index';
 import { createUIActions } from './actions/ui-actions';
 import { ChatState } from './types/chat-store-types';
-import { TokenEnforcementMode } from '@/integrations/supabase/types';
 
 // Define the full store type with all action slices
 type FullChatStore = ChatState & 
@@ -42,15 +41,6 @@ const initialState: ChatState = {
   currentMode: 'chat',
   availableProviders: [],
   currentProvider: null,
-  
-  tokenControl: {
-    balance: 0,
-    enforcementMode: 'never' as TokenEnforcementMode,
-    lastUpdated: null,
-    tokensPerQuery: 1,
-    freeQueryLimit: 5,
-    queriesUsed: 0
-  },
   
   providers: {
     availableProviders: [],

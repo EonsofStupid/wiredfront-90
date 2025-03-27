@@ -4,8 +4,7 @@ import {
   ChatMode, 
   ChatPosition, 
   ChatPositionCoordinates, 
-  ChatPositionType,
-  TokenEnforcementMode 
+  ChatPositionType
 } from '@/types/chat/enums';
 
 // Define Provider type 
@@ -50,15 +49,6 @@ export interface ChatState {
   currentMode: ChatMode;
   availableProviders: Provider[];
   currentProvider: Provider | null;
-  
-  tokenControl: {
-    balance: number;
-    enforcementMode: TokenEnforcementMode;
-    lastUpdated: string | null;
-    tokensPerQuery: number;
-    freeQueryLimit: number;
-    queriesUsed: number;
-  };
   
   providers: {
     availableProviders: Provider[];
