@@ -1,13 +1,8 @@
 
-// Re-export all stores
-export * from './chat-session';
+import { useMessageStore } from '@/components/chat/store/message';
+import { useChatStore } from '@/components/chat/store/chatStore';
 
-// Create temporary useUIStore placeholder to resolve errors
-export const useUIStore = () => {
-  return {
-    layout: {
-      sidebarExpanded: true,
-    },
-    toggleSidebar: () => {},
-  };
+export {
+  useMessageStore,
+  useChatStore,
 };

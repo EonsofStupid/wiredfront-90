@@ -15,7 +15,4 @@ export interface ChatProvider {
     totalQueries: number;
     lastUsed: Date;
   };
-}
-
-// Re-export the ChatProvider type to ensure it's available where needed
-export type { ChatProvider };
+} 

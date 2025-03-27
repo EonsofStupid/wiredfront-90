@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { Message, MessageRole, createMessage } from '@/components/chat/shared/schemas/messages';
@@ -11,10 +10,6 @@ interface MessageState {
   getMessageById: (id: string) => Message | undefined;
   clearMessages: () => void;
   fetchSessionMessages: (sessionId: string) => Promise<void>;
-  createUserMessage: (content: string, sessionId: string, metadata?: any) => Message;
-  createAssistantMessage: (content: string, sessionId: string, metadata?: any) => Message;
-  createSystemMessage: (content: string, sessionId: string, metadata?: any) => Message;
-  createErrorMessage: (content: string, sessionId: string, metadata?: any) => Message;
 }
 
 export const useMessageStore = create<MessageState>((set, get) => ({
@@ -141,7 +136,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     const newMessage = createMessage({
       id: uuidv4(),
       content: content,
-      role: 'error',
+      role: 'system',
       chat_session_id: sessionId,
       metadata: {
         ...metadata,
@@ -179,21 +174,5 @@ export const MessageManager = {
   
   fetchSessionMessages: async (sessionId: string): Promise<void> => {
     return useMessageStore.getState().fetchSessionMessages(sessionId);
-  },
-  
-  createUserMessage: (content: string, sessionId: string, metadata: any = {}): Message => {
-    return useMessageStore.getState().createUserMessage(content, sessionId, metadata);
-  },
-  
-  createAssistantMessage: (content: string, sessionId: string, metadata: any = {}): Message => {
-    return useMessageStore.getState().createAssistantMessage(content, sessionId, metadata);
-  },
-  
-  createSystemMessage: (content: string, sessionId: string, metadata: any = {}): Message => {
-    return useMessageStore.getState().createSystemMessage(content, sessionId, metadata);
-  },
-  
-  createErrorMessage: (content: string, sessionId: string, metadata: any = {}): Message => {
-    return useMessageStore.getState().createErrorMessage(content, sessionId, metadata);
   }
 };
