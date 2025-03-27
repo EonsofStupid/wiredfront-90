@@ -10,7 +10,7 @@ interface MessageState {
   addMessage: (message: Message) => void;
   removeMessage: (id: string) => void;
   clearMessages: () => void;
-  fetchSessionMessages: (sessionId: string) => Promise<void>;
+  fetchSessionMessages: (conversationId: string) => Promise<void>;
 }
 
 export const useMessageStore = create<MessageState>((set, get) => ({
@@ -38,14 +38,14 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     set({ messages: [] });
   },
   
-  fetchSessionMessages: async (sessionId: string) => {
+  fetchSessionMessages: async (conversationId: string) => {
     try {
-      logger.info('Fetching messages for session', { sessionId });
+      logger.info('Fetching messages for conversation', { conversationId });
       
       const { data, error } = await supabase
         .from('messages')
         .select('*')
-        .eq('chat_session_id', sessionId)
+        .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
       
       if (error) {
@@ -60,13 +60,14 @@ export const useMessageStore = create<MessageState>((set, get) => ({
       // Transform to our Message type
       const messages: Message[] = data.map(msg => ({
         ...msg,
+        chat_session_id: msg.conversation_id, // For backward compatibility
         message_status: 'received'
       }));
       
       logger.info('Fetched messages', { count: messages.length });
       set({ messages });
     } catch (error) {
-      logger.error('Failed to fetch session messages', { error, sessionId });
+      logger.error('Failed to fetch conversation messages', { error, conversationId });
       // Set an error message for the user
       const errorMessage: Message = {
         id: uuidv4(),
@@ -76,7 +77,8 @@ export const useMessageStore = create<MessageState>((set, get) => ({
         metadata: {},
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        chat_session_id: sessionId,
+        chat_session_id: conversationId,
+        conversation_id: conversationId,
         is_minimized: false,
         position: {},
         window_state: {},

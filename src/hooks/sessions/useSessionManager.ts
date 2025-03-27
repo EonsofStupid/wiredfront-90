@@ -1,68 +1,51 @@
 
-import { useMessageStore } from '@/components/chat/messaging/MessageManager';
-import { useChatStore } from '@/components/chat/store/chatStore';
-import { CreateSessionParams, UpdateSessionParams } from '@/types/sessions';
-import { useSessionCore } from './useSessionCore';
-import { useSessionCreation } from './useSessionCreation';
-import { useSessionSwitching } from './useSessionSwitching';
-import { useSessionUpdates } from './useSessionUpdates';
-import { useSessionCleanup } from './useSessionCleanup';
+// This is a compatibility layer to help migrate from the old hook-based approach
+// to the new store-based approach
+
+import { 
+  useConversationStore,
+  useCurrentConversation,
+  useCurrentConversationId
+} from '@/components/chat/store/conversation';
+import { Conversation } from '@/types/conversations';
 
 /**
- * Main session manager hook that composes all session-related functionality
+ * Legacy compatibility hook that maps the new store to the old hook interface
  */
 export function useSessionManager() {
-  const { clearMessages, fetchSessionMessages } = useMessageStore();
-  const { setSessionLoading } = useChatStore();
+  const { 
+    conversations,
+    refreshConversations,
+    createConversation,
+    switchConversation,
+    updateConversation,
+    archiveConversation,
+    clearConversations,
+    cleanupInactiveConversations,
+    isLoading,
+    isError,
+    error
+  } = useConversationStore();
   
-  // Get core session state
-  const {
-    sessions,
-    currentSessionId,
-    setCurrentSessionId,
-    currentSession,
-    isLoading,
-    isError,
-    error,
-    refreshSessions,
-  } = useSessionCore();
-
-  // Create specialized hooks
-  const { createSession } = useSessionCreation(
-    setCurrentSessionId,
-    clearMessages
-  );
-
-  const { switchSession } = useSessionSwitching(
-    setCurrentSessionId,
-    fetchSessionMessages,
-    setSessionLoading,
-    currentSessionId
-  );
-
-  const { updateSession, archiveSession } = useSessionUpdates();
-
-  const { clearSessions, cleanupInactiveSessions } = useSessionCleanup(
-    currentSessionId,
-    clearMessages,
-    createSession,
-    refreshSessions
-  );
-
-  // Return a unified API
+  const currentSessionId = useCurrentConversationId();
+  const currentSession = useCurrentConversation();
+  
   return {
-    sessions,
+    // Renamed props
+    sessions: conversations as unknown as Conversation[],
     currentSessionId,
     currentSession,
+    
+    // Functions with the same signature
     isLoading,
     isError,
     error,
-    createSession,
-    switchSession,
-    updateSession,
-    archiveSession,
-    clearSessions,
-    cleanupInactiveSessions,
-    refreshSessions
+    refreshSessions: refreshConversations,
+    createSession: createConversation,
+    switchSession: switchConversation,
+    updateSession: updateConversation,
+    archiveSession: archiveConversation,
+    clearSessions: clearConversations,
+    cleanupInactiveSessions: cleanupInactiveConversations
   };
 }

@@ -1,4 +1,3 @@
-
 import { Json } from '@/integrations/supabase/types';
 
 export type MessageRole = 'user' | 'assistant' | 'system';
@@ -14,7 +13,11 @@ export interface Message {
   metadata: Json;
   created_at: string;
   updated_at: string;
+  
+  conversation_id: string;
+  
   chat_session_id: string;
+  
   is_minimized: boolean;
   position: Json;
   window_state: Json;

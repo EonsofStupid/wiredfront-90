@@ -1,27 +1,28 @@
+
 import { useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Message } from '@/types/chat';
 import { logger } from '@/services/chat/LoggingService';
 
 export const useMessageSubscription = (
-  sessionId: string | null,
+  conversationId: string | null,
   onNewMessage: (message: Message) => void
 ) => {
   useEffect(() => {
-    if (!sessionId) {
-      logger.warn('No session ID provided for message subscription');
+    if (!conversationId) {
+      logger.warn('No conversation ID provided for message subscription');
       return;
     }
 
     const channel = supabase
-      .channel(`messages:${sessionId}`)
+      .channel(`messages:${conversationId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'messages',
-          filter: `chat_session_id=eq.${sessionId}`,
+          filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
           logger.debug('Real-time message update:', payload);
@@ -31,16 +32,16 @@ export const useMessageSubscription = (
         }
       )
       .subscribe((status) => {
-        logger.info(`Subscription status for session ${sessionId}:`, {
+        logger.info(`Subscription status for conversation ${conversationId}:`, {
           status: status.toString(),
           timestamp: new Date().toISOString(),
-          sessionId
+          conversationId
         });
       });
 
     return () => {
-      logger.info(`Unsubscribing from session ${sessionId}`);
+      logger.info(`Unsubscribing from conversation ${conversationId}`);
       supabase.removeChannel(channel);
     };
-  }, [sessionId, onNewMessage]);
+  }, [conversationId, onNewMessage]);
 };

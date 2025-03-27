@@ -448,6 +448,72 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_conversations: {
+        Row: {
+          archived: boolean
+          context: Json | null
+          created_at: string
+          id: string
+          last_accessed: string
+          message_count: number | null
+          metadata: Json | null
+          mode: Database["public"]["Enums"]["chat_mode_type"] | null
+          project_id: string | null
+          provider_id: string | null
+          title: string | null
+          tokens_used: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean
+          context?: Json | null
+          created_at?: string
+          id?: string
+          last_accessed?: string
+          message_count?: number | null
+          metadata?: Json | null
+          mode?: Database["public"]["Enums"]["chat_mode_type"] | null
+          project_id?: string | null
+          provider_id?: string | null
+          title?: string | null
+          tokens_used?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          archived?: boolean
+          context?: Json | null
+          created_at?: string
+          id?: string
+          last_accessed?: string
+          message_count?: number | null
+          metadata?: Json | null
+          mode?: Database["public"]["Enums"]["chat_mode_type"] | null
+          project_id?: string | null
+          provider_id?: string | null
+          title?: string | null
+          tokens_used?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_sessions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_sessions_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "api_configurations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_message_history: {
         Row: {
           created_at: string | null
@@ -548,7 +614,7 @@ export type Database = {
             foreignKeyName: "chat_messages_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
-            referencedRelation: "chat_sessions"
+            referencedRelation: "chat_conversations"
             referencedColumns: ["id"]
           },
         ]
@@ -591,72 +657,6 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
-      }
-      chat_sessions: {
-        Row: {
-          archived: boolean
-          context: Json | null
-          created_at: string
-          id: string
-          last_accessed: string
-          message_count: number | null
-          metadata: Json | null
-          mode: Database["public"]["Enums"]["chat_mode_type"] | null
-          project_id: string | null
-          provider_id: string | null
-          title: string | null
-          tokens_used: number | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          archived?: boolean
-          context?: Json | null
-          created_at?: string
-          id?: string
-          last_accessed?: string
-          message_count?: number | null
-          metadata?: Json | null
-          mode?: Database["public"]["Enums"]["chat_mode_type"] | null
-          project_id?: string | null
-          provider_id?: string | null
-          title?: string | null
-          tokens_used?: number | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          archived?: boolean
-          context?: Json | null
-          created_at?: string
-          id?: string
-          last_accessed?: string
-          message_count?: number | null
-          metadata?: Json | null
-          mode?: Database["public"]["Enums"]["chat_mode_type"] | null
-          project_id?: string | null
-          provider_id?: string | null
-          title?: string | null
-          tokens_used?: number | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "chat_sessions_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chat_sessions_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "api_configurations"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       chat_settings: {
         Row: {
@@ -833,7 +833,7 @@ export type Database = {
             foreignKeyName: "chat_user_status_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
-            referencedRelation: "chat_sessions"
+            referencedRelation: "chat_conversations"
             referencedColumns: ["id"]
           },
         ]
@@ -1462,12 +1462,12 @@ export type Database = {
       messages: {
         Row: {
           content: string
+          conversation_id: string
           created_at: string | null
           id: string
           metadata: Json | null
           position: number | null
           role: Database["public"]["Enums"]["message_role_type"]
-          session_id: string
           status: string | null
           tokens: number | null
           updated_at: string | null
@@ -1475,12 +1475,12 @@ export type Database = {
         }
         Insert: {
           content: string
+          conversation_id: string
           created_at?: string | null
           id?: string
           metadata?: Json | null
           position?: number | null
           role?: Database["public"]["Enums"]["message_role_type"]
-          session_id: string
           status?: string | null
           tokens?: number | null
           updated_at?: string | null
@@ -1488,12 +1488,12 @@ export type Database = {
         }
         Update: {
           content?: string
+          conversation_id?: string
           created_at?: string | null
           id?: string
           metadata?: Json | null
           position?: number | null
           role?: Database["public"]["Enums"]["message_role_type"]
-          session_id?: string
           status?: string | null
           tokens?: number | null
           updated_at?: string | null
@@ -1501,17 +1501,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "messages_session_id_fkey"
-            columns: ["session_id"]
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "active_sessions"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "messages_session_id_fkey"
-            columns: ["session_id"]
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
             isOneToOne: false
-            referencedRelation: "chat_sessions"
+            referencedRelation: "chat_conversations"
             referencedColumns: ["id"]
           },
         ]
@@ -2606,7 +2606,7 @@ export type Database = {
             foreignKeyName: "token_usage_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
-            referencedRelation: "chat_sessions"
+            referencedRelation: "chat_conversations"
             referencedColumns: ["id"]
           },
         ]
