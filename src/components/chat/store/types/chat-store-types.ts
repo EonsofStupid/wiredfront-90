@@ -1,8 +1,14 @@
 
 import { Json } from '@/integrations/supabase/types';
-import { ChatMode, ChatPosition, ChatPositionCoordinates, TokenEnforcementMode } from '@/types/chat/enums';
+import { 
+  ChatMode, 
+  ChatPosition, 
+  ChatPositionCoordinates, 
+  ChatPositionType,
+  TokenEnforcementMode 
+} from '@/types/chat/enums';
 
-// Define Provider type (previously named ChatProvider in some places)
+// Define Provider type 
 export interface Provider {
   id: string;
   name: string;
@@ -27,7 +33,7 @@ export interface ChatState {
   docked: boolean;
   isOpen: boolean;
   isHidden: boolean;
-  position: ChatPosition | ChatPositionCoordinates;
+  position: ChatPositionType;
   startTime: number;
   features: {
     voice: boolean;

@@ -47,19 +47,24 @@ export function isTokenEnforcementMode(value: string): value is TokenEnforcement
   return ['always', 'never', 'role_based', 'mode_based', 'warn', 'strict'].includes(value);
 }
 
+// UI enforcement modes - simplified for the UI
+export type UIEnforcementMode = 'never' | 'warn' | 'strict';
+
 // Mapping from UI enforcement modes to database enforcement modes
-export const uiEnforcementToDatabaseEnforcement: Record<string, TokenEnforcementMode> = {
+export const uiEnforcementToDatabaseEnforcement: Record<UIEnforcementMode, TokenEnforcementMode> = {
   'never': 'never',
   'warn': 'warn',
   'strict': 'always',
 };
 
 // Mapping from database enforcement modes to UI enforcement modes
-export const databaseEnforcementToUiEnforcement: Record<string, string> = {
+export const databaseEnforcementToUiEnforcement: Record<TokenEnforcementMode, UIEnforcementMode> = {
   'always': 'strict',
   'never': 'never',
   'role_based': 'warn',
   'mode_based': 'warn',
+  'warn': 'warn',
+  'strict': 'strict'
 };
 
 // Chat position type
@@ -69,6 +74,19 @@ export type ChatPosition = 'bottom-left' | 'bottom-right';
 export interface ChatPositionCoordinates {
   x: number;
   y: number;
+}
+
+// Union type for all possible position types
+export type ChatPositionType = ChatPosition | ChatPositionCoordinates;
+
+// Type guard for chat position
+export function isChatPosition(value: unknown): value is ChatPosition {
+  return typeof value === 'string' && ['bottom-left', 'bottom-right'].includes(value as string);
+}
+
+// Type guard for chat position coordinates
+export function isChatPositionCoordinates(value: unknown): value is ChatPositionCoordinates {
+  return typeof value === 'object' && value !== null && 'x' in value && 'y' in value;
 }
 
 // Message role type

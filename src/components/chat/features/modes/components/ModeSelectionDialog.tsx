@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -26,7 +25,7 @@ export type UIMode = 'standard' | 'editor' | 'image' | 'training';
 export interface ModeSelectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateSession: (mode: string, provider: string) => Promise<void>;
+  onCreateSession: (mode: ChatMode, providerId: string) => Promise<void>;
 }
 
 export function ModeSelectionDialog({ 
@@ -51,12 +50,10 @@ export function ModeSelectionDialog({
     p => p.isEnabled && p.category === 'image'
   );
 
-  // Filter providers based on selected mode
   const filteredProviders = selectedMode === 'image' 
     ? availableImageProviders 
     : availableChatProviders;
 
-  // Set default provider when mode changes
   useEffect(() => {
     if (filteredProviders.length > 0) {
       setSelectedProvider(filteredProviders[0].id);
@@ -69,12 +66,10 @@ export function ModeSelectionDialog({
     try {
       setIsSubmitting(true);
       
-      // Convert UI mode to database mode
-      const dbMode = uiModeToDatabaseMode[selectedMode] || selectedMode;
+      const dbMode = uiModeToDatabaseMode[selectedMode] || 'chat';
       
-      await onCreateSession(selectedMode, selectedProvider);
+      await onCreateSession(dbMode as ChatMode, selectedProvider);
       
-      // Navigate based on selected mode
       switch (selectedMode) {
         case 'editor':
           navigate('/editor');
@@ -83,7 +78,6 @@ export function ModeSelectionDialog({
           navigate('/gallery');
           break;
         default:
-          // Stay on current page for standard chat mode
           break;
       }
       

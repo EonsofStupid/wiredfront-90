@@ -1,11 +1,11 @@
 
 import { ChatState } from '../../types/chat-store-types';
-import { StateCreator } from 'zustand';
 
 // Define types for state management functions
 export type SetState<T> = (
   partial: T | Partial<T> | ((state: T) => T | Partial<T>),
-  replace?: boolean
+  replace?: boolean,
+  action?: string | { type: string; [key: string]: any }
 ) => void;
 
 export type GetState<T> = () => T;
@@ -51,5 +51,5 @@ export interface FeatureActions {
   
   // Provider actions
   updateProviders: (providers: any[]) => void;
-  updateCurrentProvider: (provider: any) => void;
+  updateChatProvider: (provider: any) => void;
 }
