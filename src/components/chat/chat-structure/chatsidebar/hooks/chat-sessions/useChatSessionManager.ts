@@ -124,3 +124,5 @@ export function useChatSessionManager() {
     refreshSessions: fetchSessions
   };
 }
+
+export const useSessionManager = useChatSessionManager;

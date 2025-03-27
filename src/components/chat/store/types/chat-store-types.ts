@@ -74,4 +74,13 @@ export interface ChatState {
     freeQueryLimit: number;
     queriesUsed: number;
   };
+
+  // Mode state
+  mode: 'chat' | 'code' | 'image';
+  messages: Message[];
+  startTime: number | null;
+  setMode: (mode: 'chat' | 'code' | 'image') => void;
+  setMessages: (messages: Message[]) => void;
+  setStartTime: (time: number | null) => void;
+  setAvailableProviders: (providers: ChatProvider[]) => void;
 }

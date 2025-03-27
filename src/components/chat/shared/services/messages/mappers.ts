@@ -137,9 +137,9 @@ export function mapDbMetadataToMessageMetadata(metadata: any): MessageMetadata {
   // Use safeValidate to ensure we always return a valid object
   return safeValidate(
     messageMetadataSchema, 
-    metadata, 
-    {}, // default empty object if validation fails
-    { 
+    metadata,
+    { tokens: { prompt: 0, completion: 0, total: 0 } }, // default object with required tokens if validation fails
+    {
       logErrors: true, 
       context: 'MessageMetadata' 
     }

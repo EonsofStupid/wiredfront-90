@@ -17,6 +17,7 @@ export interface SessionOperationResult {
   success: boolean;
   data?: Session | null;
   error?: Error | null;
+  sessionId?: string;
 }
 
 export interface CreateSessionParams {
