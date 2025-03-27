@@ -1,2 +1,1 @@
-
-export { VoiceToTextButton } from './VoiceToTextButton';
+export { VoiceToTextButton } from './module/VoiceToTextButton';

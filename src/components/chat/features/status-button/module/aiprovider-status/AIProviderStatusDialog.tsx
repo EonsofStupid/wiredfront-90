@@ -9,10 +9,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bot, Check, RefreshCw, History } from 'lucide-react';
-import { useAIProviders } from '@/hooks/chat/useAIProviders';
+import { useAIProviders } from '@/components/chat/features/status-button/hooks/useAIProviders';
 import { ChatProvider } from '@/components/chat/store/types/chat-store-types';
 import { logger } from '@/services/chat/LoggingService';
-import { AIProviderService } from '@/services/chat/AIProviderService';
+import { AIProviderService } from '@/components/chat/features/status-button/services/AIProviderService';
 import { toast } from 'sonner';
 import { useProviderChanges } from '@/hooks/useProviderChanges';
 import { formatDistanceToNow } from 'date-fns';

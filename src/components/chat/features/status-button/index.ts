@@ -1,12 +1,8 @@
-
-import { StatusButton } from './StatusButton';
-
-// Export components
-export { StatusButton };
-export { GitHubStatusDialog } from './GitHubStatusDialog';
-export { NotificationsStatusDialog } from './NotificationsStatusDialog';
-export { StatusButtonPreview } from './StatusButtonPreview';
-export { StatusButtonHoverCard } from './StatusButtonHoverCard';
+export { StatusButton } from './shared/StatusButton';
+export { GitHubStatusDialog } from './module/github-status/GitHubStatusDialog';
+export { NotificationsStatusDialog } from './module/notifications-status/NotificationsStatusDialog';
+export { StatusButtonPreview } from './shared/StatusButtonPreview';
+export { StatusButtonHoverCard } from './shared/StatusButtonHoverCard';
 
 // Default export
 export default StatusButton;

@@ -1,5 +1,5 @@
 // Chat Container
-export * from './ChatContainer';
+export * from './chat-toggle-button/module/ChatContainer';
 
 // Chat Input
 export * from './chatinput';
@@ -17,4 +17,4 @@ export * from './chatheadertopnav';
 export * from './chatsidebar';
 
 // Chat Mode Switch
-export * from './chatmode-switch'; 
+export * from './chatmode-switch/module/ModeSwitchModule'; 

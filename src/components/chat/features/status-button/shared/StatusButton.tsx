@@ -1,15 +1,14 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { GitBranchIcon, BellIcon, AlertCircle, CheckCircle } from 'lucide-react';
-import { GitHubStatusDialog } from './GitHubStatusDialog';
-import { NotificationsStatusDialog } from './NotificationsStatusDialog';
-import { AIProviderStatusButton } from './AIProviderStatusButton';
+import { GitHubStatusDialog } from '@/components/chat/features/status-button/module/github-status/GitHubStatusDialog';
+import { NotificationsStatusDialog } from '@/components/chat/features/status-button/module/notifications-status/NotificationsStatusDialog';
+import { AIProviderStatusButton } from '@/components/chat/features/status-button/module/aiprovider-status/AIProviderStatusButton';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
-import { useChatStore } from '../../store/chatStore';
+import { useChatStore } from '@/components/chat/store/chatStore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useErrorBoundary } from '../../hooks/useErrorBoundary';
+import { useErrorBoundary } from '@/components/chat/shared/hooks/useErrorBoundary';
 
 export function StatusButton() {
   const [activeTab, setActiveTab] = useState<'github' | 'notifications'>('github');

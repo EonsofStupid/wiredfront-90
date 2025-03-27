@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Mic, Square, AlertCircle } from "lucide-react";
-import { useVoiceRecognition } from './useVoiceRecognition';
+import { useVoiceRecognition } from '@/components/chat/features/voice-to-text/hooks/useVoiceRecognition';
 import { toast } from "sonner";
 
 interface VoiceToTextButtonProps {

@@ -1,2 +1,1 @@
-
-export { ChatModeDialog } from './ChatModeDialog';
+export { ChatModeDialog } from './module/ChatModeDialog';
