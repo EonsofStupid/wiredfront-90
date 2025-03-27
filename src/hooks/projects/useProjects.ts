@@ -4,7 +4,7 @@ import { useAuthStore } from "@/stores/auth";
 import { ProjectService, ProjectCreateDTO, Project } from "@/services/projects/ProjectService";
 import { toast } from "sonner";
 import { useState } from "react";
-import { useUIStore } from "@/stores";
+import { useUIStore } from '@/stores/ui/store';
 
 export function useProjects() {
   const { user } = useAuthStore();
