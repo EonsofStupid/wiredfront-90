@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { Session, CreateSessionParams, UpdateSessionParams } from '@/types/sessions';
-import { fetchAllSessions } from '@/components/chat/shared/services/chat-sessions/chat-sessionFetch';
+import { fetchUserSessions } from '@/components/chat/shared/services/chat-sessions/chat-sessionFetch';
 import { createNewSession } from '@/components/chat/shared/services/chat-sessions/chat-sessionCreate';
 import { updateSession as updateSessionService } from '@/components/chat/shared/services/chat-sessions/chat-sessionUpdate';
 import { archiveSession as archiveSessionService } from '@/components/chat/shared/services/chat-sessions/chat-sessionArchive';
@@ -44,7 +44,7 @@ export const useSessionStore = create<SessionStore>()(
           const { data: { user } } = await supabase.auth.getUser();
           set({ user });
           
-          const sessions = await fetchAllSessions();
+          const sessions = await fetchUserSessions();
           set({ sessions, isLoading: false });
           
           logger.info('Sessions fetched', { count: sessions.length });

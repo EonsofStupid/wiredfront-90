@@ -1,8 +1,7 @@
-
 import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Session } from '@/types/sessions';
-import { fetchUserSessions } from '@/components/chat/services/chat-sessions';
+import { fetchUserSessions } from '@/components/chat/shared/services/chat-sessions';
 import { logger } from '@/services/chat/LoggingService';
 
 // Define query keys in a central location

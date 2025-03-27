@@ -1,4 +1,3 @@
-
 import { Session } from '@/types/sessions';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
@@ -7,7 +6,7 @@ import { mapDbSessionToSession } from './mappers';
 /**
  * Fetch all sessions for the current user
  */
-export async function fetchAllSessions(): Promise<Session[]> {
+export async function fetchUserSessions(): Promise<Session[]> {
   try {
     // Get current user
     const { data: { user } } = await supabase.auth.getUser();
