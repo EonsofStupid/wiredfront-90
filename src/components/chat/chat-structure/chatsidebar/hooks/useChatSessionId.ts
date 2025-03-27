@@ -1,6 +1,6 @@
 
 // Update import for useChatSessionManager
-import { useChatSessionManager } from "./chat-sessions";
+import { useChatSessionManager } from "@/components/chat/chat-structure/chatsidebar/hooks/chat-sessions";
 
 export const useSessionId = () => {
   const { currentSessionId } = useChatSessionManager();

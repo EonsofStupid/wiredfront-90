@@ -32,19 +32,16 @@ export function ChatHeader({
   const isGalleryPage = location.pathname === '/gallery';
   const [modeDialogOpen, setModeDialogOpen] = useState(false);
   
-  // Calculate session stats
   const messageCount = messages?.length || 0;
-  const sessionDuration = startTime ? Math.floor((Date.now() - startTime) / 1000 / 60) : 0; // in minutes
+  const sessionDuration = startTime ? Math.floor((Date.now() - startTime) / 1000 / 60) : 0;
   const aiResponses = messages?.filter(m => m.role === 'assistant').length || 0;
 
-  // Get display mode label
   const getModeLabel = () => {
     if (isEditorPage) return "DEV";
     if (isGalleryPage) return "IMAGE";
     return title;
   };
 
-  // Prevent propagation to avoid triggering drag when clicking buttons
   const handleButtonClick = (e: React.MouseEvent, callback: () => void) => {
     e.stopPropagation();
     callback();

@@ -1,7 +1,8 @@
+
 import React, { Suspense, lazy, useEffect } from "react";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useChatMode } from "../providers/ChatModeProvider";
+import { useChatMode } from "@/components/chat/providers/ChatModeProvider";
 import { useChatStore } from "@/components/chat/store/chatStore";
 import { AnimatePresence, motion } from "framer-motion";
 import { logger } from "@/services/chat/LoggingService";

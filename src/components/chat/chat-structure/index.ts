@@ -1,5 +1,6 @@
+
 // Chat Container
-export * from './chat-toggle-button/module/ChatContainer';
+export * from './ChatContainer/ChatContainer';
 
 // Chat Input
 export * from './chatinput';

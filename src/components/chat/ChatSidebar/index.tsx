@@ -1,10 +1,11 @@
+
 import React, { Suspense, lazy, useState } from "react";
-import { useChatSessionManager } from '../chat-structure/chatsidebar/hooks/chat-sessions';
-import { SessionControls } from '../chat-structure/chatsidebar/module/ChatSessionControls';
-import { SessionHeader } from '../chat-structure/chatsidebar/module/ChatSessionHeader';
-import { useChatStore } from "../store/chatStore";
+import { useChatSessionManager } from '@/components/chat/chat-structure/chatsidebar/hooks/chat-sessions';
+import { SessionControls } from '@/components/chat/chat-structure/chatsidebar/module/ChatSessionControls';
+import { SessionHeader } from '@/components/chat/chat-structure/chatsidebar/module/ChatSessionHeader';
+import { useChatStore } from "@/components/chat/store/chatStore";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useErrorBoundary } from '@/components/chat/chat-structure/chatsidebar/hooks/useErrorBoundary';
+import { useErrorBoundary } from '@/components/chat/shared/hooks/useErrorBoundary';
 import { ModeSelectionDialog } from '@/components/chat/chat-structure/chatsidebar/module/ModeSelectionDialog';
 import { SessionList } from '@/components/chat/chat-structure/chatsidebar/module/ChatSessionList';
 import { SessionSkeleton } from '@/components/chat/chat-structure/chatsidebar/module/ChatSessionSkeleton';

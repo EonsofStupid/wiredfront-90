@@ -1,7 +1,8 @@
+
 import React, { useRef, useEffect } from "react";
 import { DndContext } from "@dnd-kit/core";
-import { ChatSidebar } from "../chatsidebar";
-import { ChatToggleButton } from "../chat-toggle-button/ChatToggleButton";
+import { ChatSidebar } from "@/components/chat/chat-structure/chatsidebar";
+import { ChatToggleButton } from "@/components/chat/chat-structure/chat-toggle-button/ChatToggleButton";
 import { ChatContainer as DraggableChat } from "@/components/chat/chat-structure/chat-toggle-button/module/ChatContainer";
 import { useViewportAwareness } from "@/components/chat/shared/hooks/useViewportAwareness";
 import { useChatStore } from "@/components/chat/store/chatStore";
