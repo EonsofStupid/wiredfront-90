@@ -10,7 +10,7 @@ interface AppLayoutProps {
   children: React.ReactNode;
 }
 
-export const AppLayout = ({ children }: AppLayoutProps) {
+export const AppLayout = ({ children }: AppLayoutProps) => {
   console.log("AppLayout rendering");
   const theme = useUIStore((state) => state.theme);
 
@@ -25,4 +25,4 @@ export const AppLayout = ({ children }: AppLayoutProps) {
       </TooltipProvider>
     </QueryClientProvider>
   );
-}
+};
