@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ChatProviderType } from '@/types/admin/settings/chat-provider';
-import { useChatStore } from '../store/chatStore';
+import { useChatStore } from '@/components/chat/store/chatStore';
 import { 
   Select,
   SelectContent,

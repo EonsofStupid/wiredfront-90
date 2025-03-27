@@ -1,10 +1,10 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Clock, Check, Hash, AlertCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useMessageStore } from "../messaging/MessageManager";
+import { useMessageStore } from "@/components/chat/store/message";
+import { useChatStore } from "@/components/chat/store/chatStore";
 
 interface SessionItemProps {
   id: string;
