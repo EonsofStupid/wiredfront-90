@@ -1,13 +1,12 @@
-
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { Session, CreateSessionParams, UpdateSessionParams } from '@/types/sessions';
-import { fetchAllSessions } from '@/components/chat/services/chat-sessions/sessionFetch';
-import { createNewSession } from '@/components/chat/services/chat-sessions/sessionCreate';
-import { updateSession as updateSessionService } from '@/components/chat/services/chat-sessions/sessionUpdate';
-import { archiveSession as archiveSessionService } from '@/components/chat/services/chat-sessions/sessionArchive';
+import { fetchAllSessions } from '@/components/chat/shared/services/chat-sessions/chat-sessionFetch';
+import { createNewSession } from '@/components/chat/shared/services/chat-sessions/chat-sessionCreate';
+import { updateSession as updateSessionService } from '@/components/chat/shared/services/chat-sessions/chat-sessionUpdate';
+import { archiveSession as archiveSessionService } from '@/components/chat/shared/services/chat-sessions/chat-sessionArchive';
 import { logger } from '@/services/chat/LoggingService';
-import { clearAllSessions } from '@/components/chat/services/chat-sessions/sessionDelete';
+import { clearAllSessions } from '@/components/chat/shared/services/chat-sessions/chat-sessionDelete';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { ChatSessionStore } from './types';
@@ -170,7 +169,7 @@ export const useChatSessionStore = create<ChatSessionStore>()(
         }
       },
       
-      clearSessions: async (preserveCurrentSession = true) => {
+      clearSessions: async (preserveCurrentSession: boolean = false) => {
         try {
           const currentId = get().currentSessionId;
           
@@ -178,15 +177,12 @@ export const useChatSessionStore = create<ChatSessionStore>()(
           await clearAllSessions(preserveCurrentSession ? currentId : null);
           
           // Update store state
-          if (preserveCurrentSession && currentId) {
-            const currentSession = get().sessions.find(s => s.id === currentId);
-            set({ 
-              sessions: currentSession ? [currentSession] : [],
-              currentSessionId: currentId
-            });
-          } else {
-            set({ sessions: [], currentSessionId: null });
-          }
+          set((state) => ({
+            sessions: preserveCurrentSession 
+              ? state.sessions.filter(s => s.id === currentId)
+              : [],
+            currentSessionId: preserveCurrentSession ? currentId : null
+          }));
           
           logger.info('Sessions cleared', { preserveCurrentSession });
           return;
@@ -201,16 +197,15 @@ export const useChatSessionStore = create<ChatSessionStore>()(
           const currentId = get().currentSessionId;
           
           if (!currentId) {
-            throw new Error('No active session to preserve');
+            return;
           }
           
           await clearAllSessions(currentId);
           
           // Update store to remove inactive sessions
-          const currentSession = get().sessions.find(s => s.id === currentId);
-          if (currentSession) {
-            set({ sessions: [currentSession] });
-          }
+          set((state) => ({
+            sessions: state.sessions.filter(s => s.id === currentId)
+          }));
           
           logger.info('Inactive sessions cleaned up');
           return;

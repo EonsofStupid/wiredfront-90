@@ -1,9 +1,9 @@
-
 import { useChatStore, clearMiddlewareStorage } from '@/components/chat/store/chatStore';
-import { clearAllSessions } from '@/components/chat/services/chat-sessions/sessionDelete';
+import { clearAllSessions } from '@/components/chat/shared/services/chat-sessions/chat-sessionDelete';
 import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';
 import { messageCache } from '@/services/chat/MessageCacheService';
+import { useCallback } from 'react';
 
 /**
  * Hook to handle chat session cleanup and persistence management
