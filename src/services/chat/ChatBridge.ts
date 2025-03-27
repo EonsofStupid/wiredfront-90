@@ -5,7 +5,7 @@ import { useChatStore } from '@/components/chat/store/chatStore';
 import { 
   CreateSessionParams, 
   UpdateSessionParams
-} from '@/types/chatsessions';
+} from '@/components/chat/shared/types/sessions';
 import { 
   Message, 
   MessageMetadata,
