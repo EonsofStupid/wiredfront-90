@@ -8,7 +8,7 @@ import { ProjectList } from "@/components/features/projects/ProjectList";
 import { GitHubConnectDialog } from "@/components/features/github/module/GitHubConnectDialog";
 import { GitHubImportModal } from '@/components/features/projects/onboarding/GitHubImportModal';
 import { ProjectDetails } from '@/components/features/projects/onboarding/ProjectDetails';
-import { GitHubDisconnectDialog } from '@/components/features/github/GitHubDisconnectDialog';
+import { GitHubDisconnectDialog } from '@/components/features/github/module/GitHubDisconnectDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Github, Folder, AlertTriangle, Loader2 } from "lucide-react";
 import { GitHubManagementTab } from "./GitHubManagementTab";
