@@ -1,5 +1,5 @@
 import React from 'react';
-import { useChatMode } from '@/components/chat/providers/ChatModeProvider';
+import { ChatProvider } from '@chat/store/types/chat-store-types';
 import { useChatStore } from '@/components/chat/store/chatStore';
 
 export function ModeSwitchModule() {
