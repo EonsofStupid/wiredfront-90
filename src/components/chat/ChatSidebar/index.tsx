@@ -1,15 +1,17 @@
 import React, { Suspense, lazy, useState } from "react";
-import { SessionControls } from "./SessionControls";
-import { useChatSessionManager } from "@/components/chat/hooks/chat-sessions"; 
-import { SessionHeader } from "./SessionHeader";
+import { useChatSessionManager } from '@/components/chat/chat-structure/chatsidebar/hooks/chat-sessions';
+import { SessionControls } from '@/components/chat/chat-structure/chatsidebar/module/ChatSessionControls';
+import { SessionHeader } from '@/components/chat/chat-structure/chatsidebar/module/ChatSessionHeader';
 import { useChatStore } from "../store/chatStore";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useErrorBoundary } from "../hooks/useErrorBoundary";
-import { ChatMode, ModeSelectionDialog } from "../SessionManagement/ModeSelectionDialog";
+import { useErrorBoundary } from '@/components/chat/chat-structure/chatsidebar/hooks/useErrorBoundary';
+import { ModeSelectionDialog } from '@/components/chat/chat-structure/chatsidebar/module/ModeSelectionDialog';
+import { SessionList } from '@/components/chat/chat-structure/chatsidebar/module/ChatSessionList';
+import { SessionSkeleton } from '@/components/chat/chat-structure/chatsidebar/module/ChatSessionSkeleton';
 
 // Lazy load SessionList for performance
-const SessionList = lazy(() => import("./SessionList").then(mod => ({ default: mod.SessionList })));
-const SessionSkeleton = lazy(() => import("./SessionSkeleton"));
+const LazySessionList = lazy(() => import('@/components/chat/chat-structure/chatsidebar/module/ChatSessionList').then(mod => ({ default: mod.SessionList })));
+const LazySessionSkeleton = lazy(() => import('@/components/chat/chat-structure/chatsidebar/module/ChatSessionSkeleton').then(mod => ({ default: mod.SessionSkeleton })));
 
 export const ChatSidebar = () => {
   const {
@@ -40,7 +42,7 @@ export const ChatSidebar = () => {
     setModeDialogOpen(true);
   };
 
-  const handleCreateWithMode = async (mode: ChatMode, providerId: string) => {
+  const handleCreateWithMode = async (mode: string, providerId: string) => {
     // Create session with metadata for the selected mode
     await createSession({
       metadata: {
