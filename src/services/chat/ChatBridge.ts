@@ -1,3 +1,4 @@
+
 import { useChatSessionStore } from '@/components/chat/store/chat-sessions/store';
 import { useMessageStore } from '@/components/chat/store/message';
 import { useChatStore } from '@/components/chat/store/chatStore';
@@ -78,7 +79,8 @@ export const ChatBridge = {
         });
         
         // Create and add user message
-        const message = useMessageStore.getState().createUserMessage(
+        const messageStore = useMessageStore.getState();
+        const message = messageStore.createUserMessage(
           content, 
           newSessionId,
           metadata
@@ -91,7 +93,8 @@ export const ChatBridge = {
       }
       
       // Use existing session
-      const message = useMessageStore.getState().createUserMessage(
+      const messageStore = useMessageStore.getState();
+      const message = messageStore.createUserMessage(
         content, 
         currentSessionId,
         metadata
@@ -139,7 +142,8 @@ export const ChatBridge = {
 async function processWithAI(message: Message) {
   try {
     // Update message status to pending
-    useMessageStore.getState().updateMessage(message.id, {
+    const messageStore = useMessageStore.getState();
+    messageStore.updateMessage(message.id, {
       message_status: 'pending'
     });
     
@@ -157,26 +161,27 @@ async function processWithAI(message: Message) {
     }
     
     // Create assistant message with response
-    useMessageStore.getState().createAssistantMessage(
+    messageStore.createAssistantMessage(
       data.response || 'No response received',
       message.chat_session_id,
       data.metadata || {}
     );
     
     // Update original message status to sent
-    useMessageStore.getState().updateMessage(message.id, {
+    messageStore.updateMessage(message.id, {
       message_status: 'sent'
     });
   } catch (error) {
     logger.error('Failed to process message with AI', { error, messageId: message.id });
     
     // Update message status to error
-    useMessageStore.getState().updateMessage(message.id, {
+    const messageStore = useMessageStore.getState();
+    messageStore.updateMessage(message.id, {
       message_status: 'error'
     });
     
     // Create error message
-    useMessageStore.getState().createErrorMessage(
+    messageStore.createErrorMessage(
       `Error: ${error instanceof Error ? error.message : String(error)}`,
       message.chat_session_id
     );

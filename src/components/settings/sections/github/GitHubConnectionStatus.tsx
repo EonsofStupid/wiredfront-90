@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, CheckCircle2, Github, Loader2 } from 'lucide-react';
-import { Spinner } from '@/components/chat/ui/Spinner';
+import { AlertCircle, CheckCircle2, Github, Loader2, X } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 
 interface GitHubConnectionStatusProps {
   isConnected: boolean;

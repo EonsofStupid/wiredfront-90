@@ -1,15 +1,9 @@
-
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { Session, CreateSessionParams, UpdateSessionParams } from '@/types/chatsessions';
-import { fetchUserSessions } from '@/components/chat/shared/services/chat-sessions/chat-sessionFetch';
-import { createNewSession } from '@/components/chat/shared/services/chat-sessions/chat-sessionCreate';
-import { updateSession as updateSessionService } from '@/components/chat/shared/services/chat-sessions/chat-sessionUpdate';
-import { archiveSession as archiveSessionService } from '@/components/chat/shared/services/chat-sessions/chat-sessionArchive';
-import { logger } from '@/services/chat/LoggingService';
-import { clearAllSessions } from '@/components/chat/shared/services/chat-sessions/chat-sessionDelete';
+import { SessionState, SessionActions, SessionStore, SessionAuditLog } from './types';
 import { User } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/services/chat/LoggingService';
+import { Session, UpdateSessionParams } from '@/types/chatsessions';
 
 export type SessionStore = {
   sessions: Session[];
