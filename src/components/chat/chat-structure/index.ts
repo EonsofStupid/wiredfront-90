@@ -1,6 +1,6 @@
 
-// Chat Container
-export * from './ChatContainer/ChatContainer';
+// Chat Container (main container)
+export { ChatContainer } from './ChatContainer/ChatContainer';
 
 // Chat Input
 export * from './chatinput';

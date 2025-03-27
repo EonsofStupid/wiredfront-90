@@ -1,3 +1,4 @@
+
 import React, { memo, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
@@ -31,6 +32,7 @@ const Message = memo(function Message({
   const getStatusConfig = (status: MessageStatus) => {
     switch (status) {
       case 'pending':
+      case 'sending':
         return { icon: <Clock className="h-3 w-3 animate-pulse" />, tooltip: 'Sending message...' };
       case 'sent':
       case 'received': 
@@ -47,8 +49,8 @@ const Message = memo(function Message({
   const { icon, tooltip } = getStatusConfig(status);
 
   const messageType = role === 'user' ? 'Sent' : 'Received';
-  const statusText = status === 'pending' ? 'Sending...' : 
-                   status === 'sent' || status === 'received' || status === 'cached' ? 'Sent' : 'Failed to send';
+  const statusText = status === 'pending' || status === 'sending' ? 'Sending...' : 
+                   (status === 'sent' || status === 'received' || status === 'cached') ? 'Sent' : 'Failed to send';
                    
   const handleRetryClick = useCallback(() => {
     if ((status === 'failed' || status === 'error') && id && onRetry) {

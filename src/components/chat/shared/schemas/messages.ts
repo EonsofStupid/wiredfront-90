@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export type MessageRole = 'user' | 'assistant' | 'system' | 'tool' | 'error';
 export type MessageType = 'text' | 'image' | 'code' | 'file' | 'system' | 'notification';
-export type MessageStatus = 'sending' | 'sent' | 'error' | 'received' | 'pending';
+export type MessageStatus = 'sending' | 'sent' | 'error' | 'received' | 'pending' | 'cached' | 'failed';
 
 export interface MessageMetadata {
   mode?: string;
