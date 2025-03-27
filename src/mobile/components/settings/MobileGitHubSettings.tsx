@@ -1,6 +1,7 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useGitHubConnection } from '@/components/features/github/hooks/useGitHubConnection';
+import { useGitHubConnection } from "@/hooks/github/useGitHubConnection";
 import { Loader2, Github, Plus, ExternalLink, Check, AlertCircle, ChevronRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";

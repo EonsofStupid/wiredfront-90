@@ -1,14 +1,16 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useChatStore } from '@/components/chat/store';
+
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuthStore } from '@/stores/auth';
 import { logger } from '@/services/chat/LoggingService';
-import { type ChatProvider } from '@/components/chat/shared/types/chat-provider';
+import { useChatStore } from '@/components/chat/store/chatStore';
+import { ChatProvider } from '@/components/chat/store/types/chat-store-types';
 
 /**
  * Hook to manage and track AI provider changes
  */
 export function useProviderChanges() {
-  const { user } = useChatStore();
+  const { user } = useAuthStore();
   const { 
     currentProvider, 
     availableProviders,

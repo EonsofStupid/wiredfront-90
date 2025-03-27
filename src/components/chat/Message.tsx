@@ -4,17 +4,18 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Check, Clock, AlertCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { MessageRole, MessageStatus } from "@/components/chat/shared/schemas/messages";
+import { MessageStatus } from "@/types/chat";
 
 interface MessageProps {
   content: string;
-  role: MessageRole;
+  role: 'user' | 'assistant' | 'system';
   status?: MessageStatus;
   id?: string;
   timestamp?: string;
   onRetry?: (id: string) => void;
 }
 
+// Use memo to prevent unnecessary re-renders
 const Message = memo(function Message({ 
   content, 
   role, 
@@ -23,23 +24,24 @@ const Message = memo(function Message({
   timestamp,
   onRetry
 }: MessageProps) {
+  // Map role to appropriate CSS classes
   const messageClass = role === 'user' 
     ? 'chat-message-user' 
     : role === 'system' 
       ? 'chat-message-system' 
       : 'chat-message-assistant';
   
+  // Map status to icon and tooltip text
   const getStatusConfig = (status: MessageStatus) => {
     switch (status) {
       case 'pending':
-      case 'sending':
         return { icon: <Clock className="h-3 w-3 animate-pulse" />, tooltip: 'Sending message...' };
       case 'sent':
-      case 'received': 
-      case 'cached': 
+      case 'received': // Add handling for received status
+      case 'cached': // Add handling for cached status
         return { icon: <Check className="h-3 w-3" />, tooltip: 'Message sent' };
       case 'failed':
-      case 'error': 
+      case 'error': // Add handling for error status
         return { icon: <AlertCircle className="h-3 w-3 text-destructive" />, tooltip: 'Failed to send' };
       default:
         return { icon: <Check className="h-3 w-3" />, tooltip: 'Message sent' };
@@ -48,10 +50,12 @@ const Message = memo(function Message({
 
   const { icon, tooltip } = getStatusConfig(status);
 
+  // Add proper ARIA attributes for accessibility
   const messageType = role === 'user' ? 'Sent' : 'Received';
-  const statusText = status === 'pending' || status === 'sending' ? 'Sending...' : 
-                   (status === 'sent' || status === 'received' || status === 'cached') ? 'Sent' : 'Failed to send';
+  const statusText = status === 'pending' ? 'Sending...' : 
+                   status === 'sent' || status === 'received' || status === 'cached' ? 'Sent' : 'Failed to send';
                    
+  // Handle retry click with memoization to prevent rerenders
   const handleRetryClick = useCallback(() => {
     if ((status === 'failed' || status === 'error') && id && onRetry) {
       onRetry(id);

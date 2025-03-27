@@ -6,7 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { CacheMetrics } from '@/services/chat/CacheMetricsService';
+
+interface CacheMetrics {
+  cacheHits: number;
+  cacheMisses: number;
+  syncAttempts: number;
+  syncSuccesses: number;
+  errors: Array<{ timestamp: number; error: string }>;
+}
 
 export const CacheMetricsPanel = () => {
   const [metrics, setMetrics] = useState<CacheMetrics | null>(null);
@@ -17,7 +24,7 @@ export const CacheMetricsPanel = () => {
     setIsRefreshing(true);
     try {
       const currentMetrics = await messageCache.getMetrics();
-      setMetrics(currentMetrics);
+      setMetrics(currentMetrics as CacheMetrics);
     } catch (error) {
       console.error('Failed to fetch cache metrics:', error);
       toast.error('Failed to fetch metrics');

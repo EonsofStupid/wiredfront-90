@@ -1,78 +1,97 @@
+
 import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import { UIState, UIActions } from './types';
+import { persist } from 'zustand/middleware';
+import type { UIStore } from './types';
+import { v4 as uuidv4 } from 'uuid';
 
-const initialState: UIState = {
-  theme: 'dark',
-  layout: {
-    sidebarExpanded: true,
-    contentWidth: 'contained',
-    rightSidebarVisible: false,
-    adminIconOnly: false
-  },
-  project: {
-    activeProjectId: null
-  },
-  accessibility: {
-    reducedMotion: false,
-    highContrast: false,
-    fontSize: 'normal'
-  },
-  zIndex: {
-    modal: 1000,
-    dropdown: 900,
-    tooltip: 800,
-    navbar: 700,
-    projecthub: 600,
-    floating: 500,
-    content: 400,
-    background: 300,
-    base: 100
-  }
-};
+const Z_INDEX = {
+  modal: 1000,
+  dropdown: 900,
+  tooltip: 800,
+  navbar: 700,
+  projecthub: 9600,
+  floating: 600,
+  content: 500,
+  background: 400,
+  base: 300,
+} as const;
 
-export const useUIStore = create<UIState & UIActions>()(
-  devtools(
+export const useUIStore = create<UIStore>()(
+  persist(
     (set) => ({
-      ...initialState,
+      theme: 'system',
+      layout: {
+        sidebarExpanded: true,
+        contentWidth: 'contained',
+        rightSidebarVisible: true,
+        adminIconOnly: false, // Default to showing text with icons
+      },
+      project: {
+        activeProjectId: null,
+        // We're removing the projects array as we'll now use Supabase
+      },
+      accessibility: {
+        reducedMotion: false,
+        highContrast: false,
+        fontSize: 'normal',
+      },
+      zIndex: Z_INDEX,
 
       setTheme: (theme) => set({ theme }),
-      toggleSidebar: () => set((state) => ({
-        layout: {
-          ...state.layout,
-          sidebarExpanded: !state.layout.sidebarExpanded
-        }
-      })),
-      toggleRightSidebar: () => set((state) => ({
-        layout: {
-          ...state.layout,
-          rightSidebarVisible: !state.layout.rightSidebarVisible
-        }
-      })),
-      toggleAdminIconOnly: () => set((state) => ({
-        layout: {
-          ...state.layout,
-          adminIconOnly: !state.layout.adminIconOnly
-        }
-      })),
-      updateLayout: (updates) => set((state) => ({
-        layout: {
-          ...state.layout,
-          ...updates
-        }
-      })),
-      updateAccessibility: (updates) => set((state) => ({
-        accessibility: {
-          ...state.accessibility,
-          ...updates
-        }
-      })),
-      setActiveProject: (projectId) => set({
-        project: {
-          activeProjectId: projectId
-        }
-      })
+
+      toggleSidebar: () =>
+        set((state) => ({
+          layout: {
+            ...state.layout,
+            sidebarExpanded: !state.layout.sidebarExpanded,
+          },
+        })),
+
+      toggleRightSidebar: () =>
+        set((state) => ({
+          layout: {
+            ...state.layout,
+            rightSidebarVisible: !state.layout.rightSidebarVisible,
+          },
+        })),
+
+      toggleAdminIconOnly: () =>
+        set((state) => ({
+          layout: {
+            ...state.layout,
+            adminIconOnly: !state.layout.adminIconOnly,
+          },
+        })),
+
+      updateLayout: (updates) =>
+        set((state) => ({
+          layout: { ...state.layout, ...updates },
+        })),
+
+      updateAccessibility: (updates) =>
+        set((state) => ({
+          accessibility: { ...state.accessibility, ...updates },
+        })),
+        
+      setActiveProject: (projectId) =>
+        set((state) => ({
+          project: {
+            ...state.project,
+            activeProjectId: projectId,
+          },
+        })),
+        
+      // Removing addProject and removeProject as they'll be handled by the new service
     }),
-    { name: 'UIStore' }
+    {
+      name: 'ui-storage',
+      partialize: (state) => ({
+        theme: state.theme,
+        layout: state.layout,
+        project: state.project,
+        accessibility: state.accessibility,
+      }),
+      version: 1,
+    }
   )
 );

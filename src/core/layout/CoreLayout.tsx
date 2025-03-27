@@ -1,3 +1,4 @@
+
 import React from "react";
 import { CoreLayoutProps } from "./types";
 import { CoreLayoutContainer } from "./CoreLayoutContainer";
@@ -6,7 +7,7 @@ import { CoreLeftSidebar } from "./CoreLeftSidebar";
 import { CoreRightSidebar } from "./CoreRightSidebar";
 import { CoreBottomBar } from "./CoreBottomBar";
 import { CoreMainContent } from "./CoreMainContent";
-import { useUIStore } from '@/stores/ui/store';
+import { useUIStore } from "@/stores";
 
 /**
  * @name CoreLayout

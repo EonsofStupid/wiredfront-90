@@ -1,10 +1,11 @@
+
 import { cn } from "@/lib/utils";
 import { Bell, Search, PanelLeftClose, PanelLeft, PanelRightClose, PanelRight, Settings } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { UserMenu } from "@/components/user/UserMenu";
-import { useUIStore } from '@/stores/ui/store';
+import { useUIStore } from "@/stores";
 
 interface TopBarProps {
   className?: string;

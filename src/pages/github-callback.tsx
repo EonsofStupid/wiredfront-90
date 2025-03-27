@@ -1,8 +1,9 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useChatSessionStore } from '@/components/chat/store/chat-sessions/store';
+import { useSessionStore } from '@/stores/session/store';
 import { logger } from '@/services/chat/LoggingService';
 
 // Get the Supabase URL from the client configuration
@@ -10,7 +11,7 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://deksjwrdczcsn
 
 const GitHubCallback = () => {
   const navigate = useNavigate();
-  const { user } = useChatSessionStore();
+  const { user } = useSessionStore();
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [traceId, setTraceId] = useState<string | null>(null);

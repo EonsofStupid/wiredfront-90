@@ -1,12 +1,11 @@
+
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { createInitializationActions } from './actions/initialization-actions';
 import { createFeatureActions } from './actions/feature';
 import { createUIActions } from './actions/ui-actions';
-import { ChatState, ChatPosition } from './types/chat-store-types';
-import { ChatProvider } from '@/components/chat/shared/types/chat-provider';
-import { Message } from '@/components/chat/schemas/messages';
+import { ChatState } from './types/chat-store-types';
 
 // Define the full store type with all action slices
 type FullChatStore = ChatState & 
@@ -15,48 +14,35 @@ type FullChatStore = ChatState &
   ReturnType<typeof createUIActions>;
 
 const initialState: ChatState = {
-  // UI state
-  isOpen: false,
-  isMinimized: false,
-  position: { position: 'bottom-right' },
-  docked: true,
-  scale: 1,
-  showSidebar: false,
-  
-  // Chat state
-  chatId: null,
+  initialized: false,
+  messages: [],
   userInput: '',
   isWaitingForResponse: false,
-  isInitialized: false,
-  connectionState: 'disconnected',
-  
-  // UI state object
-  ui: {
-    sessionLoading: false,
-    messageLoading: false,
-    providerLoading: false,
-    isChatLoaded: false,
-    isChatInitialized: false
-  },
-  
-  // Feature flags
+  selectedModel: 'gpt-4',
+  selectedMode: 'chat',
+  modelFetchStatus: 'idle',
+  error: null,
+  chatId: null,
+  docked: true,
+  isOpen: false,
+  isHidden: false,
+  position: 'bottom-right',
+  startTime: Date.now(),
   features: {
-    voiceEnabled: true,
-    imageGenEnabled: true,
-    githubEnabled: true,
-    codeCompletionEnabled: true,
-    ragEnabled: true,
-    tokenEnforcement: false
+    voice: true,
+    rag: true,
+    modeSwitch: true,
+    notifications: true,
+    github: true,
+    codeAssistant: true,
+    ragSupport: true,
+    githubSync: true,
+    tokenEnforcement: false,
   },
-  
-  // Provider state
+  currentMode: 'chat',
   availableProviders: [],
   currentProvider: null,
-  providers: {
-    availableProviders: []
-  },
   
-  // Token control
   tokenControl: {
     balance: 0,
     enforcementMode: 'never',
@@ -66,26 +52,22 @@ const initialState: ChatState = {
     queriesUsed: 0
   },
   
-  // Mode state
-  mode: 'chat',
-  messages: [],
-  startTime: null,
+  providers: {
+    availableProviders: [],
+  },
+  
+  isMinimized: false,
+  showSidebar: false,
+  scale: 1,
+  ui: {
+    sessionLoading: false,
+    messageLoading: false,
+    providerLoading: false,
+  },
   
   // Required actions
+  resetChatState: () => {},
   setUserInput: () => {},
-  toggleChat: () => {},
-  toggleMinimize: () => {},
-  toggleSidebar: () => {},
-  setPosition: () => {},
-  toggleDock: () => {},
-  setScale: () => {},
-  setChatId: () => {},
-  toggleUIState: () => {},
-  toggleFeature: () => {},
-  setMode: () => {},
-  setMessages: () => {},
-  setStartTime: () => {},
-  setAvailableProviders: () => {}
 };
 
 // Enhanced function to clear all Zustand middleware storage
@@ -99,12 +81,14 @@ export const clearMiddlewareStorage = () => {
       key.includes('zustand') || 
       key.includes('chat-') || 
       key.includes('provider-') || 
-      key.includes('session-')
+      key.includes('session-') ||
+      key.startsWith('persist:')
     );
     
+    console.log(`Found ${zustandKeys.length} Zustand-related localStorage keys to remove`);
     zustandKeys.forEach(key => {
       localStorage.removeItem(key);
-      console.log(`Removed localStorage key: ${key}`);
+      console.log(`Removed storage key: ${key}`);
     });
     
     // 2. Clear sessionStorage items
@@ -112,18 +96,41 @@ export const clearMiddlewareStorage = () => {
     const zustandSessionKeys = sessionKeys.filter(key => 
       key.includes('zustand') || 
       key.includes('chat-') || 
-      key.includes('provider-') || 
+      key.includes('provider-') ||
       key.includes('session-')
     );
     
     zustandSessionKeys.forEach(key => {
       sessionStorage.removeItem(key);
-      console.log(`Removed sessionStorage key: ${key}`);
+      console.log(`Removed session storage key: ${key}`);
     });
     
-    console.log("🧹 Completed middleware storage cleanup");
-  } catch (error) {
-    console.error("Error clearing middleware storage:", error);
+    // 3. Attempt to clear IndexedDB if available
+    if (window.indexedDB) {
+      try {
+        const dbNames = [
+          'zustand-persist', 
+          'zustand-chat', 
+          'chat-sessions', 
+          'chat-providers',
+          'message-cache'
+        ];
+        
+        dbNames.forEach(dbName => {
+          const request = window.indexedDB.deleteDatabase(dbName);
+          request.onsuccess = () => console.log(`Deleted IndexedDB: ${dbName}`);
+          request.onerror = () => console.error(`Failed to delete IndexedDB: ${dbName}`);
+        });
+      } catch (idbError) {
+        console.error('Error clearing IndexedDB:', idbError);
+      }
+    }
+    
+    console.log('Middleware storage cleanup completed');
+    return true;
+  } catch (e) {
+    console.error('Error clearing middleware storage:', e);
+    return false;
   }
 };
 
@@ -146,22 +153,6 @@ export const useChatStore = create<FullChatStore>()(
       
       setUserInput: (input: string) => {
         set({ userInput: input }, false, 'chat/setUserInput');
-      },
-      
-      setMode: (mode: 'chat' | 'code' | 'image') => {
-        set({ mode }, false, 'chat/setMode');
-      },
-      
-      setMessages: (messages: Message[]) => {
-        set({ messages }, false, 'chat/setMessages');
-      },
-      
-      setStartTime: (time: number | null) => {
-        set({ startTime: time }, false, 'chat/setStartTime');
-      },
-      
-      setAvailableProviders: (providers: ChatProvider[]) => {
-        set({ availableProviders: providers }, false, 'chat/setAvailableProviders');
       },
       
       ...createInitializationActions(set, get, api),

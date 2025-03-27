@@ -1,5 +1,6 @@
+
 import React from "react";
-import { DocumentsLayout } from "@/components/features/documents/DocumentsLayout";
+import { DocumentsLayout } from "@/components/documents/DocumentsLayout";
 
 const Documents = () => {
   return (

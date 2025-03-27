@@ -1,2 +1,10 @@
-export { NotificationsButton } from './module/NotificationsButton';
-export { NotificationsDialog } from './module/NotificationsDialog';
+
+import { NotificationsButton } from './NotificationsButton';
+import { NotificationsDialog } from './NotificationsDialog';
+
+export {
+  NotificationsButton,
+  NotificationsDialog
+};
+
+export default NotificationsButton;

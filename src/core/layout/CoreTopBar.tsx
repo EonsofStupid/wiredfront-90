@@ -1,3 +1,4 @@
+
 import React from "react";
 import { cn } from "@/lib/utils";
 import { TopBarProps, LayoutZIndex } from "./types";
@@ -6,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { UserMenu } from "@/components/user/UserMenu";
-import { useUIStore } from '@/stores/ui/store';
+import { useUIStore } from "@/stores";
 
 /**
  * @name CoreTopBar

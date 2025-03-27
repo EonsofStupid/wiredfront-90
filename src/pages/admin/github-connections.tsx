@@ -9,13 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertCircle, CheckCircle, Clock, Github, RefreshCw, Search, Trash, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { Spinner } from '@/components/chat/shared/Spinner';
+import { Spinner } from "@/components/chat/ui/Spinner";
 import { GitHubOAuthConnection, GitHubConnectionStatus } from "@/types/admin/settings/github";
-import { useChatSessionStore } from '@/components/chat/store/chat-sessions/store';
+import { useSessionStore } from "@/stores/session/store";
 
 export default function GitHubConnectionsAdmin() {
   const navigate = useNavigate();
-  const { user } = useChatSessionStore();
+  const { user } = useSessionStore();
   const [activeTab, setActiveTab] = useState("connections");
   const [connections, setConnections] = useState<GitHubOAuthConnection[]>([]);
   const [logs, setLogs] = useState<any[]>([]);

@@ -1,19 +1,19 @@
 {
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ],
   "compilerOptions": {
-    "baseUrl": "src",
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["*"],
-      "@components/*": ["components/*"],
-      "@chat/*": ["components/chat/*"],
-      "@chat-structure/*": ["components/chat/chat-structure/*"],
-      "@chatbridge/*": ["chatbridge/*"],
-      "@lib/*": ["lib/*"],
-      "@services/*": ["services/*"],
-      "@stores/*": ["stores/*"],
-      "@types/*": ["types/*"],
-      "@utils/*": ["utils/*"],
-      "@hooks/*": ["hooks/*"],
-      "@constants/*": ["constants/*"]
-    }
+      "@/*": ["./src/*"]
+    },
+    "noImplicitAny": false,
+    "noUnusedParameters": false,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "noUnusedLocals": false,
+    "strictNullChecks": false
   }
 }

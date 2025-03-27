@@ -9,6 +9,7 @@ export interface UIState {
   };
   project: {
     activeProjectId: string | null;
+    // Removing the projects array from here
   };
   accessibility: {
     reducedMotion: boolean;
@@ -36,6 +37,7 @@ export interface UIActions {
   updateLayout: (updates: Partial<UIState['layout']>) => void;
   updateAccessibility: (updates: Partial<UIState['accessibility']>) => void;
   setActiveProject: (projectId: string) => void;
+  // Removing addProject and removeProject as they'll be handled by the new service
 }
 
 export type UIStore = UIState & UIActions;

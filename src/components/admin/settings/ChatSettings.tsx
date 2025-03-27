@@ -1,14 +1,14 @@
 
 import { useState } from "react";
-import { useMessageStore } from "@/components/chat/store/message";
-import { useChatSessionManager } from "@/components/chat/chat-structure/chatsidebar/hooks/chat-sessions";
+import { useMessageStore } from "@/components/chat/messaging/MessageManager";
+import { useSessionManager } from "@/hooks/useSessionManager";
 import { SettingsContainer } from "./layout/SettingsContainer";
 import { toast } from "sonner";
 import { ChatSettingsTabs } from "./chat/ChatSettingsTabs";
 
 export function ChatSettings() {
   const { clearMessages } = useMessageStore();
-  const { clearSessions } = useChatSessionManager();
+  const { refreshSessions } = useSessionManager();
   const [activeTab, setActiveTab] = useState("general");
   
   const [settings, setSettings] = useState({
@@ -44,7 +44,7 @@ export function ChatSettings() {
     emailDigest: false
   });
   
-  const handleSettingChange = (section: string, setting: string, value: boolean | string | number) => {
+  const handleSettingChange = (section: string, setting: string, value: any) => {
     setSettings(prev => ({
       ...prev,
       [setting]: value
@@ -59,6 +59,7 @@ export function ChatSettings() {
   const handleClearHistory = () => {
     if (window.confirm("Are you sure you want to clear all chat history? This cannot be undone.")) {
       clearMessages();
+      refreshSessions();
       toast.success("Chat history cleared successfully");
     }
   };

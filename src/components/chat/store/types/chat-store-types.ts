@@ -1,86 +1,88 @@
-import { Message } from '@/components/chat/shared/schemas/messages';
-import { ChatProvider } from '@/components/chat/shared/types/chat-provider';
 
-export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'error';
+import { Message } from "@/types/chat";
+import { ChatMode, TokenEnforcementMode } from "@/integrations/supabase/types/enums";
 
-export interface ChatPosition {
-  x?: number;
-  y?: number;
-  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+export interface ChatProvider {
+  id: string;
+  name: string;
+  type: string;
+  isDefault: boolean;
+  isEnabled?: boolean;
+  category?: 'chat' | 'image' | 'integration';
+}
+
+export type ChatPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+
+export interface TokenControl {
+  balance: number;
+  enforcementMode: TokenEnforcementMode;
+  lastUpdated: string | null;
+  tokensPerQuery: number;
+  freeQueryLimit: number;
+  queriesUsed: number;
 }
 
 export interface ChatState {
-  // UI state
-  isOpen: boolean;
-  isMinimized: boolean;
-  position: ChatPosition;
-  docked: boolean;
-  scale: number;
-  showSidebar: boolean;
-  
-  // Chat state
-  chatId: string | null;
+  initialized: boolean;
+  messages: Message[];
   userInput: string;
   isWaitingForResponse: boolean;
-  isInitialized: boolean;
-  connectionState: ConnectionState;
+  selectedModel: string;
+  selectedMode: string;
+  modelFetchStatus: 'idle' | 'loading' | 'success' | 'error';
+  error: string | null;
+  chatId: string | null;
+  docked: boolean;
+  isOpen: boolean;
+  isHidden: boolean;
+  position: ChatPosition | { x: number; y: number };
+  startTime: number;
+  features: {
+    voice: boolean;
+    rag: boolean;
+    modeSwitch: boolean;
+    notifications: boolean;
+    github: boolean;
+    // Feature flags that components expect
+    codeAssistant: boolean;
+    ragSupport: boolean;
+    githubSync: boolean;
+    tokenEnforcement: boolean;
+  };
+  currentMode: ChatMode;
+  availableProviders: ChatProvider[];
+  currentProvider: ChatProvider | null;
   
-  // UI state object for components to consume
+  // Token control system
+  tokenControl: TokenControl;
+  
+  // Add providers mapping for session management
+  providers?: {
+    availableProviders: ChatProvider[];
+  };
+  
+  // UI state properties
+  isMinimized: boolean;
+  showSidebar: boolean;
+  scale: number;
   ui: {
     sessionLoading: boolean;
     messageLoading: boolean;
     providerLoading: boolean;
-    isChatLoaded: boolean;
-    isChatInitialized: boolean;
   };
-  
-  // Action creators
-  setUserInput: (input: string) => void;
-  toggleChat: () => void;
+
+  // Store actions
+  resetChatState: () => void;
+  setUserInput: (input: string) => void; // Added this action
+}
+
+export interface UIStateActions {
   toggleMinimize: () => void;
   toggleSidebar: () => void;
-  setPosition: (position: ChatPosition) => void;
-  toggleDock: () => void;
+  toggleChat: () => void;
+  setSessionLoading: (isLoading: boolean) => void;
+  setMessageLoading: (isLoading: boolean) => void;
+  setProviderLoading: (isLoading: boolean) => void;
   setScale: (scale: number) => void;
-  setChatId: (id: string | null) => void;
-  toggleUIState: (key: keyof ChatState, value?: boolean) => void;
-  
-  // Feature flags and UI state
-  features: {
-    voiceEnabled: boolean;
-    imageGenEnabled: boolean;
-    githubEnabled: boolean;
-    codeCompletionEnabled: boolean;
-    ragEnabled: boolean;
-    tokenEnforcement: boolean;
-  };
-  
-  // Toggle feature flags
-  toggleFeature: (featureName: keyof ChatState['features']) => void;
-
-  // Provider state
-  availableProviders: ChatProvider[];
-  currentProvider: ChatProvider | null;
-  providers: {
-    availableProviders: ChatProvider[];
-  };
-
-  // Token control
-  tokenControl: {
-    balance: number;
-    enforcementMode: 'never' | 'always' | 'when_available';
-    lastUpdated: Date | null;
-    tokensPerQuery: number;
-    freeQueryLimit: number;
-    queriesUsed: number;
-  };
-
-  // Mode state
-  mode: 'chat' | 'code' | 'image';
-  messages: Message[];
-  startTime: number | null;
-  setMode: (mode: 'chat' | 'code' | 'image') => void;
-  setMessages: (messages: Message[]) => void;
-  setStartTime: (time: number | null) => void;
-  setAvailableProviders: (providers: ChatProvider[]) => void;
+  setCurrentMode: (mode: ChatMode) => void;
 }

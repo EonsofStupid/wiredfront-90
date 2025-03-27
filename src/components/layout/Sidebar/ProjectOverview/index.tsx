@@ -1,20 +1,21 @@
+
 import { cn } from "@/lib/utils";
 import { useProjectOverview } from "./useProjectOverview";
 import { ProjectOverviewHeader } from "./ProjectOverviewHeader";
 import { GitHubConnectionSection } from "./GitHubConnectionSection";
 import { IndexingStatusSection } from "./IndexingStatusSection";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ProjectList } from "@/components/features/projects/ProjectList";
-import { GitHubConnectDialog } from "@/components/features/github/module/GitHubConnectDialog";
-import { GitHubImportModal } from '@/components/features/github/module/GitHubImportModal';
-import { ProjectDetails } from '@/components/features/projects/ProjectDetails';
-import { GitHubDisconnectDialog } from '@/components/features/github/module/GitHubDisconnectDialog';
+import { ProjectList } from "@/components/projects/ProjectList";
+import { GitHubConnectDialog } from "@/components/github/GitHubConnectDialog";
+import { GitHubImportModal } from "@/components/github/GitHubImportModal";
+import { ProjectDetails } from "@/components/projects/ProjectDetails";
+import { GitHubDisconnectDialog } from "@/components/github/GitHubDisconnectDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Github, Folder, AlertTriangle, Loader2 } from "lucide-react";
 import { GitHubManagementTab } from "./GitHubManagementTab";
 import { useState, useEffect, Suspense, lazy } from "react";
 import { ErrorMessage } from "@/components/ui/error-message";
-import { GitHubErrorBoundary } from '@/components/features/github/module/GitHubErrorBoundary';
+import { GitHubErrorBoundary } from "@/components/github/GitHubErrorBoundary";
 
 interface ProjectOverviewProps {
   className?: string;
