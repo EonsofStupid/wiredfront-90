@@ -1,5 +1,4 @@
-
-import { ChatProvider } from '@/components/chat/store/types/chat-store-types';
+import { ChatProvider } from '@/components/chat/shared/types/chat-provider';
 import { OpenAIProvider } from './openai/OpenAIProvider';
 import { GeminiProvider } from './gemini/GeminiProvider';
 import { AnthropicProvider } from './anthropic/AnthropicProvider';

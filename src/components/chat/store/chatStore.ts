@@ -1,11 +1,11 @@
-
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { createInitializationActions } from './actions/initialization-actions';
 import { createFeatureActions } from './actions/feature';
 import { createUIActions } from './actions/ui-actions';
-import { ChatState } from './types/chat-store-types';
+import { ChatState, ChatPosition } from './types/chat-store-types';
+import { ChatProvider } from '@/components/chat/shared/types/chat-provider';
 
 // Define the full store type with all action slices
 type FullChatStore = ChatState & 
@@ -14,35 +14,48 @@ type FullChatStore = ChatState &
   ReturnType<typeof createUIActions>;
 
 const initialState: ChatState = {
-  initialized: false,
-  messages: [],
+  // UI state
+  isOpen: false,
+  isMinimized: false,
+  position: { position: 'bottom-right' },
+  docked: true,
+  scale: 1,
+  showSidebar: false,
+  
+  // Chat state
+  chatId: null,
   userInput: '',
   isWaitingForResponse: false,
-  selectedModel: 'gpt-4',
-  selectedMode: 'chat',
-  modelFetchStatus: 'idle',
-  error: null,
-  chatId: null,
-  docked: true,
-  isOpen: false,
-  isHidden: false,
-  position: 'bottom-right',
-  startTime: Date.now(),
-  features: {
-    voice: true,
-    rag: true,
-    modeSwitch: true,
-    notifications: true,
-    github: true,
-    codeAssistant: true,
-    ragSupport: true,
-    githubSync: true,
-    tokenEnforcement: false,
+  isInitialized: false,
+  connectionState: 'disconnected',
+  
+  // UI state object
+  ui: {
+    sessionLoading: false,
+    messageLoading: false,
+    providerLoading: false,
+    isChatLoaded: false,
+    isChatInitialized: false
   },
-  currentMode: 'chat',
+  
+  // Feature flags
+  features: {
+    voiceEnabled: true,
+    imageGenEnabled: true,
+    githubEnabled: true,
+    codeCompletionEnabled: true,
+    ragEnabled: true,
+    tokenEnforcement: false
+  },
+  
+  // Provider state
   availableProviders: [],
   currentProvider: null,
+  providers: {
+    availableProviders: []
+  },
   
+  // Token control
   tokenControl: {
     balance: 0,
     enforcementMode: 'never',
@@ -52,22 +65,17 @@ const initialState: ChatState = {
     queriesUsed: 0
   },
   
-  providers: {
-    availableProviders: [],
-  },
-  
-  isMinimized: false,
-  showSidebar: false,
-  scale: 1,
-  ui: {
-    sessionLoading: false,
-    messageLoading: false,
-    providerLoading: false,
-  },
-  
   // Required actions
-  resetChatState: () => {},
   setUserInput: () => {},
+  toggleChat: () => {},
+  toggleMinimize: () => {},
+  toggleSidebar: () => {},
+  setPosition: () => {},
+  toggleDock: () => {},
+  setScale: () => {},
+  setChatId: () => {},
+  toggleUIState: () => {},
+  toggleFeature: () => {}
 };
 
 // Enhanced function to clear all Zustand middleware storage

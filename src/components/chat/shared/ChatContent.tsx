@@ -1,34 +1,18 @@
-
 import React, { Suspense, lazy, useEffect } from "react";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useChatMode } from "../providers/ChatModeProvider";
-import { useChatStore } from "../store/chatStore";
+import { useChatStore } from "@/components/chat/store/chatStore";
 import { AnimatePresence, motion } from "framer-motion";
 import { logger } from "@/services/chat/LoggingService";
 import { Spinner } from "./Spinner";
-import { useErrorBoundary } from "../hooks/useErrorBoundary";
+import { useErrorBoundary } from "@/components/chat/shared/hooks/useErrorBoundary";
 import { MessageSkeleton } from "./MessageSkeleton";
+import { MessageModule } from '@/components/chat/chat-structure/messages/MessageModule';
+import { ChatInputModule } from '@/components/chat/chat-structure/chatinput/module/ChatInputModule';
+import { useLocation } from 'react-router-dom';
 
 // Lazy load modules for better performance
-const MessageModule = lazy(() => 
-  import("../modules/MessageModule")
-    .then(mod => ({ default: mod.MessageModule }))
-    .catch(error => {
-      logger.error('Failed to load MessageModule', { error });
-      throw error;
-    })
-);
-
-const ChatInputModule = lazy(() => 
-  import("../modules/ChatInputModule")
-    .then(mod => ({ default: mod.ChatInputModule }))
-    .catch(error => {
-      logger.error('Failed to load ChatInputModule', { error });
-      throw error;
-    })
-);
-
 const StatusButton = lazy(() => 
   import("../features/status-button")
     .then(mod => ({ default: mod.StatusButton }))

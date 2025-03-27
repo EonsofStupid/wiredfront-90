@@ -1,15 +1,12 @@
 import { Message } from '@/components/chat/shared/schemas/messages';
+import { ChatProvider } from '@/components/chat/shared/types/chat-provider';
+
+export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'error';
 
 export interface ChatPosition {
   x?: number;
   y?: number;
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-}
-
-export interface ConnectionState {
-  status: 'connected' | 'disconnected' | 'connecting' | 'error';
-  lastPing?: number;
-  error?: Error | null;
 }
 
 export interface ChatState {
@@ -32,6 +29,7 @@ export interface ChatState {
   ui: {
     sessionLoading: boolean;
     messageLoading: boolean;
+    providerLoading: boolean;
     isChatLoaded: boolean;
     isChatInitialized: boolean;
   };
@@ -54,8 +52,26 @@ export interface ChatState {
     githubEnabled: boolean;
     codeCompletionEnabled: boolean;
     ragEnabled: boolean;
+    tokenEnforcement: boolean;
   };
   
   // Toggle feature flags
   toggleFeature: (featureName: keyof ChatState['features']) => void;
+
+  // Provider state
+  availableProviders: ChatProvider[];
+  currentProvider: ChatProvider | null;
+  providers: {
+    availableProviders: ChatProvider[];
+  };
+
+  // Token control
+  tokenControl: {
+    balance: number;
+    enforcementMode: 'never' | 'always' | 'when_available';
+    lastUpdated: Date | null;
+    tokensPerQuery: number;
+    freeQueryLimit: number;
+    queriesUsed: number;
+  };
 }

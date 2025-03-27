@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useChatStore } from '../store/chatStore';
+import { useChatStore } from '@/components/chat/store/chatStore';
 import { logger } from '@/services/chat/LoggingService';
 
 export function useViewportAwareness() {

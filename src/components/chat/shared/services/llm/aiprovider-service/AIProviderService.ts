@@ -1,7 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/services/chat/LoggingService";
-import { ChatProvider } from "@/components/chat/store/types/chat-store-types";
+import { ChatProvider } from "@/components/chat/shared/types/chat-provider";
 
 interface ProviderUsageMetrics {
   tokensUsed?: number;
