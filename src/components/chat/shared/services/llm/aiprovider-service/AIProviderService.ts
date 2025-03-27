@@ -29,6 +29,7 @@ export class AIProviderService {
         type: config.api_type,
         isDefault: config.is_default || false,
         isEnabled: config.is_enabled,
+        apiReference: config.api_reference || config.api_type,
         category: this.getCategoryForProvider(config.api_type)
       })) || [];
     } catch (error) {

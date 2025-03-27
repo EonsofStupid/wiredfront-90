@@ -153,7 +153,7 @@ export function AIProviderStatusDialog() {
                     {getProviderTypeDisplayName(type as ProviderType)}
                   </h3>
                   <div className="grid grid-cols-1 gap-2">
-                    {typeProviders.map(provider => (
+                    {typeProviders.map((provider: ChatProvider) => (
                       <div 
                         key={provider.id} 
                         className={`
