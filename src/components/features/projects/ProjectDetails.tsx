@@ -1,6 +1,6 @@
 
 import { cn } from "@/lib/utils";
-import { GitHubUserBadge } from "@/components/github/GitHubUserBadge";
+import { GitHubUserBadge } from "@/components/features/github/module/GitHubUserBadge";
 import { Badge } from "@/components/ui/badge";
 import { 
   CalendarIcon, 
