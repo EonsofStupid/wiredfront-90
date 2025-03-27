@@ -1,24 +1,23 @@
 
 import React from 'react';
-import { Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
-type SpinnerSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+type SpinnerSize = 'sm' | 'md' | 'lg' | 'xl';
 
 interface SpinnerProps {
   size?: SpinnerSize;
   className?: string;
 }
 
-const sizeMap: Record<SpinnerSize, string> = {
-  xs: 'h-3 w-3',
-  sm: 'h-4 w-4',
-  md: 'h-6 w-6',
-  lg: 'h-8 w-8',
-  xl: 'h-12 w-12'
-};
-
 export function Spinner({ size = 'md', className }: SpinnerProps) {
+  const sizeMap: Record<SpinnerSize, string> = {
+    sm: 'h-4 w-4',
+    md: 'h-6 w-6',
+    lg: 'h-8 w-8',
+    xl: 'h-12 w-12'
+  };
+
   return (
     <Loader2 
       className={cn(

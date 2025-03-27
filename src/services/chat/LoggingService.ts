@@ -1,112 +1,70 @@
 
-import { supabase } from "@/integrations/supabase/client";
-
-export interface LogOptions {
-  source?: string;
-  metadata?: Record<string, any>;
-  userId?: string;
-  [key: string]: any; // Allow any additional properties
+interface LogEntry {
+  level: 'info' | 'warn' | 'error' | 'debug';
+  message: string;
+  data?: any;
+  timestamp: string;
 }
 
 class Logger {
-  private defaultSource: string = 'application';
-
-  /**
-   * Logs an informational message
-   */
-  async info(message: string, options?: LogOptions) {
-    return this.log('info', message, options);
+  private logs: LogEntry[] = [];
+  private maxLogs: number = 100;
+  private debugMode: boolean = process.env.NODE_ENV === 'development';
+  
+  constructor() {
+    // Initialize logger
+    this.info('Logger initialized');
   }
-
-  /**
-   * Logs a warning message
-   */
-  async warn(message: string, options?: LogOptions) {
-    return this.log('warn', message, options);
-  }
-
-  /**
-   * Logs an error message
-   */
-  async error(message: string, options?: LogOptions) {
-    return this.log('error', message, options);
-  }
-
-  /**
-   * Logs a debug message (only recorded in development environment or when debug mode is enabled)
-   */
-  async debug(message: string, options?: LogOptions) {
-    // Check if we're in development mode or if debug is enabled
-    const isDev = import.meta.env.DEV;
-    if (isDev) {
-      console.debug(`[DEBUG] ${message}`, options?.metadata || {});
-    }
-    
-    return this.log('debug', message, options);
-  }
-
-  /**
-   * Logs a message to console and Supabase system_logs table
-   */
-  private async log(level: 'info' | 'warn' | 'error' | 'debug', message: string, options?: LogOptions) {
-    const source = options?.source || this.defaultSource;
-    const metadata = options?.metadata || {};
-    const userId = options?.userId || await this.getCurrentUserId();
-    
-    // Always log to console
-    this.logToConsole(level, message, source, metadata);
-    
-    // Try to log to database
-    try {
-      const { error } = await supabase.from('system_logs').insert({
-        level,
-        source,
-        message,
-        metadata,
-        user_id: userId
-      } as any); // Type assertion since table might not be in types
-      
-      if (error) {
-        console.error('Failed to write log to database:', error);
-      }
-    } catch (err) {
-      console.error('Error logging to database:', err);
+  
+  info(message: string, data?: any): void {
+    this.log('info', message, data);
+    if (this.debugMode) {
+      console.info(`[INFO] ${message}`, data || '');
     }
   }
-
-  /**
-   * Logs a message to the console with appropriate formatting
-   */
-  private logToConsole(level: 'info' | 'warn' | 'error' | 'debug', message: string, source: string, metadata: any) {
-    const timestamp = new Date().toISOString();
-    const logPrefix = `[${timestamp}] [${level.toUpperCase()}] [${source}]`;
-    
-    switch (level) {
-      case 'info':
-        console.info(`${logPrefix} ${message}`, metadata);
-        break;
-      case 'warn':
-        console.warn(`${logPrefix} ${message}`, metadata);
-        break;
-      case 'error':
-        console.error(`${logPrefix} ${message}`, metadata);
-        break;
-      case 'debug':
-        console.debug(`${logPrefix} ${message}`, metadata);
-        break;
+  
+  warn(message: string, data?: any): void {
+    this.log('warn', message, data);
+    if (this.debugMode) {
+      console.warn(`[WARN] ${message}`, data || '');
     }
   }
-
-  /**
-   * Gets the current user ID if available
-   */
-  private async getCurrentUserId(): Promise<string | null> {
-    try {
-      const { data } = await supabase.auth.getSession();
-      return data?.session?.user?.id || null;
-    } catch {
-      return null;
+  
+  error(message: string, data?: any): void {
+    this.log('error', message, data);
+    console.error(`[ERROR] ${message}`, data || '');
+  }
+  
+  debug(message: string, data?: any): void {
+    if (this.debugMode) {
+      this.log('debug', message, data);
+      console.debug(`[DEBUG] ${message}`, data || '');
     }
+  }
+  
+  private log(level: 'info' | 'warn' | 'error' | 'debug', message: string, data?: any): void {
+    const entry: LogEntry = {
+      level,
+      message,
+      data,
+      timestamp: new Date().toISOString(),
+    };
+    
+    this.logs.unshift(entry);
+    
+    // Trim logs to prevent memory leaks
+    if (this.logs.length > this.maxLogs) {
+      this.logs = this.logs.slice(0, this.maxLogs);
+    }
+  }
+  
+  getLogs(): LogEntry[] {
+    return [...this.logs];
+  }
+  
+  clearLogs(): void {
+    this.logs = [];
+    this.info('Logs cleared');
   }
 }
 

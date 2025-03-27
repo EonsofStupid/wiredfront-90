@@ -1,34 +1,40 @@
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 
-// Extended mode types to include 'image'
-export type ChatMode = 'standard' | 'editor' | 'chat-only' | 'image';
+export type ChatModeType = 'standard' | 'editor' | 'image' | 'chat-only';
 
 interface ChatModeContextType {
-  mode: ChatMode;
-  isEditorPage: boolean;
-  setMode?: (mode: ChatMode) => void;
+  mode: ChatModeType;
+  setMode: (mode: ChatModeType) => void;
 }
 
 const ChatModeContext = createContext<ChatModeContextType | undefined>(undefined);
 
 interface ChatModeProviderProps {
   children: ReactNode;
-  isEditorPage: boolean;
+  isEditorPage?: boolean;
 }
 
-export function ChatModeProvider({ children, isEditorPage }: ChatModeProviderProps) {
-  // Default mode based on page context
-  const defaultMode: ChatMode = isEditorPage ? 'editor' : 'standard';
-  const [mode, setMode] = useState<ChatMode>(defaultMode);
+export function ChatModeProvider({ children, isEditorPage = false }: ChatModeProviderProps) {
+  const [mode, setMode] = useState<ChatModeType>(isEditorPage ? 'editor' : 'standard');
+  const location = useLocation();
 
-  // Reset mode when switching pages
+  // Automatically set mode based on route
   useEffect(() => {
-    setMode(isEditorPage ? 'editor' : 'standard');
-  }, [isEditorPage]);
+    if (location.pathname.includes('/editor')) {
+      setMode('editor');
+    } else if (location.pathname.includes('/gallery')) {
+      setMode('image');
+    } else if (location.pathname === '/chat') {
+      setMode('chat-only');
+    } else {
+      setMode('standard');
+    }
+  }, [location.pathname]);
 
   return (
-    <ChatModeContext.Provider value={{ mode, isEditorPage, setMode }}>
+    <ChatModeContext.Provider value={{ mode, setMode }}>
       {children}
     </ChatModeContext.Provider>
   );

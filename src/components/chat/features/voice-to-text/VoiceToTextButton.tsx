@@ -1,8 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Mic, Square, AlertCircle } from "lucide-react";
-import { useVoiceRecognition } from './useVoiceRecognition';
+import { Mic, MicOff } from "lucide-react";
 import { toast } from "sonner";
 
 interface VoiceToTextButtonProps {
@@ -11,55 +10,63 @@ interface VoiceToTextButtonProps {
 }
 
 export function VoiceToTextButton({ onTranscription, isProcessing }: VoiceToTextButtonProps) {
-  const {
-    isListening,
-    isError,
-    errorMessage,
-    startListening,
-    stopListening
-  } = useVoiceRecognition((text) => {
-    onTranscription(text);
-    toast.success('Voice transcription completed');
-  });
-
-  const handleClick = () => {
-    if (isListening) {
-      stopListening();
-    } else {
-      startListening();
+  const [isListening, setIsListening] = useState(false);
+  
+  const startListening = async () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      toast.error('Speech recognition is not supported in your browser');
+      return;
+    }
+    
+    try {
+      setIsListening(true);
+      
+      // This is a simplified implementation
+      // In a real app, you'd need to handle browser compatibility and permissions
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      
+      recognition.lang = 'en-US';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        onTranscription(transcript);
+      };
+      
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error', event);
+        toast.error('Failed to recognize speech');
+        setIsListening(false);
+      };
+      
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+      
+      recognition.start();
+    } catch (error) {
+      console.error('Error starting speech recognition', error);
+      toast.error('Failed to start speech recognition');
+      setIsListening(false);
     }
   };
-
-  if (isError) {
-    return (
-      <Button
-        variant="ghost"
-        size="icon"
-        className="text-destructive hover:text-destructive/90 hover:bg-destructive/10 h-[var(--chat-input-height)]"
-        onClick={() => toast.error(errorMessage || 'Voice recognition error')}
-        title={errorMessage || 'Voice recognition error'}
-      >
-        <AlertCircle className="h-4 w-4" />
-      </Button>
-    );
-  }
-
+  
   return (
     <Button
-      variant="ghost"
+      type="button"
       size="icon"
-      className="relative chat-cyber-border h-[var(--chat-input-height)]"
-      onClick={handleClick}
-      disabled={isProcessing}
-      data-testid="voice-to-text-button"
+      variant="ghost"
+      onClick={startListening}
+      disabled={isListening || isProcessing}
+      className="h-10 w-10"
+      title={isListening ? "Listening..." : "Speak your message"}
     >
       {isListening ? (
-        <>
-          <Square className="h-4 w-4 text-red-500" />
-          <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-        </>
+        <Mic className="h-4 w-4 text-red-500 animate-pulse" />
       ) : (
-        <Mic className="h-4 w-4" />
+        <MicOff className="h-4 w-4" />
       )}
     </Button>
   );

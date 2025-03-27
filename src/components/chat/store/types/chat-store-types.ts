@@ -1,88 +1,74 @@
 
-import { Message } from "@/types/chat";
-import { ChatMode, TokenEnforcementMode } from "@/integrations/supabase/types/enums";
+import { SessionMetadata } from '@/types/sessions';
 
-export interface ChatProvider {
+export type ChatPosition = 'bottom-left' | 'bottom-right';
+
+export interface Provider {
   id: string;
   name: string;
-  type: string;
-  isDefault: boolean;
-  isEnabled?: boolean;
-  category?: 'chat' | 'image' | 'integration';
-}
-
-export type ChatPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-
-export interface TokenControl {
-  balance: number;
-  enforcementMode: TokenEnforcementMode;
-  lastUpdated: string | null;
-  tokensPerQuery: number;
-  freeQueryLimit: number;
-  queriesUsed: number;
+  description: string;
+  category: 'chat' | 'image' | 'audio' | 'code';
+  isEnabled: boolean;
+  maxTokens?: number;
+  contextSize?: number;
 }
 
 export interface ChatState {
   initialized: boolean;
-  messages: Message[];
+  messages: any[];
   userInput: string;
   isWaitingForResponse: boolean;
   selectedModel: string;
   selectedMode: string;
   modelFetchStatus: 'idle' | 'loading' | 'success' | 'error';
-  error: string | null;
+  error: Error | null;
   chatId: string | null;
   docked: boolean;
   isOpen: boolean;
   isHidden: boolean;
-  position: ChatPosition | { x: number; y: number };
+  position: ChatPosition;
   startTime: number;
+  
   features: {
     voice: boolean;
     rag: boolean;
     modeSwitch: boolean;
     notifications: boolean;
     github: boolean;
-    // Feature flags that components expect
     codeAssistant: boolean;
     ragSupport: boolean;
     githubSync: boolean;
     tokenEnforcement: boolean;
   };
-  currentMode: ChatMode;
-  availableProviders: ChatProvider[];
-  currentProvider: ChatProvider | null;
   
-  // Token control system
-  tokenControl: TokenControl;
+  currentMode: string;
+  availableProviders: Provider[];
+  currentProvider: Provider | null;
   
-  // Add providers mapping for session management
-  providers?: {
-    availableProviders: ChatProvider[];
+  tokenControl: {
+    balance: number;
+    enforcementMode: 'never' | 'warn' | 'strict';
+    lastUpdated: string | null;
+    tokensPerQuery: number;
+    freeQueryLimit: number;
+    queriesUsed: number;
   };
   
-  // UI state properties
+  providers: {
+    availableProviders: Provider[];
+  };
+  
   isMinimized: boolean;
   showSidebar: boolean;
   scale: number;
+  
   ui: {
     sessionLoading: boolean;
     messageLoading: boolean;
     providerLoading: boolean;
   };
-
-  // Store actions
+  
+  // Required actions
   resetChatState: () => void;
-  setUserInput: (input: string) => void; // Added this action
-}
-
-export interface UIStateActions {
-  toggleMinimize: () => void;
-  toggleSidebar: () => void;
-  toggleChat: () => void;
-  setSessionLoading: (isLoading: boolean) => void;
-  setMessageLoading: (isLoading: boolean) => void;
-  setProviderLoading: (isLoading: boolean) => void;
-  setScale: (scale: number) => void;
-  setCurrentMode: (mode: ChatMode) => void;
+  setUserInput: (input: string) => void;
 }

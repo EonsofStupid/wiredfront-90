@@ -1,14 +1,16 @@
 
 import { Json } from '@/integrations/supabase/types';
 
-export type MessageStatus = 'pending' | 'sent' | 'failed' | 'error' | 'cached' | 'received';
 export type MessageRole = 'user' | 'assistant' | 'system';
+export type MessageType = 'text' | 'image' | 'code' | 'file';
+export type MessageStatus = 'pending' | 'sent' | 'received' | 'failed' | 'error' | 'cached';
 
 export interface Message {
   id: string;
+  role: MessageRole;
   content: string;
+  type: MessageType;
   user_id: string | null;
-  type: 'text' | 'command' | 'system';
   metadata: Json;
   created_at: string;
   updated_at: string;
@@ -18,11 +20,5 @@ export interface Message {
   window_state: Json;
   last_accessed: string;
   retry_count: number;
-  message_status: MessageStatus;
-  role: MessageRole;
-  source_type?: string;
-  provider?: string;
-  processing_status?: string;
-  last_retry?: string;
-  rate_limit_window?: string;
+  message_status?: MessageStatus;
 }

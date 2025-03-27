@@ -13,7 +13,7 @@ interface RawSessionData {
   created_at: string;
   last_accessed: string;
   archived: boolean;
-  metadata: any; // Explicitly use any to break type recursion
+  metadata: unknown; // Use unknown to break type recursion
   user_id: string | null;
 }
 
@@ -45,14 +45,49 @@ function mapToSession(rawData: RawSessionData, messageCount: number = 0): Sessio
  * Helper function to validate and transform raw metadata to a type-safe structure
  * This adds runtime validation to complement the TypeScript type checking
  */
-function validateAndTransformMetadata(rawMetadata: any): SessionMetadata {
+function validateAndTransformMetadata(rawMetadata: unknown): SessionMetadata {
   if (!rawMetadata || typeof rawMetadata !== 'object') {
     return {};
   }
   
-  // Here we could add additional validation logic if needed
+  // Process the metadata to ensure type safety
+  const processed: SessionMetadata = {};
   
-  return rawMetadata as SessionMetadata;
+  if (rawMetadata && typeof rawMetadata === 'object') {
+    // Cast to Record to work with it
+    const metaObj = rawMetadata as Record<string, unknown>;
+    
+    // Copy valid properties
+    if ('mode' in metaObj && typeof metaObj.mode === 'string') {
+      processed.mode = metaObj.mode;
+    }
+    
+    if ('context' in metaObj && typeof metaObj.context === 'object' && metaObj.context) {
+      processed.context = metaObj.context as Record<string, unknown>;
+    }
+    
+    if ('settings' in metaObj && typeof metaObj.settings === 'object' && metaObj.settings) {
+      processed.settings = metaObj.settings as Record<string, unknown>;
+    }
+    
+    // Handle lastPosition if it exists
+    if ('lastPosition' in metaObj && typeof metaObj.lastPosition === 'object' && metaObj.lastPosition) {
+      const posObj = metaObj.lastPosition as Record<string, unknown>;
+      if ('x' in posObj && 'y' in posObj && 
+          typeof posObj.x === 'number' && typeof posObj.y === 'number') {
+        processed.lastPosition = { x: posObj.x, y: posObj.y };
+      }
+    }
+    
+    // Handle other properties
+    Object.entries(metaObj).forEach(([key, value]) => {
+      if (!['mode', 'context', 'settings', 'lastPosition'].includes(key)) {
+        processed[key] = value;
+      }
+    });
+  }
+  
+  return processed;
 }
 
 /**

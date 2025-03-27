@@ -1,37 +1,44 @@
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, RefObject } from 'react';
 
-export function useAutoScroll(scrollRef: React.RefObject<HTMLElement>) {
-  const isScrolledToBottom = useRef(true);
-  
-  // Check if user is scrolled to bottom (or near bottom)
-  const checkScrollPosition = useCallback(() => {
-    if (!scrollRef.current) return;
-    
-    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-    // Consider "near bottom" if within 100px of the bottom
-    const scrollThreshold = 100;
-    isScrolledToBottom.current = scrollHeight - scrollTop - clientHeight <= scrollThreshold;
-  }, [scrollRef]);
-  
-  // Manually scroll to bottom
+export function useAutoScroll(scrollRef: RefObject<HTMLDivElement>) {
+  const autoScrollEnabled = useRef(true);
+  const lastScrollTop = useRef(0);
+  const lastScrollHeight = useRef(0);
+
   const scrollToBottom = useCallback(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    if (!scrollRef.current || !autoScrollEnabled.current) return;
+
+    const scrollElement = scrollRef.current;
+    scrollElement.scrollTop = scrollElement.scrollHeight;
+    lastScrollTop.current = scrollElement.scrollTop;
+    lastScrollHeight.current = scrollElement.scrollHeight;
   }, [scrollRef]);
-  
-  // Auto-scroll only if already at bottom
-  const autoScrollIfAtBottom = useCallback(() => {
-    if (isScrolledToBottom.current && scrollRef.current) {
-      scrollToBottom();
+
+  const handleScroll = useCallback(() => {
+    if (!scrollRef.current) return;
+
+    const scrollElement = scrollRef.current;
+    
+    // Check if scroll is at the bottom (with a small threshold for browser inconsistencies)
+    const isAtBottom = scrollElement.scrollHeight - scrollElement.scrollTop - scrollElement.clientHeight < 20;
+    
+    // If user has scrolled up, disable auto-scroll
+    if (!isAtBottom && scrollElement.scrollTop < lastScrollTop.current) {
+      autoScrollEnabled.current = false;
     }
-  }, [isScrolledToBottom, scrollRef, scrollToBottom]);
-  
+    
+    // If user manually scrolled to bottom, re-enable auto-scroll
+    if (isAtBottom) {
+      autoScrollEnabled.current = true;
+    }
+    
+    lastScrollTop.current = scrollElement.scrollTop;
+  }, [scrollRef]);
+
   return {
     scrollToBottom,
-    checkScrollPosition,
-    autoScrollIfAtBottom,
-    isScrolledToBottom: () => isScrolledToBottom.current
+    handleScroll,
+    isAutoScrollEnabled: autoScrollEnabled.current
   };
 }

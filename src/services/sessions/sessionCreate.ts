@@ -58,10 +58,17 @@ export async function createNewSession(params?: CreateSessionParams): Promise<Se
         created_at: now,
         last_accessed: now,
         is_active: true,
+        // Ensure metadata is JSON compatible
         metadata: {
-          ...(typeof metadata === 'object' ? metadata : {}),
           mode,
-          providerId
+          providerId: providerId || null,
+          // Convert complex objects to strings if needed
+          ...(typeof metadata === 'object' ? 
+            Object.fromEntries(
+              Object.entries(metadata)
+                .filter(([k]) => k !== 'mode' && k !== 'providerId')
+                .map(([k, v]) => [k, typeof v === 'object' ? JSON.stringify(v) : v])
+            ) : {})
         }
       });
 
