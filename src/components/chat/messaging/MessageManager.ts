@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { Message } from '@/types/chat';
+import { Message } from '@/types/chat/message';
 import { logger } from '@/services/chat/LoggingService';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
@@ -42,8 +42,9 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     try {
       logger.info('Fetching messages for conversation', { conversationId });
       
+      // Query using the conversation_id (Supabase table now uses this name)
       const { data, error } = await supabase
-        .from('messages')
+        .from('chat_messages')
         .select('*')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
@@ -60,7 +61,9 @@ export const useMessageStore = create<MessageState>((set, get) => ({
       // Transform to our Message type
       const messages: Message[] = data.map(msg => ({
         ...msg,
-        chat_session_id: msg.conversation_id, // For backward compatibility
+        // Ensure both IDs are set for backward compatibility
+        conversation_id: conversationId,
+        chat_session_id: conversationId,
         message_status: 'received'
       }));
       

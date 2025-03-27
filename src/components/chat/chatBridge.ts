@@ -4,11 +4,23 @@ import { useConversationStore } from './store/conversation/store';
 import { useMessageStore } from './messaging/MessageManager';
 import { useChatStore } from './store/chatStore';
 import { logger } from '@/services/chat/LoggingService';
-import { Message, MessageRole, MessageType, MessageStatus } from '@/types/chat';
+import { 
+  Message, 
+  MessageRole, 
+  MessageType, 
+  MessageStatus,
+  ChatMode, 
+  ChatPosition,
+  TokenEnforcementMode,
+  uiModeToDatabaseMode,
+  databaseModeToUiMode,
+  isTokenEnforcementMode
+} from '@/types/chat/enums';
 import { Json } from '@/integrations/supabase/types';
-import { Provider, ChatPosition } from './store/types/chat-store-types';
-import { TokenEnforcementMode } from '@/integrations/supabase/types';
+import { Provider } from './store/types/chat-store-types';
 import { v4 as uuidv4 } from 'uuid';
+import { MessageCreateParams } from '@/types/chat/message';
+import { CreateConversationParams } from '@/types/chat/conversation';
 
 /**
  * ChatBridge is the central communication layer between the app and the chat client.
@@ -40,10 +52,12 @@ export class ChatBridge {
       
       if (!conversationId) {
         // Create a new conversation if needed
+        const chatMode = chatStore.currentMode as ChatMode;
+        
         conversationId = conversationStore.createConversation({
           title: content.substring(0, 30) + (content.length > 30 ? '...' : ''),
           metadata: {
-            mode: chatStore.currentMode,
+            mode: chatMode,
             providerId: chatStore.currentProvider?.id
           }
         });
@@ -101,22 +115,31 @@ export class ChatBridge {
   static createConversation(options: {
     title?: string;
     metadata?: Record<string, any>;
+    project_id?: string;
   } = {}) {
     const conversationStore = useConversationStore.getState();
     const chatStore = useChatStore.getState();
     
     try {
+      // Get the current chat mode and ensure it's a valid ChatMode
+      const currentMode = chatStore.currentMode;
+      const chatMode: ChatMode = 
+        isChatMode(currentMode) ? currentMode as ChatMode : 'chat';
+      
       // Add chat store context to metadata
       const metadata = {
         ...options.metadata,
-        mode: chatStore.currentMode,
+        mode: chatMode,
         providerId: chatStore.currentProvider?.id
       };
       
-      return conversationStore.createConversation({
+      const params: CreateConversationParams = {
         title: options.title,
-        metadata
-      });
+        metadata,
+        project_id: options.project_id
+      };
+      
+      return conversationStore.createConversation(params);
     } catch (error) {
       logger.error('Failed to create conversation through ChatBridge', { error });
       toast.error('Failed to create conversation');
@@ -188,7 +211,12 @@ export class ChatBridge {
       // In the future, this can handle more complex logic
       
       if (settings.currentMode && typeof settings.currentMode === 'string') {
-        chatStore.setSelectedMode(settings.currentMode);
+        // Map UI mode to database mode if needed
+        const mode = settings.currentMode in uiModeToDatabaseMode ? 
+          uiModeToDatabaseMode[settings.currentMode] : 
+          settings.currentMode;
+          
+        chatStore.setSelectedMode(mode);
       }
       
       if (settings.selectedModel && typeof settings.selectedModel === 'string') {
@@ -199,12 +227,17 @@ export class ChatBridge {
         chatStore.updateChatProvider(settings.providers);
       }
       
-      if (settings.position && (settings.position === 'bottom-left' || settings.position === 'bottom-right')) {
+      if (settings.position && 
+         (settings.position === 'bottom-left' || settings.position === 'bottom-right')) {
         chatStore.setPosition(settings.position as ChatPosition);
       }
       
       if (settings.tokenEnforcementMode) {
-        chatStore.setTokenEnforcementMode(settings.tokenEnforcementMode as TokenEnforcementMode);
+        const enforcementMode = isTokenEnforcementMode(settings.tokenEnforcementMode) ? 
+          settings.tokenEnforcementMode as TokenEnforcementMode : 
+          'never' as TokenEnforcementMode;
+        
+        chatStore.setTokenEnforcementMode(enforcementMode);
       }
       
       if (settings.features && typeof settings.features === 'object') {
@@ -220,6 +253,65 @@ export class ChatBridge {
     } catch (error) {
       logger.error('Failed to update chat settings through ChatBridge', { error });
       toast.error('Failed to update chat settings');
+      return false;
+    }
+  }
+  
+  /**
+   * Sets the current chat mode
+   */
+  static setMode(mode: string) {
+    const chatStore = useChatStore.getState();
+    
+    try {
+      // Map UI mode to database mode if needed
+      const dbMode = mode in uiModeToDatabaseMode ? 
+        uiModeToDatabaseMode[mode] : 
+        mode;
+        
+      chatStore.setSelectedMode(dbMode);
+      
+      logger.info('Set chat mode through ChatBridge', { mode, dbMode });
+      return true;
+    } catch (error) {
+      logger.error('Failed to set chat mode through ChatBridge', { error, mode });
+      toast.error('Failed to set chat mode');
+      return false;
+    }
+  }
+  
+  /**
+   * Sets the current model
+   */
+  static setModel(model: string) {
+    const chatStore = useChatStore.getState();
+    
+    try {
+      chatStore.setSelectedModel(model);
+      
+      logger.info('Set chat model through ChatBridge', { model });
+      return true;
+    } catch (error) {
+      logger.error('Failed to set chat model through ChatBridge', { error, model });
+      toast.error('Failed to set chat model');
+      return false;
+    }
+  }
+  
+  /**
+   * Sets the chat position
+   */
+  static setPosition(position: ChatPosition) {
+    const chatStore = useChatStore.getState();
+    
+    try {
+      chatStore.setPosition(position);
+      
+      logger.info('Set chat position through ChatBridge', { position });
+      return true;
+    } catch (error) {
+      logger.error('Failed to set chat position through ChatBridge', { error, position });
+      toast.error('Failed to set chat position');
       return false;
     }
   }
@@ -253,11 +345,17 @@ export class ChatBridge {
     const chatStore = useChatStore.getState();
     const conversationStore = useConversationStore.getState();
     
+    // Map the database mode to UI mode for consistency in the UI
+    const currentMode = chatStore.currentMode;
+    const uiMode = currentMode in databaseModeToUiMode ? 
+      databaseModeToUiMode[currentMode as ChatMode] : 
+      currentMode;
+    
     return {
       isOpen: chatStore.isOpen,
       isMinimized: chatStore.isMinimized,
       position: chatStore.position,
-      currentMode: chatStore.currentMode,
+      currentMode: uiMode,
       currentProvider: chatStore.currentProvider,
       features: chatStore.features,
       tokenControl: chatStore.tokenControl,
@@ -302,6 +400,9 @@ export const useChatBridge = () => {
     updateChatSettings: ChatBridge.updateChatSettings,
     toggleFeature: ChatBridge.toggleFeature,
     getChatState: ChatBridge.getChatState,
-    updateTokens: ChatBridge.updateTokens
+    updateTokens: ChatBridge.updateTokens,
+    setMode: ChatBridge.setMode,
+    setModel: ChatBridge.setModel,
+    setPosition: ChatBridge.setPosition
   };
 };

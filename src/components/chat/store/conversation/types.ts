@@ -1,18 +1,10 @@
 
-import { Json } from '@/integrations/supabase/types';
-import { ChatMode, TokenEnforcementMode } from '@/integrations/supabase/types/enums';
+import { ChatMode } from '@/types/chat/enums';
+import { ConversationMetadata } from '@/types/chat/conversation';
 
-// Define a more specific type for conversation metadata
-export interface ConversationMetadata {
-  mode?: ChatMode;
-  context?: Record<string, unknown>;
-  settings?: Record<string, unknown>;
-  lastPosition?: { x: number; y: number };
-  providerId?: string;
-  [key: string]: unknown;
-}
-
-// Core conversation interface
+/**
+ * Core conversation interface
+ */
 export interface Conversation {
   id: string;
   title: string;
@@ -22,32 +14,46 @@ export interface Conversation {
   archived: boolean;
   metadata?: ConversationMetadata;
   user_id?: string;
+  updated_at?: string;
+  project_id?: string;
+  tokens_used?: number;
 }
 
-// Conversation status for UI representation
+/**
+ * Conversation status for UI representation
+ */
 export type ConversationStatus = 'active' | 'archived' | 'pending';
 
-// Conversation operation result interface
+/**
+ * Conversation operation result interface
+ */
 export interface ConversationOperationResult {
   success: boolean;
   conversationId?: string;
   error?: Error | unknown;
 }
 
-// Conversation creation parameters
+/**
+ * Conversation creation parameters
+ */
 export interface CreateConversationParams {
   title?: string;
   metadata?: Partial<ConversationMetadata>;
+  project_id?: string; 
 }
 
-// Conversation update parameters
+/**
+ * Conversation update parameters
+ */
 export interface UpdateConversationParams {
   title?: string;
   archived?: boolean;
   metadata?: Partial<ConversationMetadata>;
 }
 
-// Conversation store state
+/**
+ * Conversation store state
+ */
 export interface ConversationState {
   conversations: Record<string, Conversation>;
   currentConversationId: string | null;
@@ -56,7 +62,9 @@ export interface ConversationState {
   initialized: boolean;
 }
 
-// Conversation store actions
+/**
+ * Conversation store actions
+ */
 export interface ConversationActions {
   // Core actions
   initialize: () => Promise<void>;
@@ -76,5 +84,7 @@ export interface ConversationActions {
   getCurrentConversation: () => Conversation | null;
 }
 
-// Full conversation store type
+/**
+ * Full conversation store type
+ */
 export type ConversationStore = ConversationState & ConversationActions;

@@ -3,16 +3,18 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { AlignLeft, AlignRight } from "lucide-react";
 import { useChatStore } from "../store/chatStore";
-import { ChatPosition } from "../store/types/chat-store-types";
+import { ChatPosition } from "@/types/chat/enums";
 import { logger } from '@/services/chat/LoggingService';
+import { useChatBridge } from '../chatBridge';
 
 export function ChatPositionToggle() {
-  const { position, setPosition } = useChatStore();
+  const { position } = useChatStore();
+  const chatBridge = useChatBridge();
   
   const togglePosition = () => {
     const newPosition: ChatPosition = position === 'bottom-right' ? 'bottom-left' : 'bottom-right';
     logger.info('Toggling chat position', { from: position, to: newPosition });
-    setPosition(newPosition);
+    chatBridge.setPosition(newPosition);
   };
   
   return (
