@@ -14,7 +14,7 @@ import { Github, Folder, AlertTriangle, Loader2 } from "lucide-react";
 import { GitHubManagementTab } from "./GitHubManagementTab";
 import { useState, useEffect, Suspense, lazy } from "react";
 import { ErrorMessage } from "@/components/ui/error-message";
-import { GitHubErrorBoundary } from '@/components/features/projects/onboarding/GitHubErrorBoundary';
+import { GitHubErrorBoundary } from '@/components/github/module/GitHubErrorBoundary';
 
 interface ProjectOverviewProps {
   className?: string;
