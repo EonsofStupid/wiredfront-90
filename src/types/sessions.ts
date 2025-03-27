@@ -11,6 +11,7 @@ export interface Session {
   archived: boolean;
   mode?: string;
   provider_id?: string;
+  is_active?: boolean; // Add this property since it's being used
 }
 
 export interface CreateSessionParams {
@@ -43,4 +44,5 @@ export interface DBSession {
   archived: boolean;
   provider_id?: string;
   updated_at: string;
+  is_active?: boolean; // Add this property for consistency
 }

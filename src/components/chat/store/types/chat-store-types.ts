@@ -1,3 +1,4 @@
+
 import { Message } from '@/components/chat/shared/schemas/messages';
 import { ChatProvider } from '@/components/chat/shared/types/chat-provider';
 
@@ -24,6 +25,9 @@ export interface ChatState {
   isWaitingForResponse: boolean;
   isInitialized: boolean;
   connectionState: ConnectionState;
+  
+  // Current mode for context-aware chat
+  currentMode?: string;
   
   // UI state object for components to consume
   ui: {
@@ -74,4 +78,11 @@ export interface ChatState {
     freeQueryLimit: number;
     queriesUsed: number;
   };
+  
+  // Custom UI properties
+  neonEnabled?: boolean;
+  glassEnabled?: boolean;
 }
+
+// Export these for use in the store
+export { type ChatProvider };

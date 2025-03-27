@@ -17,5 +17,5 @@ export * from './chatheadertopnav';
 // Chat Sidebar
 export * from './chatsidebar';
 
-// Chat Mode Switch
-export * from './chatmode-switch/module/ModeSwitchModule'; 
+// Explicitly re-export to avoid ambiguity
+export { ChatContainer as MainChatContainer } from './chat-toggle-button/module/ChatContainer';
