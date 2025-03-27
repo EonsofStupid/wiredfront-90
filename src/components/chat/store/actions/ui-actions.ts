@@ -1,139 +1,99 @@
 
 import { StateCreator } from 'zustand';
-import { ChatState, ChatPosition } from '../types/chat-store-types';
+import { ChatState } from '../types/chat-store-types';
 import { logger } from '@/services/chat/LoggingService';
 
 export const createUIActions = (
   set: StateCreator<ChatState>['setState'],
   get: () => ChatState
 ) => ({
-  setSessionLoading: (isLoading: boolean) => {
-    set({
-      ui: {
-        ...get().ui,
-        sessionLoading: isLoading
-      }
-    }, false, { type: 'ui/setSessionLoading', isLoading });
-  },
-  
-  setMessageLoading: (isLoading: boolean) => {
-    set({
-      ui: {
-        ...get().ui,
-        messageLoading: isLoading
-      }
-    }, false, { type: 'ui/setMessageLoading', isLoading });
-  },
-  
-  setProviderLoading: (isLoading: boolean) => {
-    set({
-      ui: {
-        ...get().ui,
-        providerLoading: isLoading
-      }
-    }, false, { type: 'ui/setProviderLoading', isLoading });
-  },
-  
+  /**
+   * Toggle chat visibility
+   */
   toggleChat: () => {
-    const isOpen = get().isOpen;
-    
-    logger.info(`Toggling chat visibility`, { newState: !isOpen });
-    
-    set({
-      isOpen: !isOpen
-    }, false, { type: 'ui/toggleChat', isOpen: !isOpen });
+    logger.info('Toggling chat visibility', { current: get().isOpen });
+    set({ isOpen: !get().isOpen }, false, { type: 'ui/toggleChat' });
   },
   
+  /**
+   * Toggle chat minimization
+   */
   toggleMinimize: () => {
-    const isMinimized = get().isMinimized;
-    
-    logger.info(`Toggling chat minimize state`, { newState: !isMinimized });
-    
-    set({
-      isMinimized: !isMinimized
-    }, false, { type: 'ui/toggleMinimize', isMinimized: !isMinimized });
+    const newState = !get().isMinimized;
+    logger.info('Toggling chat minimization', { newState });
+    set({ isMinimized: newState }, false, { type: 'ui/toggleMinimize' });
   },
   
+  /**
+   * Toggle sidebar visibility
+   */
   toggleSidebar: () => {
-    const showSidebar = get().showSidebar;
-    
-    logger.info(`Toggling sidebar visibility`, { newState: !showSidebar });
-    
-    set({
-      showSidebar: !showSidebar
-    }, false, { type: 'ui/toggleSidebar', showSidebar: !showSidebar });
+    logger.info('Toggling sidebar visibility', { current: get().showSidebar });
+    set({ showSidebar: !get().showSidebar }, false, { type: 'ui/toggleSidebar' });
   },
   
-  toggleDocked: () => {
-    const docked = get().docked;
-    
-    logger.info(`Toggling chat docked state`, { newState: !docked });
-    
-    set({
-      docked: !docked
-    }, false, { type: 'ui/toggleDocked', docked: !docked });
-  },
-  
-  setPosition: (position: ChatPosition) => {
-    logger.info(`Setting chat position`, { position });
-    
-    set({
-      position
-    }, false, { type: 'ui/setPosition', position });
-  },
-  
-  togglePosition: () => {
-    const currentPosition = get().position;
-    const newPosition: ChatPosition = currentPosition === 'bottom-right' ? 'bottom-left' : 'bottom-right';
-    
-    logger.info(`Toggling chat position`, { from: currentPosition, to: newPosition });
-    
-    set({
-      position: newPosition
-    }, false, { type: 'ui/togglePosition', from: currentPosition, to: newPosition });
-  },
-  
+  /**
+   * Set chat scale
+   */
   setScale: (scale: number) => {
-    // Ensure scale is within reasonable bounds
-    const validScale = Math.max(0.5, Math.min(scale, 1.5));
+    logger.info('Setting chat scale', { scale });
     
-    logger.info(`Setting chat scale`, { scale: validScale });
+    // Ensure scale is between 0.5 and 1.5
+    const validScale = Math.min(Math.max(scale, 0.5), 1.5);
     
-    set({
-      scale: validScale
-    }, false, { type: 'ui/setScale', scale: validScale });
+    set({ scale: validScale }, false, { type: 'ui/setScale', scale: validScale });
   },
   
-  openChat: () => {
-    if (!get().isOpen) {
-      logger.info('Opening chat');
-      set({ isOpen: true }, false, { type: 'ui/openChat' });
-    }
-    
-    if (get().isMinimized) {
-      logger.info('Maximizing chat');
-      set({ isMinimized: false }, false, { type: 'ui/maximizeChat' });
-    }
+  /**
+   * Set session loading state
+   */
+  setSessionLoading: (loading: boolean) => {
+    set({ 
+      ui: {
+        ...get().ui,
+        sessionLoading: loading
+      } 
+    }, false, { type: 'ui/setSessionLoading', loading });
   },
   
-  closeChat: () => {
-    if (get().isOpen) {
-      logger.info('Closing chat');
-      set({ isOpen: false }, false, { type: 'ui/closeChat' });
-    }
+  /**
+   * Set message loading state
+   */
+  setMessageLoading: (loading: boolean) => {
+    set({ 
+      ui: {
+        ...get().ui,
+        messageLoading: loading
+      } 
+    }, false, { type: 'ui/setMessageLoading', loading });
   },
   
-  minimizeChat: () => {
-    if (!get().isMinimized) {
-      logger.info('Minimizing chat');
-      set({ isMinimized: true }, false, { type: 'ui/minimizeChat' });
-    }
+  /**
+   * Set provider loading state
+   */
+  setProviderLoading: (loading: boolean) => {
+    set({ 
+      ui: {
+        ...get().ui,
+        providerLoading: loading
+      } 
+    }, false, { type: 'ui/setProviderLoading', loading });
   },
   
-  maximizeChat: () => {
-    if (get().isMinimized) {
-      logger.info('Maximizing chat');
-      set({ isMinimized: false }, false, { type: 'ui/maximizeChat' });
-    }
+  /**
+   * Set docked state
+   */
+  setDocked: (docked: boolean) => {
+    logger.info('Setting docked state', { docked });
+    set({ docked }, false, { type: 'ui/setDocked', docked });
+  },
+  
+  /**
+   * Toggle docked state
+   */
+  toggleDocked: () => {
+    const newState = !get().docked;
+    logger.info('Toggling docked state', { newState });
+    set({ docked: newState }, false, { type: 'ui/toggleDocked' });
   }
 });

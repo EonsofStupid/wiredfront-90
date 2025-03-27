@@ -2,6 +2,8 @@
 import { StateCreator } from 'zustand';
 import { ChatState } from '../../types/chat-store-types';
 import { logger } from '@/services/chat/LoggingService';
+import { ChatMode } from '@/types/chat/enums';
+import { createToggleActions } from './toggle';
 
 // Re-export the feature key type from the types file
 export type { FeatureKey } from './types';
@@ -11,122 +13,77 @@ export type { FeatureKey } from './types';
  */
 export const createFeatureActions = (
   set: (partial: Partial<ChatState> | ((state: ChatState) => Partial<ChatState>), replace?: boolean, name?: string) => void,
-  get: () => ChatState
-) => ({
-  /**
-   * Toggle a feature on/off
-   */
-  toggleFeature: (featureKey: keyof ChatState['features']) => {
-    const features = get().features;
-    const newValue = !features[featureKey];
-    
-    logger.info(`Toggling feature ${featureKey}`, { newValue });
-    
-    set({
-      features: {
-        ...features,
-        [featureKey]: newValue
-      }
-    }, false, 'chat/toggleFeature');
-  },
+  get: () => ChatState,
+  api: any
+) => {
+  // Get toggle-specific actions
+  const toggleActions = createToggleActions(set, get);
   
-  /**
-   * Set a feature to a specific state
-   */
-  setFeatureState: (featureKey: keyof ChatState['features'], value: boolean) => {
-    logger.info(`Setting feature ${featureKey}`, { value });
+  return {
+    /**
+     * Toggle a feature on/off
+     */
+    toggleFeature: toggleActions.toggleFeature,
     
-    set({
-      features: {
-        ...get().features,
-        [featureKey]: value
-      }
-    }, false, 'chat/setFeature');
-  },
-  
-  /**
-   * Enable a feature
-   */
-  enableFeature: (featureKey: keyof ChatState['features']) => {
-    logger.info(`Enabling feature ${featureKey}`);
+    /**
+     * Set a feature to a specific state
+     */
+    setFeatureState: toggleActions.setFeatureState,
     
-    set({
-      features: {
-        ...get().features,
-        [featureKey]: true
-      }
-    }, false, 'chat/enableFeature');
-  },
-  
-  /**
-   * Disable a feature
-   */
-  disableFeature: (featureKey: keyof ChatState['features']) => {
-    logger.info(`Disabling feature ${featureKey}`);
+    /**
+     * Enable a feature
+     */
+    enableFeature: toggleActions.enableFeature,
     
-    set({
-      features: {
-        ...get().features,
-        [featureKey]: false
-      }
-    }, false, 'chat/disableFeature');
-  },
-  
-  /**
-   * Set the selected model
-   */
-  setModel: (model: string) => {
-    logger.info('Setting selected model', { model });
+    /**
+     * Disable a feature
+     */
+    disableFeature: toggleActions.disableFeature,
     
-    set({
-      selectedModel: model
-    }, false, 'chat/setModel');
-  },
-  
-  /**
-   * Set the selected mode
-   */
-  setMode: (mode: string) => {
-    logger.info('Setting selected mode', { mode });
+    /**
+     * Update chat providers
+     */
+    updateProviders: toggleActions.updateProviders,
     
-    set({
-      currentMode: mode
-    }, false, 'chat/setMode');
-  },
-  
-  /**
-   * Set the chat position
-   */
-  setPosition: (position: 'bottom-left' | 'bottom-right') => {
-    logger.info('Setting chat position', { position });
+    /**
+     * Update chat provider
+     */
+    updateChatProvider: toggleActions.updateChatProvider,
     
-    set({
-      position
-    }, false, 'chat/setPosition');
-  },
-  
-  /**
-   * Update chat providers
-   */
-  updateProviders: (providers: any[]) => {
-    logger.info('Updating chat providers', { count: providers.length });
+    /**
+     * Set the selected model
+     */
+    setModel: (model: string) => {
+      logger.info('Setting selected model', { model });
+      
+      set({
+        selectedModel: model
+      }, false, 'chat/setModel');
+    },
     
-    set({
-      availableProviders: providers
-    }, false, 'chat/updateProviders');
-  },
-  
-  /**
-   * Set token enforcement mode
-   */
-  setTokenEnforcementMode: (mode: 'always' | 'never' | 'role_based' | 'mode_based' | 'warn' | 'strict') => {
-    logger.info('Setting token enforcement mode', { mode });
+    /**
+     * Set the selected mode
+     */
+    setMode: (mode: string | ChatMode) => {
+      logger.info('Setting selected mode', { mode });
+      
+      // Ensure we're setting a valid chat mode
+      const validMode = typeof mode === 'string' ? mode as ChatMode : mode;
+      
+      set({
+        currentMode: validMode
+      }, false, 'chat/setMode');
+    },
     
-    set({
-      tokenControl: {
-        ...get().tokenControl,
-        enforcementMode: mode
-      }
-    }, false, 'chat/setTokenEnforcementMode');
-  }
-});
+    /**
+     * Set the chat position
+     */
+    setPosition: (position: ChatState['position']) => {
+      logger.info('Setting chat position', { position });
+      
+      set({
+        position
+      }, false, 'chat/setPosition');
+    }
+  };
+};

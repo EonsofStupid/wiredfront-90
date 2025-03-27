@@ -2,9 +2,10 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { createInitializationActions } from './actions/initialization-actions';
-import { createFeatureActions } from './actions/feature/index';
+import { createFeatureActions } from './actions/feature';
 import { createUIActions } from './actions/ui-actions';
 import { ChatState } from './types/chat-store-types';
+import { logger } from '@/services/chat/LoggingService';
 
 // Define the full store type with all action slices
 type FullChatStore = ChatState & 
@@ -55,6 +56,15 @@ const initialState: ChatState = {
     providerLoading: false,
   },
   
+  tokenControl: {
+    balance: 0,
+    enforcementMode: 'never',
+    lastUpdated: new Date().toISOString(),
+    tokensPerQuery: 1,
+    freeQueryLimit: 5,
+    queriesUsed: 0
+  },
+  
   // Required actions
   resetChatState: () => {},
   setUserInput: () => {},
@@ -63,7 +73,7 @@ const initialState: ChatState = {
 // Enhanced function to clear all Zustand middleware storage
 export const clearMiddlewareStorage = () => {
   try {
-    console.log("🧹 Starting complete middleware storage cleanup");
+    logger.info("🧹 Starting complete middleware storage cleanup");
     
     // 1. Clear localStorage items
     const allKeys = Object.keys(localStorage);
@@ -75,10 +85,10 @@ export const clearMiddlewareStorage = () => {
       key.startsWith('persist:')
     );
     
-    console.log(`Found ${zustandKeys.length} Zustand-related localStorage keys to remove`);
+    logger.info(`Found ${zustandKeys.length} Zustand-related localStorage keys to remove`);
     zustandKeys.forEach(key => {
       localStorage.removeItem(key);
-      console.log(`Removed storage key: ${key}`);
+      logger.debug(`Removed storage key: ${key}`);
     });
     
     // 2. Clear sessionStorage items
@@ -92,7 +102,7 @@ export const clearMiddlewareStorage = () => {
     
     zustandSessionKeys.forEach(key => {
       sessionStorage.removeItem(key);
-      console.log(`Removed session storage key: ${key}`);
+      logger.debug(`Removed session storage key: ${key}`);
     });
     
     // 3. Attempt to clear IndexedDB if available
@@ -108,18 +118,18 @@ export const clearMiddlewareStorage = () => {
         
         dbNames.forEach(dbName => {
           const request = window.indexedDB.deleteDatabase(dbName);
-          request.onsuccess = () => console.log(`Deleted IndexedDB: ${dbName}`);
-          request.onerror = () => console.error(`Failed to delete IndexedDB: ${dbName}`);
+          request.onsuccess = () => logger.debug(`Deleted IndexedDB: ${dbName}`);
+          request.onerror = () => logger.error(`Failed to delete IndexedDB: ${dbName}`);
         });
       } catch (idbError) {
-        console.error('Error clearing IndexedDB:', idbError);
+        logger.error('Error clearing IndexedDB:', idbError);
       }
     }
     
-    console.log('Middleware storage cleanup completed');
+    logger.info('Middleware storage cleanup completed');
     return true;
   } catch (e) {
-    console.error('Error clearing middleware storage:', e);
+    logger.error('Error clearing middleware storage:', e);
     return false;
   }
 };

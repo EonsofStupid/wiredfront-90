@@ -11,17 +11,7 @@ export type SetState<T> = (
 export type GetState<T> = () => T;
 
 // Define feature action keys
-export type FeatureKey = 
-  | 'voice'
-  | 'rag'
-  | 'modeSwitch'
-  | 'notifications'
-  | 'github'
-  | 'codeAssistant'
-  | 'ragSupport'
-  | 'githubSync'
-  | 'tokenEnforcement'
-  | string;
+export type FeatureKey = keyof ChatState['features'] | string;
 
 // Common feature actions
 export interface FeatureActions {

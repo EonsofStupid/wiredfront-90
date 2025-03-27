@@ -1,38 +1,20 @@
 
 import { TokenEnforcementMode } from '@/types/chat/enums';
 
-/**
- * Token state interface
- */
 export interface TokenState {
   balance: number;
-  enforcementMode: TokenEnforcementMode;
-  lastUpdated: string | null;
+  lastUpdated: string;
   tokensPerQuery: number;
-  freeQueryLimit: number;
   queriesUsed: number;
-  isEnforcementEnabled: boolean;
+  freeQueryLimit: number;
+  enforcementMode: TokenEnforcementMode;
+  enforcementEnabled: boolean;
+  
+  // Actions
+  addTokens: (amount: number) => Promise<boolean>;
+  spendTokens: (amount: number) => Promise<boolean>;
+  setTokenBalance: (balance: number) => Promise<boolean>;
+  setEnforcementMode: (mode: TokenEnforcementMode) => void;
+  setEnforcementEnabled: (enabled: boolean) => void;
+  resetTokens: () => void;
 }
-
-/**
- * Token actions parameters
- */
-export interface TokenActionParams {
-  amount?: number;
-  mode?: TokenEnforcementMode;
-  enabled?: boolean;
-}
-
-/**
- * Set state function type
- */
-export type SetState<T> = (
-  partial: Partial<T> | ((state: T) => Partial<T>),
-  replace?: boolean,
-  action?: string | { type: string; [key: string]: any }
-) => void;
-
-/**
- * Get state function type
- */
-export type GetState<T> = () => T;

@@ -1,48 +1,153 @@
 
 import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import { createTokenActions } from './actions';
 import { TokenState } from './types';
-import { TokenEnforcementMode } from '@/types/chat/enums';
+import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
+import { TokenEnforcementMode } from '@/types/chat/enums';
 
-// Initial token state
-const initialState: TokenState = {
+const initialState: Omit<TokenState, 'addTokens' | 'spendTokens' | 'setTokenBalance' | 'setEnforcementMode' | 'setEnforcementEnabled' | 'resetTokens'> = {
   balance: 0,
-  enforcementMode: 'never' as TokenEnforcementMode,
-  lastUpdated: null,
+  lastUpdated: new Date().toISOString(),
   tokensPerQuery: 1,
-  freeQueryLimit: 5,
   queriesUsed: 0,
-  isEnforcementEnabled: false
+  freeQueryLimit: 5,
+  enforcementMode: 'never',
+  enforcementEnabled: false
 };
 
-// Token store type
-export type TokenStore = TokenState & ReturnType<typeof createTokenActions>;
-
-// Create the token store
-export const useTokenStore = create<TokenStore>()(
-  devtools(
-    (set, get) => ({
-      ...initialState,
-      ...createTokenActions(set, get),
-    }),
-    {
-      name: 'TokenStore',
-      enabled: process.env.NODE_ENV !== 'production',
+export const useTokenStore = create<TokenState>((set, get) => ({
+  ...initialState,
+  
+  addTokens: async (amount: number) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) {
+        logger.error('Cannot add tokens: User not authenticated');
+        return false;
+      }
+      
+      const { data, error } = await supabase.rpc('add_tokens', {
+        user_uuid: userData.user.id,
+        token_amount: amount
+      });
+      
+      if (error) {
+        logger.error('Failed to add tokens', { error });
+        return false;
+      }
+      
+      set({ 
+        balance: data as number,
+        lastUpdated: new Date().toISOString()
+      });
+      
+      return true;
+    } catch (error) {
+      logger.error('Error adding tokens', { error });
+      return false;
     }
-  )
-);
-
-// Export a function to clear the token store state
-export const clearTokenStore = () => {
-  try {
-    // Reset the store to initial state
-    useTokenStore.setState(initialState, false, { type: 'tokens/clearState' });
-    logger.info('Token store state cleared');
-    return true;
-  } catch (error) {
-    logger.error('Error clearing token store state', error);
-    return false;
+  },
+  
+  spendTokens: async (amount: number) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) {
+        logger.error('Cannot spend tokens: User not authenticated');
+        return false;
+      }
+      
+      // Fetch current balance to check if sufficient before trying to spend
+      const { data: tokenData, error: fetchError } = await supabase
+        .from('user_tokens')
+        .select('balance')
+        .eq('user_id', userData.user.id)
+        .single();
+      
+      if (fetchError || !tokenData) {
+        logger.error('Failed to fetch token balance', { error: fetchError });
+        return false;
+      }
+      
+      if (tokenData.balance < amount) {
+        logger.warn('Insufficient tokens', { 
+          balance: tokenData.balance, 
+          attempted: amount 
+        });
+        return false;
+      }
+      
+      const { data, error } = await supabase.rpc('spend_tokens', {
+        user_uuid: userData.user.id,
+        token_amount: amount
+      });
+      
+      if (error) {
+        logger.error('Failed to spend tokens', { error });
+        return false;
+      }
+      
+      set({ 
+        balance: data as number,
+        queriesUsed: get().queriesUsed + 1,
+        lastUpdated: new Date().toISOString()
+      });
+      
+      return true;
+    } catch (error) {
+      logger.error('Error spending tokens', { error });
+      return false;
+    }
+  },
+  
+  setTokenBalance: async (balance: number) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) {
+        logger.error('Cannot set token balance: User not authenticated');
+        return false;
+      }
+      
+      const { error } = await supabase
+        .from('user_tokens')
+        .upsert({
+          user_id: userData.user.id,
+          balance: balance,
+          updated_at: new Date().toISOString()
+        });
+      
+      if (error) {
+        logger.error('Failed to set token balance', { error });
+        return false;
+      }
+      
+      set({ 
+        balance,
+        lastUpdated: new Date().toISOString()
+      });
+      
+      return true;
+    } catch (error) {
+      logger.error('Error setting token balance', { error });
+      return false;
+    }
+  },
+  
+  setEnforcementMode: (mode: TokenEnforcementMode) => {
+    logger.info('Setting token enforcement mode', { mode });
+    set({ enforcementMode: mode });
+  },
+  
+  setEnforcementEnabled: (enabled: boolean) => {
+    logger.info('Setting token enforcement enabled', { enabled });
+    set({ enforcementEnabled: enabled });
+  },
+  
+  resetTokens: () => {
+    logger.info('Resetting token store');
+    set({ ...initialState });
   }
+}));
+
+export const clearTokenStore = () => {
+  useTokenStore.setState({ ...initialState });
 };

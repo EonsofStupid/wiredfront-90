@@ -1,7 +1,9 @@
+
 import { toast } from 'sonner';
 import { useConversationStore } from './store/conversation/store';
 import { useMessageStore } from './messaging/MessageManager';
 import { useChatStore } from './store/chatStore';
+import { useTokenStore } from './store/token/store';
 import { logger } from '@/services/chat/LoggingService';
 import { 
   MessageRole, 
@@ -20,7 +22,6 @@ import { Provider } from './store/types/chat-store-types';
 import { v4 as uuidv4 } from 'uuid';
 import { MessageCreateParams } from '@/types/chat/message';
 import { CreateConversationParams } from '@/types/chat/conversation';
-import { useTokenStore } from './store/token';
 
 /**
  * ChatBridge is the central communication layer between the app and the chat client.
@@ -162,7 +163,7 @@ export class ChatBridge {
       conversationStore.setCurrentConversationId(conversationId);
       
       // Fetch messages for this conversation
-      messageStore.fetchSessionMessages(conversationId);
+      messageStore.fetchMessages(conversationId);
       
       logger.info('Switched conversation through ChatBridge', { conversationId });
       return true;

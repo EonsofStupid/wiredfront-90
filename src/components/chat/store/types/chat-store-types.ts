@@ -4,7 +4,8 @@ import {
   ChatMode, 
   ChatPosition, 
   ChatPositionCoordinates, 
-  ChatPositionType
+  ChatPositionType,
+  TokenEnforcementMode
 } from '@/types/chat/enums';
 
 // Define Provider type 
@@ -17,6 +18,15 @@ export interface Provider {
   maxTokens?: number;
   contextSize?: number;
   isDefault?: boolean;
+}
+
+export interface TokenControl {
+  balance: number;
+  enforcementMode: TokenEnforcementMode;
+  lastUpdated: string;
+  tokensPerQuery: number;
+  freeQueryLimit: number;
+  queriesUsed: number;
 }
 
 export interface ChatState {
@@ -63,7 +73,25 @@ export interface ChatState {
     providerLoading: boolean;
   };
   
+  tokenControl?: TokenControl;
+  
   // Required actions
   resetChatState: () => void;
   setUserInput: (input: string) => void;
+  
+  // Optional UI actions
+  toggleChat?: () => void;
+  setSessionLoading?: (loading: boolean) => void;
+  toggleSidebar?: () => void;
+  
+  // Feature actions
+  setMode?: (mode: ChatMode | string) => void;
+  setModel?: (model: string) => void;
+  toggleFeature?: (key: keyof ChatState['features']) => void;
+  setFeatureState?: (key: keyof ChatState['features'], value: boolean) => void;
+  enableFeature?: (key: keyof ChatState['features']) => void;
+  disableFeature?: (key: keyof ChatState['features']) => void;
+  setPosition?: (position: ChatPositionType) => void;
+  updateProviders?: (providers: Provider[]) => void;
+  updateChatProvider?: (provider: Provider[]) => void;
 }
