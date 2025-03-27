@@ -1,5 +1,7 @@
+
 import React from 'react';
 import {
+  Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -10,16 +12,16 @@ import { Button } from '@/components/ui/button';
 import { useChatStore } from '@/components/chat/store/chatStore';
 
 interface ChatModeDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean; 
+  onOpenChange: (open: boolean) => void;
 }
 
-export function ChatModeDialog({ isOpen, onClose }: ChatModeDialogProps) {
+export function ChatModeDialog({ open, onOpenChange }: ChatModeDialogProps) {
   const { setMode } = useChatStore();
 
   const handleModeSelect = (mode: string) => {
     setMode(mode);
-    onClose();
+    onOpenChange(false);
   };
 
   return (
@@ -67,7 +69,7 @@ export function ChatModeDialog({ isOpen, onClose }: ChatModeDialogProps) {
       </div>
 
       <DialogFooter>
-        <Button variant="outline" onClick={onClose}>
+        <Button variant="outline" onClick={() => onOpenChange(false)}>
           Cancel
         </Button>
       </DialogFooter>

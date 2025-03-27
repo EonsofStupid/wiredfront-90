@@ -1,97 +1,41 @@
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { UIStore } from './types';
-import { v4 as uuidv4 } from 'uuid';
+import { devtools } from 'zustand/middleware';
 
-const Z_INDEX = {
-  modal: 1000,
-  dropdown: 900,
-  tooltip: 800,
-  navbar: 700,
-  projecthub: 9600,
-  floating: 600,
-  content: 500,
-  background: 400,
-  base: 300,
-} as const;
+interface UIState {
+  darkMode: boolean;
+  sidebarOpen: boolean;
+  settingsOpen: boolean;
+  mobileMenuOpen: boolean;
+  
+  toggleDarkMode: () => void;
+  toggleSidebar: () => void;
+  toggleSettings: () => void;
+  toggleMobileMenu: () => void;
+  setDarkMode: (active: boolean) => void;
+  setSidebarOpen: (open: boolean) => void;
+  setSettingsOpen: (open: boolean) => void;
+  setMobileMenuOpen: (open: boolean) => void;
+}
 
-export const useUIStore = create<UIStore>()(
-  persist(
+export const useUIStore = create<UIState>()(
+  devtools(
     (set) => ({
-      theme: 'system',
-      layout: {
-        sidebarExpanded: true,
-        contentWidth: 'contained',
-        rightSidebarVisible: true,
-        adminIconOnly: false, // Default to showing text with icons
-      },
-      project: {
-        activeProjectId: null,
-        // We're removing the projects array as we'll now use Supabase
-      },
-      accessibility: {
-        reducedMotion: false,
-        highContrast: false,
-        fontSize: 'normal',
-      },
-      zIndex: Z_INDEX,
-
-      setTheme: (theme) => set({ theme }),
-
-      toggleSidebar: () =>
-        set((state) => ({
-          layout: {
-            ...state.layout,
-            sidebarExpanded: !state.layout.sidebarExpanded,
-          },
-        })),
-
-      toggleRightSidebar: () =>
-        set((state) => ({
-          layout: {
-            ...state.layout,
-            rightSidebarVisible: !state.layout.rightSidebarVisible,
-          },
-        })),
-
-      toggleAdminIconOnly: () =>
-        set((state) => ({
-          layout: {
-            ...state.layout,
-            adminIconOnly: !state.layout.adminIconOnly,
-          },
-        })),
-
-      updateLayout: (updates) =>
-        set((state) => ({
-          layout: { ...state.layout, ...updates },
-        })),
-
-      updateAccessibility: (updates) =>
-        set((state) => ({
-          accessibility: { ...state.accessibility, ...updates },
-        })),
-        
-      setActiveProject: (projectId) =>
-        set((state) => ({
-          project: {
-            ...state.project,
-            activeProjectId: projectId,
-          },
-        })),
-        
-      // Removing addProject and removeProject as they'll be handled by the new service
+      darkMode: true,
+      sidebarOpen: true,
+      settingsOpen: false,
+      mobileMenuOpen: false,
+      
+      toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
+      toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+      toggleSettings: () => set((state) => ({ settingsOpen: !state.settingsOpen })),
+      toggleMobileMenu: () => set((state) => ({ mobileMenuOpen: !state.mobileMenuOpen })),
+      
+      setDarkMode: (active) => set({ darkMode: active }),
+      setSidebarOpen: (open) => set({ sidebarOpen: open }),
+      setSettingsOpen: (open) => set({ settingsOpen: open }),
+      setMobileMenuOpen: (open) => set({ mobileMenuOpen: open }),
     }),
-    {
-      name: 'ui-storage',
-      partialize: (state) => ({
-        theme: state.theme,
-        layout: state.layout,
-        project: state.project,
-        accessibility: state.accessibility,
-      }),
-      version: 1,
-    }
+    { name: 'UIStore' }
   )
 );

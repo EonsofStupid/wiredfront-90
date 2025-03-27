@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { Message, MessageRole, createMessage } from '@/components/chat/shared/schemas/messages';
@@ -10,6 +11,10 @@ interface MessageState {
   getMessageById: (id: string) => Message | undefined;
   clearMessages: () => void;
   fetchSessionMessages: (sessionId: string) => Promise<void>;
+  createUserMessage: (content: string, sessionId: string, metadata?: any) => Message;
+  createAssistantMessage: (content: string, sessionId: string, metadata?: any) => Message;
+  createSystemMessage: (content: string, sessionId: string, metadata?: any) => Message;
+  createErrorMessage: (content: string, sessionId: string, metadata?: any) => Message;
 }
 
 export const useMessageStore = create<MessageState>((set, get) => ({

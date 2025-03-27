@@ -1,7 +1,7 @@
-
-import { Button } from "@/components/ui/button";
-import { X, Github, AlertCircle } from "lucide-react";
-import { Spinner } from "@/components/chat/ui/Spinner";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { AlertCircle, CheckCircle2, Github, Loader2 } from 'lucide-react';
+import { Spinner } from '@/components/chat/ui/Spinner';
 
 interface GitHubConnectionStatusProps {
   isConnected: boolean;

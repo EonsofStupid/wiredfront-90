@@ -2,17 +2,16 @@
 export interface ChatProvider {
   id: string;
   name: string;
-  type: 'openai' | 'anthropic' | 'gemini' | 'huggingface' | 'pinecone' | 
-    'weaviate' | 'openrouter' | 'replicate' | 'sonnet' | 'elevenlabs' | 'whisper' | 'github' | 'stabilityai';
+  displayName: string;
+  description?: string;
   isEnabled: boolean;
-  isDefault: boolean;
-  apiReference: string;
-  category?: 'chat' | 'image' | 'integration';
-  config?: Record<string, unknown>;
-  lastUsed?: Date;
-  usage?: {
-    totalTokens: number;
-    totalQueries: number;
-    lastUsed: Date;
-  };
-} 
+  models?: string[];
+  defaultModel?: string;
+  baseUrl?: string;
+  requiresAuth?: boolean;
+  icon?: string;
+  metadata?: Record<string, any>;
+}
+
+// Export the ChatProvider type
+export type { ChatProvider };
