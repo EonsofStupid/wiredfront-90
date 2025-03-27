@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { SessionState, SessionActions, SessionStore, SessionAuditLog } from './types';
-import { User } from '@supabase/supabase-js';
+import { Session, CreateSessionParams, UpdateSessionParams } from '@/types/sessions';
+import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
-import { Session, UpdateSessionParams } from '@/types/chatsessions';
+import { User } from '@supabase/supabase-js';
 
-export type SessionStore = {
+interface SessionStore {
   sessions: Session[];
   currentSessionId: string | null;
   isLoading: boolean;
@@ -20,7 +20,7 @@ export type SessionStore = {
   archiveSession: (sessionId: string) => Promise<boolean>;
   clearSessions: (preserveCurrentSession?: boolean) => Promise<void>;
   cleanupInactiveSessions: () => Promise<void>;
-};
+}
 
 export const useSessionStore = create<SessionStore>()(
   devtools(
@@ -30,135 +30,145 @@ export const useSessionStore = create<SessionStore>()(
       isLoading: false,
       error: null,
       user: null,
-      
+
       fetchSessions: async () => {
         try {
           set({ isLoading: true, error: null });
-          
-          // Get current user and set it in the store
           const { data: { user } } = await supabase.auth.getUser();
-          set({ user });
-          
-          const sessions = await fetchUserSessions();
-          set({ sessions, isLoading: false });
-          
-          logger.info('Sessions fetched', { count: sessions.length });
-          
-          // If no current session is set but we have sessions, set the first one as current
-          if (!get().currentSessionId && sessions.length > 0) {
-            set({ currentSessionId: sessions[0].id });
+          if (!user) {
+            set({ user: null, isLoading: false });
+            return;
           }
-          
-          return;
+
+          const { data: sessions, error } = await supabase
+            .from('chat_sessions')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('last_accessed', { ascending: false });
+
+          if (error) throw error;
+
+          set({ 
+            sessions: sessions || [], 
+            user,
+            isLoading: false 
+          });
         } catch (error) {
-          logger.error('Failed to fetch sessions', { error });
+          logger.error('Failed to fetch sessions', error);
           set({ error: error as Error, isLoading: false });
-          throw error;
         }
       },
-      
-      createSession: async (params = {}) => {
+
+      createSession: async (params) => {
         try {
           set({ isLoading: true, error: null });
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) throw new Error('User not authenticated');
+
+          const sessionId = crypto.randomUUID();
+          const now = new Date().toISOString();
           
-          const { success, sessionId, error } = await createNewSession(params);
-          
-          if (!success || !sessionId) {
-            throw error || new Error('Failed to create session');
-          }
-          
-          // Add the new session to the store (simplified version)
-          // In a real app, you'd fetch the fresh session or use the returned data
-          const newSession: Session = {
+          const newSession = {
             id: sessionId,
-            title: params.title || 'New Chat',
-            created_at: new Date().toISOString(),
-            last_accessed: new Date().toISOString(),
+            user_id: user.id,
+            title: params?.title || `Chat ${new Date().toLocaleString()}`,
+            created_at: now,
+            updated_at: now,
+            last_accessed: now,
             message_count: 0,
             is_active: true,
-            metadata: params.metadata || {}
+            metadata: params?.metadata || {},
+            archived: false,
+            context: {},
+            mode: 'chat'
           };
-          
-          set(state => ({ 
+
+          const { error } = await supabase
+            .from('chat_sessions')
+            .insert(newSession);
+
+          if (error) throw error;
+
+          set(state => ({
             sessions: [newSession, ...state.sessions],
             currentSessionId: sessionId,
             isLoading: false
           }));
-          
-          logger.info('Session created', { sessionId });
-          
+
           return sessionId;
         } catch (error) {
-          logger.error('Failed to create session', { error });
+          logger.error('Failed to create session', error);
           set({ error: error as Error, isLoading: false });
           throw error;
         }
       },
-      
+
       switchSession: async (sessionId) => {
         try {
-          // Check if session exists
           const session = get().sessions.find(s => s.id === sessionId);
-          
           if (!session) {
             throw new Error(`Session with ID ${sessionId} not found`);
           }
-          
-          // Update current session in the store
+
           set({ currentSessionId: sessionId });
-          
-          // Update last_accessed time in the database
-          await updateSessionService(sessionId, {
-            metadata: {
-              ...session.metadata,
-              last_accessed: new Date().toISOString()
-            }
-          });
-          
+
+          const { error } = await supabase
+            .from('chat_sessions')
+            .update({ last_accessed: new Date().toISOString() })
+            .eq('id', sessionId);
+
+          if (error) throw error;
+
           logger.info('Switched to session', { sessionId });
-          
-          return;
         } catch (error) {
-          logger.error('Failed to switch session', { error, sessionId });
+          logger.error('Failed to switch session', error);
           throw error;
         }
       },
-      
+
       updateSession: async (sessionId, params) => {
         try {
           set({ isLoading: true, error: null });
-          
-          // Update in database
-          await updateSessionService(sessionId, params);
-          
-          // Update in store
+
+          const { error } = await supabase
+            .from('chat_sessions')
+            .update({
+              ...params,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', sessionId);
+
+          if (error) throw error;
+
           set(state => ({
             sessions: state.sessions.map(session => 
               session.id === sessionId 
-                ? { ...session, ...params, metadata: { ...session.metadata, ...params.metadata } }
+                ? { ...session, ...params }
                 : session
             ),
             isLoading: false
           }));
-          
+
           logger.info('Session updated', { sessionId });
-          
           return true;
         } catch (error) {
-          logger.error('Failed to update session', { error, sessionId });
+          logger.error('Failed to update session', error);
           set({ error: error as Error, isLoading: false });
           return false;
         }
       },
-      
+
       archiveSession: async (sessionId) => {
         try {
           set({ isLoading: true, error: null });
-          
-          // Archive in database
-          await archiveSessionService(sessionId);
-          
-          // Update in store
+
+          const { error } = await supabase
+            .from('chat_sessions')
+            .update({ archived: true })
+            .eq('id', sessionId);
+
+          if (error) throw error;
+
           set(state => ({
             sessions: state.sessions.map(session => 
               session.id === sessionId 
@@ -166,71 +176,67 @@ export const useSessionStore = create<SessionStore>()(
                 : session
             ),
             isLoading: false,
-            // If the archived session was the current one, set currentSessionId to null
             currentSessionId: state.currentSessionId === sessionId ? null : state.currentSessionId
           }));
-          
+
           logger.info('Session archived', { sessionId });
-          
           return true;
         } catch (error) {
-          logger.error('Failed to archive session', { error, sessionId });
+          logger.error('Failed to archive session', error);
           set({ error: error as Error, isLoading: false });
           return false;
         }
       },
-      
-      // Add the missing methods
-      clearSessions: async (preserveCurrentSession = true) => {
+
+      clearSessions: async (preserveCurrentSession = false) => {
         try {
-          const currentId = get().currentSessionId;
-          
-          // Clear sessions from database
-          await clearAllSessions(preserveCurrentSession ? currentId : null);
-          
-          // Update store state
-          if (preserveCurrentSession && currentId) {
-            const currentSession = get().sessions.find(s => s.id === currentId);
-            set({ 
-              sessions: currentSession ? [currentSession] : [],
-              currentSessionId: currentId
-            });
-          } else {
-            set({ sessions: [], currentSessionId: null });
-          }
-          
+          const currentSessionId = get().currentSessionId;
+          const { error } = await supabase
+            .from('chat_sessions')
+            .delete()
+            .neq('id', preserveCurrentSession ? currentSessionId : '');
+
+          if (error) throw error;
+
+          set(state => ({
+            sessions: preserveCurrentSession 
+              ? state.sessions.filter(s => s.id === currentSessionId)
+              : [],
+            currentSessionId: preserveCurrentSession ? currentSessionId : null
+          }));
+
           logger.info('Sessions cleared', { preserveCurrentSession });
-          return;
         } catch (error) {
-          logger.error('Failed to clear sessions', { error });
+          logger.error('Failed to clear sessions', error);
           throw error;
         }
       },
-      
+
       cleanupInactiveSessions: async () => {
         try {
-          const currentId = get().currentSessionId;
-          
-          if (!currentId) {
-            throw new Error('No active session to preserve');
-          }
-          
-          await clearAllSessions(currentId);
-          
-          // Update store to remove inactive sessions
-          const currentSession = get().sessions.find(s => s.id === currentId);
-          if (currentSession) {
-            set({ sessions: [currentSession] });
-          }
-          
+          const currentSessionId = get().currentSessionId;
+          const { error } = await supabase
+            .from('chat_sessions')
+            .delete()
+            .neq('id', currentSessionId)
+            .lt('last_accessed', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+
+          if (error) throw error;
+
+          set(state => ({
+            sessions: state.sessions.filter(s => s.id === currentSessionId)
+          }));
+
           logger.info('Inactive sessions cleaned up');
-          return;
         } catch (error) {
-          logger.error('Failed to cleanup inactive sessions', { error });
+          logger.error('Failed to cleanup inactive sessions', error);
           throw error;
         }
       }
     }),
-    { name: 'SessionStore' }
+    {
+      name: 'SessionStore',
+      enabled: process.env.NODE_ENV !== 'production'
+    }
   )
 );

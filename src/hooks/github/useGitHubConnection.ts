@@ -1,120 +1,104 @@
-
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 
-export type GitHubConnectionStatus = {
-  status: 'connected' | 'pending' | 'disconnected' | 'error';
-  metadata?: {
-    username?: string;
-    avatarUrl?: string;
-    [key: string]: any;
-  } | null;
-  errorMessage?: string | null;
-};
+export type GitHubConnectionStatus = 'connected' | 'disconnected' | 'pending' | 'error';
+
+interface GitHubConnectionData {
+  username?: string;
+  avatarUrl?: string;
+  [key: string]: unknown;
+}
 
 export function useGitHubConnection() {
   const [isConnected, setIsConnected] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
-  const [connectionStatus, setConnectionStatus] = useState<GitHubConnectionStatus>({
-    status: 'disconnected'
-  });
-  const [githubUsername, setGithubUsername] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<GitHubConnectionStatus>('pending');
+  const [githubUsername, setGithubUsername] = useState<string>('');
 
-  // Check GitHub connection status
-  const checkConnection = useCallback(async () => {
+  const checkConnectionStatus = async () => {
     try {
       setIsChecking(true);
-      
-      const { data, error } = await supabase
-        .from('github_connection_status')
-        .select('*')
-        .eq('is_default', true)
-        .single();
-      
-      if (error) throw error;
-      
-      if (data) {
-        const isConnected = data.status === 'connected';
-        setIsConnected(isConnected);
-        setConnectionStatus({
-          status: data.status,
-          metadata: data.metadata,
-          errorMessage: data.error_message
-        });
-        
-        if (data.metadata?.username) {
-          setGithubUsername(data.metadata.username);
-        }
-      } else {
+      setConnectionStatus('pending');
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setConnectionStatus('disconnected');
         setIsConnected(false);
-        setConnectionStatus({ status: 'disconnected' });
+        return;
+      }
+
+      const { data: connection, error } = await supabase
+        .from('github_connections')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        setConnectionStatus('error');
+        setIsConnected(false);
+        return;
+      }
+
+      if (connection) {
+        setConnectionStatus('connected');
+        setIsConnected(true);
+        setGithubUsername(connection.username || '');
+      } else {
+        setConnectionStatus('disconnected');
+        setIsConnected(false);
       }
     } catch (error) {
       logger.error('Error checking GitHub connection:', error);
+      setConnectionStatus('error');
       setIsConnected(false);
-      setConnectionStatus({ 
-        status: 'error',
-        errorMessage: 'Failed to check GitHub connection status'
-      });
     } finally {
       setIsChecking(false);
     }
+  };
+
+  useEffect(() => {
+    checkConnectionStatus();
   }, []);
 
-  // Connect to GitHub
-  const connectGitHub = useCallback(async () => {
+  const connectGitHub = async () => {
     try {
-      setConnectionStatus({ status: 'pending' });
-      
-      // This would actually redirect to GitHub OAuth flow
-      // Here we just simulate a pending state for demo
-      logger.info('Connecting to GitHub...');
-      
-      // In real implementation, this would be handled by the OAuth callback
-      setTimeout(() => {
-        checkConnection();
-      }, 1000);
+      setConnectionStatus('pending');
+      // TODO: Implement GitHub OAuth flow
+      setConnectionStatus('connected');
+      setIsConnected(true);
     } catch (error) {
       logger.error('Error connecting to GitHub:', error);
-      setConnectionStatus({ 
-        status: 'error', 
-        errorMessage: 'Failed to connect to GitHub'
-      });
-    }
-  }, [checkConnection]);
-
-  // Disconnect from GitHub
-  const disconnectGitHub = useCallback(async () => {
-    try {
-      // Simulate disconnection - in real implementation would revoke token
-      logger.info('Disconnecting from GitHub...');
-      
-      const { error } = await supabase
-        .from('github_connection_status')
-        .update({ status: 'disconnected', metadata: null })
-        .eq('is_default', true);
-        
-      if (error) throw error;
-      
+      setConnectionStatus('error');
       setIsConnected(false);
-      setGithubUsername(null);
-      setConnectionStatus({ status: 'disconnected' });
-      
-      logger.info('Successfully disconnected from GitHub');
+    }
+  };
+
+  const disconnectGitHub = async () => {
+    try {
+      setConnectionStatus('pending');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { error } = await supabase
+        .from('github_connections')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setConnectionStatus('disconnected');
+      setIsConnected(false);
+      setGithubUsername('');
     } catch (error) {
       logger.error('Error disconnecting from GitHub:', error);
-      setConnectionStatus({ 
-        status: 'error', 
-        errorMessage: 'Failed to disconnect from GitHub'
-      });
+      setConnectionStatus('error');
     }
-  }, []);
+  };
 
-  // Check connection on mount
-  useEffect(() => {
-    checkConnection();
-  }, [checkConnection]);
+  const refreshConnection = async () => {
+    await checkConnectionStatus();
+  };
 
   return {
     isConnected,
@@ -123,6 +107,7 @@ export function useGitHubConnection() {
     githubUsername,
     connectGitHub,
     disconnectGitHub,
-    refreshConnection: checkConnection
+    refreshConnection,
+    checkConnectionStatus
   };
 }

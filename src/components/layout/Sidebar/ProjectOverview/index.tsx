@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import { useProjectOverview } from "./useProjectOverview";
 import { ProjectOverviewHeader } from "./ProjectOverviewHeader";
@@ -7,15 +6,15 @@ import { IndexingStatusSection } from "./IndexingStatusSection";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ProjectList } from "@/components/projects/ProjectList";
 import { GitHubConnectDialog } from "@/components/github/GitHubConnectDialog";
-import { GitHubImportModal } from "@/components/github/GitHubImportModal";
-import { ProjectDetails } from "@/components/projects/ProjectDetails";
-import { GitHubDisconnectDialog } from "@/components/github/GitHubDisconnectDialog";
+import { GitHubImportModal } from '@/components/projects/onboarding/GitHubImportModal';
+import { ProjectDetails } from '@/components/projects/onboarding/ProjectDetails';
+import { GitHubDisconnectDialog } from '@/components/projects/onboarding/GitHubDisconnectDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Github, Folder, AlertTriangle, Loader2 } from "lucide-react";
 import { GitHubManagementTab } from "./GitHubManagementTab";
 import { useState, useEffect, Suspense, lazy } from "react";
 import { ErrorMessage } from "@/components/ui/error-message";
-import { GitHubErrorBoundary } from "@/components/github/GitHubErrorBoundary";
+import { GitHubErrorBoundary } from '@/components/projects/onboarding/GitHubErrorBoundary';
 
 interface ProjectOverviewProps {
   className?: string;

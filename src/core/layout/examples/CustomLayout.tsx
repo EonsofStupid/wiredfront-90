@@ -1,9 +1,8 @@
-
 import React from "react";
 import { CoreLayoutContainer } from "../CoreLayoutContainer";
 import { CoreTopBar } from "../CoreTopBar";
 import { CoreBottomBar } from "../CoreBottomBar";
-import { useUIStore } from "@/stores";
+import { useUIStore } from '@/stores/ui/store';
 
 /**
  * Example of a custom layout that uses core components

@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { Menu, Search, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MobileMenuDrawer } from "./MobileMenuDrawer";
-import { useUIStore } from "@/stores";
+import { useUIStore } from '@/stores/ui/store';
 
 export const MobileHeader = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

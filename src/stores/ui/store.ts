@@ -1,40 +1,77 @@
-
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import { UIState, UIActions } from './types';
 
-interface UIState {
-  darkMode: boolean;
-  sidebarOpen: boolean;
-  settingsOpen: boolean;
-  mobileMenuOpen: boolean;
-  
-  toggleDarkMode: () => void;
-  toggleSidebar: () => void;
-  toggleSettings: () => void;
-  toggleMobileMenu: () => void;
-  setDarkMode: (active: boolean) => void;
-  setSidebarOpen: (open: boolean) => void;
-  setSettingsOpen: (open: boolean) => void;
-  setMobileMenuOpen: (open: boolean) => void;
-}
+const initialState: UIState = {
+  theme: 'dark',
+  layout: {
+    sidebarExpanded: true,
+    contentWidth: 'contained',
+    rightSidebarVisible: false,
+    adminIconOnly: false
+  },
+  project: {
+    activeProjectId: null
+  },
+  accessibility: {
+    reducedMotion: false,
+    highContrast: false,
+    fontSize: 'normal'
+  },
+  zIndex: {
+    modal: 1000,
+    dropdown: 900,
+    tooltip: 800,
+    navbar: 700,
+    projecthub: 600,
+    floating: 500,
+    content: 400,
+    background: 300,
+    base: 100
+  }
+};
 
-export const useUIStore = create<UIState>()(
+export const useUIStore = create<UIState & UIActions>()(
   devtools(
     (set) => ({
-      darkMode: true,
-      sidebarOpen: true,
-      settingsOpen: false,
-      mobileMenuOpen: false,
-      
-      toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
-      toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
-      toggleSettings: () => set((state) => ({ settingsOpen: !state.settingsOpen })),
-      toggleMobileMenu: () => set((state) => ({ mobileMenuOpen: !state.mobileMenuOpen })),
-      
-      setDarkMode: (active) => set({ darkMode: active }),
-      setSidebarOpen: (open) => set({ sidebarOpen: open }),
-      setSettingsOpen: (open) => set({ settingsOpen: open }),
-      setMobileMenuOpen: (open) => set({ mobileMenuOpen: open }),
+      ...initialState,
+
+      setTheme: (theme) => set({ theme }),
+      toggleSidebar: () => set((state) => ({
+        layout: {
+          ...state.layout,
+          sidebarExpanded: !state.layout.sidebarExpanded
+        }
+      })),
+      toggleRightSidebar: () => set((state) => ({
+        layout: {
+          ...state.layout,
+          rightSidebarVisible: !state.layout.rightSidebarVisible
+        }
+      })),
+      toggleAdminIconOnly: () => set((state) => ({
+        layout: {
+          ...state.layout,
+          adminIconOnly: !state.layout.adminIconOnly
+        }
+      })),
+      updateLayout: (updates) => set((state) => ({
+        layout: {
+          ...state.layout,
+          ...updates
+        }
+      })),
+      updateAccessibility: (updates) => set((state) => ({
+        accessibility: {
+          ...state.accessibility,
+          ...updates
+        }
+      })),
+      setActiveProject: (projectId) => set({
+        project: {
+          activeProjectId: projectId
+        }
+      })
     }),
     { name: 'UIStore' }
   )
