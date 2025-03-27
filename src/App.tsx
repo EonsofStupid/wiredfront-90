@@ -30,18 +30,14 @@ function App() {
     <>
       <ChatProvider>
         <ChatModeProvider isEditorPage={isEditorPage}>
+          {isAdminRoute && <AdminTopNavOverlay />}
           <Routes>
             <Route path="/" element={<AppLayout><Index /></AppLayout>} />
             <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
             <Route path="/login" element={<Login />} />
             <Route path="/editor" element={<AppLayout><Editor /></AppLayout>} />
             <Route path="/documents" element={<AppLayout><Documents /></AppLayout>} />
-            <Route path="/admin/*" element={
-              <AppLayout>
-                {isAdminRoute && <AdminTopNavOverlay />}
-                <AdminDashboard />
-              </AppLayout>
-            } />
+            <Route path="/admin/*" element={<AppLayout><AdminDashboard /></AppLayout>} />
           </Routes>
           <Toaster position="top-right" richColors closeButton />
         </ChatModeProvider>
