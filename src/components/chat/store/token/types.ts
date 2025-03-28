@@ -1,5 +1,5 @@
 
-import { UIEnforcementMode } from '@/types/chat/enums';
+import { UIEnforcementMode, TokenEnforcementMode, uiEnforcementToDatabaseEnforcement } from '@/types/chat/enums';
 
 /**
  * Token state interface
@@ -16,6 +16,7 @@ export interface TokenState {
   // Token enforcement settings
   enforcementMode: UIEnforcementMode;
   enforcementEnabled: boolean;
+  isEnforcementEnabled: boolean; // Alias for enforcementEnabled for backward compatibility
   
   // Token management actions
   addTokens: (amount: number) => Promise<boolean>;
@@ -24,4 +25,27 @@ export interface TokenState {
   setEnforcementMode: (mode: UIEnforcementMode) => void;
   setEnforcementEnabled: (enabled: boolean) => void;
   resetTokens: () => void;
+  resetQueriesUsed: () => void;
+  updateTokenSettings: (settings: Partial<TokenState>) => void;
 }
+
+/**
+ * Type for token action parameters
+ */
+export interface TokenActionParams {
+  amount: number;
+  operation: 'add' | 'spend' | 'set';
+  description?: string;
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Types for state management functions
+ */
+export type SetState<T> = (
+  partial: T | Partial<T> | ((state: T) => T | Partial<T>),
+  replace?: boolean,
+  action?: string | { type: string; [key: string]: any }
+) => void;
+
+export type GetState<T> = () => T;

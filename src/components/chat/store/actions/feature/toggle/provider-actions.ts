@@ -29,7 +29,10 @@ export const createProviderActions = (
    * Update available chat providers
    */
   updateProviders: (providers: Provider[]) => {
-    logger.info('Updating available providers', { count: providers.length });
+    logger.info('Updating available providers', { 
+      count: providers.length,
+      providerNames: providers.map(p => p.name).join(', ')
+    });
     
     set({
       availableProviders: providers
@@ -40,7 +43,10 @@ export const createProviderActions = (
    * Update the current chat provider
    */
   updateChatProvider: (provider: Provider) => {
-    logger.info('Updating chat provider', { provider: provider.name });
+    logger.info('Updating chat provider', { 
+      provider: provider.name,
+      maxTokens: provider.maxTokens
+    });
     
     const oldProviderName = get().currentProvider?.name;
     logProviderChange(oldProviderName, provider.name);

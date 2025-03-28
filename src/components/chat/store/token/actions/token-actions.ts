@@ -1,6 +1,6 @@
 
 import { TokenState, TokenActionParams, SetState, GetState } from '../types';
-import { TokenEnforcementMode } from '@/types/chat/enums';
+import { UIEnforcementMode } from '@/types/chat/enums';
 import { updateUserTokens, logTokenTransaction } from './token-utils';
 import { logger } from '@/services/chat/LoggingService';
 import { toast } from 'sonner';
@@ -19,14 +19,15 @@ export const createTokenActions = (
     logger.info('Setting token enforcement enabled state', { enabled });
     
     set({
-      isEnforcementEnabled: enabled
+      enforcementEnabled: enabled,
+      isEnforcementEnabled: enabled // Set both for backward compatibility
     }, false, { type: 'tokens/setEnforcementEnabled', enabled });
   },
 
   /**
    * Set the token enforcement mode
    */
-  setEnforcementMode: (mode: TokenEnforcementMode) => {
+  setEnforcementMode: (mode: UIEnforcementMode) => {
     logger.info('Setting token enforcement mode', { mode });
     
     set({
@@ -176,6 +177,23 @@ export const createTokenActions = (
     set({
       queriesUsed: 0
     }, false, { type: 'tokens/resetQueriesUsed' });
+  },
+
+  /**
+   * Reset all token state to initial values
+   */
+  resetTokens: () => {
+    logger.info('Resetting token store');
+    set({
+      balance: 0,
+      lastUpdated: new Date().toISOString(),
+      tokensPerQuery: 1,
+      queriesUsed: 0,
+      freeQueryLimit: 5,
+      enforcementMode: 'never',
+      enforcementEnabled: false,
+      isEnforcementEnabled: false
+    }, false, { type: 'tokens/reset' });
   },
 
   /**

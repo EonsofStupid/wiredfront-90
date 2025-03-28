@@ -15,6 +15,7 @@ export function ChatPositionToggle() {
   
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    logger.info('Toggling chat position', { currentPosition: position });
     togglePosition();
   };
   
@@ -36,6 +37,7 @@ export function ChatPositionToggle() {
       onClick={handleClick}
       title={`Toggle chat position (currently ${getPositionDisplay()})`}
       data-testid="chat-position-toggle"
+      aria-label="Toggle chat position"
     >
       <ArrowLeftRight className="h-4 w-4" />
     </button>
