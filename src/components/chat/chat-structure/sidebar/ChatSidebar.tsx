@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import { SessionHeader } from "./SessionHeader";
@@ -6,7 +5,7 @@ import { SessionList } from "./SessionList";
 import { SessionControls } from "./SessionControls";
 import { useConversationStore } from '../../store/conversation/store';
 import { useEffect, useState } from 'react';
-import { Conversation } from '@/types/chat/conversation';
+import { Conversation } from '../../types/conversation-types';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';

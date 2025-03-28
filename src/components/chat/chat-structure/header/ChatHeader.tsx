@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight, Minus, X, Pin, PinOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,7 @@ interface ChatHeaderProps {
   onToggleSidebar: () => void;
   onMinimize: () => void;
   onClose: () => void;
+  onResize: (size: { width: number; height: number }) => void;
 }
 
 export function ChatHeader({
@@ -26,6 +26,7 @@ export function ChatHeader({
   onToggleSidebar,
   onMinimize,
   onClose,
+  onResize
 }: ChatHeaderProps) {
   const { docked, toggleDocked, messages, startTime } = useChatStore();
   const location = useLocation();

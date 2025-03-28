@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowUpRight, Archive, MoreVertical, Trash2, Undo } from "lucide-react";
@@ -9,7 +8,7 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Conversation } from '@/types/chat/conversation';
+import { Conversation } from '../../types/conversation-types';
 import { formatDistanceToNow } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
