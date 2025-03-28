@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { Card } from "@/components/ui/card";
-import { SessionHeader } from "./SessionHeader";
-import { SessionList } from "./SessionList";
-import { SessionControls } from "./SessionControls";
+import { ChatSessionHeader } from "./ChatSessionHeader";
+import { ChatSessionList } from "./ChatSessionList";
+import { ChatSessionControls } from "./ChatSessionControls";
 import { useConversationStore } from '../../store/conversation/store';
 import { useEffect, useState } from 'react';
 import { Conversation } from '@/types/chat/conversation';
@@ -30,7 +30,7 @@ export function ChatSidebar() {
     deleteConversation
   } = useConversationStore();
   
-  const [sessionOpen, setSessionOpen] = useState(true);
+  const [ChatsessionOpen, setChatSessionOpen] = useState(true);
   const [activeConversations, setActiveConversations] = useState<Conversation[]>([]);
   const [archivedConversations, setArchivedConversations] = useState<Conversation[]>([]);
   
@@ -75,13 +75,13 @@ export function ChatSidebar() {
 
   return (
     <Card className="w-[250px] h-full glass-card neon-border flex flex-col overflow-hidden">
-      <SessionHeader
+      <ChatSessionHeader
         title="Conversations"
         isOpen={sessionOpen} 
-        onToggle={() => setSessionOpen(!sessionOpen)}
+        onToggle={() => setChatSessionOpen(!sessionOpen)}
       />
       
-      <SessionList 
+      <ChatSessionList 
         isLoading={isLoading}
         activeConversations={activeConversations}
         archivedConversations={archivedConversations}
@@ -93,7 +93,7 @@ export function ChatSidebar() {
         onRestoreSession={handleRestoreSession}
       />
       
-      <SessionControls>
+      <ChatSessionControls>
         <div className="flex justify-center p-2">
           <Button 
             variant="outline" 
@@ -106,7 +106,7 @@ export function ChatSidebar() {
             New Conversation
           </Button>
         </div>
-      </SessionControls>
+      </ChatSessionControls>
     </Card>
   );
 }
