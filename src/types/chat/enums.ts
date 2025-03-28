@@ -1,7 +1,7 @@
 
 /**
  * Enums for the chat system
- * These are proper enums that exist at runtime (rather than just types)
+ * These are proper TypeScript enums that exist at runtime
  */
 
 // Message role types
@@ -47,7 +47,7 @@ export enum UIEnforcementMode {
   Never = 'never'
 }
 
-// Token enforcement modes
+// Token enforcement modes (database values)
 export enum TokenEnforcementMode {
   Always = 'always',
   Never = 'never',
@@ -66,7 +66,7 @@ export enum ChatMode {
   Editor = 'editor' // Alias for 'dev'
 }
 
-// Create constant objects for use in type assertions
+// Type constants for use in type assertions
 export const MessageRoles = {
   User: MessageRole.User,
   Assistant: MessageRole.Assistant,
