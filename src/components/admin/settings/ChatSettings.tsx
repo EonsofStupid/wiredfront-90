@@ -5,6 +5,8 @@ import { z } from "zod";
 import { SettingsContainer } from "./layout/SettingsContainer";
 import { ChatSettingsTabs } from "./chat/ChatSettingsTabs";
 import { useChatBridge } from "@/components/chat/ChatBridge";
+import { ChatSettingsSchema, ChatSettingsType } from "@/lib/schemas/chatSettingsSchema";
+
 
 // ✅ Define your settings schema
 const ChatSettingsSchema = z.object({
