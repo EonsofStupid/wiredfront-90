@@ -7,7 +7,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
       "@chat/*": ["components/chat/*"]
     },
     "noImplicitAny": false,
