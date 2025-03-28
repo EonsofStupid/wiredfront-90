@@ -1,6 +1,6 @@
 
 import { useConversationStore } from './store';
-import { Conversation } from '@/components/chat/types/conversation-types';
+import { Conversation } from '@/types/chat/conversation';
 
 /**
  * Hook to get the current conversation

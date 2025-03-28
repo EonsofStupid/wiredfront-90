@@ -1,5 +1,5 @@
 
-import { MessageRole, MessageStatus, MessageType } from '@/components/chat/types/chat-modes';
+import { MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
 import { Json } from '@/integrations/supabase/types';
 
 export interface Message {

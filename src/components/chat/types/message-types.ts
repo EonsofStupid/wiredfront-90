@@ -1,6 +1,6 @@
 
 import { Json } from '@/integrations/supabase/types';
-import { MessageRole, MessageType, MessageStatus } from './chat-modes';
+import { MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
 
 /**
  * Core message interface

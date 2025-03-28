@@ -11,6 +11,7 @@ import { Spinner } from '../../shared/Spinner';
 import { logger } from '@/services/chat/LoggingService';
 import { MessageSkeleton } from '../../shared/MessageSkeleton';
 import { useChatStore } from '../../store/chatStore';
+import { MessageStatus } from '@/types/chat/enums';
 
 interface MessageModuleProps {
   scrollRef: React.RefObject<HTMLDivElement>;

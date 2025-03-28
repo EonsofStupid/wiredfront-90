@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Message, MessageCreateParams } from '@/types/chat/message';
+import { MessageType, MessageStatus } from '@/types/chat/enums';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from './LoggingService';
 
@@ -21,7 +22,7 @@ export const createMessage = async (params: MessageCreateParams): Promise<Messag
       id: messageId,
       role: params.role,
       content: params.content,
-      type: params.type || 'text',
+      type: params.type || MessageType.Text,
       user_id: userData.user.id,
       conversation_id: params.conversation_id, // Primary reference
       chat_session_id: params.conversation_id, // For backward compatibility
@@ -34,9 +35,10 @@ export const createMessage = async (params: MessageCreateParams): Promise<Messag
       window_state: {},
       retry_count: 0,
       parent_message_id: params.parent_message_id,
+      message_status: MessageStatus.Sent
     };
     
-    // Insert into the new table name: chat_messages
+    // Insert into the chat_messages table
     const { data, error } = await supabase
       .from('chat_messages')
       .insert(message)

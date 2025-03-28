@@ -1,7 +1,8 @@
+
 import React, { useMemo } from 'react';
 import { atom, useAtom } from 'jotai';
 import { cn } from '@/lib/utils';
-import { MessageRole, MessageStatus, MessageType } from '@/components/chat/types/chat-modes';
+import { MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
 import { Spinner } from '@/components/chat/shared/Spinner';
 import { Avatar } from '@/components/ui/avatar';
 import { MessageActions } from './MessageActions';
@@ -114,7 +115,7 @@ export const Message = ({
               id={id}
               onEdit={onEdit ? handleEditStart : undefined}
               onDelete={onDelete}
-              onRegenerate={status === 'failed' || status === 'error' ? onRetry : undefined}
+              onRegenerate={status === MessageStatus.Failed || status === MessageStatus.Error ? onRetry : undefined}
               messageRole={role}
             />
           )}

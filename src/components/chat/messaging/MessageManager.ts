@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 import { Message } from '@/types/chat/message';
-import { MessageRole, MessageStatus, MessageType } from '@/components/chat/types/chat-modes';
+import { MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
 import { logger } from '@/services/chat/LoggingService';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
@@ -44,7 +44,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     try {
       logger.info('Fetching messages for conversation', { conversationId });
       
-      // Query using the conversation_id (Supabase table now uses this name)
+      // Query using the conversation_id field for consistency
       const { data, error } = await supabase
         .from('chat_messages')
         .select('*')

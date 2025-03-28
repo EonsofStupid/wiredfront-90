@@ -1,6 +1,7 @@
 
 /**
  * Enums for the chat system
+ * These are proper enums that exist at runtime (rather than just types)
  */
 
 // Message role types
@@ -46,5 +47,21 @@ export enum UIEnforcementMode {
   Never = 'never'
 }
 
-// Re-export ChatMode from our central location
-export { ChatMode, TokenEnforcementMode } from '@/components/chat/types/chat-modes';
+// Token enforcement modes
+export enum TokenEnforcementMode {
+  Always = 'always',
+  Never = 'never',
+  RoleBased = 'role_based',
+  ModeBased = 'mode_based',
+  Warn = 'warn',
+  Strict = 'strict'
+}
+
+// Chat mode
+export enum ChatMode {
+  Chat = 'chat',
+  Dev = 'dev',
+  Image = 'image',
+  Training = 'training',
+  Editor = 'editor' // Alias for 'dev'
+}
