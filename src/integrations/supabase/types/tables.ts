@@ -1,6 +1,5 @@
-
 import { Json } from './database';
-import { MessageType, SettingType } from './enums';
+import { MessageType, ChatMode, TokenEnforcementMode } from './enums';
 
 export interface Tables {
   messages: {
@@ -8,7 +7,7 @@ export interface Tables {
       id: string;
       content: string;
       user_id: string;
-      type: MessageType;
+      type: string;  // Changed from MessageType to string
       metadata: Json | null;
       created_at: string | null;
       updated_at: string | null;
@@ -22,7 +21,7 @@ export interface Tables {
       id?: string;
       content: string;
       user_id: string;
-      type?: MessageType;
+      type?: string;  // Changed from MessageType to string
       metadata?: Json | null;
       created_at?: string | null;
       updated_at?: string | null;
@@ -36,7 +35,7 @@ export interface Tables {
       id?: string;
       content?: string;
       user_id?: string;
-      type?: MessageType;
+      type?: string;  // Changed from MessageType to string
       metadata?: Json | null;
       created_at?: string | null;
       updated_at?: string | null;

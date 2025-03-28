@@ -6,7 +6,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useChatStore } from '../store/chatStore';
 import { useChatBridge } from '../chatBridge';
-import { ChatMode } from '../types';
+import { ChatMode } from '@/types/chat/enums';
 import { toast } from 'sonner';
 
 interface ChatModeDialogProps {
@@ -36,7 +36,7 @@ export function ChatModeDialog({ open, onOpenChange }: ChatModeDialogProps) {
         
         <RadioGroup defaultValue={currentMode} className="grid gap-4 py-4">
           <div className="flex items-center space-x-2 border p-4 rounded-md hover:bg-accent">
-            <RadioGroupItem value="chat" id="chat-mode" onClick={() => handleModeChange('chat')} />
+            <RadioGroupItem value="chat" id="chat-mode" onClick={() => handleModeChange(ChatMode.Chat)} />
             <Label htmlFor="chat-mode" className="flex flex-col gap-1">
               <span className="font-medium">Standard Chat</span>
               <span className="text-sm text-muted-foreground">General conversation and assistance</span>
@@ -44,7 +44,7 @@ export function ChatModeDialog({ open, onOpenChange }: ChatModeDialogProps) {
           </div>
           
           <div className="flex items-center space-x-2 border p-4 rounded-md hover:bg-accent">
-            <RadioGroupItem value="dev" id="dev-mode" onClick={() => handleModeChange('dev')} />
+            <RadioGroupItem value="dev" id="dev-mode" onClick={() => handleModeChange(ChatMode.Dev)} />
             <Label htmlFor="dev-mode" className="flex flex-col gap-1">
               <span className="font-medium">Developer Mode</span>
               <span className="text-sm text-muted-foreground">Code assistance and development</span>
@@ -52,7 +52,7 @@ export function ChatModeDialog({ open, onOpenChange }: ChatModeDialogProps) {
           </div>
           
           <div className="flex items-center space-x-2 border p-4 rounded-md hover:bg-accent">
-            <RadioGroupItem value="image" id="image-mode" onClick={() => handleModeChange('image')} />
+            <RadioGroupItem value="image" id="image-mode" onClick={() => handleModeChange(ChatMode.Image)} />
             <Label htmlFor="image-mode" className="flex flex-col gap-1">
               <span className="font-medium">Image Generation</span>
               <span className="text-sm text-muted-foreground">Create and modify images</span>
@@ -60,7 +60,7 @@ export function ChatModeDialog({ open, onOpenChange }: ChatModeDialogProps) {
           </div>
           
           <div className="flex items-center space-x-2 border p-4 rounded-md hover:bg-accent">
-            <RadioGroupItem value="training" id="training-mode" onClick={() => handleModeChange('training')} />
+            <RadioGroupItem value="training" id="training-mode" onClick={() => handleModeChange(ChatMode.Training)} />
             <Label htmlFor="training-mode" className="flex flex-col gap-1">
               <span className="font-medium">Training Mode</span>
               <span className="text-sm text-muted-foreground">Learning and educational assistance</span>

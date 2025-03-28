@@ -20,11 +20,11 @@ export function TokenBalanceDisplay({ className }: TokenBalanceDisplayProps) {
 
   const getEnforcementBadge = (mode: UIEnforcementMode) => {
     switch(mode) {
-      case 'warn':
+      case UIEnforcementMode.Soft:
         return <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-500">Warning</Badge>;
-      case 'strict':
+      case UIEnforcementMode.Always:
         return <Badge variant="destructive" className="bg-red-500/20 text-red-500">Enforced</Badge>;
-      case 'never':
+      case UIEnforcementMode.Never:
         return <Badge variant="success" className="bg-green-500/20 text-green-500">Free</Badge>;
       default:
         return null;
@@ -39,7 +39,7 @@ export function TokenBalanceDisplay({ className }: TokenBalanceDisplayProps) {
           {balance.toLocaleString()}
         </span>
       </div>
-      {enforcementMode !== 'never' && getEnforcementBadge(enforcementMode as UIEnforcementMode)}
+      {enforcementMode !== UIEnforcementMode.Never && getEnforcementBadge(enforcementMode as UIEnforcementMode)}
     </div>
   );
 }

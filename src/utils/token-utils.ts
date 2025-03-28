@@ -1,5 +1,6 @@
 
 import { TokenEnforcementMode, UIEnforcementMode } from '@/types/chat/enums';
+import { Json } from '@/integrations/supabase/types';
 
 /**
  * Maps UI enforcement modes to database enforcement modes

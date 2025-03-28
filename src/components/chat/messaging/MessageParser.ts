@@ -1,5 +1,5 @@
 
-import { MessageType } from '../types';
+import { MessageType } from '@/types/chat/enums';
 
 /**
  * Parse message content to extract structured information
@@ -13,7 +13,7 @@ export function parseMessage(content: string): {
     try {
       const parsedData = JSON.parse(content);
       return {
-        type: 'system',
+        type: MessageType.System,
         parsedContent: parsedData
       };
     } catch (e) {
@@ -24,14 +24,14 @@ export function parseMessage(content: string): {
   // Check for code blocks
   if (content.includes('```')) {
     return {
-      type: 'code',
+      type: MessageType.Code,
       parsedContent: extractCodeBlocks(content)
     };
   }
   
   // Default to text type
   return {
-    type: 'text',
+    type: MessageType.Text,
     parsedContent: content
   };
 }
