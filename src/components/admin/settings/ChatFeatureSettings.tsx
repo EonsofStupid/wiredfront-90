@@ -7,9 +7,10 @@ import { useChatStore } from "@/components/chat/store/chatStore";
 import { ArrowLeftRight, Pin, PinOff, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
-import { FeatureKey } from "@/components/chat/store/actions/feature";
+import { FeatureKey } from "@/components/chat/types/feature-types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ChatPosition, ChatPositionCoordinates } from "@/types/chat/enums";
+import { ChatPosition } from "@/types/chat/enums";
+import { ChatPositionCoordinates } from "@/components/chat/types/chat-modes";
 
 export const ChatFeatureSettings = () => {
   const { position, togglePosition, docked, toggleDocked } = useChatStore();
