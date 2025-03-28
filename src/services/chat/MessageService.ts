@@ -4,7 +4,7 @@ import { Message, MessageCreateParams } from '@/types/chat/message';
 import { MessageType, MessageStatus, MessageRole } from '@/types/chat/enums';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from './LoggingService';
-import { messageTypeToString, stringToMessageType } from '@/components/chat/types/enums-mapper';
+import { EnumUtils } from '@/lib/enums';
 
 /**
  * Create a new message in the database
@@ -20,7 +20,7 @@ export const createMessage = async (params: MessageCreateParams): Promise<Messag
     }
     
     // Convert MessageType enum to string for database
-    const dbMessageType = params.type ? messageTypeToString(params.type) : 'text';
+    const dbMessageType = params.type ? EnumUtils.messageTypeToString(params.type) : 'text';
     const dbMessageStatus = 'sent'; // Default status
     
     const message = {
@@ -58,7 +58,7 @@ export const createMessage = async (params: MessageCreateParams): Promise<Messag
       id: data.id,
       role: data.role as MessageRole,
       content: data.content,
-      type: stringToMessageType(data.type),
+      type: EnumUtils.stringToMessageType(data.type),
       user_id: data.user_id,
       conversation_id: data.conversation_id || data.chat_session_id,
       chat_session_id: data.chat_session_id,
@@ -89,7 +89,7 @@ export const updateMessage = async (messageId: string, updates: Partial<Message>
     // Convert types for database if needed
     const dbUpdates: any = { ...updates };
     if (updates.type) {
-      dbUpdates.type = messageTypeToString(updates.type);
+      dbUpdates.type = EnumUtils.messageTypeToString(updates.type);
     }
     if (updates.message_status) {
       dbUpdates.status = updates.message_status;
@@ -162,7 +162,7 @@ export const fetchConversationMessages = async (conversationId: string): Promise
       id: msg.id,
       role: msg.role as MessageRole,
       content: msg.content,
-      type: stringToMessageType(msg.type),
+      type: EnumUtils.stringToMessageType(msg.type),
       user_id: msg.user_id,
       conversation_id: msg.conversation_id || msg.chat_session_id,
       chat_session_id: msg.chat_session_id,

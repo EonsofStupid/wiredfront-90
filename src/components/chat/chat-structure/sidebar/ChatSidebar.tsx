@@ -13,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { useChatStore } from '../../store/chatStore';
 import { useTokenStore } from '../../store/token';
 import { ChatMode } from '@/types/chat/enums';
-import { chatModeForDatabase } from '../../types/enums-mapper';
+import { EnumUtils } from '@/lib/enums';
 
 export function ChatSidebar() {
   const navigate = useNavigate();
@@ -56,7 +56,7 @@ export function ChatSidebar() {
   };
   
   const handleCreateConversation = () => {
-    const dbMode = chatModeForDatabase(currentMode);
+    const dbMode = EnumUtils.chatModeForDatabase(currentMode);
     const newConversationId = createConversation({
       mode: dbMode,
       title: "New Conversation"

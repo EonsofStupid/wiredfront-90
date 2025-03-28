@@ -2,8 +2,7 @@
 import { useCallback } from 'react';
 import { useChatStore } from '@/components/chat/store/chatStore';
 import { useChatBridge } from '@/components/chat/chatBridge';
-import { ChatMode } from '@/types/chat/enums';
-import { databaseModeToUiMode, uiModeToDatabaseMode } from '@/components/chat/types/chat-modes';
+import { ChatMode, databaseModeToUiMode, uiModeToDatabaseMode } from '@/types/chat/enums';
 import { ModeConfig } from '../types/mode-types';
 
 // Define available modes with their configurations

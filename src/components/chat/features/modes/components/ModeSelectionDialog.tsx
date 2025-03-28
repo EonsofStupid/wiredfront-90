@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -19,16 +18,8 @@ import {
 } from '@/components/ui/select';
 import { Code, ImageIcon, MessageSquare } from 'lucide-react';
 import { useChatBridge } from '@/components/chat/chatBridge';
-import { ChatMode } from '@/types/chat/enums';
-import { stringToChatMode } from '@/components/chat/types/enums-mapper';
-
-// Map from UI mode strings to ChatMode enum values using our centralized mapper
-const uiModeToChatMode: Record<string, ChatMode> = {
-  'standard': ChatMode.Chat,
-  'editor': ChatMode.Dev,
-  'image': ChatMode.Image,
-  'training': ChatMode.Training,
-};
+import { ChatMode, uiModeToDatabaseMode } from '@/types/chat/enums';
+import { EnumUtils } from '@/lib/enums';
 
 export type UIMode = 'standard' | 'editor' | 'image' | 'training';
 
@@ -77,7 +68,7 @@ export function ModeSelectionDialog({
       setIsSubmitting(true);
       
       // Convert UI mode to ChatMode enum
-      const chatMode = uiModeToChatMode[selectedMode] || ChatMode.Chat;
+      const chatMode = uiModeToDatabaseMode[selectedMode] || ChatMode.Chat;
       
       await onCreateSession(chatMode, selectedProvider);
       

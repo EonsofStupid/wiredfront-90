@@ -66,6 +66,69 @@ function enumMeta<T extends EnumName>(enumName: T): { value: EnumValue<T>; label
   }));
 }
 
+// --- Type conversion utilities (migrated from enums-mapper.ts) ---
+function messageTypeToString(type: Enums.MessageType): string {
+  return type.toString();
+}
+
+function stringToMessageType(type: string): Enums.MessageType {
+  return safeParseEnumValue('MessageType', type, Enums.MessageType.Text);
+}
+
+function chatModeToString(mode: Enums.ChatMode): string {
+  return mode.toString();
+}
+
+function stringToChatMode(mode: string): Enums.ChatMode {
+  return safeParseEnumValue('ChatMode', mode, Enums.ChatMode.Chat);
+}
+
+function chatModeForDatabase(mode: Enums.ChatMode | string): string {
+  if (typeof mode === 'string') {
+    return mode;
+  }
+  return chatModeToString(mode);
+}
+
+function databaseToChatMode(mode: string): Enums.ChatMode {
+  return stringToChatMode(mode);
+}
+
+function messageStatusToString(status: Enums.MessageStatus): string {
+  return status.toString();
+}
+
+function stringToMessageStatus(status: string): Enums.MessageStatus {
+  return safeParseEnumValue('MessageStatus', status, Enums.MessageStatus.Sent);
+}
+
+function tokenEnforcementModeToString(mode: Enums.TokenEnforcementMode): string {
+  return mode.toString();
+}
+
+function stringToTokenEnforcementMode(mode: string): Enums.TokenEnforcementMode {
+  return safeParseEnumValue('TokenEnforcementMode', mode, Enums.TokenEnforcementMode.Never);
+}
+
+function tokenToUIEnforcementMode(mode: Enums.TokenEnforcementMode): string {
+  switch (mode) {
+    case Enums.TokenEnforcementMode.Always:
+      return 'Always On';
+    case Enums.TokenEnforcementMode.Never:
+      return 'Always Off';
+    case Enums.TokenEnforcementMode.RoleBased:
+      return 'Role Based';
+    case Enums.TokenEnforcementMode.ModeBased:
+      return 'Mode Based';
+    case Enums.TokenEnforcementMode.Warn:
+      return 'Warn Only';
+    case Enums.TokenEnforcementMode.Strict:
+      return 'Strict';
+    default:
+      return 'Not Set';
+  }
+}
+
 // --- Unified Export Object ---
 export const EnumUtils = {
   getSchema: getEnumSchema,
@@ -74,4 +137,15 @@ export const EnumUtils = {
   values: enumValues,
   flexibleParse: parseEnumFlexible,
   meta: enumMeta,
+  messageTypeToString,
+  stringToMessageType,
+  chatModeToString,
+  stringToChatMode,
+  chatModeForDatabase,
+  databaseToChatMode,
+  messageStatusToString,
+  stringToMessageStatus,
+  tokenEnforcementModeToString,
+  stringToTokenEnforcementMode,
+  tokenToUIEnforcementMode
 };

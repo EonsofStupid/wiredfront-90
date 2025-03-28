@@ -12,7 +12,7 @@ import { ChatMode, MessageRole, MessageStatus, MessageType } from '@/types/chat/
 import { Provider } from '@/types/chat/providers';
 import { Conversation } from '@/types/chat/conversation';
 import { logger } from '@/services/chat/LoggingService';
-import { chatModeToString, stringToChatMode } from '../types/enums-mapper';
+import { EnumUtils } from '@/lib/enums';
 
 // Create context for using the bridge
 const ChatBridgeContext = createContext<ChatBridgeInterface | null>(null);
@@ -94,7 +94,7 @@ export class ChatBridge implements ChatBridgeInterface {
       // Convert enum types to string for database
       const dbUpdates = { ...updates };
       if (updates.mode) {
-        dbUpdates.mode = chatModeToString(updates.mode) as any;
+        dbUpdates.mode = EnumUtils.chatModeToString(updates.mode) as any;
       }
       
       const success = await this.conversationStore.updateConversation(conversationId, dbUpdates);

@@ -121,3 +121,20 @@ export const ChatModes = {
   Training: ChatMode.Training,
   Editor: ChatMode.Editor
 } as const;
+
+// UI mode to database mode mappings
+export const uiModeToDatabaseMode: Record<string, ChatMode> = {
+  'standard': ChatMode.Chat,
+  'editor': ChatMode.Dev,
+  'image': ChatMode.Image,
+  'training': ChatMode.Training
+};
+
+// Database mode to UI mode mappings
+export const databaseModeToUiMode: Record<ChatMode, string> = {
+  [ChatMode.Chat]: 'standard',
+  [ChatMode.Dev]: 'editor',
+  [ChatMode.Editor]: 'editor',
+  [ChatMode.Image]: 'image',
+  [ChatMode.Training]: 'training'
+};

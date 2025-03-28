@@ -2,13 +2,15 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useChatStore } from '../store/chatStore';
 import { logger } from '@/services/chat/LoggingService';
-import { ChatMode } from '@/types/chat/enums';
-import { databaseModeToUiMode, UiChatMode } from '../types/chat-modes';
+import { ChatMode, databaseModeToUiMode } from '@/types/chat/enums';
 
 type ChatModeContextType = {
   mode: UiChatMode;
   isEditorPage: boolean;
 };
+
+// Use the type from enums.ts directly
+export type UiChatMode = 'standard' | 'editor' | 'image' | 'training';
 
 const ChatModeContext = createContext<ChatModeContextType>({
   mode: 'standard',

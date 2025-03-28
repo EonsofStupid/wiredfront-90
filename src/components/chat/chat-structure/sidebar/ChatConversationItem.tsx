@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Conversation } from '@/types/chat/conversation';
 import { cn } from '@/lib/utils';
-import { stringToChatMode } from '../../types/enums-mapper';
+import { EnumUtils } from '@/lib/enums';
 import { ChatMode } from '@/types/chat/enums';
 
 interface ChatConversationItemProps {
@@ -33,7 +33,7 @@ export function ChatConversationItem({
   onRestore
 }: ChatConversationItemProps) {
   const modeBadgeClass = getModeBadgeClass(typeof conversation.mode === 'string' 
-    ? stringToChatMode(conversation.mode) 
+    ? EnumUtils.stringToChatMode(conversation.mode) 
     : conversation.mode);
 
   return (

@@ -1,4 +1,3 @@
-
 import { useChatStore } from './store/chatStore';
 import { useMessageStore } from './messaging/MessageManager';
 import { ChatMode, ChatPosition } from '@/types/chat/enums';
