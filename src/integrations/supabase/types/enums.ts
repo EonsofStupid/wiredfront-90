@@ -15,9 +15,10 @@ export const MessageType = MessageTypeEnum;
 export const ChatMode = ChatModeEnum;
 export const TokenEnforcementMode = TokenEnforcementModeEnum;
 
-// Define types that are not enums
+// Define the SettingType which is not an enum but a union type
 export type SettingType = "string" | "number" | "boolean" | "json" | "array";
 
+// Define the Enums interface for database operations
 export interface Enums {
   message_type: typeof MessageTypeEnum;
   setting_type: SettingType;
