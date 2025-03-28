@@ -1,125 +1,110 @@
+
 import React from 'react';
-import { Suspense, lazy, useState } from "react";
-import { SessionControls } from "./SessionControls";
-import { useSessionManager } from "@/hooks/sessions";
+import { Card } from "@/components/ui/card";
 import { SessionHeader } from "./SessionHeader";
-import { useChatStore } from "../../store/chatStore";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useErrorBoundary } from "../../hooks/useErrorBoundary";
-import { ChatMode, ModeSelectionDialog } from "../../features/conversations/ModeSelectionDialog";
+import { SessionList } from "./SessionList";
+import { SessionControls } from "./SessionControls";
+import { useConversationStore } from '../../store/conversation/store';
+import { useEffect, useState } from 'react';
+import { Conversation } from '@/types/chat/conversation';
+import { Button } from '@/components/ui/button';
+import { PlusCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useChatStore } from '../../store/chatStore';
+import { useTokenStore } from '../../store/token';
+import { ChatMode } from '@/types/chat/enums';
 
-const SessionList = lazy(() => import("./SessionList").then(mod => ({ default: mod.SessionList })));
-const SessionSkeleton = lazy(() => import("./SessionSkeleton"));
-
-export const ChatSidebar: React.FC = () => {
-  const {
-    sessions,
-    currentSessionId,
-    switchSession,
-    createSession,
-    cleanupInactiveSessions,
-    clearSessions,
+export function ChatSidebar() {
+  const navigate = useNavigate();
+  const { tokenBalance } = useTokenStore();
+  const { 
+    conversations, 
+    fetchConversations, 
     isLoading,
-  } = useSessionManager();
-  const { ui } = useChatStore();
-  const { ErrorBoundary } = useErrorBoundary();
-  const [modeDialogOpen, setModeDialogOpen] = useState(false);
-
-  const formattedSessions = sessions.map(session => ({
-    id: session.id,
-    lastAccessed: new Date(session.last_accessed),
-    isActive: session.id === currentSessionId
-  }));
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
-
-  const handleCreateSession = async () => {
-    setModeDialogOpen(true);
-  };
-
-  const handleCreateWithMode = async (mode: ChatMode, providerId: string) => {
-    await createSession({
-      metadata: {
-        mode,
-        providerId
-      }
-    });
-  };
-
-  const handleClearChat = () => {
-    if (window.confirm("Are you sure you want to clear the chat? This cannot be undone.")) {
-      // Perform clear operation
+    createConversation,
+    currentConversationId,
+    setCurrentConversationId,
+    updateConversation,
+    archiveConversation,
+    deleteConversation
+  } = useConversationStore();
+  
+  const [sessionOpen, setSessionOpen] = useState(true);
+  const [activeConversations, setActiveConversations] = useState<Conversation[]>([]);
+  const [archivedConversations, setArchivedConversations] = useState<Conversation[]>([]);
+  
+  const { currentMode } = useChatStore();
+  
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
+  
+  useEffect(() => {
+    if (conversations.length > 0) {
+      setActiveConversations(conversations.filter(c => !c.archived));
+      setArchivedConversations(conversations.filter(c => c.archived));
     }
+  }, [conversations]);
+  
+  const handleDeleteSession = (sessionId: string) => {
+    deleteConversation(sessionId);
   };
-
-  const handleSaveChat = () => {
-    // Perform save operation
+  
+  const handleArchiveSession = (sessionId: string) => {
+    archiveConversation(sessionId);
   };
-
-  const handleClearOtherSessions = async () => {
-    await clearSessions(true);
+  
+  const handleCreateSession = () => {
+    const newConversationId = createConversation({
+      mode: currentMode as ChatMode,
+      title: "New Conversation"
+    });
+    
+    setCurrentConversationId(newConversationId);
   };
-
-  const handleClearAllSessions = async () => {
-    await clearSessions(false);
+  
+  const handleRestoreSession = (sessionId: string) => {
+    updateConversation(sessionId, { archived: false });
+  };
+  
+  const handleSelectSession = (sessionId: string) => {
+    setCurrentConversationId(sessionId);
   };
 
   return (
-    <div 
-      className="w-[300px] chat-glass-card chat-neon-border h-[500px] flex flex-col" 
-      onClick={handleClick}
-      data-testid="chat-sidebar"
-    >
-      <SessionHeader sessionCount={sessions.length} />
-      
-      <div className="flex-1 overflow-hidden">
-        <ErrorBoundary
-          fallback={
-            <div className="p-4 text-center">
-              <p className="text-sm text-destructive">Failed to load sessions</p>
-              <button 
-                className="mt-2 px-3 py-1 text-xs bg-primary/80 text-primary-foreground rounded"
-                onClick={() => window.location.reload()}
-              >
-                Retry
-              </button>
-            </div>
-          }
-        >
-          <Suspense fallback={
-            <div className="p-4">
-              <Skeleton className="h-6 w-24 mb-4" />
-              <SessionSkeleton count={4} />
-            </div>
-          }>
-            {isLoading || ui.sessionLoading ? (
-              <SessionSkeleton count={4} />
-            ) : (
-              <SessionList
-                sessions={formattedSessions}
-                onSelectSession={switchSession}
-              />
-            )}
-          </Suspense>
-        </ErrorBoundary>
-      </div>
-      
-      <SessionControls
-        onNewSession={handleCreateSession}
-        onClearSessions={handleClearOtherSessions}
-        onCleanupSessions={cleanupInactiveSessions}
-        onClearAllSessions={handleClearAllSessions}
-        sessionCount={sessions.length}
-        isLoading={isLoading || ui.sessionLoading}
+    <Card className="w-[250px] h-full glass-card neon-border flex flex-col overflow-hidden">
+      <SessionHeader
+        title="Sessions"
+        isOpen={sessionOpen} 
+        onToggle={() => setSessionOpen(!sessionOpen)}
       />
-
-      <ModeSelectionDialog
-        open={modeDialogOpen}
-        onOpenChange={setModeDialogOpen}
-        onCreateSession={handleCreateWithMode}
+      
+      <SessionList 
+        isLoading={isLoading}
+        activeConversations={activeConversations}
+        archivedConversations={archivedConversations}
+        isOpen={sessionOpen}
+        currentSessionId={currentConversationId}
+        onSelectSession={handleSelectSession}
+        onDeleteSession={handleDeleteSession}
+        onArchiveSession={handleArchiveSession}
+        onRestoreSession={handleRestoreSession}
       />
-    </div>
+      
+      <SessionControls>
+        <div className="flex justify-center p-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="w-full"
+            onClick={handleCreateSession}
+            disabled={tokenBalance <= 0}
+          >
+            <PlusCircle className="h-4 w-4 mr-2" /> 
+            New Conversation
+          </Button>
+        </div>
+      </SessionControls>
+    </Card>
   );
-};
+}

@@ -96,6 +96,21 @@ export class ChatBridge {
     disableFeature(featureKey);
     logger.info(`Feature ${featureKey} disabled via ChatBridge`);
   }
+  
+  // Toggle feature method (added to fix ChatHeaderTopNav.tsx)
+  static toggleFeature(featureKey: string) {
+    const { toggleFeature } = useChatStore.getState();
+    toggleFeature(featureKey);
+    logger.info(`Feature ${featureKey} toggled via ChatBridge`);
+  }
+
+  // Conversation methods (added to fix ChatHeaderTopNav.tsx)
+  static switchConversation(conversationId: string) {
+    // We'll implement this using the conversation store
+    const { setCurrentConversationId } = require('./store/conversation').useConversationStore.getState();
+    setCurrentConversationId(conversationId);
+    logger.info(`Switched to conversation ${conversationId} via ChatBridge`);
+  }
 
   // Settings Methods
   static updateChatSettings(settings: Record<string, any>) {
@@ -124,6 +139,25 @@ export class ChatBridge {
     
     logger.info('Chat settings updated via ChatBridge', { settings });
   }
+  
+  // Token-related methods
+  static updateTokens(amount: number, operation: 'add' | 'spend' | 'set') {
+    const tokenStore = require('./store/token').useTokenStore.getState();
+    
+    switch (operation) {
+      case 'add':
+        tokenStore.addTokens(amount);
+        break;
+      case 'spend':
+        tokenStore.spendTokens(amount);
+        break;
+      case 'set':
+        tokenStore.setTokenBalance(amount);
+        break;
+    }
+    
+    logger.info(`Token operation: ${operation}`, { amount });
+  }
 }
 
 // Optional: Export hook-based methods for use within React components
@@ -136,6 +170,11 @@ export function useChatBridge() {
     clearMessages: ChatBridge.clearMessages,
     setMode: ChatBridge.setMode,
     setPosition: ChatBridge.setPosition,
-    toggleDocked: ChatBridge.toggleDocked
+    toggleDocked: ChatBridge.toggleDocked,
+    // Add the missing methods to the hook interface
+    switchConversation: ChatBridge.switchConversation,
+    toggleFeature: ChatBridge.toggleFeature,
+    updateChatSettings: ChatBridge.updateChatSettings,
+    updateTokens: ChatBridge.updateTokens
   };
 }

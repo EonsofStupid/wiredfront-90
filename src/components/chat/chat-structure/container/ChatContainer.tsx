@@ -86,7 +86,9 @@ function ChatContainerBase({
   }, [position]);
 
   // Determine the title based on the current mode
-  const title = mode === 'editor' ? 'Code Assistant' : mode === 'chat-only' ? 'Context Planning' : 'Chat';
+  const title = mode === 'editor' ? 'Code Assistant' : 
+               mode === 'standard' ? 'Context Planning' : 
+               mode;
 
   // Stop propagation for clicks inside the chat window
   const handleContainerClick = (e: React.MouseEvent) => {

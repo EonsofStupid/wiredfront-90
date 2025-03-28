@@ -11,7 +11,7 @@ import { Spinner } from '../../shared/Spinner';
 import { logger } from '@/services/chat/LoggingService';
 import { MessageSkeleton } from '../../shared/MessageSkeleton';
 import { useChatStore } from '../../store/chatStore';
-import { MessageStatus } from '@/types/chat/enums';
+import { MessageRole, MessageStatus } from '@/types/chat/enums';
 
 interface MessageModuleProps {
   scrollRef: React.RefObject<HTMLDivElement>;
@@ -49,9 +49,9 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
     if (ui.sessionLoading) {
       return (
         <div className="flex flex-col gap-4 p-4">
-          <MessageSkeleton role="user" lines={1} />
-          <MessageSkeleton role="assistant" lines={2} />
-          <MessageSkeleton role="user" lines={1} />
+          <MessageSkeleton role={MessageRole.User} lines={1} />
+          <MessageSkeleton role={MessageRole.Assistant} lines={2} />
+          <MessageSkeleton role={MessageRole.User} lines={1} />
         </div>
       );
     }
@@ -120,7 +120,7 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
               animate={{ opacity: 1, y: 0 }}
               className="p-4"
             >
-              <MessageSkeleton role="assistant" lines={3} />
+              <MessageSkeleton role={MessageRole.Assistant} lines={3} />
             </motion.div>
           )}
         </div>
