@@ -3,6 +3,8 @@ import { useChatStore } from './store/chatStore';
 import { useMessageStore } from './messaging/MessageManager';
 import { ChatMode, ChatPosition } from '@/types/chat/enums';
 import { logger } from '@/services/chat/LoggingService';
+import { useConversationManager } from './hooks/useConversationManager';
+import { CreateConversationParams } from '@/types/chat/conversation';
 
 /**
  * ChatBridge serves as the primary interface between the chat client
@@ -97,19 +99,71 @@ export class ChatBridge {
     logger.info(`Feature ${featureKey} disabled via ChatBridge`);
   }
   
-  // Toggle feature method (added to fix ChatHeaderTopNav.tsx)
   static toggleFeature(featureKey: string) {
     const { toggleFeature } = useChatStore.getState();
     toggleFeature(featureKey);
     logger.info(`Feature ${featureKey} toggled via ChatBridge`);
   }
 
-  // Conversation methods (added to fix ChatHeaderTopNav.tsx)
+  // Conversation methods
+  static async createConversation(params: CreateConversationParams = {}) {
+    // Use the conversation store directly
+    const conversationManager = require('./hooks/useConversationManager');
+    const conversationStore = conversationManager.useConversationStore?.getState() || {};
+    
+    if (conversationStore.createConversation) {
+      const conversationId = await conversationStore.createConversation(params);
+      logger.info(`Created conversation ${conversationId} via ChatBridge`);
+      return conversationId;
+    }
+    
+    logger.error('Failed to create conversation via ChatBridge - store not available');
+    return null;
+  }
+
   static switchConversation(conversationId: string) {
-    // We'll implement this using the conversation store
-    const { setCurrentConversationId } = require('./store/conversation').useConversationStore.getState();
-    setCurrentConversationId(conversationId);
-    logger.info(`Switched to conversation ${conversationId} via ChatBridge`);
+    // Use the conversation store directly
+    const conversationManager = require('./hooks/useConversationManager');
+    const conversationStore = conversationManager.useConversationStore?.getState() || {};
+    
+    if (conversationStore.setCurrentConversationId) {
+      conversationStore.setCurrentConversationId(conversationId);
+      logger.info(`Switched to conversation ${conversationId} via ChatBridge`);
+      return true;
+    }
+    
+    logger.error('Failed to switch conversation via ChatBridge - store not available');
+    return false;
+  }
+
+  static archiveConversation(conversationId: string) {
+    // Use the conversation store directly
+    const conversationManager = require('./hooks/useConversationManager');
+    const conversationStore = conversationManager.useConversationStore?.getState() || {};
+    
+    if (conversationStore.archiveConversation) {
+      const success = conversationStore.archiveConversation(conversationId);
+      logger.info(`Archived conversation ${conversationId} via ChatBridge`);
+      return success;
+    }
+    
+    logger.error('Failed to archive conversation via ChatBridge - store not available');
+    return false;
+  }
+
+  static deleteConversation(conversationId: string) {
+    // Use the conversation store directly
+    const conversationManager = require('./hooks/useConversationManager');
+    const conversationStore = conversationManager.useConversationStore?.getState() || {};
+    
+    if (conversationStore.deleteConversation) {
+      const success = conversationStore.deleteConversation(conversationId);
+      logger.info(`Deleted conversation ${conversationId} via ChatBridge`);
+      return success;
+    }
+    
+    logger.error('Failed to delete conversation via ChatBridge - store not available');
+    return false;
   }
 
   // Settings Methods
@@ -160,8 +214,10 @@ export class ChatBridge {
   }
 }
 
-// Optional: Export hook-based methods for use within React components
+// Hook-based methods for use within React components
 export function useChatBridge() {
+  const conversationManager = useConversationManager();
+  
   return {
     sendMessage: ChatBridge.sendMessage,
     openChat: ChatBridge.openChat,
@@ -171,10 +227,14 @@ export function useChatBridge() {
     setMode: ChatBridge.setMode,
     setPosition: ChatBridge.setPosition,
     toggleDocked: ChatBridge.toggleDocked,
-    // Add the missing methods to the hook interface
-    switchConversation: ChatBridge.switchConversation,
     toggleFeature: ChatBridge.toggleFeature,
     updateChatSettings: ChatBridge.updateChatSettings,
-    updateTokens: ChatBridge.updateTokens
+    updateTokens: ChatBridge.updateTokens,
+    
+    // Direct access to conversation methods
+    createConversation: conversationManager.createConversation,
+    switchConversation: conversationManager.switchConversation,
+    archiveConversation: conversationManager.archiveConversation,
+    deleteConversation: conversationManager.deleteConversation
   };
 }
