@@ -1,6 +1,6 @@
 
 import { Json } from '@/integrations/supabase/types';
-import { TokenEnforcementMode, isTokenEnforcementMode } from '@/types/chat/enums';
+import { TokenEnforcementMode, isTokenEnforcementMode } from '@/components/chat/types/chat-modes';
 
 /**
  * Safely extracts a mode value from metadata

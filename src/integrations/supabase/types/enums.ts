@@ -7,4 +7,4 @@ export interface Enums {
   setting_type: SettingType;
 }
 
-export type { ChatMode, TokenEnforcementMode } from '@/types/chat/enums';
+export type { ChatMode, TokenEnforcementMode } from '@/components/chat/types/chat-modes';

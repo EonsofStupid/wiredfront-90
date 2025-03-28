@@ -2,7 +2,7 @@
 import { StateCreator } from 'zustand';
 import { ChatState } from '../types/chat-store-types';
 import { createToggleActions } from './feature/toggle';
-import { ChatMode } from '@/types/chat/enums';
+import { ChatMode } from '@/components/chat/types/chat-modes';
 import { logger } from '@/services/chat/LoggingService';
 
 export const createFeatureActions = (

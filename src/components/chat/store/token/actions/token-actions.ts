@@ -2,7 +2,7 @@
 import { TokenState, SetState, GetState } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
-import { UIEnforcementMode } from '../../../types';
+import { UIEnforcementMode } from '../../../types/chat-modes';
 
 /**
  * Create actions for the token store

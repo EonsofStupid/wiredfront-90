@@ -7,8 +7,8 @@ import { useAuthStore } from '@/stores/auth';
 import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';
 import { useCombinedFeatureFlag } from './useFeatureFlags';
-import { FeatureKey } from '@/components/chat/store/actions/feature-actions';
-import { TokenEnforcementMode } from '@/types/chat/enums';
+import { FeatureKey } from '@/components/chat/store/actions/feature/types';
+import { TokenEnforcementMode } from '@/components/chat/types/chat-modes';
 import { extractEnforcementMode } from '@/utils/token-utils';
 import { withTokenErrorBoundary } from '@/components/tokens/TokenErrorBoundary';
 

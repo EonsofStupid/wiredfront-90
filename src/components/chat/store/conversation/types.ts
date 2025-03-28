@@ -1,5 +1,5 @@
 
-import { Conversation, CreateConversationParams, UpdateConversationParams } from '../../types';
+import { Conversation, CreateConversationParams, UpdateConversationParams } from '../../types/conversation-types';
 
 /**
  * Conversation state interface
