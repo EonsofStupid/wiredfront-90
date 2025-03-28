@@ -1,8 +1,7 @@
 
-import { StateCreator } from 'zustand';
 import { ChatState } from '../types/chat-store-types';
 import { createToggleActions } from './feature/toggle';
-import { ChatMode } from '@/components/chat/types/chat-modes';
+import { ChatMode } from '@/types/chat/enums';
 import { logger } from '@/services/chat/LoggingService';
 import { FeatureActions } from './feature/types';
 
@@ -10,9 +9,8 @@ import { FeatureActions } from './feature/types';
  * Creates feature-related actions for the chat store
  */
 export const createFeatureActions = (
-  set: StateCreator<ChatState>['setState'],
-  get: () => ChatState,
-  api: any
+  set: (state: Partial<ChatState> | ((state: ChatState) => Partial<ChatState>), replace?: boolean, action?: any) => void,
+  get: () => ChatState
 ): FeatureActions => {
   // Get toggle-specific actions
   const toggleActions = createToggleActions(set, get);
@@ -35,12 +33,12 @@ export const createFeatureActions = (
     // Mode actions
     toggleMode: () => {
       const currentMode = get().currentMode;
-      const newMode = currentMode === 'chat' ? 'dev' : 'chat';
+      const newMode = currentMode === ChatMode.Chat ? ChatMode.Dev : ChatMode.Chat;
       
       logger.info('Toggling chat mode', { from: currentMode, to: newMode });
       
       set({
-        currentMode: newMode as ChatMode
+        currentMode: newMode
       }, false, { type: 'chat/toggleMode' });
     },
     

@@ -65,3 +65,59 @@ export enum ChatMode {
   Training = 'training',
   Editor = 'editor' // Alias for 'dev'
 }
+
+// Create constant objects for use in type assertions
+export const MessageRoles = {
+  User: MessageRole.User,
+  Assistant: MessageRole.Assistant,
+  System: MessageRole.System
+} as const;
+
+export const MessageTypes = {
+  Text: MessageType.Text,
+  Command: MessageType.Command,
+  System: MessageType.System,
+  Image: MessageType.Image,
+  Training: MessageType.Training,
+  Code: MessageType.Code,
+  File: MessageType.File
+} as const;
+
+export const MessageStatuses = {
+  Pending: MessageStatus.Pending,
+  Sent: MessageStatus.Sent,
+  Received: MessageStatus.Received,
+  Error: MessageStatus.Error,
+  Failed: MessageStatus.Failed,
+  Retrying: MessageStatus.Retrying,
+  Cached: MessageStatus.Cached
+} as const;
+
+export const ChatPositions = {
+  BottomRight: ChatPosition.BottomRight,
+  BottomLeft: ChatPosition.BottomLeft,
+  Custom: ChatPosition.Custom
+} as const;
+
+export const UIEnforcementModes = {
+  Always: UIEnforcementMode.Always,
+  Soft: UIEnforcementMode.Soft,
+  Never: UIEnforcementMode.Never
+} as const;
+
+export const TokenEnforcementModes = {
+  Always: TokenEnforcementMode.Always,
+  Never: TokenEnforcementMode.Never,
+  RoleBased: TokenEnforcementMode.RoleBased,
+  ModeBased: TokenEnforcementMode.ModeBased,
+  Warn: TokenEnforcementMode.Warn,
+  Strict: TokenEnforcementMode.Strict
+} as const;
+
+export const ChatModes = {
+  Chat: ChatMode.Chat,
+  Dev: ChatMode.Dev,
+  Image: ChatMode.Image,
+  Training: ChatMode.Training,
+  Editor: ChatMode.Editor
+} as const;

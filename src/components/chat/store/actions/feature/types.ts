@@ -1,5 +1,5 @@
 
-import { ChatState } from '../../../types/store-types';
+import { ChatState } from '../../../types/chat-store-types';
 
 // Define types for state management functions
 export type SetState<T> = (

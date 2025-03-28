@@ -1,65 +1,66 @@
 
-import { ChatMode as ChatModeEnum, MessageRole as MessageRoleEnum, MessageStatus as MessageStatusEnum, MessageType as MessageTypeEnum, TokenEnforcementMode as TokenEnforcementModeEnum, UIEnforcementMode as UIEnforcementModeEnum } from '@/types/chat/enums';
+import { 
+  ChatMode, 
+  TokenEnforcementMode, 
+  MessageRole, 
+  MessageStatus, 
+  MessageType,
+  UIEnforcementMode
+} from '@/types/chat/enums';
 
 /**
- * Type definitions from enum values for type safety
+ * Type definitions based on enum values for type safety
  */
-
-// ChatMode type based on enum
-export type ChatMode = keyof typeof ChatModeEnum | (typeof ChatModeEnum)[keyof typeof ChatModeEnum];
 
 // Type guard for ChatMode
 export function isChatMode(value: string): value is ChatMode {
-  return Object.values(ChatModeEnum).includes(value as any);
+  return Object.values(ChatMode).includes(value as ChatMode);
 }
 
 // Mapping from UI modes to database modes
 export const uiModeToDatabaseMode: Record<string, ChatMode> = {
-  'standard': ChatModeEnum.Chat,
-  'editor': ChatModeEnum.Dev,
-  'image': ChatModeEnum.Image,
-  'training': ChatModeEnum.Training,
+  'standard': ChatMode.Chat,
+  'editor': ChatMode.Dev,
+  'image': ChatMode.Image,
+  'training': ChatMode.Training,
 };
 
 // Mapping from database modes to UI modes
 export const databaseModeToUiMode: Record<ChatMode, string> = {
-  [ChatModeEnum.Chat]: 'standard',
-  [ChatModeEnum.Dev]: 'editor',
-  [ChatModeEnum.Image]: 'image',
-  [ChatModeEnum.Training]: 'training',
-  [ChatModeEnum.Editor]: 'editor', // Alias
+  [ChatMode.Chat]: 'standard',
+  [ChatMode.Dev]: 'editor',
+  [ChatMode.Image]: 'image',
+  [ChatMode.Training]: 'training',
+  [ChatMode.Editor]: 'editor', // Alias
 };
-
-// TokenEnforcementMode type
-export type TokenEnforcementMode = keyof typeof TokenEnforcementModeEnum | (typeof TokenEnforcementModeEnum)[keyof typeof TokenEnforcementModeEnum];
 
 // Type guard for TokenEnforcementMode
 export function isTokenEnforcementMode(value: string): value is TokenEnforcementMode {
-  return Object.values(TokenEnforcementModeEnum).includes(value as any);
+  return Object.values(TokenEnforcementMode).includes(value as TokenEnforcementMode);
 }
 
-// UI enforcement mode type
-export type UIEnforcementMode = 'never' | 'warn' | 'strict';
+// UI enforcement mode type alias
+export type UIEnforcementModeType = 'never' | 'warn' | 'strict';
 
 // Mapping from UI enforcement modes to database enforcement modes
-export const uiEnforcementToDatabaseEnforcement: Record<UIEnforcementMode, TokenEnforcementMode> = {
-  'never': TokenEnforcementModeEnum.Never,
-  'warn': TokenEnforcementModeEnum.Warn,
-  'strict': TokenEnforcementModeEnum.Always,
+export const uiEnforcementToDatabaseEnforcement: Record<UIEnforcementModeType, TokenEnforcementMode> = {
+  'never': TokenEnforcementMode.Never,
+  'warn': TokenEnforcementMode.Warn,
+  'strict': TokenEnforcementMode.Always,
 };
 
 // Mapping from database enforcement modes to UI enforcement modes
-export const databaseEnforcementToUiEnforcement: Record<TokenEnforcementMode, UIEnforcementMode> = {
-  [TokenEnforcementModeEnum.Always]: 'strict',
-  [TokenEnforcementModeEnum.Never]: 'never',
-  [TokenEnforcementModeEnum.RoleBased]: 'warn',
-  [TokenEnforcementModeEnum.ModeBased]: 'warn',
-  [TokenEnforcementModeEnum.Warn]: 'warn',
-  [TokenEnforcementModeEnum.Strict]: 'strict'
+export const databaseEnforcementToUiEnforcement: Record<TokenEnforcementMode, UIEnforcementModeType> = {
+  [TokenEnforcementMode.Always]: 'strict',
+  [TokenEnforcementMode.Never]: 'never',
+  [TokenEnforcementMode.RoleBased]: 'warn',
+  [TokenEnforcementMode.ModeBased]: 'warn',
+  [TokenEnforcementMode.Warn]: 'warn',
+  [TokenEnforcementMode.Strict]: 'strict'
 };
 
 // Chat position type
-export type ChatPosition = 'bottom-left' | 'bottom-right';
+export type ChatPositionType = 'bottom-left' | 'bottom-right';
 
 // Chat position coordinates type for when we need x/y positions
 export interface ChatPositionCoordinates {
@@ -68,10 +69,10 @@ export interface ChatPositionCoordinates {
 }
 
 // Union type for all possible position types
-export type ChatPositionType = ChatPosition | ChatPositionCoordinates;
+export type ChatPositionUnion = ChatPositionType | ChatPositionCoordinates;
 
 // Type guard for chat position
-export function isChatPosition(value: unknown): value is ChatPosition {
+export function isChatPosition(value: unknown): value is ChatPositionType {
   return typeof value === 'string' && ['bottom-left', 'bottom-right'].includes(value as string);
 }
 
@@ -80,11 +81,12 @@ export function isChatPositionCoordinates(value: unknown): value is ChatPosition
   return typeof value === 'object' && value !== null && 'x' in value && 'y' in value;
 }
 
-// Message role type
-export type MessageRole = keyof typeof MessageRoleEnum | (typeof MessageRoleEnum)[keyof typeof MessageRoleEnum];
-
-// Message type
-export type MessageType = keyof typeof MessageTypeEnum | (typeof MessageTypeEnum)[keyof typeof MessageTypeEnum];
-
-// Message status type
-export type MessageStatus = keyof typeof MessageStatusEnum | (typeof MessageStatusEnum)[keyof typeof MessageStatusEnum];
+// Re-export enum types for convenience
+export type {
+  ChatMode,
+  TokenEnforcementMode,
+  MessageRole,
+  MessageStatus,
+  MessageType,
+  UIEnforcementMode
+};

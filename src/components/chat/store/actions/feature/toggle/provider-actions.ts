@@ -3,14 +3,29 @@ import { ChatState } from '../../../types/chat-store-types';
 import { SetState, GetState } from '../types';
 import { logger } from '@/services/chat/LoggingService';
 import { Provider } from '@/components/chat/types';
-import { validateProvider } from './toggle-utils';
+
+/**
+ * Validates a provider object
+ */
+export const validateProvider = (provider: Provider): boolean => {
+  if (!provider || typeof provider !== 'object') {
+    return false;
+  }
+  
+  // Check for required fields
+  if (!provider.id || !provider.name) {
+    return false;
+  }
+  
+  return true;
+};
 
 /**
  * Creates provider actions for the chat store
  */
 export const createProviderActions = (
-  set: SetState<ChatState>,
-  get: GetState<ChatState>
+  set: (state: Partial<ChatState> | ((state: ChatState) => Partial<ChatState>), replace?: boolean, action?: any) => void,
+  get: () => ChatState
 ) => ({
   /**
    * Update the list of available providers

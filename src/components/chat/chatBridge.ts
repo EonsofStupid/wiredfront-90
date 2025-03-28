@@ -11,12 +11,14 @@ import {
   MessageStatus,
   ChatMode, 
   ChatPosition,
-  TokenEnforcementMode,
+  TokenEnforcementMode
+} from '@/types/chat/enums';
+import {
   uiModeToDatabaseMode,
   databaseModeToUiMode,
   isTokenEnforcementMode,
   isChatMode
-} from './types';
+} from './types/chat-modes';
 import { Json } from '@/integrations/supabase/types';
 import { Provider } from './types';
 import { v4 as uuidv4 } from 'uuid';
@@ -41,8 +43,8 @@ export class ChatBridge {
     
     // Default options
     const { 
-      role = 'user',
-      type = 'text',
+      role = MessageRole.User,
+      type = MessageType.Text,
       metadata = {}
     } = options;
     
@@ -88,7 +90,7 @@ export class ChatBridge {
         window_state: {} as Json,
         last_accessed: now,
         retry_count: 0,
-        message_status: 'sent' as MessageStatus
+        message_status: MessageStatus.Sent
       };
       
       // Add the message to the store

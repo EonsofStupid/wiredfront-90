@@ -1,54 +1,55 @@
+
 import { ChatState } from '../../../types/chat-store-types';
 import { SetState, GetState } from '../types';
 import { logger } from '@/services/chat/LoggingService';
 import { ChatPosition } from '@/types/chat/enums';
+import { 
+  isChatPosition, 
+  isChatPositionCoordinates, 
+  ChatPositionUnion, 
+  ChatPositionCoordinates 
+} from '@/components/chat/types/chat-modes';
 
 /**
- * Creates position toggle actions for the chat store
+ * Creates position-related actions for the chat store
  */
 export const createPositionActions = (
-  set: SetState<ChatState>,
-  get: GetState<ChatState>
+  set: (state: Partial<ChatState> | ((state: ChatState) => Partial<ChatState>), replace?: boolean, action?: any) => void,
+  get: () => ChatState
 ) => ({
   /**
    * Toggle between bottom-right and bottom-left positions
    */
   togglePosition: () => {
-    const { position } = get();
+    const currentPosition = get().position;
+    let newPosition: string;
     
-    // If we have a custom position, just go to bottom-right
-    if (typeof position !== 'string') {
-      logger.info('Toggling position from custom to bottom-right');
-      set({ position: ChatPosition.BottomRight }, false, { type: 'position/toggle' });
-      return;
+    if (typeof currentPosition === 'string') {
+      newPosition = currentPosition === ChatPosition.BottomRight ? 
+        ChatPosition.BottomLeft : 
+        ChatPosition.BottomRight;
+    } else {
+      // If current position is custom, default to bottom-right
+      newPosition = ChatPosition.BottomRight;
     }
     
-    // Otherwise toggle between the fixed positions
-    const newPosition = position === ChatPosition.BottomRight 
-      ? ChatPosition.BottomLeft 
-      : ChatPosition.BottomRight;
+    logger.info('Toggling chat position', { from: currentPosition, to: newPosition });
     
-    logger.info(`Toggling position from ${position} to ${newPosition}`);
-    
-    set({ position: newPosition }, false, { type: 'position/toggle' });
+    set({ position: newPosition }, false, { type: 'chat/togglePosition' });
   },
   
   /**
-   * Set the position directly
+   * Set the chat position directly
    */
-  setPosition: (newPosition: string | { x: number, y: number }) => {
-    const { position } = get();
+  setPosition: (position: ChatPositionUnion) => {
+    const currentPosition = get().position;
+    logger.info('Setting chat position', { from: currentPosition, to: position });
     
-    // Don't update if the same position
-    if (JSON.stringify(position) === JSON.stringify(newPosition)) {
-      return;
+    // Validate position
+    if (isChatPosition(position) || isChatPositionCoordinates(position)) {
+      set({ position: position as any }, false, { type: 'chat/setPosition' });
+    } else {
+      logger.error('Invalid chat position', { position });
     }
-    
-    logger.info('Setting chat position', { 
-      oldPosition: position, 
-      newPosition 
-    });
-    
-    set({ position: newPosition }, false, { type: 'position/set', position: newPosition });
   }
 });

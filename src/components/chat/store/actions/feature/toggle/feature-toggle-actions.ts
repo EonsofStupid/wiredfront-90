@@ -23,8 +23,8 @@ export const logFeatureToggle = (
  * Creates feature toggle actions for the chat store
  */
 export const createFeatureToggleActions = (
-  set: SetState<ChatState>,
-  get: GetState<ChatState>
+  set: (state: Partial<ChatState> | ((state: ChatState) => Partial<ChatState>), replace?: boolean, action?: any) => void,
+  get: () => ChatState
 ) => ({
   /**
    * Toggle a feature on/off

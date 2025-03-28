@@ -1,5 +1,9 @@
 
-import { MessageType as MessageTypeEnum, ChatMode as ChatModeEnum, TokenEnforcementMode as TokenEnforcementModeEnum } from '@/types/chat/enums';
+import { 
+  MessageType as MessageTypeEnum, 
+  ChatMode as ChatModeEnum, 
+  TokenEnforcementMode as TokenEnforcementModeEnum 
+} from '@/types/chat/enums';
 
 export type MessageType = keyof typeof MessageTypeEnum | (typeof MessageTypeEnum)[keyof typeof MessageTypeEnum];
 export type SettingType = "string" | "number" | "boolean" | "json" | "array";
@@ -11,4 +15,4 @@ export interface Enums {
 
 // Re-export enums with types
 export { ChatModeEnum as ChatMode, TokenEnforcementModeEnum as TokenEnforcementMode };
-export type { ChatMode, TokenEnforcementMode } from '@/components/chat/types/chat-modes';
+export type { ChatMode, TokenEnforcementMode } from '@/types/chat/enums';
