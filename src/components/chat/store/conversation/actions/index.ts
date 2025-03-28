@@ -1,247 +1,208 @@
 
-import { ConversationState, SetState, GetState } from '../types';
-import { Conversation, CreateConversationParams, UpdateConversationParams } from '../../../types';
 import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/services/chat/LoggingService';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@/services/chat/LoggingService';
+import { Conversation, CreateConversationParams, UpdateConversationParams } from '@/types/conversations';
+
+const CONVERSATIONS_TABLE = 'chat_conversations';
 
 /**
- * Create actions for the conversation store
+ * Creates a new conversation
  */
-export const createConversationActions = (
-  set: SetState<ConversationState>,
-  get: GetState<ConversationState>
-) => {
-  return {
-    /**
-     * Fetch conversations for the current user
-     */
-    fetchConversations: async (): Promise<Conversation[]> => {
-      try {
-        set({ isLoading: true, error: null });
-        
-        const { data: userData } = await supabase.auth.getUser();
-        if (!userData?.user) {
-          throw new Error('User not authenticated');
-        }
-        
-        const { data, error } = await supabase
-          .from('conversations')
-          .select('*')
-          .eq('user_id', userData.user.id)
-          .order('last_accessed', { ascending: false });
-        
-        if (error) {
-          throw error;
-        }
-        
-        const conversations = data as Conversation[];
-        
-        set({ 
-          conversations,
-          isLoading: false 
-        });
-        
-        logger.info('Fetched conversations', { count: conversations.length });
-        
-        return conversations;
-      } catch (error) {
-        logger.error('Failed to fetch conversations', { error });
-        
-        set({ 
-          error: error as Error,
-          isLoading: false 
-        });
-        
-        return [];
-      }
-    },
-    
-    /**
-     * Create a new conversation
-     */
-    createConversation: (params?: CreateConversationParams): string => {
-      try {
-        const conversationId = uuidv4();
-        const now = new Date().toISOString();
-        
-        // Create a new conversation in memory
-        const newConversation: Conversation = {
-          id: conversationId,
-          title: params?.title || 'New Conversation',
-          created_at: now,
-          last_accessed: now,
-          message_count: 0,
-          archived: false,
-          metadata: params?.metadata || {},
-          project_id: params?.project_id
-        };
-        
-        // Add to store immediately for UI responsiveness
-        set(state => ({
-          conversations: [newConversation, ...state.conversations],
-          currentConversationId: conversationId
-        }));
-        
-        // Then create in database asynchronously
-        supabase.auth.getUser().then(({ data: userData }) => {
-          if (!userData?.user) {
-            throw new Error('User not authenticated');
-          }
-          
-          supabase
-            .from('conversations')
-            .insert({
-              ...newConversation,
-              user_id: userData.user.id
-            })
-            .then(({ error }) => {
-              if (error) {
-                throw error;
-              }
-              
-              logger.info('Created conversation', { conversationId });
-            });
-        });
-        
-        return conversationId;
-      } catch (error) {
-        logger.error('Failed to create conversation', { error });
-        return '';
-      }
-    },
-    
-    /**
-     * Update an existing conversation
-     */
-    updateConversation: async (id: string, params: UpdateConversationParams): Promise<boolean> => {
-      try {
-        // Update in memory first for UI responsiveness
-        set(state => ({
-          conversations: state.conversations.map(c => 
-            c.id === id ? { ...c, ...params } : c
-          )
-        }));
-        
-        // Then update in database
-        const { error } = await supabase
-          .from('conversations')
-          .update({
-            ...params,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', id);
-        
-        if (error) {
-          throw error;
-        }
-        
-        logger.info('Updated conversation', { conversationId: id, params });
-        
-        return true;
-      } catch (error) {
-        logger.error('Failed to update conversation', { error, conversationId: id });
-        return false;
-      }
-    },
-    
-    /**
-     * Archive a conversation
-     */
-    archiveConversation: (id: string): boolean => {
-      try {
-        // Update in memory first for UI responsiveness
-        set(state => ({
-          conversations: state.conversations.map(c => 
-            c.id === id ? { ...c, archived: true } : c
-          )
-        }));
-        
-        // Then update in database
-        supabase
-          .from('conversations')
-          .update({
-            archived: true,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', id)
-          .then(({ error }) => {
-            if (error) {
-              throw error;
-            }
-            
-            logger.info('Archived conversation', { conversationId: id });
-          });
-        
-        return true;
-      } catch (error) {
-        logger.error('Failed to archive conversation', { error, conversationId: id });
-        return false;
-      }
-    },
-    
-    /**
-     * Delete a conversation
-     */
-    deleteConversation: (id: string): boolean => {
-      try {
-        // Update in memory first for UI responsiveness
-        set(state => ({
-          conversations: state.conversations.filter(c => c.id !== id),
-          // Reset current conversation if it was the deleted one
-          currentConversationId: state.currentConversationId === id ? null : state.currentConversationId
-        }));
-        
-        // Then delete from database
-        supabase
-          .from('conversations')
-          .delete()
-          .eq('id', id)
-          .then(({ error }) => {
-            if (error) {
-              throw error;
-            }
-            
-            logger.info('Deleted conversation', { conversationId: id });
-          });
-        
-        return true;
-      } catch (error) {
-        logger.error('Failed to delete conversation', { error, conversationId: id });
-        return false;
-      }
-    },
-    
-    /**
-     * Set the current conversation ID
-     */
-    setCurrentConversationId: (id: string | null) => {
-      logger.info('Setting current conversation ID', { id });
-      
-      set({ currentConversationId: id });
-      
-      // Update last_accessed if we have a valid conversation ID
-      if (id) {
-        const now = new Date().toISOString();
-        
-        // Update in memory first for UI responsiveness
-        set(state => ({
-          conversations: state.conversations.map(c => 
-            c.id === id ? { ...c, last_accessed: now } : c
-          )
-        }));
-        
-        // Then update in database
-        supabase
-          .from('conversations')
-          .update({ last_accessed: now })
-          .eq('id', id)
-          .then(({ error }) => {
-            if (error) {
-              logger.error('Failed to update conversation last_accessed', { error, conversationId: id });
-            }
-          });
-      }
+export const createConversation = async (params: CreateConversationParams): Promise<string | null> => {
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData?.user) {
+      throw new Error('User not authenticated');
     }
-  };
+    
+    const now = new Date().toISOString();
+    const conversationId = uuidv4();
+    
+    const conversation: Partial<Conversation> = {
+      id: conversationId,
+      title: params.title || 'New Conversation',
+      user_id: userData.user.id,
+      mode: params.mode || 'chat',
+      provider_id: params.provider_id,
+      created_at: now,
+      updated_at: now,
+      last_accessed: now,
+      metadata: params.metadata || {},
+      context: params.context || {},
+      archived: false,
+      project_id: params.project_id,
+      message_count: 0
+    };
+    
+    const { error } = await supabase
+      .from(CONVERSATIONS_TABLE)
+      .insert(conversation);
+    
+    if (error) {
+      throw error;
+    }
+    
+    logger.info('Created new conversation', { conversationId });
+    return conversationId;
+  } catch (error) {
+    logger.error('Failed to create conversation', { error });
+    return null;
+  }
+};
+
+/**
+ * Updates an existing conversation
+ */
+export const updateConversation = async (conversationId: string, updates: UpdateConversationParams): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from(CONVERSATIONS_TABLE)
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', conversationId);
+    
+    if (error) {
+      throw error;
+    }
+    
+    logger.info('Updated conversation', { conversationId, updates });
+    return true;
+  } catch (error) {
+    logger.error('Failed to update conversation', { error, conversationId });
+    return false;
+  }
+};
+
+/**
+ * Archives a conversation
+ */
+export const archiveConversation = async (conversationId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from(CONVERSATIONS_TABLE)
+      .update({
+        archived: true,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', conversationId);
+    
+    if (error) {
+      throw error;
+    }
+    
+    logger.info('Archived conversation', { conversationId });
+    return true;
+  } catch (error) {
+    logger.error('Failed to archive conversation', { error, conversationId });
+    return false;
+  }
+};
+
+/**
+ * Deletes a conversation permanently
+ */
+export const deleteConversation = async (conversationId: string): Promise<boolean> => {
+  try {
+    // First, delete all messages in the conversation
+    const { error: messagesError } = await supabase
+      .from('chat_messages')
+      .delete()
+      .eq('conversation_id', conversationId);
+    
+    if (messagesError) {
+      logger.error('Failed to delete conversation messages', { error: messagesError, conversationId });
+      // Continue with deletion anyway
+    }
+    
+    // Then delete the conversation itself
+    const { error } = await supabase
+      .from(CONVERSATIONS_TABLE)
+      .delete()
+      .eq('id', conversationId);
+    
+    if (error) {
+      throw error;
+    }
+    
+    logger.info('Deleted conversation', { conversationId });
+    return true;
+  } catch (error) {
+    logger.error('Failed to delete conversation', { error, conversationId });
+    return false;
+  }
+};
+
+/**
+ * Fetches all conversations for the current user
+ */
+export const fetchConversations = async (): Promise<Conversation[]> => {
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData?.user) {
+      throw new Error('User not authenticated');
+    }
+    
+    const { data, error } = await supabase
+      .from(CONVERSATIONS_TABLE)
+      .select('*')
+      .eq('user_id', userData.user.id)
+      .order('last_accessed', { ascending: false });
+    
+    if (error) {
+      throw error;
+    }
+    
+    return data as Conversation[];
+  } catch (error) {
+    logger.error('Failed to fetch conversations', { error });
+    return [];
+  }
+};
+
+/**
+ * Fetches a specific conversation by ID
+ */
+export const fetchConversationById = async (conversationId: string): Promise<Conversation | null> => {
+  try {
+    const { data, error } = await supabase
+      .from(CONVERSATIONS_TABLE)
+      .select('*')
+      .eq('id', conversationId)
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    return data as Conversation;
+  } catch (error) {
+    logger.error('Failed to fetch conversation', { error, conversationId });
+    return null;
+  }
+};
+
+/**
+ * Touch a conversation to update its last_accessed time
+ */
+export const touchConversation = async (conversationId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from(CONVERSATIONS_TABLE)
+      .update({
+        last_accessed: new Date().toISOString()
+      })
+      .eq('id', conversationId);
+    
+    if (error) {
+      throw error;
+    }
+    
+    return true;
+  } catch (error) {
+    logger.error('Failed to touch conversation', { error, conversationId });
+    return false;
+  }
 };

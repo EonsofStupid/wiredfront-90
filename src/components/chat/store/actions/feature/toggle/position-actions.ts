@@ -1,39 +1,54 @@
-
 import { ChatState } from '../../../types/chat-store-types';
 import { SetState, GetState } from '../types';
-import { ChatPositionType } from '@/types/chat/enums';
 import { logger } from '@/services/chat/LoggingService';
+import { ChatPosition } from '@/types/chat/enums';
 
 /**
- * Creates position-related toggle actions for the chat store
+ * Creates position toggle actions for the chat store
  */
 export const createPositionActions = (
   set: SetState<ChatState>,
   get: GetState<ChatState>
 ) => ({
   /**
-   * Toggle position between bottom-left and bottom-right
+   * Toggle between bottom-right and bottom-left positions
    */
   togglePosition: () => {
-    const currentPosition = get().position;
-    // Default to bottom-right if the position is not a string or not a valid position
-    const newPosition: ChatPositionType = 
-      currentPosition === 'bottom-right' ? 'bottom-left' : 'bottom-right';
+    const { position } = get();
     
-    logger.info('Toggling chat position', { 
-      from: currentPosition, 
-      to: newPosition 
-    });
+    // If we have a custom position, just go to bottom-right
+    if (typeof position !== 'string') {
+      logger.info('Toggling position from custom to bottom-right');
+      set({ position: ChatPosition.BottomRight }, false, { type: 'position/toggle' });
+      return;
+    }
     
-    set({ position: newPosition }, false, { type: 'chat/togglePosition' });
+    // Otherwise toggle between the fixed positions
+    const newPosition = position === ChatPosition.BottomRight 
+      ? ChatPosition.BottomLeft 
+      : ChatPosition.BottomRight;
+    
+    logger.info(`Toggling position from ${position} to ${newPosition}`);
+    
+    set({ position: newPosition }, false, { type: 'position/toggle' });
   },
   
   /**
-   * Set position to a specific value
+   * Set the position directly
    */
-  setPosition: (position: ChatPositionType) => {
-    logger.info('Setting chat position', { position });
+  setPosition: (newPosition: string | { x: number, y: number }) => {
+    const { position } = get();
     
-    set({ position }, false, { type: 'chat/setPosition' });
+    // Don't update if the same position
+    if (JSON.stringify(position) === JSON.stringify(newPosition)) {
+      return;
+    }
+    
+    logger.info('Setting chat position', { 
+      oldPosition: position, 
+      newPosition 
+    });
+    
+    set({ position: newPosition }, false, { type: 'position/set', position: newPosition });
   }
 });

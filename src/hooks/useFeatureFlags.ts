@@ -1,11 +1,10 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useChatStore } from "@/components/chat/store/chatStore";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/services/chat/LoggingService";
 import { useFeatureFlag } from "./useFeatureFlag";
 import { toast } from "sonner";
-import { KnownFeatureFlag } from "@/types/admin/settings/feature-flags";
+import { FeatureFlag } from "@/types/admin/settings/feature-flags";
 import { FeatureKey } from "@/components/chat/types/feature-types";
 
 export function useFeatureFlags() {

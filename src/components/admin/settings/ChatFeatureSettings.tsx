@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -8,7 +7,7 @@ import { useChatStore } from "@/components/chat/store/chatStore";
 import { ArrowLeftRight, Pin, PinOff, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
-import { FeatureKey } from "@/components/chat/store/actions/feature-actions";
+import { FeatureKey } from "@/components/chat/store/actions/feature";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ChatPosition, ChatPositionCoordinates } from "@/types/chat/enums";
 

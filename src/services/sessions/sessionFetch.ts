@@ -1,159 +1,95 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { Session, SessionMetadata } from '@/types/sessions';
 import { logger } from '@/services/chat/LoggingService';
 
-/**
- * Raw session data structure from database
- * Using a completely decoupled interface to prevent type recursion issues
- */
-interface RawSessionData {
-  id: string;
-  title: string;
-  created_at: string;
-  last_accessed: string;
-  archived: boolean;
-  metadata: unknown; // Use unknown to break type recursion
-  user_id: string | null;
-}
+// Define the correct table name
+const CONVERSATIONS_TABLE = 'chat_conversations';
 
 /**
- * Clean mapping function to transform database records to application domain objects
- * This function handles type conversion and provides a clear separation between 
- * database schema and application domain model
+ * Fetches all chat sessions for the current user
  */
-function mapToSession(rawData: RawSessionData, messageCount: number = 0): Session {
-  // Validate and transform the metadata to ensure type safety
-  const safeMetadata: SessionMetadata = rawData.metadata 
-    ? validateAndTransformMetadata(rawData.metadata)
-    : {};
-  
-  return {
-    id: rawData.id,
-    title: rawData.title,
-    created_at: rawData.created_at,
-    last_accessed: rawData.last_accessed,
-    message_count: messageCount,
-    is_active: !rawData.archived,
-    archived: rawData.archived,
-    metadata: safeMetadata,
-    user_id: rawData.user_id || undefined
-  };
-}
-
-/**
- * Helper function to validate and transform raw metadata to a type-safe structure
- * This adds runtime validation to complement the TypeScript type checking
- */
-function validateAndTransformMetadata(rawMetadata: unknown): SessionMetadata {
-  if (!rawMetadata || typeof rawMetadata !== 'object') {
-    return {};
-  }
-  
-  // Process the metadata to ensure type safety
-  const processed: SessionMetadata = {};
-  
-  if (rawMetadata && typeof rawMetadata === 'object') {
-    // Cast to Record to work with it
-    const metaObj = rawMetadata as Record<string, unknown>;
-    
-    // Copy valid properties
-    if ('mode' in metaObj && typeof metaObj.mode === 'string') {
-      processed.mode = metaObj.mode;
-    }
-    
-    if ('context' in metaObj && typeof metaObj.context === 'object' && metaObj.context) {
-      processed.context = metaObj.context as Record<string, unknown>;
-    }
-    
-    if ('settings' in metaObj && typeof metaObj.settings === 'object' && metaObj.settings) {
-      processed.settings = metaObj.settings as Record<string, unknown>;
-    }
-    
-    // Handle lastPosition if it exists
-    if ('lastPosition' in metaObj && typeof metaObj.lastPosition === 'object' && metaObj.lastPosition) {
-      const posObj = metaObj.lastPosition as Record<string, unknown>;
-      if ('x' in posObj && 'y' in posObj && 
-          typeof posObj.x === 'number' && typeof posObj.y === 'number') {
-        processed.lastPosition = { x: posObj.x, y: posObj.y };
-      }
-    }
-    
-    // Handle other properties
-    Object.entries(metaObj).forEach(([key, value]) => {
-      if (!['mode', 'context', 'settings', 'lastPosition'].includes(key)) {
-        processed[key] = value;
-      }
-    });
-  }
-  
-  return processed;
-}
-
-/**
- * Fetches all sessions for the current authenticated user
- */
-export async function fetchUserSessions(): Promise<Session[]> {
+export const fetchAllSessions = async () => {
   try {
-    // Get user from Supabase auth
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData?.user) {
       throw new Error('User not authenticated');
     }
-
-    // Fetch chat sessions for the current user
+    
     const { data, error } = await supabase
-      .from('chat_sessions')
-      .select(`
-        id,
-        title,
-        created_at,
-        last_accessed,
-        archived,
-        metadata,
-        user_id
-      `)
-      .eq('user_id', user.id)
+      .from(CONVERSATIONS_TABLE)
+      .select('*')
+      .eq('user_id', userData.user.id)
       .order('last_accessed', { ascending: false });
-
-    if (error) throw error;
-
-    if (!data || data.length === 0) {
-      return [];
+    
+    if (error) {
+      throw error;
     }
-
-    // Transform the data to our internal type to break recursive type chains
-    // Use type assertion only at this boundary between external and internal types
-    const rawSessions: RawSessionData[] = data.map(item => ({
-      id: item.id,
-      title: item.title,
-      created_at: item.created_at,
-      last_accessed: item.last_accessed,
-      archived: item.archived,
-      metadata: item.metadata,
-      user_id: item.user_id
-    }));
     
-    // Get message counts for each session and map to final Session objects
-    const sessionsWithCounts = await Promise.all(rawSessions.map(async (session) => {
-      // Count messages for this session
-      const { count, error: countError } = await supabase
-        .from('messages')
-        .select('id', { count: 'exact', head: true })
-        .eq('chat_session_id', session.id);
-      
-      if (countError) {
-        logger.warn('Failed to get message count', { error: countError, sessionId: session.id });
-      }
-      
-      // Convert to domain model using the mapper function
-      return mapToSession(session, count || 0);
-    }));
-    
-    logger.info('Sessions fetched', { count: sessionsWithCounts.length });
-    return sessionsWithCounts;
+    return {
+      sessions: data,
+      error: null
+    };
   } catch (error) {
-    logger.error('Failed to fetch sessions', { error });
-    throw error;
+    logger.error('Error fetching sessions', { error });
+    return {
+      sessions: [],
+      error
+    };
   }
-}
+};
+
+/**
+ * Fetches a single chat session by ID
+ */
+export const fetchSessionById = async (sessionId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from(CONVERSATIONS_TABLE)
+      .select('*')
+      .eq('id', sessionId)
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    return {
+      session: data,
+      error: null
+    };
+  } catch (error) {
+    logger.error(`Error fetching session with ID ${sessionId}`, { error });
+    return {
+      session: null,
+      error
+    };
+  }
+};
+
+/**
+ * Touches a chat session to update its last_accessed timestamp
+ */
+export const touchSession = async (sessionId: string) => {
+  try {
+    const { error } = await supabase
+      .from(CONVERSATIONS_TABLE)
+      .update({
+        last_accessed: new Date().toISOString()
+      })
+      .eq('id', sessionId);
+    
+    if (error) {
+      throw error;
+    }
+    
+    return {
+      success: true,
+      error: null
+    };
+  } catch (error) {
+    logger.error(`Error touching session with ID ${sessionId}`, { error });
+    return {
+      success: false,
+      error
+    };
+  }
+};

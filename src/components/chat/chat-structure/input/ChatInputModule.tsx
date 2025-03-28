@@ -3,7 +3,7 @@ import React, { useState, useCallback } from 'react';
 import { useChatStore } from '../../store/chatStore';
 import { useMessageStore } from '../../messaging/MessageManager';
 import { v4 as uuidv4 } from 'uuid';
-import { MessageRole, MessageStatus } from '@/types/chat/enums';
+import { MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
 import { Json } from '@/integrations/supabase/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -43,10 +43,10 @@ export const ChatInputModule: React.FC<ChatInputModuleProps> = ({ isEditorPage }
 
     const userMessage = {
       id: messageId,
-      role: 'user' as MessageRole,
+      role: MessageRole.User as string,
       content: userInput,
       user_id: null,
-      type: 'text',
+      type: MessageType.Text as string,
       metadata: {} as Json,
       created_at: now.toISOString(),
       updated_at: now.toISOString(),
@@ -57,7 +57,7 @@ export const ChatInputModule: React.FC<ChatInputModuleProps> = ({ isEditorPage }
       window_state: {} as Json,
       last_accessed: now.toISOString(),
       retry_count: 0,
-      message_status: 'sent' as MessageStatus
+      message_status: MessageStatus.Sent as string
     };
 
     addMessage(userMessage);
@@ -79,10 +79,10 @@ export const ChatInputModule: React.FC<ChatInputModuleProps> = ({ isEditorPage }
 
         const errorMessage = {
           id: uuidv4(),
-          role: 'assistant' as MessageRole,
+          role: MessageRole.Assistant as string,
           content: `Error: ${error.message || 'Failed to send message'}`,
           user_id: null,
-          type: 'text',
+          type: MessageType.Text as string,
           metadata: {} as Json,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -93,7 +93,7 @@ export const ChatInputModule: React.FC<ChatInputModuleProps> = ({ isEditorPage }
           window_state: {} as Json,
           last_accessed: new Date().toISOString(),
           retry_count: 0,
-          message_status: 'error' as MessageStatus
+          message_status: MessageStatus.Error as string
         };
 
         addMessage(errorMessage);
@@ -102,10 +102,10 @@ export const ChatInputModule: React.FC<ChatInputModuleProps> = ({ isEditorPage }
 
       const responseMessage = {
         id: uuidv4(),
-        role: 'assistant' as MessageRole,
+        role: MessageRole.Assistant as string,
         content: data?.response || 'No response received',
         user_id: null,
-        type: 'text',
+        type: MessageType.Text as string,
         metadata: {} as Json,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -116,7 +116,7 @@ export const ChatInputModule: React.FC<ChatInputModuleProps> = ({ isEditorPage }
         window_state: {} as Json,
         last_accessed: new Date().toISOString(),
         retry_count: 0,
-        message_status: 'received' as MessageStatus
+        message_status: MessageStatus.Received as string
       };
 
       addMessage(responseMessage);
@@ -125,10 +125,10 @@ export const ChatInputModule: React.FC<ChatInputModuleProps> = ({ isEditorPage }
 
       const errorMessage = {
         id: uuidv4(),
-        role: 'assistant' as MessageRole,
+        role: MessageRole.Assistant as string,
         content: `Error: ${error?.message || 'An unexpected error occurred'}`,
         user_id: null,
-        type: 'text',
+        type: MessageType.Text as string,
         metadata: {} as Json,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -139,7 +139,7 @@ export const ChatInputModule: React.FC<ChatInputModuleProps> = ({ isEditorPage }
         window_state: {} as Json,
         last_accessed: new Date().toISOString(),
         retry_count: 0,
-        message_status: 'error' as MessageStatus
+        message_status: MessageStatus.Error as string
       };
 
       addMessage(errorMessage);

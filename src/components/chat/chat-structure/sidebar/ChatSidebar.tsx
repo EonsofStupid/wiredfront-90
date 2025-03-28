@@ -1,18 +1,17 @@
-
-import React, { Suspense, lazy, useState } from "react";
+import React from 'react';
+import { Suspense, lazy, useState } from "react";
 import { SessionControls } from "./SessionControls";
-import { useSessionManager } from "@/hooks/sessions"; // Updated import
+import { useSessionManager } from "@/hooks/sessions";
 import { SessionHeader } from "./SessionHeader";
 import { useChatStore } from "../../store/chatStore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useErrorBoundary } from "../../hooks/useErrorBoundary";
 import { ChatMode, ModeSelectionDialog } from "../../features/conversations/ModeSelectionDialog";
 
-// Lazy load SessionList for performance
 const SessionList = lazy(() => import("./SessionList").then(mod => ({ default: mod.SessionList })));
 const SessionSkeleton = lazy(() => import("./SessionSkeleton"));
 
-export const ChatSidebar = () => {
+export const ChatSidebar: React.FC = () => {
   const {
     sessions,
     currentSessionId,
@@ -37,12 +36,10 @@ export const ChatSidebar = () => {
   };
 
   const handleCreateSession = async () => {
-    // Open mode selection dialog instead of directly creating a session
     setModeDialogOpen(true);
   };
 
   const handleCreateWithMode = async (mode: ChatMode, providerId: string) => {
-    // Create session with metadata for the selected mode
     await createSession({
       metadata: {
         mode,
@@ -51,13 +48,22 @@ export const ChatSidebar = () => {
     });
   };
 
-  // Explicit handlers for different deletion operations
+  const handleClearChat = () => {
+    if (window.confirm("Are you sure you want to clear the chat? This cannot be undone.")) {
+      // Perform clear operation
+    }
+  };
+
+  const handleSaveChat = () => {
+    // Perform save operation
+  };
+
   const handleClearOtherSessions = async () => {
-    await clearSessions(true); // Preserve current session
+    await clearSessions(true);
   };
 
   const handleClearAllSessions = async () => {
-    await clearSessions(false); // Clear ALL sessions including current
+    await clearSessions(false);
   };
 
   return (
