@@ -1,55 +1,52 @@
 
-import { ChatState } from '../../../types/chat-store-types';
+import { ChatState } from '../../../types/store-types';
 import { SetState, GetState } from '../types';
-import { logger } from '@/services/chat/LoggingService';
 import { ChatPosition } from '@/types/chat/enums';
-import { 
-  isChatPosition, 
-  isChatPositionCoordinates, 
-  ChatPositionUnion, 
-  ChatPositionCoordinates 
-} from '@/components/chat/types/chat-modes';
+import { logger } from '@/services/chat/LoggingService';
 
 /**
- * Creates position-related actions for the chat store
+ * Creates UI position-related actions for the chat store
  */
 export const createPositionActions = (
-  set: (state: Partial<ChatState> | ((state: ChatState) => Partial<ChatState>), replace?: boolean, action?: any) => void,
-  get: () => ChatState
-) => ({
-  /**
-   * Toggle between bottom-right and bottom-left positions
-   */
-  togglePosition: () => {
-    const currentPosition = get().position;
-    let newPosition: string;
+  set: SetState<ChatState>,
+  get: GetState<ChatState>
+) => {
+  return {
+    /**
+     * Toggle the chat position between left and right
+     */
+    togglePosition: () => {
+      const currentPosition = get().position;
+      
+      const newPosition = currentPosition === ChatPosition.BottomRight 
+        ? ChatPosition.BottomLeft 
+        : ChatPosition.BottomRight;
+      
+      logger.debug('Toggling chat position', { from: currentPosition, to: newPosition });
+      
+      set({ position: newPosition }, false, { type: 'chat/togglePosition' });
+      
+      // Save the position preference to local storage
+      try {
+        localStorage.setItem('chat-position', newPosition);
+      } catch (e) {
+        logger.error('Failed to save position preference', e);
+      }
+    },
     
-    if (typeof currentPosition === 'string') {
-      newPosition = currentPosition === ChatPosition.BottomRight ? 
-        ChatPosition.BottomLeft : 
-        ChatPosition.BottomRight;
-    } else {
-      // If current position is custom, default to bottom-right
-      newPosition = ChatPosition.BottomRight;
+    /**
+     * Set the chat position explicitly
+     */
+    setPosition: (position: ChatPosition) => {
+      logger.debug('Setting chat position', { position });
+      set({ position }, false, { type: 'chat/setPosition', position });
+      
+      // Save the position preference to local storage
+      try {
+        localStorage.setItem('chat-position', position);
+      } catch (e) {
+        logger.error('Failed to save position preference', e);
+      }
     }
-    
-    logger.info('Toggling chat position', { from: currentPosition, to: newPosition });
-    
-    set({ position: newPosition }, false, { type: 'chat/togglePosition' });
-  },
-  
-  /**
-   * Set the chat position directly
-   */
-  setPosition: (position: ChatPositionUnion) => {
-    const currentPosition = get().position;
-    logger.info('Setting chat position', { from: currentPosition, to: position });
-    
-    // Validate position
-    if (isChatPosition(position) || isChatPositionCoordinates(position)) {
-      set({ position: position as any }, false, { type: 'chat/setPosition' });
-    } else {
-      logger.error('Invalid chat position', { position });
-    }
-  }
-});
+  };
+};
