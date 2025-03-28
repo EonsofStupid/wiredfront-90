@@ -51,6 +51,11 @@ export const createFeatureActions = (
     updateChatProvider: toggleActions.updateChatProvider,
     
     /**
+     * Toggle position between bottom-left and bottom-right
+     */
+    togglePosition: toggleActions.togglePosition,
+    
+    /**
      * Set the selected model
      */
     setModel: (model: string) => {
@@ -84,19 +89,6 @@ export const createFeatureActions = (
       set({
         position
       }, false, 'chat/setPosition');
-    },
-    
-    /**
-     * Toggle position between bottom-left and bottom-right
-     */
-    togglePosition: () => {
-      const currentPosition = get().position;
-      // Default to bottom-right if the position is not a string or not a valid position
-      const newPosition: ChatPosition = 
-        currentPosition === 'bottom-right' ? 'bottom-left' : 'bottom-right';
-      
-      logger.info('Position toggled', { from: currentPosition, to: newPosition });
-      set({ position: newPosition }, false, 'chat/togglePosition');
     }
   };
 };

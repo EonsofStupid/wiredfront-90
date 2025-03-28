@@ -15,8 +15,6 @@ export function ChatPositionToggle() {
   
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    
-    logger.info('Position toggled', { from: position });
     togglePosition();
   };
   

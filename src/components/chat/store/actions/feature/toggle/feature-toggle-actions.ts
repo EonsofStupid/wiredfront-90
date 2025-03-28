@@ -2,7 +2,22 @@
 import { ChatState } from '../../../types/chat-store-types';
 import { FeatureKey, SetState, GetState } from '../types';
 import { logger } from '@/services/chat/LoggingService';
-import { logFeatureToggle } from './toggle-utils';
+
+/**
+ * Logs feature toggle events
+ */
+export const logFeatureToggle = (
+  feature: string,
+  oldValue: boolean | undefined,
+  newValue: boolean
+) => {
+  logger.info(`Feature toggle: ${feature}`, { 
+    feature, 
+    oldValue, 
+    newValue, 
+    changed: oldValue !== newValue 
+  });
+};
 
 /**
  * Creates feature toggle actions for the chat store

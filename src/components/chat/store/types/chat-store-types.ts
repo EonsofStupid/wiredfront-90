@@ -2,6 +2,23 @@
 import { ChatMode, ChatPositionType } from '@/types/chat/enums';
 import { Message } from '@/types/chat/message';
 
+/**
+ * Provider interface
+ */
+export interface Provider {
+  id: string;
+  name: string;
+  maxTokens: number;
+  description?: string;
+  apiType?: string;
+  models?: string[];
+  isDefault?: boolean;
+  icon?: string;
+}
+
+/**
+ * Chat state interface
+ */
 export interface ChatState {
   // UI State
   isOpen: boolean;
@@ -39,15 +56,10 @@ export interface ChatState {
   };
   
   // Provider State
-  currentProvider: {
-    id: string;
-    name: string;
-    maxTokens: number;
-  } | null;
-  
-  availableProviders: any[];
+  currentProvider: Provider | null;
+  availableProviders: Provider[];
   providers: {
-    availableProviders: any[];
+    availableProviders: Provider[];
   };
   
   // UI Loading States
@@ -62,6 +74,7 @@ export interface ChatState {
   toggleMinimize: () => void;
   toggleSidebar: () => void;
   toggleDocked: () => void;
+  togglePosition: () => void;
   setPosition: (position: ChatPositionType) => void;
   setUserInput: (input: string) => void;
   setChatId: (id: string | null) => void;

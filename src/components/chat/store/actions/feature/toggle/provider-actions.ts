@@ -1,8 +1,22 @@
 
-import { ChatState, Provider } from '../../../types/chat-store-types';
+import { ChatState } from '../../../types/chat-store-types';
 import { SetState, GetState } from '../types';
 import { logger } from '@/services/chat/LoggingService';
 import { logProviderChange } from './toggle-utils';
+
+/**
+ * Provider interface for typed chat providers
+ */
+export interface Provider {
+  id: string;
+  name: string;
+  maxTokens: number;
+  description?: string;
+  apiType?: string;
+  models?: string[];
+  isDefault?: boolean;
+  icon?: string;
+}
 
 /**
  * Creates provider-related actions for the chat store
@@ -14,48 +28,25 @@ export const createProviderActions = (
   /**
    * Update available chat providers
    */
-  updateChatProvider: (providers: Provider[]) => {
-    logger.info('Updating chat providers', { count: providers.length });
-    
-    const currentProviderId = get().currentProvider?.id;
-    const newCurrentProvider = providers.length > 0 ? 
-      (currentProviderId ? 
-        providers.find(p => p.id === currentProviderId) || providers[0] 
-        : providers[0])
-      : null;
-
-    // Log provider change if it changed
-    if (newCurrentProvider?.id !== currentProviderId) {
-      const oldProviderName = get().currentProvider?.name;
-      const newProviderName = newCurrentProvider?.name;
-      logProviderChange(oldProviderName, newProviderName);
-    }
+  updateProviders: (providers: Provider[]) => {
+    logger.info('Updating available providers', { count: providers.length });
     
     set({
-      availableProviders: providers,
-      currentProvider: newCurrentProvider
-    }, false, { type: 'providers/update', count: providers.length });
+      availableProviders: providers
+    }, false, { type: 'providers/updateAll', count: providers.length });
   },
   
   /**
-   * Set the current provider
+   * Update the current chat provider
    */
-  setCurrentProvider: (providerId: string) => {
-    const providers = get().availableProviders;
-    const provider = providers.find(p => p.id === providerId);
-    
-    if (!provider) {
-      logger.warn('Attempted to set unknown provider', { providerId });
-      return;
-    }
+  updateChatProvider: (provider: Provider) => {
+    logger.info('Updating chat provider', { provider: provider.name });
     
     const oldProviderName = get().currentProvider?.name;
     logProviderChange(oldProviderName, provider.name);
     
-    logger.info('Setting current provider', { providerId, name: provider.name });
-    
     set({
       currentProvider: provider
-    }, false, { type: 'providers/setCurrent', providerId });
+    }, false, { type: 'providers/updateCurrent', provider: provider.id });
   }
 });
