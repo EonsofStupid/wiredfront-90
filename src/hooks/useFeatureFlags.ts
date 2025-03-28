@@ -6,7 +6,7 @@ import { logger } from "@/services/chat/LoggingService";
 import { useFeatureFlag } from "./useFeatureFlag";
 import { toast } from "sonner";
 import { KnownFeatureFlag } from "@/types/admin/settings/feature-flags";
-import { FeatureKey } from "@/components/chat/store/actions/feature/types";
+import { FeatureKey } from "@/components/chat/types/feature-types";
 
 export function useFeatureFlags() {
   const { features, toggleFeature, enableFeature, disableFeature, setFeatureState } = useChatStore();
