@@ -1,71 +1,42 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import useChatBridge from '../ChatBridge/useChatBridge';
 import { ChatMode } from '@/types/chat/enums';
-import { CHAT_MODES, ChatMode as ModeType } from './types';
 
-interface ModeContextValue {
+interface ModeContextType {
+  currentMode: ChatMode;
+  setMode: (mode: ChatMode) => void;
   isEditorPage: boolean;
-  currentMode: ModeType;
-  setMode: (mode: ModeType) => void;
-  isDevMode: boolean;
-  isImageMode: boolean;
-  isTrainingMode: boolean;
 }
 
-const ModeContext = createContext<ModeContextValue | undefined>(undefined);
+const ModeContext = createContext<ModeContextType | undefined>(undefined);
 
 interface ModeProviderProps {
   children: ReactNode;
+  defaultMode?: ChatMode;
 }
 
-export const ModeProvider: React.FC<ModeProviderProps> = ({ children }) => {
+export const ModeProvider: React.FC<ModeProviderProps> = ({ 
+  children, 
+  defaultMode = ChatMode.Chat 
+}) => {
+  const [currentMode, setCurrentMode] = useState<ChatMode>(defaultMode);
   const location = useLocation();
-  const chatBridge = useChatBridge();
-  const isEditorPage = location.pathname.includes('/editor');
+  const isEditorPage = location.pathname === '/editor';
   
-  // Initialize with standard mode
-  const [currentMode, setCurrentMode] = useState<ModeType>('standard');
-
-  // Set the initial mode based on the current path
+  // Auto-switch mode based on route
   useEffect(() => {
-    const newMode = isEditorPage ? 'developer' : 'standard';
-    setCurrentMode(newMode);
-    
-    // Also update the ChatBridge
-    if (isEditorPage) {
-      chatBridge.setMode(ChatMode.Dev);
-    } else {
-      chatBridge.setMode(ChatMode.Chat);
+    if (isEditorPage && currentMode !== ChatMode.Dev) {
+      setCurrentMode(ChatMode.Dev);
     }
-  }, [isEditorPage, chatBridge]);
-
-  // Handle mode changes
-  const setMode = (mode: ModeType) => {
+  }, [isEditorPage, currentMode]);
+  
+  const setMode = (mode: ChatMode) => {
     setCurrentMode(mode);
-    
-    // Map to ChatMode enum
-    let chatMode = ChatMode.Chat;
-    if (mode === 'developer') chatMode = ChatMode.Dev;
-    else if (mode === 'image') chatMode = ChatMode.Image;
-    else if (mode === 'training') chatMode = ChatMode.Training;
-    
-    // Update the ChatBridge
-    chatBridge.setMode(chatMode);
   };
-
-  const value = {
-    isEditorPage,
-    currentMode,
-    setMode,
-    isDevMode: currentMode === 'developer',
-    isImageMode: currentMode === 'image',
-    isTrainingMode: currentMode === 'training'
-  };
-
+  
   return (
-    <ModeContext.Provider value={value}>
+    <ModeContext.Provider value={{ currentMode, setMode, isEditorPage }}>
       {children}
     </ModeContext.Provider>
   );

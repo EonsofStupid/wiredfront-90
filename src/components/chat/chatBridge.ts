@@ -4,14 +4,11 @@
 
 import { 
   ChatBridge, 
-  ChatBridgeHelper,
-  ChatBridgeProvider, 
   useChatBridge 
 } from '@/modules/ChatBridge';
 
 export { 
-  ChatBridge, 
-  ChatBridgeProvider, 
+  ChatBridge,
   useChatBridge 
 };
 
@@ -23,22 +20,3 @@ export {
   useMessageStore,
   useChatStore as useSessionStore 
 };
-
-// Deprecated: The static methods of this class are no longer recommended.
-// Use the instance methods from useChatBridge() instead.
-export class ChatBridgeStatic {
-  static openChat() {
-    console.warn('ChatBridgeStatic.openChat is deprecated. Use useChatBridge().openChat instead.');
-    ChatBridgeHelper.openChat();
-  }
-  
-  static closeChat() {
-    console.warn('ChatBridgeStatic.closeChat is deprecated. Use useChatBridge().closeChat instead.');
-    ChatBridgeHelper.closeChat();
-  }
-  
-  static toggleChat() {
-    console.warn('ChatBridgeStatic.toggleChat is deprecated. Use useChatBridge().toggleChat instead.');
-    ChatBridgeHelper.toggleChat();
-  }
-}

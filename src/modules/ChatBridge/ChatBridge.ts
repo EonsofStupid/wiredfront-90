@@ -156,6 +156,12 @@ export class ChatBridge {
     this.notify('positionToggled', {});
   }
 
+  // New method to support docked toggling
+  toggleDocked(): void {
+    logger.info('ChatBridge: Toggling docked state');
+    this.notify('dockedToggled', {});
+  }
+
   // State getters
   getCurrentConversationId(): string | null {
     return this.currentConversationId;
@@ -256,21 +262,3 @@ export class ChatBridge {
     }
   }
 }
-
-// Static helper methods for backward compatibility
-export const ChatBridgeHelper = {
-  openChat() {
-    console.warn('ChatBridgeHelper.openChat is deprecated. Use the instance method from useChatBridge() instead.');
-    // This is just a placeholder - can't actually perform the action without an instance
-  },
-  
-  closeChat() {
-    console.warn('ChatBridgeHelper.closeChat is deprecated. Use the instance method from useChatBridge() instead.');
-    // This is just a placeholder - can't actually perform the action without an instance
-  },
-  
-  toggleChat() {
-    console.warn('ChatBridgeHelper.toggleChat is deprecated. Use the instance method from useChatBridge() instead.');
-    // This is just a placeholder - can't actually perform the action without an instance
-  }
-};

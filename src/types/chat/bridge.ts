@@ -65,10 +65,22 @@ export interface ChatBridge {
   minimizeChat(): void;
   maximizeChat(): void;
   togglePosition(): void;
+  toggleDocked(): void;
+  toggleFeature(featureKey: string): void;
+
+  // Event management
+  on(eventType: string, callback: Function): () => void;
+  off(eventType: string, callback: Function): void;
 
   // State getters
   getCurrentConversationId(): string | null;
   getCurrentMode(): ChatMode;
   getCurrentProvider(): Provider | null;
   getState(): ChatBridgeState;
+
+  // Settings management
+  setUserSettings(settings: Record<string, any>): void;
+  getUserSettings(): Record<string, any>;
+  setAdminSettings(settings: Record<string, any>): void;
+  getAdminSettings(): Record<string, any>;
 }

@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -17,7 +16,7 @@ import {
 } from "lucide-react";
 import { SettingsContainer } from "../../layout/SettingsContainer";
 import { toast } from "sonner";
-import { ChatBridge } from "@/components/chat/chatBridge";
+import { useChatBridge } from "@/modules/ChatBridge";
 import { ChatPosition } from "@/types/chat/enums";
 import { EnumUtils } from "@/lib/enums";
 import { Provider } from "@/types/chat/providers";
@@ -35,9 +34,10 @@ interface ChatProviderConfig {
 }
 
 export function ChatProviderSettings() {
-  // Use ChatBridge to get state instead of direct store access
-  const chatState = ChatBridge.getChatState();
-  const { features, position, docked } = chatState;
+  // Use ChatBridge hook to get instance
+  const chatBridge = useChatBridge();
+  const chatState = chatBridge.getState();
+  const { features } = chatState;
   
   // Example providers - in a real app these would come from a database
   const [providers, setProviders] = useState<ChatProviderConfig[]>([
@@ -131,21 +131,22 @@ export function ChatProviderSettings() {
   
   // Use ChatBridge for feature toggling
   const toggleFeature = (featureKey: string) => {
-    ChatBridge.toggleFeature(featureKey);
+    chatBridge.toggleFeature(featureKey);
   };
   
   // Use ChatBridge for position toggling
   const togglePosition = () => {
-    ChatBridge.togglePosition();
+    chatBridge.togglePosition();
   };
   
   // Use ChatBridge for docked toggling
   const toggleDocked = () => {
-    ChatBridge.toggleDocked();
+    chatBridge.toggleDocked();
   };
   
   // Determine position display text using EnumUtils
   const getPositionDisplayText = () => {
+    const position = chatState.position || ChatPosition.BottomRight;
     if (position === ChatPosition.BottomRight) {
       return 'Bottom Right';
     } else if (position === ChatPosition.BottomLeft) {
