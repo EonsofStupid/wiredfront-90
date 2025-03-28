@@ -8,6 +8,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
+      "@chat/*": ["components/chat/*"]
     },
     "noImplicitAny": false,
     "noUnusedParameters": false,
