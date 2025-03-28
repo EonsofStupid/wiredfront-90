@@ -2,20 +2,21 @@
 import { useCallback } from 'react';
 import { useChatStore } from '@/components/chat/store/chatStore';
 import { useChatBridge } from '@/components/chat/chatBridge';
-import { ChatMode, databaseModeToUiMode, uiModeToDatabaseMode } from '@/components/chat/types/chat-modes';
+import { ChatMode } from '@/types/chat/enums';
+import { databaseModeToUiMode, uiModeToDatabaseMode } from '@/components/chat/types/chat-modes';
 import { ModeConfig } from '../types/mode-types';
 
 // Define available modes with their configurations
 const availableModes: ModeConfig[] = [
   {
-    id: 'chat',
+    id: ChatMode.Chat,
     displayName: 'Chat',
     description: 'Standard chat conversation',
     icon: 'MessageSquare',
     defaultProvider: 'gpt-4',
   },
   {
-    id: 'dev',
+    id: ChatMode.Dev,
     displayName: 'Developer',
     description: 'Code assistance and development help',
     icon: 'Code',
@@ -23,7 +24,7 @@ const availableModes: ModeConfig[] = [
     defaultProvider: 'gpt-4',
   },
   {
-    id: 'image',
+    id: ChatMode.Image,
     displayName: 'Image',
     description: 'Generate and modify images',
     icon: 'ImageIcon',
@@ -31,7 +32,7 @@ const availableModes: ModeConfig[] = [
     defaultProvider: 'dalle-3',
   },
   {
-    id: 'training',
+    id: ChatMode.Training,
     displayName: 'Training',
     description: 'Learn coding and concepts',
     icon: 'GraduationCap',
@@ -58,7 +59,7 @@ export const useMode = () => {
     // Map UI mode to database mode if needed
     const dbMode = mode in uiModeToDatabaseMode ? 
       uiModeToDatabaseMode[mode] : 
-      mode;
+      mode as ChatMode;
       
     chatBridge.setMode(dbMode);
   }, [chatBridge]);

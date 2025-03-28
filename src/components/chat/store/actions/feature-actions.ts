@@ -46,7 +46,13 @@ export const createFeatureActions = (
       logger.info('Setting chat mode', { mode });
       
       // Ensure we're setting a valid chat mode
-      const validMode = typeof mode === 'string' ? mode as ChatMode : mode;
+      let validMode: ChatMode;
+      if (typeof mode === 'string' && Object.values(ChatMode).includes(mode as ChatMode)) {
+        validMode = mode as ChatMode;
+      } else {
+        validMode = ChatMode.Chat; // Default fallback
+        logger.warn('Invalid chat mode provided, defaulting to Chat mode', { providedMode: mode });
+      }
       
       set({
         currentMode: validMode

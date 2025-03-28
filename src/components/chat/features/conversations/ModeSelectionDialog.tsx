@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useChatStore } from '../../store/chatStore';
-import { ChatMode } from '../../types/chat-modes';
+import { ChatMode } from '@/types/chat/enums';
 
 export type { ChatMode };
 
@@ -19,7 +19,7 @@ export function ModeSelectionDialog({
   onCreateSession
 }: ModeSelectionDialogProps) {
   const { availableProviders, currentProvider } = useChatStore();
-  const [selectedMode, setSelectedMode] = useState<ChatMode>('chat');
+  const [selectedMode, setSelectedMode] = useState<ChatMode>(ChatMode.Chat);
   const [selectedProviderId, setSelectedProviderId] = useState<string>(
     currentProvider?.id || (availableProviders[0]?.id || '')
   );
@@ -38,36 +38,36 @@ export function ModeSelectionDialog({
         
         <div className="grid grid-cols-2 gap-4 py-4">
           <Button
-            variant={selectedMode === 'chat' ? 'default' : 'outline'}
+            variant={selectedMode === ChatMode.Chat ? 'default' : 'outline'}
             className="h-24 flex flex-col items-center justify-center gap-2"
-            onClick={() => setSelectedMode('chat')}
+            onClick={() => setSelectedMode(ChatMode.Chat)}
           >
             <span className="text-lg">💬</span>
             <span>Chat</span>
           </Button>
           
           <Button
-            variant={selectedMode === 'dev' ? 'default' : 'outline'}
+            variant={selectedMode === ChatMode.Dev ? 'default' : 'outline'}
             className="h-24 flex flex-col items-center justify-center gap-2"
-            onClick={() => setSelectedMode('dev')}
+            onClick={() => setSelectedMode(ChatMode.Dev)}
           >
             <span className="text-lg">👨‍💻</span>
             <span>Developer</span>
           </Button>
           
           <Button
-            variant={selectedMode === 'image' ? 'default' : 'outline'}
+            variant={selectedMode === ChatMode.Image ? 'default' : 'outline'}
             className="h-24 flex flex-col items-center justify-center gap-2"
-            onClick={() => setSelectedMode('image')}
+            onClick={() => setSelectedMode(ChatMode.Image)}
           >
             <span className="text-lg">🖼️</span>
             <span>Image</span>
           </Button>
           
           <Button
-            variant={selectedMode === 'training' ? 'default' : 'outline'}
+            variant={selectedMode === ChatMode.Training ? 'default' : 'outline'}
             className="h-24 flex flex-col items-center justify-center gap-2"
-            onClick={() => setSelectedMode('training')}
+            onClick={() => setSelectedMode(ChatMode.Training)}
           >
             <span className="text-lg">📚</span>
             <span>Training</span>

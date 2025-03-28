@@ -1,5 +1,6 @@
 
 import { ChatState } from '../../../types/chat-store-types';
+import { ChatMode } from '@/types/chat/enums';
 
 // Define types for state management functions
 export type SetState<T> = (
@@ -27,7 +28,7 @@ export interface FeatureActions {
   
   // Mode actions
   toggleMode: () => void;
-  setMode: (mode: string) => void;
+  setMode: (mode: ChatMode | string) => void;
   
   // Model actions
   setModel: (model: string) => void;

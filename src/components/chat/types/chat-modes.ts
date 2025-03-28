@@ -41,27 +41,27 @@ export function isTokenEnforcementMode(value: string): value is TokenEnforcement
 }
 
 // UI enforcement mode type alias
-export type UIEnforcementModeType = 'never' | 'warn' | 'strict';
+export type UIEnforcementModeType = UIEnforcementMode.Never | UIEnforcementMode.Soft | UIEnforcementMode.Always;
 
 // Mapping from UI enforcement modes to database enforcement modes
-export const uiEnforcementToDatabaseEnforcement: Record<UIEnforcementModeType, TokenEnforcementMode> = {
-  'never': TokenEnforcementMode.Never,
-  'warn': TokenEnforcementMode.Warn,
-  'strict': TokenEnforcementMode.Always,
+export const uiEnforcementToDatabaseEnforcement: Record<UIEnforcementMode, TokenEnforcementMode> = {
+  [UIEnforcementMode.Never]: TokenEnforcementMode.Never,
+  [UIEnforcementMode.Soft]: TokenEnforcementMode.Warn,
+  [UIEnforcementMode.Always]: TokenEnforcementMode.Always,
 };
 
 // Mapping from database enforcement modes to UI enforcement modes
-export const databaseEnforcementToUiEnforcement: Record<TokenEnforcementMode, UIEnforcementModeType> = {
-  [TokenEnforcementMode.Always]: 'strict',
-  [TokenEnforcementMode.Never]: 'never',
-  [TokenEnforcementMode.RoleBased]: 'warn',
-  [TokenEnforcementMode.ModeBased]: 'warn',
-  [TokenEnforcementMode.Warn]: 'warn',
-  [TokenEnforcementMode.Strict]: 'strict'
+export const databaseEnforcementToUiEnforcement: Record<TokenEnforcementMode, UIEnforcementMode> = {
+  [TokenEnforcementMode.Always]: UIEnforcementMode.Always,
+  [TokenEnforcementMode.Never]: UIEnforcementMode.Never,
+  [TokenEnforcementMode.RoleBased]: UIEnforcementMode.Soft,
+  [TokenEnforcementMode.ModeBased]: UIEnforcementMode.Soft,
+  [TokenEnforcementMode.Warn]: UIEnforcementMode.Soft,
+  [TokenEnforcementMode.Strict]: UIEnforcementMode.Always
 };
 
 // Chat position type
-export type ChatPositionType = 'bottom-left' | 'bottom-right';
+export type ChatPositionType = ChatPosition.BottomLeft | ChatPosition.BottomRight;
 
 // Chat position coordinates type for when we need x/y positions
 export interface ChatPositionCoordinates {
@@ -74,7 +74,7 @@ export type ChatPositionUnion = ChatPositionType | ChatPositionCoordinates;
 
 // Type guard for chat position
 export function isChatPosition(value: unknown): value is ChatPositionType {
-  return typeof value === 'string' && ['bottom-left', 'bottom-right'].includes(value as string);
+  return typeof value === 'string' && Object.values(ChatPosition).includes(value as ChatPosition);
 }
 
 // Type guard for chat position coordinates
