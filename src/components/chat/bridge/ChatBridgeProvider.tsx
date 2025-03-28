@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useMemo } from 'react';
 import { useChatStore } from '../store/chatStore';
 import { useConversationStore } from '../store/conversation/store';
 import { useMessageStore } from '../messaging/MessageManager';
@@ -8,11 +8,11 @@ import {
   ChatBridgeState,
   SendMessageOptions
 } from '@/types/chat/bridge';
-import { ChatMode, MessageRole, MessageType } from '@/types/chat/enums';
+import { ChatMode, MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
 import { Provider } from '@/types/chat/providers';
 import { Conversation } from '@/types/chat/conversation';
 import { logger } from '@/services/chat/LoggingService';
-import { chatModeToString } from '../types/enums-mapper';
+import { chatModeToString, stringToChatMode } from '../types/enums-mapper';
 
 // Create context for using the bridge
 const ChatBridgeContext = createContext<ChatBridgeInterface | null>(null);
@@ -32,7 +32,7 @@ export const useChatBridge = () => {
  * ChatBridge implementation
  * This is the central communication layer between the app and chat components
  */
-class ChatBridge implements ChatBridgeInterface {
+export class ChatBridge implements ChatBridgeInterface {
   private chatStore;
   private conversationStore;
   private messageStore;
@@ -127,8 +127,8 @@ class ChatBridge implements ChatBridgeInterface {
       const messageId = await this.messageStore.sendMessage(
         content,
         conversationId,
-        options.role || MessageRole.User,
-        options.type || MessageType.Text,
+        options.role,
+        options.type,
         options.metadata,
         options.parentMessageId
       );
@@ -212,6 +212,10 @@ class ChatBridge implements ChatBridgeInterface {
     if (this.chatStore.isMinimized) {
       this.chatStore.toggleMinimize();
     }
+  }
+
+  togglePosition(): void {
+    this.chatStore.togglePosition();
   }
 
   // Current state getters

@@ -1,33 +1,68 @@
 
-import { ChatMode } from './enums';
-import { Json } from '@/integrations/supabase/types';
+import { ChatMode, MessageRole, MessageStatus, MessageType } from './enums';
 
 /**
- * Standard conversation type to be used throughout the application
- * This is for backward compatibility until we fully migrate to Conversation terminology
+ * Core Chat UI state
  */
-export interface ChatSession {
-  id: string;
-  title: string | null;
-  user_id: string;
-  mode: ChatMode;
-  provider_id: string | null;
-  created_at: string;
-  last_accessed: string;
-  tokens_used: number | null;
-  project_id: string | null;
-  metadata: Json;
-  context: Json;
-  archived: boolean;
-  updated_at: string;
-  message_count: number | null;
+export interface ChatUIState {
+  sessionLoading: boolean;
+  messageLoading: boolean;
+  providerLoading: boolean;
 }
 
 /**
- * Legacy aliases for compatibility
+ * Basic chat state for the store
  */
-export type {
-  Conversation as ChatConversation,
-  CreateConversationParams as CreateSessionParams,
-  UpdateConversationParams as UpdateSessionParams
-} from './conversation';
+export interface ChatState {
+  initialized: boolean;
+  messages: any[];
+  userInput: string;
+  isWaitingForResponse: boolean;
+  selectedModel: string;
+  selectedMode: string;
+  modelFetchStatus: 'idle' | 'loading' | 'success' | 'error';
+  error: string | null;
+  chatId: string | null;
+  isOpen: boolean;
+  isMinimized: boolean;
+  position: 'bottom-right' | 'bottom-left';
+  startTime: number;
+  features: {
+    voice: boolean;
+    rag: boolean;
+    modeSwitch: boolean;
+    notifications: boolean;
+    github: boolean;
+    codeAssistant: boolean;
+    ragSupport: boolean;
+    githubSync: boolean;
+    knowledgeBase: boolean;
+    tokenEnforcement: boolean;
+  };
+  currentMode: ChatMode | string;
+  availableProviders: any[];
+  currentProvider: any;
+  providers: {
+    availableProviders: any[];
+  };
+  showSidebar: boolean;
+  scale: number;
+  ui: ChatUIState;
+  
+  // Core actions
+  resetChatState: () => void;
+  setUserInput: (input: string) => void;
+  toggleChat: () => void;
+  toggleMinimize: () => void;
+  toggleSidebar: () => void;
+  toggleDocked: () => void;
+  setPosition: (position: 'bottom-right' | 'bottom-left') => void;
+  setChatId: (id: string | null) => void;
+  setMode: (mode: ChatMode) => void;
+  initializeChat: () => void;
+  
+  // UI state management
+  setSessionLoading: (isLoading: boolean) => void;
+  setMessageLoading: (isLoading: boolean) => void;
+  setProviderLoading: (isLoading: boolean) => void;
+}

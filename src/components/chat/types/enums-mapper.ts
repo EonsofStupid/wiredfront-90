@@ -98,6 +98,23 @@ export function stringToChatMode(mode: string): ChatMode {
 }
 
 /**
+ * Convert ChatMode to database mode string format (for backward compatibility)
+ */
+export function chatModeForDatabase(mode: ChatMode | string): string {
+  if (typeof mode === 'string') {
+    return mode;
+  }
+  return chatModeToString(mode);
+}
+
+/**
+ * Convert database mode string to ChatMode (for backward compatibility)
+ */
+export function databaseToChatMode(mode: string): ChatMode {
+  return stringToChatMode(mode);
+}
+
+/**
  * Map MessageStatus enum to string representation
  */
 export function messageStatusToString(status: MessageStatus): string {
@@ -186,5 +203,27 @@ export function stringToTokenEnforcementMode(mode: string): TokenEnforcementMode
       return TokenEnforcementMode.Strict;
     default:
       return TokenEnforcementMode.Never;
+  }
+}
+
+/**
+ * Convert UIEnforcementMode to string
+ */
+export function tokenToUIEnforcementMode(mode: TokenEnforcementMode): string {
+  switch (mode) {
+    case TokenEnforcementMode.Always:
+      return 'Always On';
+    case TokenEnforcementMode.Never:
+      return 'Always Off';
+    case TokenEnforcementMode.RoleBased:
+      return 'Role Based';
+    case TokenEnforcementMode.ModeBased:
+      return 'Mode Based';
+    case TokenEnforcementMode.Warn:
+      return 'Warn Only';
+    case TokenEnforcementMode.Strict:
+      return 'Strict';
+    default:
+      return 'Not Set';
   }
 }

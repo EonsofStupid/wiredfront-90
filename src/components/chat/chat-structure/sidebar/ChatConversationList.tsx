@@ -1,18 +1,11 @@
 
 import React from 'react';
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowUpRight, Archive, MoreVertical, Trash2, Undo } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Conversation } from '@/types/chat/conversation';
-import { formatDistanceToNow } from 'date-fns';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
+import { Loader2 } from 'lucide-react';
+import { ChatConversationItem } from './ChatConversationItem';
 
 interface ChatConversationListProps {
   isLoading: boolean;
@@ -26,7 +19,7 @@ interface ChatConversationListProps {
   onRestoreConversation: (id: string) => void;
 }
 
-export const ChatConversationList = ({
+export function ChatConversationList({
   isLoading,
   activeConversations,
   archivedConversations,
@@ -36,114 +29,72 @@ export const ChatConversationList = ({
   onDeleteConversation,
   onArchiveConversation,
   onRestoreConversation
-}: ChatConversationListProps) => {
-
-  if (!isOpen) return null;
-  
+}: ChatConversationListProps) {
   if (isLoading) {
     return (
-      <div className="p-4 space-y-3">
-        <Skeleton className="h-12 w-full rounded-md" />
-        <Skeleton className="h-12 w-full rounded-md" />
-        <Skeleton className="h-12 w-full rounded-md" />
+      <div className="flex justify-center items-center p-4">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
       </div>
     );
   }
 
-  const hasActiveConversations = activeConversations.length > 0;
-  const hasArchivedConversations = archivedConversations.length > 0;
-
   return (
-    <ScrollArea className="flex-1 overflow-auto">
-      {hasActiveConversations ? (
-        <div className="p-2 space-y-2">
-          <div className="px-1 py-1 text-xs text-muted-foreground">
-            Active Conversations
-          </div>
+    <Collapsible open={isOpen} className="flex-1 overflow-hidden">
+      <CollapsibleContent className="h-full">
+        <Tabs defaultValue="active" className="h-full flex flex-col">
+          <TabsList className="grid grid-cols-2 mx-3 mt-2">
+            <TabsTrigger value="active">Active</TabsTrigger>
+            <TabsTrigger value="archived">Archived</TabsTrigger>
+          </TabsList>
           
-          {activeConversations.map((conversation) => (
-            <div 
-              key={conversation.id}
-              className={`flex items-center justify-between p-2 rounded-md cursor-pointer hover:bg-accent/50 transition-colors ${
-                currentConversationId === conversation.id ? 'bg-accent' : ''
-              }`}
-              onClick={() => onSelectConversation(conversation.id)}
-            >
-              <div className="flex-1 truncate">
-                <div className="text-sm font-medium truncate">
-                  {conversation.title || `Conversation ${conversation.id.substring(0, 6)}`}
+          <TabsContent value="active" className="flex-1 overflow-hidden">
+            <ScrollArea className="h-[calc(100%-2rem)]">
+              {activeConversations.length === 0 ? (
+                <div className="text-center p-4 text-sm text-muted-foreground">
+                  No active conversations
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {formatDistanceToNow(new Date(conversation.last_accessed), { addSuffix: true })}
+              ) : (
+                <div className="p-2 space-y-1">
+                  {activeConversations.map((conversation) => (
+                    <ChatConversationItem
+                      key={conversation.id}
+                      conversation={conversation}
+                      isActive={conversation.id === currentConversationId}
+                      onClick={() => onSelectConversation(conversation.id)}
+                      onDelete={() => onDeleteConversation(conversation.id)}
+                      onArchive={() => onArchiveConversation(conversation.id)}
+                    />
+                  ))}
                 </div>
-              </div>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onArchiveConversation(conversation.id)}>
-                    <Archive className="h-4 w-4 mr-2" /> Archive
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onDeleteConversation(conversation.id)}>
-                    <Trash2 className="h-4 w-4 mr-2" /> Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="p-4 text-center">
-          <p className="text-sm text-muted-foreground">No active conversations</p>
-        </div>
-      )}
-      
-      {hasArchivedConversations && (
-        <div className="p-2 space-y-2">
-          <div className="px-1 py-2 text-xs text-muted-foreground border-t">
-            Archived Conversations
-          </div>
+              )}
+            </ScrollArea>
+          </TabsContent>
           
-          {archivedConversations.map((conversation) => (
-            <div 
-              key={conversation.id}
-              className="flex items-center justify-between p-2 rounded-md cursor-pointer hover:bg-accent/50 transition-colors opacity-70"
-            >
-              <div 
-                className="flex-1 truncate"
-                onClick={() => onSelectConversation(conversation.id)}
-              >
-                <div className="text-sm font-medium truncate">
-                  {conversation.title || `Conversation ${conversation.id.substring(0, 6)}`}
+          <TabsContent value="archived" className="flex-1 overflow-hidden">
+            <ScrollArea className="h-[calc(100%-2rem)]">
+              {archivedConversations.length === 0 ? (
+                <div className="text-center p-4 text-sm text-muted-foreground">
+                  No archived conversations
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {formatDistanceToNow(new Date(conversation.last_accessed), { addSuffix: true })}
+              ) : (
+                <div className="p-2 space-y-1">
+                  {archivedConversations.map((conversation) => (
+                    <ChatConversationItem
+                      key={conversation.id}
+                      conversation={conversation}
+                      isActive={false}
+                      isArchived={true}
+                      onClick={() => onSelectConversation(conversation.id)}
+                      onDelete={() => onDeleteConversation(conversation.id)}
+                      onRestore={() => onRestoreConversation(conversation.id)}
+                    />
+                  ))}
                 </div>
-              </div>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onRestoreConversation(conversation.id)}>
-                    <Undo className="h-4 w-4 mr-2" /> Restore
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onDeleteConversation(conversation.id)}>
-                    <Trash2 className="h-4 w-4 mr-2" /> Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          ))}
-        </div>
-      )}
-    </ScrollArea>
+              )}
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
+      </CollapsibleContent>
+    </Collapsible>
   );
-};
+}

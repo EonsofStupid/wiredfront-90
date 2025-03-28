@@ -1,114 +1,101 @@
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { MessageSquare, Clock, Check, Hash, AlertCircle } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useMessageStore } from "../../messaging/MessageManager";
+import React from 'react';
+import { MoreHorizontal, Archive, TrashIcon, RotateCcw } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { Conversation } from '@/types/chat/conversation';
+import { cn } from '@/lib/utils';
+import { stringToChatMode } from '../../types/enums-mapper';
+import { ChatMode } from '@/types/chat/enums';
 
 interface ChatConversationItemProps {
-  id: string;
-  lastAccessed: Date;
+  conversation: Conversation;
   isActive: boolean;
-  messageCount?: number;
-  title?: string;
-  onSelect: (id: string) => void;
-  provider?: string;
+  isArchived?: boolean;
+  onClick: () => void;
+  onDelete: () => void;
+  onArchive?: () => void;
+  onRestore?: () => void;
 }
 
-export const ChatConversationItem = ({ 
-  id, 
-  lastAccessed, 
-  isActive, 
-  messageCount = 0,
-  title,
-  onSelect,
-  provider
-}: ChatConversationItemProps) => {
-  // Format the date with date-fns
-  const formattedDate = formatDistanceToNow(lastAccessed, { addSuffix: true });
-  
-  // Determine if conversation is recent (less than 1 hour old)
-  const isRecent = new Date().getTime() - lastAccessed.getTime() < 60 * 60 * 1000;
-
-  // Get the first message for this conversation
-  const messages = useMessageStore(state => state.messages);
-  const conversationMessages = messages.filter(m => m.conversation_id === id);
-  const firstMessage = conversationMessages[0]?.content || 'New Chat';
-
-  // Truncate the first message for display
-  const truncatedMessage = firstMessage.length > 50 
-    ? firstMessage.substring(0, 50) + '...' 
-    : firstMessage;
-
-  // Check if conversation is getting long (more than 20 messages)
-  const isLongConversation = messageCount > 20;
+export function ChatConversationItem({
+  conversation,
+  isActive,
+  isArchived = false,
+  onClick,
+  onDelete,
+  onArchive,
+  onRestore
+}: ChatConversationItemProps) {
+  const modeBadgeClass = getModeBadgeClass(typeof conversation.mode === 'string' 
+    ? stringToChatMode(conversation.mode) 
+    : conversation.mode);
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant={isActive ? "secondary" : "ghost"}
-            className={`w-full justify-start gap-2 mb-1 transition-all duration-200 ${
-              isActive 
-                ? "bg-chat-message-assistant-bg/50 text-chat-knowledge-text chat-cyber-border" 
-                : "hover:bg-chat-message-assistant-bg/20"
-            }`}
-            onClick={() => onSelect(id)}
-          >
-            <MessageSquare className="h-4 w-4" />
-            <div className="flex-1 text-left truncate flex flex-col">
-              <span className="truncate">{truncatedMessage}</span>
-              {provider && (
-                <span className="text-xs opacity-70 truncate">
-                  {provider}
-                </span>
-              )}
-            </div>
-            {messageCount > 0 && (
-              <span className="inline-flex items-center justify-center rounded-full bg-primary/20 px-1.5 py-0.5 text-xs">
-                <Hash className="h-3 w-3 mr-0.5" />
-                {messageCount}
-              </span>
-            )}
-            {isRecent && <span className="h-2 w-2 rounded-full bg-green-500" />}
-            {isActive && <Check className="h-4 w-4 text-chat-knowledge-text" />}
-            {isLongConversation && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <AlertCircle className="h-4 w-4 text-yellow-500" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>This conversation is getting long. Consider starting a new chat for better performance.</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-            <Clock className="h-4 w-4 opacity-50" />
-            <span className="text-xs opacity-70 truncate max-w-[80px]">
-              {formattedDate}
-            </span>
+    <div
+      className={cn(
+        "flex items-center justify-between p-2 rounded-md",
+        isActive ? "bg-primary/20" : "hover:bg-accent/50",
+        isArchived && "opacity-70"
+      )}
+    >
+      <div 
+        className="flex items-center gap-2 flex-1 overflow-hidden cursor-pointer" 
+        onClick={onClick}
+      >
+        <div className={cn("w-2 h-2 rounded-full", modeBadgeClass)} />
+        <span className="text-sm truncate">{conversation.title}</span>
+      </div>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-7 w-7">
+            <MoreHorizontal className="h-4 w-4" />
           </Button>
-        </TooltipTrigger>
-        <TooltipContent 
-          side="right" 
-          className="text-xs chat-dialog-content max-w-[300px]"
-        >
-          <div className="space-y-1">
-            <p className="font-medium">First Message:</p>
-            <p className="opacity-90">{firstMessage}</p>
-            <p>Last accessed: {lastAccessed.toLocaleString()}</p>
-            <p>Status: {isActive ? 'Active' : 'Inactive'}</p>
-            {messageCount > 0 && <p>Messages: {messageCount}</p>}
-            {provider && <p>Provider: {provider}</p>}
-            {isLongConversation && (
-              <p className="text-yellow-500">
-                ⚠️ This conversation is getting long. Consider starting a new chat for better performance.
-              </p>
-            )}
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {isArchived ? (
+            <DropdownMenuItem onClick={onRestore}>
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Restore
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem onClick={onArchive}>
+              <Archive className="h-4 w-4 mr-2" />
+              Archive
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem 
+            className="text-destructive focus:text-destructive" 
+            onClick={onDelete}
+          >
+            <TrashIcon className="h-4 w-4 mr-2" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
-};
+}
+
+function getModeBadgeClass(mode: ChatMode): string {
+  switch (mode) {
+    case ChatMode.Chat:
+      return "bg-blue-500";
+    case ChatMode.Dev:
+      return "bg-green-500";
+    case ChatMode.Image:
+      return "bg-purple-500";
+    case ChatMode.Training:
+      return "bg-yellow-500";
+    case ChatMode.Editor:
+      return "bg-orange-500";
+    default:
+      return "bg-gray-500";
+  }
+}
