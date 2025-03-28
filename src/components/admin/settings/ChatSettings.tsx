@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { SettingsContainer } from "./layout/SettingsContainer";
 import { ChatSettingsTabs } from "./chat/ChatSettingsTabs";
-import { useChatBridge } from "@chat/ChatBridge";
+import { useChatBridge } from "@chat/chatBridge";
 import { ChatSettingsSchema, ChatSettingsType } from "@chat/shared/schemas/chatSettingsSchema";
 
 
