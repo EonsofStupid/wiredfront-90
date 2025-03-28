@@ -39,7 +39,7 @@ export function TokenBalanceDisplay({ className }: TokenBalanceDisplayProps) {
           {balance.toLocaleString()}
         </span>
       </div>
-      {enforcementMode !== UIEnforcementMode.Never && getEnforcementBadge(enforcementMode as UIEnforcementMode)}
+      {enforcementMode !== UIEnforcementMode.Never && getEnforcementBadge(enforcementMode)}
     </div>
   );
 }

@@ -127,3 +127,13 @@ export function dbToUiEnforcementMode(dbMode: TokenEnforcementMode): UIEnforceme
       return UIEnforcementMode.Soft;
   }
 }
+
+/**
+ * Helper function for converting chat mode to database format
+ */
+export function chatModeForDatabase(mode: string | ChatMode): ChatMode {
+  if (typeof mode === 'string') {
+    return stringToChatMode(mode);
+  }
+  return mode;
+}
