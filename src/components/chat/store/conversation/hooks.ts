@@ -1,39 +1,39 @@
 
+import { useEffect } from 'react';
 import { useConversationStore } from './store';
-import { Conversation } from '@/types/chat/conversation';
+import { useChatStore } from '../chatStore';
+import { useMessageStore } from '../../messaging/MessageManager';
 
 /**
- * Hook to get the current conversation
+ * Hook to sync the current conversation with the chat mode
+ * This ensures that the chat mode and conversation mode are in sync
  */
-export const useCurrentConversation = (): Conversation | null => {
-  return useConversationStore(state => {
-    const { conversations, currentConversationId } = state;
-    
-    if (!currentConversationId || !conversations?.length) {
-      return null;
+export const useSyncConversationMode = () => {
+  const { currentConversationId, updateConversation } = useConversationStore();
+  const currentMode = useChatStore(state => state.currentMode);
+  
+  useEffect(() => {
+    if (currentConversationId) {
+      updateConversation(currentConversationId, { mode: currentMode });
     }
-    
-    return conversations.find(conv => conv.id === currentConversationId) || null;
-  });
+  }, [currentMode, currentConversationId, updateConversation]);
 };
 
 /**
- * Hook to get the current conversation ID
+ * Hook to load messages for the current conversation
  */
-export const useCurrentConversationId = (): string | null => {
-  return useConversationStore(state => state.currentConversationId);
-};
-
-/**
- * Hook to check if conversations are loading
- */
-export const useConversationsLoading = (): boolean => {
-  return useConversationStore(state => state.isLoading);
-};
-
-/**
- * Hook to get all conversations
- */
-export const useConversations = (): Conversation[] => {
-  return useConversationStore(state => state.conversations);
+export const useLoadConversationMessages = () => {
+  const currentConversationId = useConversationStore(state => state.currentConversationId);
+  const { loadMessages, clearMessages } = useMessageStore();
+  const { setSessionLoading } = useChatStore();
+  
+  useEffect(() => {
+    if (currentConversationId) {
+      setSessionLoading(true);
+      loadMessages(currentConversationId)
+        .finally(() => setSessionLoading(false));
+    } else {
+      clearMessages();
+    }
+  }, [currentConversationId, loadMessages, clearMessages, setSessionLoading]);
 };

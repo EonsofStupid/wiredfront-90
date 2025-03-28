@@ -1,141 +1,66 @@
 
-import React, { useRef, useEffect, memo } from "react";
-import { useDraggable } from "@dnd-kit/core";
-import { Card, CardHeader } from "@/components/ui/card";
-import { ChatHeader } from "../../chat-structure/header/ChatHeader";
-import { ChatContent } from "../../chat-structure/content/ChatContent";
-import { useChatMode } from "../../providers/ChatModeProvider";
+import React from "react";
+import { DndContext } from "@dnd-kit/core";
+import { ChatHeader } from "../header/ChatHeader";
+import { ChatContent } from "../content/ChatContent";
+import { useChatWindowResize } from "../../hooks/useChatWindowResize";
 import { useChatStore } from "../../store/chatStore";
-import { motion } from "framer-motion";
-import { logger } from "@/services/chat/LoggingService";
+import { ChatMode } from "@/types/chat/enums";
+import { cn } from "@/lib/utils";
+import { useTokenStore } from "../../store/token";
 
 interface ChatContainerProps {
   scrollRef: React.RefObject<HTMLDivElement>;
   isEditorPage: boolean;
 }
 
-function ChatContainerBase({
-  scrollRef,
-  isEditorPage,
-}: ChatContainerProps) {
-  const { mode } = useChatMode();
-  const chatRef = useRef<HTMLDivElement>(null);
-  const { isMinimized, showSidebar, toggleSidebar, toggleMinimize, toggleChat, docked, position } = useChatStore();
-  const prevPosition = useRef(position);
-
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: "chat-window",
-    disabled: docked
-  });
-
-  const adjustedTransform = transform && !docked ? {
-    x: transform.x,
-    y: transform.y,
-  } : undefined;
-
-  const style = adjustedTransform ? {
-    transform: `translate3d(${adjustedTransform.x}px, ${adjustedTransform.y}px, 0)`,
-  } : undefined;
-
-  // Handle position change and viewport boundaries
-  useEffect(() => {
-    if (!chatRef.current || docked) return;
-
-    const updatePosition = () => {
-      if (!chatRef.current) return;
-      const rect = chatRef.current.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      
-      let transformX = 0;
-      let transformY = 0;
-      
-      // Horizontal bounds
-      if (rect.right > viewportWidth) {
-        transformX = viewportWidth - rect.right - 20;
-      } else if (rect.left < 0) {
-        transformX = Math.abs(rect.left) + 20;
-      }
-      
-      // Vertical bounds
-      if (rect.bottom > viewportHeight) {
-        transformY = viewportHeight - rect.bottom - 20;
-      } else if (rect.top < 0) {
-        transformY = Math.abs(rect.top) + 20;
-      }
-      
-      if (transformX !== 0 || transformY !== 0) {
-        chatRef.current.style.transform = `translate3d(${transformX}px, ${transformY}px, 0)`;
-        logger.info('Chat position adjusted to fit viewport', { transformX, transformY });
-      }
-    };
-
-    updatePosition();
+export function ChatContainer({ scrollRef, isEditorPage }: ChatContainerProps) {
+  const { isMinimized, currentMode } = useChatStore();
+  const { balance } = useTokenStore();
+  
+  // Hook to handle window resize logic
+  const { windowWidth, windowHeight, setWindowSize } = useChatWindowResize();
+  
+  // Calculate appropriate height based on chat mode and device
+  const getHeight = () => {
+    if (isMinimized) return "h-16"; // Minimized height
     
-    // Performance optimization: Use passive listener
-    window.addEventListener('resize', updatePosition, { passive: true });
-    return () => window.removeEventListener('resize', updatePosition);
-  }, [docked]);
-
-  // Log position changes
-  useEffect(() => {
-    if (prevPosition.current !== position) {
-      logger.info('Chat position changed', { from: prevPosition.current, to: position });
-      prevPosition.current = position;
+    // Handle mode-specific sizes
+    if (currentMode === ChatMode.Dev) {
+      return isEditorPage ? "h-[500px]" : "h-[600px]";
+    } else if (currentMode === ChatMode.Image) {
+      return "h-[650px]"; // Taller for image generation
     }
-  }, [position]);
-
-  // Determine the title based on the current mode
-  const title = mode === 'editor' ? 'Code Assistant' : 
-               mode === 'standard' ? 'Context Planning' : 
-               mode;
-
-  // Stop propagation for clicks inside the chat window
-  const handleContainerClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+    
+    // Default standard chat height
+    return "h-[500px]";
   };
-
+  
+  // Only render header when in minimized state, otherwise render full container
   return (
-    <motion.div 
-      ref={(node) => {
-        setNodeRef(node);
-        if (chatRef) {
-          chatRef.current = node;
-        }
-      }}
-      style={style}
-      {...(docked ? {} : { ...attributes, ...listeners })}
-      className="w-[var(--chat-width)] transition-all duration-300 chat-container flex flex-col h-[var(--chat-height)]" 
-      onClick={handleContainerClick}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-      transition={{ duration: 0.2 }}
-      data-testid="chat-container"
-    >
-      <Card className="shadow-xl glass-card neon-border overflow-hidden h-full flex flex-col">
-        <CardHeader className={`p-0 flex-shrink-0 ${docked ? '' : 'cursor-move'}`}>
-          <ChatHeader 
-            title={title}
-            showSidebar={showSidebar}
-            isMinimized={isMinimized}
-            onToggleSidebar={toggleSidebar}
-            onMinimize={toggleMinimize}
-            onClose={toggleChat}
-          />
-        </CardHeader>
-
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          <ChatContent 
-            scrollRef={scrollRef} 
-            isMinimized={isMinimized} 
-            isEditorPage={isEditorPage}
-          />
-        </div>
-      </Card>
-    </motion.div>
+    <DndContext>
+      <div 
+        className={cn(
+          "w-[350px] rounded-lg glass-card neon-border overflow-hidden flex flex-col",
+          getHeight(),
+          balance <= 0 && "token-empty" // Add visual indicator for low tokens
+        )}
+        style={{
+          width: `${windowWidth}px`,
+          height: isMinimized ? undefined : `${windowHeight}px`
+        }}
+      >
+        <ChatHeader 
+          isMinimized={isMinimized} 
+          onResize={setWindowSize}
+        />
+        
+        <ChatContent 
+          scrollRef={scrollRef} 
+          isMinimized={isMinimized}
+          isEditorPage={isEditorPage}
+        />
+      </div>
+    </DndContext>
   );
 }
-
-// Optimize with memo to prevent unnecessary re-renders
-export const ChatContainer = memo(ChatContainerBase);

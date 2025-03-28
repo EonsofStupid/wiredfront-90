@@ -16,7 +16,7 @@ import { ChatMode } from '@/types/chat/enums';
 
 export function ChatSidebar() {
   const navigate = useNavigate();
-  const { tokenBalance } = useTokenStore();
+  const { balance } = useTokenStore();
   const { 
     conversations, 
     fetchConversations, 
@@ -56,7 +56,7 @@ export function ChatSidebar() {
   
   const handleCreateSession = () => {
     const newConversationId = createConversation({
-      mode: currentMode as ChatMode,
+      mode: currentMode,
       title: "New Conversation"
     });
     
@@ -98,7 +98,7 @@ export function ChatSidebar() {
             size="sm"
             className="w-full"
             onClick={handleCreateSession}
-            disabled={tokenBalance <= 0}
+            disabled={balance <= 0}
           >
             <PlusCircle className="h-4 w-4 mr-2" /> 
             New Conversation

@@ -11,17 +11,21 @@ import { Button } from '@/components/ui/button';
 import { useChatBridge } from '../chatBridge';
 import { useChatStore } from '../store/chatStore';
 import { ChatMode } from '@/types/chat/enums';
+import { useConversationStore } from '../store/conversation/store';
 
 export function ChatHeaderTopNav() {
   const chatBridge = useChatBridge();
   const { currentMode, setMode, features } = useChatStore();
+  const { createConversation, setCurrentConversationId } = useConversationStore();
   
-  // Note: Since switchConversation doesn't exist in ChatBridge, we'll handle this differently
-  // We'll update the ChatBridge implementation separately to add this functionality
+  // Create a new conversation and switch to it
   const handleNewSession = () => {
-    // This should create a new session and switch to it
-    console.log('New session requested');
-    // For now, we'll just clear messages as a fallback
+    const newConversationId = createConversation({
+      mode: currentMode as ChatMode,
+      title: "New Conversation"
+    });
+    
+    setCurrentConversationId(newConversationId);
     chatBridge.clearMessages();
   };
 
@@ -31,10 +35,10 @@ export function ChatHeaderTopNav() {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" className="h-7 w-7">
             <div className="flex items-center">
-              {currentMode === 'chat' && <MessageSquare className="h-4 w-4" />}
-              {currentMode === 'dev' && <Code className="h-4 w-4" />}
-              {currentMode === 'image' && <ImageIcon className="h-4 w-4" />}
-              {currentMode === 'training' && <GraduationCap className="h-4 w-4" />}
+              {currentMode === ChatMode.Chat && <MessageSquare className="h-4 w-4" />}
+              {currentMode === ChatMode.Dev && <Code className="h-4 w-4" />}
+              {currentMode === ChatMode.Image && <ImageIcon className="h-4 w-4" />}
+              {currentMode === ChatMode.Training && <GraduationCap className="h-4 w-4" />}
               <ChevronDown className="h-3 w-3 ml-1" />
             </div>
           </Button>
