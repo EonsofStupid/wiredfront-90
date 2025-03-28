@@ -6,7 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMessageStore } from "../../messaging/MessageManager";
 
-interface ChatSessionItemProps {
+interface ChatConversationItemProps {
   id: string;
   lastAccessed: Date;
   isActive: boolean;
@@ -16,7 +16,7 @@ interface ChatSessionItemProps {
   provider?: string;
 }
 
-export const ChatSessionItem = ({ 
+export const ChatConversationItem = ({ 
   id, 
   lastAccessed, 
   isActive, 
@@ -24,25 +24,25 @@ export const ChatSessionItem = ({
   title,
   onSelect,
   provider
-}: ChatSessionItemProps) => {
+}: ChatConversationItemProps) => {
   // Format the date with date-fns
   const formattedDate = formatDistanceToNow(lastAccessed, { addSuffix: true });
   
-  // Determine if session is recent (less than 1 hour old)
+  // Determine if conversation is recent (less than 1 hour old)
   const isRecent = new Date().getTime() - lastAccessed.getTime() < 60 * 60 * 1000;
 
-  // Get the first message for this session
+  // Get the first message for this conversation
   const messages = useMessageStore(state => state.messages);
-  const sessionMessages = messages.filter(m => m.chat_session_id === id);
-  const firstMessage = sessionMessages[0]?.content || 'New Chat';
+  const conversationMessages = messages.filter(m => m.conversation_id === id);
+  const firstMessage = conversationMessages[0]?.content || 'New Chat';
 
   // Truncate the first message for display
   const truncatedMessage = firstMessage.length > 50 
     ? firstMessage.substring(0, 50) + '...' 
     : firstMessage;
 
-  // Check if session is getting long (more than 20 messages)
-  const isLongSession = messageCount > 20;
+  // Check if conversation is getting long (more than 20 messages)
+  const isLongConversation = messageCount > 20;
 
   return (
     <TooltipProvider>
@@ -74,13 +74,13 @@ export const ChatSessionItem = ({
             )}
             {isRecent && <span className="h-2 w-2 rounded-full bg-green-500" />}
             {isActive && <Check className="h-4 w-4 text-chat-knowledge-text" />}
-            {isLongSession && (
+            {isLongConversation && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <AlertCircle className="h-4 w-4 text-yellow-500" />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>This session is getting long. Consider starting a new chat for better performance.</p>
+                  <p>This conversation is getting long. Consider starting a new chat for better performance.</p>
                 </TooltipContent>
               </Tooltip>
             )}
@@ -101,9 +101,9 @@ export const ChatSessionItem = ({
             <p>Status: {isActive ? 'Active' : 'Inactive'}</p>
             {messageCount > 0 && <p>Messages: {messageCount}</p>}
             {provider && <p>Provider: {provider}</p>}
-            {isLongSession && (
+            {isLongConversation && (
               <p className="text-yellow-500">
-                ⚠️ This session is getting long. Consider starting a new chat for better performance.
+                ⚠️ This conversation is getting long. Consider starting a new chat for better performance.
               </p>
             )}
           </div>

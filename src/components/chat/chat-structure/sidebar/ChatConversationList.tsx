@@ -14,29 +14,29 @@ import { formatDistanceToNow } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface ChatSessionListProps {
+interface ChatConversationListProps {
   isLoading: boolean;
   activeConversations: Conversation[];
   archivedConversations: Conversation[];
   isOpen: boolean;
-  currentSessionId: string | null;
-  onSelectSession: (id: string) => void;
-  onDeleteSession: (id: string) => void;
-  onArchiveSession: (id: string) => void;
-  onRestoreSession: (id: string) => void;
+  currentConversationId: string | null;
+  onSelectConversation: (id: string) => void;
+  onDeleteConversation: (id: string) => void;
+  onArchiveConversation: (id: string) => void;
+  onRestoreConversation: (id: string) => void;
 }
 
-export const ChatSessionList = ({
+export const ChatConversationList = ({
   isLoading,
   activeConversations,
   archivedConversations,
   isOpen,
-  currentSessionId,
-  onSelectSession,
-  onDeleteSession,
-  onArchiveSession,
-  onRestoreSession
-}: SessionListProps) => {
+  currentConversationId,
+  onSelectConversation,
+  onDeleteConversation,
+  onArchiveConversation,
+  onRestoreConversation
+}: ChatConversationListProps) => {
 
   if (!isOpen) return null;
   
@@ -65,9 +65,9 @@ export const ChatSessionList = ({
             <div 
               key={conversation.id}
               className={`flex items-center justify-between p-2 rounded-md cursor-pointer hover:bg-accent/50 transition-colors ${
-                currentSessionId === conversation.id ? 'bg-accent' : ''
+                currentConversationId === conversation.id ? 'bg-accent' : ''
               }`}
-              onClick={() => onSelectSession(conversation.id)}
+              onClick={() => onSelectConversation(conversation.id)}
             >
               <div className="flex-1 truncate">
                 <div className="text-sm font-medium truncate">
@@ -85,10 +85,10 @@ export const ChatSessionList = ({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onArchiveSession(conversation.id)}>
+                  <DropdownMenuItem onClick={() => onArchiveConversation(conversation.id)}>
                     <Archive className="h-4 w-4 mr-2" /> Archive
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onDeleteSession(conversation.id)}>
+                  <DropdownMenuItem onClick={() => onDeleteConversation(conversation.id)}>
                     <Trash2 className="h-4 w-4 mr-2" /> Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -115,7 +115,7 @@ export const ChatSessionList = ({
             >
               <div 
                 className="flex-1 truncate"
-                onClick={() => onSelectSession(conversation.id)}
+                onClick={() => onSelectConversation(conversation.id)}
               >
                 <div className="text-sm font-medium truncate">
                   {conversation.title || `Conversation ${conversation.id.substring(0, 6)}`}
@@ -132,10 +132,10 @@ export const ChatSessionList = ({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onRestoreSession(conversation.id)}>
+                  <DropdownMenuItem onClick={() => onRestoreConversation(conversation.id)}>
                     <Undo className="h-4 w-4 mr-2" /> Restore
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onDeleteSession(conversation.id)}>
+                  <DropdownMenuItem onClick={() => onDeleteConversation(conversation.id)}>
                     <Trash2 className="h-4 w-4 mr-2" /> Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -146,4 +146,4 @@ export const ChatSessionList = ({
       )}
     </ScrollArea>
   );
-}
+};

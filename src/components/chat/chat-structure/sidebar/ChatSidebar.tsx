@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { Card } from "@/components/ui/card";
-import { ChatSessionHeader } from "./ChatSessionHeader";
-import { ChatSessionList } from "./ChatSessionList";
-import { ChatSessionControls } from "./ChatSessionControls";
+import { ChatConversationHeader } from "./ChatConversationHeader";
+import { ChatConversationList } from "./ChatConversationList";
+import { ChatConversationControls } from "./ChatConversationControls";
 import { useConversationStore } from '../../store/conversation/store';
 import { useEffect, useState } from 'react';
 import { Conversation } from '@/types/chat/conversation';
@@ -30,7 +30,7 @@ export function ChatSidebar() {
     deleteConversation
   } = useConversationStore();
   
-  const [ChatsessionOpen, setChatSessionOpen] = useState(true);
+  const [conversationOpen, setConversationOpen] = useState(true);
   const [activeConversations, setActiveConversations] = useState<Conversation[]>([]);
   const [archivedConversations, setArchivedConversations] = useState<Conversation[]>([]);
   
@@ -47,15 +47,15 @@ export function ChatSidebar() {
     }
   }, [conversations]);
   
-  const handleDeleteSession = (sessionId: string) => {
-    deleteConversation(sessionId);
+  const handleDeleteConversation = (conversationId: string) => {
+    deleteConversation(conversationId);
   };
   
-  const handleArchiveSession = (sessionId: string) => {
-    archiveConversation(sessionId);
+  const handleArchiveConversation = (conversationId: string) => {
+    archiveConversation(conversationId);
   };
   
-  const handleCreateSession = () => {
+  const handleCreateConversation = () => {
     const dbMode = chatModeForDatabase(currentMode);
     const newConversationId = createConversation({
       mode: dbMode,
@@ -65,48 +65,48 @@ export function ChatSidebar() {
     setCurrentConversationId(newConversationId);
   };
   
-  const handleRestoreSession = (sessionId: string) => {
-    updateConversation(sessionId, { archived: false });
+  const handleRestoreConversation = (conversationId: string) => {
+    updateConversation(conversationId, { archived: false });
   };
   
-  const handleSelectSession = (sessionId: string) => {
-    setCurrentConversationId(sessionId);
+  const handleSelectConversation = (conversationId: string) => {
+    setCurrentConversationId(conversationId);
   };
 
   return (
     <Card className="w-[250px] h-full glass-card neon-border flex flex-col overflow-hidden">
-      <ChatSessionHeader
+      <ChatConversationHeader
         title="Conversations"
-        isOpen={sessionOpen} 
-        onToggle={() => setChatSessionOpen(!sessionOpen)}
+        isOpen={conversationOpen} 
+        onToggle={() => setConversationOpen(!conversationOpen)}
       />
       
-      <ChatSessionList 
+      <ChatConversationList 
         isLoading={isLoading}
         activeConversations={activeConversations}
         archivedConversations={archivedConversations}
-        isOpen={sessionOpen}
-        currentSessionId={currentConversationId}
-        onSelectSession={handleSelectSession}
-        onDeleteSession={handleDeleteSession}
-        onArchiveSession={handleArchiveSession}
-        onRestoreSession={handleRestoreSession}
+        isOpen={conversationOpen}
+        currentConversationId={currentConversationId}
+        onSelectConversation={handleSelectConversation}
+        onDeleteConversation={handleDeleteConversation}
+        onArchiveConversation={handleArchiveConversation}
+        onRestoreConversation={handleRestoreConversation}
       />
       
-      <ChatSessionControls>
+      <ChatConversationControls>
         <div className="flex justify-center p-2">
           <Button 
             variant="outline" 
             size="sm"
             className="w-full"
-            onClick={handleCreateSession}
+            onClick={handleCreateConversation}
             disabled={balance <= 0}
           >
             <PlusCircle className="h-4 w-4 mr-2" /> 
             New Conversation
           </Button>
         </div>
-      </ChatSessionControls>
+      </ChatConversationControls>
     </Card>
   );
 }

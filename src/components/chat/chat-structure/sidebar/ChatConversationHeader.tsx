@@ -3,13 +3,13 @@ import React from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface ChatSessionHeaderProps {
+interface ChatConversationHeaderProps {
   title: string;
   isOpen: boolean;
   onToggle: () => void;
 }
 
-export function ChatSessionHeader({ title, isOpen, onToggle }: ChatSessionHeaderProps) {
+export function ChatConversationHeader({ title, isOpen, onToggle }: ChatConversationHeaderProps) {
   return (
     <div className="flex justify-between items-center p-2 border-b">
       <h3 className="text-sm font-medium">Conversations</h3>
