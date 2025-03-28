@@ -3,6 +3,7 @@ import { TokenState, SetState, GetState } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { TokenEnforcementMode } from '@/types/chat/enums';
+import { toJson } from '@/utils/json';
 
 /**
  * Create actions for the token store

@@ -1,25 +1,25 @@
 
-import { ChatMode } from '@/types/chat/enums';
+import { ChatMode } from './enums';
 import { Json } from '@/integrations/supabase/types';
 
 /**
- * Core conversation interface matching the database schema
+ * Conversation interface representing a chat session
  */
 export interface Conversation {
   id: string;
-  title: string | null;
   user_id: string;
+  title: string;
   mode: ChatMode;
   provider_id: string | null;
   created_at: string;
-  last_accessed: string;
-  tokens_used: number | null;
-  project_id: string | null;
-  metadata: Json;
-  context: Json;
-  archived: boolean;
   updated_at: string;
-  message_count: number | null;
+  last_accessed: string;
+  metadata: Record<string, any>;
+  context: Record<string, any>;
+  archived: boolean;
+  project_id: string | null;
+  message_count: number;
+  tokens_used: number | null;
 }
 
 /**
@@ -30,8 +30,8 @@ export interface CreateConversationParams {
   mode?: ChatMode;
   provider_id?: string;
   project_id?: string;
-  metadata?: Json;
-  context?: Json;
+  metadata?: Record<string, any>;
+  context?: Record<string, any>;
 }
 
 /**
@@ -41,20 +41,8 @@ export interface UpdateConversationParams {
   title?: string;
   mode?: ChatMode;
   provider_id?: string;
-  tokens_used?: number;
   project_id?: string;
-  metadata?: Json;
-  context?: Json;
+  metadata?: Record<string, any>;
+  context?: Record<string, any>;
   archived?: boolean;
-  message_count?: number;
-  last_accessed?: string;
-}
-
-/**
- * Result of a conversation operation (create, update, delete)
- */
-export interface ConversationOperationResult {
-  success: boolean;
-  conversationId?: string;
-  error?: any;
 }
