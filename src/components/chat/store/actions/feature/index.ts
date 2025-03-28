@@ -2,7 +2,7 @@
 import { StateCreator } from 'zustand';
 import { ChatState } from '../../types/chat-store-types';
 import { logger } from '@/services/chat/LoggingService';
-import { ChatMode, ChatPosition } from '@/types/chat/enums';
+import { ChatMode, ChatPositionType } from '@/types/chat/enums';
 import { createToggleActions } from './toggle';
 
 // Re-export the feature key type from the types file
@@ -12,7 +12,7 @@ export type { FeatureKey } from './types';
  * Create feature actions for the chat store
  */
 export const createFeatureActions = (
-  set: (partial: Partial<ChatState> | ((state: ChatState) => Partial<ChatState>), replace?: boolean, name?: string) => void,
+  set: (partial: Partial<ChatState> | ((state: ChatState) => Partial<ChatState>), replace?: boolean, name?: string | {type: string}) => void,
   get: () => ChatState,
   api: any
 ) => {
@@ -63,7 +63,7 @@ export const createFeatureActions = (
       
       set({
         selectedModel: model
-      }, false, 'chat/setModel');
+      }, false, { type: 'chat/setModel' });
     },
     
     /**
@@ -77,18 +77,18 @@ export const createFeatureActions = (
       
       set({
         currentMode: validMode
-      }, false, 'chat/setMode');
+      }, false, { type: 'chat/setMode' });
     },
     
     /**
      * Set the chat position
      */
-    setPosition: (position: ChatState['position']) => {
+    setPosition: (position: ChatPositionType) => {
       logger.info('Setting chat position', { position });
       
       set({
         position
-      }, false, 'chat/setPosition');
+      }, false, { type: 'chat/setPosition' });
     }
   };
 };

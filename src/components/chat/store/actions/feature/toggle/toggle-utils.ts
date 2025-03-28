@@ -1,7 +1,25 @@
+
 import { logger } from '@/services/chat/LoggingService';
 
 /**
- * Logs feature toggle events to analytics/database
+ * Logs provider changes for analytics and debugging
+ */
+export const logProviderChange = (oldProvider: string | undefined, newProvider: string | undefined) => {
+  if (oldProvider === newProvider) {
+    logger.debug('Provider unchanged', { provider: newProvider });
+    return;
+  }
+  
+  logger.info('Provider changed', { 
+    from: oldProvider || 'none', 
+    to: newProvider || 'none' 
+  });
+  
+  // Here you can add additional analytics or logging
+};
+
+/**
+ * Logs feature toggle events
  */
 export const logFeatureToggle = (
   feature: string,
@@ -14,24 +32,4 @@ export const logFeatureToggle = (
     newValue, 
     changed: oldValue !== newValue 
   });
-  
-  // Here we could add API calls to log to the database
-  // or send analytics events
-};
-
-/**
- * Logs provider change events
- */
-export const logProviderChange = (
-  oldProvider: string | undefined,
-  newProvider: string | undefined
-) => {
-  logger.info('Provider changed', { 
-    oldProvider, 
-    newProvider,
-    changed: oldProvider !== newProvider
-  });
-  
-  // Here we could add API calls to log to the database
-  // or send analytics events
 };

@@ -67,7 +67,7 @@ export const databaseEnforcementToUiEnforcement: Record<TokenEnforcementMode, UI
   'strict': 'strict'
 };
 
-// Chat position type
+// Chat position type - this is the central definition
 export type ChatPosition = 'bottom-left' | 'bottom-right';
 
 // Chat position coordinates type for when we need x/y positions

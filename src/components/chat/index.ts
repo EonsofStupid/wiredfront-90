@@ -4,7 +4,7 @@ export { ChatContainer } from './ChatContainer';
 export { ChatProvider, useChat } from './ChatProvider';
 
 // Store exports
-export { useChatStore } from './store';
+export { useChatStore } from './store/chatStore';
 export { useTokenStore } from './store/token';
 
 // Feature exports

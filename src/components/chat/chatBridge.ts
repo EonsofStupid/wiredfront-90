@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import { useConversationStore } from './store/conversation/store';
 import { useMessageStore } from './messaging/MessageManager';
@@ -20,7 +19,6 @@ import {
 import { Json } from '@/integrations/supabase/types';
 import { Provider } from './store/types/chat-store-types';
 import { v4 as uuidv4 } from 'uuid';
-import { MessageCreateParams } from '@/types/chat/message';
 import { CreateConversationParams } from '@/types/chat/conversation';
 
 /**
