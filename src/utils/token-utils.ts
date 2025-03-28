@@ -1,26 +1,25 @@
 
-import { TokenEnforcementMode, UIEnforcementMode } from '@/components/chat/types/chat-modes';
-import { Json } from '@/integrations/supabase/types';
+import { TokenEnforcementMode, UIEnforcementMode } from '@/types/chat/enums';
 
 /**
  * Maps UI enforcement modes to database enforcement modes
  */
 export const uiEnforcementToDatabaseEnforcement: Record<UIEnforcementMode, TokenEnforcementMode> = {
-  'always': 'always',
-  'soft': 'warn',
-  'never': 'never'
+  [UIEnforcementMode.Always]: TokenEnforcementMode.Always,
+  [UIEnforcementMode.Soft]: TokenEnforcementMode.Warn,
+  [UIEnforcementMode.Never]: TokenEnforcementMode.Never
 };
 
 /**
  * Maps database enforcement modes to UI enforcement modes
  */
 export const databaseEnforcementToUiEnforcement: Record<TokenEnforcementMode, UIEnforcementMode> = {
-  'always': 'always',
-  'never': 'never',
-  'role_based': 'soft',
-  'mode_based': 'soft',
-  'warn': 'soft',
-  'strict': 'always'
+  [TokenEnforcementMode.Always]: UIEnforcementMode.Always,
+  [TokenEnforcementMode.Never]: UIEnforcementMode.Never,
+  [TokenEnforcementMode.RoleBased]: UIEnforcementMode.Soft,
+  [TokenEnforcementMode.ModeBased]: UIEnforcementMode.Soft,
+  [TokenEnforcementMode.Warn]: UIEnforcementMode.Soft,
+  [TokenEnforcementMode.Strict]: UIEnforcementMode.Always
 };
 
 /**
@@ -63,19 +62,19 @@ export const extractEnforcementMode = (metadata: Json | null): TokenEnforcementM
  * Validates if a string is a valid token enforcement mode
  */
 export const isValidEnforcementMode = (mode: string): boolean => {
-  return ['always', 'never', 'role_based', 'mode_based', 'warn', 'strict'].includes(mode);
+  return Object.values(TokenEnforcementMode).includes(mode as TokenEnforcementMode);
 };
 
 /**
  * Converts a UI enforcement mode to a database enforcement mode
  */
 export const convertUiToDbEnforcement = (uiMode: UIEnforcementMode): TokenEnforcementMode => {
-  return uiEnforcementToDatabaseEnforcement[uiMode] || 'warn';
+  return uiEnforcementToDatabaseEnforcement[uiMode] || TokenEnforcementMode.Warn;
 };
 
 /**
  * Converts a database enforcement mode to a UI enforcement mode
  */
 export const convertDbToUiEnforcement = (dbMode: TokenEnforcementMode): UIEnforcementMode => {
-  return databaseEnforcementToUiEnforcement[dbMode] || 'soft';
+  return databaseEnforcementToUiEnforcement[dbMode] || UIEnforcementMode.Soft;
 };

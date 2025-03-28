@@ -14,8 +14,8 @@ export const TokenEnforcementMode = TokenEnforcementModeEnum;
 export type SettingType = "string" | "number" | "boolean" | "json" | "array";
 
 export interface Enums {
-  message_type: MessageTypeEnum;
+  message_type: typeof MessageTypeEnum;
   setting_type: SettingType;
-  chat_mode: ChatModeEnum;
-  token_enforcement: TokenEnforcementModeEnum;
+  chat_mode: typeof ChatModeEnum;
+  token_enforcement: typeof TokenEnforcementModeEnum;
 }
