@@ -1,104 +1,122 @@
 
 /**
- * Utilities for handling JSON safely in the application
+ * Utility functions for JSON manipulation with type safety
  */
-import { Json } from '@/integrations/supabase/types';
-import { logger } from '@/services/chat/LoggingService';
 
 /**
- * Safely convert any value to a Json type
- * This helps with type consistency when working with Supabase
+ * Convert a value to JSON string with proper error handling
  */
-export function toJson<T>(value: T): Json {
-  if (value === undefined || value === null) {
-    return null;
-  }
-  
+export function toJson<T>(value: T): string {
   try {
-    if (typeof value === 'object') {
-      return JSON.parse(JSON.stringify(value)) as Json;
-    }
-    
-    return value as Json;
+    return JSON.stringify(value);
   } catch (error) {
-    logger.error('Error converting to JSON:', error);
-    return null;
+    console.error('Failed to stringify value to JSON:', error);
+    return '{}';
   }
 }
 
 /**
- * Parse a Json value to a specific type
- * Use this when retrieving data from Supabase
+ * Parse a JSON string to an object with proper error handling
  */
-export function fromJson<T>(json: Json | null | undefined, defaultValue?: T): T | undefined {
-  if (json === null || json === undefined) {
-    return defaultValue;
-  }
-  
+export function fromJson<T>(jsonString: string, defaultValue: T): T {
   try {
-    if (typeof json === 'string' && (json.startsWith('{') || json.startsWith('['))) {
-      return JSON.parse(json) as T;
-    }
-    return json as unknown as T;
+    return JSON.parse(jsonString) as T;
   } catch (error) {
-    logger.error('Error parsing JSON:', error);
+    console.error('Failed to parse JSON string:', error);
     return defaultValue;
   }
 }
 
 /**
- * Convert a Json object to a Record<string, any>
- * Use this for metadata and context fields from the database
+ * Safely get a nested property from an object using a path string
+ * Example: getNestedValue(obj, 'user.profile.name')
  */
-export function jsonToRecord(json: Json | null | undefined): Record<string, any> {
-  if (json === null || json === undefined) {
-    return {};
-  }
-  
-  if (typeof json === 'object' && json !== null && !Array.isArray(json)) {
-    return json as Record<string, any>;
-  }
-  
+export function getNestedValue<T = any>(
+  obj: Record<string, any>,
+  path: string,
+  defaultValue: T
+): T {
   try {
-    // If it's a string, try to parse it
-    if (typeof json === 'string') {
-      return JSON.parse(json) as Record<string, any>;
+    const keys = path.split('.');
+    let result = obj;
+    
+    for (const key of keys) {
+      if (result === undefined || result === null) {
+        return defaultValue;
+      }
+      result = result[key];
     }
     
-    // If it's not an object, return an empty object
-    return {};
+    return (result === undefined || result === null) ? defaultValue : result as T;
   } catch (error) {
-    logger.error('Error converting JSON to Record:', error);
-    return {};
+    console.error('Failed to get nested value:', error);
+    return defaultValue;
   }
 }
 
 /**
- * Create an empty record that satisfies the Json type
+ * Safely set a nested property in an object using a path string
+ * Example: setNestedValue(obj, 'user.profile.name', 'John')
  */
-export function emptyJsonRecord(): Record<string, Json> {
-  return {};
+export function setNestedValue<T = any>(
+  obj: Record<string, any>,
+  path: string,
+  value: T
+): Record<string, any> {
+  try {
+    const keys = path.split('.');
+    const lastKey = keys.pop();
+    let current = obj;
+    
+    if (!lastKey) {
+      return obj;
+    }
+    
+    // Create path if it doesn't exist
+    for (const key of keys) {
+      if (current[key] === undefined || current[key] === null || typeof current[key] !== 'object') {
+        current[key] = {};
+      }
+      current = current[key];
+    }
+    
+    // Set the value
+    current[lastKey] = value;
+    return obj;
+  } catch (error) {
+    console.error('Failed to set nested value:', error);
+    return obj;
+  }
 }
 
 /**
- * Safely merge two JSON objects
+ * Deep merge two objects with type safety
  */
-export function mergeJsonObjects(obj1: Json | null | undefined, obj2: Json | null | undefined): Record<string, any> {
-  const record1 = jsonToRecord(obj1);
-  const record2 = jsonToRecord(obj2);
+export function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
+  const output = { ...target };
   
-  return { ...record1, ...record2 };
-}
-
-/**
- * Safely access a property from a JSON object
- */
-export function getJsonProperty<T>(json: Json | null | undefined, key: string, defaultValue?: T): T | undefined {
-  const record = jsonToRecord(json);
-  
-  if (key in record) {
-    return record[key] as T;
+  if (typeof target !== 'object' || target === null || typeof source !== 'object' || source === null) {
+    return output;
   }
   
-  return defaultValue;
+  Object.keys(source).forEach(key => {
+    const sourceKey = key as keyof T;
+    const targetValue = target[sourceKey];
+    const sourceValue = source[sourceKey];
+    
+    if (
+      typeof targetValue === 'object' && 
+      targetValue !== null && 
+      typeof sourceValue === 'object' && 
+      sourceValue !== null &&
+      !Array.isArray(targetValue) &&
+      !Array.isArray(sourceValue)
+    ) {
+      output[sourceKey] = deepMerge(targetValue, sourceValue as any);
+    } else if (sourceValue !== undefined) {
+      output[sourceKey] = sourceValue as T[keyof T];
+    }
+  });
+  
+  return output;
 }

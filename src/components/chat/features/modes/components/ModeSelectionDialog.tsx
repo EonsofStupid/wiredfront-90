@@ -18,8 +18,8 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Code, ImageIcon, MessageSquare } from 'lucide-react';
-import { useChatBridge } from '@/components/chat/chatBridge';
-import { ChatMode, uiModeToDatabaseMode } from '@/types/chat/enums';
+import { useChatBridge } from '@/components/chat/bridge/ChatBridgeProvider';
+import { ChatMode } from '@/types/chat/enums';
 import { EnumUtils } from '@/lib/enums';
 
 export type UIMode = 'standard' | 'editor' | 'image' | 'training';
@@ -68,8 +68,8 @@ export function ModeSelectionDialog({
     try {
       setIsSubmitting(true);
       
-      // Convert UI mode to ChatMode enum
-      const chatMode = uiModeToDatabaseMode[selectedMode] || ChatMode.Chat;
+      // Convert UI mode to ChatMode enum using the utility function
+      const chatMode = EnumUtils.uiModeToChatMode(selectedMode);
       
       await onCreateSession(chatMode, selectedProvider);
       

@@ -1,8 +1,8 @@
 
 import { useCallback } from 'react';
 import { useChatStore } from '@/components/chat/store/chatStore';
-import { useChatBridge } from '@/components/chat/chatBridge';
-import { ChatMode, databaseModeToUiMode, uiModeToDatabaseMode } from '@/types/chat/enums';
+import { useChatBridge } from '@/components/chat/bridge/ChatBridgeProvider';
+import { ChatMode } from '@/types/chat/enums';
 import { ModeConfig } from '../types/mode-types';
 import { EnumUtils } from '@/lib/enums';
 
@@ -53,17 +53,12 @@ export const useMode = () => {
     ? EnumUtils.stringToChatMode(storeMode) 
     : storeMode as ChatMode;
     
-  const uiMode = currentMode in databaseModeToUiMode ? 
-    databaseModeToUiMode[currentMode] : 
-    EnumUtils.chatModeToString(currentMode);
+  const uiMode = EnumUtils.chatModeToUiMode(currentMode);
 
   // Function to change the mode
   const setMode = useCallback((mode: string) => {
     // Map UI mode to database mode if needed
-    const dbMode = mode in uiModeToDatabaseMode ? 
-      uiModeToDatabaseMode[mode] : 
-      EnumUtils.stringToChatMode(mode);
-      
+    const dbMode = EnumUtils.uiModeToChatMode(mode);
     chatBridge.setMode(dbMode);
   }, [chatBridge]);
 

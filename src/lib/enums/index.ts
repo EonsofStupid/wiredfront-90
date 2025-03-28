@@ -8,7 +8,10 @@ import {
   MessageStatus, 
   MessageType, 
   databaseModeToUiMode, 
-  uiModeToDatabaseMode 
+  uiModeToDatabaseMode,
+  ChatPosition,
+  UIEnforcementMode,
+  TokenEnforcementMode
 } from '@/types/chat/enums';
 
 /**
@@ -179,6 +182,138 @@ export const chatModeToString = (mode: ChatMode): string => {
   }
 };
 
+/**
+ * Convert a string to ChatPosition enum
+ */
+export const stringToChatPosition = (position: string): ChatPosition => {
+  switch (position?.toLowerCase()) {
+    case 'bottom-right':
+      return ChatPosition.BottomRight;
+    case 'bottom-left':
+      return ChatPosition.BottomLeft;
+    case 'custom':
+      return ChatPosition.Custom;
+    default:
+      return ChatPosition.BottomRight;
+  }
+};
+
+/**
+ * Convert a ChatPosition enum to string
+ */
+export const chatPositionToString = (position: ChatPosition): string => {
+  switch (position) {
+    case ChatPosition.BottomRight:
+      return 'bottom-right';
+    case ChatPosition.BottomLeft:
+      return 'bottom-left';
+    case ChatPosition.Custom:
+      return 'custom';
+    default:
+      return 'bottom-right';
+  }
+};
+
+/**
+ * Convert a UI mode string to database ChatMode
+ */
+export const uiModeToChatMode = (uiMode: string): ChatMode => {
+  return uiMode in uiModeToDatabaseMode 
+    ? uiModeToDatabaseMode[uiMode]
+    : ChatMode.Chat;
+};
+
+/**
+ * Convert a database ChatMode to UI mode string
+ */
+export const chatModeToUiMode = (dbMode: ChatMode): string => {
+  return dbMode in databaseModeToUiMode
+    ? databaseModeToUiMode[dbMode]
+    : 'standard';
+};
+
+/**
+ * Validate and return a properly formatted ChatMode for database operations
+ */
+export const chatModeForDatabase = (mode: ChatMode | string): string => {
+  if (typeof mode === 'string') {
+    return chatModeToString(stringToChatMode(mode));
+  }
+  return chatModeToString(mode);
+};
+
+/**
+ * General enum validation function
+ */
+export const validate = (enumName: string, value: string): string => {
+  switch (enumName) {
+    case 'ChatMode':
+      return chatModeToString(stringToChatMode(value));
+    case 'MessageRole':
+      return messageRoleToString(stringToMessageRole(value));
+    case 'MessageType':
+      return messageTypeToString(stringToMessageType(value));
+    case 'MessageStatus':
+      return messageStatusToString(stringToMessageStatus(value));
+    default:
+      return value;
+  }
+};
+
+/**
+ * Safely parse a value into an enum with a fallback
+ */
+export const safeParse = (enumName: string, value: string, fallback: string): string => {
+  try {
+    return validate(enumName, value);
+  } catch (e) {
+    return fallback;
+  }
+};
+
+/**
+ * Flexibly parse a string to an enum value, removing whitespace and case sensitivity
+ */
+export const flexibleParse = (enumName: string, value: string): string => {
+  const cleanValue = value.trim().toLowerCase();
+  return validate(enumName, cleanValue);
+};
+
+/**
+ * Get all values for an enum
+ */
+export const values = (enumName: string): string[] => {
+  switch (enumName) {
+    case 'ChatMode':
+      return Object.values(ChatMode);
+    case 'MessageRole':
+      return Object.values(MessageRole);
+    case 'MessageType':
+      return Object.values(MessageType);
+    case 'MessageStatus':
+      return Object.values(MessageStatus);
+    case 'ChatPosition':
+      return Object.values(ChatPosition);
+    case 'UIEnforcementMode':
+      return Object.values(UIEnforcementMode);
+    case 'TokenEnforcementMode':
+      return Object.values(TokenEnforcementMode);
+    default:
+      return [];
+  }
+};
+
+/**
+ * Generate metadata for an enum (useful for UI components)
+ */
+export const meta = (enumName: string): { value: string; label: string }[] => {
+  const vals = values(enumName);
+  return vals.map(value => ({
+    value,
+    label: value.charAt(0).toUpperCase() + value.slice(1)
+  }));
+};
+
 // Export a complete EnumUtils object for easy imports
 export const EnumUtils = {
   stringToMessageType,
@@ -189,4 +324,14 @@ export const EnumUtils = {
   messageStatusToString,
   stringToChatMode,
   chatModeToString,
+  stringToChatPosition,
+  chatPositionToString,
+  uiModeToChatMode,
+  chatModeToUiMode,
+  chatModeForDatabase,
+  validate,
+  safeParse,
+  flexibleParse,
+  values,
+  meta
 };
