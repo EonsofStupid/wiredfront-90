@@ -3,7 +3,12 @@ import React from 'react';
 import { ArrowLeftRight } from "lucide-react";
 import { useChatStore } from '../store/chatStore';
 import { logger } from '@/services/chat/LoggingService';
-import { isChatPosition, isChatPositionCoordinates } from '@/types/chat/enums';
+import { 
+  ChatPosition, 
+  ChatPositionType, 
+  isChatPosition, 
+  isChatPositionCoordinates 
+} from '@/types/chat/enums';
 
 export function ChatPositionToggle() {
   const { position, setPosition } = useChatStore();
@@ -12,7 +17,7 @@ export function ChatPositionToggle() {
     e.stopPropagation();
     
     // Toggle between bottom-left and bottom-right
-    const newPosition = position === 'bottom-right' ? 'bottom-left' : 'bottom-right';
+    const newPosition: ChatPosition = position === 'bottom-right' ? 'bottom-left' : 'bottom-right';
     logger.info('Position toggled', { from: position, to: newPosition });
     setPosition(newPosition);
   };
@@ -22,7 +27,7 @@ export function ChatPositionToggle() {
     if (isChatPosition(position)) {
       return position;
     }
-    // Ensure we're checking if position is an object with x and y properties
+    // Check if position has coordinates
     if (isChatPositionCoordinates(position)) {
       return `Custom (${position.x}, ${position.y})`;
     }

@@ -2,13 +2,17 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { MessageRole } from '@/types/chat/enums';
 
 interface MessageSkeletonProps {
-  isUser?: boolean;
+  role?: MessageRole;
+  lines?: number;
   className?: string;
 }
 
-export function MessageSkeleton({ isUser = false, className }: MessageSkeletonProps) {
+export function MessageSkeleton({ role = 'assistant', lines = 3, className }: MessageSkeletonProps) {
+  const isUser = role === 'user';
+  
   return (
     <div 
       className={cn(
@@ -23,9 +27,12 @@ export function MessageSkeleton({ isUser = false, className }: MessageSkeletonPr
         <Skeleton className="h-3 w-10" />
       </div>
       <div className="space-y-2 mt-3">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-[90%]" />
-        <Skeleton className="h-4 w-[80%]" />
+        {Array.from({ length: lines }).map((_, i) => (
+          <Skeleton 
+            key={i} 
+            className={cn("h-4", i === lines - 1 && lines > 1 ? "w-[80%]" : "w-full")} 
+          />
+        ))}
       </div>
     </div>
   );

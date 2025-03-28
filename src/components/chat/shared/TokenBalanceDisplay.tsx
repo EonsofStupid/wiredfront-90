@@ -2,6 +2,8 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { useTokenStore } from '../store/token';
+import { Badge } from '@/components/ui/badge';
+import { UIEnforcementMode } from '@/types/chat/enums';
 
 interface TokenBalanceDisplayProps {
   className?: string;
@@ -16,6 +18,19 @@ export function TokenBalanceDisplay({ className }: TokenBalanceDisplayProps) {
     return 'text-red-500';
   };
 
+  const getEnforcementBadge = (mode: UIEnforcementMode) => {
+    switch(mode) {
+      case 'warn':
+        return <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-500">Warning</Badge>;
+      case 'strict':
+        return <Badge variant="destructive" className="bg-red-500/20 text-red-500">Enforced</Badge>;
+      case 'never':
+        return <Badge variant="success" className="bg-green-500/20 text-green-500">Free</Badge>;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className={cn('flex items-center gap-2', className)}>
       <div className="text-sm">
@@ -24,16 +39,7 @@ export function TokenBalanceDisplay({ className }: TokenBalanceDisplayProps) {
           {balance.toLocaleString()}
         </span>
       </div>
-      {enforcementMode !== 'never' && (
-        <div className={cn(
-          'text-xs px-1.5 py-0.5 rounded',
-          enforcementMode === 'warn' ? 'bg-yellow-500/20 text-yellow-500' : 
-          enforcementMode === 'strict' ? 'bg-red-500/20 text-red-500' : 'bg-green-500/20 text-green-500'
-        )}>
-          {enforcementMode === 'warn' ? 'Warning' : 
-           enforcementMode === 'strict' ? 'Enforced' : 'Free'}
-        </div>
-      )}
+      {enforcementMode !== 'never' && getEnforcementBadge(enforcementMode as UIEnforcementMode)}
     </div>
   );
 }

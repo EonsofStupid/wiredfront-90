@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { TokenState } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
-import { TokenEnforcementMode } from '@/types/chat/enums';
+import { UIEnforcementMode, TokenEnforcementMode, databaseEnforcementToUiEnforcement } from '@/types/chat/enums';
 
 const initialState: Omit<TokenState, 'addTokens' | 'spendTokens' | 'setTokenBalance' | 'setEnforcementMode' | 'setEnforcementEnabled' | 'resetTokens'> = {
   balance: 0,
@@ -132,7 +132,7 @@ export const useTokenStore = create<TokenState>((set, get) => ({
     }
   },
   
-  setEnforcementMode: (mode: TokenEnforcementMode) => {
+  setEnforcementMode: (mode: UIEnforcementMode) => {
     logger.info('Setting token enforcement mode', { mode });
     set({ enforcementMode: mode });
   },

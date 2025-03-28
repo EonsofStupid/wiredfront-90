@@ -2,7 +2,7 @@
 import { StateCreator } from 'zustand';
 import { ChatState } from '../../types/chat-store-types';
 import { logger } from '@/services/chat/LoggingService';
-import { ChatMode } from '@/types/chat/enums';
+import { ChatMode, ChatPosition } from '@/types/chat/enums';
 import { createToggleActions } from './toggle';
 
 // Re-export the feature key type from the types file
@@ -84,6 +84,19 @@ export const createFeatureActions = (
       set({
         position
       }, false, 'chat/setPosition');
+    },
+    
+    /**
+     * Toggle position between bottom-left and bottom-right
+     */
+    togglePosition: () => {
+      const currentPosition = get().position;
+      // Default to bottom-right if the position is not a string or not a valid position
+      const newPosition: ChatPosition = 
+        currentPosition === 'bottom-right' ? 'bottom-left' : 'bottom-right';
+      
+      logger.info('Position toggled', { from: currentPosition, to: newPosition });
+      set({ position: newPosition }, false, 'chat/togglePosition');
     }
   };
 };

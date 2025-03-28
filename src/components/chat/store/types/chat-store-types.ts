@@ -10,13 +10,18 @@ export interface ChatState {
   position: ChatPositionType;
   docked: boolean;
   scale: number;
+  initialized: boolean;
+  error: Error | null;
   
   // Session State
   userInput: string;
   messages: Message[];
   chatId: string | null;
   isWaitingForResponse: boolean;
-  mode: ChatMode;
+  currentMode: ChatMode;
+  selectedModel: string;
+  selectedMode: string;
+  modelFetchStatus: 'idle' | 'loading' | 'success' | 'error';
   startTime: number | null;
   
   // Feature Toggles
@@ -25,6 +30,11 @@ export interface ChatState {
     knowledgeBase: boolean;
     notifications: boolean;
     voice: boolean;
+    rag: boolean;
+    modeSwitch: boolean;
+    codeAssistant: boolean;
+    ragSupport: boolean;
+    tokenEnforcement: boolean;
   };
   
   // Provider State
@@ -33,6 +43,11 @@ export interface ChatState {
     name: string;
     maxTokens: number;
   } | null;
+  
+  availableProviders: any[];
+  providers: {
+    availableProviders: any[];
+  };
   
   // UI Loading States
   ui: {
@@ -54,4 +69,5 @@ export interface ChatState {
   setSessionLoading: (loading: boolean) => void;
   setMessageLoading: (loading: boolean) => void;
   setProviderLoading: (loading: boolean) => void;
+  resetChatState: () => void;
 }

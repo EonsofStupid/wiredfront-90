@@ -1,5 +1,5 @@
 
-import { TokenEnforcementMode } from '@/types/chat/enums';
+import { TokenEnforcementMode, UIEnforcementMode } from '@/types/chat/enums';
 
 export interface TokenState {
   balance: number;
@@ -7,14 +7,14 @@ export interface TokenState {
   tokensPerQuery: number;
   queriesUsed: number;
   freeQueryLimit: number;
-  enforcementMode: TokenEnforcementMode;
+  enforcementMode: UIEnforcementMode;
   enforcementEnabled: boolean;
   
   // Actions
   addTokens: (amount: number) => Promise<boolean>;
   spendTokens: (amount: number) => Promise<boolean>;
   setTokenBalance: (balance: number) => Promise<boolean>;
-  setEnforcementMode: (mode: TokenEnforcementMode) => void;
+  setEnforcementMode: (mode: UIEnforcementMode) => void;
   setEnforcementEnabled: (enabled: boolean) => void;
   resetTokens: () => void;
 }
