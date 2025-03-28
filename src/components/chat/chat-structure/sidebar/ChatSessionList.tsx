@@ -14,7 +14,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface SessionListProps {
+interface ChatSessionListProps {
   isLoading: boolean;
   activeConversations: Conversation[];
   archivedConversations: Conversation[];
@@ -26,7 +26,7 @@ interface SessionListProps {
   onRestoreSession: (id: string) => void;
 }
 
-export const SessionList = ({
+export const ChatSessionList = ({
   isLoading,
   activeConversations,
   archivedConversations,
