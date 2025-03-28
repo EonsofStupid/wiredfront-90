@@ -1,6 +1,5 @@
 
 import { MessageType } from '@/types/chat/enums';
-import { EnumUtils } from '@/lib/enums';
 
 /**
  * Parse message content to extract structured information
