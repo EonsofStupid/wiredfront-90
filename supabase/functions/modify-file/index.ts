@@ -13,10 +13,41 @@ serve(async (req) => {
   }
 
   try {
-    const { filePath, content } = await req.json();
+    const { filePath, content, projectId } = await req.json();
+
+    // Validate inputs
+    if (!filePath || !content) {
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Missing required fields: filePath and content are required'
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Get authorization headers for connecting to Supabase
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'No authorization header provided' }),
+        { 
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
     // Here you would implement the logic to modify files in your project
-    // For now, we'll just return a success response
+    // For now, we'll just log and return a success response
+    console.log(`Modifying file: ${filePath}`);
+    console.log(`Project ID: ${projectId || 'Not specified'}`);
+    
+    // TODO: Implement actual file modification logic with proper error handling
+    
     return new Response(
       JSON.stringify({ 
         success: true,
@@ -27,7 +58,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in modify-file function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: false,
+        error: error.message 
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

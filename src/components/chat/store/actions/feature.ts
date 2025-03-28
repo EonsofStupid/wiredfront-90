@@ -1,50 +1,52 @@
 
 import { StateCreator } from 'zustand';
 import { ChatState } from '../types/chat-store-types';
+import { createToggleActions } from './feature/toggle';
+import { ChatMode } from '@/types/chat/enums';
 import { logger } from '@/services/chat/LoggingService';
 
 export const createFeatureActions = (
   set: StateCreator<ChatState>['setState'],
-  get: () => ChatState
-) => ({
-  toggleFeature: (featureKey: keyof ChatState['features']) => {
-    const features = get().features;
-    const newValue = !features[featureKey];
-    
-    logger.info(`Toggling feature ${featureKey}`, { newValue });
-    
-    set({
-      features: {
-        ...features,
-        [featureKey]: newValue
-      }
-    }, false, 'chat/toggleFeature');
-  },
+  get: () => ChatState,
+  api: any
+) => {
+  // Get toggle-specific actions
+  const toggleActions = createToggleActions(set, get);
   
-  setFeature: (featureKey: keyof ChatState['features'], value: boolean) => {
-    logger.info(`Setting feature ${featureKey}`, { value });
+  return {
+    // Feature toggle actions
+    toggleFeature: toggleActions.toggleFeature,
+    enableFeature: toggleActions.enableFeature,
+    disableFeature: toggleActions.disableFeature,
+    setFeatureState: toggleActions.setFeatureState,
     
-    set({
-      features: {
-        ...get().features,
-        [featureKey]: value
-      }
-    }, false, 'chat/setFeature');
-  },
-  
-  setSelectedModel: (model: string) => {
-    logger.info('Setting selected model', { model });
+    // Position actions
+    togglePosition: toggleActions.togglePosition,
+    setPosition: toggleActions.setPosition,
     
-    set({
-      selectedModel: model
-    }, false, 'chat/setSelectedModel');
-  },
-  
-  setSelectedMode: (mode: string) => {
-    logger.info('Setting selected mode', { mode });
+    // Provider actions
+    updateProviders: toggleActions.updateProviders,
+    updateChatProvider: toggleActions.updateChatProvider,
     
-    set({
-      selectedMode: mode
-    }, false, 'chat/setSelectedMode');
-  },
-});
+    // Mode actions
+    setMode: (mode: string | ChatMode) => {
+      logger.info('Setting chat mode', { mode });
+      
+      // Ensure we're setting a valid chat mode
+      const validMode = typeof mode === 'string' ? mode as ChatMode : mode;
+      
+      set({
+        currentMode: validMode
+      }, false, { type: 'chat/setMode' });
+    },
+    
+    // Model actions
+    setModel: (model: string) => {
+      logger.info('Setting selected model', { model });
+      
+      set({
+        selectedModel: model
+      }, false, { type: 'chat/setModel' });
+    }
+  };
+};

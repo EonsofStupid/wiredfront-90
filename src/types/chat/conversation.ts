@@ -1,4 +1,3 @@
-
 import { ChatMode } from './enums';
 import { Json } from '@/integrations/supabase/types';
 
@@ -11,7 +10,7 @@ export interface ConversationMetadata {
   settings?: Record<string, unknown>;
   lastPosition?: { x: number; y: number };
   providerId?: string;
-  [key: string]: unknown; // Allow other properties while keeping type safety
+  [key: string]: unknown;
 }
 
 /**

@@ -4,8 +4,6 @@ import { ArrowLeftRight } from "lucide-react";
 import { useChatStore } from '../store/chatStore';
 import { logger } from '@/services/chat/LoggingService';
 import { 
-  ChatPosition, 
-  ChatPositionType, 
   isChatPosition, 
   isChatPositionCoordinates 
 } from '@/types/chat/enums';
