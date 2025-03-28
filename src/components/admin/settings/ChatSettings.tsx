@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useMessageStore } from "@/components/chat/messaging/MessageManager";
-import { useChatSessionManager } from "@/hooks/useChatSessionManager";
+import { useChatSessionManager } from "@chat/chatBridge";
 import { SettingsContainer } from "./layout/SettingsContainer";
 import { toast } from "sonner";
 import { ChatSettingsTabs } from "./chat/ChatSettingsTabs";
