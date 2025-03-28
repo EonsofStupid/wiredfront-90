@@ -3,7 +3,6 @@ import { useState, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { ChatMode } from '@/types/chat/enums';
 import { useChatStore } from '../store/chatStore';
-import { chatModeForDatabase } from '../types/enums-mapper';
 
 interface SessionMetadata {
   mode?: ChatMode;
@@ -16,6 +15,9 @@ interface CreateSessionParams {
   metadata?: SessionMetadata;
 }
 
+/**
+ * @deprecated Use useConversationManager() instead
+ */
 export function useSessionManager() {
   const { setChatId, setMode, resetChatState } = useChatStore();
   const [isLoading, setIsLoading] = useState(false);
