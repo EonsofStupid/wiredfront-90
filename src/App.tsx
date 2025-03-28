@@ -2,12 +2,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
-import MainLayout from '@/layouts/MainLayout';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { 
   ChatBridgeProvider, 
   ModeProvider 
 } from '@/components/chat';
-import { AuthProvider } from '@/auth/AuthProvider';
+import { AuthProvider } from '@/auth';
 
 // Lazy-loaded pages for better performance
 const Dashboard = React.lazy(() => import('@/pages/Dashboard'));

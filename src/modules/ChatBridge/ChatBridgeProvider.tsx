@@ -1,33 +1,34 @@
 
-import React, { createContext, useContext, useMemo } from 'react';
-import { ChatBridge } from './ChatBridge';
-import { ChatBridge as ChatBridgeInterface } from '@/types/chat/bridge';
+import React, { createContext, useContext, ReactNode } from 'react';
 
-// Create context for using the bridge
-const ChatBridgeContext = createContext<ChatBridgeInterface | null>(null);
+interface ChatBridgeContextType {
+  sendMessage: (message: string) => void;
+}
 
-/**
- * Hook to access the chat bridge
- */
+const ChatBridgeContext = createContext<ChatBridgeContextType | undefined>(undefined);
+
 export const useChatBridge = () => {
   const context = useContext(ChatBridgeContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useChatBridge must be used within a ChatBridgeProvider');
   }
   return context;
 };
 
-/**
- * Component that provides the ChatBridge to the app
- */
-export const ChatBridgeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Create a memoized instance of the bridge
-  const bridge = useMemo(() => new ChatBridge(), []);
-  
-  // Render the provider
+interface ChatBridgeProviderProps {
+  children: ReactNode;
+}
+
+export const ChatBridgeProvider: React.FC<ChatBridgeProviderProps> = ({ children }) => {
+  const sendMessage = (message: string) => {
+    console.log('Message sent:', message);
+  };
+
   return (
-    <ChatBridgeContext.Provider value={bridge}>
+    <ChatBridgeContext.Provider value={{ sendMessage }}>
       {children}
     </ChatBridgeContext.Provider>
   );
 };
+
+export default useChatBridge;
