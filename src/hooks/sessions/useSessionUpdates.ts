@@ -37,7 +37,7 @@ export function useSessionUpdates() {
   });
 
   return {
-    updateSession: updateSessionMutation,
-    archiveSession: archiveSessionMutation,
+    updateSessionMutation,
+    archiveSessionMutation
   };
 }

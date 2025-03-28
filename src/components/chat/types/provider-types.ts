@@ -1,54 +1,52 @@
 
 /**
- * Types for AI provider configuration and management
+ * Provider-related types for the chat system
  */
 
+// Core provider definition
 export interface Provider {
   id: string;
   name: string;
+  displayName: string;
   description?: string;
-  models: ProviderModel[];
   isEnabled: boolean;
-  apiKey?: string;
-  organization?: string;
+  models: ProviderModel[];
   baseUrl?: string;
+  configSchema?: Record<string, any>;
   defaultModel?: string;
+  metadata?: Record<string, any>;
+  icon?: string;
 }
 
+// Provider model definition
 export interface ProviderModel {
   id: string;
   name: string;
-  provider: string;
-  contextSize: number;
-  capabilities: ModelCapability[];
-  isEnabled: boolean;
-  isDefault?: boolean;
+  displayName: string;
+  description?: string;
+  maxTokens?: number;
+  contextWindow?: number;
+  supportedFeatures?: string[];
+  tokenizingMethod?: string;
+  pricing?: {
+    input: number;
+    output: number;
+    unit: string;
+  };
 }
 
-export type ModelCapability = 
-  | 'chat'
-  | 'completions'
-  | 'embeddings'
-  | 'image-generation'
-  | 'vision'
-  | 'function-calling';
+// Provider categories
+export type ProviderCategory = 'chat' | 'image' | 'voice' | 'embedding' | 'vectorstore';
 
-export interface ProviderCreateParams {
-  name: string;
-  description?: string;
-  models?: ProviderModel[];
-  apiKey?: string;
-  organization?: string;
-  baseUrl?: string;
-  defaultModel?: string;
-}
+// Provider status
+export type ProviderStatus = 'active' | 'inactive' | 'maintenance' | 'deprecated';
 
-export interface ProviderUpdateParams {
-  name?: string;
-  description?: string;
-  isEnabled?: boolean;
+// Provider connection config
+export interface ProviderConnectionConfig {
+  providerId: string;
   apiKey?: string;
-  organization?: string;
+  organizationId?: string;
   baseUrl?: string;
-  defaultModel?: string;
+  models?: string[];
+  customHeaders?: Record<string, string>;
 }

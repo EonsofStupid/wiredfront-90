@@ -1,34 +1,43 @@
 
 /**
- * Types for feature management
+ * Feature-related types for the chat system
  */
 
-export type FeatureKey = 
-  | 'voice'
-  | 'rag'
-  | 'modeSwitch'
-  | 'notifications'
-  | 'github'
-  | 'codeAssistant'
-  | 'ragSupport'
-  | 'githubSync'
-  | 'knowledgeBase'
-  | 'tokenEnforcement'
-  | string;
+// Define feature action keys
+export type FeatureKey = string;
 
-export interface FeatureToggleResult {
-  success: boolean;
-  feature: FeatureKey;
-  newValue: boolean;
-  error?: Error | unknown;
+// Core feature flags that can be toggled
+export interface FeatureFlags {
+  voice: boolean;
+  rag: boolean;
+  modeSwitch: boolean;
+  notifications: boolean;
+  github: boolean;
+  codeAssistant: boolean;
+  ragSupport: boolean;
+  githubSync: boolean;
+  knowledgeBase: boolean;
+  tokenEnforcement: boolean;
+  [key: string]: boolean;
 }
 
-export interface FeatureListItem {
-  key: FeatureKey;
+// Feature toggle history structure
+export interface FeatureToggleEvent {
+  id: string;
+  featureName: FeatureKey;
+  userId: string;
+  oldValue: boolean | null;
+  newValue: boolean;
+  timestamp: string;
+  metadata?: Record<string, any>;
+}
+
+// Feature status types
+export type FeatureStatus = 'enabled' | 'disabled' | 'partial' | 'unknown';
+
+// Feature category types
+export interface FeatureCategory {
+  id: string;
   name: string;
-  description: string;
-  isEnabled: boolean;
-  isRestricted?: boolean;
-  requiresSubscription?: boolean;
-  icon?: string;
+  description?: string;
 }

@@ -1,5 +1,5 @@
 
-import { ChatState } from '../../../types/chat-store-types';
+import { ChatState } from '../../../types/store-types';
 import { FeatureActions, SetState, GetState } from '../types';
 import { createFeatureToggleActions } from './feature-toggle-actions';
 import { createProviderActions } from './provider-actions';
