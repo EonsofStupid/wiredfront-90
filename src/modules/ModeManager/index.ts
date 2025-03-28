@@ -1,4 +1,3 @@
 
-export { ModeProvider } from './ModeProvider';
-export { useModeManager } from './useModeManager';
+export { ModeProvider, useMode } from './ModeProvider';
 export * from './types';

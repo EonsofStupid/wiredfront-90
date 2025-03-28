@@ -1,6 +1,8 @@
 
 export class ChatBridge {
   private listeners: Map<string, Function[]> = new Map();
+  private userSettings: Record<string, any> = {};
+  private adminSettings: Record<string, any> = {};
 
   // Send a message to the chat component
   sendMessage(message: any) {
@@ -12,6 +14,28 @@ export class ChatBridge {
   sendEvent(eventType: string, data: any) {
     console.log(`ChatBridge: Sending event ${eventType}`, data);
     this.notify(eventType, data);
+  }
+
+  // Set user settings from the main application
+  setUserSettings(settings: Record<string, any>) {
+    this.userSettings = { ...this.userSettings, ...settings };
+    this.notify('userSettingsChanged', this.userSettings);
+  }
+
+  // Get current user settings
+  getUserSettings(): Record<string, any> {
+    return { ...this.userSettings };
+  }
+
+  // Set admin settings from the main application
+  setAdminSettings(settings: Record<string, any>) {
+    this.adminSettings = { ...this.adminSettings, ...settings };
+    this.notify('adminSettingsChanged', this.adminSettings);
+  }
+
+  // Get current admin settings
+  getAdminSettings(): Record<string, any> {
+    return { ...this.adminSettings };
   }
 
   // Register a listener for a specific event

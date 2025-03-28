@@ -1,60 +1,85 @@
 
+/**
+ * Chat Client CSS Variables
+ * IMPORTANT: These variables provide styling for the isolated chat client
+ * Default values are provided as HSL fallbacks.
+ */
+
 :root {
-  /* Chat dimensions */
-  --chat-width: 500px;
-  --chat-height: 500px;
-  --chat-sidebar-width: 300px;
+  /* Z-index variables - CRITICAL: these must align with application z-index */
+  --z-chat: var(--z-chat, 9700);
+  --z-chat-dialog: var(--z-chat-dialog, 9710);
+  --z-chat-tooltip: var(--z-chat-tooltip, 9720);
   
-  /* Z-index values */
-  --z-chat: 1000;
-  --z-chat-dialogs: 1100;
+  /* Dimensions */
+  --chat-width: var(--chat-width, 450px);
+  --chat-min-width: var(--chat-min-width, 350px);
+  --chat-max-width: var(--chat-max-width, 600px);
+  --chat-height: var(--chat-height, 600px);
+  --chat-min-height: var(--chat-min-height, 400px);
+  --chat-max-height: var(--chat-max-height, 800px);
+  --chat-border-radius: var(--chat-border-radius, 12px);
+  --chat-header-height: var(--chat-header-height, 56px);
+  --chat-footer-height: var(--chat-footer-height, 60px);
+  --chat-scrollbar-width: var(--chat-scrollbar-width, 5px);
   
-  /* Colors */
-  --chat-text: hsl(210, 10%, 90%);
-  --chat-background: hsl(220, 10%, 10%, 0.85);
-  --chat-border: hsl(220, 10%, 30%);
-  --chat-header-bg: hsl(220, 10%, 12%, 0.95);
-  --chat-header-text: hsl(210, 10%, 90%);
+  /* Colors - Using HSL values for better theming */
+  --chat-bg: var(--chat-bg, hsla(220, 10%, 10%, 0.85));
+  --chat-text: var(--chat-text, hsl(210, 10%, 90%));
+  --chat-border: var(--chat-border, hsl(220, 10%, 30%));
+  --chat-accent: var(--chat-accent, hsl(180, 100%, 50%));
+  --chat-accent-alt: var(--chat-accent-alt, hsl(330, 100%, 50%));
   
-  /* Message colors */
-  --chat-message-user-bg: hsl(240, 20%, 20%, 0.8);
-  --chat-message-user-text: hsl(210, 10%, 95%);
-  --chat-message-user-border: hsl(240, 30%, 30%);
+  /* Header colors */
+  --chat-header-bg: var(--chat-header-bg, hsla(220, 10%, 12%, 0.95));
+  --chat-header-text: var(--chat-header-text, hsl(210, 10%, 90%));
   
-  --chat-message-assistant-bg: hsl(210, 20%, 15%, 0.8);
-  --chat-message-assistant-text: hsl(210, 10%, 95%);
-  --chat-message-assistant-border: hsl(210, 30%, 30%);
+  /* Message specific colors */
+  --chat-message-user-bg: var(--chat-message-user-bg, hsla(240, 20%, 20%, 0.8));
+  --chat-message-user-text: var(--chat-message-user-text, hsl(210, 10%, 95%));
+  --chat-message-user-border: var(--chat-message-user-border, hsl(240, 30%, 30%));
   
-  --chat-message-system-bg: hsl(280, 20%, 15%, 0.8);
-  --chat-message-system-text: hsl(280, 10%, 95%);
-  --chat-message-system-border: hsl(280, 30%, 30%);
+  --chat-message-assistant-bg: var(--chat-message-assistant-bg, hsla(210, 20%, 15%, 0.8));
+  --chat-message-assistant-text: var(--chat-message-assistant-text, hsl(210, 10%, 95%));
+  --chat-message-assistant-border: var(--chat-message-assistant-border, hsl(210, 30%, 30%));
   
-  /* Feature colors */
-  --chat-knowledge-background: hsl(200, 70%, 20%);
-  --chat-knowledge-text: hsl(200, 70%, 70%);
-  --chat-knowledge-border: hsl(200, 70%, 40%);
+  --chat-message-system-bg: var(--chat-message-system-bg, hsla(280, 20%, 15%, 0.8));
+  --chat-message-system-text: var(--chat-message-system-text, hsl(280, 10%, 95%));
+  --chat-message-system-border: var(--chat-message-system-border, hsl(280, 30%, 30%));
   
-  --chat-notification-background: hsl(340, 70%, 20%);
-  --chat-notification-text: hsl(340, 70%, 70%);
-  --chat-notification-border: hsl(340, 70%, 40%);
+  /* Feature-specific colors */
+  --chat-knowledge-text: var(--chat-knowledge-text, hsl(200, 70%, 70%));
+  --chat-knowledge-border: var(--chat-knowledge-border, hsl(200, 70%, 40%));
+  --chat-knowledge-background: var(--chat-knowledge-background, hsl(200, 70%, 20%));
   
-  /* Dialog colors */
-  --chat-dialog-bg: hsl(220, 10%, 12%, 0.95);
-  --chat-dialog-text: hsl(210, 10%, 90%);
-  --chat-dialog-border: hsl(220, 10%, 30%);
-  --chat-dialog-content: hsl(210, 10%, 15%, 0.95);
+  --chat-notification-text: var(--chat-notification-text, hsl(340, 70%, 70%));
+  --chat-notification-border: var(--chat-notification-border, hsl(340, 70%, 40%));
+  --chat-notification-background: var(--chat-notification-background, hsl(340, 70%, 20%));
+  
+  /* Dialog styles */
+  --chat-dialog-bg: var(--chat-dialog-bg, hsla(220, 10%, 12%, 0.95));
+  --chat-dialog-text: var(--chat-dialog-text, hsl(210, 10%, 90%));
+  --chat-dialog-border: var(--chat-dialog-border, hsl(220, 10%, 30%));
+  --chat-dialog-content: var(--chat-dialog-content, hsla(210, 10%, 15%, 0.95));
+  
+  /* Effects */
+  --chat-transition-speed: var(--chat-transition-speed, 0.3s);
+  --chat-box-shadow: var(--chat-box-shadow, 0 10px 25px -5px rgba(0, 0, 0, 0.3));
+  --chat-neon-glow: var(--chat-neon-glow, 0 0 10px var(--chat-accent), 0 0 20px var(--chat-accent-alt));
+  --chat-cyber-glow: var(--chat-cyber-glow, 0 0 5px var(--chat-accent), 0 0 10px var(--chat-accent-alt));
 }
 
+/* Cyberpunk theme utilities */
 .chat-glass-card {
-  background: var(--chat-background);
+  background: var(--chat-bg);
   backdrop-filter: blur(12px);
   border: 1px solid var(--chat-border);
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--chat-box-shadow);
 }
 
 .chat-neon-border {
   border: 1px solid var(--chat-border);
-  box-shadow: 0 0 10px rgba(100, 100, 255, 0.2);
+  box-shadow: var(--chat-neon-glow);
 }
 
 .chat-cyber-border {
@@ -82,12 +107,12 @@
 
 .chat-pulsing-glow {
   animation: chatPulse 2s infinite alternate;
-  box-shadow: 0 0 8px rgba(100, 100, 255, 0.3);
+  box-shadow: 0 0 8px var(--chat-accent);
 }
 
 @keyframes chatPulse {
-  0% { box-shadow: 0 0 8px rgba(100, 100, 255, 0.3); }
-  100% { box-shadow: 0 0 15px rgba(100, 100, 255, 0.6); }
+  0% { box-shadow: 0 0 8px rgba(var(--chat-accent), 0.3); }
+  100% { box-shadow: 0 0 15px rgba(var(--chat-accent-alt), 0.6); }
 }
 
 .chat-dialog-content {
@@ -104,7 +129,7 @@
   align-items: center;
   justify-content: center;
   color: var(--chat-text);
-  background: var(--chat-background);
+  background: var(--chat-bg);
   border: 1px solid var(--chat-border);
   cursor: pointer;
   transition: all 0.2s;

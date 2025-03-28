@@ -1,4 +1,45 @@
 
+/**
+ * Chat Client Main Stylesheet
+ * This file imports all chat-specific styles and should be the only
+ * stylesheet imported by the chat client components.
+ */
+
+/* Import base variables and utilities */
+@import './chat-variables.css';
 @import './tokens.css';
+
+/* Import component styles */
+@import './container.css';
 @import './components.css';
 @import './animations.css';
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+  :root {
+    --chat-width: 90vw;
+    --chat-max-width: 90vw;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --chat-border-radius: 8px;
+    --chat-header-height: 48px;
+  }
+  
+  .chat-message {
+    max-width: 90%;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion) {
+  .chat-animate-pulse,
+  .chat-animate-typing span,
+  .chat-cyber-border::after,
+  .chat-pulsing-glow,
+  .chat-scan-line::after {
+    animation: none !important;
+  }
+}

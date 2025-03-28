@@ -1,28 +1,43 @@
 
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { ChatBridge } from './ChatBridge';
 
 // Context for the chat bridge
-const ChatBridgeContext = createContext<ChatBridge | undefined>(undefined);
-
-// Hook to use the chat bridge
-export const useChatBridge = () => {
-  const context = useContext(ChatBridgeContext);
-  if (context === undefined) {
-    throw new Error('useChatBridge must be used within a ChatBridgeProvider');
-  }
-  return context;
-};
+export const ChatBridgeContext = createContext<ChatBridge | undefined>(undefined);
 
 interface ChatBridgeProviderProps {
   children: ReactNode;
+  userSettings?: Record<string, any>; // Optional user settings from parent app
+  adminSettings?: Record<string, any>; // Optional admin settings from parent app
 }
 
-// Provider component for the chat bridge
-export const ChatBridgeProvider: React.FC<ChatBridgeProviderProps> = ({ children }) => {
+/**
+ * ChatBridgeProvider serves as the isolation boundary between the chat client
+ * and the rest of the application. All communication goes through the ChatBridge.
+ */
+export const ChatBridgeProvider: React.FC<ChatBridgeProviderProps> = ({ 
+  children, 
+  userSettings, 
+  adminSettings 
+}) => {
   // Create a new ChatBridge instance
-  const chatBridge = new ChatBridge();
+  const [chatBridge] = useState(() => new ChatBridge());
+  
+  // Apply any user or admin settings passed from parent application
+  useEffect(() => {
+    if (userSettings) {
+      chatBridge.setUserSettings(userSettings);
+      console.log('ChatBridge: User settings applied', userSettings);
+    }
+  }, [chatBridge, userSettings]);
 
+  useEffect(() => {
+    if (adminSettings) {
+      chatBridge.setAdminSettings(adminSettings);
+      console.log('ChatBridge: Admin settings applied', adminSettings);
+    }
+  }, [chatBridge, adminSettings]);
+  
   return (
     <ChatBridgeContext.Provider value={chatBridge}>
       {children}

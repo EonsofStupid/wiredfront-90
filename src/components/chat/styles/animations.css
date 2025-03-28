@@ -1,4 +1,9 @@
 
+/**
+ * Chat Client Animations
+ * These animations are specific to the chat client and isolated from the main app.
+ */
+
 @keyframes chat-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -15,9 +20,9 @@
 }
 
 @keyframes chat-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
-  70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(var(--chat-accent), 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(var(--chat-accent), 0); }
+  100% { box-shadow: 0 0 0 0 rgba(var(--chat-accent), 0); }
 }
 
 @keyframes chat-typing {
@@ -27,15 +32,15 @@
 }
 
 .chat-animate-fade-in {
-  animation: chat-fade-in var(--chat-transition-duration) var(--chat-transition-timing);
+  animation: chat-fade-in var(--chat-transition-speed) ease-out;
 }
 
 .chat-animate-slide-up {
-  animation: chat-slide-up var(--chat-transition-duration) var(--chat-transition-timing);
+  animation: chat-slide-up var(--chat-transition-speed) ease-out;
 }
 
 .chat-animate-slide-down {
-  animation: chat-slide-down var(--chat-transition-duration) var(--chat-transition-timing);
+  animation: chat-slide-down var(--chat-transition-speed) ease-out;
 }
 
 .chat-animate-pulse {
@@ -52,4 +57,40 @@
 
 .chat-animate-typing span:nth-child(3) {
   animation-delay: 0.4s;
+}
+
+/* Cyberpunk-specific animations */
+@keyframes chat-glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+
+.chat-glitch {
+  animation: chat-glitch 0.5s ease-out;
+}
+
+@keyframes chat-scan-line {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+.chat-scan-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(to bottom, 
+    transparent,
+    var(--chat-accent),
+    transparent
+  );
+  opacity: 0.3;
+  z-index: 1;
+  animation: chat-scan-line 5s linear infinite;
 }

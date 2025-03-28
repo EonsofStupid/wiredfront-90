@@ -9,6 +9,11 @@ import { useChatStore } from "./store/chatStore";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { logger } from "@/services/chat/LoggingService";
+import { useChatBridge } from "@/modules/ChatBridge";
+import { useMode } from "@/modules/ModeManager";
+
+// Import chat styles (only imported once)
+import "./styles/index.css";
 
 export function ChatContainer() {
   const { 
@@ -23,7 +28,8 @@ export function ChatContainer() {
   const { containerRef, isOverflowing } = useViewportAwareness();
   const scrollRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
-  const isEditorPage = location.pathname === '/editor';
+  const chatBridge = useChatBridge();
+  const { isEditorPage } = useMode();
 
   // Scroll to bottom of messages when new message is added
   useEffect(() => {
@@ -44,6 +50,25 @@ export function ChatContainer() {
       path: location.pathname
     });
   }, [isOpen, position, isMinimized, showSidebar, scale, isOverflowing, location.pathname]);
+
+  // Register with ChatBridge for external events
+  useEffect(() => {
+    // Set up listeners for external events
+    const unsubscribeMessage = chatBridge.on('message', (message) => {
+      console.log('Received message from app:', message);
+      // Handle message from the main app
+    });
+    
+    const unsubscribeSettings = chatBridge.on('userSettingsChanged', (settings) => {
+      console.log('User settings updated:', settings);
+      // Apply user settings to chat
+    });
+    
+    return () => {
+      unsubscribeMessage();
+      unsubscribeSettings();
+    };
+  }, [chatBridge]);
 
   if (!isOpen) {
     return <ChatToggleButton onClick={toggleChat} />;
