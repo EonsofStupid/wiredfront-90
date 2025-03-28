@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -391,14 +392,14 @@ export function ChatProviderSettings() {
                   <div className="space-y-0.5">
                     <Label htmlFor="docked">Default Docking</Label>
                     <p className="text-sm text-muted-foreground">
-                      {docked ? 'Fixed in position' : 'Freely draggable'}
+                      {chatState.docked ? 'Fixed in position' : 'Freely draggable'}
                     </p>
                   </div>
                   <Button 
                     variant="outline" 
                     onClick={toggleDocked}
                   >
-                    {docked ? 'Make Draggable' : 'Make Fixed'}
+                    {chatState.docked ? 'Make Draggable' : 'Make Fixed'}
                   </Button>
                 </div>
                 

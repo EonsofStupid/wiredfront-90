@@ -1,5 +1,5 @@
 
-import { ChatMode, MessageRole, MessageType } from './enums';
+import { ChatMode, ChatPosition, MessageRole, MessageType } from './enums';
 import { Conversation } from './conversation';
 import { Provider } from './providers';
 
@@ -24,6 +24,8 @@ export interface ChatBridgeState {
   currentProvider: Provider | null;
   currentConversationId: string | null;
   isMessageLoading: boolean;
+  position: ChatPosition;
+  docked: boolean;
   features: {
     voice: boolean;
     rag: boolean;
@@ -77,6 +79,8 @@ export interface ChatBridge {
   getCurrentMode(): ChatMode;
   getCurrentProvider(): Provider | null;
   getState(): ChatBridgeState;
+  isDocked(): boolean;
+  getPosition(): ChatPosition;
 
   // Settings management
   setUserSettings(settings: Record<string, any>): void;

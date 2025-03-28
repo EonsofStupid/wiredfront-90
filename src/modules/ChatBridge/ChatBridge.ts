@@ -1,5 +1,5 @@
 
-import { ChatMode } from '@/types/chat/enums';
+import { ChatMode, ChatPosition } from '@/types/chat/enums';
 import { ChatBridgeState, SendMessageOptions } from '@/types/chat/bridge';
 import { Conversation } from '@/types/chat/conversation';
 import { Provider } from '@/types/chat/providers';
@@ -15,6 +15,8 @@ export class ChatBridge {
   private currentProvider: Provider | null = null;
   private currentConversationId: string | null = null;
   private isMessageLoading: boolean = false;
+  private position: ChatPosition = ChatPosition.BottomRight;
+  private docked: boolean = true;
   private features = {
     voice: false,
     rag: false,
@@ -153,13 +155,19 @@ export class ChatBridge {
 
   togglePosition(): void {
     logger.info('ChatBridge: Toggling position');
-    this.notify('positionToggled', {});
+    this.position = this.position === ChatPosition.BottomRight
+      ? ChatPosition.BottomLeft
+      : ChatPosition.BottomRight;
+    this.notify('positionToggled', { position: this.position });
+    this.notify('stateChanged', this.getState());
   }
 
-  // New method to support docked toggling
+  // Toggle docked state
   toggleDocked(): void {
     logger.info('ChatBridge: Toggling docked state');
-    this.notify('dockedToggled', {});
+    this.docked = !this.docked;
+    this.notify('dockedToggled', { docked: this.docked });
+    this.notify('stateChanged', this.getState());
   }
 
   // State getters
@@ -175,6 +183,14 @@ export class ChatBridge {
     return this.currentProvider;
   }
 
+  isDocked(): boolean {
+    return this.docked;
+  }
+
+  getPosition(): ChatPosition {
+    return this.position;
+  }
+
   getState(): ChatBridgeState {
     return {
       isOpen: this.isOpen,
@@ -183,6 +199,8 @@ export class ChatBridge {
       currentProvider: this.currentProvider,
       currentConversationId: this.currentConversationId,
       isMessageLoading: this.isMessageLoading,
+      position: this.position,
+      docked: this.docked,
       features: { ...this.features }
     };
   }
