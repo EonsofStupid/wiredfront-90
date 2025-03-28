@@ -64,11 +64,19 @@ export function ChatContainer() {
       // Apply user settings to chat
     });
     
+    // Sync chat store state with chatBridge
+    const chatState = chatBridge.getState();
+    if (isOpen !== chatState.isOpen) {
+      if (chatState.isOpen) {
+        toggleChat();
+      }
+    }
+    
     return () => {
       unsubscribeMessage();
       unsubscribeSettings();
     };
-  }, [chatBridge]);
+  }, [chatBridge, isOpen, toggleChat]);
 
   if (!isOpen) {
     return <ChatToggleButton onClick={toggleChat} />;

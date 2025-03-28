@@ -1,18 +1,75 @@
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
-import { ChatMode, CHAT_MODES } from './types';
-import { useChatBridge } from '../ChatBridge/useChatBridge';
+import useChatBridge from '../ChatBridge/useChatBridge';
+import { ChatMode } from '@/types/chat/enums';
+import { CHAT_MODES, ChatMode as ModeType } from './types';
 
-interface ModeContextType {
-  currentMode: ChatMode;
-  setMode: (mode: ChatMode) => void;
+interface ModeContextValue {
   isEditorPage: boolean;
-  isGalleryPage: boolean;
-  isTrainingPage: boolean;
+  currentMode: ModeType;
+  setMode: (mode: ModeType) => void;
+  isDevMode: boolean;
+  isImageMode: boolean;
+  isTrainingMode: boolean;
 }
 
-const ModeContext = createContext<ModeContextType | undefined>(undefined);
+const ModeContext = createContext<ModeContextValue | undefined>(undefined);
+
+interface ModeProviderProps {
+  children: ReactNode;
+}
+
+export const ModeProvider: React.FC<ModeProviderProps> = ({ children }) => {
+  const location = useLocation();
+  const chatBridge = useChatBridge();
+  const isEditorPage = location.pathname.includes('/editor');
+  
+  // Initialize with standard mode
+  const [currentMode, setCurrentMode] = useState<ModeType>('standard');
+
+  // Set the initial mode based on the current path
+  useEffect(() => {
+    const newMode = isEditorPage ? 'developer' : 'standard';
+    setCurrentMode(newMode);
+    
+    // Also update the ChatBridge
+    if (isEditorPage) {
+      chatBridge.setMode(ChatMode.Dev);
+    } else {
+      chatBridge.setMode(ChatMode.Chat);
+    }
+  }, [isEditorPage, chatBridge]);
+
+  // Handle mode changes
+  const setMode = (mode: ModeType) => {
+    setCurrentMode(mode);
+    
+    // Map to ChatMode enum
+    let chatMode = ChatMode.Chat;
+    if (mode === 'developer') chatMode = ChatMode.Dev;
+    else if (mode === 'image') chatMode = ChatMode.Image;
+    else if (mode === 'training') chatMode = ChatMode.Training;
+    
+    // Update the ChatBridge
+    chatBridge.setMode(chatMode);
+  };
+
+  const value = {
+    isEditorPage,
+    currentMode,
+    setMode,
+    isDevMode: currentMode === 'developer',
+    isImageMode: currentMode === 'image',
+    isTrainingMode: currentMode === 'training'
+  };
+
+  return (
+    <ModeContext.Provider value={value}>
+      {children}
+    </ModeContext.Provider>
+  );
+};
 
 export const useMode = () => {
   const context = useContext(ModeContext);
@@ -20,56 +77,4 @@ export const useMode = () => {
     throw new Error('useMode must be used within a ModeProvider');
   }
   return context;
-};
-
-interface ModeProviderProps {
-  children: ReactNode;
-}
-
-export const ModeProvider: React.FC<ModeProviderProps> = ({ children }) => {
-  const [currentMode, setCurrentMode] = useState<ChatMode>('standard');
-  const location = useLocation();
-  const chatBridge = useChatBridge();
-  
-  // Determine current page type
-  const isEditorPage = location.pathname === '/editor';
-  const isGalleryPage = location.pathname === '/gallery';
-  const isTrainingPage = location.pathname === '/training';
-  
-  // Automatically switch mode based on current page
-  useEffect(() => {
-    if (isEditorPage) {
-      setCurrentMode('developer');
-    } else if (isGalleryPage) {
-      setCurrentMode('image');
-    } else if (isTrainingPage) {
-      setCurrentMode('training');
-    } else {
-      setCurrentMode('standard');
-    }
-  }, [isEditorPage, isGalleryPage, isTrainingPage]);
-  
-  // Notify chat bridge of mode changes
-  useEffect(() => {
-    chatBridge.sendEvent('modeChanged', { 
-      mode: currentMode,
-      modeConfig: CHAT_MODES[currentMode] 
-    });
-  }, [currentMode, chatBridge]);
-  
-  const setMode = (mode: ChatMode) => {
-    setCurrentMode(mode);
-  };
-  
-  return (
-    <ModeContext.Provider value={{ 
-      currentMode, 
-      setMode, 
-      isEditorPage, 
-      isGalleryPage, 
-      isTrainingPage 
-    }}>
-      {children}
-    </ModeContext.Provider>
-  );
 };

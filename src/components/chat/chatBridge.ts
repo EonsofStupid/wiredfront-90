@@ -4,6 +4,7 @@
 
 import { 
   ChatBridge, 
+  ChatBridgeHelper,
   ChatBridgeProvider, 
   useChatBridge 
 } from '@/modules/ChatBridge';
@@ -28,16 +29,16 @@ export {
 export class ChatBridgeStatic {
   static openChat() {
     console.warn('ChatBridgeStatic.openChat is deprecated. Use useChatBridge().openChat instead.');
-    ChatBridge.prototype.openChat.call(null);
+    ChatBridgeHelper.openChat();
   }
   
   static closeChat() {
     console.warn('ChatBridgeStatic.closeChat is deprecated. Use useChatBridge().closeChat instead.');
-    ChatBridge.prototype.closeChat.call(null);
+    ChatBridgeHelper.closeChat();
   }
   
   static toggleChat() {
     console.warn('ChatBridgeStatic.toggleChat is deprecated. Use useChatBridge().toggleChat instead.');
-    ChatBridge.prototype.toggleChat.call(null);
+    ChatBridgeHelper.toggleChat();
   }
 }

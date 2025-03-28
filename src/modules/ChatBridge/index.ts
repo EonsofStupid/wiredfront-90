@@ -1,4 +1,4 @@
 
-export { ChatBridgeProvider } from './ChatBridgeProvider';
+export { ChatBridge, ChatBridgeHelper } from './ChatBridge';
+export { ChatBridgeProvider, ChatBridgeContext } from './ChatBridgeProvider';
 export { default as useChatBridge } from './useChatBridge';
-export { ChatBridge } from './ChatBridge';
