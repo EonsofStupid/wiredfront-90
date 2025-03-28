@@ -6,7 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMessageStore } from "../../messaging/MessageManager";
 
-interface SessionItemProps {
+interface ChatSessionItemProps {
   id: string;
   lastAccessed: Date;
   isActive: boolean;
@@ -16,7 +16,7 @@ interface SessionItemProps {
   provider?: string;
 }
 
-export const SessionItem = ({ 
+export const ChatSessionItem = ({ 
   id, 
   lastAccessed, 
   isActive, 
@@ -24,7 +24,7 @@ export const SessionItem = ({
   title,
   onSelect,
   provider
-}: SessionItemProps) => {
+}: ChatSessionItemProps) => {
   // Format the date with date-fns
   const formattedDate = formatDistanceToNow(lastAccessed, { addSuffix: true });
   
