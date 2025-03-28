@@ -7,9 +7,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useAutoScroll } from '../../hooks/useAutoScroll';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useErrorBoundary } from '../../hooks/useErrorBoundary';
-import { Spinner } from '../../shared/Spinner';
-import { logger } from '@/services/chat/LoggingService';
 import { MessageSkeleton } from '../../shared/MessageSkeleton';
+import { logger } from '@/services/chat/LoggingService';
 import { useChatStore } from '../../store/chatStore';
 import { MessageRole, MessageStatus } from '@/types/chat/enums';
 
@@ -85,6 +84,11 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
         >
           {rowVirtualizer.getVirtualItems().map((virtualItem) => {
             const msg = messages[virtualItem.index];
+            // Convert string status to enum if needed
+            const messageStatus = typeof msg.message_status === 'string' 
+              ? msg.message_status as MessageStatus 
+              : msg.message_status;
+            
             return (
               <div
                 key={msg.id}
@@ -102,7 +106,7 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
                     <Message
                       content={msg.content}
                       role={msg.role}
-                      status={msg.message_status}
+                      status={messageStatus}
                       id={msg.id}
                       timestamp={msg.created_at}
                       onRetry={handleRetry}

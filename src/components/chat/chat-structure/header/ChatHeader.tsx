@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight, Minus, X, Pin, PinOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,25 +11,15 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { ChatModeDialog } from "../../features/ModeSwitch";
 
 interface ChatHeaderProps {
-  title: string;
-  showSidebar: boolean;
   isMinimized: boolean;
-  onToggleSidebar: () => void;
-  onMinimize: () => void;
-  onClose: () => void;
   onResize: (size: { width: number; height: number }) => void;
 }
 
 export function ChatHeader({
-  title,
-  showSidebar,
   isMinimized,
-  onToggleSidebar,
-  onMinimize,
-  onClose,
   onResize
 }: ChatHeaderProps) {
-  const { docked, toggleDocked, messages, startTime } = useChatStore();
+  const { docked, toggleDocked, messages, startTime, toggleSidebar, showSidebar } = useChatStore();
   const location = useLocation();
   const isEditorPage = location.pathname === '/editor';
   const isGalleryPage = location.pathname === '/gallery';
@@ -43,7 +34,18 @@ export function ChatHeader({
   const getModeLabel = () => {
     if (isEditorPage) return "DEV";
     if (isGalleryPage) return "IMAGE";
-    return title;
+    return "CHAT";
+  };
+
+  // Use ChatBridge to handle close/minimize actions
+  const handleMinimize = () => {
+    const { toggleMinimize } = useChatStore.getState();
+    toggleMinimize();
+  };
+
+  const handleClose = () => {
+    const { toggleChat } = useChatStore.getState();
+    toggleChat();
   };
 
   // Prevent propagation to avoid triggering drag when clicking buttons
@@ -66,7 +68,7 @@ export function ChatHeader({
           variant="ghost"
           size="icon"
           className="h-8 w-8 hover:bg-white/10 transition-colors duration-200"
-          onClick={(e) => handleButtonClick(e, onToggleSidebar)}
+          onClick={(e) => handleButtonClick(e, toggleSidebar)}
           title={showSidebar ? "Hide sidebar" : "Show sidebar"}
           data-testid="toggle-sidebar-button"
         >
@@ -131,7 +133,7 @@ export function ChatHeader({
           variant="ghost"
           size="icon"
           className="h-8 w-8 hover:bg-white/10 transition-colors duration-200"
-          onClick={(e) => handleButtonClick(e, onMinimize)}
+          onClick={(e) => handleButtonClick(e, handleMinimize)}
           title={isMinimized ? "Maximize chat" : "Minimize chat"}
           data-testid="minimize-button"
         >
@@ -142,7 +144,7 @@ export function ChatHeader({
           variant="ghost"
           size="icon"
           className="h-8 w-8 hover:bg-white/10 transition-colors duration-200"
-          onClick={(e) => handleButtonClick(e, onClose)}
+          onClick={(e) => handleButtonClick(e, handleClose)}
           title="Close chat"
           data-testid="close-button"
         >

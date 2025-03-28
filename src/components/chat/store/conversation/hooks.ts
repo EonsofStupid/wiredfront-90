@@ -1,39 +1,61 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useConversationStore } from './store';
-import { useChatStore } from '../chatStore';
-import { useMessageStore } from '../../messaging/MessageManager';
+import { Conversation } from '../../types/conversation-types';
 
 /**
- * Hook to sync the current conversation with the chat mode
- * This ensures that the chat mode and conversation mode are in sync
+ * Hook to get the current conversation ID
  */
-export const useSyncConversationMode = () => {
-  const { currentConversationId, updateConversation } = useConversationStore();
-  const currentMode = useChatStore(state => state.currentMode);
-  
-  useEffect(() => {
-    if (currentConversationId) {
-      updateConversation(currentConversationId, { mode: currentMode });
-    }
-  }, [currentMode, currentConversationId, updateConversation]);
-};
+export function useCurrentConversationId() {
+  const { currentConversationId } = useConversationStore();
+  return currentConversationId;
+}
 
 /**
- * Hook to load messages for the current conversation
+ * Hook to get the current conversation
  */
-export const useLoadConversationMessages = () => {
-  const currentConversationId = useConversationStore(state => state.currentConversationId);
-  const { loadMessages, clearMessages } = useMessageStore();
-  const { setSessionLoading } = useChatStore();
-  
+export function useCurrentConversation(): Conversation | null {
+  const { conversations, currentConversationId } = useConversationStore();
+  const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
+
   useEffect(() => {
-    if (currentConversationId) {
-      setSessionLoading(true);
-      loadMessages(currentConversationId)
-        .finally(() => setSessionLoading(false));
+    if (currentConversationId && conversations.length > 0) {
+      const conversation = conversations.find(c => c.id === currentConversationId) || null;
+      setCurrentConversation(conversation);
     } else {
-      clearMessages();
+      setCurrentConversation(null);
     }
-  }, [currentConversationId, loadMessages, clearMessages, setSessionLoading]);
-};
+  }, [currentConversationId, conversations]);
+
+  return currentConversation;
+}
+
+/**
+ * Hook to get active conversations 
+ */
+export function useActiveConversations() {
+  const { conversations } = useConversationStore();
+  const [activeConversations, setActiveConversations] = useState<Conversation[]>([]);
+
+  useEffect(() => {
+    const active = conversations.filter(c => !c.archived) || [];
+    setActiveConversations(active);
+  }, [conversations]);
+
+  return activeConversations;
+}
+
+/**
+ * Hook to get archived conversations
+ */
+export function useArchivedConversations() {
+  const { conversations } = useConversationStore();
+  const [archivedConversations, setArchivedConversations] = useState<Conversation[]>([]);
+
+  useEffect(() => {
+    const archived = conversations.filter(c => c.archived) || [];
+    setArchivedConversations(archived);
+  }, [conversations]);
+
+  return archivedConversations;
+}

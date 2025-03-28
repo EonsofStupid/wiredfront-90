@@ -36,7 +36,6 @@ export function ChatContainer({ scrollRef, isEditorPage }: ChatContainerProps) {
     return "h-[500px]";
   };
   
-  // Only render header when in minimized state, otherwise render full container
   return (
     <DndContext>
       <div 
