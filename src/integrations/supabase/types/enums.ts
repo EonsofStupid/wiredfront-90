@@ -4,6 +4,11 @@ import {
   ChatMode as ChatModeEnum, 
   TokenEnforcementMode as TokenEnforcementModeEnum 
 } from '@/types/chat/enums';
+import { 
+  messageTypeToString,
+  chatModeToString,
+  safeEnumValue
+} from '@/components/chat/types/enums-mapper';
 
 // Re-export the enum values for use in the integration layer
 export const MessageType = MessageTypeEnum;
@@ -19,3 +24,8 @@ export interface Enums {
   chat_mode: typeof ChatModeEnum;
   token_enforcement: typeof TokenEnforcementModeEnum;
 }
+
+// Helper functions for database operations
+export const getDbMessageType = (type: MessageTypeEnum): string => messageTypeToString(type);
+export const getDbChatMode = (mode: ChatModeEnum): string => chatModeToString(mode);
+export const getDbEnforcementMode = (mode: TokenEnforcementModeEnum): string => safeEnumValue(mode).toString();

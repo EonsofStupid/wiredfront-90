@@ -137,3 +137,13 @@ export function chatModeForDatabase(mode: string | ChatMode): ChatMode {
   }
   return mode;
 }
+
+/**
+ * Helper function to safely use enum values in database operations
+ */
+export function safeEnumValue(value: string | number | symbol): string | number {
+  if (typeof value === 'symbol') {
+    return value.toString().replace(/^Symbol\((.*)\)$/, '$1');
+  }
+  return value;
+}

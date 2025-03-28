@@ -22,7 +22,7 @@ import { useChatBridge } from '@/components/chat/chatBridge';
 import { ChatMode } from '@/types/chat/enums';
 import { stringToChatMode } from '@/components/chat/types/enums-mapper';
 
-// Map from UI mode strings to ChatMode enum values
+// Map from UI mode strings to ChatMode enum values using our centralized mapper
 const uiModeToChatMode: Record<string, ChatMode> = {
   'standard': ChatMode.Chat,
   'editor': ChatMode.Dev,
