@@ -1,9 +1,9 @@
 
-import { useCallback } from 'react';
-import { useChatBridge } from '../ChatBridge';
-import { useChatStore } from '@/components/chat/store/chatStore';
+import { useState, useCallback, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ChatMode } from '@/types/chat/enums';
-import { ModeConfig } from './types';
+import { ModeConfig, ModeContextType } from './types';
+import { logger } from '@/services/chat/LoggingService';
 
 // Define available modes with their configurations
 const availableModes: ModeConfig[] = [
@@ -12,7 +12,7 @@ const availableModes: ModeConfig[] = [
     displayName: 'Chat',
     description: 'Standard chat conversation',
     icon: 'MessageSquare',
-    defaultProvider: 'gpt-4',
+    defaultProvider: 'gpt-4'
   },
   {
     id: ChatMode.Dev,
@@ -20,7 +20,7 @@ const availableModes: ModeConfig[] = [
     description: 'Code assistance and development help',
     icon: 'Code',
     requiredFeatures: ['codeAssistant'],
-    defaultProvider: 'gpt-4',
+    defaultProvider: 'gpt-4'
   },
   {
     id: ChatMode.Image,
@@ -28,7 +28,7 @@ const availableModes: ModeConfig[] = [
     description: 'Generate and modify images',
     icon: 'ImageIcon',
     requiredFeatures: ['imageGeneration'],
-    defaultProvider: 'dalle-3',
+    defaultProvider: 'dalle-3'
   },
   {
     id: ChatMode.Training,
@@ -36,45 +36,68 @@ const availableModes: ModeConfig[] = [
     description: 'Learn coding and concepts',
     icon: 'GraduationCap',
     requiredFeatures: ['training'],
-    defaultProvider: 'gpt-4',
-  },
+    defaultProvider: 'gpt-4'
+  }
 ];
 
 /**
- * Hook to manage chat modes
+ * Hook to manage mode selection and switching
  */
-export const useModeManager = () => {
-  const { currentMode: storeMode, features } = useChatStore();
-  const chatBridge = useChatBridge();
+export function useModeManager(): ModeContextType {
+  const location = useLocation();
+  const [currentMode, setCurrentMode] = useState<ChatMode>(ChatMode.Chat);
+  const [isModeSwitchEnabled, setIsModeSwitchEnabled] = useState<boolean>(true);
   
-  // Use the actual chat mode from store
-  const currentMode = (typeof storeMode === 'string' 
-    ? storeMode as ChatMode 
-    : storeMode) || ChatMode.Chat;
-
-  // Function to change the mode
-  const setMode = useCallback((mode: ChatMode) => {
-    return chatBridge.setMode(mode);
-  }, [chatBridge]);
-
-  // Filter modes based on available features
-  const filteredModes = availableModes.filter(mode => {
-    if (!mode.requiredFeatures || mode.requiredFeatures.length === 0) {
-      return true;
-    }
+  // Synchronize mode with current route
+  useEffect(() => {
+    const path = location.pathname;
     
-    return mode.requiredFeatures.every(feature => 
-      features[feature as keyof typeof features]
-    );
-  });
-
-  // Check if mode switching is enabled
-  const isModeSwitchEnabled = !!features.modeSwitch;
-
+    // Map routes to modes
+    if (path.includes('/editor')) {
+      handleModeChange(ChatMode.Dev);
+    } else if (path.includes('/training')) {
+      handleModeChange(ChatMode.Training);
+    } else if (path.includes('/gallery')) {
+      handleModeChange(ChatMode.Image);
+    } else {
+      // Default to Chat mode for other routes
+      handleModeChange(ChatMode.Chat);
+    }
+  }, [location.pathname]);
+  
+  // Function to set the current mode
+  const handleModeChange = useCallback((mode: ChatMode) => {
+    logger.info('Mode changed', { prevMode: currentMode, newMode: mode });
+    setCurrentMode(mode);
+  }, [currentMode]);
+  
+  // Function to set the mode with validation and side effects
+  const setMode = useCallback(async (mode: ChatMode): Promise<boolean> => {
+    try {
+      // Check if the mode is available
+      const modeConfig = availableModes.find(m => m.id === mode);
+      if (!modeConfig) {
+        logger.warn('Attempting to switch to unavailable mode', { mode });
+        return false;
+      }
+      
+      // Set the mode
+      handleModeChange(mode);
+      
+      // Log the mode change
+      logger.info('Mode switched successfully', { mode });
+      
+      return true;
+    } catch (error) {
+      logger.error('Failed to set mode', { error, requestedMode: mode });
+      return false;
+    }
+  }, [handleModeChange]);
+  
   return {
     currentMode,
     setMode,
-    availableModes: filteredModes,
+    availableModes,
     isModeSwitchEnabled
   };
-};
+}

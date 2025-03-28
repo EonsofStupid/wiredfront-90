@@ -18,6 +18,8 @@ import { Provider } from '@/types/chat/providers';
 import { Conversation } from '@/types/chat/conversation';
 import { logger } from '@/services/chat/LoggingService';
 import { EnumUtils } from '@/lib/enums';
+import { v4 as uuidv4 } from 'uuid';
+import { MessageEnvelope, TaskType } from '@/types/chat/communication';
 
 /**
  * ChatBridge implementation
@@ -115,12 +117,23 @@ export class ChatBridge implements ChatBridgeInterface {
         throw new Error('No active conversation');
       }
       
+      // Create a proper message envelope
+      const envelope = this.createMessageEnvelope(
+        content, 
+        conversationId, 
+        options.metadata || {}
+      );
+      
+      // Log the envelope for debugging
+      logger.debug('Sending message with envelope', { envelope });
+      
+      // Send the message through the message store
       const messageId = await this.messageStore.sendMessage(
         content,
         conversationId,
         options.role,
         options.type,
-        options.metadata,
+        { ...options.metadata, envelope },
         options.parentMessageId
       );
       
@@ -128,6 +141,54 @@ export class ChatBridge implements ChatBridgeInterface {
     } catch (error) {
       logger.error('ChatBridge: Failed to send message', error);
       throw error;
+    }
+  }
+
+  /**
+   * Create a standardized message envelope
+   */
+  private createMessageEnvelope(
+    content: string, 
+    conversationId: string, 
+    metadata: Record<string, any> = {}
+  ): MessageEnvelope {
+    // Get the conversation to determine mode
+    const conversation = this.conversationStore.conversations.find(
+      c => c.id === conversationId
+    );
+    
+    // Map current mode to task type
+    const taskType = this.mapModeToTaskType(
+      conversation?.mode || this.chatStore.currentMode
+    );
+    
+    return {
+      traceId: uuidv4(),
+      sessionId: conversationId,
+      mode: conversation?.mode || this.chatStore.currentMode,
+      taskType,
+      input: content,
+      context: metadata.context || [],
+      timestamp: new Date().toISOString(),
+      metadata
+    };
+  }
+  
+  /**
+   * Map chat mode to appropriate task type
+   */
+  private mapModeToTaskType(mode: ChatMode): TaskType {
+    switch (mode) {
+      case ChatMode.Dev:
+      case ChatMode.Editor:
+        return TaskType.CodeGeneration;
+      case ChatMode.Training:
+        return TaskType.Tutoring;
+      case ChatMode.Image:
+        return TaskType.ImageGeneration;
+      case ChatMode.Chat:
+      default:
+        return TaskType.Conversation;
     }
   }
 
