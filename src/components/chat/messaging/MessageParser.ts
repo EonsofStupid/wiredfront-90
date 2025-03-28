@@ -1,5 +1,5 @@
 
-import { MessageType } from '@/types/chat/enums';
+import { MessageType, MessageRole } from '@/types/chat/enums';
 
 /**
  * Parse message content to extract structured information
@@ -80,5 +80,36 @@ export function parseCommand(content: string): {
     isCommand: false,
     command: '',
     args: []
+  };
+}
+
+/**
+ * Create a message envelope for tracing and logging
+ */
+export function createMessageEnvelope(
+  content: string, 
+  role: MessageRole,
+  sessionId: string,
+  metadata: Record<string, any> = {}
+): {
+  content: string;
+  role: MessageRole;
+  trace_id: string;
+  session_id: string;
+  timestamp: string;
+  metadata: Record<string, any>;
+} {
+  const trace_id = metadata.trace_id || `trace-${Math.random().toString(36).substring(2, 15)}`;
+  
+  return {
+    content,
+    role,
+    trace_id,
+    session_id: sessionId,
+    timestamp: new Date().toISOString(),
+    metadata: {
+      ...metadata,
+      trace_id
+    }
   };
 }

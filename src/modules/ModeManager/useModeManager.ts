@@ -1,10 +1,9 @@
 
 import { useCallback } from 'react';
+import { useChatBridge } from '../ChatBridge';
 import { useChatStore } from '@/components/chat/store/chatStore';
-import { useChatBridge } from '@/modules/ChatBridge';
 import { ChatMode } from '@/types/chat/enums';
-import { ModeConfig } from '@/modules/ModeManager/types';
-import { EnumUtils } from '@/lib/enums';
+import { ModeConfig } from './types';
 
 // Define available modes with their configurations
 const availableModes: ModeConfig[] = [
@@ -42,25 +41,20 @@ const availableModes: ModeConfig[] = [
 ];
 
 /**
- * DEPRECATED: Use useMode from @/modules/ModeManager instead
- * This hook is kept for backward compatibility
+ * Hook to manage chat modes
  */
-export const useMode = () => {
+export const useModeManager = () => {
   const { currentMode: storeMode, features } = useChatStore();
   const chatBridge = useChatBridge();
   
-  // Convert from database mode to UI mode for consistency
-  const currentMode = typeof storeMode === 'string' 
-    ? EnumUtils.stringToChatMode(storeMode) 
-    : storeMode as ChatMode;
-    
-  const uiMode = EnumUtils.chatModeToUiMode(currentMode);
+  // Use the actual chat mode from store
+  const currentMode = (typeof storeMode === 'string' 
+    ? storeMode as ChatMode 
+    : storeMode) || ChatMode.Chat;
 
   // Function to change the mode
-  const setMode = useCallback((mode: string) => {
-    // Map UI mode to database mode if needed
-    const dbMode = EnumUtils.uiModeToChatMode(mode);
-    chatBridge.setMode(dbMode);
+  const setMode = useCallback((mode: ChatMode) => {
+    return chatBridge.setMode(mode);
   }, [chatBridge]);
 
   // Filter modes based on available features
@@ -74,9 +68,13 @@ export const useMode = () => {
     );
   });
 
+  // Check if mode switching is enabled
+  const isModeSwitchEnabled = !!features.modeSwitch;
+
   return {
-    currentMode: uiMode,
+    currentMode,
     setMode,
     availableModes: filteredModes,
+    isModeSwitchEnabled
   };
 };

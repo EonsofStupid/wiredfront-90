@@ -1,32 +1,23 @@
 
-import React, { createContext, useContext, useEffect, useMemo } from 'react';
-import { useChatStore } from '../store/chatStore';
-import { useConversationStore } from '../store/conversation/store';
-import { useMessageStore } from '../messaging/MessageManager';
+import { useChatStore } from '@/components/chat/store/chatStore';
+import { useConversationStore } from '@/components/chat/store/conversation/store';
+import { useMessageStore } from '@/components/chat/messaging/MessageManager';
 import { 
-  ChatBridge as ChatBridgeInterface, 
   ChatBridgeState,
-  SendMessageOptions
+  SendMessageOptions,
+  ChatBridge as ChatBridgeInterface
 } from '@/types/chat/bridge';
-import { ChatMode, MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
+import { 
+  ChatMode, 
+  MessageRole, 
+  MessageStatus, 
+  MessageType,
+  ChatPositions
+} from '@/types/chat/enums';
 import { Provider } from '@/types/chat/providers';
 import { Conversation } from '@/types/chat/conversation';
 import { logger } from '@/services/chat/LoggingService';
 import { EnumUtils } from '@/lib/enums';
-
-// Create context for using the bridge
-const ChatBridgeContext = createContext<ChatBridgeInterface | null>(null);
-
-/**
- * Hook to access the chat bridge
- */
-export const useChatBridge = () => {
-  const context = useContext(ChatBridgeContext);
-  if (!context) {
-    throw new Error('useChatBridge must be used within a ChatBridgeProvider');
-  }
-  return context;
-};
 
 /**
  * ChatBridge implementation
@@ -244,18 +235,3 @@ export class ChatBridge implements ChatBridgeInterface {
     };
   }
 }
-
-/**
- * Component that provides the ChatBridge to the app
- */
-export const ChatBridgeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Create a memoized instance of the bridge
-  const bridge = useMemo(() => new ChatBridge(), []);
-  
-  // Render the provider
-  return (
-    <ChatBridgeContext.Provider value={bridge}>
-      {children}
-    </ChatBridgeContext.Provider>
-  );
-};

@@ -1,30 +1,22 @@
 
-// Consolidated export file for the chat module
-// This provides a single entry point for all chat components and functionality
+// Only export the public interface components
+// Import from modules for bridge functionality
 
-// Core store exports
-export * from './store/chatStore';
-export * from './store/conversation';
-export * from './store/token';
+// Re-export bridge from modules
+export { 
+  ChatBridgeProvider, 
+  useChatBridge 
+} from '@/modules/ChatBridge';
 
-// Chat structure and UI components
-export * from './chat-structure';
-export * from './shared/ChatPositionToggle';
-export * from './shared/Spinner';
+// Re-export mode manager from modules
+export { 
+  ModeProvider, 
+  useMode 
+} from '@/modules/ModeManager';
 
-// Hook exports
-export * from './hooks/conversation';
-export * from './hooks/useConversationCleanup';
-export * from './hooks/useMode';
+// Chat UI components - minimal exports
+export { default as ChatContainer } from './ChatContainer';
+export { default as ChatToggle } from './shared/ChatToggleButton';
 
-// Messaging system
-export * from './messaging/MessageManager';
-
-// Chat bridge - main integration point for external apps
-export { ChatBridge, ChatBridgeProvider, useChatBridge } from './chatBridge';
-
-// Feature exports
-export * from './features/modes/hooks/useMode';
-
-// Type exports
+// Types 
 export * from '@/types/chat';
