@@ -1,104 +1,47 @@
 
-import { StateCreator } from 'zustand';
-import { ChatState } from '../types/chat-store-types';
-import { supabase } from '@/integrations/supabase/client';
+import { ChatState } from '../../types';
 import { logger } from '@/services/chat/LoggingService';
 
+/**
+ * Create initialization actions for the chat store
+ */
 export const createInitializationActions = (
-  set: StateCreator<ChatState>['setState'],
+  set: (partial: Partial<ChatState> | ((state: ChatState) => Partial<ChatState>), replace?: boolean, name?: string | {type: string}) => void,
   get: () => ChatState
-) => ({
-  initializeChat: async () => {
-    try {
-      logger.info('Initializing chat state...');
+) => {
+  return {
+    /**
+     * Initialize the chat
+     */
+    initializeChat: () => {
+      logger.info('Initializing chat');
       
-      // Fetch user auth info
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        // Get user chat preferences
-        const { data: prefsData } = await supabase
-          .from('user_chat_preferences')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-        
-        if (prefsData) {
-          // Set UI preferences from database
+      // Restore state from localStorage if available
+      const savedState = localStorage.getItem('chatState');
+      if (savedState) {
+        try {
+          const parsed = JSON.parse(savedState);
+          
           set({
-            position: prefsData.position as any || 'bottom-right',
-            docked: prefsData.docked !== undefined ? prefsData.docked : true,
-            isMinimized: false, // Always start maximized
-            scale: prefsData.scale || 1
-          }, false, { type: 'chat/initializePreferences' });
+            ...parsed,
+            initialized: true,
+            startTime: Date.now()
+          }, false, { type: 'chat/initialize' });
           
-          logger.info('Chat preferences initialized', { 
-            position: prefsData.position,
-            docked: prefsData.docked 
-          });
-        }
-        
-        // Fetch available providers
-        const { data: providers } = await supabase
-          .from('chat_providers')
-          .select('*')
-          .eq('is_enabled', true);
-        
-        if (providers && providers.length > 0) {
-          // Transform to the Provider type
-          const transformedProviders = providers.map(p => ({
-            id: p.id,
-            name: p.name,
-            description: p.description || '',
-            category: p.category || 'chat',
-            isEnabled: p.is_enabled,
-            maxTokens: p.max_tokens,
-            contextSize: p.context_size
-          }));
-          
-          // Update providers in store
-          get().updateChatProvider(transformedProviders);
-          
-          logger.info('Chat providers initialized', { count: transformedProviders.length });
-        } else {
-          logger.warn('No chat providers found');
-        }
-        
-        // Fetch feature flags
-        const { data: featureFlags } = await supabase
-          .from('feature_flags')
-          .select('key, enabled')
-          .in('key', [
-            'voice', 'rag', 'modeSwitch', 'notifications', 
-            'github', 'codeAssistant', 'ragSupport', 
-            'githubSync', 'tokenEnforcement'
-          ]);
-        
-        if (featureFlags && featureFlags.length > 0) {
-          const features = { ...get().features };
-          
-          // Update features based on database flags
-          featureFlags.forEach(flag => {
-            if (flag.key in features) {
-              features[flag.key as keyof typeof features] = flag.enabled;
-            }
-          });
-          
-          set({ features }, false, { type: 'chat/initializeFeatures' });
-          logger.info('Feature flags initialized', { features });
+          logger.info('Chat initialized from saved state');
+          return;
+        } catch (error) {
+          logger.error('Failed to parse saved chat state', { error });
         }
       }
       
-      // Mark as initialized
-      set({ initialized: true }, false, { type: 'chat/initialized' });
-      logger.info('Chat initialization complete');
+      // Set initialized flag
+      set({
+        initialized: true,
+        startTime: Date.now()
+      }, false, { type: 'chat/initialize' });
       
-    } catch (error) {
-      logger.error('Error initializing chat', { error });
-      set({ 
-        error: error instanceof Error ? error : new Error('Failed to initialize chat'),
-        initialized: true // Still mark as initialized to prevent infinite retries
-      }, false, { type: 'chat/initializationError' });
+      logger.info('Chat initialized with default state');
     }
-  }
-});
+  };
+};

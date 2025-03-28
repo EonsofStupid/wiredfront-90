@@ -1,4 +1,5 @@
-import { ChatMode } from './enums';
+
+import { ChatMode } from './chat-modes';
 import { Json } from '@/integrations/supabase/types';
 
 /**

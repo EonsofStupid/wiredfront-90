@@ -1,108 +1,82 @@
 
 import React from 'react';
-import { atom, useAtom } from 'jotai';
 import { 
   MoreHorizontal, 
   Copy, 
-  Edit, 
-  Trash, 
-  MessageSquare, 
-  Download,
-  RefreshCw
+  RefreshCw,
+  Trash2, 
+  Pencil
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
-import { MessageRole } from '@/types/chat/enums';
+import { MessageRole } from '../../types';
 
 interface MessageActionsProps {
   id: string;
   messageRole: MessageRole;
   onEdit?: () => void;
   onDelete?: (id: string) => void;
-  onRegenerate?: () => void;
-  onDownload?: () => void;
+  onRegenerate?: (id: string) => void;
 }
 
-// Create local atoms for this component
-const showDropdownAtom = atom(false);
-
-export const MessageActions = ({
-  id,
+export const MessageActions = ({ 
+  id, 
   messageRole,
-  onEdit,
-  onDelete,
-  onRegenerate,
-  onDownload
+  onEdit, 
+  onDelete, 
+  onRegenerate
 }: MessageActionsProps) => {
-  const [showDropdown, setShowDropdown] = useAtom(showDropdownAtom);
-  
   const handleCopy = () => {
-    // Find the message content in the DOM
+    // Find the message element and copy its text content
     const messageElement = document.getElementById(`message-${id}`);
     if (messageElement) {
-      const content = messageElement.innerText;
-      navigator.clipboard.writeText(content)
-        .then(() => toast.success("Copied to clipboard"))
-        .catch(() => toast.error("Failed to copy"));
-    } else {
-      toast.error("Couldn't find message content");
+      const textContent = messageElement.innerText;
+      navigator.clipboard.writeText(textContent)
+        .then(() => toast.success('Message copied to clipboard'))
+        .catch(() => toast.error('Failed to copy message'));
     }
   };
-  
-  const handleDelete = () => {
-    if (onDelete) {
-      onDelete(id);
-    }
-  };
-  
-  const isAssistant = messageRole === 'assistant';
   
   return (
-    <DropdownMenu open={showDropdown} onOpenChange={setShowDropdown}>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button 
-          className="p-1 rounded-full hover:bg-muted"
-          aria-label="Message actions"
-        >
+        <Button variant="ghost" size="icon" className="h-6 w-6 opacity-50 hover:opacity-100">
           <MoreHorizontal className="h-4 w-4" />
-        </button>
+        </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
+      <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={handleCopy}>
           <Copy className="h-4 w-4 mr-2" />
-          <span>Copy</span>
+          Copy
         </DropdownMenuItem>
         
-        {onEdit && (
+        {onEdit && messageRole === 'user' && (
           <DropdownMenuItem onClick={onEdit}>
-            <Edit className="h-4 w-4 mr-2" />
-            <span>Edit</span>
+            <Pencil className="h-4 w-4 mr-2" />
+            Edit
+          </DropdownMenuItem>
+        )}
+        
+        {onRegenerate && messageRole === 'assistant' && (
+          <DropdownMenuItem onClick={() => onRegenerate(id)}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Regenerate
           </DropdownMenuItem>
         )}
         
         {onDelete && (
-          <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-            <Trash className="h-4 w-4 mr-2" />
-            <span>Delete</span>
-          </DropdownMenuItem>
-        )}
-        
-        {isAssistant && onRegenerate && (
-          <DropdownMenuItem onClick={onRegenerate}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            <span>Regenerate</span>
-          </DropdownMenuItem>
-        )}
-        
-        {isAssistant && onDownload && (
-          <DropdownMenuItem onClick={onDownload}>
-            <Download className="h-4 w-4 mr-2" />
-            <span>Download</span>
+          <DropdownMenuItem 
+            onClick={() => onDelete(id)}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

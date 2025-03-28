@@ -4,7 +4,6 @@ import { TokenState } from './types';
 import { createTokenActions } from './actions/token-actions';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
-import { UIEnforcementMode } from '@/types/chat/enums';
 
 const initialState: Omit<TokenState, 'addTokens' | 'spendTokens' | 'setTokenBalance' | 'setEnforcementMode' | 'setEnforcementEnabled' | 'resetTokens' | 'resetQueriesUsed' | 'updateTokenSettings'> = {
   balance: 0,

@@ -1,118 +1,55 @@
 
-/* ---------- Chat Animations ---------- */
-
-/* Fade in animation */
 @keyframes chat-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-.chat-fade-in {
-  animation: chat-fade-in var(--chat-transition-speed) var(--chat-animation-timing);
+@keyframes chat-slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
-/* Message animation for assistant typing */
+@keyframes chat-slide-down {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes chat-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+
 @keyframes chat-typing {
   0% { opacity: 0.3; }
   50% { opacity: 1; }
   100% { opacity: 0.3; }
 }
 
-.chat-typing-indicator {
-  display: flex;
-  gap: 0.25rem;
+.chat-animate-fade-in {
+  animation: chat-fade-in var(--chat-transition-duration) var(--chat-transition-timing);
 }
 
-.chat-typing-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background-color: var(--chat-text);
+.chat-animate-slide-up {
+  animation: chat-slide-up var(--chat-transition-duration) var(--chat-transition-timing);
+}
+
+.chat-animate-slide-down {
+  animation: chat-slide-down var(--chat-transition-duration) var(--chat-transition-timing);
+}
+
+.chat-animate-pulse {
+  animation: chat-pulse 2s infinite;
+}
+
+.chat-animate-typing span {
   animation: chat-typing 1.5s infinite;
 }
 
-.chat-typing-dot:nth-child(2) {
+.chat-animate-typing span:nth-child(2) {
   animation-delay: 0.2s;
 }
 
-.chat-typing-dot:nth-child(3) {
+.chat-animate-typing span:nth-child(3) {
   animation-delay: 0.4s;
-}
-
-/* Pulse animation */
-@keyframes chat-pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
-.chat-pulse {
-  animation: chat-pulse 2s infinite var(--chat-animation-timing);
-}
-
-/* Glow animation */
-@keyframes chat-glow {
-  0% { box-shadow: 0 0 5px var(--chat-accent-primary); }
-  50% { box-shadow: 0 0 15px var(--chat-accent-primary); }
-  100% { box-shadow: 0 0 5px var(--chat-accent-primary); }
-}
-
-.chat-glow {
-  animation: chat-glow 2s infinite var(--chat-animation-timing);
-}
-
-/* WFPULSE Theme Specific Animations */
-
-/* Color cycling for neon elements */
-@keyframes wfpulse-color-cycle {
-  0% { border-color: rgba(139, 92, 246, 0.7); }
-  33% { border-color: rgba(217, 70, 239, 0.7); }
-  66% { border-color: rgba(14, 165, 233, 0.7); }
-  100% { border-color: rgba(139, 92, 246, 0.7); }
-}
-
-.wfpulse-border-cycle {
-  animation: wfpulse-color-cycle 8s infinite;
-}
-
-/* Glow cycling for neon elements */
-@keyframes wfpulse-glow-cycle {
-  0% { box-shadow: 0 0 10px rgba(139, 92, 246, 0.7); }
-  33% { box-shadow: 0 0 15px rgba(217, 70, 239, 0.7); }
-  66% { box-shadow: 0 0 10px rgba(14, 165, 233, 0.7); }
-  100% { box-shadow: 0 0 10px rgba(139, 92, 246, 0.7); }
-}
-
-.wfpulse-glow-cycle {
-  animation: wfpulse-glow-cycle 8s infinite;
-}
-
-/* Trace animation for cyber elements */
-@keyframes wfpulse-trace {
-  0% { 
-    background-position: 0% 0%;
-    opacity: 0;
-  }
-  20% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { 
-    background-position: 100% 0%; 
-    opacity: 0;
-  }
-}
-
-.wfpulse-trace {
-  position: relative;
-  overflow: hidden;
-}
-
-.wfpulse-trace::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 1), transparent);
-  animation: wfpulse-trace 3s infinite;
 }

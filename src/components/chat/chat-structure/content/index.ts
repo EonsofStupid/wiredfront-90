@@ -1,2 +1,2 @@
 
-export { ChatContent } from './ChatContent';
+export * from './ChatContent';

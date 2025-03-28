@@ -1,49 +1,54 @@
 
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import { useChatStore } from '../store/chatStore';
+import { logger } from '@/services/chat/LoggingService';
 
-export type ChatModeType = 'standard' | 'editor' | 'image' | 'chat-only';
+type ChatModeContextType = {
+  mode: 'standard' | 'editor' | 'image' | 'training';
+  isEditorPage: boolean;
+};
 
-interface ChatModeContextType {
-  mode: ChatModeType;
-  setMode: (mode: ChatModeType) => void;
-}
-
-const ChatModeContext = createContext<ChatModeContextType | undefined>(undefined);
+const ChatModeContext = createContext<ChatModeContextType>({
+  mode: 'standard',
+  isEditorPage: false
+});
 
 interface ChatModeProviderProps {
   children: ReactNode;
-  isEditorPage?: boolean;
+  isEditorPage: boolean;
 }
 
-export function ChatModeProvider({ children, isEditorPage = false }: ChatModeProviderProps) {
-  const [mode, setMode] = useState<ChatModeType>(isEditorPage ? 'editor' : 'standard');
-  const location = useLocation();
-
-  // Automatically set mode based on route
+export function ChatModeProvider({ children, isEditorPage }: ChatModeProviderProps) {
+  const { currentMode, setMode } = useChatStore();
+  const [mode, setLocalMode] = useState<'standard' | 'editor' | 'image' | 'training'>('standard');
+  
+  // Initialize the mode based on current page and store state
   useEffect(() => {
-    if (location.pathname.includes('/editor')) {
-      setMode('editor');
-    } else if (location.pathname.includes('/gallery')) {
-      setMode('image');
-    } else if (location.pathname === '/chat') {
-      setMode('chat-only');
-    } else {
-      setMode('standard');
+    let newMode: 'standard' | 'editor' | 'image' | 'training' = 'standard';
+    
+    if (isEditorPage) {
+      newMode = 'editor';
+      if (currentMode !== 'dev' && currentMode !== 'editor') {
+        // Sync store with UI if on editor page
+        setMode('dev');
+      }
+    } else if (currentMode === 'dev' || currentMode === 'editor') {
+      newMode = 'editor';
+    } else if (currentMode === 'image') {
+      newMode = 'image';
+    } else if (currentMode === 'training') {
+      newMode = 'training';
     }
-  }, [location.pathname]);
-
+    
+    setLocalMode(newMode);
+    logger.info('Chat mode context initialized', { mode: newMode, currentMode, isEditorPage });
+  }, [currentMode, isEditorPage, setMode]);
+  
   return (
-    <ChatModeContext.Provider value={{ mode, setMode }}>
+    <ChatModeContext.Provider value={{ mode, isEditorPage }}>
       {children}
     </ChatModeContext.Provider>
   );
 }
 
-export const useChatMode = () => {
-  const context = useContext(ChatModeContext);
-  if (context === undefined) {
-    throw new Error('useChatMode must be used within a ChatModeProvider');
-  }
-  return context;
-};
+export const useChatMode = () => useContext(ChatModeContext);

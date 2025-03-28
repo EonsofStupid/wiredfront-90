@@ -1,70 +1,53 @@
 
-import React, { useState } from 'react';
-import { Code, Image, MessageSquare } from 'lucide-react';
+import React from 'react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useChatStore } from '../store/chatStore';
-import { useChatMode } from '../providers/ChatModeProvider';
+import { useConversationStore } from '../store/conversation/store';
+import { useChatBridge } from '../chatBridge';
+import { toast } from 'sonner';
 
 export function ChatHeaderTopNav() {
-  const { features } = useChatStore();
-  const { mode, setMode } = useChatMode();
-  const [hoveredIcon, setHoveredIcon] = useState<string | null>(null);
-  
-  // Only show if mode switching is enabled
-  if (!features.modeSwitch) return null;
-  
+  const { features, resetChatState } = useChatStore();
+  const { createConversation } = useConversationStore();
+  const chatBridge = useChatBridge();
+
+  const handleNewChat = () => {
+    const conversationId = createConversation();
+    if (conversationId) {
+      chatBridge.switchConversation(conversationId);
+      toast.success('New chat started');
+    }
+  };
+
+  const handleResetChat = () => {
+    resetChatState();
+    toast.success('Chat reset successfully');
+  };
+
   return (
-    <TooltipProvider>
-      <div className="flex items-center gap-1 mr-2">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`h-6 w-6 p-1 rounded-full ${mode === 'standard' ? 'bg-primary/20' : 'opacity-50'}`}
-              onClick={() => setMode('standard')}
-              onMouseEnter={() => setHoveredIcon('chat')}
-              onMouseLeave={() => setHoveredIcon(null)}
-            >
-              <MessageSquare className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">Chat Mode</TooltipContent>
-        </Tooltip>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Settings className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-56">
+        <DropdownMenuItem onClick={handleNewChat}>
+          New Chat
+        </DropdownMenuItem>
         
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`h-6 w-6 p-1 rounded-full ${mode === 'editor' ? 'bg-primary/20' : 'opacity-50'}`}
-              onClick={() => setMode('editor')}
-              onMouseEnter={() => setHoveredIcon('code')}
-              onMouseLeave={() => setHoveredIcon(null)}
-            >
-              <Code className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">Code Mode</TooltipContent>
-        </Tooltip>
+        {features.tokenEnforcement && (
+          <DropdownMenuItem onClick={() => chatBridge.toggleFeature('tokenEnforcement')}>
+            {features.tokenEnforcement ? 'Disable' : 'Enable'} Token Enforcement
+          </DropdownMenuItem>
+        )}
         
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`h-6 w-6 p-1 rounded-full ${mode === 'image' ? 'bg-primary/20' : 'opacity-50'}`}
-              onClick={() => setMode('image')}
-              onMouseEnter={() => setHoveredIcon('image')}
-              onMouseLeave={() => setHoveredIcon(null)}
-            >
-              <Image className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">Image Mode</TooltipContent>
-        </Tooltip>
-      </div>
-    </TooltipProvider>
+        <DropdownMenuItem onClick={handleResetChat} className="text-red-500">
+          Reset Chat
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

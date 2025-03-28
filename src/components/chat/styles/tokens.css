@@ -1,158 +1,34 @@
 
-/* Chat theme tokens - WFPULSE theme */
 :root {
-  /* Base colors */
-  --chat-primary: #7c3aed;
-  --chat-primary-hover: #6d28d9;
-  --chat-secondary: #ec4899;
-  --chat-secondary-hover: #db2777;
+  /* Z-index variables */
+  --z-chat: 50;
+  --z-chat-dialog: 51;
+  --z-chat-tooltip: 52;
   
-  /* Text colors */
-  --chat-text: #f8fafc;
-  --chat-text-muted: #cbd5e1;
-  --chat-text-dimmed: #94a3b8;
-  --chat-text-highlight: #f1f5f9;
+  /* Size variables */
+  --chat-width: 400px;
+  --chat-height: 500px;
+  --chat-input-height: 60px;
+  --chat-header-height: 56px;
   
-  /* Background colors */
-  --chat-bg: #1e293b;
-  --chat-bg-hover: #334155;
-  --chat-bg-light: #334155;
-  --chat-bg-lighter: #475569;
-  --chat-bg-dark: #0f172a;
-  --chat-bg-darkest: #020617;
+  /* Color variables */
+  --chat-border-color: rgba(59, 130, 246, 0.5);
+  --chat-bg-color: rgba(17, 24, 39, 0.8);
+  --chat-accent-color: rgb(59, 130, 246);
+  --chat-text-color: white;
+  --chat-muted-color: rgba(156, 163, 175, 0.8);
   
-  /* Dialog & UI elements */
-  --chat-dialog-content: #1e293b;
-  --chat-dialog-header: #0f172a;
-  --chat-dialog-footer: #0f172a;
-  --chat-sidebar-bg: #0f172a;
-  --chat-input-bg: #334155;
-  --chat-message-user-bg: #334155;
-  --chat-message-assistant-bg: #1e293b;
-  --chat-separator: #475569;
+  /* Shadow variables */
+  --chat-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+  --chat-inset-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
   
-  /* Accents & Indicators */
-  --chat-success: #22c55e;
-  --chat-warning: #eab308;
-  --chat-error: #ef4444;
-  --chat-info: #3b82f6;
-  
-  /* Effects */
-  --chat-border: rgba(148, 163, 184, 0.2);
-  --chat-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --chat-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-  --chat-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
-  --chat-box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-  
-  /* Layout & Sizing */
-  --chat-border-radius: 0.5rem;
-  --chat-border-radius-sm: 0.25rem;
-  --chat-border-radius-lg: 0.75rem;
-  --chat-z-index-base: 1000;
-  --chat-z-index-overlay: 1050;
-  --chat-z-index-dropdown: 1030;
-  --chat-z-index-modal: 1100;
-  --chat-z-index-toast: 1200;
-  
-  /* Animation & Timing */
-  --chat-duration-short: 150ms;
-  --chat-duration-normal: 300ms;
-  --chat-duration-long: 500ms;
-  --chat-ease: cubic-bezier(0.4, 0, 0.2, 1);
-  --chat-ease-in: cubic-bezier(0.4, 0, 1, 1);
-  --chat-ease-out: cubic-bezier(0, 0, 0.2, 1);
-  --chat-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-  
-  /* Component specifics */
-  --chat-max-width: 500px;
-  --chat-min-width: 300px;
-  --chat-max-height: 600px;
-  --chat-min-height: 400px;
-  --chat-message-spacing: 1rem;
-  --chat-sidebar-width: 280px;
-  --z-chat: var(--chat-z-index-base);
+  /* Animation variables */
+  --chat-transition-duration: 300ms;
+  --chat-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Dark theme overrides (default above is already dark) */
-.theme-dark {
-  /* No need for overrides as default is already dark */
-}
-
-/* Light theme overrides */
-.theme-light {
-  --chat-primary: #8b5cf6;
-  --chat-primary-hover: #7c3aed;
-  --chat-secondary: #ec4899;
-  --chat-secondary-hover: #db2777;
-  
-  --chat-text: #0f172a;
-  --chat-text-muted: #475569;
-  --chat-text-dimmed: #64748b;
-  --chat-text-highlight: #1e293b;
-  
-  --chat-bg: #f8fafc;
-  --chat-bg-hover: #f1f5f9;
-  --chat-bg-light: #f1f5f9;
-  --chat-bg-lighter: #e2e8f0;
-  --chat-bg-dark: #e2e8f0;
-  --chat-bg-darkest: #cbd5e1;
-  
-  --chat-dialog-content: #ffffff;
-  --chat-dialog-header: #f1f5f9;
-  --chat-dialog-footer: #f1f5f9;
-  --chat-sidebar-bg: #f1f5f9;
-  --chat-input-bg: #f8fafc;
-  --chat-message-user-bg: #e2e8f0;
-  --chat-message-assistant-bg: #f8fafc;
-  --chat-separator: #cbd5e1;
-  
-  --chat-border: rgba(203, 213, 225, 0.8);
-  --chat-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --chat-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --chat-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --chat-box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-/* System theme follows system preference */
-@media (prefers-color-scheme: dark) {
-  .theme-system {
-    /* Use dark theme variables by default (already set above) */
-  }
-}
-
-@media (prefers-color-scheme: light) {
-  .theme-system {
-    /* Override with light theme variables */
-    --chat-primary: #8b5cf6;
-    --chat-primary-hover: #7c3aed;
-    --chat-secondary: #ec4899;
-    --chat-secondary-hover: #db2777;
-    
-    --chat-text: #0f172a;
-    --chat-text-muted: #475569;
-    --chat-text-dimmed: #64748b;
-    --chat-text-highlight: #1e293b;
-    
-    --chat-bg: #f8fafc;
-    --chat-bg-hover: #f1f5f9;
-    --chat-bg-light: #f1f5f9;
-    --chat-bg-lighter: #e2e8f0;
-    --chat-bg-dark: #e2e8f0;
-    --chat-bg-darkest: #cbd5e1;
-    
-    --chat-dialog-content: #ffffff;
-    --chat-dialog-header: #f1f5f9;
-    --chat-dialog-footer: #f1f5f9;
-    --chat-sidebar-bg: #f1f5f9;
-    --chat-input-bg: #f8fafc;
-    --chat-message-user-bg: #e2e8f0;
-    --chat-message-assistant-bg: #f8fafc;
-    --chat-separator: #cbd5e1;
-    
-    --chat-border: rgba(203, 213, 225, 0.8);
-    --chat-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --chat-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --chat-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --chat-box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  }
+/* Dark theme overrides */
+[data-theme="dark"] {
+  --chat-border-color: rgba(59, 130, 246, 0.7);
+  --chat-bg-color: rgba(30, 41, 59, 0.8);
 }

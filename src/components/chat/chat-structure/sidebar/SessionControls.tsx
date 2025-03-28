@@ -1,160 +1,85 @@
 
 import React from 'react';
+import { Plus, Trash2, Clock, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, X, TrashIcon } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Spinner } from '../../shared/Spinner';
 import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface SessionControlsProps {
   onNewSession: () => void;
-  onCleanupSessions: () => void;
   onClearSessions: () => void;
+  onCleanupSessions: () => void;
   onClearAllSessions: () => void;
   sessionCount: number;
-  isLoading?: boolean;
+  isLoading: boolean;
 }
 
-export const SessionControls: React.FC<SessionControlsProps> = ({
+export const SessionControls = ({
   onNewSession,
-  onCleanupSessions,
   onClearSessions,
+  onCleanupSessions,
   onClearAllSessions,
   sessionCount,
-  isLoading = false
-}) => {
+  isLoading
+}: SessionControlsProps) => {
   return (
-    <div className="p-3 border-t border-white/10 flex justify-between items-center gap-2">
-      <TooltipProvider>
+    <div className="p-4 border-t flex justify-between items-center">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isLoading}
+            onClick={onNewSession}
+            className="flex items-center"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            New Chat
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="top">Start a new conversation</TooltipContent>
+      </Tooltip>
+
+      <DropdownMenu>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-8 px-2" 
-              onClick={onNewSession}
-              disabled={isLoading}
-            >
-              {isLoading ? <Spinner size="sm" /> : <Plus className="h-4 w-4 mr-1" />}
-              New Chat
-            </Button>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" disabled={isLoading || sessionCount === 0}>
+                <Clock className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
           </TooltipTrigger>
-          <TooltipContent>
-            <p>Start a new chat session</p>
-          </TooltipContent>
+          <TooltipContent side="top">Session management</TooltipContent>
         </Tooltip>
-      </TooltipProvider>
-
-      {sessionCount > 0 && (
-        <div className="flex gap-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
-                  onClick={onCleanupSessions}
-                  disabled={isLoading}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Clean up inactive sessions</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <AlertDialog>
-            <TooltipProvider>
-              <Tooltip>
-                <AlertDialogTrigger asChild>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
-                      disabled={isLoading}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                </AlertDialogTrigger>
-                <TooltipContent>
-                  <p>Keep current, delete others</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <AlertDialogContent className="glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#D946EF]/20" style={{ zIndex: 9900 }}>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Other Sessions</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will delete ALL other chat sessions except the current one. This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel className="border-white/10 hover:bg-white/10">Cancel</AlertDialogCancel>
-                <AlertDialogAction 
-                  onClick={onClearSessions}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  Delete Others
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-
-          <AlertDialog>
-            <TooltipProvider>
-              <Tooltip>
-                <AlertDialogTrigger asChild>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-muted-foreground hover:bg-red-500/20 hover:text-red-500 transition-colors"
-                      disabled={isLoading}
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                </AlertDialogTrigger>
-                <TooltipContent>
-                  <p>Delete ALL sessions including current</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <AlertDialogContent className="glass-card border-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#D946EF]/20" style={{ zIndex: 9900 }}>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete All Sessions</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will delete ALL chat sessions, including the current active one, and create a new empty session. This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel className="border-white/10 hover:bg-white/10">Cancel</AlertDialogCancel>
-                <AlertDialogAction 
-                  onClick={onClearAllSessions}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  Delete All
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      )}
+        
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={onCleanupSessions}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Clean up inactive sessions
+          </DropdownMenuItem>
+          
+          <DropdownMenuItem onClick={onClearSessions}>
+            <Trash2 className="h-4 w-4 mr-2" />
+            Clear other sessions
+          </DropdownMenuItem>
+          
+          <DropdownMenuSeparator />
+          
+          <DropdownMenuItem 
+            onClick={onClearAllSessions}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Clear all sessions
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { Message, MessageRole, MessageStatus, MessageType } from '@/types/chat/message';
+import { Message, MessageRole, MessageStatus, MessageType } from '../types';
 import { logger } from '@/services/chat/LoggingService';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
@@ -11,7 +11,7 @@ interface MessageState {
   addMessage: (message: Message) => void;
   removeMessage: (id: string) => void;
   clearMessages: () => void;
-  fetchSessionMessages: (conversationId: string) => Promise<void>;
+  fetchMessages: (conversationId: string) => Promise<void>;
 }
 
 export const useMessageStore = create<MessageState>((set, get) => ({
@@ -39,7 +39,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     set({ messages: [] });
   },
   
-  fetchSessionMessages: async (conversationId: string) => {
+  fetchMessages: async (conversationId: string) => {
     try {
       logger.info('Fetching messages for conversation', { conversationId });
       

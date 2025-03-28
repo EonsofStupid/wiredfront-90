@@ -1,3 +1,4 @@
 
-export { Message } from './Message';
-export { MessageModule } from './MessageModule';
+export * from './Message';
+export * from './MessageModule';
+export * from './MessageActions';

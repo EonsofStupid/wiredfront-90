@@ -1,6 +1,6 @@
 
-import React, { useState, useCallback, ReactNode } from 'react';
-import { logger } from '@/services/chat/LoggingService';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { AlertCircle } from 'lucide-react';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -12,18 +12,24 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-class ErrorBoundaryComponent extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundaryComponent extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = {
+      hasError: false,
+      error: null
+    };
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
+  static getDerivedStateFromError(error: Error) {
+    return {
+      hasError: true,
+      error
+    };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    logger.error('Component error caught by boundary', { error, errorInfo });
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('Error caught by ErrorBoundary:', error, errorInfo);
   }
 
   render() {
@@ -35,31 +41,19 @@ class ErrorBoundaryComponent extends React.Component<ErrorBoundaryProps, ErrorBo
   }
 }
 
-export function useErrorBoundary() {
-  const [error, setError] = useState<Error | null>(null);
-
-  const DefaultErrorFallback = useCallback(() => (
-    <div className="p-3 text-center">
-      <div className="text-destructive mb-1">⚠️</div>
-      <div className="text-sm font-medium text-destructive">Something went wrong</div>
-      <div className="text-xs text-muted-foreground mt-1">
+export const useErrorBoundary = () => {
+  const DefaultErrorFallback = () => (
+    <div className="flex flex-col items-center justify-center p-4 text-destructive">
+      <AlertCircle className="h-8 w-8 mb-2" />
+      <h3 className="text-lg font-semibold">Something went wrong</h3>
+      <p className="text-center text-sm text-muted-foreground mt-1">
         Please try again or refresh the page
-      </div>
+      </p>
     </div>
-  ), []);
-
-  const ErrorBoundary = useCallback(({ children, fallback }: ErrorBoundaryProps) => {
-    return (
-      <ErrorBoundaryComponent fallback={fallback}>
-        {children}
-      </ErrorBoundaryComponent>
-    );
-  }, []);
+  );
 
   return {
-    error,
-    setError,
-    ErrorBoundary,
+    ErrorBoundary: ErrorBoundaryComponent,
     DefaultErrorFallback
   };
-}
+};

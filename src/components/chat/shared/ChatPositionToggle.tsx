@@ -1,43 +1,30 @@
 
 import React from 'react';
-import { ArrowLeftRight } from "lucide-react";
+import { AlignLeft, AlignRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useChatStore } from '../store/chatStore';
-import { logger } from '@/services/chat/LoggingService';
-import { 
-  isChatPosition, 
-  isChatPositionCoordinates 
-} from '@/types/chat/enums';
+import { ChatPosition } from '../types';
 
-export function ChatPositionToggle() {
+export const ChatPositionToggle = () => {
   const { position, togglePosition } = useChatStore();
   
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    logger.info('Toggling chat position', { currentPosition: position });
-    togglePosition();
-  };
-  
-  // Get a display string for the position
-  const getPositionDisplay = (): string => {
-    if (isChatPosition(position)) {
-      return position;
-    }
-    // Check if position has coordinates
-    if (isChatPositionCoordinates(position)) {
-      return `Custom (${position.x}, ${position.y})`;
-    }
-    return 'Unknown';
-  };
+  const currentPosition = position as ChatPosition;
+  const isLeft = currentPosition === 'bottom-left';
   
   return (
-    <button
-      className="h-8 w-8 hover:bg-white/10 text-chat-text transition-colors duration-200"
-      onClick={handleClick}
-      title={`Toggle chat position (currently ${getPositionDisplay()})`}
-      data-testid="chat-position-toggle"
-      aria-label="Toggle chat position"
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-8 w-8 hover:bg-white/10 transition-colors duration-200"
+      onClick={togglePosition}
+      title={isLeft ? "Move to right" : "Move to left"}
+      data-testid="position-toggle-button"
     >
-      <ArrowLeftRight className="h-4 w-4" />
-    </button>
+      {isLeft ? (
+        <AlignRight className="h-4 w-4" />
+      ) : (
+        <AlignLeft className="h-4 w-4" />
+      )}
+    </Button>
   );
-}
+};

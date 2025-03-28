@@ -1,3 +1,4 @@
+
 import { toast } from 'sonner';
 import { useConversationStore } from './store/conversation/store';
 import { useMessageStore } from './messaging/MessageManager';
@@ -15,11 +16,11 @@ import {
   databaseModeToUiMode,
   isTokenEnforcementMode,
   isChatMode
-} from '@/types/chat/enums';
+} from './types';
 import { Json } from '@/integrations/supabase/types';
-import { Provider } from './store/types/chat-store-types';
+import { Provider } from './types';
 import { v4 as uuidv4 } from 'uuid';
-import { CreateConversationParams } from '@/types/chat/conversation';
+import { CreateConversationParams } from './types';
 
 /**
  * ChatBridge is the central communication layer between the app and the chat client.
@@ -263,7 +264,7 @@ export class ChatBridge {
         Object.entries(settings.features).forEach(([key, value]) => {
           if (typeof value === 'boolean' && key in chatStore.features) {
             if (chatStore.setFeatureState) {
-              chatStore.setFeatureState(key as any, value as boolean);
+              chatStore.setFeatureState(key, value as boolean);
               
               // If setting token enforcement feature, update the token store too
               if (key === 'tokenEnforcement') {
@@ -360,7 +361,7 @@ export class ChatBridge {
     try {
       if (typeof value === 'boolean') {
         if (chatStore.setFeatureState) {
-          chatStore.setFeatureState(featureKey as any, value);
+          chatStore.setFeatureState(featureKey, value);
           
           // If toggling token enforcement, update token store too
           if (featureKey === 'tokenEnforcement') {
@@ -369,11 +370,11 @@ export class ChatBridge {
         }
       } else {
         if (chatStore.toggleFeature) {
-          chatStore.toggleFeature(featureKey as any);
+          chatStore.toggleFeature(featureKey);
           
           // If toggling token enforcement, update token store too
           if (featureKey === 'tokenEnforcement') {
-            const newValue = !chatStore.features[featureKey as keyof typeof chatStore.features];
+            const newValue = !chatStore.features[featureKey];
             tokenStore.setEnforcementEnabled(newValue);
           }
         }

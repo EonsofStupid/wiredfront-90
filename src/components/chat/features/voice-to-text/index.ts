@@ -1,2 +1,2 @@
 
-export { VoiceToTextButton } from './VoiceToTextButton';
+export * from './VoiceToTextButton';

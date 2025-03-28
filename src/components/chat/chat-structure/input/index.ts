@@ -1,2 +1,2 @@
 
-export { ChatInputModule } from './ChatInputModule';
+export * from './ChatInputModule';

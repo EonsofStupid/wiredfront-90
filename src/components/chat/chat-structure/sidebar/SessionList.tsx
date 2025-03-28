@@ -1,73 +1,47 @@
 
-import React from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { SessionItem } from "./SessionItem";
-import { motion } from "framer-motion";
-import { useChatStore } from "../../store/chatStore";
+import React from 'react';
+import { formatDistanceToNow } from 'date-fns';
+
+interface SessionItem {
+  id: string;
+  lastAccessed: Date;
+  isActive: boolean;
+}
 
 interface SessionListProps {
-  sessions: Array<{
-    id: string;
-    lastAccessed: Date;
-    isActive: boolean;
-    provider?: string;
-    messageCount?: number;
-  }>;
+  sessions: SessionItem[];
   onSelectSession: (id: string) => void;
 }
 
 export const SessionList = ({ sessions, onSelectSession }: SessionListProps) => {
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.05
-      }
-    }
-  };
-  
-  const item = {
-    hidden: { opacity: 0, y: 10 },
-    show: { opacity: 1, y: 0 }
-  };
-
-  // Get current provider from chat store
-  const currentProvider = useChatStore(state => state.currentProvider);
+  if (sessions.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-sm text-muted-foreground">No sessions available</p>
+      </div>
+    );
+  }
 
   return (
-    <ScrollArea className="h-full w-full pr-4 chat-messages-container">
-      {sessions.length === 0 ? (
-        <div className="text-center p-6 text-muted-foreground flex flex-col items-center justify-center h-full">
-          <div className="opacity-60 mb-2">🔄</div>
-          <div className="text-chat-message-system-text">No active sessions</div>
-          <div className="text-xs mt-2 opacity-60 max-w-[200px]">
-            Create a new session to start chatting
+    <div className="overflow-auto h-full">
+      {sessions.map((session) => (
+        <div
+          key={session.id}
+          className={`p-2 m-2 rounded-lg cursor-pointer transition-colors ${
+            session.isActive
+              ? 'bg-primary/10 text-primary'
+              : 'hover:bg-muted/50'
+          }`}
+          onClick={() => onSelectSession(session.id)}
+        >
+          <div className="flex justify-between items-center">
+            <span className="text-sm truncate">Chat {session.id.slice(0, 8)}</span>
+            <span className="text-xs text-muted-foreground">
+              {formatDistanceToNow(session.lastAccessed, { addSuffix: true })}
+            </span>
           </div>
         </div>
-      ) : (
-        <motion.div 
-          className="space-y-1 p-2"
-          variants={container}
-          initial="hidden"
-          animate="show"
-        >
-          {sessions.map((session) => (
-            <motion.div key={session.id} variants={item}>
-              <SessionItem
-                id={session.id}
-                lastAccessed={session.lastAccessed}
-                isActive={session.isActive}
-                onSelect={onSelectSession}
-                provider={session.provider || currentProvider?.name}
-                messageCount={session.messageCount}
-              />
-            </motion.div>
-          ))}
-        </motion.div>
-      )}
-    </ScrollArea>
+      ))}
+    </div>
   );
 };
-
-export default SessionList;

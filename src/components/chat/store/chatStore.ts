@@ -2,9 +2,9 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { createInitializationActions } from './actions/initialization-actions';
-import { createFeatureActions } from './actions/feature';
+import { createFeatureActions } from './actions/feature-actions';
 import { createUIActions } from './actions/ui-actions';
-import { ChatState } from './types/chat-store-types';
+import { ChatState } from '../types';
 import { logger } from '@/services/chat/LoggingService';
 
 // Define the full store type with all action slices
@@ -158,7 +158,7 @@ export const useChatStore = create<FullChatStore>()(
       },
       
       ...createInitializationActions(set, get),
-      ...createFeatureActions(set, get, api),
+      ...createFeatureActions(set, get),
       ...createUIActions(set, get),
     }),
     {

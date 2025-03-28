@@ -1,5 +1,5 @@
 
-import { UIEnforcementMode, TokenEnforcementMode } from '@/types/chat/enums';
+import { UIEnforcementMode } from '../../types';
 
 /**
  * Token state interface

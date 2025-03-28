@@ -1,73 +1,110 @@
 
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Mic, MicOff } from "lucide-react";
-import { toast } from "sonner";
+import { Mic, MicOff } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { useChatStore } from '../../store/chatStore';
 
 interface VoiceToTextButtonProps {
   onTranscription: (text: string) => void;
-  isProcessing: boolean;
+  isProcessing?: boolean;
 }
 
-export function VoiceToTextButton({ onTranscription, isProcessing }: VoiceToTextButtonProps) {
-  const [isListening, setIsListening] = useState(false);
-  
-  const startListening = async () => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      toast.error('Speech recognition is not supported in your browser');
+export const VoiceToTextButton: React.FC<VoiceToTextButtonProps> = ({ 
+  onTranscription,
+  isProcessing = false
+}) => {
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const { features } = useChatStore();
+
+  const startRecording = async () => {
+    if (!features.voice) {
+      toast.error('Voice input is not enabled');
       return;
     }
-    
+
     try {
-      setIsListening(true);
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
       
-      // This is a simplified implementation
-      // In a real app, you'd need to handle browser compatibility and permissions
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
+      const audioChunks: BlobPart[] = [];
       
-      recognition.lang = 'en-US';
-      recognition.continuous = false;
-      recognition.interimResults = false;
+      recorder.addEventListener('dataavailable', event => {
+        audioChunks.push(event.data);
+      });
       
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        onTranscription(transcript);
-      };
+      recorder.addEventListener('stop', () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        processAudio(audioBlob);
+        
+        // Stop all audio tracks
+        stream.getAudioTracks().forEach(track => track.stop());
+      });
       
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error', event);
-        toast.error('Failed to recognize speech');
-        setIsListening(false);
-      };
+      setMediaRecorder(recorder);
+      recorder.start();
+      setIsRecording(true);
       
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-      
-      recognition.start();
+      toast.info('Voice recording started');
     } catch (error) {
-      console.error('Error starting speech recognition', error);
-      toast.error('Failed to start speech recognition');
-      setIsListening(false);
+      console.error('Error accessing microphone:', error);
+      toast.error('Could not access microphone');
     }
   };
+  
+  const stopRecording = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      setMediaRecorder(null);
+      toast.info('Processing voice input...');
+    }
+  };
+  
+  const processAudio = async (audioBlob: Blob) => {
+    try {
+      // Create a form data object to send the audio
+      const formData = new FormData();
+      formData.append('audio', audioBlob);
+      
+      // For now, just simulate a response
+      // In a real implementation, you would call an API
+      setTimeout(() => {
+        const mockTranscription = "This is a simulated voice transcription. Replace with actual API call.";
+        onTranscription(mockTranscription);
+        toast.success('Voice transcribed successfully');
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Error processing audio:', error);
+      toast.error('Failed to process voice input');
+    }
+  };
+  
+  const handleToggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+  
+  if (!features.voice) {
+    return null;
+  }
   
   return (
     <Button
       type="button"
-      size="icon"
       variant="ghost"
-      onClick={startListening}
-      disabled={isListening || isProcessing}
-      className="h-10 w-10"
-      title={isListening ? "Listening..." : "Speak your message"}
+      size="icon"
+      disabled={isProcessing}
+      onClick={handleToggleRecording}
+      className={`h-10 w-10 ${isRecording ? 'text-red-500 bg-red-500/10' : ''}`}
+      title={isRecording ? 'Stop recording' : 'Start voice input'}
     >
-      {isListening ? (
-        <Mic className="h-4 w-4 text-red-500 animate-pulse" />
-      ) : (
-        <MicOff className="h-4 w-4" />
-      )}
+      {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
     </Button>
   );
-}
+};

@@ -1,44 +1,53 @@
 
-import { useCallback, useRef, RefObject } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useMessageStore } from '../messaging/MessageManager';
 
-export function useAutoScroll(scrollRef: RefObject<HTMLDivElement>) {
-  const autoScrollEnabled = useRef(true);
-  const lastScrollTop = useRef(0);
-  const lastScrollHeight = useRef(0);
-
+export const useAutoScroll = (scrollRef: React.RefObject<HTMLDivElement>) => {
+  const { messages } = useMessageStore();
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const [isNearBottom, setIsNearBottom] = useState(true);
+  
+  // Function to scroll to bottom
   const scrollToBottom = useCallback(() => {
-    if (!scrollRef.current || !autoScrollEnabled.current) return;
-
-    const scrollElement = scrollRef.current;
-    scrollElement.scrollTop = scrollElement.scrollHeight;
-    lastScrollTop.current = scrollElement.scrollTop;
-    lastScrollHeight.current = scrollElement.scrollHeight;
-  }, [scrollRef]);
-
-  const handleScroll = useCallback(() => {
-    if (!scrollRef.current) return;
-
-    const scrollElement = scrollRef.current;
-    
-    // Check if scroll is at the bottom (with a small threshold for browser inconsistencies)
-    const isAtBottom = scrollElement.scrollHeight - scrollElement.scrollTop - scrollElement.clientHeight < 20;
-    
-    // If user has scrolled up, disable auto-scroll
-    if (!isAtBottom && scrollElement.scrollTop < lastScrollTop.current) {
-      autoScrollEnabled.current = false;
+    if (scrollRef.current && shouldAutoScroll) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
+  }, [scrollRef, shouldAutoScroll]);
+  
+  // Handle scroll events
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!scrollRef.current) return;
+      
+      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+      const scrollBottom = scrollHeight - scrollTop - clientHeight;
+      
+      // Consider "near bottom" if within 100px of bottom
+      const isScrollNearBottom = scrollBottom < 100;
+      setIsNearBottom(isScrollNearBottom);
+      
+      // Only auto-scroll if user is near bottom
+      setShouldAutoScroll(isScrollNearBottom);
+    };
     
-    // If user manually scrolled to bottom, re-enable auto-scroll
-    if (isAtBottom) {
-      autoScrollEnabled.current = true;
+    const scrollElement = scrollRef.current;
+    if (scrollElement) {
+      scrollElement.addEventListener('scroll', handleScroll);
+      return () => scrollElement.removeEventListener('scroll', handleScroll);
     }
-    
-    lastScrollTop.current = scrollElement.scrollTop;
   }, [scrollRef]);
-
+  
+  // Auto-scroll when new messages are added
+  useEffect(() => {
+    if (messages.length > 0 && shouldAutoScroll) {
+      scrollToBottom();
+    }
+  }, [messages.length, scrollToBottom, shouldAutoScroll]);
+  
   return {
     scrollToBottom,
-    handleScroll,
-    isAutoScrollEnabled: autoScrollEnabled.current
+    isNearBottom,
+    shouldAutoScroll,
+    setShouldAutoScroll
   };
-}
+};
