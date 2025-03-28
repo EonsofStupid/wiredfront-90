@@ -1,7 +1,7 @@
 
-import React from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface SessionHeaderProps {
   title: string;
@@ -9,13 +9,13 @@ interface SessionHeaderProps {
   onToggle: () => void;
 }
 
-export const SessionHeader = ({ title, isOpen, onToggle }: SessionHeaderProps) => {
+export function SessionHeader({ title, isOpen, onToggle }: SessionHeaderProps) {
   return (
-    <div className="p-4 border-b flex justify-between items-center">
-      <h2 className="text-lg font-semibold">{title}</h2>
-      <Button variant="ghost" size="sm" onClick={onToggle}>
-        {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+    <div className="flex justify-between items-center p-2 border-b">
+      <h3 className="text-sm font-medium">Conversations</h3>
+      <Button variant="ghost" size="sm" onClick={onToggle} className="h-8 w-8 p-0">
+        {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
       </Button>
     </div>
   );
-};
+}

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import { SessionHeader } from "./SessionHeader";
@@ -5,13 +6,14 @@ import { SessionList } from "./SessionList";
 import { SessionControls } from "./SessionControls";
 import { useConversationStore } from '../../store/conversation/store';
 import { useEffect, useState } from 'react';
-import { Conversation } from '../../types/conversation-types';
+import { Conversation } from '@/types/chat/conversation';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useChatStore } from '../../store/chatStore';
 import { useTokenStore } from '../../store/token';
 import { ChatMode } from '@/types/chat/enums';
+import { chatModeForDatabase } from '../../types/enums-mapper';
 
 export function ChatSidebar() {
   const navigate = useNavigate();
@@ -54,8 +56,9 @@ export function ChatSidebar() {
   };
   
   const handleCreateSession = () => {
+    const dbMode = chatModeForDatabase(currentMode);
     const newConversationId = createConversation({
-      mode: currentMode,
+      mode: dbMode,
       title: "New Conversation"
     });
     
@@ -73,7 +76,7 @@ export function ChatSidebar() {
   return (
     <Card className="w-[250px] h-full glass-card neon-border flex flex-col overflow-hidden">
       <SessionHeader
-        title="Sessions"
+        title="Conversations"
         isOpen={sessionOpen} 
         onToggle={() => setSessionOpen(!sessionOpen)}
       />

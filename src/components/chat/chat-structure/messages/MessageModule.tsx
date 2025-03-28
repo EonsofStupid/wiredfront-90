@@ -10,7 +10,7 @@ import { useErrorBoundary } from '../../hooks/useErrorBoundary';
 import { MessageSkeleton } from '../../shared/MessageSkeleton';
 import { logger } from '@/services/chat/LoggingService';
 import { useChatStore } from '../../store/chatStore';
-import { MessageRole, MessageStatus } from '@/types/chat/enums';
+import { MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
 
 interface MessageModuleProps {
   scrollRef: React.RefObject<HTMLDivElement>;
@@ -110,6 +110,7 @@ export function MessageModule({ scrollRef }: MessageModuleProps) {
                       id={msg.id}
                       timestamp={msg.created_at}
                       onRetry={handleRetry}
+                      type={msg.type || MessageType.Text}
                     />
                   </motion.div>
                 </AnimatePresence>

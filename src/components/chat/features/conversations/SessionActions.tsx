@@ -2,50 +2,50 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Trash2, X } from "lucide-react";
-import { useSessionManager } from '@/hooks/useSessionManager';
+import { useConversationManager } from '@/hooks/conversation';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog';
 import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';
 
 export function SessionActions() {
-  const { sessions, currentSessionId, clearSessions, refreshSessions } = useSessionManager();
+  const { activeConversations, currentConversationId, clearConversations, refreshConversations } = useConversationManager();
   const [isDeleteOthersDialogOpen, setIsDeleteOthersDialogOpen] = React.useState(false);
   const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = React.useState(false);
 
-  // Get active sessions count (excluding current)
-  const activeSessionsCount = sessions.filter(
-    s => s.is_active && s.id !== currentSessionId
+  // Get active conversations count (excluding current)
+  const activeConversationsCount = activeConversations.filter(
+    s => s.id !== currentConversationId
   ).length;
 
   const handleDeleteOthers = async () => {
     try {
       setIsDeleteOthersDialogOpen(false);
       
-      if (!currentSessionId) {
-        toast.error("No active session found");
+      if (!currentConversationId) {
+        toast.error("No active conversation found");
         return;
       }
       
-      await clearSessions(true); // Keep current session
-      await refreshSessions();
+      await clearConversations(true); // Keep current conversation
+      await refreshConversations();
       
-      toast.success("Other sessions deleted successfully");
+      toast.success("Other conversations deleted successfully");
     } catch (error) {
-      logger.error("Failed to delete other sessions", { error });
-      toast.error("Failed to delete other sessions");
+      logger.error("Failed to delete other conversations", { error });
+      toast.error("Failed to delete other conversations");
     }
   };
 
   const handleDeleteAll = async () => {
     try {
       setIsDeleteAllDialogOpen(false);
-      await clearSessions(false); // Don't preserve any sessions
-      await refreshSessions();
+      await clearConversations(false); // Don't preserve any conversations
+      await refreshConversations();
       
-      toast.success("All sessions deleted successfully");
+      toast.success("All conversations deleted successfully");
     } catch (error) {
-      logger.error("Failed to delete all sessions", { error });
-      toast.error("Failed to delete all sessions");
+      logger.error("Failed to delete all conversations", { error });
+      toast.error("Failed to delete all conversations");
     }
   };
 
@@ -55,9 +55,9 @@ export function SessionActions() {
         variant="outline" 
         className="flex justify-between w-full"
         onClick={() => setIsDeleteOthersDialogOpen(true)}
-        disabled={activeSessionsCount === 0}
+        disabled={activeConversationsCount === 0}
       >
-        <span>Delete Other Sessions</span>
+        <span>Delete Other Conversations</span>
         <Trash2 className="h-4 w-4 ml-2" />
       </Button>
       
@@ -66,7 +66,7 @@ export function SessionActions() {
         className="flex justify-between w-full"
         onClick={() => setIsDeleteAllDialogOpen(true)}
       >
-        <span>Delete All Sessions</span>
+        <span>Delete All Conversations</span>
         <X className="h-4 w-4 ml-2" />
       </Button>
 
@@ -74,18 +74,18 @@ export function SessionActions() {
         isOpen={isDeleteOthersDialogOpen}
         onClose={() => setIsDeleteOthersDialogOpen(false)}
         onConfirm={handleDeleteOthers}
-        title="Delete Other Sessions"
-        description="This will permanently delete all active sessions except the current one. Archived sessions will not be affected. This action cannot be undone."
-        confirmLabel="Delete Other Sessions"
+        title="Delete Other Conversations"
+        description="This will permanently delete all active conversations except the current one. Archived conversations will not be affected. This action cannot be undone."
+        confirmLabel="Delete Other Conversations"
       />
 
       <DeleteConfirmDialog
         isOpen={isDeleteAllDialogOpen}
         onClose={() => setIsDeleteAllDialogOpen(false)}
         onConfirm={handleDeleteAll}
-        title="Delete All Sessions"
-        description="This will permanently delete ALL chat sessions, including archived ones. This action cannot be undone."
-        confirmLabel="Delete All Sessions"
+        title="Delete All Conversations"
+        description="This will permanently delete ALL chat conversations, including archived ones. This action cannot be undone."
+        confirmLabel="Delete All Conversations"
         destructive
       />
     </div>
