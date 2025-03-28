@@ -1,151 +1,192 @@
 
-import { z, ZodNativeEnum } from "zod";
-import * as Enums from "@/types/chat/enums";
+/**
+ * Utilities for working with enums throughout the application
+ */
+import { 
+  ChatMode, 
+  MessageRole, 
+  MessageStatus, 
+  MessageType, 
+  databaseModeToUiMode, 
+  uiModeToDatabaseMode 
+} from '@/types/chat/enums';
 
-// --- Types ---
-type NativeEnum = Record<string, string | number>;
-type EnumName = keyof typeof Enums;
-type EnumSchemasMap = Record<EnumName, ZodNativeEnum<any>>;
-type EnumValue<T extends EnumName> = z.infer<ReturnType<typeof getEnumSchema<T>>>;
-
-// --- Internal: Lazy Registry ---
-const _enumSchemaCache: EnumSchemasMap = {};
-
-function getEnumSchema<T extends EnumName>(enumName: T): ZodNativeEnum<any> {
-  if (!_enumSchemaCache[enumName]) {
-    const enumDef = Enums[enumName];
-    if (!enumDef) throw new Error(`Enum "${enumName}" not found in "@/types/chat/enums.ts"`);
-    _enumSchemaCache[enumName] = z.nativeEnum(enumDef);
-  }
-  return _enumSchemaCache[enumName];
-}
-
-// --- Core Validators ---
-function validateEnumValue<T extends EnumName>(
-  enumName: T,
-  value: unknown
-): EnumValue<T> {
-  return getEnumSchema(enumName).parse(value);
-}
-
-function safeParseEnumValue<T extends EnumName>(
-  enumName: T,
-  value: unknown,
-  fallback?: EnumValue<T>
-): EnumValue<T> | undefined {
-  const result = getEnumSchema(enumName).safeParse(value);
-  return result.success ? result.data : fallback;
-}
-
-// --- Dropdown / UI Helpers ---
-function enumValues<T extends EnumName>(enumName: T): EnumValue<T>[] {
-  return Object.values(getEnumSchema(enumName).enum);
-}
-
-// --- Flexible Input (e.g. AI/user-friendly) ---
-function parseEnumFlexible<T extends EnumName>(
-  enumName: T,
-  raw: unknown,
-  fallback?: EnumValue<T>
-): EnumValue<T> | undefined {
-  if (typeof raw !== "string") return fallback;
-
-  const normalized = raw.trim().toLowerCase();
-  const values = enumValues(enumName).map((v) => v.toString());
-
-  const matched = values.find((v) => v.toLowerCase() === normalized);
-  return matched as EnumValue<T> ?? fallback;
-}
-
-// --- Bonus: Enum Metadata Builder (for UI docs / introspection) ---
-function enumMeta<T extends EnumName>(enumName: T): { value: EnumValue<T>; label: string }[] {
-  const values = enumValues(enumName);
-  return values.map((v) => ({
-    value: v,
-    label: v.toString().replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
-  }));
-}
-
-// --- Type conversion utilities (migrated from enums-mapper.ts) ---
-function messageTypeToString(type: Enums.MessageType): string {
-  return type.toString();
-}
-
-function stringToMessageType(type: string): Enums.MessageType {
-  return safeParseEnumValue('MessageType', type, Enums.MessageType.Text);
-}
-
-function chatModeToString(mode: Enums.ChatMode): string {
-  return mode.toString();
-}
-
-function stringToChatMode(mode: string): Enums.ChatMode {
-  return safeParseEnumValue('ChatMode', mode, Enums.ChatMode.Chat);
-}
-
-function chatModeForDatabase(mode: Enums.ChatMode | string): string {
-  if (typeof mode === 'string') {
-    return mode;
-  }
-  return chatModeToString(mode);
-}
-
-function databaseToChatMode(mode: string): Enums.ChatMode {
-  return stringToChatMode(mode);
-}
-
-function messageStatusToString(status: Enums.MessageStatus): string {
-  return status.toString();
-}
-
-function stringToMessageStatus(status: string): Enums.MessageStatus {
-  return safeParseEnumValue('MessageStatus', status, Enums.MessageStatus.Sent);
-}
-
-function tokenEnforcementModeToString(mode: Enums.TokenEnforcementMode): string {
-  return mode.toString();
-}
-
-function stringToTokenEnforcementMode(mode: string): Enums.TokenEnforcementMode {
-  return safeParseEnumValue('TokenEnforcementMode', mode, Enums.TokenEnforcementMode.Never);
-}
-
-function tokenToUIEnforcementMode(mode: Enums.TokenEnforcementMode): string {
-  switch (mode) {
-    case Enums.TokenEnforcementMode.Always:
-      return 'Always On';
-    case Enums.TokenEnforcementMode.Never:
-      return 'Always Off';
-    case Enums.TokenEnforcementMode.RoleBased:
-      return 'Role Based';
-    case Enums.TokenEnforcementMode.ModeBased:
-      return 'Mode Based';
-    case Enums.TokenEnforcementMode.Warn:
-      return 'Warn Only';
-    case Enums.TokenEnforcementMode.Strict:
-      return 'Strict';
+/**
+ * Convert a string to the corresponding MessageType enum
+ */
+export const stringToMessageType = (type: string): MessageType => {
+  switch (type?.toLowerCase()) {
+    case 'text':
+      return MessageType.Text;
+    case 'command':
+      return MessageType.Command;
+    case 'system':
+      return MessageType.System;
+    case 'image':
+      return MessageType.Image;
+    case 'training':
+      return MessageType.Training;
+    case 'code':
+      return MessageType.Code;
+    case 'file':
+      return MessageType.File;
     default:
-      return 'Not Set';
+      return MessageType.Text;
   }
-}
+};
 
-// --- Unified Export Object ---
+/**
+ * Convert a MessageType enum to its string representation
+ */
+export const messageTypeToString = (type: MessageType): string => {
+  switch (type) {
+    case MessageType.Text:
+      return 'text';
+    case MessageType.Command:
+      return 'command';
+    case MessageType.System:
+      return 'system';
+    case MessageType.Image:
+      return 'image';
+    case MessageType.Training:
+      return 'training';
+    case MessageType.Code:
+      return 'code';
+    case MessageType.File:
+      return 'file';
+    default:
+      return 'text';
+  }
+};
+
+/**
+ * Convert a string to the corresponding MessageRole enum
+ */
+export const stringToMessageRole = (role: string): MessageRole => {
+  switch (role?.toLowerCase()) {
+    case 'user':
+      return MessageRole.User;
+    case 'assistant':
+      return MessageRole.Assistant;
+    case 'system':
+      return MessageRole.System;
+    default:
+      return MessageRole.User;
+  }
+};
+
+/**
+ * Convert a MessageRole enum to its string representation
+ */
+export const messageRoleToString = (role: MessageRole): string => {
+  switch (role) {
+    case MessageRole.User:
+      return 'user';
+    case MessageRole.Assistant:
+      return 'assistant';
+    case MessageRole.System:
+      return 'system';
+    default:
+      return 'user';
+  }
+};
+
+/**
+ * Convert a string to the corresponding MessageStatus enum
+ */
+export const stringToMessageStatus = (status: string): MessageStatus => {
+  switch (status?.toLowerCase()) {
+    case 'pending':
+      return MessageStatus.Pending;
+    case 'sent':
+      return MessageStatus.Sent;
+    case 'received':
+      return MessageStatus.Received;
+    case 'error':
+      return MessageStatus.Error;
+    case 'failed':
+      return MessageStatus.Failed;
+    case 'retrying':
+      return MessageStatus.Retrying;
+    case 'cached':
+      return MessageStatus.Cached;
+    default:
+      return MessageStatus.Pending;
+  }
+};
+
+/**
+ * Convert a MessageStatus enum to its string representation
+ */
+export const messageStatusToString = (status: MessageStatus): string => {
+  switch (status) {
+    case MessageStatus.Pending:
+      return 'pending';
+    case MessageStatus.Sent:
+      return 'sent';
+    case MessageStatus.Received:
+      return 'received';
+    case MessageStatus.Error:
+      return 'error';
+    case MessageStatus.Failed:
+      return 'failed';
+    case MessageStatus.Retrying:
+      return 'retrying';
+    case MessageStatus.Cached:
+      return 'cached';
+    default:
+      return 'pending';
+  }
+};
+
+/**
+ * Convert a string to the corresponding ChatMode enum
+ */
+export const stringToChatMode = (mode: string): ChatMode => {
+  switch (mode?.toLowerCase()) {
+    case 'chat':
+      return ChatMode.Chat;
+    case 'dev':
+      return ChatMode.Dev;
+    case 'image':
+      return ChatMode.Image;
+    case 'training':
+      return ChatMode.Training;
+    case 'editor':
+      return ChatMode.Editor;
+    default:
+      return ChatMode.Chat;
+  }
+};
+
+/**
+ * Convert a ChatMode enum to its string representation
+ */
+export const chatModeToString = (mode: ChatMode): string => {
+  switch (mode) {
+    case ChatMode.Chat:
+      return 'chat';
+    case ChatMode.Dev:
+      return 'dev';
+    case ChatMode.Image:
+      return 'image';
+    case ChatMode.Training:
+      return 'training';
+    case ChatMode.Editor:
+      return 'editor';
+    default:
+      return 'chat';
+  }
+};
+
+// Export a complete EnumUtils object for easy imports
 export const EnumUtils = {
-  getSchema: getEnumSchema,
-  validate: validateEnumValue,
-  safeParse: safeParseEnumValue,
-  values: enumValues,
-  flexibleParse: parseEnumFlexible,
-  meta: enumMeta,
-  messageTypeToString,
   stringToMessageType,
-  chatModeToString,
-  stringToChatMode,
-  chatModeForDatabase,
-  databaseToChatMode,
-  messageStatusToString,
+  messageTypeToString,
+  stringToMessageRole,
+  messageRoleToString,
   stringToMessageStatus,
-  tokenEnforcementModeToString,
-  stringToTokenEnforcementMode,
-  tokenToUIEnforcementMode
+  messageStatusToString,
+  stringToChatMode,
+  chatModeToString,
 };

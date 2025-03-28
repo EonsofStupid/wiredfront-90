@@ -2,9 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import { useChatStore } from '../../store/chatStore';
 import { useMessageStore } from '../../messaging/MessageManager';
-import { v4 as uuidv4 } from 'uuid';
 import { MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
-import { Json } from '@/integrations/supabase/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -12,6 +10,12 @@ import { Input } from '@/components/ui/input';
 import { Send } from 'lucide-react';
 import { parseCommand, executeCommand } from '@/services/chat/CommandHandler';
 import { VoiceToTextButton } from '../../features/voice-to-text/VoiceToTextButton';
+import { 
+  createUserMessage, 
+  createErrorMessage, 
+  createAssistantMessage 
+} from '@/services/chat/MessageFactory';
+import { logger } from '@/services/chat/LoggingService';
 
 interface ChatInputModuleProps {
   isEditorPage: boolean;
@@ -37,28 +41,14 @@ export const ChatInputModule: React.FC<ChatInputModuleProps> = ({ isEditorPage }
       return;
     }
 
-    const messageId = uuidv4();
-    const now = new Date();
     const sessionId = chatId || 'default';
-
-    const userMessage = {
-      id: messageId,
-      role: MessageRole.User,
-      content: userInput,
-      user_id: null,
-      type: MessageType.Text,
-      metadata: {} as Json,
-      created_at: now.toISOString(),
-      updated_at: now.toISOString(),
-      chat_session_id: sessionId,
-      conversation_id: sessionId,  // Add this for new Message type compatibility
-      is_minimized: false,
-      position: {} as Json,
-      window_state: {} as Json,
-      last_accessed: now.toISOString(),
-      retry_count: 0,
-      message_status: MessageStatus.Sent
-    };
+    
+    // Create user message using factory function
+    const userMessage = createUserMessage(
+      userInput, 
+      sessionId, 
+      'current-user' // This should be replaced with the actual user ID in a real implementation
+    );
 
     addMessage(userMessage);
     setUserInput('');
@@ -69,79 +59,41 @@ export const ChatInputModule: React.FC<ChatInputModuleProps> = ({ isEditorPage }
         body: { 
           message: userInput, 
           chatId,
-          isEditorPage // Pass this to the API if needed
+          isEditorPage
         }
       });
 
       if (error) {
+        logger.error('Error sending message:', error);
         toast.error('Error sending message');
-        console.error('Error sending message:', error);
-
-        const errorMessage = {
-          id: uuidv4(),
-          role: MessageRole.Assistant,
-          content: `Error: ${error.message || 'Failed to send message'}`,
-          user_id: null,
-          type: MessageType.Text,
-          metadata: {} as Json,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          chat_session_id: sessionId,
-          conversation_id: sessionId,  // Add this for new Message type compatibility
-          is_minimized: false,
-          position: {} as Json,
-          window_state: {} as Json,
-          last_accessed: new Date().toISOString(),
-          retry_count: 0,
-          message_status: MessageStatus.Error
-        };
-
+        
+        // Add error message using factory function
+        const errorMessage = createErrorMessage(
+          error.message || 'Failed to send message',
+          sessionId
+        );
+        
         addMessage(errorMessage);
         return;
       }
 
-      const responseMessage = {
-        id: uuidv4(),
-        role: MessageRole.Assistant,
-        content: data?.response || 'No response received',
-        user_id: null,
-        type: MessageType.Text,
-        metadata: {} as Json,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        chat_session_id: sessionId,
-        conversation_id: sessionId,  // Add this for new Message type compatibility
-        is_minimized: false,
-        position: {} as Json,
-        window_state: {} as Json,
-        last_accessed: new Date().toISOString(),
-        retry_count: 0,
-        message_status: MessageStatus.Received
-      };
+      // Create assistant message using factory function
+      const responseMessage = createAssistantMessage(
+        data?.response || 'No response received',
+        sessionId,
+        { source: 'api' }
+      );
 
       addMessage(responseMessage);
     } catch (error: any) {
-      console.error('Error in chat flow:', error);
-
-      const errorMessage = {
-        id: uuidv4(),
-        role: MessageRole.Assistant,
-        content: `Error: ${error?.message || 'An unexpected error occurred'}`,
-        user_id: null,
-        type: MessageType.Text,
-        metadata: {} as Json,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        chat_session_id: sessionId,
-        conversation_id: sessionId,  // Add this for new Message type compatibility
-        is_minimized: false,
-        position: {} as Json,
-        window_state: {} as Json,
-        last_accessed: new Date().toISOString(),
-        retry_count: 0,
-        message_status: MessageStatus.Error
-      };
-
+      logger.error('Error in chat flow:', error);
+      
+      // Add error message using factory function
+      const errorMessage = createErrorMessage(
+        error?.message || 'An unexpected error occurred',
+        sessionId
+      );
+      
       addMessage(errorMessage);
     } finally {
       setIsProcessing(false);

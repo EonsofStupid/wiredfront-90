@@ -3,6 +3,7 @@
  * Utilities for handling JSON safely in the application
  */
 import { Json } from '@/integrations/supabase/types';
+import { logger } from '@/services/chat/LoggingService';
 
 /**
  * Safely convert any value to a Json type
@@ -13,11 +14,16 @@ export function toJson<T>(value: T): Json {
     return null;
   }
   
-  if (typeof value === 'object') {
-    return JSON.parse(JSON.stringify(value)) as Json;
+  try {
+    if (typeof value === 'object') {
+      return JSON.parse(JSON.stringify(value)) as Json;
+    }
+    
+    return value as Json;
+  } catch (error) {
+    logger.error('Error converting to JSON:', error);
+    return null;
   }
-  
-  return value as Json;
 }
 
 /**
@@ -30,9 +36,12 @@ export function fromJson<T>(json: Json | null | undefined, defaultValue?: T): T 
   }
   
   try {
+    if (typeof json === 'string' && (json.startsWith('{') || json.startsWith('['))) {
+      return JSON.parse(json) as T;
+    }
     return json as unknown as T;
-  } catch (e) {
-    console.error('Error parsing JSON:', e);
+  } catch (error) {
+    logger.error('Error parsing JSON:', error);
     return defaultValue;
   }
 }
@@ -58,8 +67,8 @@ export function jsonToRecord(json: Json | null | undefined): Record<string, any>
     
     // If it's not an object, return an empty object
     return {};
-  } catch (e) {
-    console.error('Error converting JSON to Record:', e);
+  } catch (error) {
+    logger.error('Error converting JSON to Record:', error);
     return {};
   }
 }
@@ -69,4 +78,27 @@ export function jsonToRecord(json: Json | null | undefined): Record<string, any>
  */
 export function emptyJsonRecord(): Record<string, Json> {
   return {};
+}
+
+/**
+ * Safely merge two JSON objects
+ */
+export function mergeJsonObjects(obj1: Json | null | undefined, obj2: Json | null | undefined): Record<string, any> {
+  const record1 = jsonToRecord(obj1);
+  const record2 = jsonToRecord(obj2);
+  
+  return { ...record1, ...record2 };
+}
+
+/**
+ * Safely access a property from a JSON object
+ */
+export function getJsonProperty<T>(json: Json | null | undefined, key: string, defaultValue?: T): T | undefined {
+  const record = jsonToRecord(json);
+  
+  if (key in record) {
+    return record[key] as T;
+  }
+  
+  return defaultValue;
 }

@@ -1,49 +1,38 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Message, MessageCreateParams } from '@/types/chat/message';
+import { Message, MessageCreateParams, MessageUpdateParams } from '@/types/chat/message';
 import { MessageType, MessageStatus, MessageRole } from '@/types/chat/enums';
-import { v4 as uuidv4 } from 'uuid';
 import { logger } from './LoggingService';
 import { EnumUtils } from '@/lib/enums';
+import { 
+  createMessage, 
+  createMessageFromDatabase, 
+  prepareMessageForDatabase 
+} from './MessageFactory';
 
 /**
  * Create a new message in the database
  */
-export const createMessage = async (params: MessageCreateParams): Promise<Message | null> => {
+export const createMessageInDb = async (params: MessageCreateParams): Promise<Message | null> => {
   try {
-    const now = new Date().toISOString();
-    const messageId = uuidv4();
-    
     const { data: userData } = await supabase.auth.getUser();
     if (!userData?.user) {
       throw new Error('User not authenticated');
     }
     
-    // Convert MessageType enum to string for database
-    const dbMessageType = params.type ? EnumUtils.messageTypeToString(params.type) : 'text';
-    const dbMessageStatus = 'sent'; // Default status
+    // Create message with consistent structure using factory
+    const message = createMessage({
+      ...params,
+      user_id: userData.user.id
+    });
     
-    const message = {
-      id: messageId,
-      role: params.role,
-      content: params.content,
-      type: dbMessageType,
-      user_id: userData.user.id,
-      conversation_id: params.conversation_id, // Primary reference
-      chat_session_id: params.conversation_id, // For backward compatibility
-      metadata: params.metadata || {},
-      created_at: now,
-      updated_at: now,
-      last_accessed: now,
-      parent_message_id: params.parent_message_id,
-      status: dbMessageStatus,
-      retry_count: 0
-    };
+    // Prepare for database insertion
+    const dbMessage = prepareMessageForDatabase(message);
     
     // Insert into the chat_messages table
     const { data, error } = await supabase
       .from('chat_messages')
-      .insert(message)
+      .insert(dbMessage)
       .select()
       .single();
     
@@ -51,30 +40,10 @@ export const createMessage = async (params: MessageCreateParams): Promise<Messag
       throw error;
     }
     
-    logger.info('Message created', { messageId });
+    logger.info('Message created', { messageId: message.id });
     
     // Convert database record to Message type
-    const resultMessage: Message = {
-      id: data.id,
-      role: data.role as MessageRole,
-      content: data.content,
-      type: EnumUtils.stringToMessageType(data.type),
-      user_id: data.user_id,
-      conversation_id: data.conversation_id || data.chat_session_id,
-      chat_session_id: data.chat_session_id,
-      metadata: data.metadata || {},
-      created_at: data.created_at,
-      updated_at: data.updated_at,
-      last_accessed: data.last_accessed || now,
-      parent_message_id: data.parent_message_id,
-      message_status: data.status as MessageStatus || MessageStatus.Sent,
-      is_minimized: false,
-      position: {},
-      window_state: {},
-      retry_count: data.retry_count || 0
-    };
-    
-    return resultMessage;
+    return createMessageFromDatabase(data);
   } catch (error) {
     logger.error('Failed to create message', { error });
     return null;
@@ -157,30 +126,20 @@ export const fetchConversationMessages = async (conversationId: string): Promise
     
     logger.info('Fetched conversation messages', { conversationId, count: data.length });
     
-    // Convert database records to Message type
-    const messages: Message[] = data.map(msg => ({
-      id: msg.id,
-      role: msg.role as MessageRole,
-      content: msg.content,
-      type: EnumUtils.stringToMessageType(msg.type),
-      user_id: msg.user_id,
-      conversation_id: msg.conversation_id || msg.chat_session_id,
-      chat_session_id: msg.chat_session_id,
-      metadata: msg.metadata || {},
-      created_at: msg.created_at,
-      updated_at: msg.updated_at,
-      last_accessed: msg.last_accessed || msg.created_at,
-      parent_message_id: msg.parent_message_id,
-      message_status: msg.status as MessageStatus || MessageStatus.Received,
-      is_minimized: false,
-      position: {},
-      window_state: {},
-      retry_count: msg.retry_count || 0
-    }));
+    // Convert database records to Message type using factory
+    const messages: Message[] = data.map(msg => createMessageFromDatabase(msg));
     
     return messages;
   } catch (error) {
     logger.error('Failed to fetch conversation messages', { error, conversationId });
     return [];
   }
+};
+
+// Export everything as a single MessageService object
+export const MessageService = {
+  createMessage: createMessageInDb,
+  updateMessage,
+  deleteMessage,
+  fetchConversationMessages
 };

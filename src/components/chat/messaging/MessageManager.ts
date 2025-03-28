@@ -5,7 +5,15 @@ import { MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
 import { logger } from '@/services/chat/LoggingService';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
-import { stringToMessageType, messageTypeToString } from '../types/enums-mapper';
+import { EnumUtils } from '@/lib/enums';
+import { 
+  createMessage, 
+  createUserMessage, 
+  createAssistantMessage, 
+  createSystemMessage, 
+  createErrorMessage, 
+  createMessageFromDatabase 
+} from '@/services/chat/MessageFactory';
 
 interface MessageState {
   messages: Message[];
@@ -64,64 +72,45 @@ export const useMessageStore = create<MessageState>((set, get) => ({
         throw new Error('User not authenticated');
       }
 
-      const now = new Date().toISOString();
-      const messageId = uuidv4();
-      
-      // Convert types for database
-      const dbMessageType = messageTypeToString(type);
-      
-      // Create message to insert into database
-      const messageData = {
-        id: messageId,
+      // Create message using factory function
+      const message = createMessage({
         role,
         content,
-        type: dbMessageType,
-        user_id: userData.user.id,
         conversation_id: conversationId,
-        chat_session_id: conversationId,
+        type,
         metadata,
-        created_at: now,
-        updated_at: now,
-        last_accessed: now,
         parent_message_id: parentMessageId,
-        status: 'sent',
-        retry_count: 0
-      };
+        user_id: userData.user.id
+      });
       
       // Insert message into database
       const { error } = await supabase
         .from('chat_messages')
-        .insert(messageData);
+        .insert({
+          id: message.id,
+          role: message.role,
+          content: message.content,
+          type: EnumUtils.messageTypeToString(message.type),
+          user_id: message.user_id,
+          conversation_id: message.conversation_id,
+          chat_session_id: message.chat_session_id,
+          metadata: message.metadata,
+          created_at: message.created_at,
+          updated_at: message.updated_at,
+          last_accessed: message.last_accessed,
+          parent_message_id: message.parent_message_id,
+          status: message.message_status,
+          retry_count: message.retry_count
+        });
       
       if (error) {
         throw error;
       }
       
-      // Create message for local state
-      const newMessage: Message = {
-        id: messageId,
-        role,
-        content,
-        type,
-        user_id: userData.user.id,
-        conversation_id: conversationId,
-        chat_session_id: conversationId,
-        metadata,
-        created_at: now,
-        updated_at: now,
-        last_accessed: now,
-        parent_message_id: parentMessageId,
-        message_status: MessageStatus.Sent,
-        is_minimized: false,
-        position: {},
-        window_state: {},
-        retry_count: 0
-      };
-      
       // Add message to local state
-      get().addMessage(newMessage);
+      get().addMessage(message);
       
-      return messageId;
+      return message.id;
     } catch (error) {
       logger.error('Failed to send message', { error });
       throw error;
@@ -199,50 +188,19 @@ export const useMessageStore = create<MessageState>((set, get) => ({
         return;
       }
       
-      // Transform to our Message type with proper conversions
-      const messages: Message[] = data.map(msg => ({
-        id: msg.id,
-        role: msg.role as MessageRole,
-        content: msg.content,
-        type: stringToMessageType(msg.type),
-        user_id: msg.user_id,
-        conversation_id: msg.conversation_id || msg.chat_session_id,
-        chat_session_id: msg.chat_session_id,
-        metadata: msg.metadata || {},
-        created_at: msg.created_at,
-        updated_at: msg.updated_at,
-        last_accessed: msg.last_accessed || msg.created_at,
-        parent_message_id: msg.parent_message_id,
-        message_status: msg.status as MessageStatus || MessageStatus.Received,
-        is_minimized: false,
-        position: {},
-        window_state: {},
-        retry_count: msg.retry_count || 0
-      }));
+      // Transform to our Message type with proper conversions using factory
+      const messages: Message[] = data.map(msg => createMessageFromDatabase(msg));
       
       logger.info('Fetched messages', { count: messages.length });
       set({ messages });
     } catch (error) {
       logger.error('Failed to fetch conversation messages', { error, conversationId });
       // Set an error message for the user
-      const errorMessage: Message = {
-        id: uuidv4(),
-        role: MessageRole.System,
-        content: 'Failed to load messages. Please try again.',
-        type: MessageType.System,
-        metadata: {},
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        chat_session_id: conversationId,
-        conversation_id: conversationId,
-        is_minimized: false,
-        position: {},
-        window_state: {},
-        last_accessed: new Date().toISOString(),
-        retry_count: 0,
-        message_status: MessageStatus.Error,
-        user_id: ''
-      };
+      const errorMessage = createSystemMessage(
+        'Failed to load messages. Please try again.',
+        conversationId,
+        { error: true }
+      );
       
       set({ messages: [errorMessage] });
     }
