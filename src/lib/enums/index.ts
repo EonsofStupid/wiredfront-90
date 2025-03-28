@@ -1,65 +1,76 @@
-// src/lib/enums/index.ts
-import { z, ZodTypeAny, ZodNativeEnum } from "zod";
+import { z, ZodNativeEnum } from "zod";
 import * as Enums from "@/types/chat/enums";
 
-// ---- TYPES ----
-
+// --- Types ---
 type NativeEnum = Record<string, string | number>;
-type EnumSchemasMap = Record<string, ZodNativeEnum<any>>;
+type EnumName = keyof typeof Enums;
+type EnumSchemasMap = Record<EnumName, ZodNativeEnum<any>>;
+type EnumValue<T extends EnumName> = z.infer<ReturnType<typeof getEnumSchema<T>>>;
 
-// ---- INTERNAL: Lazy Enum Registry ----
+// --- Internal: Lazy Registry ---
+const _enumSchemaCache: EnumSchemasMap = {};
 
-const _registry: EnumSchemasMap = {};
-
-function getEnumSchema(enumName: keyof typeof Enums): ZodNativeEnum<any> {
-  if (!_registry[enumName]) {
+function getEnumSchema<T extends EnumName>(enumName: T): ZodNativeEnum<any> {
+  if (!_enumSchemaCache[enumName]) {
     const enumDef = Enums[enumName];
-    if (!enumDef) throw new Error(`Enum ${enumName} not found in @/types/chat/enums.ts`);
-    _registry[enumName] = z.nativeEnum(enumDef);
+    if (!enumDef) throw new Error(`Enum "${enumName}" not found in "@/types/chat/enums.ts"`);
+    _enumSchemaCache[enumName] = z.nativeEnum(enumDef);
   }
-  return _registry[enumName];
+  return _enumSchemaCache[enumName];
 }
 
-// ---- API FUNCTIONS ----
-
-export function validateEnumValue<T extends keyof typeof Enums>(
+// --- Core Validators ---
+function validateEnumValue<T extends EnumName>(
   enumName: T,
   value: unknown
-): z.infer<ReturnType<typeof getEnumSchema>> {
+): EnumValue<T> {
   return getEnumSchema(enumName).parse(value);
 }
 
-export function safeParseEnumValue<T extends keyof typeof Enums>(
+function safeParseEnumValue<T extends EnumName>(
   enumName: T,
   value: unknown,
-  fallback?: z.infer<ReturnType<typeof getEnumSchema>>
-): z.infer<ReturnType<typeof getEnumSchema>> | undefined {
+  fallback?: EnumValue<T>
+): EnumValue<T> | undefined {
   const result = getEnumSchema(enumName).safeParse(value);
   return result.success ? result.data : fallback;
 }
 
-export function enumValues<T extends keyof typeof Enums>(enumName: T): string[] {
-  const schema = getEnumSchema(enumName);
-  return Object.values(schema.enum);
+// --- Dropdown / UI Helpers ---
+function enumValues<T extends EnumName>(enumName: T): EnumValue<T>[] {
+  return Object.values(getEnumSchema(enumName).enum);
 }
 
-export function parseEnumFlexible<T extends keyof typeof Enums>(
+// --- Flexible Input (e.g. AI/user-friendly) ---
+function parseEnumFlexible<T extends EnumName>(
   enumName: T,
   raw: unknown,
-  fallback?: z.infer<ReturnType<typeof getEnumSchema>>
-): z.infer<ReturnType<typeof getEnumSchema>> | undefined {
+  fallback?: EnumValue<T>
+): EnumValue<T> | undefined {
   if (typeof raw !== "string") return fallback;
-  const normalized = raw.trim().toUpperCase();
-  const candidates = enumValues(enumName);
-  const match = candidates.find((v) => v.toUpperCase() === normalized);
-  return match ?? fallback;
+
+  const normalized = raw.trim().toLowerCase();
+  const values = enumValues(enumName).map((v) => v.toString());
+
+  const matched = values.find((v) => v.toLowerCase() === normalized);
+  return matched as EnumValue<T> ?? fallback;
 }
 
-// ---- EXPORTS ----
+// --- Bonus: Enum Metadata Builder (for UI docs / introspection) ---
+function enumMeta<T extends EnumName>(enumName: T): { value: EnumValue<T>; label: string }[] {
+  const values = enumValues(enumName);
+  return values.map((v) => ({
+    value: v,
+    label: v.toString().replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+  }));
+}
 
+// --- Unified Export Object ---
 export const EnumUtils = {
-  validateEnumValue,
-  safeParseEnumValue,
-  enumValues,
-  parseEnumFlexible,
+  getSchema: getEnumSchema,
+  validate: validateEnumValue,
+  safeParse: safeParseEnumValue,
+  values: enumValues,
+  flexibleParse: parseEnumFlexible,
+  meta: enumMeta,
 };
