@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useChatStore } from "@/components/chat/store/chatStore";
 import { 
   Bot, 
   Settings, 
@@ -13,18 +13,19 @@ import {
   BotMessageSquare, 
   Braces, 
   MessagesSquare, 
-  BrainCircuit,
   Save
 } from "lucide-react";
 import { SettingsContainer } from "../../layout/SettingsContainer";
 import { toast } from "sonner";
+import { ChatBridge } from "@/components/chat/chatBridge";
 import { ChatPosition } from "@/types/chat/enums";
-import { ChatPositionType } from "@/components/chat/types/chat-modes";
+import { EnumUtils } from "@/lib/enums";
+import { Provider } from "@/types/chat/providers";
 
-// Define provider types for chat
-export type ChatProviderType = 'openai' | 'anthropic' | 'gemini' | 'local' | 'perplexity' | 'llama';
+// Define provider types aligned with central types
+type ChatProviderType = 'openai' | 'anthropic' | 'gemini' | 'local' | 'perplexity' | 'llama';
 
-interface ChatProvider {
+interface ChatProviderConfig {
   id: string;
   name: string;
   type: ChatProviderType;
@@ -34,10 +35,12 @@ interface ChatProvider {
 }
 
 export function ChatProviderSettings() {
-  const { features, toggleFeature, position, togglePosition, docked, toggleDocked } = useChatStore();
+  // Use ChatBridge to get state instead of direct store access
+  const chatState = ChatBridge.getChatState();
+  const { features, position, docked } = chatState;
   
   // Example providers - in a real app these would come from a database
-  const [providers, setProviders] = useState<ChatProvider[]>([
+  const [providers, setProviders] = useState<ChatProviderConfig[]>([
     { 
       id: '1', 
       name: 'OpenAI', 
@@ -93,6 +96,8 @@ export function ChatProviderSettings() {
   
   // Function to save all provider settings
   const saveProviderSettings = () => {
+    // Here we would update providers through ChatBridge
+    // For example: ChatBridge.updateProviders(providers);
     toast.success("Chat provider settings saved successfully");
   };
   
@@ -124,7 +129,22 @@ export function ChatProviderSettings() {
     toast.success("New provider added");
   };
   
-  // Determine position display text
+  // Use ChatBridge for feature toggling
+  const toggleFeature = (featureKey: string) => {
+    ChatBridge.toggleFeature(featureKey);
+  };
+  
+  // Use ChatBridge for position toggling
+  const togglePosition = () => {
+    ChatBridge.togglePosition();
+  };
+  
+  // Use ChatBridge for docked toggling
+  const toggleDocked = () => {
+    ChatBridge.toggleDocked();
+  };
+  
+  // Determine position display text using EnumUtils
   const getPositionDisplayText = () => {
     if (position === ChatPosition.BottomRight) {
       return 'Bottom Right';
