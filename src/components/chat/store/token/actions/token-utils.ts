@@ -1,6 +1,8 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
+import { TokenEnforcementMode } from '@/types/chat/enums';
+import { EnumUtils } from '@/lib/enums';
 
 /**
  * Update user tokens in the database

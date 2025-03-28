@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useChatStore } from '@/components/chat/store/chatStore';
 import { useTokenStore } from '@/components/chat/store/token';
@@ -8,7 +9,7 @@ import { logger } from '@/services/chat/LoggingService';
 import { useCombinedFeatureFlag } from './useFeatureFlags';
 import { FeatureKey } from '@/components/chat/store/actions/feature/types';
 import { TokenEnforcementMode } from '@/types/chat/enums';
-import { extractEnforcementMode } from '@/utils/token-utils';
+import { EnumUtils } from '@/lib/enums';
 import { withTokenErrorBoundary } from '@/components/tokens/TokenErrorBoundary';
 
 export function useTokenManagement() {
@@ -106,7 +107,7 @@ export function useTokenManagement() {
           
           // Set enforcement mode from metadata if available
           if (data.metadata) {
-            const mode = extractEnforcementMode(data.metadata);
+            const mode = extractEnforcementModeFromMetadata(data.metadata);
             if (mode) {
               setEnforcementMode(mode);
             } else {
@@ -121,6 +122,38 @@ export function useTokenManagement() {
     
     fetchTokenConfig();
   }, [user?.id, setFeatureState, setEnforcementMode, setEnforcementEnabled]);
+  
+  // Extract enforcement mode from metadata using EnumUtils
+  const extractEnforcementModeFromMetadata = (metadata: any): TokenEnforcementMode | null => {
+    if (!metadata) return null;
+    
+    try {
+      // Handle string metadata
+      if (typeof metadata === 'string') {
+        try {
+          const parsed = JSON.parse(metadata);
+          return extractEnforcementModeFromMetadata(parsed);
+        } catch (e) {
+          return null;
+        }
+      }
+      
+      // Handle object with mode property
+      if (typeof metadata === 'object' && metadata !== null) {
+        if ('mode' in metadata && typeof metadata.mode === 'string') {
+          return EnumUtils.safeParse('TokenEnforcementMode', metadata.mode);
+        }
+        
+        if ('enforcement_mode' in metadata && typeof metadata.enforcement_mode === 'string') {
+          return EnumUtils.safeParse('TokenEnforcementMode', metadata.enforcement_mode);
+        }
+      }
+    } catch (error) {
+      logger.error('Error extracting enforcement mode:', error);
+    }
+    
+    return null;
+  };
   
   // Function to check if a user has enough tokens for an operation
   const hasEnoughTokens = (amount = 1) => {

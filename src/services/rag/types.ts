@@ -1,4 +1,6 @@
 
+import { EnumUtils } from '@/lib/enums';
+
 export interface VectorDBStats {
   totalVectors: number;
   usedStorage: number;
