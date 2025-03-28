@@ -1,6 +1,7 @@
 
 import { create } from 'zustand';
-import { Message, MessageRole, MessageStatus, MessageType } from '../types';
+import { Message } from '@/types/chat/message';
+import { MessageRole, MessageStatus, MessageType } from '@/components/chat/types/chat-modes';
 import { logger } from '@/services/chat/LoggingService';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
@@ -66,20 +67,22 @@ export const useMessageStore = create<MessageState>((set, get) => ({
           id: msg.id,
           role: msg.role as MessageRole,
           content: msg.content,
-          type: (msg.type as MessageType) || 'text',
+          type: (msg.type as MessageType) || MessageType.Text,
           user_id: msg.user_id,
           metadata: msg.metadata as Json || {},
           created_at: msg.created_at,
           updated_at: msg.updated_at,
           conversation_id: conversationId,
-          chat_session_id: conversationId,
+          chat_session_id: msg.session_id,
           is_minimized: false,
           position: {} as Json,
           window_state: {} as Json,
           last_accessed: msg.last_accessed || new Date().toISOString(),
           retry_count: msg.retry_count || 0,
-          message_status: (msg.status as MessageStatus) || 'received'
-        };
+          message_status: (msg.status as MessageStatus) || MessageStatus.Received,
+          parent_message_id: msg.parent_message_id,
+          position_order: msg.position_order
+        } as Message;
       });
       
       logger.info('Fetched messages', { count: messages.length });
@@ -89,9 +92,9 @@ export const useMessageStore = create<MessageState>((set, get) => ({
       // Set an error message for the user
       const errorMessage: Message = {
         id: uuidv4(),
-        role: 'system',
+        role: MessageRole.System,
         content: 'Failed to load messages. Please try again.',
-        type: 'text',
+        type: MessageType.System,
         metadata: {} as Json,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -102,7 +105,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
         window_state: {} as Json,
         last_accessed: new Date().toISOString(),
         retry_count: 0,
-        message_status: 'error',
+        message_status: MessageStatus.Error,
         user_id: null
       };
       

@@ -22,13 +22,16 @@ export interface Conversation {
   title: string;
   created_at: string;
   last_accessed: string;
+  updated_at: string;
   message_count: number;
   archived: boolean;
-  metadata?: ConversationMetadata;
-  user_id?: string;
-  updated_at?: string;
+  user_id: string;
+  mode: ChatMode;
+  provider_id?: string;
   project_id?: string;
   tokens_used?: number;
+  metadata?: ConversationMetadata | Json;
+  context?: Json;
 }
 
 /**
@@ -50,8 +53,11 @@ export interface ConversationOperationResult {
  */
 export interface CreateConversationParams {
   title?: string;
-  metadata?: Partial<ConversationMetadata>;
+  mode?: ChatMode;
+  metadata?: Partial<ConversationMetadata> | Json;
   project_id?: string;
+  provider_id?: string;
+  context?: Json;
 }
 
 /**
@@ -59,6 +65,12 @@ export interface CreateConversationParams {
  */
 export interface UpdateConversationParams {
   title?: string;
+  mode?: ChatMode;
   archived?: boolean;
-  metadata?: Partial<ConversationMetadata>;
+  metadata?: Partial<ConversationMetadata> | Json;
+  provider_id?: string;
+  tokens_used?: number;
+  project_id?: string;
+  message_count?: number;
+  context?: Json;
 }

@@ -1,92 +1,71 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { CreateConversationParams, ConversationOperationResult } from '@/types/conversations';
 import { v4 as uuidv4 } from 'uuid';
+import { Conversation, CreateConversationParams, ConversationOperationResult } from '@/types/chat/conversation';
 import { logger } from '@/services/chat/LoggingService';
 
 /**
- * Creates a new chat conversation
+ * Create a new conversation
  */
-export async function createNewConversation(params?: CreateConversationParams): Promise<ConversationOperationResult> {
+export const createConversation = async (
+  params: CreateConversationParams = {}
+): Promise<ConversationOperationResult> => {
   try {
-    // Get user from Supabase auth
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return { success: false, error: new Error('User not authenticated') };
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData?.user) {
+      return {
+        success: false,
+        error: new Error('User not authenticated')
+      };
     }
-
+    
     const conversationId = uuidv4();
     const now = new Date().toISOString();
     
-    // Extract mode from metadata if available - with proper type checking
-    const metadata = params?.metadata || {};
-    const mode = typeof metadata === 'object' && 'mode' in metadata ? 
-      metadata.mode as string : 'chat';
-    const providerId = typeof metadata === 'object' && 'providerId' in metadata ? 
-      metadata.providerId as string : undefined;
+    const conversationData: Partial<Conversation> = {
+      id: conversationId,
+      title: params.title || 'New Conversation',
+      user_id: userData.user.id,
+      mode: params.mode || 'chat',
+      provider_id: params.provider_id || null,
+      created_at: now,
+      updated_at: now,
+      last_accessed: now,
+      tokens_used: 0,
+      project_id: params.project_id || null,
+      metadata: params.metadata || {},
+      context: params.context || {},
+      archived: false,
+      message_count: 0
+    };
     
-    // Generate a better default title based on mode
-    let defaultTitle = params?.title;
-    if (!defaultTitle) {
-      const dateStr = new Date().toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: true
-      });
-      
-      switch (mode) {
-        case 'dev':
-        case 'editor':
-          defaultTitle = `Code Session (${dateStr})`;
-          break;
-        case 'image':
-          defaultTitle = `Image Generation (${dateStr})`;
-          break;
-        case 'training':
-          defaultTitle = `Training Session (${dateStr})`;
-          break;
-        default:
-          defaultTitle = `Chat ${dateStr}`;
-      }
-    }
-    
-    // Create a new conversation
     const { error } = await supabase
       .from('chat_conversations')
-      .insert({
-        id: conversationId,
-        user_id: user.id,
-        title: defaultTitle,
-        created_at: now,
-        last_accessed: now,
-        archived: false,
-        mode: mode,
-        provider_id: providerId,
-        // Ensure metadata is JSON compatible
-        metadata: {
-          ...(typeof metadata === 'object' ? 
-            Object.fromEntries(
-              Object.entries(metadata)
-                .filter(([k]) => k !== 'mode' && k !== 'providerId')
-                .map(([k, v]) => [k, typeof v === 'object' ? JSON.stringify(v) : v])
-            ) : {})
-        }
-      });
-
-    if (error) throw error;
+      .insert(conversationData);
     
-    logger.info('New conversation created', { 
+    if (error) {
+      logger.error('Failed to create conversation', { error, params });
+      return {
+        success: false,
+        error
+      };
+    }
+    
+    logger.info('Created new conversation', { 
       conversationId, 
-      title: defaultTitle,
-      mode,
-      providerId
+      title: conversationData.title,
+      mode: conversationData.mode
     });
     
-    return { success: true, conversationId };
+    return {
+      success: true,
+      conversationId
+    };
   } catch (error) {
-    logger.error('Failed to create conversation', { error });
-    return { success: false, error };
+    logger.error('Error in createConversation', { error, params });
+    return {
+      success: false,
+      error
+    };
   }
-}
+};

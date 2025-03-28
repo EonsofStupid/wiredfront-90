@@ -1,8 +1,7 @@
-
 import React, { useMemo } from 'react';
 import { atom, useAtom } from 'jotai';
 import { cn } from '@/lib/utils';
-import { MessageRole, MessageType, MessageStatus } from '@/types/chat/enums';
+import { MessageRole, MessageStatus, MessageType } from '@/components/chat/types/chat-modes';
 import { Spinner } from '@/components/chat/shared/Spinner';
 import { Avatar } from '@/components/ui/avatar';
 import { MessageActions } from './MessageActions';
@@ -38,7 +37,7 @@ export const Message = ({
   id,
   role,
   content,
-  type = 'text',
+  type = MessageType.Text,
   status,
   isLoading = false,
   timestamp,
@@ -72,8 +71,8 @@ export const Message = ({
   };
   
   // Role-based styling
-  const isUser = role === 'user';
-  const isSystem = role === 'system';
+  const isUser = role === MessageRole.User;
+  const isSystem = role === MessageRole.System;
   
   const messageClasses = cn(
     'flex flex-col p-3 rounded-lg max-w-[90%] min-w-[200px]',

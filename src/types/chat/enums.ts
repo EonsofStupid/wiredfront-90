@@ -16,7 +16,9 @@ export enum MessageType {
   Command = 'command',
   System = 'system',
   Image = 'image',
-  Training = 'training'
+  Training = 'training',
+  Code = 'code',
+  File = 'file'
 }
 
 // Message status
@@ -25,7 +27,9 @@ export enum MessageStatus {
   Sent = 'sent',
   Received = 'received',
   Error = 'error',
-  Retrying = 'retrying'
+  Failed = 'failed',
+  Retrying = 'retrying',
+  Cached = 'cached'
 }
 
 // Chat position types
@@ -35,25 +39,12 @@ export enum ChatPosition {
   Custom = 'custom'
 }
 
-// Chat position coordinates
-export type ChatPositionCoordinates = {
-  x: number;
-  y: number;
-}
-
-// Token enforcement modes
-export enum TokenEnforcementMode {
-  Always = 'always',
-  Soft = 'soft',
-  Never = 'never'
-}
-
-// UI enforcement modes (used in UI components)
+// UI enforcement modes
 export enum UIEnforcementMode {
   Always = 'always',
   Soft = 'soft',
   Never = 'never'
 }
 
-// Re-export these from our central location
-export { ChatMode } from '@/components/chat/types/chat-modes';
+// Re-export ChatMode from our central location
+export { ChatMode, TokenEnforcementMode } from '@/components/chat/types/chat-modes';

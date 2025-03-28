@@ -1,68 +1,87 @@
 
-import { ChatMode } from '@/components/chat/types/chat-modes';
-import { FeatureFlags, Provider } from '@/components/chat/types';
+import { Provider } from '@/components/chat/types/provider-types';
+import { FeatureFlags } from '@/components/chat/types/feature-types';
+import { ChatMode, ChatPositionType } from '@/components/chat/types/chat-modes';
 import { Json } from '@/integrations/supabase/types';
 
 /**
- * Chat state definition
+ * Main Chat State interface
+ * This represents the global state for the chat component
  */
 export interface ChatState {
-  // Core state
-  initialized: boolean;
+  // UI state
+  isOpen: boolean;
+  isMinimized: boolean;
+  showSidebar: boolean;
+  position: ChatPositionType;
+  scale: number;
+  docked: boolean;
+  
+  // Chat state
+  currentMode: ChatMode;
   messages: any[];
   userInput: string;
   isWaitingForResponse: boolean;
-  selectedModel: string;
-  selectedMode: string;
-  modelFetchStatus: 'idle' | 'loading' | 'error' | 'success';
-  error: string | null;
   chatId: string | null;
-  
-  // UI state
-  docked: boolean;
-  isOpen: boolean;
-  isMinimized: boolean;
-  position: string | {x: number, y: number};
-  startTime: number;
+  startTime: number | null;
   
   // Feature flags
   features: FeatureFlags;
   
-  // Mode and provider state
-  currentMode: ChatMode;
-  availableProviders: Provider[];
+  // Provider state
   currentProvider: Provider | null;
-  
+  availableProviders: Provider[];
+  selectedModel: string;
   providers: {
-    availableProviders: any[];
+    availableProviders: Provider[];
+    currentProvider: Provider | null;
   };
   
-  // UI state continued
-  showSidebar: boolean;
-  scale: number;
-  ui: {
-    sessionLoading: boolean;
-    messageLoading: boolean;
-    providerLoading: boolean;
+  // Token state
+  tokenBalance: number;
+  
+  // Session state
+  sessions: {
+    allSessions: any[];
+    currentSession: any | null;
+    isLoading: boolean;
   };
   
-  // Required actions (initialized in the store)
-  resetChatState: () => void;
-  setUserInput: (input: string) => void;
+  // Actions
   toggleChat: () => void;
   toggleMinimize: () => void;
   toggleSidebar: () => void;
+  togglePosition: () => void;
+  toggleMode: () => void;
   toggleDocked: () => void;
-  setPosition: (position: any) => void;
-  setChatId: (id: string | null) => void;
+  
+  setPosition: (position: ChatPositionType) => void;
+  setUserInput: (input: string) => void;
   setMode: (mode: string | ChatMode) => void;
+  setDocked: (docked: boolean) => void;
+  setSessionLoading: (isLoading: boolean) => void;
+  
+  // Feature actions
+  toggleFeature: (key: string) => void;
+  enableFeature: (key: string) => void;
+  disableFeature: (key: string) => void;
+  setFeatureState: (key: string, enabled: boolean) => void;
+  
+  // Provider actions
+  updateProviders: (providers: Provider[]) => void;
+  updateChatProvider: (provider: Provider) => void;
+  
+  // Model actions
+  setModel: (model: string) => void;
+  
+  // Token actions
+  setTokenBalance: (balance: number) => void;
+  
+  // Lifecycle actions
   initializeChat: () => void;
-  setSessionLoading: (isLoading: boolean) => void; 
-  setMessageLoading: (isLoading: boolean) => void;
-  setProviderLoading: (isLoading: boolean) => void;
 }
 
-// Types for state management functions
+// Define types for state management functions
 export type SetState<T> = (
   partial: T | Partial<T> | ((state: T) => T | Partial<T>),
   replace?: boolean,
@@ -70,3 +89,6 @@ export type SetState<T> = (
 ) => void;
 
 export type GetState<T> = () => T;
+
+// Re-export Provider type for convenience
+export type { Provider, ChatProvider } from '@/components/chat/types/provider-types';
