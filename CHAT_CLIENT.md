@@ -1,308 +1,177 @@
-# WiredFront Chat Client
 
-## Core Rules
+# WiredFront Chat Client Architecture
 
-1. **Isolation**
+## Core Architecture Principles
+
+1. **Isolation & Independence**
 
    - ALL chat code lives in `src/components/chat`
-   - NO chat logic outside this directory
-   - NO prop drilling
-   - Self-contained CSS
+   - ChatBridge is the ONLY communication interface with the outside app
+   - Self-contained CSS stored in dedicated style files
+   - No direct imports from outside the chat module
 
-2. **State Management**
+2. **Directory Structure**
 
+   ```
+   src/components/chat/
+   ├── chatBridge.ts       # Primary communication interface
+   ├── ChatContainer.tsx   # Main container component
+   ├── ChatProvider.tsx    # Context provider
+   ├── chat-structure/     # Core UI structure components
+   │   ├── container/      # Main container layout
+   │   ├── content/        # Content area
+   │   ├── header/         # Chat header
+   │   ├── input/          # Input components
+   │   ├── messages/       # Message display
+   │   └── sidebar/        # Sidebar components
+   ├── features/           # Feature-specific modules
+   │   ├── conversations/  # Conversation management
+   │   ├── modes/          # Chat mode switching
+   │   ├── tokens/         # Token management
+   │   └── [more features] # Other self-contained features
+   ├── hooks/              # Custom hooks
+   ├── messaging/          # Message handling logic
+   ├── providers/          # Context providers
+   ├── shared/             # Shared UI components
+   ├── store/              # State management
+   │   ├── actions/        # Store actions
+   │   ├── conversation/   # Conversation store
+   │   ├── token/          # Token store
+   │   └── types/          # Store types
+   ├── styles/             # CSS styling
+   │   ├── tokens.css      # CSS variables
+   │   ├── components.css  # Component styles
+   │   └── animations.css  # Animation styles
+   └── types/              # Type definitions
+   ```
+
+3. **State Management**
+
+   - **Global State (Zustand)**: Centralized stores for app-wide state
+     ```typescript
+     interface ChatStore {
+       isOpen: boolean;
+       isMinimized: boolean;
+       position: ChatPosition;
+       currentMode: ChatMode;
+       features: Record<string, boolean>;
+       providers: Provider[];
+       currentProvider: Provider | null;
+     }
+     ```
+
+   - **Component State (Jotai)**: Atomic state for UI components
+     ```typescript
+     // Component-level atoms 
+     const inputValueAtom = atom('');
+     const isTypingAtom = atom(false);
+     const messageListAtom = atom<Message[]>([]);
+     ```
+
+4. **ChatBridge Communication Pattern**
+
+   All external communication must go through ChatBridge:
    ```typescript
-   // Global State (Zustand)
-   // src/stores/chat/chat.store.ts
-   interface ChatStore {
-     mode: ChatMode;        // chat, dev, image, training, code
-     sessionId: string;     // Current session
-     isChatOpen: boolean;   // Global visibility
-     settings: ChatSettings;// Global settings
-   }
+   // External app code
+   import { ChatBridge } from '@/components/chat/chatBridge';
 
-   // Component State (Jotai)
-   // src/components/chat/atoms/*
-   - Input state
-   - Message state
-   - UI state
+   // Send a message
+   ChatBridge.sendMessage('Hello');
+   
+   // Get chat state
+   const state = ChatBridge.getChatState();
+   
+   // Update settings
+   ChatBridge.updateChatSettings({ 
+     currentMode: 'dev', 
+     features: { tokenEnforcement: true }
+   });
    ```
 
-3. **Feature Flags**
+5. **Type System Structure**
 
-   - Database-driven from `public.feature_flags`
-   - Managed through Zustand store
-   - Controls feature availability
+   - **Single source of truth**: All types defined in `src/components/chat/types/`
+   - **Clear hierarchy**: Core types → Store types → Component types
+   - **Consistent naming**: Descriptive, consistent naming conventions
+   - **Export strategy**: Proper barrel exports through index files
 
-4. **CSS Rules**
-   - All styles scoped to chat components
-   - Database-driven theme tokens
-   - NO global CSS leaks
-   - NO inline styles
+6. **CSS Architecture**
 
-## Current Structure
+   - **Scoped styles**: All styles scoped to `.chat-*` namespace
+   - **Variable-based**: Use of CSS variables for theming
+   - **Component isolation**: Each component's styles in dedicated files 
+   - **No leakage**: Chat styles can't affect rest of app
 
-```
-src/components/chat/
-├── atoms/          # Jotai atoms
-├── components/     # UI components
-├── features/       # Feature modules
-├── hooks/          # Custom hooks
-├── messaging/      # Message handling
-├── modules/        # Core modules
-├── providers/      # Context providers
-├── store/          # Zustand store
-├── styles/         # CSS
-├── ChatProvider.tsx
-├── DraggableChat.tsx
-└── Message.tsx
-```
+## Feature Implementation
 
-## Database Integration
+1. **Message Handling**
+   - MessageManager for message state and operations
+   - Clear typing for all message operations
+   - Structured storage of messages by conversation
 
-1. **Theme Tables** (Existing)
+2. **Conversation Management**
+   - Full CRUD operations for conversations
+   - Proper metadata handling
+   - Switching between conversations
 
-   - `public.theme_tokens`
-   - `public.theme_categories`
-   - `public.themes`
+3. **Chat Modes**
+   - Mode-specific components and UI
+   - Proper transitions between modes
+   - Mode metadata and settings
 
-2. **Feature Management** (Existing)
+4. **Token Management**
+   - Token balance tracking
+   - Usage limits and enforcement
+   - User feedback and warnings
 
-   - `public.feature_flags`
-   - `public.user_features`
+5. **Provider Management**
+   - Available providers list
+   - Provider switching
+   - Model selection
 
-3. **AI/Vector Store** (Existing)
-   - `public.project_vectors`
-   - `public.vector_store_configs`
-   - `public.user_ai_access`
+## Testing & Quality
 
-## Architecture Stack
+1. **Isolation Testing**
+   - Each component testable in isolation
+   - Clear mocking boundaries
+   - Interface-driven testing
 
-1. **Python (Driver Layer)**
+2. **Type Safety**
+   - Comprehensive type coverage
+   - No implicit any types
+   - Proper generic constraints
 
-   ```python
-   # AI Orchestration (FastAPI)
-   from fastapi import FastAPI
-   from pydantic import BaseModel
+3. **Performance**
+   - Memoization for expensive operations
+   - Virtualized message lists
+   - Optimized re-renders
 
-   class ChatSession(BaseModel):
-       mode: ChatMode
-       context: dict
-       memory: dict
+## Integration with External Systems
 
-   # Prompt Engine
-   from jinja2 import Template
-   prompts = {
-       'chat': Template("{{ context }} {{ message }}"),
-       'dev': Template("{{ codebase }} {{ query }}")
-   }
-   ```
+1. **App → Chat**
+   - All settings passed through ChatBridge
+   - Features toggled via feature flags
+   - Clear API for external control
 
-2. **Rust (Core Systems)**
+2. **Chat → App** 
+   - Event handlers for state changes
+   - Callbacks for important actions
+   - Strongly typed event payloads
 
-   ```rust
-   // Memory Layer (axum)
-   pub struct Memory {
-       short_term: HashMap<String, Vec<Message>>,
-       long_term: VectorStore,
-       context: Context
-   }
+## Enhancements Roadmap
 
-   // Vector Search
-   pub struct VectorStore {
-       embeddings: Vec<Embedding>,
-       index: HNSWIndex,
-       metadata: HashMap<String, String>
-   }
-   ```
+1. **Performance Optimizations**
+   - Message virtualization for large conversations
+   - Lazy loading of features
+   - Optimized re-rendering
 
-## Component Architecture
+2. **Advanced Features**
+   - Voice-to-text integration
+   - Knowledge base connections
+   - GitHub integration
+   - Image mode support
 
-1. **AI Orchestration (Python/FastAPI)**
-
-   - Route selection
-   - Context management
-   - Session handling
-   - API integration
-
-2. **Prompt Engine (Python)**
-
-   - Template management
-   - Context injection
-   - Dynamic prompting
-   - Chain orchestration
-
-3. **Memory Layer (Rust/gRPC)**
-
-   - Short-term: Redis
-   - Long-term: Vector DB
-   - Context window
-   - Memory injection
-
-4. **Vector Search (Rust)**
-
-   - pgvector integration
-   - Similarity search
-   - Metadata handling
-   - Index management
-
-5. **Database Layer (Shared)**
-   - Supabase/Postgres
-   - Redis caching
-   - Vector storage
-   - Session state
-
-## Memory Strategy
-
-1. **Short-Term Memory**
-
-   ```typescript
-   interface STM {
-     sessionId: string;
-     messages: Message[];
-     context: Context;
-     expiry: number;
-   }
-   ```
-
-2. **Long-Term Memory**
-
-   ```typescript
-   interface LTM {
-     vectors: Vector[];
-     metadata: Metadata;
-     namespace: string;
-     indexes: Index[];
-   }
-   ```
-
-3. **Context Management**
-   ```typescript
-   interface Context {
-     codebase?: CodeContext;
-     conversation?: ConversationContext;
-     system?: SystemContext;
-     user?: UserContext;
-   }
-   ```
-
-## Service Integration
-
-1. **Python Services**
-
-   ```typescript
-   interface AIServices {
-     orchestration: FastAPIService;
-     prompts: PromptEngine;
-     routing: ModelRouter;
-     context: ContextManager;
-   }
-   ```
-
-2. **Rust Services**
-   ```typescript
-   interface CoreServices {
-     memory: MemoryService;
-     vectors: VectorService;
-     search: SearchEngine;
-     websocket: WSServer;
-   }
-   ```
-
-## Implementation Steps
-
-1. **State Cleanup**
-
-   - Move global state to Zustand
-   - Move component state to Jotai
-   - Remove ChatProvider
-
-2. **CSS Isolation**
-
-   - Scope all styles to chat
-   - Use theme tokens
-   - Remove global styles
-
-3. **Feature Integration**
-
-   - Use existing feature flags
-   - Integrate with Zustand
-   - Remove redundant checks
-
-4. **Component Cleanup**
-   - Remove prop drilling
-   - Use atomic state
-   - Clean up exports
-
-## Type Definitions
-
-```typescript
-// Chat Modes
-type ChatMode = "chat" | "dev" | "image" | "training" | "code";
-
-// Message Types
-interface Message {
-  id: string;
-  content: string;
-  type: "user" | "assistant";
-  timestamp: Date;
-}
-
-// Feature Flags
-interface FeatureFlags {
-  voice: boolean;
-  rag: boolean;
-  github: boolean;
-  codeAssistant: boolean;
-}
-
-// Theme Config
-interface ThemeConfig {
-  tokens: Record<string, string>;
-  mode: "light" | "dark" | "system";
-}
-```
-
-## Testing Requirements
-
-1. **Unit Tests**
-
-   - Component tests
-   - State management
-   - Feature flags
-   - Theme integration
-
-2. **Integration Tests**
-
-   - Chat flow
-   - State updates
-   - Feature toggles
-   - Theme changes
-
-3. **Performance Tests**
-   - Load time
-   - State updates
-   - CSS performance
-   - Memory usage
-
-## Performance Optimizations
-
-1. **Memory Management**
-
-   - Rust-based memory segmentation
-   - Redis caching layer
-   - Context window optimization
-   - Garbage collection
-
-2. **Search Performance**
-
-   - HNSW indexing
-   - Parallel search
-   - Metadata filtering
-   - Cache warming
-
-3. **API Optimization**
-   - gRPC for internal comms
-   - WebSocket for streaming
-   - Connection pooling
-   - Rate limiting
+3. **Developer Experience**
+   - Comprehensive documentation
+   - Component playground
+   - Testing utilities
