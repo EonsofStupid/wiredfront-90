@@ -106,7 +106,7 @@ export class ChatBridge {
       switch (key) {
         case 'currentMode':
           if (store.setMode && typeof value === 'string') {
-            store.setMode(value);
+            store.setMode(value as ChatMode);
           }
           break;
         case 'features':

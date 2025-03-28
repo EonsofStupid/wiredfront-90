@@ -16,4 +16,6 @@ export type SettingType = "string" | "number" | "boolean" | "json" | "array";
 export interface Enums {
   message_type: MessageTypeEnum;
   setting_type: SettingType;
+  chat_mode: ChatModeEnum;
+  token_enforcement: TokenEnforcementModeEnum;
 }

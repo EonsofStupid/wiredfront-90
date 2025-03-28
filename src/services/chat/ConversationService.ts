@@ -27,7 +27,10 @@ export const createConversation = async (params: CreateConversationParams): Prom
       message_count: 0,
       archived: false,
       metadata: params.metadata || {},
-      project_id: params.project_id
+      project_id: params.project_id,
+      mode: params.mode,
+      provider_id: params.provider_id,
+      context: params.context || {}
     };
     
     // Insert into the chat_conversations table
