@@ -50,11 +50,13 @@ export interface ChatBridge {
   switchConversation(conversationId: string): Promise<boolean>;
   updateConversation(conversationId: string, updates: Partial<Conversation>): Promise<boolean>;
   archiveConversation(conversationId: string): Promise<boolean>;
+  deleteConversation(conversationId: string): Promise<boolean>;
 
   // Message operations
   sendMessage(content: string, options?: SendMessageOptions): Promise<string>;
   updateMessage(messageId: string, content: string): Promise<boolean>;
   deleteMessage(messageId: string): Promise<boolean>;
+  clearMessages(): void;
 
   // Mode and provider management
   setMode(mode: ChatMode): Promise<boolean>;
@@ -73,6 +75,7 @@ export interface ChatBridge {
   // Event management
   on(eventType: string, callback: Function): () => void;
   off(eventType: string, callback: Function): void;
+  sendEvent(eventType: string, data: any): void;
 
   // State getters
   getCurrentConversationId(): string | null;
@@ -87,4 +90,8 @@ export interface ChatBridge {
   getUserSettings(): Record<string, any>;
   setAdminSettings(settings: Record<string, any>): void;
   getAdminSettings(): Record<string, any>;
+  
+  // Token management
+  updateTokens(amount: number, options?: { reason?: string }): Promise<boolean>;
+  updateChatSettings(settings: Record<string, any>): Promise<boolean>;
 }

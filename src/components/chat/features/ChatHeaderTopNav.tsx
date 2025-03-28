@@ -26,6 +26,8 @@ export function ChatHeaderTopNav() {
     });
     
     setCurrentConversationId(newConversationId);
+    
+    // Use the clearMessages method from the ChatBridge
     chatBridge.clearMessages();
   };
 

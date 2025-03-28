@@ -21,6 +21,7 @@ export function ChatHeaderTopNav() {
   ];
   
   const handleNavClick = (path: string) => {
+    // Use the sendEvent method to notify about navigation
     chatBridge.sendEvent('navigation', { destination: path });
   };
   

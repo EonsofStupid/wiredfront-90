@@ -58,6 +58,12 @@ export class ChatBridge {
     return true;
   }
 
+  async deleteConversation(conversationId: string): Promise<boolean> {
+    logger.info(`ChatBridge: Deleting conversation ${conversationId}`);
+    this.notify('conversationDeleted', { conversationId });
+    return true;
+  }
+
   // Message operations
   async sendMessage(content: string, options?: SendMessageOptions): Promise<string> {
     logger.info('ChatBridge: Sending message', { content, options });
@@ -97,6 +103,11 @@ export class ChatBridge {
     logger.info(`ChatBridge: Deleting message ${messageId}`);
     this.notify('messageDeleted', { messageId });
     return true;
+  }
+
+  clearMessages(): void {
+    logger.info('ChatBridge: Clearing messages');
+    this.notify('messagesCleared', {});
   }
 
   // Mode and provider management
@@ -235,6 +246,25 @@ export class ChatBridge {
       });
       this.notify('stateChanged', this.getState());
     }
+  }
+
+  // Token management
+  async updateTokens(amount: number, options?: { reason?: string }): Promise<boolean> {
+    logger.info('ChatBridge: Updating tokens', { amount, options });
+    this.notify('tokensUpdated', { amount, ...options });
+    return true;
+  }
+
+  async updateChatSettings(settings: Record<string, any>): Promise<boolean> {
+    logger.info('ChatBridge: Updating chat settings', settings);
+    this.notify('chatSettingsUpdated', settings);
+    return true;
+  }
+
+  // Event management
+  sendEvent(eventType: string, data: any): void {
+    logger.info(`ChatBridge: Sending event ${eventType}`, data);
+    this.notify(eventType, data);
   }
 
   // Event listening

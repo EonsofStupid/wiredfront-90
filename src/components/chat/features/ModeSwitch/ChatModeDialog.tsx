@@ -10,6 +10,7 @@ import { useLocation } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/services/chat/LoggingService";
+import { ChatMode } from "@/types/chat/enums";
 
 interface ChatModeDialogProps {
   open: boolean;
@@ -24,7 +25,7 @@ export function ChatModeDialog({ open, onOpenChange }: ChatModeDialogProps) {
     messages, 
     startTime, 
     currentMode, 
-    setCurrentMode,
+    setMode,
     availableProviders
   } = useChatStore();
   
@@ -47,21 +48,21 @@ export function ChatModeDialog({ open, onOpenChange }: ChatModeDialogProps) {
   // Get current mode based on page
   useEffect(() => {
     if (isEditorPage) {
-      setCurrentMode('dev');
+      setMode(ChatMode.Dev);
     } else if (isGalleryPage) {
-      setCurrentMode('image');
+      setMode(ChatMode.Image);
     } else if (location.pathname === '/') {
-      setCurrentMode('chat');
+      setMode(ChatMode.Chat);
     }
-  }, [isEditorPage, isGalleryPage, setCurrentMode, location.pathname]);
+  }, [isEditorPage, isGalleryPage, setMode, location.pathname]);
 
-  const handleModeChange = (mode: 'chat' | 'dev' | 'image') => {
-    setCurrentMode(mode);
+  const handleModeChange = (mode: ChatMode) => {
+    setMode(mode);
     
     // Navigate to the appropriate page based on mode
-    if (mode === 'dev') {
+    if (mode === ChatMode.Dev) {
       navigate('/editor');
-    } else if (mode === 'image') {
+    } else if (mode === ChatMode.Image) {
       navigate('/gallery');
     } else {
       navigate('/');
@@ -103,9 +104,9 @@ export function ChatModeDialog({ open, onOpenChange }: ChatModeDialogProps) {
           <TabsContent value="mode" className="space-y-4">
             <div className="grid grid-cols-1 gap-3">
               <Button 
-                onClick={() => handleModeChange('chat')}
-                variant={currentMode === 'chat' ? 'default' : 'outline'}
-                className={`flex justify-start items-center p-4 ${currentMode === 'chat' ? 'bg-gradient-to-r from-blue-500/80 to-violet-500/80 hover:from-blue-500/90 hover:to-violet-500/90' : 'bg-gray-900/50 hover:bg-gray-800/70 border-gray-700'}`}
+                onClick={() => handleModeChange(ChatMode.Chat)}
+                variant={currentMode === ChatMode.Chat ? 'default' : 'outline'}
+                className={`flex justify-start items-center p-4 ${currentMode === ChatMode.Chat ? 'bg-gradient-to-r from-blue-500/80 to-violet-500/80 hover:from-blue-500/90 hover:to-violet-500/90' : 'bg-gray-900/50 hover:bg-gray-800/70 border-gray-700'}`}
               >
                 <MessageSquare className="h-5 w-5 mr-3" />
                 <div className="text-left">
@@ -115,9 +116,9 @@ export function ChatModeDialog({ open, onOpenChange }: ChatModeDialogProps) {
               </Button>
 
               <Button 
-                onClick={() => handleModeChange('dev')}
-                variant={currentMode === 'dev' ? 'default' : 'outline'}
-                className={`flex justify-start items-center p-4 ${currentMode === 'dev' ? 'bg-gradient-to-r from-blue-500/80 to-violet-500/80 hover:from-blue-500/90 hover:to-violet-500/90' : 'bg-gray-900/50 hover:bg-gray-800/70 border-gray-700'}`}
+                onClick={() => handleModeChange(ChatMode.Dev)}
+                variant={currentMode === ChatMode.Dev ? 'default' : 'outline'}
+                className={`flex justify-start items-center p-4 ${currentMode === ChatMode.Dev ? 'bg-gradient-to-r from-blue-500/80 to-violet-500/80 hover:from-blue-500/90 hover:to-violet-500/90' : 'bg-gray-900/50 hover:bg-gray-800/70 border-gray-700'}`}
               >
                 <Terminal className="h-5 w-5 mr-3" />
                 <div className="text-left">
@@ -127,9 +128,9 @@ export function ChatModeDialog({ open, onOpenChange }: ChatModeDialogProps) {
               </Button>
 
               <Button 
-                onClick={() => handleModeChange('image')}
-                variant={currentMode === 'image' ? 'default' : 'outline'}
-                className={`flex justify-start items-center p-4 ${currentMode === 'image' ? 'bg-gradient-to-r from-blue-500/80 to-violet-500/80 hover:from-blue-500/90 hover:to-violet-500/90' : 'bg-gray-900/50 hover:bg-gray-800/70 border-gray-700'}`}
+                onClick={() => handleModeChange(ChatMode.Image)}
+                variant={currentMode === ChatMode.Image ? 'default' : 'outline'}
+                className={`flex justify-start items-center p-4 ${currentMode === ChatMode.Image ? 'bg-gradient-to-r from-blue-500/80 to-violet-500/80 hover:from-blue-500/90 hover:to-violet-500/90' : 'bg-gray-900/50 hover:bg-gray-800/70 border-gray-700'}`}
               >
                 <Image className="h-5 w-5 mr-3" />
                 <div className="text-left">
