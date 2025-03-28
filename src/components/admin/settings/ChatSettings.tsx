@@ -4,8 +4,8 @@ import { z } from "zod";
 
 import { SettingsContainer } from "./layout/SettingsContainer";
 import { ChatSettingsTabs } from "./chat/ChatSettingsTabs";
-import { useChatBridge } from "@/components/chat/ChatBridge";
-import { ChatSettingsSchema, ChatSettingsType } from "@/components/chat/shared/schemas/chatSettingsSchema";
+import { useChatBridge } from "@chat/ChatBridge";
+import { ChatSettingsSchema, ChatSettingsType } from "@chat/shared/schemas/chatSettingsSchema";
 
 
 // ✅ Define your settings schema
