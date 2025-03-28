@@ -1,20 +1,27 @@
-import { EnumUtils } from "@/lib/enums";
+// src/lib/enums/__tests__/index.test.ts
+import { EnumUtils } from "../index";
 
 describe("EnumUtils", () => {
-  it("parses valid values", () => {
-    expect(EnumUtils.validateEnumValue("ChatMode", "dev")).toBe("dev");
+  it("validates enum", () => {
+    expect(EnumUtils.validate("ChatMode", "dev")).toBe("dev");
   });
 
-  it("falls back on invalid values", () => {
-    expect(EnumUtils.safeParseEnumValue("UserRole", "not_a_role", "guest")).toBe("guest");
+  it("safe parses with fallback", () => {
+    expect(EnumUtils.safeParse("UserRole", "superstar", "guest")).toBe("guest");
   });
 
-  it("flexibly parses strings", () => {
-    expect(EnumUtils.parseEnumFlexible("ChatMode", "   Dev ")).toBe("dev");
+  it("flexibly parses sloppy input", () => {
+    expect(EnumUtils.flexibleParse("ChatMode", "  Dev ")).toBe("dev");
   });
 
   it("lists all values", () => {
-    const roles = EnumUtils.enumValues("UserRole");
-    expect(Array.isArray(roles)).toBe(true);
+    const roles = EnumUtils.values("UserRole");
+    expect(roles).toContain("admin");
+  });
+
+  it("generates meta with labels", () => {
+    const metadata = EnumUtils.meta("ChatTier");
+    expect(metadata[0]).toHaveProperty("value");
+    expect(metadata[0]).toHaveProperty("label");
   });
 });
