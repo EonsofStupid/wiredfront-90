@@ -1,5 +1,5 @@
 
-// Re-export pages to maintain backward compatibility
+// Export all pages for use in the router
 export { default as Dashboard } from "./Dashboard";
 export { default as Projects } from "./Projects";
 export { default as Editor } from "./Editor";
