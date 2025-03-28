@@ -1,29 +1,39 @@
 
-import { ChatMode } from '@/types/chat/enums';
-import { TaskType } from '@/types/chat/communication';
+// Define the possible chat modes
+export type ChatMode = 'standard' | 'developer' | 'image' | 'training';
 
-/**
- * Configuration for a specific chat mode
- */
-export interface ModeConfig {
+// Define the interface for a chat mode configuration
+export interface ChatModeConfig {
   id: ChatMode;
-  displayName: string;
+  name: string;
   description: string;
   icon: string;
-  requiredFeatures?: string[];
-  defaultProvider?: string;
-  defaultTaskType?: TaskType;
 }
 
-/**
- * Context for the mode manager
- */
-export interface ModeContextType {
-  currentMode: ChatMode;
-  currentTaskType: TaskType;
-  setMode: (mode: ChatMode) => Promise<boolean>;
-  setTaskType: (taskType: TaskType) => boolean;
-  availableModes: ModeConfig[];
-  availableTaskTypes: TaskType[];
-  isModeSwitchEnabled: boolean;
-}
+// Define the available chat modes
+export const CHAT_MODES: Record<ChatMode, ChatModeConfig> = {
+  standard: {
+    id: 'standard',
+    name: 'Standard',
+    description: 'General purpose chat assistant',
+    icon: 'MessageSquare',
+  },
+  developer: {
+    id: 'developer',
+    name: 'Developer',
+    description: 'Coding assistant for development',
+    icon: 'Code',
+  },
+  image: {
+    id: 'image',
+    name: 'Image',
+    description: 'Create and edit images',
+    icon: 'Image',
+  },
+  training: {
+    id: 'training',
+    name: 'Training',
+    description: 'Guided learning experience',
+    icon: 'GraduationCap',
+  },
+};

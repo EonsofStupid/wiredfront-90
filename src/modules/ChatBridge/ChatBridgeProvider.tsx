@@ -1,12 +1,11 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
+import { ChatBridge } from './ChatBridge';
 
-interface ChatBridgeContextType {
-  sendMessage: (message: string) => void;
-}
+// Context for the chat bridge
+const ChatBridgeContext = createContext<ChatBridge | undefined>(undefined);
 
-const ChatBridgeContext = createContext<ChatBridgeContextType | undefined>(undefined);
-
+// Hook to use the chat bridge
 export const useChatBridge = () => {
   const context = useContext(ChatBridgeContext);
   if (context === undefined) {
@@ -19,16 +18,14 @@ interface ChatBridgeProviderProps {
   children: ReactNode;
 }
 
+// Provider component for the chat bridge
 export const ChatBridgeProvider: React.FC<ChatBridgeProviderProps> = ({ children }) => {
-  const sendMessage = (message: string) => {
-    console.log('Message sent:', message);
-  };
+  // Create a new ChatBridge instance
+  const chatBridge = new ChatBridge();
 
   return (
-    <ChatBridgeContext.Provider value={{ sendMessage }}>
+    <ChatBridgeContext.Provider value={chatBridge}>
       {children}
     </ChatBridgeContext.Provider>
   );
 };
-
-export default useChatBridge;

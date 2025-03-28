@@ -1,21 +1,22 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { ChatMode } from '@/types/chat/enums';
-import { TaskType } from '@/types/chat/communication';
-import { useModeManager } from './useModeManager';
-import { ModeContextType } from './types';
-import { logger } from '@/services/chat/LoggingService';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { ChatMode } from './types';
 
-// Create context with default values
+interface ModeContextType {
+  currentMode: ChatMode;
+  setMode: (mode: ChatMode) => void;
+  isEditorPage: boolean;
+  isGalleryPage: boolean;
+  isTrainingPage: boolean;
+}
+
 const ModeContext = createContext<ModeContextType | undefined>(undefined);
 
-/**
- * Hook to use the mode context
- */
-export const useMode = () => {
+export const useModeManager = () => {
   const context = useContext(ModeContext);
   if (context === undefined) {
-    throw new Error('useMode must be used within a ModeProvider');
+    throw new Error('useModeManager must be used within a ModeProvider');
   }
   return context;
 };
@@ -24,24 +25,38 @@ interface ModeProviderProps {
   children: ReactNode;
 }
 
-/**
- * Provider component for the mode context
- */
 export const ModeProvider: React.FC<ModeProviderProps> = ({ children }) => {
-  // Use the mode manager hook
-  const modeManager = useModeManager();
-  
-  // Log when provider is mounted
-  React.useEffect(() => {
-    logger.info('ModeProvider initialized', { 
-      currentMode: modeManager.currentMode,
-      currentTaskType: modeManager.currentTaskType,
-      availableTaskTypes: modeManager.availableTaskTypes
-    });
-  }, []);
-  
+  const [currentMode, setCurrentMode] = useState<ChatMode>('standard');
+  const location = useLocation();
+
+  // Determine the current page based on the route
+  const isEditorPage = location.pathname.includes('/editor');
+  const isGalleryPage = location.pathname.includes('/gallery');
+  const isTrainingPage = location.pathname.includes('/training');
+
+  // Update the mode based on the current page
+  useEffect(() => {
+    if (isEditorPage) {
+      setCurrentMode('developer');
+    } else if (isGalleryPage) {
+      setCurrentMode('image');
+    } else if (isTrainingPage) {
+      setCurrentMode('training');
+    } else {
+      setCurrentMode('standard');
+    }
+  }, [isEditorPage, isGalleryPage, isTrainingPage]);
+
   return (
-    <ModeContext.Provider value={modeManager}>
+    <ModeContext.Provider
+      value={{
+        currentMode,
+        setMode: setCurrentMode,
+        isEditorPage,
+        isGalleryPage,
+        isTrainingPage,
+      }}
+    >
       {children}
     </ModeContext.Provider>
   );
