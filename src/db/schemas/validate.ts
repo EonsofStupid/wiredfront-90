@@ -1,4 +1,5 @@
-import { ZodTypeAny } from "zod";
+
+import { ZodTypeAny, z } from "zod";
 
 export function validateRecord<T extends ZodTypeAny>(
   schema: T,
