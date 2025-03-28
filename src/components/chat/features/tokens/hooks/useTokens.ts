@@ -1,113 +1,134 @@
 
-import { useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTokenStore } from '@/components/chat/store/token';
-import { useChatBridge } from '@/components/chat/chatBridge';
-import { TokenEnforcementMode } from '@/types/chat/enums';
+import { useChatBridge } from '@/components/chat/bridge/ChatBridgeProvider';
+import { TokenEnforcementMode } from '@/types/chat/tokens';
 import { toast } from 'sonner';
 
-/**
- * Hook to manage token operations
- */
 export const useTokens = () => {
-  const { 
-    balance, 
-    enforcementMode, 
-    isEnforcementEnabled,
-    tokensPerQuery,
-    freeQueryLimit,
-    queriesUsed,
-    lastUpdated
-  } = useTokenStore();
-  
+  const tokenStore = useTokenStore();
   const chatBridge = useChatBridge();
-  
-  // Add tokens to the user's balance
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialize tokens from the bridge
+  useEffect(() => {
+    if (!isInitialized) {
+      // Get initial token state from the bridge if available
+      const bridgeState = chatBridge.getState();
+      const userSettings = chatBridge.getUserSettings();
+      
+      if (userSettings && userSettings.tokens) {
+        // Apply token settings from user settings
+        tokenStore.setBalance(userSettings.tokens.balance || 0);
+        
+        if (userSettings.tokens.enforcementMode) {
+          tokenStore.setEnforcementMode(userSettings.tokens.enforcementMode as TokenEnforcementMode);
+        }
+      }
+      
+      setIsInitialized(true);
+    }
+  }, [isInitialized, tokenStore, chatBridge]);
+
+  // Add tokens with bridge sync
   const addTokens = useCallback(async (amount: number) => {
-    if (amount <= 0) {
-      toast.error('Token amount must be positive');
-      return false;
-    }
-    
-    const success = await chatBridge.updateTokens(amount, 'add');
-    if (success) {
-      toast.success(`Added ${amount} tokens to your balance`);
-    }
-    return success;
-  }, [chatBridge]);
-  
-  // Spend tokens from the user's balance
-  const spendTokens = useCallback(async (amount: number) => {
-    if (amount <= 0) {
-      toast.error('Token amount must be positive');
-      return false;
-    }
-    
-    if (balance < amount && isEnforcementEnabled && enforcementMode !== 'never' && enforcementMode !== 'warn') {
-      toast.error('Not enough tokens');
-      return false;
-    }
-    
-    const success = await chatBridge.updateTokens(amount, 'spend');
-    if (success && enforcementMode !== 'never') {
-      toast.success(`Spent ${amount} tokens`);
-    }
-    return success;
-  }, [chatBridge, balance, isEnforcementEnabled, enforcementMode]);
-  
-  // Set token balance to a specific amount
-  const setTokenBalance = useCallback(async (amount: number) => {
-    if (amount < 0) {
-      toast.error('Token balance cannot be negative');
-      return false;
-    }
-    
-    const success = await chatBridge.updateTokens(amount, 'set');
-    if (success) {
-      toast.success(`Set token balance to ${amount}`);
-    }
-    return success;
-  }, [chatBridge]);
-  
-  // Set token enforcement mode
-  const setEnforcementMode = useCallback((mode: TokenEnforcementMode) => {
-    return chatBridge.updateChatSettings({ tokenEnforcementMode: mode });
-  }, [chatBridge]);
-  
-  // Toggle token enforcement
-  const toggleEnforcement = useCallback(() => {
-    return chatBridge.toggleFeature('tokenEnforcement');
-  }, [chatBridge]);
-  
-  // Check if user has enough tokens for an operation
-  const hasEnoughTokens = useCallback((amount: number) => {
-    if (!isEnforcementEnabled || enforcementMode === 'never' || enforcementMode === 'warn') {
+    try {
+      // Update local store first for immediate feedback
+      tokenStore.addTokens(amount, "add");
+      
+      // Sync with bridge
+      await chatBridge.updateTokens(amount, { reason: "add" });
+      
       return true;
+    } catch (error) {
+      console.error('Failed to add tokens:', error);
+      toast.error('Failed to add tokens');
+      return false;
     }
-    return balance >= amount;
-  }, [balance, isEnforcementEnabled, enforcementMode]);
-  
-  // Check if the enforcement is active
-  const isEnforcementActive = useCallback(() => {
-    return isEnforcementEnabled && enforcementMode !== 'never';
-  }, [isEnforcementEnabled, enforcementMode]);
-  
+  }, [tokenStore, chatBridge]);
+
+  // Spend tokens with bridge sync
+  const spendTokens = useCallback(async (amount: number) => {
+    try {
+      // Check if there are enough tokens
+      if (tokenStore.balance < amount) {
+        if (tokenStore.enforcementMode === TokenEnforcementMode.Hard) {
+          toast.error('Not enough tokens available');
+          return false;
+        }
+        // In soft enforcement, we allow but warn
+        toast.warning('You have exceeded your token limit');
+      }
+      
+      // Update local store first for immediate feedback
+      tokenStore.spendTokens(amount, "spend");
+      
+      // Sync with bridge
+      await chatBridge.updateTokens(-amount, { reason: "spend" });
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to spend tokens:', error);
+      toast.error('Failed to spend tokens');
+      return false;
+    }
+  }, [tokenStore, chatBridge]);
+
+  // Set tokens to specific value
+  const setTokens = useCallback(async (amount: number) => {
+    try {
+      // Update local store first for immediate feedback
+      tokenStore.setTokens(amount, "set");
+      
+      // Sync with bridge
+      await chatBridge.updateTokens(amount, { reason: "set" });
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to set tokens:', error);
+      toast.error('Failed to set tokens');
+      return false;
+    }
+  }, [tokenStore, chatBridge]);
+
+  // Update token settings
+  const updateSettings = useCallback(async (settings: { 
+    enforcementMode?: TokenEnforcementMode, 
+    warningThreshold?: number 
+  }) => {
+    try {
+      if (settings.enforcementMode !== undefined) {
+        tokenStore.setEnforcementMode(settings.enforcementMode);
+      }
+      
+      if (settings.warningThreshold !== undefined) {
+        tokenStore.setWarningThreshold(settings.warningThreshold);
+      }
+      
+      // Sync with bridge
+      await chatBridge.updateChatSettings({ 
+        tokens: { ...settings } 
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to update token settings:', error);
+      toast.error('Failed to update token settings');
+      return false;
+    }
+  }, [tokenStore, chatBridge]);
+
   return {
-    // State
-    balance,
-    enforcementMode,
-    isEnforcementEnabled,
-    tokensPerQuery,
-    freeQueryLimit,
-    queriesUsed,
-    lastUpdated,
-    
-    // Actions
+    balance: tokenStore.balance,
+    limit: tokenStore.limit,
+    used: tokenStore.used,
+    enforcementMode: tokenStore.enforcementMode,
+    usagePercent: tokenStore.usagePercent,
+    isLowBalance: tokenStore.isLowBalance,
+    isTokensExhausted: tokenStore.isTokensExhausted,
     addTokens,
     spendTokens,
-    setTokenBalance,
-    setEnforcementMode,
-    toggleEnforcement,
-    hasEnoughTokens,
-    isEnforcementActive
+    setTokens,
+    updateSettings
   };
 };

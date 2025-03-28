@@ -1,51 +1,38 @@
 
-import { TokenEnforcementMode } from '@/types/chat/enums';
+import { TokenEnforcementMode } from '@/types/chat/tokens';
 
-/**
- * Token state interface
- * Manages the user's token balance and enforcement settings
- */
 export interface TokenState {
-  // Token balance state
   balance: number;
-  lastUpdated: string;
-  tokensPerQuery: number;
-  queriesUsed: number;
-  freeQueryLimit: number;
-  
-  // Token enforcement settings
+  limit: number;
+  used: number;
+  usagePercent: number;
+  isLowBalance: boolean;
+  isTokensExhausted: boolean;
   enforcementMode: TokenEnforcementMode;
-  enforcementEnabled: boolean;
-  isEnforcementEnabled: boolean; // Alias for enforcementEnabled for backward compatibility
-  
-  // Token management actions
-  addTokens: (amount: number) => Promise<boolean>;
-  spendTokens: (amount: number) => Promise<boolean>;
-  setTokenBalance: (balance: number) => Promise<boolean>;
-  setEnforcementMode: (mode: TokenEnforcementMode) => void;
-  setEnforcementEnabled: (enabled: boolean) => void;
-  resetTokens: () => void;
-  resetQueriesUsed: () => void;
-  updateTokenSettings: (settings: Partial<TokenState>) => void;
+  resetDate: string | null;
+  warningThreshold: number;
+  isLoading: boolean;
+  error: Error | null;
 }
 
-/**
- * Type for token action parameters
- */
-export interface TokenActionParams {
-  amount: number;
-  operation: 'add' | 'spend' | 'set';
-  description?: string;
-  metadata?: Record<string, any>;
-}
-
-/**
- * Types for state management functions
- */
 export type SetState<T> = (
   partial: T | Partial<T> | ((state: T) => T | Partial<T>),
-  replace?: boolean,
-  action?: string | { type: string; [key: string]: any }
+  replace?: boolean
 ) => void;
 
 export type GetState<T> = () => T;
+
+export interface TokenActions {
+  initialize: () => Promise<void>;
+  fetchTokenData: () => Promise<void>;
+  setBalance: (amount: number) => void;
+  addTokens: (amount: number, reason?: string) => Promise<boolean>;
+  spendTokens: (amount: number, reason?: string) => Promise<boolean>;
+  setTokens: (amount: number, reason?: string) => Promise<boolean>;
+  setEnforcementMode: (mode: TokenEnforcementMode) => void;
+  setResetDate: (date: string | null) => void;
+  setWarningThreshold: (percent: number) => void;
+  resetTokens: () => Promise<boolean>;
+}
+
+export interface TokenStore extends TokenState, TokenActions {}

@@ -1,82 +1,63 @@
 
-import { useCallback } from 'react';
-import { useChatStore } from '@/components/chat/store/chatStore';
-import { useChatBridge } from '@/modules/ChatBridge';
-import { ChatMode } from '@/types/chat/enums';
+import { useContext } from 'react';
 import { ModeConfig } from '@/modules/ModeManager/types';
-import { EnumUtils } from '@/lib/enums';
+import { ChatMode } from '@/types/chat/enums';
+import { useChatBridge } from '@/modules/ChatBridge';
 
-// Define available modes with their configurations
-const availableModes: ModeConfig[] = [
-  {
-    id: ChatMode.Chat,
-    displayName: 'Chat',
-    description: 'Standard chat conversation',
-    icon: 'MessageSquare',
-    defaultProvider: 'gpt-4',
-  },
-  {
-    id: ChatMode.Dev,
-    displayName: 'Developer',
-    description: 'Code assistance and development help',
-    icon: 'Code',
-    requiredFeatures: ['codeAssistant'],
-    defaultProvider: 'gpt-4',
-  },
-  {
-    id: ChatMode.Image,
-    displayName: 'Image',
-    description: 'Generate and modify images',
-    icon: 'ImageIcon',
-    requiredFeatures: ['imageGeneration'],
-    defaultProvider: 'dalle-3',
-  },
-  {
-    id: ChatMode.Training,
-    displayName: 'Training',
-    description: 'Learn coding and concepts',
-    icon: 'GraduationCap',
-    requiredFeatures: ['training'],
-    defaultProvider: 'gpt-4',
-  },
-];
+export interface UseModeResult {
+  currentMode: ChatMode;
+  availableModes: ModeConfig[];
+  setMode: (mode: ChatMode) => Promise<boolean>;
+}
 
 /**
- * DEPRECATED: Use useMode from @/modules/ModeManager instead
- * This hook is kept for backward compatibility
+ * Hook to access and manage chat modes
  */
-export const useMode = () => {
-  const { currentMode: storeMode, features } = useChatStore();
+export function useMode(): UseModeResult {
   const chatBridge = useChatBridge();
   
-  // Convert from database mode to UI mode for consistency
-  const currentMode = typeof storeMode === 'string' 
-    ? EnumUtils.stringToChatMode(storeMode) 
-    : storeMode as ChatMode;
-    
-  const uiMode = EnumUtils.chatModeToUiMode(currentMode);
-
-  // Function to change the mode
-  const setMode = useCallback((mode: string) => {
-    // Map UI mode to database mode if needed
-    const dbMode = EnumUtils.uiModeToChatMode(mode);
-    chatBridge.setMode(dbMode);
-  }, [chatBridge]);
-
-  // Filter modes based on available features
-  const filteredModes = availableModes.filter(mode => {
-    if (!mode.requiredFeatures || mode.requiredFeatures.length === 0) {
-      return true;
+  // Get current mode from bridge
+  const currentMode = chatBridge.getCurrentMode();
+  
+  // Available modes (could be fetched from the bridge in the future)
+  const availableModes: ModeConfig[] = [
+    {
+      id: ChatMode.Chat,
+      name: 'Chat',
+      description: 'Standard conversation',
+      icon: 'MessageSquare',
+    },
+    {
+      id: ChatMode.Dev,
+      name: 'Developer',
+      description: 'Code assistance',
+      icon: 'Code',
+      requiredFeatures: ['codeAssistant']
+    },
+    {
+      id: ChatMode.Image,
+      name: 'Image',
+      description: 'Create images',
+      icon: 'Image',
+      requiredFeatures: ['imageGeneration']
+    },
+    {
+      id: ChatMode.Training,
+      name: 'Training',
+      description: 'Learning assistant',
+      icon: 'GraduationCap',
+      requiredFeatures: ['training']
     }
-    
-    return mode.requiredFeatures.every(feature => 
-      features[feature as keyof typeof features]
-    );
-  });
-
-  return {
-    currentMode: uiMode,
-    setMode,
-    availableModes: filteredModes,
+  ];
+  
+  // Function to set the mode via the bridge
+  const setMode = async (mode: ChatMode): Promise<boolean> => {
+    return chatBridge.setMode(mode);
   };
-};
+  
+  return {
+    currentMode,
+    availableModes,
+    setMode
+  };
+}

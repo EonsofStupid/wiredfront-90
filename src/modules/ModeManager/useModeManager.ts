@@ -10,6 +10,7 @@ import { TaskType } from '@/types/chat/communication';
 const availableModes: ModeConfig[] = [
   {
     id: ChatMode.Chat,
+    name: 'Chat',
     displayName: 'Chat',
     description: 'Standard chat conversation',
     icon: 'MessageSquare',
@@ -18,6 +19,7 @@ const availableModes: ModeConfig[] = [
   },
   {
     id: ChatMode.Dev,
+    name: 'Developer',
     displayName: 'Developer',
     description: 'Code assistance and development help',
     icon: 'Code',
@@ -27,6 +29,7 @@ const availableModes: ModeConfig[] = [
   },
   {
     id: ChatMode.Image,
+    name: 'Image',
     displayName: 'Image',
     description: 'Generate and modify images',
     icon: 'ImageIcon',
@@ -36,6 +39,7 @@ const availableModes: ModeConfig[] = [
   },
   {
     id: ChatMode.Training,
+    name: 'Training',
     displayName: 'Training',
     description: 'Learn coding and concepts',
     icon: 'GraduationCap',
@@ -168,11 +172,11 @@ export function useModeManager(): ModeContextType {
   
   return {
     currentMode,
-    currentTaskType,
     setMode,
-    setTaskType,
+    isEditorPage: location.pathname === '/editor',
     availableModes,
-    availableTaskTypes,
-    isModeSwitchEnabled
+    currentTaskType,
+    setTaskType,
+    availableTaskTypes
   };
 }

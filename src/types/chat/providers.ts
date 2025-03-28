@@ -1,47 +1,34 @@
 
-import { Json } from '@/integrations/supabase/types';
-
 /**
- * Provider interface - represents a chat service provider (OpenAI, Anthropic, etc)
- */
-export interface Provider {
-  id: string;
-  name: string;
-  displayName: string;
-  models: ProviderModel[];
-  isEnabled: boolean;
-  isDefault?: boolean;
-  apiKeyName?: string;
-  baseUrl?: string;
-  category?: string;
-  metadata?: Record<string, any>;
-}
-
-/**
- * Model supported by a provider
+ * Provider model definition
  */
 export interface ProviderModel {
   id: string;
   name: string;
-  displayName: string;
-  maxTokens: number;
-  contextWindow: number;
+  maxTokens?: number;
+  contextWindow?: number;
   supportedModes: string[];
   isDefault?: boolean;
-  capabilities?: string[];
-  metadata?: Record<string, any>;
 }
 
 /**
- * Provider settings stored per user
+ * Provider definition for the chat system
  */
-export interface UserProviderSettings {
+export interface Provider {
   id: string;
-  userId: string;
-  providerId: string;
-  isDefault: boolean;
+  name: string;
+  description?: string;
+  apiType: string;
+  models: ProviderModel[];
   isEnabled: boolean;
-  config: Json;
-  createdAt: string;
-  updatedAt: string;
+  isDefault?: boolean;
+  category: 'chat' | 'image' | 'audio' | 'video' | 'embedding';
+  capabilities?: {
+    streaming?: boolean;
+    functions?: boolean;
+    tokenCounting?: boolean;
+    vision?: boolean;
+  };
+  endpoints?: Record<string, string>;
+  maxRequestTokens?: number;
 }

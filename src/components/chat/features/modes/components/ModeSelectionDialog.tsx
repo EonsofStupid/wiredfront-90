@@ -39,17 +39,18 @@ export function ModeSelectionDialog({
   const { providers } = useChatStore();
   const [selectedMode, setSelectedMode] = useState<UIMode>('standard');
   const [selectedProvider, setSelectedProvider] = useState<string>(
-    providers.availableProviders.find(p => p.isEnabled)?.id || ''
+    providers.availableProviders.find(p => p.isEnabled && (p as any).category === 'chat')?.id || ''
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const chatBridge = useChatBridge();
 
+  // Filter providers by category
   const availableChatProviders = providers.availableProviders.filter(
-    p => p.isEnabled && p.category === 'chat'
+    p => p.isEnabled && ((p as any).category === 'chat')
   );
   
   const availableImageProviders = providers.availableProviders.filter(
-    p => p.isEnabled && p.category === 'image'
+    p => p.isEnabled && ((p as any).category === 'image')
   );
 
   const filteredProviders = selectedMode === 'image' 
@@ -69,7 +70,7 @@ export function ModeSelectionDialog({
       setIsSubmitting(true);
       
       // Convert UI mode to ChatMode enum using the utility function
-      const chatMode = EnumUtils.uiModeToChatMode(selectedMode);
+      const chatMode = EnumUtils.uiModeToChatMode?.(selectedMode) || ChatMode.Chat;
       
       await onCreateSession(chatMode, selectedProvider);
       

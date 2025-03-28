@@ -1,158 +1,129 @@
 
-import { ChatMode, MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
+// Enum mappers to handle transitions between different enum representations
+import { ChatMode, ChatPosition, MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
+import { TokenEnforcementMode } from '@/types/chat/tokens';
 
-/**
- * Convert ChatMode enum to database string representation
- */
-export function chatModeToString(mode: ChatMode): string {
-  switch (mode) {
-    case ChatMode.Chat:
-      return 'chat';
-    case ChatMode.Dev:
-      return 'dev';
-    case ChatMode.Image:
-      return 'image';
-    case ChatMode.Training:
-      return 'training';
-    case ChatMode.Planning:
-      return 'planning';
-    case ChatMode.Code:
-      return 'code';
-    default:
-      return 'chat';
-  }
-}
+// Type definition for UI mode
+export type UiChatMode = 'standard' | 'editor' | 'image' | 'training';
 
-/**
- * Convert database string representation to ChatMode enum
- */
-export function stringToChatMode(modeString: string): ChatMode {
-  switch (modeString.toLowerCase()) {
+// Mapping from database mode (ChatMode enum) to UI representation
+export const databaseModeToUiMode: Record<ChatMode, UiChatMode> = {
+  [ChatMode.Chat]: 'standard',
+  [ChatMode.Dev]: 'editor',
+  [ChatMode.Editor]: 'editor',
+  [ChatMode.Image]: 'image',
+  [ChatMode.Training]: 'training',
+  // Handle potential future ChatMode enum values
+  ...(ChatMode as any).Planning && { [(ChatMode as any).Planning]: 'standard' },
+  ...(ChatMode as any).Code && { [(ChatMode as any).Code]: 'editor' }
+};
+
+// Mapping from UI mode to database mode (ChatMode enum)
+export const uiModeToChatMode: Record<UiChatMode, ChatMode> = {
+  'standard': ChatMode.Chat,
+  'editor': ChatMode.Dev,
+  'image': ChatMode.Image,
+  'training': ChatMode.Training
+};
+
+// Mapping strings to chat modes
+export const stringToChatMode = (mode: string): ChatMode => {
+  const lowerMode = mode.trim().toLowerCase();
+  
+  switch (lowerMode) {
     case 'chat':
+    case 'standard':
       return ChatMode.Chat;
     case 'dev':
+    case 'developer':
+    case 'editor':
       return ChatMode.Dev;
     case 'image':
       return ChatMode.Image;
     case 'training':
       return ChatMode.Training;
     case 'planning':
-      return ChatMode.Planning;
+      // Handle potential future enum value
+      return (ChatMode as any).Planning || ChatMode.Chat;
     case 'code':
-      return ChatMode.Code;
+      // Handle potential future enum value
+      return (ChatMode as any).Code || ChatMode.Dev;
     default:
       return ChatMode.Chat;
   }
-}
+};
 
-/**
- * Convert MessageType enum to string representation
- */
-export function messageTypeToString(type: MessageType): string {
-  switch (type) {
-    case MessageType.Text:
-      return 'text';
-    case MessageType.Image:
-      return 'image';
-    case MessageType.Code:
-      return 'code';
-    case MessageType.File:
-      return 'file';
-    case MessageType.System:
-      return 'system';
-    default:
-      return 'text';
-  }
-}
+// Mapping from chat position enum to CSS classes
+export const positionToClasses: Record<ChatPosition, string> = {
+  [ChatPosition.BottomRight]: 'bottom-right',
+  [ChatPosition.BottomLeft]: 'bottom-left'
+};
 
-/**
- * Convert string representation to MessageType enum
- */
-export function stringToMessageType(typeString: string): MessageType {
-  switch (typeString.toLowerCase()) {
-    case 'text':
-      return MessageType.Text;
-    case 'image':
-      return MessageType.Image;
-    case 'code':
-      return MessageType.Code;
-    case 'file':
-      return MessageType.File;
-    case 'system':
-      return MessageType.System;
-    default:
-      return MessageType.Text;
-  }
-}
+// Mapping from message role enum to CSS classes
+export const messageRoleToClasses: Record<MessageRole, string> = {
+  [MessageRole.User]: 'user',
+  [MessageRole.Assistant]: 'assistant',
+  [MessageRole.System]: 'system',
+  [MessageRole.Error]: 'error',
+  [MessageRole.Tool]: 'tool',
+  [MessageRole.Function]: 'function'
+};
 
-/**
- * Convert MessageRole enum to string representation
- */
-export function messageRoleToString(role: MessageRole): string {
-  switch (role) {
-    case MessageRole.User:
-      return 'user';
-    case MessageRole.Assistant:
-      return 'assistant';
-    case MessageRole.System:
-      return 'system';
-    default:
-      return 'user';
-  }
-}
+// Mapping from message status enum to user-friendly labels
+export const messageStatusToLabel: Record<MessageStatus, string> = {
+  [MessageStatus.Pending]: 'Pending',
+  [MessageStatus.Sending]: 'Sending...',
+  [MessageStatus.Sent]: 'Sent',
+  [MessageStatus.Received]: 'Received',
+  [MessageStatus.Error]: 'Error',
+  [MessageStatus.Canceled]: 'Canceled',
+  // Handle potential future MessageStatus enum values
+  ...(MessageStatus as any).Delivered && { [(MessageStatus as any).Delivered]: 'Delivered' }
+};
 
-/**
- * Convert string representation to MessageRole enum
- */
-export function stringToMessageRole(roleString: string): MessageRole {
-  switch (roleString.toLowerCase()) {
-    case 'user':
-      return MessageRole.User;
-    case 'assistant':
-      return MessageRole.Assistant;
-    case 'system':
-      return MessageRole.System;
-    default:
-      return MessageRole.User;
-  }
-}
+// Mapping from message type enum to icon names
+export const messageTypeToIcon: Record<MessageType, string> = {
+  [MessageType.Text]: 'message-square',
+  [MessageType.Code]: 'code',
+  [MessageType.Image]: 'image',
+  [MessageType.Audio]: 'mic',
+  [MessageType.File]: 'file',
+  [MessageType.Link]: 'link',
+  [MessageType.System]: 'info'
+};
 
-/**
- * Convert MessageStatus enum to string representation 
- */
-export function messageStatusToString(status: MessageStatus): string {
-  switch (status) {
-    case MessageStatus.Pending:
-      return 'pending';
-    case MessageStatus.Sent:
-      return 'sent';
-    case MessageStatus.Received:
-      return 'received';
-    case MessageStatus.Error:
-      return 'error';
-    case MessageStatus.Delivered:
-      return 'delivered';
-    default:
-      return 'pending';
-  }
-}
+// Mapping from token enforcement mode to user-friendly labels
+export const tokenEnforcementModeToLabel: Record<TokenEnforcementMode, string> = {
+  [TokenEnforcementMode.None]: 'Disabled',
+  [TokenEnforcementMode.Warn]: 'Warning Only',
+  [TokenEnforcementMode.Soft]: 'Soft Limit',
+  [TokenEnforcementMode.Hard]: 'Hard Limit'
+};
 
-/**
- * Convert string representation to MessageStatus enum
- */
-export function stringToMessageStatus(statusString: string): MessageStatus {
-  switch (statusString.toLowerCase()) {
-    case 'pending':
-      return MessageStatus.Pending;
-    case 'sent':
-      return MessageStatus.Sent;
-    case 'received':
-      return MessageStatus.Received;
-    case 'error':
-      return MessageStatus.Error;
-    case 'delivered':
-      return MessageStatus.Delivered;
-    default:
-      return MessageStatus.Pending;
+// UI-friendly mapping for token enforcement modes
+export const tokenToUIEnforcementMode: Record<TokenEnforcementMode, {
+  label: string;
+  description: string;
+  color: string;
+}> = {
+  [TokenEnforcementMode.None]: {
+    label: 'Disabled',
+    description: 'No token limits enforced',
+    color: 'text-gray-500'
+  },
+  [TokenEnforcementMode.Warn]: {
+    label: 'Warning Only',
+    description: 'Users are warned when reaching limits',
+    color: 'text-yellow-500'
+  },
+  [TokenEnforcementMode.Soft]: {
+    label: 'Soft Limit',
+    description: 'Functionality degrades when limits reached',
+    color: 'text-orange-500'
+  },
+  [TokenEnforcementMode.Hard]: {
+    label: 'Hard Limit',
+    description: 'Features blocked when limits reached',
+    color: 'text-red-500'
   }
-}
+};
