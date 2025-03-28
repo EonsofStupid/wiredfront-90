@@ -10,7 +10,7 @@ import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { FeatureKey } from "@/components/chat/types/feature-types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ChatPosition } from "@/types/chat/enums";
-import { ChatPositionCoordinates } from "@/components/chat/types/chat-modes";
+import { ChatPositionType } from "@/components/chat/types/chat-modes";
 
 export const ChatFeatureSettings = () => {
   const { position, togglePosition, docked, toggleDocked } = useChatStore();
@@ -28,10 +28,10 @@ export const ChatFeatureSettings = () => {
 
   // Safely determine the position display text
   const getPositionDisplayText = () => {
-    if (typeof position === 'string') {
-      return position === 'bottom-right' ? 'Bottom Right' : 'Bottom Left';
-    } else if (position && typeof position === 'object') {
-      return `Custom (${position.x}, ${position.y})`;
+    if (position === ChatPosition.BottomRight) {
+      return 'Bottom Right';
+    } else if (position === ChatPosition.BottomLeft) {
+      return 'Bottom Left';
     }
     return 'Unknown';
   };

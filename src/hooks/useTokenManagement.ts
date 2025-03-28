@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useChatStore } from '@/components/chat/store/chatStore';
 import { useTokenStore } from '@/components/chat/store/token';
@@ -8,7 +7,7 @@ import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';
 import { useCombinedFeatureFlag } from './useFeatureFlags';
 import { FeatureKey } from '@/components/chat/store/actions/feature/types';
-import { TokenEnforcementMode } from '@/components/chat/types/chat-modes';
+import { TokenEnforcementMode } from '@/types/chat/enums';
 import { extractEnforcementMode } from '@/utils/token-utils';
 import { withTokenErrorBoundary } from '@/components/tokens/TokenErrorBoundary';
 
@@ -126,12 +125,12 @@ export function useTokenManagement() {
   // Function to check if a user has enough tokens for an operation
   const hasEnoughTokens = (amount = 1) => {
     // If token enforcement is disabled, always return true
-    if (!features.tokenEnforcement || !isEnforcementEnabled || enforcementMode === 'never') {
+    if (!features.tokenEnforcement || !isEnforcementEnabled || enforcementMode === TokenEnforcementMode.Never) {
       return true;
     }
     
     // If mode is 'warn', allow but will warn
-    if (enforcementMode === 'warn') {
+    if (enforcementMode === TokenEnforcementMode.Warn) {
       return true;
     }
     
@@ -141,7 +140,7 @@ export function useTokenManagement() {
   // Function to handle token spending with error handling
   const handleSpendTokens = async (amount = 1) => {
     // If token enforcement is disabled, allow the operation
-    if (!features.tokenEnforcement || !isEnforcementEnabled || enforcementMode === 'never') {
+    if (!features.tokenEnforcement || !isEnforcementEnabled || enforcementMode === TokenEnforcementMode.Never) {
       return true;
     }
     
@@ -150,22 +149,22 @@ export function useTokenManagement() {
       return false;
     }
     
-    if (!hasEnoughTokens(amount) && enforcementMode !== 'warn') {
+    if (!hasEnoughTokens(amount) && enforcementMode !== TokenEnforcementMode.Warn) {
       toast.error(`Not enough tokens. You need ${amount} tokens for this operation.`);
       return false;
     }
     
     try {
       const success = await spendTokens(amount);
-      if (!success && enforcementMode !== 'warn') {
+      if (!success && enforcementMode !== TokenEnforcementMode.Warn) {
         toast.error('Failed to process tokens. Please try again.');
       }
-      return success || enforcementMode === 'warn';
+      return success || enforcementMode === TokenEnforcementMode.Warn;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('Error spending tokens:', error);
       toast.error(`Error processing tokens: ${errorMessage}`);
-      return enforcementMode === 'warn'; // Allow operation to proceed if in warn mode
+      return enforcementMode === TokenEnforcementMode.Warn; // Allow operation to proceed if in warn mode
     }
   };
   

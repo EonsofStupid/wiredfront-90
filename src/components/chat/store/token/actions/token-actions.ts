@@ -1,8 +1,7 @@
-
 import { TokenState, SetState, GetState } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
-import { UIEnforcementMode } from '../../../types/chat-modes';
+import { TokenEnforcementMode } from '@/types/chat/enums';
 
 /**
  * Create actions for the token store
@@ -143,13 +142,13 @@ export const createTokenActions = (
     /**
      * Set the enforcement mode
      */
-    setEnforcementMode: (mode: UIEnforcementMode) => {
+    setEnforcementMode: (mode: TokenEnforcementMode) => {
       logger.info('Setting token enforcement mode', { mode });
       
       set({
         enforcementMode: mode,
-        enforcementEnabled: mode !== 'never', // Enable enforcement if not "never"
-        isEnforcementEnabled: mode !== 'never'
+        enforcementEnabled: mode !== TokenEnforcementMode.Never, // Enable enforcement if not "never"
+        isEnforcementEnabled: mode !== TokenEnforcementMode.Never
       });
     },
     
@@ -163,7 +162,7 @@ export const createTokenActions = (
         enforcementEnabled: enabled,
         isEnforcementEnabled: enabled,
         // If enabling enforcement, set mode to 'warn' if it was 'never'
-        enforcementMode: enabled && get().enforcementMode === 'never' ? 'warn' : get().enforcementMode
+        enforcementMode: enabled && get().enforcementMode === TokenEnforcementMode.Never ? TokenEnforcementMode.Warn : get().enforcementMode
       });
     },
     

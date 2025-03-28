@@ -1,9 +1,9 @@
-
 import { create } from 'zustand';
 import { TokenState } from './types';
 import { createTokenActions } from './actions/token-actions';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
+import { TokenEnforcementMode } from '@/types/chat/enums';
 
 const initialState: Omit<TokenState, 'addTokens' | 'spendTokens' | 'setTokenBalance' | 'setEnforcementMode' | 'setEnforcementEnabled' | 'resetTokens' | 'resetQueriesUsed' | 'updateTokenSettings'> = {
   balance: 0,
@@ -11,7 +11,7 @@ const initialState: Omit<TokenState, 'addTokens' | 'spendTokens' | 'setTokenBala
   tokensPerQuery: 1,
   queriesUsed: 0,
   freeQueryLimit: 5,
-  enforcementMode: 'never',
+  enforcementMode: TokenEnforcementMode.Never,
   enforcementEnabled: false,
   isEnforcementEnabled: false
 };

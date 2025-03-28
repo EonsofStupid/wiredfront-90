@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
+import { TokenEnforcementMode } from '@/types/chat/enums';
 
 interface AdvancedTabProps {
   tokenBalance: number;
@@ -50,9 +49,9 @@ export function AdvancedTab({
           </p>
         </div>
         <Switch
-          checked={enforcementMode === 'never'}
+          checked={enforcementMode === TokenEnforcementMode.Never}
           onCheckedChange={(checked) => 
-            handleUpdateEnforcementConfig(checked ? 'never' : 'always')
+            handleUpdateEnforcementConfig(checked ? TokenEnforcementMode.Never : TokenEnforcementMode.Always)
           }
           disabled={isSubmitting}
         />

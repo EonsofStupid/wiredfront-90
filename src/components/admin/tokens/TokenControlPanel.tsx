@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTokenManagement } from '@/hooks/useTokenManagement';
 import { useRoleStore } from '@/stores/role';
-import { TokenEnforcementMode } from '@/integrations/supabase/types/enums';
+import { TokenEnforcementMode, UIEnforcementMode } from '@/types/chat/enums';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Coins } from 'lucide-react';

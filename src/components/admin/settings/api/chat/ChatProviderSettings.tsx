@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,7 +18,8 @@ import {
 } from "lucide-react";
 import { SettingsContainer } from "../../layout/SettingsContainer";
 import { toast } from "sonner";
-import { ChatPosition } from "@/components/chat/store/types/chat-store-types";
+import { ChatPosition } from "@/types/chat/enums";
+import { ChatPositionType } from "@/components/chat/types/chat-modes";
 
 // Define provider types for chat
 export type ChatProviderType = 'openai' | 'anthropic' | 'gemini' | 'local' | 'perplexity' | 'llama';
@@ -126,15 +126,11 @@ export function ChatProviderSettings() {
   
   // Determine position display text
   const getPositionDisplayText = () => {
-    if (typeof position === 'string') {
-      return position === 'bottom-right' ? 'Bottom Right' : 'Bottom Left';
+    if (position === ChatPosition.BottomRight) {
+      return 'Bottom Right';
+    } else if (position === ChatPosition.BottomLeft) {
+      return 'Bottom Left';
     }
-    
-    // Type guard to ensure position is an object with x and y properties
-    if (position && typeof position === 'object' && 'x' in position && 'y' in position) {
-      return `Custom (${position.x}, ${position.y})`;
-    }
-    
     return 'Unknown';
   };
   
