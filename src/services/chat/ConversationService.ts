@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { CreateConversationParams, UpdateConversationParams, Conversation } from '@/types/chat/conversation';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from './LoggingService';
+import { chatModeToString, stringToChatMode } from '@/components/chat/types/enums-mapper';
 
 /**
  * Create a new conversation in the database
@@ -17,7 +18,10 @@ export const createConversation = async (params: CreateConversationParams): Prom
     const now = new Date().toISOString();
     const conversationId = uuidv4();
     
-    const conversation: Partial<Conversation> = {
+    // Convert ChatMode enum to string for database
+    const dbMode = params.mode ? chatModeToString(params.mode) : 'chat';
+    
+    const conversation = {
       id: conversationId,
       title: params.title || 'New Conversation',
       user_id: userData.user.id,
@@ -28,7 +32,7 @@ export const createConversation = async (params: CreateConversationParams): Prom
       archived: false,
       metadata: params.metadata || {},
       project_id: params.project_id,
-      mode: params.mode,
+      mode: dbMode,
       provider_id: params.provider_id,
       context: params.context || {}
     };
@@ -56,10 +60,16 @@ export const createConversation = async (params: CreateConversationParams): Prom
  */
 export const updateConversation = async (conversationId: string, updates: UpdateConversationParams): Promise<boolean> => {
   try {
+    // Convert ChatMode enum to string for database if it exists
+    const dbUpdates: any = { ...updates };
+    if (updates.mode) {
+      dbUpdates.mode = chatModeToString(updates.mode);
+    }
+    
     const { error } = await supabase
       .from('chat_conversations')
       .update({
-        ...updates,
+        ...dbUpdates,
         updated_at: new Date().toISOString()
       })
       .eq('id', conversationId);
@@ -134,7 +144,13 @@ export const fetchConversations = async (): Promise<Conversation[]> => {
     
     logger.info('Fetched conversations', { count: data.length });
     
-    return data as Conversation[];
+    // Convert string modes from DB to ChatMode enum
+    const conversations = data.map(conv => ({
+      ...conv,
+      mode: stringToChatMode(conv.mode as string)
+    })) as Conversation[];
+    
+    return conversations;
   } catch (error) {
     logger.error('Failed to fetch conversations', { error });
     return [];
@@ -158,7 +174,13 @@ export const fetchConversation = async (conversationId: string): Promise<Convers
     
     logger.info('Fetched conversation', { conversationId });
     
-    return data as Conversation;
+    // Convert string mode from DB to ChatMode enum
+    const conversation = {
+      ...data,
+      mode: stringToChatMode(data.mode as string)
+    } as Conversation;
+    
+    return conversation;
   } catch (error) {
     logger.error('Failed to fetch conversation', { error, conversationId });
     return null;

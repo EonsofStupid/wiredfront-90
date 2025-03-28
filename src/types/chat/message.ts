@@ -13,7 +13,7 @@ export interface Message {
   role: MessageRole;
   content: string;
   type: MessageType;
-  metadata: Json;
+  metadata: Record<string, any>;
   created_at: string;
   updated_at: string;
   last_accessed: string;
@@ -33,7 +33,7 @@ export interface MessageCreateParams {
   content: string;
   conversation_id: string;
   type?: MessageType;
-  metadata?: Json;
+  metadata?: Record<string, any>;
   parent_message_id?: string;
 }
 
@@ -43,7 +43,7 @@ export interface MessageCreateParams {
 export interface MessageUpdateParams {
   content?: string;
   type?: MessageType;
-  metadata?: Json;
+  metadata?: Record<string, any>;
   message_status?: MessageStatus;
   is_minimized?: boolean;
   position?: Record<string, any>;

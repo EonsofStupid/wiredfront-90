@@ -8,10 +8,11 @@ import {
   ChatBridgeState,
   SendMessageOptions
 } from '@/types/chat/bridge';
-import { ChatMode } from '@/types/chat/enums';
+import { ChatMode, MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
 import { Provider } from '@/types/chat/providers';
 import { Conversation } from '@/types/chat/conversation';
 import { logger } from '@/services/chat/LoggingService';
+import { chatModeToString, stringToChatMode } from './types/enums-mapper';
 
 // Create context for using the bridge
 const ChatBridgeContext = createContext<ChatBridgeInterface | null>(null);
@@ -90,7 +91,13 @@ export class ChatBridge implements ChatBridgeInterface {
 
   async updateConversation(conversationId: string, updates: Partial<Conversation>): Promise<boolean> {
     try {
-      const success = await this.conversationStore.updateConversation(conversationId, updates);
+      // Convert enum types to string for database
+      const dbUpdates = { ...updates };
+      if (updates.mode) {
+        dbUpdates.mode = chatModeToString(updates.mode) as any;
+      }
+      
+      const success = await this.conversationStore.updateConversation(conversationId, dbUpdates);
       return success;
     } catch (error) {
       logger.error('ChatBridge: Failed to update conversation', error);

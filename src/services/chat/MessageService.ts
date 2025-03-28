@@ -1,9 +1,10 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Message, MessageCreateParams } from '@/types/chat/message';
-import { MessageType, MessageStatus } from '@/types/chat/enums';
+import { MessageType, MessageStatus, MessageRole } from '@/types/chat/enums';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from './LoggingService';
+import { messageTypeToString, stringToMessageType } from '@/components/chat/types/enums-mapper';
 
 /**
  * Create a new message in the database
@@ -18,11 +19,15 @@ export const createMessage = async (params: MessageCreateParams): Promise<Messag
       throw new Error('User not authenticated');
     }
     
-    const message: Partial<Message> = {
+    // Convert MessageType enum to string for database
+    const dbMessageType = params.type ? messageTypeToString(params.type) : 'text';
+    const dbMessageStatus = 'sent'; // Default status
+    
+    const message = {
       id: messageId,
       role: params.role,
       content: params.content,
-      type: params.type || MessageType.Text,
+      type: dbMessageType,
       user_id: userData.user.id,
       conversation_id: params.conversation_id, // Primary reference
       chat_session_id: params.conversation_id, // For backward compatibility
@@ -30,12 +35,9 @@ export const createMessage = async (params: MessageCreateParams): Promise<Messag
       created_at: now,
       updated_at: now,
       last_accessed: now,
-      is_minimized: false,
-      position: {},
-      window_state: {},
-      retry_count: 0,
       parent_message_id: params.parent_message_id,
-      message_status: MessageStatus.Sent
+      status: dbMessageStatus,
+      retry_count: 0
     };
     
     // Insert into the chat_messages table
@@ -51,7 +53,28 @@ export const createMessage = async (params: MessageCreateParams): Promise<Messag
     
     logger.info('Message created', { messageId });
     
-    return data as Message;
+    // Convert database record to Message type
+    const resultMessage: Message = {
+      id: data.id,
+      role: data.role as MessageRole,
+      content: data.content,
+      type: stringToMessageType(data.type),
+      user_id: data.user_id,
+      conversation_id: data.conversation_id || data.chat_session_id,
+      chat_session_id: data.chat_session_id,
+      metadata: data.metadata || {},
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      last_accessed: data.last_accessed || now,
+      parent_message_id: data.parent_message_id,
+      message_status: data.status as MessageStatus || MessageStatus.Sent,
+      is_minimized: false,
+      position: {},
+      window_state: {},
+      retry_count: data.retry_count || 0
+    };
+    
+    return resultMessage;
   } catch (error) {
     logger.error('Failed to create message', { error });
     return null;
@@ -63,10 +86,20 @@ export const createMessage = async (params: MessageCreateParams): Promise<Messag
  */
 export const updateMessage = async (messageId: string, updates: Partial<Message>): Promise<boolean> => {
   try {
+    // Convert types for database if needed
+    const dbUpdates: any = { ...updates };
+    if (updates.type) {
+      dbUpdates.type = messageTypeToString(updates.type);
+    }
+    if (updates.message_status) {
+      dbUpdates.status = updates.message_status;
+      delete dbUpdates.message_status;
+    }
+    
     const { error } = await supabase
       .from('chat_messages')
       .update({
-        ...updates,
+        ...dbUpdates,
         updated_at: new Date().toISOString()
       })
       .eq('id', messageId);
@@ -124,7 +157,28 @@ export const fetchConversationMessages = async (conversationId: string): Promise
     
     logger.info('Fetched conversation messages', { conversationId, count: data.length });
     
-    return data as Message[];
+    // Convert database records to Message type
+    const messages: Message[] = data.map(msg => ({
+      id: msg.id,
+      role: msg.role as MessageRole,
+      content: msg.content,
+      type: stringToMessageType(msg.type),
+      user_id: msg.user_id,
+      conversation_id: msg.conversation_id || msg.chat_session_id,
+      chat_session_id: msg.chat_session_id,
+      metadata: msg.metadata || {},
+      created_at: msg.created_at,
+      updated_at: msg.updated_at,
+      last_accessed: msg.last_accessed || msg.created_at,
+      parent_message_id: msg.parent_message_id,
+      message_status: msg.status as MessageStatus || MessageStatus.Received,
+      is_minimized: false,
+      position: {},
+      window_state: {},
+      retry_count: msg.retry_count || 0
+    }));
+    
+    return messages;
   } catch (error) {
     logger.error('Failed to fetch conversation messages', { error, conversationId });
     return [];
