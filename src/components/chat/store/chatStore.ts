@@ -25,7 +25,7 @@ const initialState: ChatState = {
   chatId: null,
   docked: true,
   isOpen: false,
-  isHidden: false,
+  isMinimized: false,
   position: 'bottom-right',
   startTime: Date.now(),
   features: {
@@ -37,6 +37,7 @@ const initialState: ChatState = {
     codeAssistant: true,
     ragSupport: true,
     githubSync: true,
+    knowledgeBase: true,
     tokenEnforcement: false,
   },
   currentMode: 'chat',
@@ -47,7 +48,6 @@ const initialState: ChatState = {
     availableProviders: [],
   },
   
-  isMinimized: false,
   showSidebar: false,
   scale: 1,
   ui: {
@@ -56,18 +56,20 @@ const initialState: ChatState = {
     providerLoading: false,
   },
   
-  tokenControl: {
-    balance: 0,
-    enforcementMode: 'never',
-    lastUpdated: new Date().toISOString(),
-    tokensPerQuery: 1,
-    freeQueryLimit: 5,
-    queriesUsed: 0
-  },
-  
   // Required actions
   resetChatState: () => {},
   setUserInput: () => {},
+  toggleChat: () => {},
+  toggleMinimize: () => {},
+  toggleSidebar: () => {},
+  toggleDocked: () => {},
+  setPosition: () => {},
+  setChatId: () => {},
+  setMode: () => {},
+  initializeChat: () => {},
+  setSessionLoading: () => {},
+  setMessageLoading: () => {},
+  setProviderLoading: () => {},
 };
 
 // Enhanced function to clear all Zustand middleware storage

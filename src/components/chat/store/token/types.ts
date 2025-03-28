@@ -1,5 +1,5 @@
 
-import { TokenEnforcementMode, UIEnforcementMode } from '@/types/chat/enums';
+import { UIEnforcementMode } from '@/types/chat/enums';
 
 export interface TokenState {
   balance: number;

@@ -35,6 +35,7 @@ export interface ChatState {
     codeAssistant: boolean;
     ragSupport: boolean;
     tokenEnforcement: boolean;
+    github: boolean;
   };
   
   // Provider State

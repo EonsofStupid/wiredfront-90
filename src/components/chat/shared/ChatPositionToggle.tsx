@@ -11,15 +11,13 @@ import {
 } from '@/types/chat/enums';
 
 export function ChatPositionToggle() {
-  const { position, setPosition } = useChatStore();
+  const { position, togglePosition } = useChatStore();
   
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    // Toggle between bottom-left and bottom-right
-    const newPosition: ChatPosition = position === 'bottom-right' ? 'bottom-left' : 'bottom-right';
-    logger.info('Position toggled', { from: position, to: newPosition });
-    setPosition(newPosition);
+    logger.info('Position toggled', { from: position });
+    togglePosition();
   };
   
   // Get a display string for the position
