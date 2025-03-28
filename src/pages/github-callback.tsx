@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useSessionStore } from '@chat/chatBridge';
+import { useSessionStore } from '@/components/chat/store/chatStore'; // Updated import path
 import { logger } from '@/services/chat/LoggingService';
 
 // Get the Supabase URL from the client configuration

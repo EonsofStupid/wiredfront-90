@@ -3,7 +3,7 @@ import { useChatStore } from './store/chatStore';
 import { useMessageStore } from './messaging/MessageManager';
 import { ChatMode, ChatPosition } from '@/types/chat/enums';
 import { logger } from '@/services/chat/LoggingService';
-import { useConversationManager } from './hooks/useConversationManager';
+import { useConversationManager } from './hooks/conversation/useConversationManager';
 import { CreateConversationParams } from '@/types/chat/conversation';
 
 /**
@@ -238,3 +238,7 @@ export function useChatBridge() {
     deleteConversation: conversationManager.deleteConversation
   };
 }
+
+// For backward compatibility, also export useMessageStore and useSessionStore
+export { useMessageStore } from './messaging/MessageManager';
+export { useChatStore as useSessionStore } from './store/chatStore';

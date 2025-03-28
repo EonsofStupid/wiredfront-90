@@ -1,32 +1,30 @@
 
-// Import CSS
-import './styles/index.css';
-
-// Core exports
-export { ChatContainer } from './ChatContainer';
-export { ChatProvider, useChat } from './ChatProvider';
-export { ChatBridge, useChatBridge } from './chatBridge';
+// Re-export main components, hooks, and utilities from the chat module
 
 // Store exports
-export { useChatStore } from './store/chatStore';
-export { useTokenStore } from './store/token';
-export { useConversationStore } from './store/conversation/store';
-export { useMessageStore } from './messaging/MessageManager';
+export * from './store/chatStore';
+export * from './store/conversation';
+export * from './store/token';
 
-// Structure exports
+// Chat structure components
 export * from './chat-structure';
 
-// Feature exports
-export * from './features';
+// Hooks
+export * from './hooks/conversation';
+export * from './hooks/useConversationCleanup';
+export * from './hooks/useMode';
 
-// Shared exports
-export * from './shared';
+// Messaging
+export * from './messaging/MessageManager';
 
-// Provider exports
-export * from './providers';
-
-// Hook exports
-export * from './hooks';
-
-// Type exports
+// Types
 export * from './types';
+
+// ChatBridge
+export { ChatBridge, useChatBridge } from './chatBridge';
+
+// Providers
+export * from './providers/ChatModeProvider';
+
+// Features
+export * from './features/modes/hooks/useMode';
