@@ -22,6 +22,13 @@ export interface PromptLogEntry {
   metadata?: Record<string, any>;
   fallbacksUsed?: number;
   timestamp: string;
+  vectorSearchPerformed?: boolean;
+  vectorChunksRetrieved?: number;
+  vectorDbUsed?: string;
+  cacheHit?: boolean;
+  cacheTier?: string;
+  fineTuneCandidate?: boolean;
+  responseQuality?: string;
 }
 
 /**
@@ -52,10 +59,18 @@ export async function logPrompt(
       error,
       metadata: {
         ...envelope.metadata,
-        ...response.metadata
+        ...response.metadata,
+        adminFlags: envelope.adminFlags
       },
       fallbacksUsed: response.fallbacksUsed,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      vectorSearchPerformed: response.vectorInfo?.searchPerformed,
+      vectorChunksRetrieved: response.vectorInfo?.chunksRetrieved,
+      vectorDbUsed: response.vectorInfo?.vectorDb,
+      cacheHit: response.cacheInfo?.cacheHit,
+      cacheTier: response.cacheInfo?.cacheTier || undefined,
+      fineTuneCandidate: response.fineTuneMetadata?.markedForFineTune,
+      responseQuality: response.fineTuneMetadata?.quality
     };
 
     // Log to console for debugging
@@ -68,7 +83,8 @@ export async function logPrompt(
         tokensUsed: logEntry.tokensUsed,
         latencyMs: logEntry.latencyMs,
         mode: logEntry.mode,
-        taskType: logEntry.taskType
+        taskType: logEntry.taskType,
+        cacheHit: logEntry.cacheHit
       });
     } else {
       logger.error('Prompt failed', {
@@ -102,13 +118,41 @@ export async function logPrompt(
           latency_ms: logEntry.latencyMs,
           success: logEntry.success,
           error_message: logEntry.error || null,
-          metadata: logEntry.metadata,
+          metadata: {
+            ...logEntry.metadata,
+            vectorInfo: {
+              searchPerformed: logEntry.vectorSearchPerformed,
+              chunksRetrieved: logEntry.vectorChunksRetrieved,
+              vectorDb: logEntry.vectorDbUsed
+            },
+            cacheInfo: {
+              cacheHit: logEntry.cacheHit,
+              cacheTier: logEntry.cacheTier
+            },
+            fineTuneInfo: {
+              isCandidate: logEntry.fineTuneCandidate,
+              quality: logEntry.responseQuality
+            }
+          },
           fallbacks_used: logEntry.fallbacksUsed || 0,
           timestamp: logEntry.timestamp
         });
         
       if (dbError) {
         logger.error('Failed to log prompt to database', { error: dbError });
+      }
+      
+      // Also log to model_usage table for billing and quota tracking
+      if (success && logEntry.userId) {
+        await supabase
+          .from('model_usage')
+          .insert({
+            user_id: logEntry.userId,
+            model_id: logEntry.modelId,
+            tokens_used: logEntry.tokensUsed,
+            // Rough cost estimate based on model (this would be more precise in production)
+            cost_usd: calculateCost(logEntry.modelId, logEntry.tokensUsed)
+          });
       }
     } catch (dbError) {
       logger.error('Failed to log prompt to database', { error: dbError });
@@ -160,6 +204,67 @@ export async function logSimplePrompt(
       mode: metadata.mode
     });
   }
+  
+  // Log to database as well
+  try {
+    if (metadata.userId) {
+      await supabase
+        .from('orchestrator_logs')
+        .insert({
+          trace_id: metadata.traceId,
+          session_id: metadata.sessionId,
+          user_id: metadata.userId,
+          prompt: prompt,
+          response: response,
+          model_id: metadata.modelId,
+          provider: metadata.provider,
+          mode: metadata.mode || 'unknown',
+          task_type: metadata.taskType || TaskType.Conversation,
+          tokens_used: metadata.tokensUsed || 0,
+          input_tokens: metadata.inputTokens || 0,
+          output_tokens: metadata.outputTokens || 0,
+          latency_ms: metadata.latencyMs || 0,
+          success: metadata.success,
+          error_message: metadata.error || null,
+          metadata: metadata,
+          timestamp: new Date().toISOString()
+        });
+        
+      // Also log to model_usage for billing
+      if (metadata.success) {
+        await supabase
+          .from('model_usage')
+          .insert({
+            user_id: metadata.userId,
+            model_id: metadata.modelId,
+            tokens_used: metadata.tokensUsed || 0,
+            cost_usd: calculateCost(metadata.modelId, metadata.tokensUsed || 0)
+          });
+      }
+    }
+  } catch (error) {
+    logger.error('Failed to log simple prompt to database', { error });
+  }
+}
+
+/**
+ * Calculate approximate cost based on model and tokens
+ */
+function calculateCost(modelId: string, tokensUsed: number): number {
+  // These are very rough estimates - would be more precise in production
+  const costPerThousandTokens: Record<string, number> = {
+    'gpt-4o': 0.005,
+    'gpt-4o-mini': 0.00015,
+    'gpt-4': 0.03,
+    'claude-3-opus': 0.015,
+    'claude-3-sonnet': 0.003,
+    'claude-3-haiku': 0.00025,
+    'codellama-70b': 0.0001, // Local models have minimal costs
+    'gemini-pro': 0.0001
+  };
+  
+  const rate = costPerThousandTokens[modelId] || 0.001; // Default if unknown
+  return (tokensUsed / 1000) * rate;
 }
 
 export default {

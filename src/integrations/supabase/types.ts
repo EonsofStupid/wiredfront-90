@@ -1618,6 +1618,36 @@ export type Database = {
         }
         Relationships: []
       }
+      model_usage: {
+        Row: {
+          cost_usd: number | null
+          created_at: string | null
+          date: string | null
+          id: string
+          model_id: string
+          tokens_used: number
+          user_id: string | null
+        }
+        Insert: {
+          cost_usd?: number | null
+          created_at?: string | null
+          date?: string | null
+          id?: string
+          model_id: string
+          tokens_used: number
+          user_id?: string | null
+        }
+        Update: {
+          cost_usd?: number | null
+          created_at?: string | null
+          date?: string | null
+          id?: string
+          model_id?: string
+          tokens_used?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       oauth_connections: {
         Row: {
           access_token: string | null
@@ -1695,6 +1725,69 @@ export type Database = {
           id?: string
           step_name?: string
           updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      orchestrator_logs: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          fallback_level: number | null
+          id: string
+          input_tokens: number | null
+          latency_ms: number | null
+          metadata: Json | null
+          mode: string
+          model_id: string
+          output_tokens: number | null
+          prompt: string
+          response: string | null
+          session_id: string
+          success: boolean
+          task_type: string
+          tokens_used: number | null
+          trace_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          fallback_level?: number | null
+          id?: string
+          input_tokens?: number | null
+          latency_ms?: number | null
+          metadata?: Json | null
+          mode: string
+          model_id: string
+          output_tokens?: number | null
+          prompt: string
+          response?: string | null
+          session_id: string
+          success: boolean
+          task_type: string
+          tokens_used?: number | null
+          trace_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          fallback_level?: number | null
+          id?: string
+          input_tokens?: number | null
+          latency_ms?: number | null
+          metadata?: Json | null
+          mode?: string
+          model_id?: string
+          output_tokens?: number | null
+          prompt?: string
+          response?: string | null
+          session_id?: string
+          success?: boolean
+          task_type?: string
+          tokens_used?: number | null
+          trace_id?: string
           user_id?: string | null
         }
         Relationships: []
@@ -2910,6 +3003,39 @@ export type Database = {
           total_spent?: number | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      vector_queries: {
+        Row: {
+          created_at: string | null
+          id: string
+          latency_ms: number | null
+          project_id: string | null
+          query: string
+          results_count: number | null
+          user_id: string | null
+          vector_db: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          latency_ms?: number | null
+          project_id?: string | null
+          query: string
+          results_count?: number | null
+          user_id?: string | null
+          vector_db: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          latency_ms?: number | null
+          project_id?: string | null
+          query?: string
+          results_count?: number | null
+          user_id?: string | null
+          vector_db?: string
         }
         Relationships: []
       }

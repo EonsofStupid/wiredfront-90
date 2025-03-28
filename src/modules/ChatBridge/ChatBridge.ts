@@ -19,7 +19,8 @@ import { Conversation } from '@/types/chat/conversation';
 import { logger } from '@/services/chat/LoggingService';
 import { EnumUtils } from '@/lib/enums';
 import { v4 as uuidv4 } from 'uuid';
-import { MessageEnvelope, TaskType } from '@/types/chat/communication';
+import { MessageEnvelope, TaskType, TaskPriority } from '@/types/chat/communication';
+import { processMessage } from '@/modules/ModelBridge';
 
 /**
  * ChatBridge implementation
@@ -127,7 +128,7 @@ export class ChatBridge implements ChatBridgeInterface {
       // Log the envelope for debugging
       logger.debug('Sending message with envelope', { envelope });
       
-      // Send the message through the message store
+      // Mark as pending in the message store
       const messageId = await this.messageStore.sendMessage(
         content,
         conversationId,
@@ -136,6 +137,37 @@ export class ChatBridge implements ChatBridgeInterface {
         { ...options.metadata, envelope },
         options.parentMessageId
       );
+      
+      // Send to orchestrator and get response
+      try {
+        this.chatStore.setMessageLoading(true);
+        const response = await processMessage(envelope);
+        
+        // Update message with response
+        if (response.output) {
+          await this.messageStore.receiveResponse(
+            conversationId,
+            response.output,
+            {
+              traceId: response.traceId,
+              model: response.model,
+              provider: response.provider,
+              tokensUsed: response.tokensUsed,
+              processingTimeMs: response.processingTimeMs,
+              vectorInfo: response.vectorInfo,
+              cacheInfo: response.cacheInfo,
+              fallbacksUsed: response.fallbacksUsed
+            }
+          );
+        } else if (response.error) {
+          await this.messageStore.updateMessageStatus(messageId, MessageStatus.Error, response.error);
+        }
+      } catch (error) {
+        logger.error('Error processing message', { error, traceId: envelope.traceId });
+        await this.messageStore.updateMessageStatus(messageId, MessageStatus.Error, String(error));
+      } finally {
+        this.chatStore.setMessageLoading(false);
+      }
       
       return messageId;
     } catch (error) {
@@ -162,6 +194,9 @@ export class ChatBridge implements ChatBridgeInterface {
       conversation?.mode || this.chatStore.currentMode
     );
     
+    // Determine if this is an admin user
+    const isAdmin = metadata.isAdmin || metadata.userRole === 'admin' || false;
+    
     return {
       traceId: uuidv4(),
       sessionId: conversationId,
@@ -169,8 +204,21 @@ export class ChatBridge implements ChatBridgeInterface {
       taskType,
       input: content,
       context: metadata.context || [],
+      systemPrompt: metadata.systemPrompt,
       timestamp: new Date().toISOString(),
-      metadata
+      priority: metadata.priority || TaskPriority.Normal,
+      adminFlags: isAdmin ? {
+        safeMode: metadata.safeMode,
+        logFineTuneReady: metadata.logFineTuneReady,
+        bypassCache: metadata.bypassCache,
+        bypassVectorSearch: metadata.bypassVectorSearch
+      } : undefined,
+      metadata: {
+        ...metadata,
+        userId: metadata.userId,
+        projectId: metadata.projectId,
+        sessionContext: metadata.sessionContext
+      }
     };
   }
   

@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { ChatMode } from '@/types/chat/enums';
 import { ModeConfig, ModeContextType } from './types';
 import { logger } from '@/services/chat/LoggingService';
+import { TaskType } from '@/types/chat/communication';
 
 // Define available modes with their configurations
 const availableModes: ModeConfig[] = [
@@ -12,7 +13,8 @@ const availableModes: ModeConfig[] = [
     displayName: 'Chat',
     description: 'Standard chat conversation',
     icon: 'MessageSquare',
-    defaultProvider: 'gpt-4'
+    defaultProvider: 'gpt-4',
+    defaultTaskType: TaskType.Conversation
   },
   {
     id: ChatMode.Dev,
@@ -20,7 +22,8 @@ const availableModes: ModeConfig[] = [
     description: 'Code assistance and development help',
     icon: 'Code',
     requiredFeatures: ['codeAssistant'],
-    defaultProvider: 'gpt-4'
+    defaultProvider: 'gpt-4',
+    defaultTaskType: TaskType.CodeGeneration
   },
   {
     id: ChatMode.Image,
@@ -28,7 +31,8 @@ const availableModes: ModeConfig[] = [
     description: 'Generate and modify images',
     icon: 'ImageIcon',
     requiredFeatures: ['imageGeneration'],
-    defaultProvider: 'dalle-3'
+    defaultProvider: 'dalle-3',
+    defaultTaskType: TaskType.ImageGeneration
   },
   {
     id: ChatMode.Training,
@@ -36,9 +40,43 @@ const availableModes: ModeConfig[] = [
     description: 'Learn coding and concepts',
     icon: 'GraduationCap',
     requiredFeatures: ['training'],
-    defaultProvider: 'gpt-4'
+    defaultProvider: 'gpt-4',
+    defaultTaskType: TaskType.Tutoring
   }
 ];
+
+// Define task types available for each mode
+const modeTaskTypes: Record<ChatMode, TaskType[]> = {
+  [ChatMode.Chat]: [
+    TaskType.Conversation,
+    TaskType.DocumentSearch
+  ],
+  [ChatMode.Dev]: [
+    TaskType.CodeGeneration,
+    TaskType.CodeExplanation,
+    TaskType.BugFix,
+    TaskType.CodeReview,
+    TaskType.Refactoring,
+    TaskType.ProjectContext
+  ],
+  [ChatMode.Image]: [
+    TaskType.ImageGeneration,
+    TaskType.ImageEditing
+  ],
+  [ChatMode.Training]: [
+    TaskType.Tutoring,
+    TaskType.ProblemSolving,
+    TaskType.Explanation
+  ],
+  [ChatMode.Editor]: [
+    TaskType.CodeGeneration,
+    TaskType.CodeExplanation,
+    TaskType.BugFix,
+    TaskType.CodeReview,
+    TaskType.Refactoring,
+    TaskType.ProjectContext
+  ]
+};
 
 /**
  * Hook to manage mode selection and switching
@@ -46,7 +84,9 @@ const availableModes: ModeConfig[] = [
 export function useModeManager(): ModeContextType {
   const location = useLocation();
   const [currentMode, setCurrentMode] = useState<ChatMode>(ChatMode.Chat);
+  const [currentTaskType, setCurrentTaskType] = useState<TaskType>(TaskType.Conversation);
   const [isModeSwitchEnabled, setIsModeSwitchEnabled] = useState<boolean>(true);
+  const [availableTaskTypes, setAvailableTaskTypes] = useState<TaskType[]>([]);
   
   // Synchronize mode with current route
   useEffect(() => {
@@ -65,11 +105,43 @@ export function useModeManager(): ModeContextType {
     }
   }, [location.pathname]);
   
-  // Function to set the current mode
+  // Function to set the current mode and update available task types
   const handleModeChange = useCallback((mode: ChatMode) => {
     logger.info('Mode changed', { prevMode: currentMode, newMode: mode });
     setCurrentMode(mode);
+    
+    // Update available task types for this mode
+    const taskTypes = modeTaskTypes[mode] || [TaskType.Conversation];
+    setAvailableTaskTypes(taskTypes);
+    
+    // Set default task type for this mode
+    const modeConfig = availableModes.find(m => m.id === mode);
+    if (modeConfig?.defaultTaskType) {
+      setCurrentTaskType(modeConfig.defaultTaskType);
+    } else {
+      setCurrentTaskType(taskTypes[0]);
+    }
   }, [currentMode]);
+  
+  // Function to set the task type
+  const setTaskType = useCallback((taskType: TaskType) => {
+    if (availableTaskTypes.includes(taskType)) {
+      setCurrentTaskType(taskType);
+      logger.info('Task type changed', { 
+        mode: currentMode, 
+        prevTaskType: currentTaskType, 
+        newTaskType: taskType 
+      });
+      return true;
+    }
+    
+    logger.warn('Attempted to set unavailable task type', { 
+      mode: currentMode,
+      attemptedTaskType: taskType,
+      availableTaskTypes
+    });
+    return false;
+  }, [currentMode, currentTaskType, availableTaskTypes]);
   
   // Function to set the mode with validation and side effects
   const setMode = useCallback(async (mode: ChatMode): Promise<boolean> => {
@@ -96,8 +168,11 @@ export function useModeManager(): ModeContextType {
   
   return {
     currentMode,
+    currentTaskType,
     setMode,
+    setTaskType,
     availableModes,
+    availableTaskTypes,
     isModeSwitchEnabled
   };
 }
