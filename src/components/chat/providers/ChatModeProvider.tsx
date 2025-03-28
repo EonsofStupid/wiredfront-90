@@ -2,9 +2,11 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useChatStore } from '../store/chatStore';
 import { logger } from '@/services/chat/LoggingService';
+import { ChatMode } from '@/types/chat/enums';
+import { databaseModeToUiMode, UiChatMode } from '../types/chat-modes';
 
 type ChatModeContextType = {
-  mode: 'standard' | 'editor' | 'image' | 'training';
+  mode: UiChatMode;
   isEditorPage: boolean;
 };
 
@@ -20,24 +22,21 @@ interface ChatModeProviderProps {
 
 export function ChatModeProvider({ children, isEditorPage }: ChatModeProviderProps) {
   const { currentMode, setMode } = useChatStore();
-  const [mode, setLocalMode] = useState<'standard' | 'editor' | 'image' | 'training'>('standard');
+  const [mode, setLocalMode] = useState<UiChatMode>('standard');
   
   // Initialize the mode based on current page and store state
   useEffect(() => {
-    let newMode: 'standard' | 'editor' | 'image' | 'training' = 'standard';
+    let newMode: UiChatMode = 'standard';
     
     if (isEditorPage) {
       newMode = 'editor';
-      if (currentMode !== 'dev' && currentMode !== 'editor') {
+      if (currentMode !== ChatMode.Dev && currentMode !== ChatMode.Editor) {
         // Sync store with UI if on editor page
-        setMode('dev');
+        setMode(ChatMode.Dev);
       }
-    } else if (currentMode === 'dev' || currentMode === 'editor') {
-      newMode = 'editor';
-    } else if (currentMode === 'image') {
-      newMode = 'image';
-    } else if (currentMode === 'training') {
-      newMode = 'training';
+    } else {
+      // Convert database mode to UI mode using our mapping
+      newMode = databaseModeToUiMode[currentMode as ChatMode] as UiChatMode || 'standard';
     }
     
     setLocalMode(newMode);
