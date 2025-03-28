@@ -5,7 +5,8 @@ import {
   MessageRole, 
   MessageStatus, 
   MessageType,
-  UIEnforcementMode
+  UIEnforcementMode,
+  ChatPosition
 } from '@/types/chat/enums';
 
 /**
@@ -81,12 +82,13 @@ export function isChatPositionCoordinates(value: unknown): value is ChatPosition
   return typeof value === 'object' && value !== null && 'x' in value && 'y' in value;
 }
 
-// Re-export enum types for convenience
-export type {
-  ChatMode,
-  TokenEnforcementMode,
-  MessageRole,
-  MessageStatus,
-  MessageType,
-  UIEnforcementMode
+// Re-export the enums for convenience
+export { 
+  ChatMode, 
+  TokenEnforcementMode, 
+  MessageRole, 
+  MessageStatus, 
+  MessageType, 
+  UIEnforcementMode,
+  ChatPosition
 };
