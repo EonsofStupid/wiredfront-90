@@ -4,8 +4,9 @@ import { Json } from '@/integrations/supabase/types';
 
 /**
  * Standard conversation type to be used throughout the application
+ * This is for backward compatibility until we fully migrate to Conversation terminology
  */
-export interface Conversation {
+export interface ChatSession {
   id: string;
   title: string | null;
   user_id: string;
@@ -23,29 +24,10 @@ export interface Conversation {
 }
 
 /**
- * Parameters for creating a new conversation
+ * Legacy aliases for compatibility
  */
-export interface CreateConversationParams {
-  title?: string;
-  mode?: ChatMode;
-  provider_id?: string;
-  project_id?: string;
-  metadata?: Json;
-  context?: Json;
-}
-
-/**
- * Parameters for updating an existing conversation
- */
-export interface UpdateConversationParams {
-  title?: string;
-  mode?: ChatMode;
-  provider_id?: string;
-  tokens_used?: number;
-  project_id?: string;
-  metadata?: Json;
-  context?: Json;
-  archived?: boolean;
-  message_count?: number;
-  last_accessed?: string;
-}
+export type {
+  Conversation as ChatConversation,
+  CreateConversationParams as CreateSessionParams,
+  UpdateConversationParams as UpdateSessionParams
+} from './conversation';

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -10,7 +11,6 @@ import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { FeatureKey } from "@/components/chat/types/feature-types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ChatPosition } from "@/types/chat/enums";
-import { ChatPositionType } from "@/components/chat/types/chat-modes";
 
 export const ChatFeatureSettings = () => {
   const { position, togglePosition, docked, toggleDocked } = useChatStore();

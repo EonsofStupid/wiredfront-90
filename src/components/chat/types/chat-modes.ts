@@ -1,5 +1,5 @@
 
-import { ChatMode } from '@/types/chat/enums';
+import { ChatMode, ChatPosition } from '@/types/chat/enums';
 
 /**
  * Maps UI display modes to database chat modes
@@ -53,3 +53,6 @@ export function convertUiModeToDbMode(uiMode: string): ChatMode {
 export function convertDbModeToUiMode(dbMode: ChatMode): UiChatMode {
   return databaseModeToUiMode[dbMode] as UiChatMode || 'standard';
 }
+
+// For ChatPosition, we'll use the enum directly from the central types
+export type ChatPositionType = ChatPosition;

@@ -5,3 +5,4 @@ export * from './message';
 export * from './conversation';
 export * from './providers';
 export * from './bridge';
+export * from './chat-types';

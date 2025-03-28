@@ -2,11 +2,11 @@
 import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface SessionSkeletonProps {
+interface ChatSessionSkeletonProps {
   count?: number;
 }
 
-const SessionSkeleton = ({ count = 3 }: ChatSessionSkeletonProps) => {
+const ChatSessionSkeleton = ({ count = 3 }: ChatSessionSkeletonProps) => {
   return (
     <div className="space-y-3 p-3">
       {Array.from({ length: count }).map((_, i) => (

@@ -1,5 +1,5 @@
 
-import { ChatMode } from '@/components/chat/types/chat-modes';
+import { ChatMode } from '@/types/chat/enums';
 
 export interface ModeConfig {
   id: ChatMode;
@@ -11,8 +11,8 @@ export interface ModeConfig {
 }
 
 export interface ModeContextType {
-  currentMode: ChatMode;
-  setMode: (mode: ChatMode) => void;
+  currentMode: string;
+  setMode: (mode: string) => void;
   availableModes: ModeConfig[];
   isEditorPage: boolean;
 }

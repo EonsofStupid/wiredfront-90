@@ -1,5 +1,5 @@
 
-import { ChatMode, ChatPosition, ChatPositionType } from './chat-modes';
+import { ChatMode, ChatPosition } from '@/types/chat/enums';
 import { Message } from './message-types';
 import { Provider, ProviderModel } from './provider-types';
 import { FeatureKey } from './feature-types';
@@ -29,7 +29,7 @@ export interface ChatState {
   docked: boolean;
   isOpen: boolean;
   isMinimized: boolean;
-  position: ChatPositionType;
+  position: ChatPosition;
   startTime: number;
   
   // Features
@@ -59,7 +59,7 @@ export interface ChatState {
   toggleMinimize: () => void;
   toggleSidebar: () => void;
   toggleDocked: () => void;
-  setPosition: (position: ChatPositionType) => void;
+  setPosition: (position: ChatPosition) => void;
   setChatId: (id: string | null) => void;
   setMode: (mode: string | ChatMode) => void;
   initializeChat: () => void;
