@@ -1,65 +1,101 @@
-
 import { useState } from "react";
-import { useMessageStore } from "@/components/chat/messaging/MessageManager";
-import { useSessionManager } from "@/hooks/useSessionManager";
-import { SettingsContainer } from "./layout/SettingsContainer";
 import { toast } from "sonner";
+import { z } from "zod";
+
+import { SettingsContainer } from "./layout/SettingsContainer";
 import { ChatSettingsTabs } from "./chat/ChatSettingsTabs";
+import { useChatBridge } from "@/components/chat/ChatBridge";
+
+// ✅ Define your settings schema
+const ChatSettingsSchema = z.object({
+  defaultModel: z.string(),
+  systemPrompt: z.string(),
+  temperature: z.number().min(0).max(1),
+  maxTokens: z.number().min(1),
+  streamingEnabled: z.boolean(),
+
+  saveHistory: z.boolean(),
+  anonymizeData: z.boolean(),
+  dataRetentionDays: z.number().min(0),
+  allowAnalytics: z.boolean(),
+
+  darkMode: z.boolean(),
+  fontSize: z.enum(["small", "medium", "large"]),
+  messageAlignment: z.enum(["left", "center", "right"]),
+  showTimestamps: z.boolean(),
+
+  debugMode: z.boolean(),
+  experimentalFeatures: z.boolean(),
+  apiTimeout: z.number().min(1),
+  retryAttempts: z.number().min(0),
+
+  soundEnabled: z.boolean(),
+  desktopNotifications: z.boolean(),
+  mentionAlerts: z.boolean(),
+  emailDigest: z.boolean()
+});
+
+type ChatSettingsType = z.infer<typeof ChatSettingsSchema>;
 
 export function ChatSettings() {
-  const { clearMessages } = useMessageStore();
-  const { refreshSessions } = useSessionManager();
+  const {
+    clearMessages,
+    updateChatSettings,
+    updateTokens,
+  } = useChatBridge();
+
   const [activeTab, setActiveTab] = useState("general");
-  
-  const [settings, setSettings] = useState({
-    // General settings
+
+  const [settings, setSettings] = useState<ChatSettingsType>({
     defaultModel: "gpt-4",
     systemPrompt: "You are a helpful AI assistant.",
     temperature: 0.7,
     maxTokens: 2048,
     streamingEnabled: true,
-    
-    // Privacy settings
+
     saveHistory: true,
     anonymizeData: false,
     dataRetentionDays: 30,
     allowAnalytics: true,
-    
-    // UI settings
+
     darkMode: true,
     fontSize: "medium",
     messageAlignment: "left",
     showTimestamps: true,
-    
-    // Advanced settings
+
     debugMode: false,
     experimentalFeatures: false,
     apiTimeout: 60,
     retryAttempts: 3,
-    
-    // Notification settings
+
     soundEnabled: true,
     desktopNotifications: false,
     mentionAlerts: true,
     emailDigest: false
   });
-  
-  const handleSettingChange = (section: string, setting: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      [setting]: value
-    }));
+
+  const handleSettingChange = (section: string, setting: keyof ChatSettingsType, value: any) => {
+    setSettings(prev => {
+      const updated = { ...prev, [setting]: value };
+      return updated;
+    });
   };
-  
+
   const handleSave = () => {
-    // Save settings logic would go here
+    const result = ChatSettingsSchema.safeParse(settings);
+    if (!result.success) {
+      toast.error("Invalid chat settings. Please check your input.");
+      console.error(result.error.format());
+      return;
+    }
+
+    updateChatSettings(settings);
     toast.success("Chat settings saved successfully");
   };
-  
+
   const handleClearHistory = () => {
     if (window.confirm("Are you sure you want to clear all chat history? This cannot be undone.")) {
       clearMessages();
-      refreshSessions();
       toast.success("Chat history cleared successfully");
     }
   };
