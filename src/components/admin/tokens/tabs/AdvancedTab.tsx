@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -51,7 +52,7 @@ export function AdvancedTab({
         <Switch
           checked={enforcementMode === TokenEnforcementMode.Never}
           onCheckedChange={(checked) => 
-            handleUpdateEnforcementConfig(checked ? TokenEnforcementMode.Never : TokenEnforcementMode.Always)
+            handleUpdateEnforcementConfig(checked ? TokenEnforcementMode.Never : TokenEnforcementMode.Hard)
           }
           disabled={isSubmitting}
         />

@@ -1,6 +1,4 @@
 
-import { TokenEnforcementMode } from './enums';
-
 /**
  * Token record in the database
  */
@@ -11,7 +9,7 @@ export interface Token {
   used: number;
   limit: number;
   reset_date: string;
-  enforcement_mode: TokenEnforcementMode;
+  enforcement_mode: string;
   created_at: string;
   updated_at: string;
   metadata: Record<string, any>;
@@ -25,7 +23,7 @@ export interface TokenUpdateParams {
   used?: number;
   limit?: number;
   reset_date?: string;
-  enforcement_mode?: TokenEnforcementMode;
+  enforcement_mode?: string;
   metadata?: Record<string, any>;
 }
 

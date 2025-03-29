@@ -1,5 +1,4 @@
 
-import { Json } from '@/integrations/supabase/types';
 import { MessageRole, MessageStatus, MessageType } from './enums';
 
 /**

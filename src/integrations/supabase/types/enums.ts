@@ -25,7 +25,7 @@ export {
   ChatMode, 
   MessageRole, 
   MessageStatus, 
-  MessageType 
+  MessageType,
+  TokenEnforcementMode,
+  TaskType
 } from '@/types/chat/enums';
-
-export { TokenEnforcementMode } from '@/types/chat/tokens';

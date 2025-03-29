@@ -6,8 +6,7 @@ import {
   MessageType,
   TokenEnforcementMode 
 } from '@/types/chat/enums';
-import { UiChatMode, databaseModeToUiMode, uiModeToChatMode } from '@/components/chat/types/enums-mapper';
-import { chatModeForDatabase, databaseStringToChatMode } from '@/components/chat/types/chat-modes';
+import { UiChatMode, databaseModeToUiMode, uiModeToChatMode } from '@/components/chat/shared/types/enums-mapper';
 
 /**
  * Extensions to the EnumUtils class with additional utilities
@@ -58,14 +57,47 @@ export class EnumUtilsExtensions {
    * Convert ChatMode enum to database string
    */
   static chatModeForDatabase(mode: ChatMode): string {
-    return chatModeForDatabase(mode);
+    switch (mode) {
+      case ChatMode.Chat:
+        return 'chat';
+      case ChatMode.Dev:
+      case ChatMode.Editor:
+        return 'dev';
+      case ChatMode.Image:
+        return 'image';
+      case ChatMode.Training:
+        return 'training';
+      case ChatMode.Planning:
+        return 'planning';
+      case ChatMode.Code:
+        return 'code';
+      default:
+        return 'chat';
+    }
   }
   
   /**
    * Convert database string to ChatMode enum
    */
   static databaseStringToChatMode(mode: string): ChatMode {
-    return databaseStringToChatMode(mode);
+    switch (mode) {
+      case 'chat':
+        return ChatMode.Chat;
+      case 'dev':
+        return ChatMode.Dev;
+      case 'image':
+        return ChatMode.Image;
+      case 'training':
+        return ChatMode.Training;
+      case 'planning':
+        return ChatMode.Planning;
+      case 'code':
+        return ChatMode.Code;
+      case 'editor':
+        return ChatMode.Editor;
+      default:
+        return ChatMode.Chat;
+    }
   }
   
   /**

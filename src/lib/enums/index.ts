@@ -1,5 +1,5 @@
 
-import { ChatMode, ChatPosition, TokenEnforcementMode, TaskType } from '@/types/chat/enums';
+import { ChatMode, ChatPosition, TokenEnforcementMode, MessageRole, MessageStatus, MessageType, TaskType } from '@/types/chat/enums';
 
 /**
  * Utility functions for working with enums
@@ -69,8 +69,8 @@ export class EnumUtils {
     const normalizedMode = mode.toLowerCase().trim();
     
     switch (normalizedMode) {
-      case 'never':
-        return TokenEnforcementMode.Never;
+      case 'none':
+        return TokenEnforcementMode.None;
       case 'warn':
         return TokenEnforcementMode.Warn;
       case 'soft':
@@ -79,6 +79,8 @@ export class EnumUtils {
         return TokenEnforcementMode.Hard;
       case 'always':
         return TokenEnforcementMode.Always;
+      case 'never':
+        return TokenEnforcementMode.Never;
       case 'role_based':
       case 'role-based':
         return TokenEnforcementMode.RoleBased;
@@ -88,7 +90,105 @@ export class EnumUtils {
       case 'strict':
         return TokenEnforcementMode.Strict;
       default:
-        return TokenEnforcementMode.Never;
+        return TokenEnforcementMode.None;
+    }
+  }
+
+  /**
+   * Convert a string to MessageRole enum value
+   */
+  static stringToMessageRole(role: string | MessageRole): MessageRole {
+    if (typeof role !== 'string') {
+      return role;
+    }
+
+    const normalizedRole = role.toLowerCase().trim();
+    
+    switch (normalizedRole) {
+      case 'user':
+        return MessageRole.User;
+      case 'assistant':
+        return MessageRole.Assistant;
+      case 'system':
+        return MessageRole.System;
+      case 'error':
+        return MessageRole.Error;
+      case 'tool':
+        return MessageRole.Tool;
+      case 'function':
+        return MessageRole.Function;
+      default:
+        return MessageRole.User;
+    }
+  }
+
+  /**
+   * Convert a string to MessageType enum value
+   */
+  static stringToMessageType(type: string | MessageType): MessageType {
+    if (typeof type !== 'string') {
+      return type;
+    }
+
+    const normalizedType = type.toLowerCase().trim();
+    
+    switch (normalizedType) {
+      case 'text':
+        return MessageType.Text;
+      case 'command':
+        return MessageType.Command;
+      case 'system':
+        return MessageType.System;
+      case 'image':
+        return MessageType.Image;
+      case 'training':
+        return MessageType.Training;
+      case 'code':
+        return MessageType.Code;
+      case 'file':
+        return MessageType.File;
+      case 'audio':
+        return MessageType.Audio;
+      case 'link':
+        return MessageType.Link;
+      default:
+        return MessageType.Text;
+    }
+  }
+
+  /**
+   * Convert a string to MessageStatus enum value
+   */
+  static stringToMessageStatus(status: string | MessageStatus): MessageStatus {
+    if (typeof status !== 'string') {
+      return status;
+    }
+
+    const normalizedStatus = status.toLowerCase().trim();
+    
+    switch (normalizedStatus) {
+      case 'pending':
+        return MessageStatus.Pending;
+      case 'sending':
+        return MessageStatus.Sending;
+      case 'sent':
+        return MessageStatus.Sent;
+      case 'received':
+        return MessageStatus.Received;
+      case 'error':
+        return MessageStatus.Error;
+      case 'failed':
+        return MessageStatus.Failed;
+      case 'retrying':
+        return MessageStatus.Retrying;
+      case 'cached':
+        return MessageStatus.Cached;
+      case 'canceled':
+        return MessageStatus.Canceled;
+      case 'delivered':
+        return MessageStatus.Delivered;
+      default:
+        return MessageStatus.Pending;
     }
   }
 
@@ -119,6 +219,56 @@ export class EnumUtils {
         return 'Code';
       default:
         return 'Chat';
+    }
+  }
+
+  /**
+   * Get user-friendly label for a message role
+   */
+  static getMessageRoleLabel(role: MessageRole): string {
+    switch (role) {
+      case MessageRole.User:
+        return 'User';
+      case MessageRole.Assistant:
+        return 'Assistant';
+      case MessageRole.System:
+        return 'System';
+      case MessageRole.Error:
+        return 'Error';
+      case MessageRole.Tool:
+        return 'Tool';
+      case MessageRole.Function:
+        return 'Function';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  /**
+   * Get user-friendly label for a message type
+   */
+  static getMessageTypeLabel(type: MessageType): string {
+    switch (type) {
+      case MessageType.Text:
+        return 'Text';
+      case MessageType.Command:
+        return 'Command';
+      case MessageType.System:
+        return 'System';
+      case MessageType.Image:
+        return 'Image';
+      case MessageType.Training:
+        return 'Training';
+      case MessageType.Code:
+        return 'Code';
+      case MessageType.File:
+        return 'File';
+      case MessageType.Audio:
+        return 'Audio';
+      case MessageType.Link:
+        return 'Link';
+      default:
+        return 'Unknown';
     }
   }
 }
