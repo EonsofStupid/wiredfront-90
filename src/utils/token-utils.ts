@@ -1,118 +1,90 @@
 
-import { TokenEnforcementMode } from '@/types/chat/enums';
-import { EnumUtils } from '@/lib/enums/EnumUtils';
+import { TokenEnforcementMode } from "@/types/chat/enums";
 
 /**
- * Maps token enforcement modes to display labels
+ * Get the appropriate status color for a token balance
+ * @param balance Current token balance
+ * @param limit Optional token limit, if not provided only considers low balance
+ * @param warningThreshold Optional warning threshold percentage (0-1), defaults to 0.1 (10%)
+ * @returns Tailwind color class
  */
-export const tokenEnforcementModeToLabel: Record<TokenEnforcementMode, string> = {
-  [TokenEnforcementMode.None]: 'Not Enforced',
-  [TokenEnforcementMode.Warn]: 'Warning Only',
-  [TokenEnforcementMode.Soft]: 'Soft Enforcement',
-  [TokenEnforcementMode.Hard]: 'Hard Enforcement',
-  [TokenEnforcementMode.Always]: 'Always',
-  [TokenEnforcementMode.Never]: 'Never',
-  [TokenEnforcementMode.RoleBased]: 'Role-Based',
-  [TokenEnforcementMode.ModeBased]: 'Mode-Based',
-  [TokenEnforcementMode.Strict]: 'Strict'
-};
-
-/**
- * Maps token enforcement modes to descriptions and visual styles
- */
-export const tokenEnforcementModeInfo: Record<TokenEnforcementMode, { label: string; description: string; color: string }> = {
-  [TokenEnforcementMode.None]: {
-    label: 'Not Enforced',
-    description: 'Token limits are not being enforced',
-    color: 'text-gray-500'
-  },
-  [TokenEnforcementMode.Warn]: {
-    label: 'Warning Only',
-    description: 'You will be warned when you exceed token limits, but operations will not be blocked',
-    color: 'text-yellow-500'
-  },
-  [TokenEnforcementMode.Soft]: {
-    label: 'Soft Enforcement',
-    description: 'Some functionality will be limited when you exceed token limits',
-    color: 'text-orange-500'
-  },
-  [TokenEnforcementMode.Hard]: {
-    label: 'Hard Enforcement',
-    description: 'Operations will be blocked when you exceed token limits',
-    color: 'text-red-500'
-  },
-  [TokenEnforcementMode.Always]: {
-    label: 'Always',
-    description: 'Token limits are always enforced',
-    color: 'text-red-700'
-  },
-  [TokenEnforcementMode.Never]: {
-    label: 'Never',
-    description: 'Token limits are never enforced',
-    color: 'text-gray-500'
-  },
-  [TokenEnforcementMode.RoleBased]: {
-    label: 'Role-Based',
-    description: 'Token enforcement depends on your user role',
-    color: 'text-blue-500'
-  },
-  [TokenEnforcementMode.ModeBased]: {
-    label: 'Mode-Based',
-    description: 'Token enforcement depends on the current chat mode',
-    color: 'text-purple-500'
-  },
-  [TokenEnforcementMode.Strict]: {
-    label: 'Strict',
-    description: 'Token limits are strictly enforced with no exceptions',
-    color: 'text-red-600'
+export function getTokenStatusColor(
+  balance: number, 
+  limit?: number, 
+  warningThreshold = 0.1
+): string {
+  // If no limit, just check if balance is low
+  if (!limit) {
+    return balance <= 5 ? "text-destructive" : "text-primary";
   }
-};
+  
+  // Calculate percentage of limit
+  const percentage = balance / limit;
+  
+  if (percentage <= 0.05) {
+    return "text-destructive"; // Critical (below 5%)
+  } else if (percentage <= warningThreshold) {
+    return "text-yellow-500"; // Warning (below threshold)
+  } else if (percentage <= 0.25) {
+    return "text-amber-500"; // Caution (below 25%)
+  } else {
+    return "text-primary"; // Good
+  }
+}
 
 /**
- * Database string to TokenEnforcementMode enum
+ * Get the appropriate status color for a token enforcement mode
+ * @param mode Token enforcement mode
+ * @returns Tailwind color class
  */
-export const stringToEnforcementMode = (value: string): TokenEnforcementMode => {
-  return EnumUtils.stringToTokenEnforcementMode(value);
-};
+export function getEnforcementModeColor(mode: TokenEnforcementMode): string {
+  switch (mode) {
+    case TokenEnforcementMode.None:
+    case TokenEnforcementMode.Never:
+      return "text-gray-500";
+    case TokenEnforcementMode.Warn:
+      return "text-yellow-500";
+    case TokenEnforcementMode.Soft:
+      return "text-orange-500";
+    case TokenEnforcementMode.Hard:
+    case TokenEnforcementMode.Always:
+    case TokenEnforcementMode.Strict:
+      return "text-red-500";
+    case TokenEnforcementMode.RoleBased:
+      return "text-blue-500";
+    case TokenEnforcementMode.ModeBased:
+      return "text-purple-500";
+    default:
+      return "text-gray-500";
+  }
+}
 
 /**
- * Calculate percentage of usage based on tokens
+ * Get user-friendly label for token enforcement mode
+ * @param mode Token enforcement mode
+ * @returns Human-readable label
  */
-export const calculateTokenUsagePercent = (used: number, limit: number): number => {
-  if (!limit || limit === 0) return 0;
-  const percent = Math.round((used / limit) * 100);
-  return Math.min(100, Math.max(0, percent));
-};
-
-/**
- * Check if token balance is low based on threshold
- */
-export const isLowTokenBalance = (balance: number, threshold = 100): boolean => {
-  return balance <= threshold;
-};
-
-/**
- * Format token balance for display
- */
-export const formatTokenBalance = (balance: number): string => {
-  return balance.toLocaleString();
-};
-
-/**
- * Calculate the remaining token budget
- */
-export const calculateRemainingBudget = (balance: number, used: number, limit: number): number => {
-  if (!limit) return balance;
-  const remaining = Math.max(0, limit - used);
-  return Math.min(balance, remaining);
-};
-
-/**
- * Get appropriate status color based on token balance
- */
-export const getTokenStatusColor = (balance: number, threshold = 100): string => {
-  if (balance <= 0) return 'text-red-600';
-  if (balance <= threshold / 2) return 'text-red-500';
-  if (balance <= threshold) return 'text-yellow-500';
-  return 'text-green-500';
-};
+export function getEnforcementModeLabel(mode: TokenEnforcementMode): string {
+  switch (mode) {
+    case TokenEnforcementMode.None:
+      return "None";
+    case TokenEnforcementMode.Warn:
+      return "Warning Only";
+    case TokenEnforcementMode.Soft:
+      return "Soft Enforcement";
+    case TokenEnforcementMode.Hard:
+      return "Hard Enforcement";
+    case TokenEnforcementMode.Always:
+      return "Always Enforce";
+    case TokenEnforcementMode.Never:
+      return "Never Enforce";
+    case TokenEnforcementMode.RoleBased:
+      return "Role-Based";
+    case TokenEnforcementMode.ModeBased:
+      return "Mode-Based";
+    case TokenEnforcementMode.Strict:
+      return "Strict Enforcement";
+    default:
+      return "Unknown";
+  }
+}

@@ -40,7 +40,7 @@ export function EditorModeTokenDisplay({
           <TooltipTrigger asChild>
             <Badge variant={isLowBalance ? "destructive" : "secondary"} className="flex items-center gap-1.5 px-3 py-1">
               <Coins className="h-3.5 w-3.5" />
-              <span>{balance} / {tokenLimit || '∞'}</span>
+              <span>{balance} {tokenLimit ? `/ ${tokenLimit}` : ''}</span>
               {isLowBalance && isTokenEnforced && (
                 <AlertTriangle className="h-3 w-3 ml-1" />
               )}

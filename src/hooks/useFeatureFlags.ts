@@ -8,6 +8,9 @@ import { toast } from "sonner";
 import { FeatureFlag } from "@/types/admin/settings/feature-flags";
 import { FeatureKey } from "@/components/chat/types/feature-types";
 
+/**
+ * Hook for managing feature flags across the application
+ */
 export function useFeatureFlags() {
   const { features, toggleFeature, enableFeature, disableFeature, setFeatureState } = useChatStore();
   const [isUpdating, setIsUpdating] = useState(false);

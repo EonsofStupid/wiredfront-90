@@ -4,7 +4,12 @@ import { useTokenStore } from '@/stores/token';
 import { useChatBridge } from '@/modules/ChatBridge';
 import { TokenEnforcementMode } from '@/types/chat/enums';
 import { toast } from 'sonner';
+import { logger } from '@/services/chat/LoggingService';
+import { EnumUtils } from '@/lib/enums/EnumUtils';
 
+/**
+ * Hook for token management in the chat interface
+ */
 export const useTokens = () => {
   const tokenStore = useTokenStore();
   const chatBridge = useChatBridge();
@@ -13,20 +18,25 @@ export const useTokens = () => {
   // Initialize tokens from the bridge
   useEffect(() => {
     if (!isInitialized) {
-      // Get initial token state from the bridge if available
-      const bridgeState = chatBridge.getState();
-      const userSettings = chatBridge.getUserSettings();
-      
-      if (userSettings && userSettings.tokens) {
-        // Apply token settings from user settings
-        tokenStore.setBalance(userSettings.tokens.balance || 0);
+      try {
+        // Get initial token state from the bridge if available
+        const bridgeState = chatBridge.getState();
+        const userSettings = chatBridge.getUserSettings();
         
-        if (userSettings.tokens.enforcementMode) {
-          tokenStore.setEnforcementMode(userSettings.tokens.enforcementMode as TokenEnforcementMode);
+        if (userSettings && userSettings.tokens) {
+          // Apply token settings from user settings
+          tokenStore.setBalance(userSettings.tokens.balance || 0);
+          
+          if (userSettings.tokens.enforcementMode) {
+            const mode = EnumUtils.stringToTokenEnforcementMode(userSettings.tokens.enforcementMode);
+            tokenStore.setEnforcementMode(mode);
+          }
         }
+      } catch (error) {
+        logger.error('Error initializing tokens from bridge:', error);
+      } finally {
+        setIsInitialized(true);
       }
-      
-      setIsInitialized(true);
     }
   }, [isInitialized, tokenStore, chatBridge]);
 
@@ -52,7 +62,9 @@ export const useTokens = () => {
     try {
       // Check if there are enough tokens
       if (tokenStore.balance < amount) {
-        if (tokenStore.enforcementMode === TokenEnforcementMode.Hard) {
+        if (tokenStore.enforcementMode === TokenEnforcementMode.Hard || 
+            tokenStore.enforcementMode === TokenEnforcementMode.Always || 
+            tokenStore.enforcementMode === TokenEnforcementMode.Strict) {
           toast.error('Not enough tokens available');
           return false;
         }
@@ -93,12 +105,16 @@ export const useTokens = () => {
 
   // Update token settings
   const updateSettings = useCallback(async (settings: { 
-    enforcementMode?: TokenEnforcementMode, 
+    enforcementMode?: TokenEnforcementMode | string, 
     warningThreshold?: number 
   }) => {
     try {
+      const updatedSettings: any = { ...settings };
+      
       if (settings.enforcementMode !== undefined) {
-        tokenStore.setEnforcementMode(settings.enforcementMode);
+        const mode = EnumUtils.stringToTokenEnforcementMode(settings.enforcementMode);
+        tokenStore.setEnforcementMode(mode);
+        updatedSettings.enforcementMode = mode;
       }
       
       if (settings.warningThreshold !== undefined) {
@@ -107,7 +123,7 @@ export const useTokens = () => {
       
       // Sync with bridge
       await chatBridge.updateChatSettings({ 
-        tokens: { ...settings } 
+        tokens: updatedSettings
       });
       
       return true;
@@ -118,14 +134,23 @@ export const useTokens = () => {
     }
   }, [tokenStore, chatBridge]);
 
+  // Compute derived values
+  const usagePercent = tokenStore.limit ? Math.min(100, ((tokenStore.used || 0) / tokenStore.limit) * 100) : 0;
+  const isLowBalance = tokenStore.limit ? (tokenStore.balance / tokenStore.limit) < 0.1 : tokenStore.balance < 5;
+
   return {
+    // State
     balance: tokenStore.balance,
     limit: tokenStore.limit,
     used: tokenStore.used,
     enforcementMode: tokenStore.enforcementMode,
-    usagePercent: tokenStore.limit ? Math.min(100, (tokenStore.used || 0) / tokenStore.limit * 100) : 0,
-    isLowBalance: tokenStore.limit ? (tokenStore.balance / tokenStore.limit) < 0.1 : false,
+    usagePercent,
+    isLowBalance,
     isTokensExhausted: tokenStore.balance <= 0,
+    warningThreshold: tokenStore.warningThreshold,
+    tokenLimit: tokenStore.limit,
+    
+    // Actions
     addTokens,
     spendTokens,
     setTokens,

@@ -4,13 +4,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import { useRoleStore } from "@/stores/role";
 import { FeatureFlag } from "@/types/admin/settings/feature-flags";
+import { logger } from "@/services/chat/LoggingService";
 
+/**
+ * Hook to query feature flag status from the database
+ * @param flagKey The feature flag key to check
+ * @returns Object containing whether the flag is enabled, loading status, and the feature flag data
+ */
 export function useFeatureFlag(flagKey: string) {
   const { user } = useAuthStore();
   const { roles } = useRoleStore();
   const userRole = roles?.[0]; // Get first role (most important)
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['feature-flag', flagKey],
     queryFn: async () => {
       try {
@@ -21,7 +27,7 @@ export function useFeatureFlag(flagKey: string) {
           .single();
 
         if (error) {
-          console.error(`Error fetching feature flag ${flagKey}:`, error);
+          logger.error(`Error fetching feature flag ${flagKey}:`, error);
           // Return a fallback object with the same shape as the expected feature flag
           return {
             id: '',
@@ -39,7 +45,7 @@ export function useFeatureFlag(flagKey: string) {
 
         return data as FeatureFlag;
       } catch (error) {
-        console.error(`Unexpected error fetching feature flag ${flagKey}:`, error);
+        logger.error(`Unexpected error fetching feature flag ${flagKey}:`, error);
         return {
           id: '',
           key: flagKey,
@@ -89,7 +95,8 @@ export function useFeatureFlag(flagKey: string) {
   return {
     isEnabled: isEnabled(),
     isLoading,
-    data
+    data,
+    error
   };
 }
 

@@ -11,6 +11,9 @@ import { TokenEnforcementMode } from '@/types/chat/enums';
 import { withTokenErrorBoundary } from '@/components/tokens/TokenErrorBoundary';
 import { EnumUtils } from '@/lib/enums/EnumUtils';
 
+/**
+ * Hook for managing token operations and enforcement
+ */
 export function useTokenManagement() {
   const { user } = useAuthStore();
   const { features, setFeatureState } = useChatStore();
