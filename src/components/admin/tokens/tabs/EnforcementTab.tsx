@@ -5,6 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TokenEnforcementMode } from '@/types/chat/enums';
 import { tokenEnforcementModeToLabel } from '@/utils/token-utils';
+import { EnumUtils } from '@/lib/enums/EnumUtils';
 
 interface EnforcementTabProps {
   isTokenEnforcementEnabled: boolean;
@@ -21,6 +22,12 @@ export function EnforcementTab({
   handleUpdateEnforcementConfig,
   isSubmitting
 }: EnforcementTabProps) {
+  // Handle mode selection with proper conversion
+  const handleModeChange = (value: string) => {
+    const mode = EnumUtils.stringToTokenEnforcementMode(value);
+    handleUpdateEnforcementConfig(mode);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between space-x-2">
@@ -43,7 +50,7 @@ export function EnforcementTab({
         <Select
           disabled={!isTokenEnforcementEnabled || isSubmitting}
           value={enforcementMode}
-          onValueChange={(value) => handleUpdateEnforcementConfig(value as TokenEnforcementMode)}
+          onValueChange={handleModeChange}
         >
           <SelectTrigger id="enforcement-mode">
             <SelectValue placeholder="Select enforcement mode" />
@@ -60,6 +67,16 @@ export function EnforcementTab({
             </SelectItem>
             <SelectItem value={TokenEnforcementMode.None}>
               {tokenEnforcementModeToLabel[TokenEnforcementMode.None]} (Disable enforcement)
+            </SelectItem>
+            {/* Add advanced modes for admin users */}
+            <SelectItem value={TokenEnforcementMode.RoleBased}>
+              {tokenEnforcementModeToLabel[TokenEnforcementMode.RoleBased]}
+            </SelectItem>
+            <SelectItem value={TokenEnforcementMode.ModeBased}>
+              {tokenEnforcementModeToLabel[TokenEnforcementMode.ModeBased]}
+            </SelectItem>
+            <SelectItem value={TokenEnforcementMode.Strict}>
+              {tokenEnforcementModeToLabel[TokenEnforcementMode.Strict]}
             </SelectItem>
           </SelectContent>
         </Select>

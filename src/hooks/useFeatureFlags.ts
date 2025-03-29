@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useChatStore } from "@/components/chat/store/chatStore";
 import { supabase } from "@/integrations/supabase/client";
@@ -127,7 +128,6 @@ export function useFeatureFlags() {
     async (featureKey: FeatureKey, context: Record<string, any> = {}) => {
       if (isUpdating) return;
       
-      setIsUpdating(true);
       try {
         const { data: userData } = await supabase.auth.getUser();
         if (!userData?.user) return;
@@ -135,19 +135,17 @@ export function useFeatureFlags() {
         await supabase.from('feature_toggle_history').insert({
           user_id: userData.user.id,
           feature_name: featureKey,
-          old_value: null,
-          new_value: true,
+          old_value: features[featureKey as keyof typeof features] || false,
+          new_value: !features[featureKey as keyof typeof features],
           context
         });
         
         logger.info(`Feature used: ${featureKey}`, { feature: featureKey, context });
       } catch (error) {
         logger.error(`Error logging feature usage for ${featureKey}:`, error);
-      } finally {
-        setIsUpdating(false);
       }
     },
-    [isUpdating]
+    [features, isUpdating]
   );
 
   return {

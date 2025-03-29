@@ -48,6 +48,10 @@ export class EnumUtilsExtensions {
         return ChatMode.Planning;
       case 'code':
         return ChatMode.Code;
+      case 'document':
+        return ChatMode.Document;
+      case 'audio':
+        return ChatMode.Audio;
       default:
         return ChatMode.Chat;
     }
@@ -71,6 +75,10 @@ export class EnumUtilsExtensions {
         return 'planning';
       case ChatMode.Code:
         return 'code';
+      case ChatMode.Document:
+        return 'document';
+      case ChatMode.Audio:
+        return 'audio';
       default:
         return 'chat';
     }
@@ -95,6 +103,10 @@ export class EnumUtilsExtensions {
         return ChatMode.Code;
       case 'editor':
         return ChatMode.Editor;
+      case 'document':
+        return ChatMode.Document;
+      case 'audio':
+        return ChatMode.Audio;
       default:
         return ChatMode.Chat;
     }

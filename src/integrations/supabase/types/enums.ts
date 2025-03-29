@@ -2,11 +2,11 @@
 // Enum types used in database queries
 export type MessageRoleType = 'user' | 'assistant' | 'system' | 'error' | 'tool' | 'function';
 
-export type MessageTypeType = 'text' | 'command' | 'system' | 'image' | 'training' | 'code' | 'file' | 'audio' | 'link';
+export type MessageTypeType = 'text' | 'command' | 'system' | 'image' | 'training' | 'code' | 'file' | 'audio' | 'link' | 'document';
 
 export type MessageStatusType = 'pending' | 'sending' | 'sent' | 'received' | 'error' | 'failed' | 'retrying' | 'cached' | 'canceled' | 'delivered';
 
-export type ChatModeType = 'chat' | 'dev' | 'image' | 'training' | 'planning' | 'code' | 'editor';
+export type ChatModeType = 'chat' | 'dev' | 'image' | 'training' | 'planning' | 'code' | 'editor' | 'document' | 'audio';
 
 export type TokenEnforcementModeType = 'none' | 'warn' | 'soft' | 'hard' | 'always' | 'never' | 'role_based' | 'mode_based' | 'strict';
 
@@ -27,5 +27,6 @@ export {
   MessageStatus, 
   MessageType,
   TokenEnforcementMode,
-  TaskType
+  TaskType,
+  UIEnforcementMode
 } from '@/types/chat/enums';

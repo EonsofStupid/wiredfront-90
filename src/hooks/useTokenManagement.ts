@@ -9,6 +9,7 @@ import { logger } from '@/services/chat/LoggingService';
 import { useCombinedFeatureFlag } from './useFeatureFlags';
 import { TokenEnforcementMode } from '@/types/chat/enums';
 import { withTokenErrorBoundary } from '@/components/tokens/TokenErrorBoundary';
+import { EnumUtils } from '@/lib/enums/EnumUtils';
 
 export function useTokenManagement() {
   const { user } = useAuthStore();
@@ -58,7 +59,7 @@ export function useTokenManagement() {
   };
   
   // Function to handle token spending with error handling
-  const handleSpendTokens = async (amount = 1) => {
+  const handleSpendTokens = async (amount = 1, reason?: string) => {
     // If token enforcement is disabled, allow the operation
     if (!features.tokenEnforcement || !tokenStore.isEnforcementEnabled || 
         tokenStore.enforcementMode === TokenEnforcementMode.None) {
@@ -76,7 +77,7 @@ export function useTokenManagement() {
     }
     
     try {
-      const success = await tokenStore.spendTokens(amount);
+      const success = await tokenStore.spendTokens(amount, reason);
       if (!success && tokenStore.enforcementMode !== TokenEnforcementMode.Warn) {
         toast.error('Failed to process tokens. Please try again.');
       }
@@ -87,6 +88,12 @@ export function useTokenManagement() {
       toast.error(`Error processing tokens: ${errorMessage}`);
       return tokenStore.enforcementMode === TokenEnforcementMode.Warn; // Allow operation to proceed if in warn mode
     }
+  };
+
+  // Update enforcement mode with proper enum conversion
+  const setEnforcementMode = (mode: string | TokenEnforcementMode) => {
+    const enforcementMode = EnumUtils.stringToTokenEnforcementMode(mode);
+    tokenStore.setEnforcementMode(enforcementMode);
   };
   
   return {
@@ -102,7 +109,7 @@ export function useTokenManagement() {
     spendTokens: handleSpendTokens,
     setTokenBalance: tokenStore.setTokenBalance,
     hasEnoughTokens,
-    setEnforcementMode: tokenStore.setEnforcementMode,
+    setEnforcementMode,
     toggleTokenEnforcement: () => {
       setFeatureState('tokenEnforcement', !features.tokenEnforcement);
       tokenStore.setEnforcementEnabled(!tokenStore.isEnforcementEnabled);

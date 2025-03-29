@@ -1,58 +1,76 @@
 
 import React from 'react';
-import { useTokenStore } from '@/stores/token';
-import { Coins } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { formatDistanceToNow } from 'date-fns';
+import { useTokens } from './hooks/useTokens';
+import { Badge } from '@/components/ui/badge';
+import { Coins, AlertTriangle } from 'lucide-react';
+import { getTokenStatusColor } from '@/utils/token-utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { TokenEnforcementMode } from '@/types/chat/enums';
 
-export const TokenDisplay = () => {
-  const { balance, lastUpdated, tokensPerQuery, queriesUsed, freeQueryLimit } = useTokenStore();
+interface TokenDisplayProps {
+  compact?: boolean;
+  showTooltip?: boolean;
+  className?: string;
+}
+
+export function TokenDisplay({ compact = false, showTooltip = true, className = '' }: TokenDisplayProps) {
+  const { balance, usagePercent, isLowBalance, enforcementMode } = useTokens();
   
-  // Calculate remaining free queries
-  const freeQueriesRemaining = Math.max(0, freeQueryLimit - queriesUsed);
-  const freeQueryPercentage = (queriesUsed / freeQueryLimit) * 100;
+  const isTokenEnforced = enforcementMode !== TokenEnforcementMode.None && 
+                          enforcementMode !== TokenEnforcementMode.Never;
+                          
+  const statusColor = getTokenStatusColor(balance);
   
-  // Format the last updated date
-  const lastUpdatedFormatted = lastUpdated ? 
-    formatDistanceToNow(new Date(lastUpdated), { addSuffix: true }) : 
-    'Not yet updated';
-  
-  return (
-    <div className="p-3 border rounded-lg bg-muted/30">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <Coins className="h-4 w-4 text-yellow-500" />
-          <span className="font-medium text-sm">Token Balance</span>
-        </div>
+  if (compact) {
+    return (
+      <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className="text-sm font-mono bg-primary/10 px-2 py-0.5 rounded">
-              {balance.toLocaleString()}
-            </span>
+            <div className={`flex items-center gap-1 ${className}`}>
+              <Coins className={`h-4 w-4 ${statusColor}`} />
+              <span className={`text-sm font-medium ${statusColor}`}>{balance}</span>
+              {isLowBalance && isTokenEnforced && (
+                <AlertTriangle className="h-3 w-3 text-yellow-500" />
+              )}
+            </div>
           </TooltipTrigger>
-          <TooltipContent side="top">
-            <p>Last updated: {lastUpdatedFormatted}</p>
-            <p>Cost per query: {tokensPerQuery} tokens</p>
-          </TooltipContent>
+          {showTooltip && (
+            <TooltipContent>
+              <p>Current token balance: {balance}</p>
+              {isTokenEnforced && (
+                <p className="text-xs text-muted-foreground">
+                  {isLowBalance ? 'Low token balance' : 'Token enforcement active'}
+                </p>
+              )}
+            </TooltipContent>
+          )}
         </Tooltip>
-      </div>
+      </TooltipProvider>
+    );
+  }
+  
+  return (
+    <div className={`flex items-center gap-2 ${className}`}>
+      <Badge variant={isLowBalance ? "destructive" : "secondary"} className="flex items-center gap-1.5">
+        <Coins className="h-3.5 w-3.5" />
+        <span>{balance} tokens</span>
+        {isLowBalance && isTokenEnforced && (
+          <AlertTriangle className="h-3 w-3 ml-1" />
+        )}
+      </Badge>
       
-      <div className="mb-1 flex justify-between text-xs">
-        <span>Free Queries: {queriesUsed}/{freeQueryLimit}</span>
-        <span>{freeQueriesRemaining} remaining</span>
-      </div>
-      
-      <Progress 
-        value={freeQueryPercentage} 
-        className="h-2" 
-      />
-      
-      {freeQueriesRemaining === 0 && (
-        <p className="text-xs mt-2 text-yellow-500">
-          Free quota exhausted. Using token balance.
-        </p>
+      {isLowBalance && isTokenEnforced && showTooltip && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <AlertTriangle className="h-4 w-4 text-yellow-500" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Low token balance warning</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       )}
     </div>
   );
-};
+}

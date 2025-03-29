@@ -1,5 +1,6 @@
 
 import { TokenEnforcementMode } from '@/types/chat/enums';
+import { EnumUtils } from '@/lib/enums/EnumUtils';
 
 /**
  * Maps token enforcement modes to display labels
@@ -71,32 +72,7 @@ export const tokenEnforcementModeInfo: Record<TokenEnforcementMode, { label: str
  * Database string to TokenEnforcementMode enum
  */
 export const stringToEnforcementMode = (value: string): TokenEnforcementMode => {
-  const normalizedValue = value.trim().toLowerCase();
-  
-  switch (normalizedValue) {
-    case 'none':
-      return TokenEnforcementMode.None;
-    case 'warn':
-      return TokenEnforcementMode.Warn;
-    case 'soft':
-      return TokenEnforcementMode.Soft;
-    case 'hard':
-      return TokenEnforcementMode.Hard;
-    case 'always':
-      return TokenEnforcementMode.Always;
-    case 'never':
-      return TokenEnforcementMode.Never;
-    case 'role_based':
-    case 'rolebased':
-      return TokenEnforcementMode.RoleBased;
-    case 'mode_based':
-    case 'modebased':
-      return TokenEnforcementMode.ModeBased;
-    case 'strict':
-      return TokenEnforcementMode.Strict;
-    default:
-      return TokenEnforcementMode.None;
-  }
+  return EnumUtils.stringToTokenEnforcementMode(value);
 };
 
 /**
@@ -120,4 +96,23 @@ export const isLowTokenBalance = (balance: number, threshold = 100): boolean => 
  */
 export const formatTokenBalance = (balance: number): string => {
   return balance.toLocaleString();
+};
+
+/**
+ * Calculate the remaining token budget
+ */
+export const calculateRemainingBudget = (balance: number, used: number, limit: number): number => {
+  if (!limit) return balance;
+  const remaining = Math.max(0, limit - used);
+  return Math.min(balance, remaining);
+};
+
+/**
+ * Get appropriate status color based on token balance
+ */
+export const getTokenStatusColor = (balance: number, threshold = 100): string => {
+  if (balance <= 0) return 'text-red-600';
+  if (balance <= threshold / 2) return 'text-red-500';
+  if (balance <= threshold) return 'text-yellow-500';
+  return 'text-green-500';
 };

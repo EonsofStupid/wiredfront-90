@@ -9,7 +9,9 @@ export enum ChatMode {
   Image = 'image',
   Training = 'training',
   Planning = 'planning',
-  Code = 'code'
+  Code = 'code',
+  Document = 'document', // Added for document-based interactions
+  Audio = 'audio' // Added for audio-based interactions
 }
 
 /**
@@ -17,7 +19,9 @@ export enum ChatMode {
  */
 export enum ChatPosition {
   BottomRight = 'bottom-right',
-  BottomLeft = 'bottom-left'
+  BottomLeft = 'bottom-left',
+  TopRight = 'top-right', // Added for more positioning options
+  TopLeft = 'top-left' // Added for more positioning options
 }
 
 /**
@@ -44,7 +48,8 @@ export enum MessageType {
   Code = 'code',
   File = 'file',
   Audio = 'audio',
-  Link = 'link'
+  Link = 'link',
+  Document = 'document' // Added for document content
 }
 
 /**
@@ -100,6 +105,8 @@ export enum TaskType {
   Analysis = 'analysis',
   Extraction = 'extraction',
   Classification = 'classification',
+  Transformation = 'transformation', // Added for content transformations
+  Recommendation = 'recommendation', // Added for recommendation tasks
   Other = 'other'
 }
 
@@ -113,5 +120,7 @@ export const databaseModeToUiMode: Record<ChatMode, string> = {
   [ChatMode.Image]: 'image',
   [ChatMode.Training]: 'training',
   [ChatMode.Planning]: 'planning',
-  [ChatMode.Code]: 'code'
+  [ChatMode.Code]: 'code',
+  [ChatMode.Document]: 'document',
+  [ChatMode.Audio]: 'audio'
 };

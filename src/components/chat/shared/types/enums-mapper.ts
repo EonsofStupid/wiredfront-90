@@ -1,11 +1,11 @@
 
 import { ChatMode, TokenEnforcementMode, UIEnforcementMode } from '@/types/chat/enums';
-import { tokenEnforcementModeInfo } from '@/utils/token-utils';
+import { EnumUtils } from '@/lib/enums/EnumUtils';
 
 /**
  * UI mode representation (used in UI components)
  */
-export type UiChatMode = 'standard' | 'editor' | 'image' | 'training' | 'planning' | 'code';
+export type UiChatMode = 'standard' | 'editor' | 'image' | 'training' | 'planning' | 'code' | 'document' | 'audio';
 
 /**
  * Mapping from UI mode to ChatMode enum
@@ -16,7 +16,9 @@ export const uiModeToChatMode: Record<UiChatMode, ChatMode> = {
   'image': ChatMode.Image,
   'training': ChatMode.Training,
   'planning': ChatMode.Planning,
-  'code': ChatMode.Code
+  'code': ChatMode.Code,
+  'document': ChatMode.Document,
+  'audio': ChatMode.Audio
 };
 
 /**
@@ -29,14 +31,10 @@ export const databaseModeToUiMode: Record<ChatMode, UiChatMode> = {
   [ChatMode.Image]: 'image',
   [ChatMode.Training]: 'training',
   [ChatMode.Planning]: 'planning',
-  [ChatMode.Code]: 'code'
+  [ChatMode.Code]: 'code',
+  [ChatMode.Document]: 'document',
+  [ChatMode.Audio]: 'audio'
 };
-
-/**
- * Mapping from TokenEnforcementMode to UI metadata
- * Reusing the definitions from token-utils.ts
- */
-export const tokenToUIEnforcementMode = tokenEnforcementModeInfo;
 
 /**
  * Mapping from UI enforcement mode to token enforcement mode
@@ -60,4 +58,18 @@ export const tokenToUIEnforcementModeEnum: Record<TokenEnforcementMode, UIEnforc
   [TokenEnforcementMode.RoleBased]: UIEnforcementMode.Soft,
   [TokenEnforcementMode.ModeBased]: UIEnforcementMode.Soft,
   [TokenEnforcementMode.Strict]: UIEnforcementMode.Always
+};
+
+/**
+ * Convert string to ChatMode enum with fallback
+ */
+export const stringToChatMode = (mode: string): ChatMode => {
+  return EnumUtils.stringToChatMode(mode);
+};
+
+/**
+ * Convert string to TokenEnforcementMode enum with fallback
+ */
+export const stringToTokenEnforcementMode = (mode: string): TokenEnforcementMode => {
+  return EnumUtils.stringToTokenEnforcementMode(mode);
 };
