@@ -26,6 +26,7 @@ export const createFeatureActions = (
     
     // Provider actions
     updateChatProvider: toggleActions.updateChatProvider,
+    updateAvailableProviders: toggleActions.updateAvailableProviders,
     
     // Mode actions
     setMode: (mode: string | ChatMode) => {

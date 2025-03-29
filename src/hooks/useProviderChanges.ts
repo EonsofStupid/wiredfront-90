@@ -14,9 +14,9 @@ export function useProviderChanges() {
   const { 
     currentProvider, 
     availableProviders,
-    updateChatProvider 
+    updateChatProvider,
+    updateAvailableProviders
   } = useChatStore();
-  const { updateAvailableProviders } = useChatStore();
   
   const [isChanging, setIsChanging] = useState(false);
   const [changeHistory, setChangeHistory] = useState<any[]>([]);

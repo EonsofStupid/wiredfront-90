@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useChatStore } from '@/components/chat/store/chatStore';
-import { Provider } from '@/components/chat/types/provider-types';
+import { Provider, mapDbProviderToProvider } from '@/components/chat/types/provider-types';
 import { logger } from '@/services/chat/LoggingService';
 
 /**
@@ -12,8 +12,7 @@ export function useAIProviders() {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const { updateChatProvider } = useChatStore();
-  const { updateAvailableProviders } = useChatStore();
+  const { updateChatProvider, updateAvailableProviders } = useChatStore();
   
   // Fetch providers on component mount
   useEffect(() => {
@@ -37,18 +36,7 @@ export function useAIProviders() {
       }
       
       // Convert to Provider type
-      const providersData: Provider[] = data.map(provider => ({
-        id: provider.id,
-        name: provider.display_name || provider.name,
-        type: provider.provider_type,
-        isDefault: provider.is_default || false,
-        isEnabled: provider.is_enabled || true,
-        category: 'chat',
-        description: provider.description || '',
-        apiEndpoint: provider.base_url || undefined,
-        iconUrl: provider.icon_url || undefined,
-        models: []
-      }));
+      const providersData: Provider[] = data.map(provider => mapDbProviderToProvider(provider));
       
       setProviders(providersData);
       

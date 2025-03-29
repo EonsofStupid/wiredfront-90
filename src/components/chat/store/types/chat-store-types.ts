@@ -10,18 +10,6 @@ import { FeatureKey } from '@/components/chat/types/feature-types';
 export type UiChatMode = 'standard' | 'editor' | 'image' | 'training' | 'planning' | 'code' | 'document';
 
 /**
- * Chat provider type for stores
- */
-export interface ChatProvider {
-  id: string;
-  name: string;
-  apiKey: string;
-  type: string;
-  isDefault: boolean;
-  isActive: boolean;
-}
-
-/**
  * Chat session state interface
  */
 export interface ChatSessionState {

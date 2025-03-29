@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/services/chat/LoggingService";
-import { ChatProvider } from "@/components/chat/store/types/chat-store-types";
+import { Provider } from "@/components/chat/types/provider-types";
 
 interface ProviderUsageMetrics {
   tokensUsed?: number;
@@ -14,10 +14,10 @@ export class AIProviderService {
   /**
    * Get all available AI providers from the database
    */
-  static async getAllProviders(): Promise<ChatProvider[]> {
+  static async getAllProviders(): Promise<Provider[]> {
     try {
       const { data, error } = await supabase
-        .from('api_configurations')
+        .from('available_providers')
         .select('*')
         .eq('is_enabled', true)
         .order('is_default', { ascending: false });
@@ -26,11 +26,13 @@ export class AIProviderService {
       
       return data?.map(config => ({
         id: config.id,
-        name: config.memorable_name || `${config.api_type} Provider`,
-        type: config.api_type,
+        name: config.display_name || config.name,
+        type: config.provider_type,
         isDefault: config.is_default || false,
         isEnabled: config.is_enabled,
-        category: this.getCategoryForProvider(config.api_type)
+        category: this.getCategoryForProvider(config.provider_type),
+        description: '',
+        models: []
       })) || [];
     } catch (error) {
       logger.error("Error fetching AI providers", error);
@@ -41,7 +43,7 @@ export class AIProviderService {
   /**
    * Get the default provider for a specific category
    */
-  static async getDefaultProvider(category: 'chat' | 'image' | 'integration'): Promise<ChatProvider | null> {
+  static async getDefaultProvider(category: 'chat' | 'image' | 'integration'): Promise<Provider | null> {
     try {
       const providers = await this.getAllProviders();
       
@@ -67,8 +69,8 @@ export class AIProviderService {
     try {
       // Fix: Use update method instead of rpc since set_default_api_config doesn't exist
       const { data: provider, error: getError } = await supabase
-        .from('api_configurations')
-        .select('id, api_type, category')
+        .from('available_providers')
+        .select('id, provider_type')
         .eq('id', providerId)
         .single();
         
@@ -76,15 +78,15 @@ export class AIProviderService {
       
       // First set all providers of the same type to not default
       const { error: updateAllError } = await supabase
-        .from('api_configurations')
+        .from('available_providers')
         .update({ is_default: false })
-        .eq('api_type', provider.api_type);
+        .eq('provider_type', provider.provider_type);
         
       if (updateAllError) throw updateAllError;
       
       // Then set the selected provider as default
       const { error: updateError } = await supabase
-        .from('api_configurations')
+        .from('available_providers')
         .update({ is_default: true })
         .eq('id', providerId);
         

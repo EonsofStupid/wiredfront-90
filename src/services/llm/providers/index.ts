@@ -1,5 +1,5 @@
 
-import { ChatProvider } from '@/components/chat/store/types/chat-store-types';
+import { Provider } from '@/components/chat/types/provider-types';
 import { OpenAIProvider } from './openai/OpenAIProvider';
 import { GeminiProvider } from './gemini/GeminiProvider';
 import { AnthropicProvider } from './anthropic/AnthropicProvider';
@@ -19,7 +19,7 @@ export interface LLMProvider {
 }
 
 // Provider factory to get the appropriate provider implementation
-export const getProviderImplementation = (provider: ChatProvider | null): LLMProvider => {
+export const getProviderImplementation = (provider: Provider | null): LLMProvider => {
   if (!provider) {
     logger.warn('No provider specified, defaulting to OpenAI');
     return new OpenAIProvider();
