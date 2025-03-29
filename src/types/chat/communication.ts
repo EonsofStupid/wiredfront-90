@@ -1,8 +1,8 @@
 
-import { ChatMode, MessageRole, MessageType } from './enums';
+import { TaskType } from './enums';
 
 /**
- * Provider types supported by the system
+ * Provider types enum
  */
 export enum ProviderType {
   OpenAI = 'openai',
@@ -17,7 +17,7 @@ export enum ProviderType {
 }
 
 /**
- * Vector database types supported by the system
+ * Vector database types enum
  */
 export enum VectorDbType {
   Pinecone = 'pinecone',
@@ -26,83 +26,121 @@ export enum VectorDbType {
   Milvus = 'milvus',
   Supabase = 'supabase',
   ChromaDB = 'chromadb',
-  Faiss = 'faiss'
+  Faiss = 'faiss',
+  Custom = 'custom'
 }
 
 /**
- * Task types supported by the system
- * These values must be aligned with the TaskType in chat/enums.ts
+ * Extended task types (for internal code organization)
  */
-export enum TaskType {
-  Chat = 'chat',
-  Generation = 'generation',
-  Completion = 'completion',
-  Summarization = 'summarization',
-  Translation = 'translation',
-  Analysis = 'analysis',
-  Extraction = 'extraction',
-  Classification = 'classification',
-  StructuredOutput = 'structured_output',
-  AdminQuery = 'admin_query',
-  SystemDiagnostic = 'system_diagnostic',
-  CacheQuery = 'cache_query',
-  VectorIndex = 'vector_index',
-  ModelValidation = 'model_validation',
-  QuestionAnswering = 'question_answering',
-  ImageGeneration = 'image_generation',
-  CodeGeneration = 'code_generation',
-  Transformation = 'transformation',
-  Recommendation = 'recommendation',
-  Conversation = 'conversation', // Alias for 'chat' for backward compatibility
-  Other = 'other'
+export enum ExtendedTaskType {
+  // Standard task types from the main enum
+  Chat = TaskType.Chat,
+  Conversation = TaskType.Conversation,
+  Generation = TaskType.Generation,
+  Completion = TaskType.Completion,
+  Summarization = TaskType.Summarization,
+  Translation = TaskType.Translation,
+  Analysis = TaskType.Analysis,
+  Extraction = TaskType.Extraction,
+  Classification = TaskType.Classification,
+  Transformation = TaskType.Transformation,
+  Recommendation = TaskType.Recommendation,
+  StructuredOutput = TaskType.StructuredOutput,
+  AdminQuery = TaskType.AdminQuery,
+  SystemDiagnostic = TaskType.SystemDiagnostic,
+  CacheQuery = TaskType.CacheQuery,
+  VectorIndex = TaskType.VectorIndex,
+  ModelValidation = TaskType.ModelValidation,
+  QuestionAnswering = TaskType.QuestionAnswering,
+  ImageGeneration = TaskType.ImageGeneration,
+  CodeGeneration = TaskType.CodeGeneration,
+  Other = TaskType.Other,
+  
+  // Extended task types for more granular operations
+  CodeExplanation = 'code_explanation',
+  BugFix = 'bug_fix',
+  CodeReview = 'code_review',
+  Refactoring = 'refactoring',
+  Tutoring = 'tutoring',
+  ProblemSolving = 'problem_solving',
+  Explanation = 'explanation',
+  ImageEditing = 'image_editing',
+  DocumentSearch = 'document_search',
+  ProjectContext = 'project_context'
 }
 
 /**
- * Message envelope for sending to AI providers
+ * Message envelope for requests
  */
 export interface MessageEnvelope {
   id: string;
-  role: MessageRole;
-  content: string;
-  type: MessageType;
-  metadata?: Record<string, any>;
-  traceId?: string;
   sessionId?: string;
-  userId?: string;
-  timestamp?: string;
-  mode?: ChatMode;
-  systemInstructions?: string[];
-  contextStrategy?: string;
-  maxTokens?: number;
+  userId: string;
+  messages: any[];
+  model: string;
   temperature?: number;
-  tools?: any[];
-  isStreaming?: boolean;
-  model?: string;
+  maxTokens?: number;
+  stop?: string[];
+  functions?: any[];
+  contextInfo?: {
+    projectId?: string;
+    files?: string[];
+    relevanceThreshold?: number;
+  };
+  metadata?: Record<string, any>;
+  
+  // Extended fields for the ModelBridge
+  taskType?: ExtendedTaskType | TaskType;
+  fallbackLevel?: number;
+  adminFlags?: Record<string, boolean>;
+  input?: string;
+  vectorInfo?: Record<string, any>;
+  cacheInfo?: Record<string, any>;
 }
 
 /**
- * Response envelope from AI providers
+ * Response envelope for completed requests
  */
 export interface ResponseEnvelope {
   id: string;
-  content: string;
-  role: MessageRole;
-  type: MessageType;
-  metadata: Record<string, any>;
-  finishReason?: string;
-  promptTokens?: number;
-  completionTokens?: number;
-  totalTokens?: number;
-  latencyMs?: number;
-  error?: {
-    message: string;
-    type: string;
-    code?: string;
-    param?: string;
-  };
-  traceId?: string;
   sessionId?: string;
-  timestamp: string;
-  model?: string;
-  provider?: string;
+  userId: string;
+  model: string;
+  content: string;
+  messages?: any[];
+  metadata?: Record<string, any>;
+  
+  // Extended fields for the ModelBridge
+  taskType?: ExtendedTaskType | TaskType;
+  tokensUsed?: {
+    total: number;
+    prompt: number;
+    completion: number;
+  };
+  processingTimeMs?: number;
+  fallbacksUsed?: string[];
+  vectorInfo?: {
+    used: boolean;
+    count: number;
+    sources: string[];
+  };
+  cacheInfo?: {
+    hit: boolean;
+    key: string;
+  };
+  fineTuneMetadata?: {
+    version: string;
+    params: Record<string, any>;
+  };
+}
+
+/**
+ * Error response structure
+ */
+export interface APIErrorResponse {
+  message: string;
+  type: string;
+  code?: string;
+  param?: string;
 }

@@ -31,7 +31,7 @@ export interface Provider {
   models: ProviderModel[];
   isEnabled: boolean;
   isDefault?: boolean;
-  category: 'chat' | 'image' | 'audio' | 'video' | 'embedding';
+  category: 'chat' | 'image' | 'audio' | 'video' | 'embedding' | 'integration';
   capabilities?: {
     streaming?: boolean;
     functions?: boolean;
@@ -44,6 +44,7 @@ export interface Provider {
   configSchema?: Record<string, any>;
   metadata?: Record<string, any>;
   icon?: string;
+  type?: string; // Added for backward compatibility
 }
 
 /**

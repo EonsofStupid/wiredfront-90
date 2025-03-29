@@ -1,13 +1,20 @@
 
-/**
- * Feature-related types for the chat system
- */
+export type FeatureKey = 
+  | 'voice'
+  | 'rag'
+  | 'modeSwitch'
+  | 'notifications'
+  | 'github'
+  | 'codeAssistant'
+  | 'ragSupport'
+  | 'githubSync'
+  | 'knowledgeBase'
+  | 'tokenEnforcement'
+  | 'standardChat'      // For standard chat mode
+  | 'imageGeneration'   // For image generation
+  | 'training';         // For training mode
 
-// Define feature action keys
-export type FeatureKey = string;
-
-// Core feature flags that can be toggled
-export interface FeatureFlags {
+export interface Features {
   voice: boolean;
   rag: boolean;
   modeSwitch: boolean;
@@ -18,26 +25,7 @@ export interface FeatureFlags {
   githubSync: boolean;
   knowledgeBase: boolean;
   tokenEnforcement: boolean;
-  [key: string]: boolean;
-}
-
-// Feature toggle history structure
-export interface FeatureToggleEvent {
-  id: string;
-  featureName: FeatureKey;
-  userId: string;
-  oldValue: boolean | null;
-  newValue: boolean;
-  timestamp: string;
-  metadata?: Record<string, any>;
-}
-
-// Feature status types
-export type FeatureStatus = 'enabled' | 'disabled' | 'partial' | 'unknown';
-
-// Feature category types
-export interface FeatureCategory {
-  id: string;
-  name: string;
-  description?: string;
+  standardChat: boolean;
+  imageGeneration: boolean;
+  training: boolean;
 }

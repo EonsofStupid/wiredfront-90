@@ -1,63 +1,154 @@
 
-import { MessageType } from '../types';
+import { marked } from 'marked';
+import { MessageType } from '@/types/chat/enums';
+import DOMPurify from 'dompurify';
+import hljs from 'highlight.js';
 
 /**
- * Format a message based on its type
+ * Format text message content based on type
  */
-export function formatMessage(content: string, type: MessageType): string {
+export function formatMessageContent(content: string, type: MessageType): string {
+  if (!content) return '';
+  
   switch (type) {
-    case 'code':
-      return formatCodeMessage(content);
-    case 'system':
-      return formatSystemMessage(content);
-    case 'image':
-      return formatImageMessage(content);
+    case MessageType.Code:
+      return formatCodeContent(content);
+    case MessageType.Text:
+      return formatTextContent(content);
+    case MessageType.System:
+      return formatSystemContent(content);
+    case MessageType.Image:
+      return content; // Image URLs are passed through
+    case MessageType.Link:
+      return formatLinkContent(content);
+    case MessageType.Document:
+      return formatDocumentContent(content);
     default:
-      return content;
+      return formatTextContent(content);
   }
 }
 
 /**
- * Format code message with syntax highlighting placeholders
+ * Format code content with syntax highlighting
  */
-function formatCodeMessage(content: string): string {
-  // Replace actual code blocks with formatted versions
-  return content.replace(
-    /```(\w+)?\s*\n([\s\S]*?)```/g,
-    (match, language, code) => {
-      const formattedCode = code.trim();
-      const displayLanguage = language || 'text';
-      
-      return `<div class="code-block">
-        <div class="code-header">
-          <span class="language-tag">${displayLanguage}</span>
-        </div>
-        <pre><code class="language-${displayLanguage}">${formattedCode}</code></pre>
-      </div>`;
-    }
-  );
-}
-
-/**
- * Format system messages with visual distinction
- */
-function formatSystemMessage(content: string): string {
-  // Try to parse as JSON for structured display
+function formatCodeContent(content: string): string {
   try {
-    const parsed = JSON.parse(content);
-    return `<div class="system-message">${JSON.stringify(parsed, null, 2)}</div>`;
-  } catch (e) {
-    // Not JSON, display as regular system message
-    return `<div class="system-message">${content}</div>`;
+    // Set up code highlighting with marked
+    marked.setOptions({
+      highlight: function(code, lang) {
+        if (lang && hljs.getLanguage(lang)) {
+          return hljs.highlight(code, { language: lang }).value;
+        }
+        return hljs.highlightAuto(code).value;
+      }
+    });
+    
+    // Parse with marked and sanitize
+    const html = marked(content);
+    return DOMPurify.sanitize(html);
+  } catch (error) {
+    console.error('Error formatting code content:', error);
+    return escapeHtml(content);
   }
 }
 
 /**
- * Format image messages with proper HTML
+ * Format regular text content with markdown
  */
-function formatImageMessage(content: string): string {
-  if (content.startsWith('http')) {
-    return `<img src="${content}" alt="AI Generated Image" class="message-image" />`;
+function formatTextContent(content: string): string {
+  try {
+    // Parse with marked and sanitize
+    const html = marked(content);
+    return DOMPurify.sanitize(html);
+  } catch (error) {
+    console.error('Error formatting text content:', error);
+    return escapeHtml(content);
   }
-  return content;
+}
+
+/**
+ * Format system content with special styling
+ */
+function formatSystemContent(content: string): string {
+  try {
+    // Add special CSS class for system messages
+    const html = marked(content);
+    return DOMPurify.sanitize(`<div class="system-message">${html}</div>`);
+  } catch (error) {
+    console.error('Error formatting system content:', error);
+    return escapeHtml(content);
+  }
+}
+
+/**
+ * Format link content
+ */
+function formatLinkContent(content: string): string {
+  try {
+    // Check if content is a valid URL
+    const url = new URL(content);
+    return DOMPurify.sanitize(`<a href="${url.href}" target="_blank" rel="noopener noreferrer">${url.href}</a>`);
+  } catch (error) {
+    // If not a valid URL, just return the content
+    return escapeHtml(content);
+  }
+}
+
+/**
+ * Format document content
+ */
+function formatDocumentContent(content: string): string {
+  try {
+    // Assume content is markdown with document metadata
+    const html = marked(content);
+    return DOMPurify.sanitize(html);
+  } catch (error) {
+    console.error('Error formatting document content:', error);
+    return escapeHtml(content);
+  }
+}
+
+/**
+ * Escape HTML to prevent XSS
+ */
+function escapeHtml(content: string): string {
+  return content
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
+ * Extract code blocks from a markdown string
+ */
+export function extractCodeBlocks(markdown: string): { language: string; code: string }[] {
+  const codeBlockRegex = /```([a-zA-Z0-9_]*)\n([\s\S]*?)```/g;
+  const codeBlocks: { language: string; code: string }[] = [];
+  
+  let match;
+  while ((match = codeBlockRegex.exec(markdown)) !== null) {
+    codeBlocks.push({
+      language: match[1],
+      code: match[2].trim()
+    });
+  }
+  
+  return codeBlocks;
+}
+
+/**
+ * Strip markdown formatting from text
+ */
+export function stripMarkdown(markdown: string): string {
+  return markdown
+    .replace(/#+\s+(.*)/g, '$1') // Remove headings
+    .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
+    .replace(/\*(.*?)\*/g, '$1') // Remove italic
+    .replace(/`(.*?)`/g, '$1') // Remove inline code
+    .replace(/```[\s\S]*?```/g, '') // Remove code blocks
+    .replace(/!\[(.*?)\]\((.*?)\)/g, '$1') // Remove images
+    .replace(/\[(.*?)\]\((.*?)\)/g, '$1') // Remove links
+    .replace(/\n\s*\n/g, '\n'); // Remove extra newlines
 }

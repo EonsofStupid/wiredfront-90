@@ -1,58 +1,62 @@
 
+import { Provider } from '../../types/provider-types';
 import { ChatMode, ChatPosition } from '@/types/chat/enums';
-import { Message } from '@/components/chat/types/message-types';
-import { Provider } from '@/components/chat/types/provider-types';
+import { Features } from '../../types/feature-types';
+import { Message } from '@/types/chat/message';
 
-// Export ChatProvider for backward compatibility
-export type { Provider as ChatProvider } from '@/components/chat/types/provider-types';
-
-// Define UI chat mode as a union type
 export type UiChatMode = 'standard' | 'editor' | 'image' | 'training' | 'planning' | 'code' | 'document' | 'audio';
 
-// Chat UI state interface
-export interface ChatUIState {
-  isOpen: boolean;
-  isMinimized: boolean;
-  isDocked: boolean;
-  position: ChatPosition;
-  scale: number;
-  showSidebar: boolean;
-  sessionLoading: boolean;
-  messageLoading: boolean;
-  providerLoading: boolean;
+/**
+ * State associated with a chat session
+ */
+export interface ChatSession {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  lastAccessed: string;
+  messageCount: number;
+  archived: boolean;
 }
 
 /**
- * Main chat store state type
+ * State for the chat window dimensions
+ */
+export interface ChatWindowState {
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+}
+
+/**
+ * Core chat state
  */
 export interface ChatState {
-  // Initialization
+  // Core state
   initialized: boolean;
-  
-  // Messages and input
   messages: Message[];
   userInput: string;
   isWaitingForResponse: boolean;
-  
-  // Selection state
   selectedModel: string;
   selectedMode: string;
-  
-  // UI status
   modelFetchStatus: 'idle' | 'loading' | 'success' | 'error';
   error: Error | null;
-  
-  // Session state
   chatId: string | null;
+  
+  // UI state
   docked: boolean;
   isOpen: boolean;
   isMinimized: boolean;
   position: ChatPosition;
   startTime: number;
+  showSidebar: boolean;
+  scale: number;
+  tokenBalance?: number;
   
   // Features
-  features: Record<FeatureKey, boolean>;
-  currentMode: ChatMode;
+  features: Features;
+  currentMode: ChatMode | string;
   
   // Providers
   availableProviders: Provider[];
@@ -61,19 +65,14 @@ export interface ChatState {
     availableProviders: Provider[];
   };
   
-  // UI state
-  showSidebar: boolean;
-  scale: number;
+  // UI state objects
   ui: {
     sessionLoading: boolean;
     messageLoading: boolean;
     providerLoading: boolean;
   };
   
-  // Optional token balance
-  tokenBalance?: number;
-  
-  // Required actions
+  // Required actions (implemented in store)
   resetChatState: () => void;
   setUserInput: (input: string) => void;
   toggleChat: () => void;
@@ -82,42 +81,9 @@ export interface ChatState {
   toggleDocked: () => void;
   setPosition: (position: ChatPosition) => void;
   setChatId: (id: string | null) => void;
-  setMode: (mode: string | ChatMode) => void;
+  setMode: (mode: ChatMode | string) => void;
   initializeChat: () => void;
-  setSessionLoading: (isLoading: boolean) => void;
-  setMessageLoading: (isLoading: boolean) => void;
-  setProviderLoading: (isLoading: boolean) => void;
+  setSessionLoading: (loading: boolean) => void;
+  setMessageLoading: (loading: boolean) => void;
+  setProviderLoading: (loading: boolean) => void;
 }
-
-/**
- * Feature keys for the chat store
- */
-export type FeatureKey = 
-  | 'voice'
-  | 'rag'
-  | 'modeSwitch'
-  | 'notifications'
-  | 'github'
-  | 'codeAssistant'
-  | 'ragSupport'
-  | 'githubSync'
-  | 'knowledgeBase'
-  | 'tokenEnforcement';
-
-/**
- * Represents a chat session in memory
- */
-export interface ChatSession {
-  id: string;
-  title: string;
-  created_at: string;
-  last_accessed: string;
-  message_count: number;
-  messages?: Message[];
-  metadata?: Record<string, any>;
-}
-
-/**
- * Possible chat window states
- */
-export type ChatWindowState = 'open' | 'minimized' | 'closed';

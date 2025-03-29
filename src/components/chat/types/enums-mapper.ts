@@ -1,83 +1,15 @@
 
-import { ChatMode, ChatPosition, TokenEnforcementMode } from '@/types/chat/enums';
+import { ChatMode, MessageRole, MessageType } from '@/types/chat/enums';
+import { UiChatMode } from '../store/types/chat-store-types';
 
 /**
- * Maps chat modes to their database string representations
+ * Convert a UI-friendly chat mode to a database-friendly mode
  */
-export const chatModeToDatabase: Record<ChatMode, string> = {
-  [ChatMode.Chat]: 'chat',
-  [ChatMode.Dev]: 'dev',
-  [ChatMode.Editor]: 'editor',
-  [ChatMode.Image]: 'image',
-  [ChatMode.Training]: 'training',
-  [ChatMode.Planning]: 'planning',
-  [ChatMode.Code]: 'code',
-  [ChatMode.Document]: 'document',
-  [ChatMode.Audio]: 'audio'
-};
-
-/**
- * Maps chat modes to display labels
- */
-export const chatModeToLabel: Record<ChatMode, string> = {
-  [ChatMode.Chat]: 'Chat',
-  [ChatMode.Dev]: 'Developer',
-  [ChatMode.Editor]: 'Editor',
-  [ChatMode.Image]: 'Image',
-  [ChatMode.Training]: 'Training',
-  [ChatMode.Planning]: 'Planning',
-  [ChatMode.Code]: 'Code',
-  [ChatMode.Document]: 'Document',
-  [ChatMode.Audio]: 'Audio'
-};
-
-/**
- * Maps chat modes to icon names
- */
-export const chatModeToIcon: Record<ChatMode, string> = {
-  [ChatMode.Chat]: 'message-circle',
-  [ChatMode.Dev]: 'code',
-  [ChatMode.Editor]: 'code',
-  [ChatMode.Image]: 'image',
-  [ChatMode.Training]: 'graduation-cap',
-  [ChatMode.Planning]: 'clipboard-list',
-  [ChatMode.Code]: 'terminal',
-  [ChatMode.Document]: 'file-text',
-  [ChatMode.Audio]: 'headphones'
-};
-
-/**
- * Maps chat positions to their string representations
- */
-export const chatPositionToString: Record<ChatPosition, string> = {
-  [ChatPosition.BottomRight]: 'bottom-right',
-  [ChatPosition.BottomLeft]: 'bottom-left',
-  [ChatPosition.TopRight]: 'top-right',
-  [ChatPosition.TopLeft]: 'top-left'
-};
-
-/**
- * Maps chat positions to display labels
- */
-export const chatPositionToLabel: Record<ChatPosition, string> = {
-  [ChatPosition.BottomRight]: 'Bottom Right',
-  [ChatPosition.BottomLeft]: 'Bottom Left',
-  [ChatPosition.TopRight]: 'Top Right',
-  [ChatPosition.TopLeft]: 'Top Left'
-};
-
-/**
- * Maps database strings to chat modes
- */
-export const databaseStringToChatMode = (mode: string): ChatMode => {
-  const normalizedMode = mode.toLowerCase().trim();
-  
-  switch (normalizedMode) {
-    case 'chat':
+export function uiModeToChatMode(uiMode: string): ChatMode {
+  switch (uiMode) {
+    case 'standard':
       return ChatMode.Chat;
-    case 'dev':
     case 'editor':
-    case 'development':
       return ChatMode.Dev;
     case 'image':
       return ChatMode.Image;
@@ -94,75 +26,164 @@ export const databaseStringToChatMode = (mode: string): ChatMode => {
     default:
       return ChatMode.Chat;
   }
-};
+}
 
 /**
- * Maps UI chat mode to database enum
+ * Convert a database chat mode to a UI-friendly mode
  */
-export const stringToChatMode = databaseStringToChatMode;
-
-/**
- * Maps token enforcement modes to display labels
- */
-export const tokenEnforcementModeToLabel: Record<TokenEnforcementMode, string> = {
-  [TokenEnforcementMode.None]: 'None',
-  [TokenEnforcementMode.Never]: 'Never',
-  [TokenEnforcementMode.Warn]: 'Warn',
-  [TokenEnforcementMode.Soft]: 'Soft',
-  [TokenEnforcementMode.Hard]: 'Hard',
-  [TokenEnforcementMode.Always]: 'Always',
-  [TokenEnforcementMode.RoleBased]: 'Role-Based',
-  [TokenEnforcementMode.ModeBased]: 'Mode-Based',
-  [TokenEnforcementMode.Strict]: 'Strict'
-};
-
-/**
- * Maps token enforcement modes to descriptions and visual styles
- */
-export const tokenEnforcementModeInfo: Record<TokenEnforcementMode, { label: string; description: string; color: string }> = {
-  [TokenEnforcementMode.None]: {
-    label: 'None',
-    description: 'No token enforcement',
-    color: 'text-gray-400'
-  },
-  [TokenEnforcementMode.Never]: {
-    label: 'Never',
-    description: 'No token enforcement',
-    color: 'text-gray-500'
-  },
-  [TokenEnforcementMode.Warn]: {
-    label: 'Warn',
-    description: 'Shows warnings but allows usage',
-    color: 'text-yellow-500'
-  },
-  [TokenEnforcementMode.Soft]: {
-    label: 'Soft',
-    description: 'Shows errors but allows usage with degraded results',
-    color: 'text-orange-500'
-  },
-  [TokenEnforcementMode.Hard]: {
-    label: 'Hard',
-    description: 'Prevents usage when tokens are depleted',
-    color: 'text-red-500'
-  },
-  [TokenEnforcementMode.Always]: {
-    label: 'Always',
-    description: 'Always enforces token limits without exceptions',
-    color: 'text-red-700'
-  },
-  [TokenEnforcementMode.RoleBased]: {
-    label: 'Role-Based',
-    description: 'Enforcement varies by user role',
-    color: 'text-blue-500'
-  },
-  [TokenEnforcementMode.ModeBased]: {
-    label: 'Mode-Based',
-    description: 'Enforcement varies by chat mode',
-    color: 'text-purple-500'
-  },
-  [TokenEnforcementMode.Strict]: {
-    label: 'Strict',
-    description: 'Strict enforcement with detailed logging',
-    color: 'text-red-600'
+export function chatModeToUiMode(mode: ChatMode): UiChatMode {
+  switch (mode) {
+    case ChatMode.Chat:
+      return 'standard';
+    case ChatMode.Dev:
+    case ChatMode.Editor:
+      return 'editor';
+    case ChatMode.Image:
+      return 'image';
+    case ChatMode.Training:
+      return 'training';
+    case ChatMode.Planning:
+      return 'planning';
+    case ChatMode.Code:
+      return 'code';
+    case ChatMode.Document:
+      return 'document';
+    case ChatMode.Audio:
+      return 'audio';
+    default:
+      return 'standard';
   }
-};
+}
+
+/**
+ * Convert ChatMode enum to icon name
+ */
+export function chatModeToIcon(mode: ChatMode): string {
+  switch (mode) {
+    case ChatMode.Chat:
+      return 'message-circle';
+    case ChatMode.Dev:
+    case ChatMode.Editor:
+      return 'code';
+    case ChatMode.Image:
+      return 'image';
+    case ChatMode.Training:
+      return 'graduation-cap';
+    case ChatMode.Planning:
+      return 'clipboard-list';
+    case ChatMode.Code:
+      return 'terminal';
+    case ChatMode.Document:
+      return 'file-text';
+    case ChatMode.Audio:
+      return 'headphones';
+    default:
+      return 'message-circle';
+  }
+}
+
+/**
+ * Convert database string to ChatMode enum
+ */
+export function databaseStringToChatMode(mode: string): ChatMode {
+  switch (mode.toLowerCase()) {
+    case 'chat':
+      return ChatMode.Chat;
+    case 'dev':
+    case 'editor':
+      return ChatMode.Dev;
+    case 'image':
+      return ChatMode.Image;
+    case 'training':
+      return ChatMode.Training;
+    case 'planning':
+      return ChatMode.Planning;
+    case 'code':
+      return ChatMode.Code;
+    case 'document':
+      return ChatMode.Document;
+    case 'audio':
+      return ChatMode.Audio;
+    default:
+      return ChatMode.Chat;
+  }
+}
+
+/**
+ * Convert ChatMode enum to database-friendly string
+ */
+export function chatModeToString(mode: ChatMode): string {
+  switch (mode) {
+    case ChatMode.Chat:
+      return 'chat';
+    case ChatMode.Dev:
+    case ChatMode.Editor:
+      return 'dev';
+    case ChatMode.Image:
+      return 'image';
+    case ChatMode.Training:
+      return 'training';
+    case ChatMode.Planning:
+      return 'planning';
+    case ChatMode.Code:
+      return 'code';
+    case ChatMode.Document:
+      return 'document';
+    case ChatMode.Audio:
+      return 'audio';
+    default:
+      return 'chat';
+  }
+}
+
+/**
+ * Get a friendly label for a message role
+ */
+export function getRoleLabel(role: MessageRole): string {
+  switch (role) {
+    case MessageRole.User:
+      return 'User';
+    case MessageRole.Assistant:
+      return 'Assistant';
+    case MessageRole.System:
+      return 'System';
+    case MessageRole.Error:
+      return 'Error';
+    case MessageRole.Tool:
+      return 'Tool';
+    case MessageRole.Function:
+      return 'Function';
+    default:
+      return 'Unknown';
+  }
+}
+
+/**
+ * Get a friendly label for a message type
+ */
+export function getMessageTypeLabel(type: MessageType): string {
+  switch (type) {
+    case MessageType.Text:
+      return 'Text';
+    case MessageType.Command:
+      return 'Command';
+    case MessageType.System:
+      return 'System';
+    case MessageType.Image:
+      return 'Image';
+    case MessageType.Training:
+      return 'Training';
+    case MessageType.Code:
+      return 'Code';
+    case MessageType.File:
+      return 'File';
+    case MessageType.Audio:
+      return 'Audio';
+    case MessageType.Link:
+      return 'Link';
+    case MessageType.Document:
+      return 'Document';
+    default:
+      return 'Unknown';
+  }
+}

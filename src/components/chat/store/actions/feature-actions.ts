@@ -1,102 +1,105 @@
 
 import { ChatState } from '../types/chat-store-types';
-import { createToggleActions } from './feature/toggle';
-import { ChatMode } from '@/types/chat/enums';
-import { logger } from '@/services/chat/LoggingService';
-import { FeatureActions, SetState, GetState } from './feature/types';
+import { Provider } from '../../types/provider-types';
+import { createFeatureToggleActions } from './feature/toggle';
+import { createProviderActions } from './feature/provider';
+import { ChatMode, ChatPosition } from '@/types/chat/enums';
+import { SetState, GetState } from './feature/types';
 
 /**
- * Creates feature-related actions for the chat store
+ * Create feature-related actions for the chat store
  */
 export const createFeatureActions = (
   set: SetState<ChatState>,
   get: GetState<ChatState>
-): FeatureActions => {
-  // Get toggle-specific actions
-  const toggleActions = createToggleActions(set, get);
+) => {
+  // Get the feature toggle actions
+  const featureToggleActions = createFeatureToggleActions(set, get);
+  
+  // Get the provider actions
+  const providerActions = createProviderActions(set, get);
   
   return {
-    // Feature toggle actions
-    toggleFeature: toggleActions.toggleFeature,
-    enableFeature: toggleActions.enableFeature,
-    disableFeature: toggleActions.disableFeature,
-    setFeatureState: toggleActions.setFeatureState,
+    ...featureToggleActions,
+    ...providerActions,
     
-    // Position actions
-    togglePosition: toggleActions.togglePosition,
-    setPosition: toggleActions.setPosition,
+    /**
+     * Set the current model
+     */
+    setModel: (model: string) => {
+      set({ selectedModel: model }, false, { type: 'feature/setModel', model });
+    },
     
-    // Provider actions
-    updateProviders: toggleActions.updateProviders,
-    updateChatProvider: toggleActions.updateChatProvider,
+    /**
+     * Set the current mode
+     */
+    setMode: (mode: string | ChatMode) => {
+      set({ currentMode: mode }, false, { type: 'feature/setMode', mode });
+    },
     
-    // Mode actions
+    /**
+     * Toggle between chat modes
+     */
     toggleMode: () => {
       const currentMode = get().currentMode;
-      const newMode = currentMode === ChatMode.Chat ? ChatMode.Dev : ChatMode.Chat;
       
-      logger.info('Toggling chat mode', { from: currentMode, to: newMode });
+      // Define mode toggle sequence
+      const toggleSequence = [
+        ChatMode.Chat,
+        ChatMode.Dev,
+        ChatMode.Image,
+        ChatMode.Training
+      ];
       
-      set({
-        currentMode: newMode
+      // Find current index or default to start
+      const currentIndex = toggleSequence.findIndex(m => m === currentMode);
+      const nextIndex = (currentIndex + 1) % toggleSequence.length;
+      
+      // Set the next mode
+      set({ currentMode: toggleSequence[nextIndex] }, false, { 
+        type: 'feature/toggleMode',
+        previousMode: currentMode,
+        newMode: toggleSequence[nextIndex]
       });
     },
     
-    setMode: (mode: string | ChatMode) => {
-      logger.info('Setting chat mode', { mode });
+    /**
+     * Toggle between positions
+     */
+    togglePosition: () => {
+      const currentPosition = get().position;
+      const newPosition = currentPosition === ChatPosition.BottomRight 
+        ? ChatPosition.BottomLeft 
+        : ChatPosition.BottomRight;
       
-      // Ensure we're setting a valid chat mode
-      let validMode: ChatMode;
-      if (typeof mode === 'string' && Object.values(ChatMode).includes(mode as ChatMode)) {
-        validMode = mode as ChatMode;
-      } else {
-        validMode = ChatMode.Chat; // Default fallback
-        logger.warn('Invalid chat mode provided, defaulting to Chat mode', { providedMode: mode });
-      }
-      
-      set({
-        currentMode: validMode
+      set({ position: newPosition }, false, { 
+        type: 'feature/togglePosition',
+        position: newPosition
       });
     },
     
-    // Model actions
-    setModel: (model: string) => {
-      logger.info('Setting selected model', { model });
-      
-      set((state) => ({
-        selectedModel: model
-      }));
+    /**
+     * Set the chat position
+     */
+    setPosition: (position: ChatPosition) => {
+      set({ position }, false, { type: 'feature/setPosition', position });
     },
     
-    // Dock actions
+    /**
+     * Toggle docked state
+     */
     toggleDocked: () => {
-      const isDocked = get().docked;
-      logger.info('Toggling docked state', { from: isDocked, to: !isDocked });
-      
-      set((state) => ({
-        docked: !state.docked
-      }));
+      const docked = get().docked;
+      set({ docked: !docked }, false, { type: 'feature/toggleDocked', docked: !docked });
     },
     
+    /**
+     * Set docked state
+     */
     setDocked: (docked: boolean) => {
-      logger.info('Setting docked state', { docked });
-      
-      set({
-        docked
-      });
-    },
-    
-    // Token actions
-    setTokenBalance: (balance: number) => {
-      logger.info('Setting token balance', { balance });
-      
-      set({
-        tokenBalance: balance
-      });
+      set({ docked }, false, { type: 'feature/setDocked', docked });
     }
   };
 };
 
-// Export all feature actions
-export * from './feature/toggle';
-export * from './feature/types';
+export type FeatureActions = ReturnType<typeof createFeatureActions>;
