@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useTokenManagement } from '@/hooks/useTokenManagement';
+import { useTokenStore } from '@/stores/token';
 import { useRoleStore } from '@/stores/role';
-import { TokenEnforcementMode, UIEnforcementMode } from '@/types/chat/enums';
+import { TokenEnforcementMode } from '@/types/chat/enums';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Coins } from 'lucide-react';
@@ -14,14 +15,13 @@ import { UserTokenCard } from './UserTokenCard';
 
 export function TokenControlPanel() {
   const { 
-    tokenBalance, 
-    isTokenEnforcementEnabled, 
+    balance, 
     enforcementMode,
-    toggleTokenEnforcement,
+    isEnforcementEnabled,
     setEnforcementMode,
-    addTokens,
-    isLoading
-  } = useTokenManagement();
+    setEnforcementEnabled,
+    addTokens
+  } = useTokenStore();
   
   const { hasRole } = useRoleStore();
   const isAdmin = hasRole('admin') || hasRole('super_admin');
@@ -49,7 +49,7 @@ export function TokenControlPanel() {
       }
       
       // Log the transaction for auditing
-      await supabase.from('token_transaction_log').insert({
+      await supabase.from('token_transactions').insert({
         user_id: userId,
         amount: parseInt(amount),
         transaction_type: 'admin_update',
@@ -70,61 +70,104 @@ export function TokenControlPanel() {
   const handleUpdateEnforcementConfig = async (mode: TokenEnforcementMode) => {
     setIsSubmitting(true);
     try {
-      // Update the feature flag for token enforcement
-      const { error } = await supabase
-        .from('feature_flags')
-        .upsert({
-          key: 'token_enforcement',
-          name: 'Token Enforcement',
-          description: 'Controls whether users need tokens to use the API',
-          enabled: isTokenEnforcementEnabled,
-          metadata: {
-            enforcementMode: mode
-          },
-          created_by: (await supabase.auth.getUser()).data.user?.id,
-          updated_by: (await supabase.auth.getUser()).data.user?.id
-        });
-      
-      if (error) throw error;
-      
-      // Update local state
       setEnforcementMode(mode);
-      toast.success('Token enforcement configuration updated');
+      
+      // For admin users, also update the global setting
+      if (isAdmin) {
+        const { error } = await supabase
+          .from('feature_flags')
+          .upsert({
+            key: 'token_enforcement',
+            enabled: mode !== TokenEnforcementMode.None && mode !== TokenEnforcementMode.Never,
+            metadata: {
+              mode: mode,
+              updated_by: (await supabase.auth.getUser()).data.user?.id,
+              updated_at: new Date().toISOString()
+            }
+          });
+        
+        if (error) throw error;
+      }
+      
+      toast.success('Token enforcement settings updated');
     } catch (error) {
-      console.error('Error updating token enforcement config:', error);
-      toast.error('Failed to update token configuration');
+      console.error('Error updating enforcement config:', error);
+      toast.error('Failed to update token enforcement settings');
     } finally {
       setIsSubmitting(false);
     }
   };
   
-  if (!isAdmin) {
-    return <UserTokenCard tokenBalance={tokenBalance} />;
-  }
+  // Toggle token enforcement on/off
+  const toggleTokenEnforcement = () => {
+    const newState = !isEnforcementEnabled;
+    setEnforcementEnabled(newState);
+    
+    // Update the global setting for admins
+    if (isAdmin) {
+      supabase
+        .from('feature_flags')
+        .upsert({
+          key: 'token_enforcement',
+          enabled: newState,
+          metadata: {
+            mode: newState ? enforcementMode : TokenEnforcementMode.None,
+            updated_by: (supabase.auth.getUser() as any).data?.user?.id,
+            updated_at: new Date().toISOString()
+          }
+        })
+        .then(({ error }) => {
+          if (error) {
+            console.error('Error updating feature flag:', error);
+            toast.error('Failed to update token enforcement setting');
+          }
+        });
+    }
+  };
+  
+  // Add tokens to current user
+  const handleAddTokens = async (amount: number) => {
+    setIsSubmitting(true);
+    try {
+      await addTokens(amount, "admin_action");
+      toast.success(`Added ${amount} tokens to your account`);
+    } catch (error) {
+      console.error('Error adding tokens:', error);
+      toast.error('Failed to add tokens');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Coins className="h-5 w-5" />
-            Token System Management
-          </CardTitle>
-          <CardDescription>
-            Configure token enforcement and manage user token balances
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="enforcement" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="enforcement">System Settings</TabsTrigger>
-              <TabsTrigger value="users">User Management</TabsTrigger>
-              {isSuperAdmin && <TabsTrigger value="advanced">Advanced</TabsTrigger>}
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          <Coins className="mr-2 h-6 w-6 text-yellow-500" />
+          Token Management
+        </CardTitle>
+        <CardDescription>
+          Configure token settings and manage user balances
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-4">
+          <UserTokenCard 
+            balance={balance} 
+            onAddTokens={handleAddTokens} 
+            isSubmitting={isSubmitting}
+          />
+          
+          <Tabs defaultValue="enforcement" className="mt-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="enforcement">Enforcement</TabsTrigger>
+              {isAdmin && <TabsTrigger value="users">User Management</TabsTrigger>}
+              <TabsTrigger value="advanced">Advanced</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="enforcement">
+            <TabsContent value="enforcement" className="mt-4">
               <EnforcementTab 
-                isTokenEnforcementEnabled={isTokenEnforcementEnabled}
+                isTokenEnforcementEnabled={isEnforcementEnabled}
                 enforcementMode={enforcementMode}
                 toggleTokenEnforcement={toggleTokenEnforcement}
                 handleUpdateEnforcementConfig={handleUpdateEnforcementConfig}
@@ -132,27 +175,27 @@ export function TokenControlPanel() {
               />
             </TabsContent>
             
-            <TabsContent value="users">
-              <UserManagementTab 
-                isSubmitting={isSubmitting}
-                onUpdateUserTokens={handleUpdateUserTokens}
-              />
-            </TabsContent>
-            
-            {isSuperAdmin && (
-              <TabsContent value="advanced">
-                <AdvancedTab 
-                  tokenBalance={tokenBalance}
-                  enforcementMode={enforcementMode}
-                  addTokens={addTokens}
-                  handleUpdateEnforcementConfig={handleUpdateEnforcementConfig}
+            {isAdmin && (
+              <TabsContent value="users" className="mt-4">
+                <UserManagementTab 
+                  handleUpdateUserTokens={handleUpdateUserTokens}
                   isSubmitting={isSubmitting}
                 />
               </TabsContent>
             )}
+            
+            <TabsContent value="advanced" className="mt-4">
+              <AdvancedTab 
+                tokenBalance={balance}
+                enforcementMode={enforcementMode}
+                addTokens={handleAddTokens}
+                handleUpdateEnforcementConfig={handleUpdateEnforcementConfig}
+                isSubmitting={isSubmitting}
+              />
+            </TabsContent>
           </Tabs>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

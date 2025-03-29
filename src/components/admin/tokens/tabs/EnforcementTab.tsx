@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TokenEnforcementMode } from '@/types/chat/enums';
+import { tokenEnforcementModeToLabel } from '@/utils/token-utils';
 
 interface EnforcementTabProps {
   isTokenEnforcementEnabled: boolean;
@@ -48,10 +49,18 @@ export function EnforcementTab({
             <SelectValue placeholder="Select enforcement mode" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={TokenEnforcementMode.Hard}>Hard (Block operations)</SelectItem>
-            <SelectItem value={TokenEnforcementMode.Soft}>Soft (Degrade functionality)</SelectItem>
-            <SelectItem value={TokenEnforcementMode.Warn}>Warn only (Allow operations)</SelectItem>
-            <SelectItem value={TokenEnforcementMode.None}>None (Disable enforcement)</SelectItem>
+            <SelectItem value={TokenEnforcementMode.Hard}>
+              {tokenEnforcementModeToLabel[TokenEnforcementMode.Hard]} (Block operations)
+            </SelectItem>
+            <SelectItem value={TokenEnforcementMode.Soft}>
+              {tokenEnforcementModeToLabel[TokenEnforcementMode.Soft]} (Degrade functionality)
+            </SelectItem>
+            <SelectItem value={TokenEnforcementMode.Warn}>
+              {tokenEnforcementModeToLabel[TokenEnforcementMode.Warn]} (Allow operations)
+            </SelectItem>
+            <SelectItem value={TokenEnforcementMode.None}>
+              {tokenEnforcementModeToLabel[TokenEnforcementMode.None]} (Disable enforcement)
+            </SelectItem>
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground mt-1">
