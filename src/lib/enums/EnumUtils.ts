@@ -217,6 +217,59 @@ export class EnumUtils {
         return MessageType.Text; // Default fallback
     }
   }
+  
+  /**
+   * Convert string to MessageRole with fallback
+   */
+  static stringToMessageRole(role: string): MessageRole {
+    const normalizedRole = role?.toLowerCase().trim();
+    
+    switch (normalizedRole) {
+      case 'user':
+        return MessageRole.User;
+      case 'assistant':
+        return MessageRole.Assistant;
+      case 'system':
+        return MessageRole.System;
+      case 'error':
+        return MessageRole.Error;
+      case 'tool':
+        return MessageRole.Tool;
+      case 'function':
+        return MessageRole.Function;
+      default:
+        return MessageRole.User; // Default fallback
+    }
+  }
+  
+  /**
+   * Convert MessageRole to string representation for database
+   */
+  static messageRoleToString(role: MessageRole): string {
+    return role.toString();
+  }
+  
+  /**
+   * Get human-readable label for a MessageRole
+   */
+  static getMessageRoleLabel(role: MessageRole): string {
+    switch (role) {
+      case MessageRole.User:
+        return 'User';
+      case MessageRole.Assistant:
+        return 'Assistant';
+      case MessageRole.System:
+        return 'System';
+      case MessageRole.Error:
+        return 'Error';
+      case MessageRole.Tool:
+        return 'Tool';
+      case MessageRole.Function:
+        return 'Function';
+      default:
+        return 'Unknown';
+    }
+  }
 
   /**
    * Convert string to TaskType enum with fallback
@@ -241,6 +294,10 @@ export class EnumUtils {
         return TaskType.Extraction;
       case 'classification':
         return TaskType.Classification;
+      case 'transformation':
+        return TaskType.Transformation;
+      case 'recommendation':
+        return TaskType.Recommendation;
       case 'structured_output':
         return TaskType.StructuredOutput;
       case 'admin_query':
@@ -259,10 +316,6 @@ export class EnumUtils {
         return TaskType.ImageGeneration;
       case 'code_generation':
         return TaskType.CodeGeneration;
-      case 'transformation':
-        return TaskType.Transformation;
-      case 'recommendation':
-        return TaskType.Recommendation;
       default:
         return TaskType.Other; // Default fallback
     }
@@ -375,5 +428,44 @@ export class EnumUtils {
       default:
         return 'message-circle';
     }
+  }
+  
+  /**
+   * Convert string to MessageStatus with fallback
+   */
+  static stringToMessageStatus(status: string): MessageStatus {
+    const normalizedStatus = status?.toLowerCase().trim();
+    
+    switch (normalizedStatus) {
+      case 'pending':
+        return MessageStatus.Pending;
+      case 'sending':
+        return MessageStatus.Sending;
+      case 'sent':
+        return MessageStatus.Sent;
+      case 'received':
+        return MessageStatus.Received;
+      case 'error':
+        return MessageStatus.Error;
+      case 'failed':
+        return MessageStatus.Failed;
+      case 'retrying':
+        return MessageStatus.Retrying;
+      case 'cached':
+        return MessageStatus.Cached;
+      case 'canceled':
+        return MessageStatus.Canceled;
+      case 'delivered':
+        return MessageStatus.Delivered;
+      default:
+        return MessageStatus.Pending; // Default fallback
+    }
+  }
+  
+  /**
+   * Convert MessageStatus to string representation for database
+   */
+  static messageStatusToString(status: MessageStatus): string {
+    return status.toString();
   }
 }

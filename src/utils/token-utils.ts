@@ -88,3 +88,16 @@ export function getEnforcementModeLabel(mode: TokenEnforcementMode): string {
       return "Unknown";
   }
 }
+
+// Mapping of enforcement modes to labels for use in components
+export const tokenEnforcementModeToLabel: Record<TokenEnforcementMode, string> = {
+  [TokenEnforcementMode.None]: 'None',
+  [TokenEnforcementMode.Warn]: 'Warning Only',
+  [TokenEnforcementMode.Soft]: 'Soft Enforcement',
+  [TokenEnforcementMode.Hard]: 'Hard Enforcement',
+  [TokenEnforcementMode.Always]: 'Always Enforce',
+  [TokenEnforcementMode.Never]: 'Never Enforce',
+  [TokenEnforcementMode.RoleBased]: 'Role-Based',
+  [TokenEnforcementMode.ModeBased]: 'Mode-Based',
+  [TokenEnforcementMode.Strict]: 'Strict Enforcement'
+};

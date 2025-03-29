@@ -78,7 +78,10 @@ export function TokenControlPanel() {
           .from('feature_flags')
           .upsert({
             key: 'token_enforcement',
+            name: 'Token Enforcement',
+            description: 'Controls whether token limits are enforced for users',
             enabled: mode !== TokenEnforcementMode.None && mode !== TokenEnforcementMode.Never,
+            rollout_percentage: 100,
             metadata: {
               mode: mode,
               updated_by: (await supabase.auth.getUser()).data.user?.id,
@@ -109,7 +112,10 @@ export function TokenControlPanel() {
         .from('feature_flags')
         .upsert({
           key: 'token_enforcement',
+          name: 'Token Enforcement',
+          description: 'Controls whether token limits are enforced for users',
           enabled: newState,
+          rollout_percentage: 100,
           metadata: {
             mode: newState ? enforcementMode : TokenEnforcementMode.None,
             updated_by: (supabase.auth.getUser() as any).data?.user?.id,

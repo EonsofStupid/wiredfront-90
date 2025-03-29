@@ -7,16 +7,16 @@ import { Loader2 } from 'lucide-react';
 
 interface UserManagementTabProps {
   isSubmitting: boolean;
-  onUpdateUserTokens: (userId: string, amount: string) => Promise<void>;
+  handleUpdateUserTokens: (userId: string, amount: string) => Promise<void>;
 }
 
-export function UserManagementTab({ isSubmitting, onUpdateUserTokens }: UserManagementTabProps) {
+export function UserManagementTab({ isSubmitting, handleUpdateUserTokens }: UserManagementTabProps) {
   const [userId, setUserId] = useState('');
   const [amount, setAmount] = useState('10');
 
   const handleSubmit = () => {
     if (userId && amount) {
-      onUpdateUserTokens(userId, amount);
+      handleUpdateUserTokens(userId, amount);
     }
   };
 
