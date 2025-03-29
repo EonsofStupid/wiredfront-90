@@ -1,8 +1,6 @@
 
 import { ChatMode } from '@/types/chat/enums';
 
-export { TokenEnforcementMode } from '@/types/chat/tokens';
-
 /**
  * Convert ChatMode enum to database-friendly string
  */
@@ -59,50 +57,46 @@ export interface ChatModeDefinition {
   description: string;
   icon: string;
   requiredFeatures?: string[];
-  isEnabled?: boolean;
 }
 
 /**
- * Default chat modes
+ * Default chat modes available in the application
  */
 export const DEFAULT_CHAT_MODES: ChatModeDefinition[] = [
   {
     id: ChatMode.Chat,
     name: 'Chat',
-    description: 'Standard conversation',
-    icon: 'MessageSquare',
-    isEnabled: true
+    description: 'Standard chat interface',
+    icon: 'message-circle'
   },
   {
     id: ChatMode.Dev,
     name: 'Developer',
-    description: 'Code assistance',
-    icon: 'Code',
-    requiredFeatures: ['codeAssistant'],
-    isEnabled: true
+    description: 'Coding assistant and editor integration',
+    icon: 'code'
   },
   {
     id: ChatMode.Image,
     name: 'Image',
-    description: 'Create images',
-    icon: 'Image',
-    requiredFeatures: ['imageGeneration'],
-    isEnabled: true
+    description: 'Image generation and manipulation',
+    icon: 'image'
   },
   {
     id: ChatMode.Training,
     name: 'Training',
-    description: 'Learning assistant',
-    icon: 'GraduationCap',
-    requiredFeatures: ['training'],
-    isEnabled: true
+    description: 'Educational mode with guided learning',
+    icon: 'book-open'
   },
   {
     id: ChatMode.Planning,
     name: 'Planning',
-    description: 'Project planning',
-    icon: 'ListTodo',
-    requiredFeatures: ['planning'],
-    isEnabled: false
+    description: 'Task and project planning',
+    icon: 'trello'
+  },
+  {
+    id: ChatMode.Code,
+    name: 'Code',
+    description: 'Focused code generation',
+    icon: 'terminal'
   }
 ];

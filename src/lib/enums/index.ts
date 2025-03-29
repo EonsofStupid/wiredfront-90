@@ -2,6 +2,7 @@
 import { ChatMode, MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
 import { UiChatMode, databaseModeToUiMode, uiModeToChatMode } from '@/components/chat/types/enums-mapper';
 import { chatModeForDatabase, databaseStringToChatMode } from '@/components/chat/types/chat-modes';
+import { EnumUtilsExtensions } from './EnumUtilsExtensions';
 
 /**
  * Utility functions for working with enums in the application
@@ -26,11 +27,7 @@ export class EnumUtils {
    * @returns The parsed enum value or the fallback
    */
   static safeParse(enumName: string, value: string, fallback: string): string {
-    try {
-      return this.validate(enumName, value);
-    } catch (error) {
-      return fallback;
-    }
+    return EnumUtilsExtensions.safeParse(enumName, value, fallback);
   }
 
   /**
@@ -45,23 +42,7 @@ export class EnumUtils {
     // Implementation would vary based on the enum
     // Here's a simple example for ChatMode
     if (enumName === 'ChatMode') {
-      const normalizedMode = normalizedValue.toLowerCase();
-      
-      switch (normalizedMode) {
-        case 'chat':
-        case 'standard':
-          return 'chat';
-        case 'dev':
-        case 'developer':
-        case 'editor':
-          return 'dev';
-        case 'image':
-          return 'image';
-        case 'training':
-          return 'training';
-        default:
-          return null;
-      }
+      return EnumUtilsExtensions.stringToChatMode(normalizedValue).toString();
     }
     
     return null;
@@ -110,65 +91,14 @@ export class EnumUtils {
     }
   }
 
-  /**
-   * Convert UI mode to database ChatMode enum
-   */
-  static uiModeToChatMode(uiMode: UiChatMode): ChatMode {
-    return uiModeToChatMode[uiMode];
-  }
-
-  /**
-   * Convert database ChatMode enum to UI mode
-   */
-  static chatModeToUiMode(chatMode: ChatMode): UiChatMode {
-    return databaseModeToUiMode[chatMode];
-  }
-
-  /**
-   * Convert string to ChatMode enum
-   */
-  static stringToChatMode(mode: string): ChatMode {
-    const normalizedMode = mode.trim().toLowerCase();
-    
-    switch (normalizedMode) {
-      case 'chat':
-      case 'standard':
-        return ChatMode.Chat;
-      case 'dev':
-      case 'developer':
-      case 'editor':
-        return ChatMode.Dev;
-      case 'image':
-        return ChatMode.Image;
-      case 'training':
-        return ChatMode.Training;
-      case 'planning':
-        return ChatMode.Planning;
-      case 'code':
-        return ChatMode.Code;
-      default:
-        return ChatMode.Chat;
-    }
-  }
-  
-  /**
-   * Convert ChatMode enum to database string
-   */
-  static chatModeForDatabase(mode: ChatMode): string {
-    return chatModeForDatabase(mode);
-  }
-  
-  /**
-   * Convert database string to ChatMode enum
-   */
-  static databaseStringToChatMode(mode: string): ChatMode {
-    return databaseStringToChatMode(mode);
-  }
-  
-  /**
-   * Convert message type to string
-   */
-  static messageTypeToString(type: MessageType): string {
-    return type.toString();
-  }
+  // Add all extension methods to the main class
+  static uiModeToChatMode = EnumUtilsExtensions.uiModeToChatMode;
+  static chatModeToUiMode = EnumUtilsExtensions.chatModeToUiMode;
+  static stringToChatMode = EnumUtilsExtensions.stringToChatMode;
+  static chatModeForDatabase = EnumUtilsExtensions.chatModeForDatabase;
+  static databaseStringToChatMode = EnumUtilsExtensions.databaseStringToChatMode;
+  static messageTypeToString = EnumUtilsExtensions.messageTypeToString;
+  static messageRoleToString = EnumUtilsExtensions.messageRoleToString;
+  static messageStatusToString = EnumUtilsExtensions.messageStatusToString;
+  static stringToEnforcementMode = EnumUtilsExtensions.stringToEnforcementMode;
 }

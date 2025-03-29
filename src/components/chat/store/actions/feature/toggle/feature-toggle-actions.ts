@@ -1,124 +1,119 @@
 
-import { ChatState } from '../../../types/chat-store-types';
-import { FeatureKey, SetState, GetState } from '../types';
+import { ChatState } from '../../../types/store-types';
+import { SetState, GetState, FeatureKey } from '../types';
 import { logger } from '@/services/chat/LoggingService';
+import { logFeatureToggle } from '../helpers';
 
 /**
- * Logs feature toggle events
- */
-export const logFeatureToggle = (
-  feature: string,
-  oldValue: boolean | undefined,
-  newValue: boolean
-) => {
-  logger.info(`Feature toggle: ${feature}`, { 
-    feature, 
-    oldValue, 
-    newValue, 
-    changed: oldValue !== newValue 
-  });
-};
-
-/**
- * Creates feature toggle actions for the chat store
+ * Creates actions for toggling features
  */
 export const createFeatureToggleActions = (
-  set: (state: Partial<ChatState> | ((state: ChatState) => Partial<ChatState>), replace?: boolean, action?: any) => void,
-  get: () => ChatState
-) => ({
-  /**
-   * Toggle a feature on/off
-   */
-  toggleFeature: (feature: FeatureKey) => {
-    const features = get().features;
-    const oldValue = features[feature as keyof typeof features];
-    const newValue = !oldValue;
+  set: SetState<ChatState>,
+  get: GetState<ChatState>
+) => {
+  return {
+    /**
+     * Toggle a feature on/off
+     */
+    toggleFeature: (key: FeatureKey) => {
+      const { features } = get();
+      const currentValue = features[key];
+      const newValue = !currentValue;
+      
+      logger.info(`Toggling feature: ${String(key)}`, { 
+        feature: String(key), 
+        oldValue: currentValue, 
+        newValue 
+      });
+      
+      // Log to analytics if appropriate
+      logFeatureToggle(String(key), currentValue, newValue);
+      
+      // Update state
+      set(state => ({
+        features: {
+          ...state.features,
+          [key]: newValue
+        }
+      }));
+    },
     
-    logger.info(`Toggling feature ${feature}`, { newValue });
-    
-    // Log the change to analytics/database
-    logFeatureToggle(feature, oldValue, newValue);
-    
-    set({
-      features: {
-        ...features,
-        [feature]: newValue
+    /**
+     * Enable a specific feature
+     */
+    enableFeature: (key: FeatureKey) => {
+      const { features } = get();
+      const currentValue = features[key];
+      
+      // Skip if already enabled
+      if (currentValue === true) {
+        return;
       }
-    }, false, { type: 'features/toggle', feature, value: newValue });
-  },
-  
-  /**
-   * Enable a feature
-   */
-  enableFeature: (feature: FeatureKey) => {
-    const features = get().features;
-    const oldValue = features[feature as keyof typeof features];
+      
+      logger.info(`Enabling feature: ${String(key)}`);
+      
+      // Log to analytics
+      logFeatureToggle(String(key), currentValue, true);
+      
+      // Update state
+      set(state => ({
+        features: {
+          ...state.features,
+          [key]: true
+        }
+      }));
+    },
     
-    // Don't do anything if already enabled
-    if (oldValue === true) {
-      return;
+    /**
+     * Disable a specific feature
+     */
+    disableFeature: (key: FeatureKey) => {
+      const { features } = get();
+      const currentValue = features[key];
+      
+      // Skip if already disabled
+      if (currentValue === false) {
+        return;
+      }
+      
+      logger.info(`Disabling feature: ${String(key)}`);
+      
+      // Log to analytics
+      logFeatureToggle(String(key), currentValue, false);
+      
+      // Update state
+      set(state => ({
+        features: {
+          ...state.features,
+          [key]: false
+        }
+      }));
+    },
+    
+    /**
+     * Set a feature's state directly
+     */
+    setFeatureState: (key: FeatureKey, enabled: boolean) => {
+      const { features } = get();
+      const currentValue = features[key];
+      
+      // Skip if value hasn't changed
+      if (currentValue === enabled) {
+        return;
+      }
+      
+      logger.info(`Setting feature state: ${String(key)} = ${enabled}`);
+      
+      // Log to analytics
+      logFeatureToggle(String(key), currentValue, enabled);
+      
+      // Update state
+      set(state => ({
+        features: {
+          ...state.features,
+          [key]: enabled
+        }
+      }));
     }
-    
-    logger.info(`Enabling feature ${feature}`);
-    
-    // Log the change to analytics/database
-    logFeatureToggle(feature, oldValue, true);
-    
-    set({
-      features: {
-        ...features,
-        [feature]: true
-      }
-    }, false, { type: 'features/enable', feature });
-  },
-  
-  /**
-   * Disable a feature
-   */
-  disableFeature: (feature: FeatureKey) => {
-    const features = get().features;
-    const oldValue = features[feature as keyof typeof features];
-    
-    // Don't do anything if already disabled
-    if (oldValue === false) {
-      return;
-    }
-    
-    logger.info(`Disabling feature ${feature}`);
-    
-    // Log the change to analytics/database
-    logFeatureToggle(feature, oldValue, false);
-    
-    set({
-      features: {
-        ...features,
-        [feature]: false
-      }
-    }, false, { type: 'features/disable', feature });
-  },
-  
-  /**
-   * Set a feature's state directly
-   */
-  setFeatureState: (feature: FeatureKey, isEnabled: boolean) => {
-    const features = get().features;
-    const oldValue = features[feature as keyof typeof features];
-    
-    // Don't do anything if the value is the same
-    if (oldValue === isEnabled) {
-      return;
-    }
-    
-    logger.info(`Setting feature ${feature} to ${isEnabled}`);
-    
-    // Log the change to analytics/database
-    logFeatureToggle(feature, oldValue, isEnabled);
-    
-    set({
-      features: {
-        ...features,
-        [feature]: isEnabled
-      }
-    }, false, { type: 'features/setState', feature, value: isEnabled });
-  }
-});
+  };
+};
