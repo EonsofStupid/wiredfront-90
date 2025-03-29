@@ -1,4 +1,4 @@
-import { ChatMode } from './enums';
+import { ChatMode } from '/enums';
 
 /**
  * Chat bridge events
