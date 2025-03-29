@@ -19,7 +19,7 @@ export class EnumUtilsExtensions {
    * Convert UI mode to database ChatMode enum
    */
   static uiModeToChatMode(uiMode: string): ChatMode {
-    return EnumUtils.uiModeToChatMode(uiMode);
+    return EnumUtils.stringToChatMode(uiMode);
   }
 
   /**

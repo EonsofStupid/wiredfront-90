@@ -4,15 +4,15 @@ import {
   MessageRole, 
   MessageStatus, 
   MessageType,
-  TaskType,
-  TokenEnforcementMode 
+  TokenEnforcementMode,
+  TaskType
 } from '@/components/chat/types/chat/enums';
 import { chatModeToDbString, dbStringToChatMode } from '@/components/chat/types/chat/conversation';
 
 /**
  * Type representing UI-friendly chat modes
  */
-export type UiChatMode = 'chat' | 'dev' | 'image' | 'training' | 'code' | 'document';
+export type UiChatMode = 'chat' | 'dev' | 'image' | 'training' | 'code' | 'document' | 'audio' | 'planning';
 
 /**
  * Utility functions for enum handling
@@ -22,7 +22,7 @@ export const EnumUtils = {
    * Convert a string to a ChatMode enum value
    */
   stringToChatMode(mode: string): ChatMode {
-    switch (mode.toLowerCase()) {
+    switch ((mode || '').toLowerCase()) {
       case 'chat': return ChatMode.Chat;
       case 'dev': 
       case 'editor': return ChatMode.Dev;
@@ -40,18 +40,7 @@ export const EnumUtils = {
    * Convert a ChatMode enum to a string
    */
   chatModeToString(mode: ChatMode): string {
-    switch (mode) {
-      case ChatMode.Chat: return 'chat';
-      case ChatMode.Dev: 
-      case ChatMode.Editor: return 'dev';
-      case ChatMode.Image: return 'image';
-      case ChatMode.Training: return 'training';
-      case ChatMode.Planning: return 'planning';
-      case ChatMode.Code: return 'code';
-      case ChatMode.Document: return 'document';
-      case ChatMode.Audio: return 'audio';
-      default: return 'chat';
-    }
+    return mode.toString();
   },
 
   /**
@@ -64,9 +53,28 @@ export const EnumUtils = {
       case ChatMode.Editor: return 'dev';
       case ChatMode.Image: return 'image';
       case ChatMode.Training: return 'training';
+      case ChatMode.Planning: return 'planning';
       case ChatMode.Code: return 'code';
       case ChatMode.Document: return 'document';
+      case ChatMode.Audio: return 'audio';
       default: return 'chat';
+    }
+  },
+
+  /**
+   * Convert a UI mode to ChatMode enum
+   */
+  uiModeToChatMode(mode: UiChatMode): ChatMode {
+    switch (mode) {
+      case 'chat': return ChatMode.Chat;
+      case 'dev': return ChatMode.Dev;
+      case 'image': return ChatMode.Image;
+      case 'training': return ChatMode.Training;
+      case 'planning': return ChatMode.Planning;
+      case 'code': return ChatMode.Code;
+      case 'document': return ChatMode.Document;
+      case 'audio': return ChatMode.Audio;
+      default: return ChatMode.Chat;
     }
   },
 
@@ -81,7 +89,7 @@ export const EnumUtils = {
    * Convert a string to a MessageRole enum value
    */
   stringToMessageRole(role: string): MessageRole {
-    switch (role.toLowerCase()) {
+    switch ((role || '').toLowerCase()) {
       case 'user': return MessageRole.User;
       case 'assistant': return MessageRole.Assistant;
       case 'system': return MessageRole.System;
@@ -103,7 +111,7 @@ export const EnumUtils = {
    * Convert a string to a MessageType enum value
    */
   stringToMessageType(type: string): MessageType {
-    switch (type.toLowerCase()) {
+    switch ((type || '').toLowerCase()) {
       case 'text': return MessageType.Text;
       case 'command': return MessageType.Command;
       case 'system': return MessageType.System;
@@ -129,7 +137,7 @@ export const EnumUtils = {
    * Convert a string to a MessageStatus enum value
    */
   stringToMessageStatus(status: string): MessageStatus {
-    switch (status.toLowerCase()) {
+    switch ((status || '').toLowerCase()) {
       case 'pending': return MessageStatus.Pending;
       case 'sending': return MessageStatus.Sending;
       case 'sent': return MessageStatus.Sent;
@@ -162,7 +170,7 @@ export const EnumUtils = {
    * Convert a string to a TokenEnforcementMode enum value
    */
   stringToTokenEnforcementMode(mode: string): TokenEnforcementMode {
-    switch (mode.toLowerCase()) {
+    switch ((mode || '').toLowerCase()) {
       case 'none': return TokenEnforcementMode.None;
       case 'warn': return TokenEnforcementMode.Warn;
       case 'soft': return TokenEnforcementMode.Soft;
@@ -173,6 +181,45 @@ export const EnumUtils = {
       case 'mode_based': return TokenEnforcementMode.ModeBased;
       case 'strict': return TokenEnforcementMode.Strict;
       default: return TokenEnforcementMode.Warn;
+    }
+  },
+
+  /**
+   * Convert a string to TaskType enum
+   */
+  stringToTaskType(type: string): TaskType {
+    switch ((type || '').toLowerCase()) {
+      case 'chat': return TaskType.Chat;
+      case 'generation': return TaskType.Generation;
+      case 'completion': return TaskType.Completion;
+      case 'summarization': return TaskType.Summarization;
+      case 'translation': return TaskType.Translation;
+      case 'analysis': return TaskType.Analysis;
+      case 'extraction': return TaskType.Extraction;
+      case 'classification': return TaskType.Classification;
+      case 'transformation': return TaskType.Transformation;
+      case 'recommendation': return TaskType.Recommendation;
+      case 'structured_output': return TaskType.StructuredOutput;
+      case 'admin_query': return TaskType.AdminQuery;
+      case 'system_diagnostic': return TaskType.SystemDiagnostic;
+      case 'cache_query': return TaskType.CacheQuery;
+      case 'vector_index': return TaskType.VectorIndex;
+      case 'model_validation': return TaskType.ModelValidation;
+      case 'question_answering': return TaskType.QuestionAnswering;
+      case 'image_generation': return TaskType.ImageGeneration;
+      case 'code_generation': return TaskType.CodeGeneration;
+      case 'code_explanation': return TaskType.CodeExplanation;
+      case 'bug_fix': return TaskType.BugFix;
+      case 'code_review': return TaskType.CodeReview;
+      case 'refactoring': return TaskType.Refactoring;
+      case 'project_context': return TaskType.ProjectContext;
+      case 'image_editing': return TaskType.ImageEditing;
+      case 'document_search': return TaskType.DocumentSearch;
+      case 'tutoring': return TaskType.Tutoring;
+      case 'problem_solving': return TaskType.ProblemSolving;
+      case 'explanation': return TaskType.Explanation;
+      case 'conversation': return TaskType.Conversation;
+      default: return TaskType.Other;
     }
   },
 
@@ -191,6 +238,33 @@ export const EnumUtils = {
       case ChatMode.Document: return 'Document';
       case ChatMode.Audio: return 'Audio';
       default: return 'Chat';
+    }
+  },
+
+  /**
+   * Safely parse a string to an enum with fallback
+   */
+  safeParse(enumName: string, value: string, fallback: string = ''): any {
+    try {
+      switch (enumName.toLowerCase()) {
+        case 'chatmode':
+          return this.stringToChatMode(value);
+        case 'messagerole':
+          return this.stringToMessageRole(value);
+        case 'messagetype':
+          return this.stringToMessageType(value);
+        case 'messagestatus':
+          return this.stringToMessageStatus(value);
+        case 'tasktype':
+          return this.stringToTaskType(value);
+        case 'tokenenforcement':
+          return this.stringToTokenEnforcementMode(value);
+        default:
+          return fallback;
+      }
+    } catch (error) {
+      console.error(`Error parsing enum ${enumName} with value ${value}`, error);
+      return fallback;
     }
   }
 };
