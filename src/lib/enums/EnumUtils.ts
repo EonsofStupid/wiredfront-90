@@ -1,4 +1,3 @@
-
 import { 
   ChatMode, 
   MessageRole, 
@@ -6,7 +5,9 @@ import {
   MessageType,
   TaskType,
   TokenEnforcementMode,
-  stringToChatMode
+  stringToChatMode,
+  getChatModeLabel,
+  getChatModeIcon
 } from '@/types/enums';
 
 /**
@@ -90,6 +91,54 @@ export class EnumUtils {
       case 'document': return ChatMode.Document;
       case 'audio': return ChatMode.Audio;
       default: return ChatMode.Chat;
+    }
+  }
+
+  /**
+   * Get the icon for a chat mode
+   */
+  static getChatModeIcon(mode: ChatMode): string {
+    return getChatModeIcon(mode);
+  }
+
+  /**
+   * Get a human-readable label for a chat mode
+   */
+  static getChatModeLabel(mode: ChatMode): string {
+    return getChatModeLabel(mode);
+  }
+
+  /**
+   * Get a human-readable label for a message role
+   */
+  static getMessageRoleLabel(role: MessageRole): string {
+    switch (role) {
+      case MessageRole.User: return 'User';
+      case MessageRole.Assistant: return 'Assistant';
+      case MessageRole.System: return 'System';
+      case MessageRole.Error: return 'Error';
+      case MessageRole.Tool: return 'Tool';
+      case MessageRole.Function: return 'Function';
+      default: return 'Unknown';
+    }
+  }
+
+  /**
+   * Get a human-readable label for a message type
+   */
+  static getMessageTypeLabel(type: MessageType): string {
+    switch (type) {
+      case MessageType.Text: return 'Text';
+      case MessageType.Command: return 'Command';
+      case MessageType.System: return 'System';
+      case MessageType.Image: return 'Image';
+      case MessageType.Training: return 'Training';
+      case MessageType.Code: return 'Code';
+      case MessageType.File: return 'File';
+      case MessageType.Audio: return 'Audio';
+      case MessageType.Link: return 'Link';
+      case MessageType.Document: return 'Document';
+      default: return 'Unknown';
     }
   }
 

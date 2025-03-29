@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -8,9 +7,9 @@ import { useChatStore } from "@/components/chat/store/chatStore";
 import { ArrowLeftRight, Pin, PinOff, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
-import { FeatureKey } from "@/components/chat/types/feature-types";
+import { FeatureKey } from "@/types/feature-types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ChatPosition } from "@/components/chat/types/chat/enums";
+import { ChatPosition } from "@/types/enums";
 
 export const ChatFeatureSettings = () => {
   const { position, togglePosition, docked, toggleDocked } = useChatStore();

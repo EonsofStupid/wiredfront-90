@@ -1,15 +1,21 @@
 
-import { ChatMode, MessageRole } from '@/components/chat/types/chat/enums';
+import { ChatMode, MessageRole } from '@/types/enums';
 import { EventEmitter } from '@/utils/event-emitter';
 import { v4 as uuid } from 'uuid';
-import { Provider, ProviderType } from '@/components/chat/types/provider-types';
+import { Provider } from '@/types/provider-types';
 import { logger } from '@/services/chat/LoggingService';
-import { SendMessageOptions, ChatSettings, ChatBridgeState, ChatBridgeEvent } from '@/components/chat/types/chat/bridge';
+import { 
+  SendMessageOptions, 
+  ChatSettings, 
+  ChatBridgeState, 
+  ChatBridgeEvent,
+  ChatBridgeInterface
+} from '@/components/chat/types/chat/bridge';
 
 /**
  * ChatBridge provides a unified interface for interacting with AI providers
  */
-export class ChatBridge {
+export class ChatBridge implements ChatBridgeInterface {
   private bridgeId: string;
   private eventEmitter: EventEmitter;
   private state: ChatBridgeState = {
@@ -20,12 +26,10 @@ export class ChatBridge {
     isWaitingResponse: false,
     currentProviderId: null,
     currentConversationId: null,
-    features: [],
-    position: {
-      x: 0,
-      y: 0
-    },
-    docked: true
+    features: {},
+    position: 'bottom-right',
+    docked: true,
+    isMessageLoading: false
   };
   
   private settings: ChatSettings = {
@@ -203,6 +207,13 @@ export class ChatBridge {
   public getSettings(): ChatSettings {
     return { ...this.settings };
   }
+
+  /**
+   * Get user settings (for compatibility)
+   */
+  public getUserSettings(): any {
+    return this.getSettings();
+  }
   
   /**
    * Get current provider
@@ -248,6 +259,102 @@ export class ChatBridge {
    */
   public emit<T = any>(event: ChatBridgeEvent, payload: T): void {
     this.eventEmitter.emit(event, payload);
+  }
+
+  /**
+   * Toggle feature flag
+   */
+  public toggleFeature(key: string): void {
+    const features = { ...this.state.features };
+    features[key] = !features[key];
+    this.setState({ features });
+  }
+
+  /**
+   * Toggle position of chat
+   */
+  public togglePosition(): void {
+    const currentPosition = this.state.position;
+    const newPosition = currentPosition === 'bottom-right' ? 'bottom-left' : 'bottom-right';
+    this.setState({ position: newPosition });
+  }
+
+  /**
+   * Toggle docked state
+   */
+  public toggleDocked(): void {
+    this.setState({ docked: !this.state.docked });
+  }
+
+  /**
+   * Update token information
+   */
+  public updateTokens(value: any): void {
+    // This would update token information
+    logger.info('Updating tokens', { value });
+  }
+
+  /**
+   * Set admin settings
+   */
+  public setAdminSettings(settings: any): void {
+    logger.info('Setting admin settings', { settings });
+    // Implementation would depend on the specific settings
+  }
+
+  /**
+   * Send a custom event
+   */
+  public sendEvent(event: string, payload?: any): void {
+    logger.info('Sending custom event', { event, payload });
+    this.eventEmitter.emit(event as any, payload);
+  }
+
+  /**
+   * Create a new conversation
+   */
+  public createConversation(params: any): void {
+    logger.info('Creating conversation', { params });
+    // Implementation would create a conversation
+  }
+
+  /**
+   * Switch to a different conversation
+   */
+  public switchConversation(id: string): void {
+    logger.info('Switching conversation', { id });
+    this.setState({ currentConversationId: id });
+    this.eventEmitter.emit('conversation:changed', { id });
+  }
+
+  /**
+   * Archive a conversation
+   */
+  public archiveConversation(id: string): void {
+    logger.info('Archiving conversation', { id });
+    // Implementation would archive the conversation
+  }
+
+  /**
+   * Delete a conversation
+   */
+  public deleteConversation(id: string): void {
+    logger.info('Deleting conversation', { id });
+    // Implementation would delete the conversation
+  }
+
+  /**
+   * Toggle chat open/closed state
+   */
+  public toggleChat(): void {
+    this.setState({ isOpen: !this.state.isOpen });
+  }
+
+  /**
+   * Update chat settings (for compatibility)
+   */
+  public updateChatSettings(settings: any): void {
+    this.updateSettings(settings);
   }
 }
 

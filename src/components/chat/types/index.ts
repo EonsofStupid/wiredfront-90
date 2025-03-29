@@ -1,6 +1,8 @@
 
 // Re-export from centralized enum source
 export * from '@/types/enums';
+export * from '@/types/feature-types';
+export * from '@/types/provider-types';
 
 // Re-export types from each category
 export * from './chat/message';
@@ -11,17 +13,13 @@ export * from './chat/bridge';
 // Export chat modes separately to avoid duplicates
 export {
   UiChatMode,
-  uiModeToChatMode as UiModeToChatMode,
-  databaseModeToUiMode as ChatModeToUiMode,
+  uiModeToChatMode,
+  databaseModeToUiMode,
   ModeConfig, 
   DEFAULT_CHAT_MODES,
   getAvailableChatModes,
   isChatModeAvailable
 } from './chat/chat-modes';
-
-// Re-export from feature-types and provider-types
-export * from './feature-types';
-export * from './provider-types';
 
 // Re-export specialized utilities for backward compatibility
 export * from './communication';

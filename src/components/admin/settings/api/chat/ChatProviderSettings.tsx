@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,9 +17,9 @@ import {
 import { SettingsContainer } from "../../layout/SettingsContainer";
 import { toast } from "sonner";
 import { useChatBridge } from "@/modules/ChatBridge";
-import { ChatPosition } from "@/components/chat/types/enums";
+import { ChatPosition } from "@/types/enums";
 import { EnumUtils } from "@/lib/enums";
-import { Provider } from "@/components/chat/types/providers";
+import { Provider } from "@/types/provider-types";
 
 // Define provider types aligned with central types
 type ChatProviderType = 'openai' | 'anthropic' | 'gemini' | 'local' | 'perplexity' | 'llama';
@@ -181,7 +180,6 @@ export function ChatProviderSettings() {
           </TabsTrigger>
         </TabsList>
         
-        {/* Providers Tab */}
         <TabsContent value="providers">
           <Card>
             <CardHeader>
@@ -223,7 +221,6 @@ export function ChatProviderSettings() {
                   </div>
                 ))}
                 
-                {/* Add new provider form */}
                 <div className="pt-6 border-t">
                   <h3 className="text-sm font-medium mb-4">Add New Provider</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -284,7 +281,6 @@ export function ChatProviderSettings() {
           </Card>
         </TabsContent>
         
-        {/* Features Tab */}
         <TabsContent value="features">
           <Card>
             <CardHeader>
@@ -362,7 +358,6 @@ export function ChatProviderSettings() {
           </Card>
         </TabsContent>
         
-        {/* Appearance Tab */}
         <TabsContent value="appearance">
           <Card>
             <CardHeader>
@@ -414,7 +409,6 @@ export function ChatProviderSettings() {
           </Card>
         </TabsContent>
         
-        {/* Sessions Tab */}
         <TabsContent value="sessions">
           <Card>
             <CardHeader>
