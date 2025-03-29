@@ -5,10 +5,18 @@
 export interface ProviderModel {
   id: string;
   name: string;
+  displayName?: string;  // Added for compatibility
+  description?: string;
   maxTokens?: number;
   contextWindow?: number;
   supportedModes: string[];
   isDefault?: boolean;
+  tokenizingMethod?: string;
+  pricing?: {
+    input: number;
+    output: number;
+    unit: string;
+  };
 }
 
 /**
@@ -17,6 +25,7 @@ export interface ProviderModel {
 export interface Provider {
   id: string;
   name: string;
+  displayName?: string;  // Added for compatibility
   description?: string;
   apiType: string;
   models: ProviderModel[];
@@ -31,4 +40,8 @@ export interface Provider {
   };
   endpoints?: Record<string, string>;
   maxRequestTokens?: number;
+  baseUrl?: string;
+  configSchema?: Record<string, any>;
+  metadata?: Record<string, any>;
+  icon?: string;
 }

@@ -1,6 +1,7 @@
 
 import { ChatMode, MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
 import { UiChatMode, databaseModeToUiMode, uiModeToChatMode } from '@/components/chat/types/enums-mapper';
+import { chatModeForDatabase, databaseStringToChatMode } from '@/components/chat/types/chat-modes';
 
 /**
  * Utility functions for working with enums in the application
@@ -76,7 +77,7 @@ export class EnumUtils {
     // Here's a simple example
     switch (enumName) {
       case 'ChatMode':
-        return ['chat', 'dev', 'image', 'training', 'editor'];
+        return ['chat', 'dev', 'image', 'training', 'editor', 'planning', 'code'];
       case 'UserRole':
         return ['admin', 'user', 'guest', 'moderator'];
       case 'ChatTier':
@@ -141,8 +142,33 @@ export class EnumUtils {
         return ChatMode.Image;
       case 'training':
         return ChatMode.Training;
+      case 'planning':
+        return ChatMode.Planning;
+      case 'code':
+        return ChatMode.Code;
       default:
         return ChatMode.Chat;
     }
+  }
+  
+  /**
+   * Convert ChatMode enum to database string
+   */
+  static chatModeForDatabase(mode: ChatMode): string {
+    return chatModeForDatabase(mode);
+  }
+  
+  /**
+   * Convert database string to ChatMode enum
+   */
+  static databaseStringToChatMode(mode: string): ChatMode {
+    return databaseStringToChatMode(mode);
+  }
+  
+  /**
+   * Convert message type to string
+   */
+  static messageTypeToString(type: MessageType): string {
+    return type.toString();
   }
 }

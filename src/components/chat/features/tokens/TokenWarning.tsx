@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useTokenStore } from '../../store/token';
 import { Button } from '@/components/ui/button';
+import { TokenEnforcementMode } from '@/types/chat/tokens';
 
 interface TokenWarningProps {
   balance: number;
@@ -19,7 +21,7 @@ export const TokenWarning = ({
 }: TokenWarningProps) => {
   const { enforcementMode } = useTokenStore();
   
-  if (balance > threshold || enforcementMode === 'never') {
+  if (balance > threshold || enforcementMode === TokenEnforcementMode.None) {
     return null;
   }
   
@@ -31,7 +33,7 @@ export const TokenWarning = ({
         <p>You have {balance} tokens remaining in your account.</p>
         {balance <= 0 ? (
           <p className="font-medium mt-1">
-            {enforcementMode === 'strict' 
+            {enforcementMode === TokenEnforcementMode.Hard 
               ? 'You cannot send messages until you add more tokens.' 
               : 'Your experience may be limited.'}
           </p>

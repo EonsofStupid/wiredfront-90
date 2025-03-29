@@ -3,7 +3,7 @@ import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { TokenEnforcementMode } from '@/types/chat/enums';
+import { TokenEnforcementMode } from '@/types/chat/tokens';
 
 interface EnforcementTabProps {
   isTokenEnforcementEnabled: boolean;
@@ -48,10 +48,10 @@ export function EnforcementTab({
             <SelectValue placeholder="Select enforcement mode" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={TokenEnforcementMode.Always}>Always (All users)</SelectItem>
-            <SelectItem value={TokenEnforcementMode.Never}>Never (Testing only)</SelectItem>
-            <SelectItem value={TokenEnforcementMode.RoleBased}>Role-based (By user role)</SelectItem>
-            <SelectItem value={TokenEnforcementMode.ModeBased}>Mode-based (By chat mode)</SelectItem>
+            <SelectItem value={TokenEnforcementMode.Hard}>Hard (Block operations)</SelectItem>
+            <SelectItem value={TokenEnforcementMode.Soft}>Soft (Degrade functionality)</SelectItem>
+            <SelectItem value={TokenEnforcementMode.Warn}>Warn only (Allow operations)</SelectItem>
+            <SelectItem value={TokenEnforcementMode.None}>None (Disable enforcement)</SelectItem>
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground mt-1">

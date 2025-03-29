@@ -14,7 +14,9 @@ export const TokenDisplay = () => {
   const freeQueryPercentage = (queriesUsed / freeQueryLimit) * 100;
   
   // Format the last updated date
-  const lastUpdatedFormatted = formatDistanceToNow(new Date(lastUpdated), { addSuffix: true });
+  const lastUpdatedFormatted = lastUpdated ? 
+    formatDistanceToNow(new Date(lastUpdated), { addSuffix: true }) : 
+    'Not yet updated';
   
   return (
     <div className="p-3 border rounded-lg bg-muted/30">

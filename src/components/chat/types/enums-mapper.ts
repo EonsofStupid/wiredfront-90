@@ -4,7 +4,7 @@ import { ChatMode, ChatPosition, MessageRole, MessageStatus, MessageType } from 
 import { TokenEnforcementMode } from '@/types/chat/tokens';
 
 // Type definition for UI mode
-export type UiChatMode = 'standard' | 'editor' | 'image' | 'training';
+export type UiChatMode = 'standard' | 'editor' | 'image' | 'training' | 'planning' | 'code';
 
 // Mapping from database mode (ChatMode enum) to UI representation
 export const databaseModeToUiMode: Record<ChatMode, UiChatMode> = {
@@ -13,9 +13,8 @@ export const databaseModeToUiMode: Record<ChatMode, UiChatMode> = {
   [ChatMode.Editor]: 'editor',
   [ChatMode.Image]: 'image',
   [ChatMode.Training]: 'training',
-  // Handle potential future ChatMode enum values
-  ...(ChatMode as any).Planning && { [(ChatMode as any).Planning]: 'standard' },
-  ...(ChatMode as any).Code && { [(ChatMode as any).Code]: 'editor' }
+  [ChatMode.Planning]: 'planning',
+  [ChatMode.Code]: 'code'
 };
 
 // Mapping from UI mode to database mode (ChatMode enum)
@@ -23,7 +22,9 @@ export const uiModeToChatMode: Record<UiChatMode, ChatMode> = {
   'standard': ChatMode.Chat,
   'editor': ChatMode.Dev,
   'image': ChatMode.Image,
-  'training': ChatMode.Training
+  'training': ChatMode.Training,
+  'planning': ChatMode.Planning,
+  'code': ChatMode.Code
 };
 
 // Mapping strings to chat modes
@@ -43,11 +44,9 @@ export const stringToChatMode = (mode: string): ChatMode => {
     case 'training':
       return ChatMode.Training;
     case 'planning':
-      // Handle potential future enum value
-      return (ChatMode as any).Planning || ChatMode.Chat;
+      return ChatMode.Planning;
     case 'code':
-      // Handle potential future enum value
-      return (ChatMode as any).Code || ChatMode.Dev;
+      return ChatMode.Code;
     default:
       return ChatMode.Chat;
   }
@@ -56,7 +55,8 @@ export const stringToChatMode = (mode: string): ChatMode => {
 // Mapping from chat position enum to CSS classes
 export const positionToClasses: Record<ChatPosition, string> = {
   [ChatPosition.BottomRight]: 'bottom-right',
-  [ChatPosition.BottomLeft]: 'bottom-left'
+  [ChatPosition.BottomLeft]: 'bottom-left',
+  [ChatPosition.Custom]: 'custom'
 };
 
 // Mapping from message role enum to CSS classes
@@ -76,20 +76,34 @@ export const messageStatusToLabel: Record<MessageStatus, string> = {
   [MessageStatus.Sent]: 'Sent',
   [MessageStatus.Received]: 'Received',
   [MessageStatus.Error]: 'Error',
+  [MessageStatus.Failed]: 'Failed',
+  [MessageStatus.Retrying]: 'Retrying',
+  [MessageStatus.Cached]: 'Cached',
   [MessageStatus.Canceled]: 'Canceled',
-  // Handle potential future MessageStatus enum values
-  ...(MessageStatus as any).Delivered && { [(MessageStatus as any).Delivered]: 'Delivered' }
+  [MessageStatus.Delivered]: 'Delivered'
 };
 
 // Mapping from message type enum to icon names
 export const messageTypeToIcon: Record<MessageType, string> = {
   [MessageType.Text]: 'message-square',
+  [MessageType.Command]: 'terminal',
   [MessageType.Code]: 'code',
   [MessageType.Image]: 'image',
   [MessageType.Audio]: 'mic',
   [MessageType.File]: 'file',
   [MessageType.Link]: 'link',
-  [MessageType.System]: 'info'
+  [MessageType.System]: 'info',
+  [MessageType.Training]: 'graduation-cap'
+};
+
+// Helper function to convert message type to string
+export const messageTypeToString = (type: MessageType): string => {
+  return type.toString();
+};
+
+// Helper to convert chat mode to database string
+export const chatModeToString = (mode: ChatMode): string => {
+  return mode.toString();
 };
 
 // Mapping from token enforcement mode to user-friendly labels

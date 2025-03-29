@@ -8,7 +8,10 @@
 export enum MessageRole {
   User = 'user',
   Assistant = 'assistant',
-  System = 'system'
+  System = 'system',
+  Error = 'error',
+  Tool = 'tool',
+  Function = 'function'
 }
 
 // Message types
@@ -19,18 +22,23 @@ export enum MessageType {
   Image = 'image',
   Training = 'training',
   Code = 'code',
-  File = 'file'
+  File = 'file',
+  Audio = 'audio',
+  Link = 'link'
 }
 
 // Message status
 export enum MessageStatus {
   Pending = 'pending',
+  Sending = 'sending',
   Sent = 'sent',
   Received = 'received',
   Error = 'error',
   Failed = 'failed',
   Retrying = 'retrying',
-  Cached = 'cached'
+  Cached = 'cached',
+  Canceled = 'canceled',
+  Delivered = 'delivered'
 }
 
 // Chat position types
@@ -49,11 +57,16 @@ export enum UIEnforcementMode {
 
 // Token enforcement modes (database values)
 export enum TokenEnforcementMode {
+  None = 'none',     // No enforcement
+  Warn = 'warn',     // Warn user but allow operations
+  Soft = 'soft',     // Degrade functionality but allow some operations
+  Hard = 'hard',     // Strictly enforce limits and block operations
+  
+  // Legacy values for backward compatibility
   Always = 'always',
   Never = 'never',
   RoleBased = 'role_based',
   ModeBased = 'mode_based',
-  Warn = 'warn',
   Strict = 'strict'
 }
 
@@ -63,14 +76,19 @@ export enum ChatMode {
   Dev = 'dev',
   Image = 'image',
   Training = 'training',
-  Editor = 'editor' // Alias for 'dev'
+  Editor = 'editor', // Alias for 'dev'
+  Planning = 'planning',
+  Code = 'code'
 }
 
 // Type constants for use in type assertions
 export const MessageRoles = {
   User: MessageRole.User,
   Assistant: MessageRole.Assistant,
-  System: MessageRole.System
+  System: MessageRole.System,
+  Error: MessageRole.Error,
+  Tool: MessageRole.Tool,
+  Function: MessageRole.Function
 } as const;
 
 export const MessageTypes = {
@@ -80,17 +98,22 @@ export const MessageTypes = {
   Image: MessageType.Image,
   Training: MessageType.Training,
   Code: MessageType.Code,
-  File: MessageType.File
+  File: MessageType.File,
+  Audio: MessageType.Audio,
+  Link: MessageType.Link
 } as const;
 
 export const MessageStatuses = {
   Pending: MessageStatus.Pending,
+  Sending: MessageStatus.Sending,
   Sent: MessageStatus.Sent,
   Received: MessageStatus.Received,
   Error: MessageStatus.Error,
   Failed: MessageStatus.Failed,
   Retrying: MessageStatus.Retrying,
-  Cached: MessageStatus.Cached
+  Cached: MessageStatus.Cached,
+  Canceled: MessageStatus.Canceled,
+  Delivered: MessageStatus.Delivered
 } as const;
 
 export const ChatPositions = {
@@ -106,11 +129,14 @@ export const UIEnforcementModes = {
 } as const;
 
 export const TokenEnforcementModes = {
+  None: TokenEnforcementMode.None,
+  Warn: TokenEnforcementMode.Warn,
+  Soft: TokenEnforcementMode.Soft,
+  Hard: TokenEnforcementMode.Hard,
   Always: TokenEnforcementMode.Always,
   Never: TokenEnforcementMode.Never,
   RoleBased: TokenEnforcementMode.RoleBased,
   ModeBased: TokenEnforcementMode.ModeBased,
-  Warn: TokenEnforcementMode.Warn,
   Strict: TokenEnforcementMode.Strict
 } as const;
 
@@ -119,7 +145,9 @@ export const ChatModes = {
   Dev: ChatMode.Dev,
   Image: ChatMode.Image,
   Training: ChatMode.Training,
-  Editor: ChatMode.Editor
+  Editor: ChatMode.Editor,
+  Planning: ChatMode.Planning,
+  Code: ChatMode.Code
 } as const;
 
 // UI mode to database mode mappings
@@ -127,7 +155,9 @@ export const uiModeToDatabaseMode: Record<string, ChatMode> = {
   'standard': ChatMode.Chat,
   'editor': ChatMode.Dev,
   'image': ChatMode.Image,
-  'training': ChatMode.Training
+  'training': ChatMode.Training,
+  'planning': ChatMode.Planning,
+  'code': ChatMode.Code
 };
 
 // Database mode to UI mode mappings
@@ -136,5 +166,7 @@ export const databaseModeToUiMode: Record<ChatMode, string> = {
   [ChatMode.Dev]: 'editor',
   [ChatMode.Editor]: 'editor',
   [ChatMode.Image]: 'image',
-  [ChatMode.Training]: 'training'
+  [ChatMode.Training]: 'training',
+  [ChatMode.Planning]: 'planning',
+  [ChatMode.Code]: 'code'
 };

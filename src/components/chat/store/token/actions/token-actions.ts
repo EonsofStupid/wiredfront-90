@@ -2,7 +2,7 @@
 import { TokenState, SetState, GetState } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
-import { TokenEnforcementMode } from '@/types/chat/enums';
+import { TokenEnforcementMode } from '@/types/chat/tokens';
 import { toJson } from '@/utils/json';
 
 /**
@@ -149,8 +149,8 @@ export const createTokenActions = (
       
       set({
         enforcementMode: mode,
-        enforcementEnabled: mode !== TokenEnforcementMode.Never, // Enable enforcement if not "never"
-        isEnforcementEnabled: mode !== TokenEnforcementMode.Never
+        enforcementEnabled: mode !== TokenEnforcementMode.None, // Enable enforcement if not "none"
+        isEnforcementEnabled: mode !== TokenEnforcementMode.None
       });
     },
     
@@ -163,21 +163,25 @@ export const createTokenActions = (
       set({
         enforcementEnabled: enabled,
         isEnforcementEnabled: enabled,
-        // If enabling enforcement, set mode to 'warn' if it was 'never'
-        enforcementMode: enabled && get().enforcementMode === TokenEnforcementMode.Never ? TokenEnforcementMode.Warn : get().enforcementMode
+        // If enabling enforcement, set mode to 'warn' if it was 'none'
+        enforcementMode: enabled && get().enforcementMode === TokenEnforcementMode.None 
+          ? TokenEnforcementMode.Warn 
+          : get().enforcementMode
       });
     },
     
     /**
      * Reset the token balance
      */
-    resetTokens: () => {
+    resetTokens: async (): Promise<boolean> => {
       logger.info('Resetting token balance');
       
       set({
         balance: 0,
         lastUpdated: new Date().toISOString()
       });
+      
+      return true;
     },
     
     /**
@@ -198,6 +202,56 @@ export const createTokenActions = (
       logger.info('Updating token settings', { settings });
       
       set({ ...settings });
+    },
+    
+    /**
+     * Initialize token data
+     */
+    initialize: async (): Promise<void> => {
+      // Implementation of initialize would fetch initial token data
+      logger.info('Initializing token data');
+    },
+    
+    /**
+     * Fetch token data from the database
+     */
+    fetchTokenData: async (): Promise<void> => {
+      // Implementation of fetchTokenData would refresh token data from DB
+      logger.info('Fetching token data');
+    },
+    
+    /**
+     * Set token warning threshold
+     */
+    setWarningThreshold: (percent: number) => {
+      logger.info('Setting token warning threshold', { percent });
+      
+      set({ warningThreshold: percent });
+    },
+    
+    /**
+     * Set token reset date
+     */
+    setResetDate: (date: string | null) => {
+      logger.info('Setting token reset date', { date });
+      
+      set({ resetDate: date });
+    },
+    
+    /**
+     * Set token balance
+     */
+    setBalance: (amount: number) => {
+      logger.info('Setting token balance directly', { amount });
+      
+      set({ balance: amount });
+    },
+    
+    /**
+     * Set token amount (alias for setTokenBalance for backward compatibility)
+     */
+    setTokens: async (amount: number, reason?: string): Promise<boolean> => {
+      return await get().setTokenBalance(amount);
     }
   };
 };

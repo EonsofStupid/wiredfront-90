@@ -13,6 +13,12 @@ export interface TokenState {
   warningThreshold: number;
   isLoading: boolean;
   error: Error | null;
+  lastUpdated: string;
+  tokensPerQuery: number;
+  freeQueryLimit: number;
+  queriesUsed: number;
+  enforcementEnabled: boolean;
+  isEnforcementEnabled: boolean;
 }
 
 export type SetState<T> = (
@@ -30,9 +36,13 @@ export interface TokenActions {
   spendTokens: (amount: number, reason?: string) => Promise<boolean>;
   setTokens: (amount: number, reason?: string) => Promise<boolean>;
   setEnforcementMode: (mode: TokenEnforcementMode) => void;
+  setEnforcementEnabled: (enabled: boolean) => void;
   setResetDate: (date: string | null) => void;
   setWarningThreshold: (percent: number) => void;
   resetTokens: () => Promise<boolean>;
+  resetQueriesUsed: () => void;
+  updateTokenSettings: (settings: Partial<TokenState>) => void;
+  setTokenBalance: (amount: number) => Promise<boolean>;
 }
 
 export interface TokenStore extends TokenState, TokenActions {}

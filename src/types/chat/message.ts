@@ -16,7 +16,7 @@ export interface Message {
   metadata: Record<string, any>;
   created_at: string;
   updated_at: string;
-  last_accessed: string;
+  last_accessed?: string;
   parent_message_id?: string;
   message_status: MessageStatus;
   is_minimized?: boolean;
@@ -35,6 +35,8 @@ export interface MessageCreateParams {
   type?: MessageType;
   metadata?: Record<string, any>;
   parent_message_id?: string;
+  user_id?: string; // Added for compatibility with database operations
+  id?: string; // Added for compatibility with database operations
 }
 
 /**
