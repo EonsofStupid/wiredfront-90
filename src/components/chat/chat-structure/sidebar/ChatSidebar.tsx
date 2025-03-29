@@ -1,15 +1,15 @@
 
 import React, { useState } from 'react';
 import { useChatStore } from '../../store/chatStore';
-import { useConversationManager } from '../../hooks/conversation';
+import { useConversationManager } from '../../hooks/conversation/useConversationManager';
 import { Conversation } from '@/types/chat/conversation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { MessageSquarePlus, Archive, Settings } from 'lucide-react';
+import { MessageSquarePlus } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatMode } from '@/types/chat/enums';
 import { ConversationList } from './ConversationList';
-import { EnumUtils } from '@/lib/enums';
+import { EnumUtils } from '@/lib/enums/EnumUtils';
 
 export function ChatSidebar() {
   const { currentMode } = useChatStore();
@@ -17,7 +17,11 @@ export function ChatSidebar() {
     activeConversations, 
     archivedConversations, 
     createConversation,
-    currentConversationId
+    currentConversationId,
+    switchConversation,
+    archiveConversation,
+    deleteConversation,
+    updateConversation
   } = useConversationManager();
   
   const [view, setView] = useState<'active' | 'archived'>('active');
@@ -35,13 +39,18 @@ export function ChatSidebar() {
       
       await createConversation({
         mode: chatMode,
-        title: `New ${EnumUtils.chatModeToUiMode(chatMode)} conversation`
+        title: `New ${EnumUtils.getChatModeLabel(chatMode)} conversation`
       });
     } catch (error) {
       console.error('Failed to create conversation:', error);
     } finally {
       setIsCreating(false);
     }
+  };
+
+  const handleRestoreConversation = async (id: string) => {
+    // Unarchive conversation
+    await updateConversation(id, { archived: false });
   };
   
   return (
@@ -75,21 +84,27 @@ export function ChatSidebar() {
         </Button>
       </div>
       
-      <ScrollArea className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto">
         {view === 'active' ? (
           <ConversationList 
             conversations={activeConversations}
             currentConversationId={currentConversationId}
             isArchived={false}
+            onSelectConversation={switchConversation}
+            onArchiveConversation={archiveConversation}
+            onDeleteConversation={deleteConversation}
           />
         ) : (
           <ConversationList 
             conversations={archivedConversations}
             currentConversationId={currentConversationId}
             isArchived={true}
+            onSelectConversation={switchConversation}
+            onRestoreConversation={handleRestoreConversation}
+            onDeleteConversation={deleteConversation}
           />
         )}
-      </ScrollArea>
+      </div>
       
       <div className="p-2 border-t border-border/50">
         <Button

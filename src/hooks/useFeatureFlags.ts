@@ -20,7 +20,7 @@ export function useFeatureFlags() {
    */
   const isEnabled = useCallback(
     (featureKey: FeatureKey) => {
-      return features[featureKey as keyof typeof features] || false;
+      return features[featureKey] || false;
     },
     [features]
   );
@@ -138,8 +138,8 @@ export function useFeatureFlags() {
         await supabase.from('feature_toggle_history').insert({
           user_id: userData.user.id,
           feature_name: featureKey,
-          old_value: features[featureKey as keyof typeof features] || false,
-          new_value: !features[featureKey as keyof typeof features],
+          old_value: features[featureKey] || false,
+          new_value: !features[featureKey],
           context
         });
         

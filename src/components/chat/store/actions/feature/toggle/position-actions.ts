@@ -1,11 +1,11 @@
 
 import { ChatState } from '../../../types/chat-store-types';
-import { SetState, GetState } from '../types';
 import { ChatPosition } from '@/types/chat/enums';
+import { SetState, GetState } from '../types';
 import { logger } from '@/services/chat/LoggingService';
 
 /**
- * Creates UI position-related actions for the chat store
+ * Creates position-related actions for the chat store
  */
 export const createPositionActions = (
   set: SetState<ChatState>,
@@ -13,40 +13,26 @@ export const createPositionActions = (
 ) => {
   return {
     /**
-     * Toggle the chat position between left and right
+     * Toggle the chat position between bottom-right and bottom-left
      */
     togglePosition: () => {
-      const currentPosition = get().position;
-      
-      const newPosition = currentPosition === ChatPosition.BottomRight 
+      const { position } = get();
+      const newPosition = position === ChatPosition.BottomRight 
         ? ChatPosition.BottomLeft 
         : ChatPosition.BottomRight;
       
-      logger.debug('Toggling chat position', { from: currentPosition, to: newPosition });
+      logger.info(`Toggling chat position to: ${newPosition}`);
       
       set({ position: newPosition });
-      
-      // Save the position preference to local storage
-      try {
-        localStorage.setItem('chat-position', newPosition);
-      } catch (e) {
-        logger.error('Failed to save position preference', e);
-      }
     },
     
     /**
-     * Set the chat position explicitly
+     * Set the chat position directly
      */
     setPosition: (position: ChatPosition) => {
-      logger.debug('Setting chat position', { position });
-      set({ position });
+      logger.info(`Setting chat position to: ${position}`);
       
-      // Save the position preference to local storage
-      try {
-        localStorage.setItem('chat-position', position);
-      } catch (e) {
-        logger.error('Failed to save position preference', e);
-      }
+      set({ position });
     }
   };
 };

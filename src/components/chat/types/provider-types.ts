@@ -1,50 +1,76 @@
 
-import { ProviderType } from '@/types/chat/communication';
+/**
+ * Types for AI providers
+ */
 
 /**
- * Interface for AI providers
+ * Provider type enum
  */
-export interface Provider {
-  id: string;
-  name: string;
-  type: ProviderType;
-  description?: string;
-  icon?: string;
-  isEnabled?: boolean;
-  isDefault?: boolean;
-  models?: ProviderModel[];
-  apiKey?: string;
-  endpointUrl?: string;
-  category?: 'chat' | 'image' | 'audio' | 'embeddings';
-  features?: string[];
+export enum ProviderType {
+  OpenAI = 'openai',
+  Anthropic = 'anthropic',
+  Gemini = 'gemini',
+  HuggingFace = 'huggingface',
+  AzureOpenAI = 'azure_openai',
+  Cohere = 'cohere',
+  LLaMA = 'llama',
+  Ollama = 'ollama',
+  Replicate = 'replicate',
+  StabilityAI = 'stabilityai',
+  Custom = 'custom'
 }
 
 /**
- * Interface for provider models
+ * Provider model interface
  */
 export interface ProviderModel {
   id: string;
   name: string;
+  contextLength: number;
   description?: string;
-  contextWindow?: number;
-  maxTokens?: number;
-  isEnabled?: boolean;
   isDefault?: boolean;
-  isStreaming?: boolean;
+  isEnabled?: boolean;
+  maxCompletionTokens?: number;
+  pricing?: {
+    input: number;
+    output: number;
+  };
+  capabilities?: string[];
+  metadata?: Record<string, any>;
 }
 
 /**
- * Validates a provider object
+ * Provider interface
  */
-export const validateProvider = (provider: Provider): boolean => {
-  if (!provider || typeof provider !== 'object') {
-    return false;
-  }
-  
-  // Check for required fields
-  if (!provider.id || !provider.name) {
-    return false;
-  }
-  
-  return true;
-};
+export interface Provider {
+  id: string;
+  name: string;
+  type: ProviderType | string;
+  isDefault: boolean;
+  isEnabled: boolean;
+  category: 'chat' | 'vision' | 'integration';
+  models?: ProviderModel[];
+  description?: string;
+  apiEndpoint?: string;
+  documentationUrl?: string;
+  iconUrl?: string;
+  isThirdParty?: boolean;
+  capabilities?: string[];
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Provider API key interface
+ */
+export interface ProviderApiKey {
+  id: string;
+  providerId: string;
+  key: string;
+  isActive: boolean;
+  name?: string;
+  createdAt: string;
+  lastUsed?: string;
+  expiresAt?: string;
+  usageCount?: number;
+  metadata?: Record<string, any>;
+}

@@ -2,7 +2,7 @@
 import { StateCreator } from 'zustand';
 import { ChatState } from '../types/chat-store-types';
 import { createToggleActions } from './feature/toggle';
-import { ChatMode } from '@/components/chat/types/chat-modes';
+import { ChatMode } from '@/types/chat/enums';
 import { logger } from '@/services/chat/LoggingService';
 
 export const createFeatureActions = (
@@ -25,7 +25,6 @@ export const createFeatureActions = (
     setPosition: toggleActions.setPosition,
     
     // Provider actions
-    updateProviders: toggleActions.updateProviders,
     updateChatProvider: toggleActions.updateChatProvider,
     
     // Mode actions
@@ -37,16 +36,16 @@ export const createFeatureActions = (
       
       set({
         currentMode: validMode
-      }, false, { type: 'chat/setMode' });
+      });
     },
     
     // Model actions
     setModel: (model: string) => {
-      logger.info('Setting selected model', { model });
+      logger.info('Selected model set', { model });
       
       set({
         selectedModel: model
-      }, false, { type: 'chat/setModel' });
+      });
     }
   };
 };

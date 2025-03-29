@@ -1,6 +1,5 @@
 
 import { ChatMode, ChatPosition } from '@/types/chat/enums';
-import { ChatState } from '../../types/chat-store-types';
 import { Provider } from '@/components/chat/types/provider-types';
 
 // Zustand setState and getState types

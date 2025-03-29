@@ -1,8 +1,8 @@
 
-import { ChatMode, MessageRole, MessageType } from './enums';
+import { ChatMode, MessageRole, MessageType, TaskType } from './enums';
 
 /**
- * Provider types supported by the system
+ * Provider type enum (for communication with APIs)
  */
 export enum ProviderType {
   OpenAI = 'openai',
@@ -13,11 +13,13 @@ export enum ProviderType {
   Cohere = 'cohere',
   LLaMA = 'llama',
   Ollama = 'ollama',
+  Replicate = 'replicate',
+  StabilityAI = 'stabilityai',
   Custom = 'custom'
 }
 
 /**
- * Vector database types supported by the system
+ * Vector database type enum
  */
 export enum VectorDbType {
   Pinecone = 'pinecone',
@@ -30,40 +32,72 @@ export enum VectorDbType {
 }
 
 /**
- * Task types for AI operations
- * Re-exported from the enums file to maintain a single source of truth
+ * Basic message envelope structure 
  */
-export { TaskType } from './enums';
+export interface MessageEnvelope {
+  id: string;
+  model: string;
+  prompt: string;
+  options?: {
+    temperature?: number;
+    maxTokens?: number;
+    topP?: number;
+    frequencyPenalty?: number;
+    presencePenalty?: number;
+    stop?: string[];
+    [key: string]: any;
+  };
+  task: TaskType;
+  metadata?: Record<string, any>;
+  traceId?: string;
+}
 
 /**
- * Extended task types (for internal code organization)
- * These extend the base TaskType but include more specialized operations
+ * Response envelope from AI providers
+ */
+export interface ResponseEnvelope {
+  id: string;
+  content: string;
+  model: string;
+  provider?: string;
+  usage: {
+    total: number;
+    prompt: number;
+    completion: number;
+    input?: number;
+    output?: number;
+  };
+  rag: {
+    used: boolean;
+    count: number;
+    sources: string[];
+    searchPerformed?: boolean;
+    chunksRetrieved?: number;
+    vectorDb?: string;
+  };
+  cache: {
+    hit: boolean;
+    key: string;
+    cacheHit?: boolean;
+    cacheTier?: string | null;
+  };
+  context: string[];
+  model_info: {
+    version: string;
+    params: Record<string, any>;
+    markedForFineTune?: boolean;
+    quality?: number | string;
+  };
+  created: number;
+  latency: number;
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Extended task types for specific use cases
  */
 export enum ExtendedTaskType {
-  // Standard task types from TaskType enum
   Chat = 'chat',
-  Conversation = 'conversation',
-  Generation = 'generation',
-  Completion = 'completion',
-  Summarization = 'summarization',
-  Translation = 'translation',
-  Analysis = 'analysis',
-  Extraction = 'extraction',
-  Classification = 'classification',
-  Transformation = 'transformation',
-  Recommendation = 'recommendation',
-  StructuredOutput = 'structured_output',
-  AdminQuery = 'admin_query',
-  SystemDiagnostic = 'system_diagnostic',
-  CacheQuery = 'cache_query',
-  VectorIndex = 'vector_index',
-  ModelValidation = 'model_validation',
-  QuestionAnswering = 'question_answering',
-  ImageGeneration = 'image_generation',
-  CodeGeneration = 'code_generation',
-  Other = 'other',
-  
-  // Extended specialized task types
   CodeExplanation = 'code_explanation',
   BugFix = 'bug_fix',
   CodeReview = 'code_review',
@@ -74,92 +108,4 @@ export enum ExtendedTaskType {
   ImageEditing = 'image_editing',
   DocumentSearch = 'document_search',
   ProjectContext = 'project_context'
-}
-
-/**
- * Message envelope for requests
- */
-export interface MessageEnvelope {
-  id: string;
-  sessionId?: string;
-  userId: string;
-  messages: any[];
-  model: string;
-  temperature?: number;
-  maxTokens?: number;
-  stop?: string[];
-  functions?: any[];
-  contextInfo?: {
-    projectId?: string;
-    files?: string[];
-    relevanceThreshold?: number;
-  };
-  metadata?: Record<string, any>;
-  
-  // Extended fields for the ModelBridge
-  taskType?: ExtendedTaskType | TaskType;
-  fallbackLevel?: number;
-  adminFlags?: Record<string, boolean>;
-  input?: string;
-  vectorInfo?: Record<string, any>;
-  cacheInfo?: Record<string, any>;
-  traceId?: string;
-}
-
-/**
- * Response envelope for completed requests
- */
-export interface ResponseEnvelope {
-  id: string;
-  sessionId?: string;
-  userId: string;
-  model: string;
-  content: string;
-  messages?: any[];
-  metadata?: Record<string, any>;
-  
-  // Extended fields for the ModelBridge
-  taskType?: ExtendedTaskType | TaskType;
-  tokensUsed?: {
-    total: number;
-    prompt: number;
-    completion: number;
-    input?: number;
-    output?: number;
-  };
-  processingTimeMs?: number;
-  fallbacksUsed?: string[];
-  vectorInfo?: {
-    used: boolean;
-    count: number;
-    sources: string[];
-    searchPerformed?: boolean;
-    chunksRetrieved?: number;
-    vectorDb?: string;
-  };
-  cacheInfo?: {
-    hit: boolean;
-    key: string;
-    cacheHit?: boolean;
-    cacheTier?: string;
-  };
-  fineTuneMetadata?: {
-    version: string;
-    params: Record<string, any>;
-    markedForFineTune?: boolean;
-    quality?: number;
-  };
-  output?: string;
-  provider?: string;
-  traceId?: string;
-}
-
-/**
- * Error response structure
- */
-export interface APIErrorResponse {
-  message: string;
-  type: string;
-  code?: string;
-  param?: string;
 }

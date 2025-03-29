@@ -1,58 +1,29 @@
 
-import { ChatMode, ChatPosition, MessageStatus } from '@/types/chat/enums';
-import { Message } from '@/types/chat/message';
-import { Conversation } from '@/types/chat/conversation';
-import { Provider } from '@/components/chat/types/provider-types';
+import { ChatMode, ChatPosition } from '@/types/chat/enums';
+import { Message } from '../../types/message-types';
+import { Provider } from '../../types/provider-types';
+import { FeatureKey } from '../../types/feature-types';
 
-// UI Chat Mode representation
-export type UiChatMode = 'standard' | 'editor' | 'image' | 'training' | 'planning' | 'code' | 'document' | 'audio';
-
-// Re-export the Provider type
-export type ChatProvider = Provider;
-
-// Chat window state
-export interface ChatWindowState {
-  isMinimized: boolean;
-  isVisible: boolean;
-  height: number;
-  width: number;
+/**
+ * UI state for chat components
+ */
+export interface ChatUIState {
+  sessionLoading: boolean;
+  messageLoading: boolean;
+  providerLoading: boolean;
 }
 
-// Chat session state
-export interface ChatSession {
-  id: string | null;
-  messages: Message[];
-  startTime: number | null;
-  mode: ChatMode;
-}
-
-// Chat state interface
+/**
+ * Full chat state including all required properties
+ */
 export interface ChatState {
-  // UI state
-  isOpen: boolean;
-  isMinimized: boolean;
-  userInput: string;
-  position: ChatPosition;
-  error: string | null;
-  docked: boolean;
-  showSidebar: boolean;
-  scale: number;
+  // Initialization
+  initialized: boolean;
   
-  // Session state
+  // Messages and input
   messages: Message[];
-  startTime: number | null;
-  currentSession: string | null;
-  sessions: Record<string, ChatSession>;
-  chatId: string | null;
+  userInput: string;
   isWaitingForResponse: boolean;
-  
-  // Provider state
-  currentProvider: Provider | null;
-  availableProviders: Provider[];
-  providers: {
-    currentProvider: Provider | null;
-    availableProviders: Provider[];
-  };
   
   // Selection state
   selectedModel: string;
@@ -60,67 +31,67 @@ export interface ChatState {
   
   // UI status
   modelFetchStatus: 'idle' | 'loading' | 'success' | 'error';
-  ui: {
-    sessionLoading: boolean;
-    messageLoading: boolean;
-    providerLoading: boolean;
-  };
-  
-  // Feature flags
-  features: {
-    voice: boolean;
-    rag: boolean;
-    darkMode: boolean;
-    imageGeneration: boolean;
-    multiFile: boolean;
-    ragSupport: boolean;
-    githubSync: boolean;
-    knowledgeBase: boolean;
-    tokenEnforcement: boolean;
-    standardChat: boolean;
-    training: boolean;
-    codeAssistant: boolean;
-    notifications: boolean;
-    modeSwitch: boolean;
-  };
-  
-  // Current modes
-  currentMode: ChatMode;
-  
-  // Custom UI state
-  customStyles: Record<string, string>;
-  
-  // Actions - these will be implemented by action creators
-  resetChatState: () => void;
-  setUserInput: (input: string) => void;
-  toggleChat: () => void;
-  toggleMinimize: () => void;
-  toggleSidebar: () => void;
-  toggleDocked: () => void;
-  resetInput: () => void;
-  setError: (error: string | null) => void;
-  setCurrentSession: (sessionId: string | null) => void;
-  setChatId: (id: string | null) => void;
-  setMode: (mode: ChatMode | string) => void;
-  setPosition: (position: ChatPosition) => void;
-  initializeChat: () => void;
-  setSessionLoading: (isLoading: boolean) => void;
-  setMessageLoading: (isLoading: boolean) => void;
-  setProviderLoading: (isLoading: boolean) => void;
-}
-
-// Define conversation store state
-export interface ConversationState {
-  conversations: Conversation[];
-  currentConversationId: string | null;
-  isLoading: boolean;
   error: Error | null;
   
-  // Required actions
-  fetchConversations: () => Promise<void>;
-  createConversation: (params?: any) => string;
-  updateConversation: (id: string, updates: any) => Promise<boolean>;
-  archiveConversation: (id: string) => boolean;
-  deleteConversation: (id: string) => boolean;
-  setCurrentConversationId: (id: string | null) => void;
+  // Session state
+  chatId: string | null;
+  docked: boolean;
+  isOpen: boolean;
+  isMinimized: boolean;
+  position: ChatPosition;
+  startTime: number;
+  
+  // Legacy session state (to be migrated)
+  currentSession: any | null;
+  sessions: Record<string, any>;
+  
+  // Features
+  features: Record<FeatureKey, boolean>;
+  currentMode: ChatMode;
+  
+  // Providers
+  availableProviders: Provider[];
+  currentProvider: Provider | null;
+  providers: {
+    availableProviders: Provider[];
+    currentProvider: Provider | null;
+  };
+  
+  // UI state
+  showSidebar: boolean;
+  scale: number;
+  ui: ChatUIState;
+  
+  // Custom styles (for theming)
+  customStyles: Record<string, any>;
+  
+  // Token management
+  tokenBalance?: {
+    available: number;
+    used: number;
+    total: number;
+  };
 }
+
+/**
+ * Represents a chat session in memory
+ */
+export interface ChatSession {
+  id: string;
+  title: string;
+  created_at: string;
+  last_accessed: string;
+  message_count: number;
+  messages?: Message[];
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Possible chat window states
+ */
+export type ChatWindowState = 'open' | 'minimized' | 'closed';
+
+/**
+ * UI-friendly representation of chat modes
+ */
+export type UiChatMode = 'standard' | 'editor' | 'image' | 'training' | 'planning' | 'code' | 'document' | 'audio';

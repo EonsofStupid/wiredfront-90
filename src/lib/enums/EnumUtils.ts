@@ -300,6 +300,26 @@ export class EnumUtils {
         return TaskType.ImageGeneration;
       case 'code_generation':
         return TaskType.CodeGeneration;
+      case 'tutoring':
+        return TaskType.Tutoring;
+      case 'problem_solving':
+        return TaskType.ProblemSolving;
+      case 'explanation':
+        return TaskType.Explanation;
+      case 'code_explanation':
+        return TaskType.CodeExplanation;
+      case 'bug_fix':
+        return TaskType.BugFix;
+      case 'code_review':
+        return TaskType.CodeReview;
+      case 'refactoring':
+        return TaskType.Refactoring;
+      case 'project_context':
+        return TaskType.ProjectContext;
+      case 'image_editing':
+        return TaskType.ImageEditing;
+      case 'document_search':
+        return TaskType.DocumentSearch;
       case 'conversation':
         return TaskType.Chat; // Alias for backward compatibility
       default:
@@ -331,6 +351,10 @@ export class EnumUtils {
         return ProviderType.LLaMA;
       case 'ollama':
         return ProviderType.Ollama;
+      case 'replicate':
+        return ProviderType.Replicate;
+      case 'stabilityai':
+        return ProviderType.StabilityAI;
       default:
         return ProviderType.Custom; // Default fallback
     }

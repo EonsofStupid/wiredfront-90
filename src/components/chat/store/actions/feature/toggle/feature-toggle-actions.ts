@@ -1,8 +1,21 @@
 
-import { ChatState } from '../../../types/store-types';
-import { SetState, GetState, FeatureKey } from '../types';
+import { ChatState } from '../../../types/chat-store-types';
+import { FeatureKey, SetState, GetState } from '../types';
 import { logger } from '@/services/chat/LoggingService';
-import { logFeatureToggle } from '../helpers';
+
+/**
+ * Function to log feature toggle events
+ */
+export function logFeatureToggle(feature: string, oldValue: boolean, newValue: boolean) {
+  logger.info(`Feature toggle: ${feature}`, { 
+    feature, 
+    oldValue, 
+    newValue 
+  });
+
+  // Add analytics tracking if needed
+  // Analytics.track('feature_toggle', { feature, oldValue, newValue });
+}
 
 /**
  * Creates actions for toggling features
@@ -26,7 +39,7 @@ export const createFeatureToggleActions = (
         newValue 
       });
       
-      // Log to analytics if appropriate
+      // Log feature usage
       logFeatureToggle(String(key), currentValue, newValue);
       
       // Update state
@@ -52,7 +65,7 @@ export const createFeatureToggleActions = (
       
       logger.info(`Enabling feature: ${String(key)}`);
       
-      // Log to analytics
+      // Log feature usage
       logFeatureToggle(String(key), currentValue, true);
       
       // Update state
@@ -78,7 +91,7 @@ export const createFeatureToggleActions = (
       
       logger.info(`Disabling feature: ${String(key)}`);
       
-      // Log to analytics
+      // Log feature usage
       logFeatureToggle(String(key), currentValue, false);
       
       // Update state
@@ -104,7 +117,7 @@ export const createFeatureToggleActions = (
       
       logger.info(`Setting feature state: ${String(key)} = ${enabled}`);
       
-      // Log to analytics
+      // Log feature usage
       logFeatureToggle(String(key), currentValue, enabled);
       
       // Update state
