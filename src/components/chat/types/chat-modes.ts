@@ -1,65 +1,81 @@
+import { ChatMode, getChatModeIcon } from './enums';
 
-import { ChatMode } from './chat/enums';
-import { EnumUtils } from '@/lib/enums/EnumUtils';
+/**
+ * Mode configuration interface for defining available chat modes
+ */
+export interface ModeConfig {
+  id: ChatMode;
+  name: string;
+  description: string;
+  icon: string;
+  requiredFeatures: string[];
+}
 
 /**
  * Default chat mode configuration
  */
-export const DEFAULT_CHAT_MODES = [
+export const DEFAULT_CHAT_MODES: ModeConfig[] = [
   {
-    id: ChatMode.Chat,
+    id: 'chat',
     name: 'Chat',
     description: 'General chat assistant',
-    icon: EnumUtils.getChatModeIcon(ChatMode.Chat),
+    icon: getChatModeIcon('chat'),
     requiredFeatures: ['standardChat']
   },
   {
-    id: ChatMode.Dev,
+    id: 'dev',
     name: 'Developer',
     description: 'Code and development assistance',
-    icon: EnumUtils.getChatModeIcon(ChatMode.Dev),
+    icon: getChatModeIcon('dev'),
     requiredFeatures: ['codeAssistant']
   },
   {
-    id: ChatMode.Image,
+    id: 'image',
     name: 'Image',
     description: 'Image generation and editing',
-    icon: EnumUtils.getChatModeIcon(ChatMode.Image),
+    icon: getChatModeIcon('image'),
     requiredFeatures: ['imageGeneration']
   },
   {
-    id: ChatMode.Training,
+    id: 'training',
     name: 'Training',
     description: 'Learning and education assistance',
-    icon: EnumUtils.getChatModeIcon(ChatMode.Training),
+    icon: getChatModeIcon('training'),
     requiredFeatures: ['training']
   },
   {
-    id: ChatMode.Planning,
+    id: 'planning',
     name: 'Planning',
     description: 'Structured planning assistance',
-    icon: EnumUtils.getChatModeIcon(ChatMode.Planning),
+    icon: getChatModeIcon('planning'),
     requiredFeatures: ['standardChat']
   },
   {
-    id: ChatMode.Code,
+    id: 'code',
     name: 'Code',
     description: 'Focused code assistance',
-    icon: EnumUtils.getChatModeIcon(ChatMode.Code),
+    icon: getChatModeIcon('code'),
     requiredFeatures: ['codeAssistant']
-  },
-  {
-    id: ChatMode.Document,
-    name: 'Document',
-    description: 'Document analysis and generation',
-    icon: EnumUtils.getChatModeIcon(ChatMode.Document),
-    requiredFeatures: ['standardChat']
-  },
-  {
-    id: ChatMode.Audio,
-    name: 'Audio',
-    description: 'Audio transcription and analysis',
-    icon: EnumUtils.getChatModeIcon(ChatMode.Audio),
-    requiredFeatures: ['voice']
   }
 ];
+
+/**
+ * Helper function to get available chat modes based on enabled features
+ */
+export function getAvailableChatModes(enabledFeatures: string[]): ModeConfig[] {
+  return DEFAULT_CHAT_MODES.filter(mode => 
+    mode.requiredFeatures.every(feature => enabledFeatures.includes(feature))
+  );
+}
+
+/**
+ * Helper function to check if a chat mode is available based on enabled features
+ */
+export function isChatModeAvailable(mode: ChatMode, enabledFeatures: string[]): boolean {
+  const modeConfig = DEFAULT_CHAT_MODES.find(m => m.id === mode);
+  if (!modeConfig) return false;
+  
+  return modeConfig.requiredFeatures.every(feature => 
+    enabledFeatures.includes(feature)
+  );
+}
