@@ -1,6 +1,8 @@
 
+// Re-export from centralized enum source
+export * from '@/types/enums';
+
 // Re-export types from each category
-export * from './chat/enums';
 export * from './chat/message';
 export * from './chat/conversation';
 export * from './chat/token';
@@ -9,8 +11,8 @@ export * from './chat/bridge';
 // Export chat modes separately to avoid duplicates
 export {
   UiChatMode,
-  UiModeToChatMode,
-  ChatModeToUiMode,
+  uiModeToChatMode as UiModeToChatMode,
+  databaseModeToUiMode as ChatModeToUiMode,
   ModeConfig, 
   DEFAULT_CHAT_MODES,
   getAvailableChatModes,

@@ -1,5 +1,5 @@
 
-import { ChatMode, MessageRole, MessageType, TaskType } from './chat/enums';
+import { ChatMode, MessageRole, MessageType, TaskType } from '@/types/enums';
 
 /**
  * Communication request interface

@@ -1,4 +1,14 @@
 
+import {
+  ChatMode,
+  MessageRole,
+  MessageStatus,
+  MessageType,
+  TokenEnforcementMode,
+  TaskType,
+  UIEnforcementMode
+} from '@/types/enums';
+
 // Enum types used in database queries
 export type MessageRoleType = 'user' | 'assistant' | 'system' | 'error' | 'tool' | 'function';
 
@@ -20,7 +30,7 @@ export type VectorStoreType = 'pinecone' | 'weaviate' | 'qdrant' | 'milvus' | 's
 
 export type SettingType = 'string' | 'number' | 'boolean' | 'json' | 'array';
 
-// Import and re-export for direct use
+// Export enums from the central source of truth
 export { 
   ChatMode, 
   MessageRole, 
@@ -29,4 +39,4 @@ export {
   TokenEnforcementMode,
   TaskType,
   UIEnforcementMode
-} from '@/components/chat/types/chat/enums';
+};

@@ -1,5 +1,5 @@
 
-import { ChatMode, TokenEnforcementMode, UIEnforcementMode, TaskType } from '@/components/chat/types/chat/enums';
+import { ChatMode, TokenEnforcementMode, UIEnforcementMode, TaskType } from '@/types/enums';
 import { EnumUtils } from '@/lib/enums/EnumUtils';
 
 /**

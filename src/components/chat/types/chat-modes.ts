@@ -1,4 +1,5 @@
-import { ChatMode, getChatModeIcon } from './enums';
+
+import { ChatMode, getChatModeIcon } from '@/types/enums';
 
 /**
  * Mode configuration interface for defining available chat modes
@@ -16,45 +17,45 @@ export interface ModeConfig {
  */
 export const DEFAULT_CHAT_MODES: ModeConfig[] = [
   {
-    id: 'chat',
+    id: ChatMode.Chat,
     name: 'Chat',
     description: 'General chat assistant',
-    icon: getChatModeIcon('chat'),
+    icon: getChatModeIcon(ChatMode.Chat),
     requiredFeatures: ['standardChat']
   },
   {
-    id: 'dev',
+    id: ChatMode.Dev,
     name: 'Developer',
     description: 'Code and development assistance',
-    icon: getChatModeIcon('dev'),
+    icon: getChatModeIcon(ChatMode.Dev),
     requiredFeatures: ['codeAssistant']
   },
   {
-    id: 'image',
+    id: ChatMode.Image,
     name: 'Image',
     description: 'Image generation and editing',
-    icon: getChatModeIcon('image'),
+    icon: getChatModeIcon(ChatMode.Image),
     requiredFeatures: ['imageGeneration']
   },
   {
-    id: 'training',
+    id: ChatMode.Training,
     name: 'Training',
     description: 'Learning and education assistance',
-    icon: getChatModeIcon('training'),
+    icon: getChatModeIcon(ChatMode.Training),
     requiredFeatures: ['training']
   },
   {
-    id: 'planning',
+    id: ChatMode.Planning,
     name: 'Planning',
     description: 'Structured planning assistance',
-    icon: getChatModeIcon('planning'),
+    icon: getChatModeIcon(ChatMode.Planning),
     requiredFeatures: ['standardChat']
   },
   {
-    id: 'code',
+    id: ChatMode.Code,
     name: 'Code',
     description: 'Focused code assistance',
-    icon: getChatModeIcon('code'),
+    icon: getChatModeIcon(ChatMode.Code),
     requiredFeatures: ['codeAssistant']
   }
 ];

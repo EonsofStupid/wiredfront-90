@@ -6,8 +6,8 @@ import {
   MessageType,
   TaskType,
   TokenEnforcementMode,
-  UIEnforcementMode
-} from '@/components/chat/types/chat/chat-modes';
+  stringToChatMode
+} from '@/types/enums';
 
 /**
  * UI mode representation (used in UI components)
@@ -24,20 +24,7 @@ export class EnumUtils {
    * @returns ChatMode enum value
    */
   static stringToChatMode(mode: string): ChatMode {
-    if (!mode) return ChatMode.Chat;
-    
-    switch (mode.toLowerCase()) {
-      case 'chat': return ChatMode.Chat;
-      case 'dev': 
-      case 'editor': return ChatMode.Dev;
-      case 'image': return ChatMode.Image;
-      case 'training': return ChatMode.Training;
-      case 'planning': return ChatMode.Planning;
-      case 'code': return ChatMode.Code;
-      case 'document': return ChatMode.Document;
-      case 'audio': return ChatMode.Audio;
-      default: return ChatMode.Chat;
-    }
+    return stringToChatMode(mode);
   }
 
   /**
@@ -103,46 +90,6 @@ export class EnumUtils {
       case 'document': return ChatMode.Document;
       case 'audio': return ChatMode.Audio;
       default: return ChatMode.Chat;
-    }
-  }
-
-  /**
-   * Get a human-readable label for a chat mode
-   * @param mode ChatMode enum
-   * @returns User-friendly label
-   */
-  static getChatModeLabel(mode: ChatMode): string {
-    switch (mode) {
-      case ChatMode.Chat: return 'Chat';
-      case ChatMode.Dev:
-      case ChatMode.Editor: return 'Editor';
-      case ChatMode.Image: return 'Image Generation';
-      case ChatMode.Training: return 'Training';
-      case ChatMode.Planning: return 'Planning';
-      case ChatMode.Code: return 'Code Assistant';
-      case ChatMode.Document: return 'Document';
-      case ChatMode.Audio: return 'Audio';
-      default: return 'Chat';
-    }
-  }
-
-  /**
-   * Get an icon name for a chat mode
-   * @param mode ChatMode enum
-   * @returns Icon name
-   */
-  static getChatModeIcon(mode: ChatMode): string {
-    switch (mode) {
-      case ChatMode.Chat: return 'message-square';
-      case ChatMode.Dev:
-      case ChatMode.Editor: return 'code';
-      case ChatMode.Image: return 'image';
-      case ChatMode.Training: return 'book-open';
-      case ChatMode.Planning: return 'clipboard-list';
-      case ChatMode.Code: return 'terminal';
-      case ChatMode.Document: return 'file-text';
-      case ChatMode.Audio: return 'mic';
-      default: return 'message-square';
     }
   }
 
@@ -236,40 +183,6 @@ export class EnumUtils {
    */
   static messageStatusToString(status: MessageStatus): string {
     return status.toString();
-  }
-
-  /**
-   * Get a display label for a MessageType
-   */
-  static getMessageTypeLabel(type: MessageType): string {
-    switch (type) {
-      case MessageType.Text: return 'Text';
-      case MessageType.Command: return 'Command';
-      case MessageType.System: return 'System';
-      case MessageType.Image: return 'Image';
-      case MessageType.Training: return 'Training';
-      case MessageType.Code: return 'Code';
-      case MessageType.File: return 'File';
-      case MessageType.Audio: return 'Audio';
-      case MessageType.Link: return 'Link';
-      case MessageType.Document: return 'Document';
-      default: return 'Unknown';
-    }
-  }
-
-  /**
-   * Get a display label for a MessageRole
-   */
-  static getMessageRoleLabel(role: MessageRole): string {
-    switch (role) {
-      case MessageRole.User: return 'You';
-      case MessageRole.Assistant: return 'Assistant';
-      case MessageRole.System: return 'System';
-      case MessageRole.Error: return 'Error';
-      case MessageRole.Tool: return 'Tool';
-      case MessageRole.Function: return 'Function';
-      default: return 'Unknown';
-    }
   }
 
   /**
