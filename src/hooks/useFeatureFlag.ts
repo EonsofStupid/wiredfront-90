@@ -1,27 +1,45 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import { useRoleStore } from "@/stores/role";
-import { Database } from "@/integrations/supabase/types";
 import { FeatureFlag } from "@/types/admin/settings/feature-flags";
 
 export function useFeatureFlag(flagKey: string) {
   const { user } = useAuthStore();
   const { roles } = useRoleStore();
-  const userRole = roles[0] as Database["public"]["Enums"]["app_role"];
+  const userRole = roles?.[0]; // Get first role (most important)
 
   const { data, isLoading } = useQuery({
     queryKey: ['feature-flag', flagKey],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('feature_flags')
-        .select('*')
-        .eq('key', flagKey)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('feature_flags')
+          .select('*')
+          .eq('key', flagKey)
+          .single();
 
-      if (error) {
-        console.error(`Error fetching feature flag ${flagKey}:`, error);
-        // Return a fallback object with the same shape as the expected feature flag
+        if (error) {
+          console.error(`Error fetching feature flag ${flagKey}:`, error);
+          // Return a fallback object with the same shape as the expected feature flag
+          return {
+            id: '',
+            key: flagKey,
+            name: '',
+            description: null,
+            enabled: false,
+            target_roles: null,
+            rollout_percentage: 0,
+            created_at: null,
+            updated_at: null,
+            created_by: null,
+          } as FeatureFlag;
+        }
+
+        return data as FeatureFlag;
+      } catch (error) {
+        console.error(`Unexpected error fetching feature flag ${flagKey}:`, error);
         return {
           id: '',
           key: flagKey,
@@ -33,12 +51,8 @@ export function useFeatureFlag(flagKey: string) {
           created_at: null,
           updated_at: null,
           created_by: null,
-          // Ensure updated_by is present (it will be handled by the FeatureFlag type)
         } as FeatureFlag;
       }
-
-      // Type assertion with proper structure - ensure updated_by exists
-      return data as FeatureFlag;
     },
   });
 
@@ -75,16 +89,16 @@ export function useFeatureFlag(flagKey: string) {
   return {
     isEnabled: isEnabled(),
     isLoading,
-    featureFlag: data
+    data
   };
 }
 
-// Simple hash function to get deterministic number from string
+// Simple string hash function for consistent user percentiles
 function hashCode(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
+    hash = ((hash << 5) - hash) + char;
     hash = hash & hash; // Convert to 32bit integer
   }
   return hash;

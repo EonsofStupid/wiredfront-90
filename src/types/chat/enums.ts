@@ -95,6 +95,7 @@ export enum UIEnforcementMode {
 
 /**
  * Task types for AI operations
+ * Must be aligned with the TaskType in communication.ts
  */
 export enum TaskType {
   Chat = 'chat',
@@ -105,8 +106,17 @@ export enum TaskType {
   Analysis = 'analysis',
   Extraction = 'extraction',
   Classification = 'classification',
-  Transformation = 'transformation', // Added for content transformations
-  Recommendation = 'recommendation', // Added for recommendation tasks
+  Transformation = 'transformation',
+  Recommendation = 'recommendation',
+  StructuredOutput = 'structured_output',
+  AdminQuery = 'admin_query',
+  SystemDiagnostic = 'system_diagnostic',
+  CacheQuery = 'cache_query',
+  VectorIndex = 'vector_index',
+  ModelValidation = 'model_validation',
+  QuestionAnswering = 'question_answering',
+  ImageGeneration = 'image_generation',
+  CodeGeneration = 'code_generation',
   Other = 'other'
 }
 

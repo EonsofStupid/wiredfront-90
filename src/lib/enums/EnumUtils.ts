@@ -9,6 +9,7 @@ import {
   TaskType,
   UIEnforcementMode
 } from '@/types/chat/enums';
+import { ProviderType, VectorDbType } from '@/types/chat/communication';
 
 /**
  * Utility class for working with enums across the application
@@ -280,9 +281,90 @@ export class EnumUtils {
         return TaskType.Transformation;
       case 'recommendation':
         return TaskType.Recommendation;
+      case 'structured_output':
+        return TaskType.StructuredOutput;
+      case 'admin_query':
+        return TaskType.AdminQuery;
+      case 'system_diagnostic':
+        return TaskType.SystemDiagnostic;
+      case 'cache_query':
+        return TaskType.CacheQuery;
+      case 'vector_index':
+        return TaskType.VectorIndex;
+      case 'model_validation':
+        return TaskType.ModelValidation;
+      case 'question_answering':
+        return TaskType.QuestionAnswering;
+      case 'image_generation':
+        return TaskType.ImageGeneration;
+      case 'code_generation':
+        return TaskType.CodeGeneration;
       case 'other':
       default:
         return TaskType.Other;
+    }
+  }
+
+  /**
+   * Convert a string to ProviderType enum value
+   */
+  static stringToProviderType(type: string | ProviderType): ProviderType {
+    if (typeof type !== 'string') {
+      return type;
+    }
+
+    const normalizedType = type.toLowerCase().trim();
+    
+    switch (normalizedType) {
+      case 'openai':
+        return ProviderType.OpenAI;
+      case 'anthropic':
+        return ProviderType.Anthropic;
+      case 'gemini':
+        return ProviderType.Gemini;
+      case 'huggingface':
+        return ProviderType.HuggingFace;
+      case 'azure_openai':
+        return ProviderType.AzureOpenAI;
+      case 'cohere':
+        return ProviderType.Cohere;
+      case 'llama':
+        return ProviderType.LLaMA;
+      case 'ollama':
+        return ProviderType.Ollama;
+      case 'custom':
+      default:
+        return ProviderType.Custom;
+    }
+  }
+
+  /**
+   * Convert a string to VectorDbType enum value
+   */
+  static stringToVectorDbType(type: string | VectorDbType): VectorDbType {
+    if (typeof type !== 'string') {
+      return type;
+    }
+
+    const normalizedType = type.toLowerCase().trim();
+    
+    switch (normalizedType) {
+      case 'pinecone':
+        return VectorDbType.Pinecone;
+      case 'weaviate':
+        return VectorDbType.Weaviate;
+      case 'qdrant':
+        return VectorDbType.Qdrant;
+      case 'milvus':
+        return VectorDbType.Milvus;
+      case 'supabase':
+        return VectorDbType.Supabase;
+      case 'chromadb':
+        return VectorDbType.ChromaDB;
+      case 'faiss':
+        return VectorDbType.Faiss;
+      default:
+        return VectorDbType.Supabase;
     }
   }
 
@@ -335,5 +417,7 @@ export {
   MessageType,
   TokenEnforcementMode, 
   TaskType,
-  UIEnforcementMode
+  UIEnforcementMode,
+  ProviderType,
+  VectorDbType
 };

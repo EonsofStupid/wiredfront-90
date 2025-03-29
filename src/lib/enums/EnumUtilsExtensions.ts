@@ -4,7 +4,8 @@ import {
   MessageRole, 
   MessageStatus, 
   MessageType,
-  TokenEnforcementMode 
+  TokenEnforcementMode,
+  TaskType
 } from '@/types/chat/enums';
 import { UiChatMode, databaseModeToUiMode, uiModeToChatMode } from '@/components/chat/shared/types/enums-mapper';
 
@@ -136,7 +137,7 @@ export class EnumUtilsExtensions {
   /**
    * Convert string to TokenEnforcementMode enum
    */
-  static stringToEnforcementMode(value: string): TokenEnforcementMode {
+  static stringToTokenEnforcementMode(value: string): TokenEnforcementMode {
     const normalizedValue = value.trim().toLowerCase();
     
     switch (normalizedValue) {
@@ -166,12 +167,58 @@ export class EnumUtilsExtensions {
   }
   
   /**
+   * Convert string to TaskType enum
+   */
+  static stringToTaskType(value: string): TaskType {
+    const normalizedValue = value.trim().toLowerCase();
+    
+    switch (normalizedValue) {
+      case 'chat':
+        return TaskType.Chat;
+      case 'generation':
+        return TaskType.Generation;
+      case 'completion':
+        return TaskType.Completion;
+      case 'summarization':
+        return TaskType.Summarization;
+      case 'translation':
+        return TaskType.Translation;
+      case 'analysis':
+        return TaskType.Analysis;
+      case 'extraction':
+        return TaskType.Extraction;
+      case 'classification':
+        return TaskType.Classification;
+      case 'transformation':
+        return TaskType.Transformation;
+      case 'recommendation':
+        return TaskType.Recommendation;
+      case 'structured_output':
+        return TaskType.StructuredOutput;
+      case 'question_answering':
+        return TaskType.QuestionAnswering;
+      case 'image_generation':
+        return TaskType.ImageGeneration;
+      case 'code_generation':
+        return TaskType.CodeGeneration;
+      case 'admin_query':
+        return TaskType.AdminQuery;
+      default:
+        return TaskType.Chat;
+    }
+  }
+  
+  /**
    * Safely parse a string to TokenEnforcementMode with fallback
    */
   static safeParse(enumName: string, value: string, fallback: string = ''): any {
     try {
       if (enumName === 'TokenEnforcementMode') {
-        return this.stringToEnforcementMode(value);
+        return this.stringToTokenEnforcementMode(value);
+      } else if (enumName === 'ChatMode') {
+        return this.stringToChatMode(value);
+      } else if (enumName === 'TaskType') {
+        return this.stringToTaskType(value);
       }
       return value;
     } catch (error) {

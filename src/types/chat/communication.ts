@@ -31,24 +31,29 @@ export enum VectorDbType {
 
 /**
  * Task types supported by the system
+ * These values must be aligned with the TaskType in chat/enums.ts
  */
 export enum TaskType {
   Chat = 'chat',
   Generation = 'generation',
   Completion = 'completion',
   Summarization = 'summarization',
-  Classification = 'classification',
-  Embeddings = 'embeddings',
   Translation = 'translation',
-  QuestionAnswering = 'question_answering',
-  ImageGeneration = 'image_generation',
-  CodeGeneration = 'code_generation',
+  Analysis = 'analysis',
+  Extraction = 'extraction',
+  Classification = 'classification',
   StructuredOutput = 'structured_output',
   AdminQuery = 'admin_query',
   SystemDiagnostic = 'system_diagnostic',
   CacheQuery = 'cache_query',
   VectorIndex = 'vector_index',
-  ModelValidation = 'model_validation'
+  ModelValidation = 'model_validation',
+  QuestionAnswering = 'question_answering',
+  ImageGeneration = 'image_generation',
+  CodeGeneration = 'code_generation',
+  Transformation = 'transformation',
+  Recommendation = 'recommendation',
+  Other = 'other'
 }
 
 /**
