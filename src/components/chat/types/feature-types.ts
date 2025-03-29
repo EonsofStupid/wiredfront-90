@@ -1,7 +1,5 @@
 
-/**
- * Feature keys for the chat application
- */
+// Feature key type used across the application
 export type FeatureKey = 
   | 'voice'
   | 'rag'
@@ -13,33 +11,49 @@ export type FeatureKey =
   | 'githubSync'
   | 'knowledgeBase'
   | 'tokenEnforcement'
-  | 'tokenEnforcementMode'  // Added to align with feature toggles
   | 'standardChat'
   | 'imageGeneration'
   | 'training'
   | 'darkMode'
   | 'multiFile';
 
-/**
- * Feature configuration interface
- */
-export interface FeatureConfig {
+// Feature state record
+export type FeatureState = Record<FeatureKey, boolean>;
+
+// Feature metadata
+export interface FeatureMetadata {
+  id: string;
   key: FeatureKey;
   name: string;
   description: string;
-  enabled: boolean;
-  icon?: string;
-  category?: 'ui' | 'functionality' | 'integration' | 'security';
-  requiresSubscription?: boolean;
-  beta?: boolean;
+  isEnabled: boolean;
+  isPublic: boolean;
+  isRequired: boolean;
+  category: string;
+  group: string;
+  dependencies: FeatureKey[];
+  conflicts: FeatureKey[];
 }
 
-/**
- * Feature toggle service interface
- */
-export interface FeatureToggleService {
-  isEnabled: (feature: FeatureKey) => boolean;
-  toggleFeature: (feature: FeatureKey) => void;
-  enableFeature: (feature: FeatureKey) => void;
-  disableFeature: (feature: FeatureKey) => void;
+// Feature toggle event
+export interface FeatureToggleEvent {
+  feature: FeatureKey;
+  oldValue: boolean;
+  newValue: boolean;
+  userId: string;
+  timestamp: string;
+  context?: Record<string, any>;
+}
+
+// Feature flag interface (from database)
+export interface FeatureFlag {
+  id: string;
+  key: string;
+  name: string;
+  description: string;
+  is_enabled: boolean;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+  metadata?: Record<string, any>;
 }

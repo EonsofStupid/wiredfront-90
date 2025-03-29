@@ -1,52 +1,21 @@
 
-import { MessageRole, MessageStatus, MessageType } from './enums';
+import { 
+  Message, 
+  MessageCreateParams, 
+  MessageUpdateParams 
+} from './chat/message';
+import { 
+  MessageRole, 
+  MessageStatus, 
+  MessageType 
+} from './chat/enums';
 
-/**
- * Core message interface matching the database schema
- */
-export interface Message {
-  id: string;
-  conversation_id: string; // Primary reference
-  chat_session_id?: string; // For backward compatibility 
-  user_id: string;
-  role: MessageRole;
-  content: string;
-  type: MessageType;
-  metadata: Record<string, any>;
-  created_at: string;
-  updated_at: string;
-  last_accessed?: string;
-  parent_message_id?: string;
-  message_status: MessageStatus;
-  is_minimized?: boolean;
-  position?: Record<string, any>;
-  window_state?: Record<string, any>;
-  retry_count?: number;
-}
+// Re-export message-related types
+export type { 
+  Message, 
+  MessageCreateParams, 
+  MessageUpdateParams 
+};
 
-/**
- * Parameters for creating a new message
- */
-export interface MessageCreateParams {
-  role: MessageRole;
-  content: string;
-  conversation_id: string;
-  type?: MessageType;
-  metadata?: Record<string, any>;
-  parent_message_id?: string;
-  user_id?: string; // Added for compatibility with database operations
-  id?: string; // Added for compatibility with database operations
-}
-
-/**
- * Parameters for updating an existing message
- */
-export interface MessageUpdateParams {
-  content?: string;
-  type?: MessageType;
-  metadata?: Record<string, any>;
-  message_status?: MessageStatus;
-  is_minimized?: boolean;
-  position?: Record<string, any>;
-  window_state?: Record<string, any>;
-}
+// Re-export message-related enums
+export { MessageRole, MessageStatus, MessageType };
