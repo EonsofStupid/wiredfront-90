@@ -1,4 +1,3 @@
-
 /**
  * All chat-related enum types - Source of truth for the application
  */
@@ -6,17 +5,12 @@
 /**
  * Chat modes supported by the application
  */
-export enum ChatMode {
-  Chat = 'chat',
-  Dev = 'dev',
-  Editor = 'editor', // Alias for Dev
-  Image = 'image',
-  Training = 'training',
-  Planning = 'planning',
-  Code = 'code',
-  Document = 'document', // Added for document-based interactions
-  Audio = 'audio' // Added for audio-based interactions
-}
+export type ChatMode = 'chat' | 'dev' | 'image' | 'training' | 'planning' | 'code';
+
+/**
+ * UI-friendly chat mode type
+ */
+export type UiChatMode = ChatMode | 'settings';
 
 /**
  * Chat positions for UI display
@@ -24,8 +18,8 @@ export enum ChatMode {
 export enum ChatPosition {
   BottomRight = 'bottom-right',
   BottomLeft = 'bottom-left',
-  TopRight = 'top-right', // Added for more positioning options
-  TopLeft = 'top-left' // Added for more positioning options
+  TopRight = 'top-right',
+  TopLeft = 'top-left'
 }
 
 /**
@@ -53,7 +47,7 @@ export enum MessageType {
   File = 'file',
   Audio = 'audio',
   Link = 'link',
-  Document = 'document' // Added for document content
+  Document = 'document'
 }
 
 /**
@@ -77,15 +71,15 @@ export enum MessageStatus {
  * These values must match the database representation in user_tokens.enforcement_mode
  */
 export enum TokenEnforcementMode {
-  None = 'none',        // No enforcement
-  Warn = 'warn',        // Show warnings but allow usage
-  Soft = 'soft',        // Degrade features when tokens are low
-  Hard = 'hard',        // Block operations when tokens are depleted
-  Always = 'always',    // Legacy: always enforce
-  Never = 'never',      // Legacy: never enforce
-  RoleBased = 'role_based', // Enforcement based on user role
-  ModeBased = 'mode_based', // Enforcement based on chat mode
-  Strict = 'strict'     // Strict enforcement with no exceptions
+  None = 'none',
+  Warn = 'warn',
+  Soft = 'soft',
+  Hard = 'hard',
+  Always = 'always',
+  Never = 'never',
+  RoleBased = 'role_based',
+  ModeBased = 'mode_based',
+  Strict = 'strict'
 }
 
 /**
@@ -99,7 +93,6 @@ export enum UIEnforcementMode {
 
 /**
  * Task types for AI operations
- * Must be aligned with the TaskType in communication.ts
  */
 export enum TaskType {
   // Core task types
@@ -142,4 +135,127 @@ export enum TaskType {
   // Legacy and fallback
   Conversation = 'conversation', // Alias for Chat for backward compatibility
   Other = 'other'
+}
+
+/**
+ * Mapping from UI mode to ChatMode
+ */
+export const UiModeToChatMode: Record<UiChatMode, ChatMode> = {
+  'chat': 'chat',
+  'dev': 'dev',
+  'image': 'image',
+  'training': 'training',
+  'planning': 'planning',
+  'code': 'code',
+  'settings': 'chat' // Settings defaults to chat mode
+};
+
+/**
+ * Mapping from ChatMode to UI mode
+ */
+export const ChatModeToUiMode: Record<ChatMode, UiChatMode> = {
+  'chat': 'chat',
+  'dev': 'dev',
+  'image': 'image',
+  'training': 'training',
+  'planning': 'planning',
+  'code': 'code'
+};
+
+/**
+ * Mapping from UI enforcement mode to token enforcement mode
+ */
+export const uiToTokenEnforcementMode: Record<UIEnforcementMode, TokenEnforcementMode> = {
+  [UIEnforcementMode.Always]: TokenEnforcementMode.Hard,
+  [UIEnforcementMode.Soft]: TokenEnforcementMode.Soft,
+  [UIEnforcementMode.Never]: TokenEnforcementMode.None
+};
+
+/**
+ * Mapping from token enforcement mode to UI enforcement mode
+ */
+export const tokenToUIEnforcementMode: Record<TokenEnforcementMode, UIEnforcementMode> = {
+  [TokenEnforcementMode.None]: UIEnforcementMode.Never,
+  [TokenEnforcementMode.Warn]: UIEnforcementMode.Soft,
+  [TokenEnforcementMode.Soft]: UIEnforcementMode.Soft,
+  [TokenEnforcementMode.Hard]: UIEnforcementMode.Always,
+  [TokenEnforcementMode.Always]: UIEnforcementMode.Always,
+  [TokenEnforcementMode.Never]: UIEnforcementMode.Never,
+  [TokenEnforcementMode.RoleBased]: UIEnforcementMode.Soft,
+  [TokenEnforcementMode.ModeBased]: UIEnforcementMode.Soft,
+  [TokenEnforcementMode.Strict]: UIEnforcementMode.Always
+};
+
+/**
+ * Utility functions for converting between string and enum values
+ */
+export const stringToChatMode = (mode: string): ChatMode => {
+  if (mode === 'chat' || mode === 'dev' || mode === 'image' || 
+      mode === 'training' || mode === 'planning' || mode === 'code') {
+    return mode;
+  }
+  return 'chat'; // Default to chat for unknown modes
+};
+
+export const stringToTokenEnforcementMode = (mode: string): TokenEnforcementMode => {
+  switch (mode.toLowerCase()) {
+    case 'none': return TokenEnforcementMode.None;
+    case 'warn': return TokenEnforcementMode.Warn;
+    case 'soft': return TokenEnforcementMode.Soft;
+    case 'hard': return TokenEnforcementMode.Hard;
+    case 'always': return TokenEnforcementMode.Always;
+    case 'never': return TokenEnforcementMode.Never;
+    case 'role_based': return TokenEnforcementMode.RoleBased;
+    case 'mode_based': return TokenEnforcementMode.ModeBased;
+    case 'strict': return TokenEnforcementMode.Strict;
+    default: return TokenEnforcementMode.Soft;
+  }
+};
+
+export const stringToTaskType = (type: string): TaskType => {
+  switch (type.toLowerCase()) {
+    case 'chat': return TaskType.Chat;
+    case 'generation': return TaskType.Generation;
+    case 'completion': return TaskType.Completion;
+    case 'summarization': return TaskType.Summarization;
+    case 'translation': return TaskType.Translation;
+    case 'analysis': return TaskType.Analysis;
+    case 'question_answering': return TaskType.QuestionAnswering;
+    case 'image_generation': return TaskType.ImageGeneration;
+    case 'code_generation': return TaskType.CodeGeneration;
+    case 'conversation': return TaskType.Conversation;
+    default: return TaskType.Other;
+  }
+};
+
+/**
+ * Get the icon name for a chat mode
+ */
+export const getChatModeIcon = (mode: ChatMode): string => {
+  switch (mode) {
+    case 'chat': return 'message-circle';
+    case 'dev': return 'code';
+    case 'image': return 'image';
+    case 'training': return 'graduation-cap';
+    case 'planning': return 'clipboard-list';
+    case 'code': return 'terminal';
+    default: return 'message-circle';
+  }
+};
+
+/**
+ * Get the display label for a chat mode
+ */
+export const getChatModeLabel = (mode: ChatMode): string => {
+  switch (mode) {
+    case 'chat': return 'Chat';
+    case 'dev': return 'Developer';
+    case 'image': return 'Image';
+    case 'training': return 'Training';
+    case 'planning': return 'Planning';
+    case 'code': return 'Code';
+    default: return 'Chat';
+  }
+};
+
 }
