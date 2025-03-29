@@ -7,222 +7,88 @@ import {
   TokenEnforcementMode,
   TaskType
 } from '@/types/chat/enums';
-import { UiChatMode, databaseModeToUiMode, uiModeToChatMode } from '@/components/chat/shared/types/enums-mapper';
+import { EnumUtils } from './EnumUtils';
 
 /**
  * Extensions to the EnumUtils class with additional utilities
+ * This class is being deprecated in favor of the main EnumUtils class.
+ * Kept for backward compatibility but should not be extended further.
  */
 export class EnumUtilsExtensions {
   /**
    * Convert UI mode to database ChatMode enum
    */
-  static uiModeToChatMode(uiMode: UiChatMode): ChatMode {
-    return uiModeToChatMode[uiMode] || ChatMode.Chat;
+  static uiModeToChatMode(uiMode: string): ChatMode {
+    return EnumUtils.uiModeToChatMode(uiMode);
   }
 
   /**
    * Convert database ChatMode enum to UI mode
    */
-  static chatModeToUiMode(chatMode: ChatMode): UiChatMode {
-    return databaseModeToUiMode[chatMode] || 'standard';
+  static chatModeToUiMode(chatMode: ChatMode): string {
+    return EnumUtils.chatModeToUiMode(chatMode);
   }
 
   /**
    * Convert string to ChatMode enum
    */
   static stringToChatMode(mode: string): ChatMode {
-    const normalizedMode = mode.trim().toLowerCase();
-    
-    switch (normalizedMode) {
-      case 'chat':
-      case 'standard':
-        return ChatMode.Chat;
-      case 'dev':
-      case 'developer':
-      case 'editor':
-        return ChatMode.Dev;
-      case 'image':
-        return ChatMode.Image;
-      case 'training':
-        return ChatMode.Training;
-      case 'planning':
-        return ChatMode.Planning;
-      case 'code':
-        return ChatMode.Code;
-      case 'document':
-        return ChatMode.Document;
-      case 'audio':
-        return ChatMode.Audio;
-      default:
-        return ChatMode.Chat;
-    }
+    return EnumUtils.stringToChatMode(mode);
   }
   
   /**
    * Convert ChatMode enum to database string
    */
   static chatModeForDatabase(mode: ChatMode): string {
-    switch (mode) {
-      case ChatMode.Chat:
-        return 'chat';
-      case ChatMode.Dev:
-      case ChatMode.Editor:
-        return 'dev';
-      case ChatMode.Image:
-        return 'image';
-      case ChatMode.Training:
-        return 'training';
-      case ChatMode.Planning:
-        return 'planning';
-      case ChatMode.Code:
-        return 'code';
-      case ChatMode.Document:
-        return 'document';
-      case ChatMode.Audio:
-        return 'audio';
-      default:
-        return 'chat';
-    }
+    return EnumUtils.chatModeForDatabase(mode);
   }
   
   /**
    * Convert database string to ChatMode enum
    */
   static databaseStringToChatMode(mode: string): ChatMode {
-    switch (mode) {
-      case 'chat':
-        return ChatMode.Chat;
-      case 'dev':
-        return ChatMode.Dev;
-      case 'image':
-        return ChatMode.Image;
-      case 'training':
-        return ChatMode.Training;
-      case 'planning':
-        return ChatMode.Planning;
-      case 'code':
-        return ChatMode.Code;
-      case 'editor':
-        return ChatMode.Editor;
-      case 'document':
-        return ChatMode.Document;
-      case 'audio':
-        return ChatMode.Audio;
-      default:
-        return ChatMode.Chat;
-    }
+    return EnumUtils.databaseStringToChatMode(mode);
   }
   
   /**
    * Convert MessageType enum to string for database
    */
   static messageTypeToString(type: MessageType): string {
-    return type.toString();
+    return EnumUtils.messageTypeToString(type);
   }
   
   /**
    * Convert MessageRole enum to string for database
    */
   static messageRoleToString(role: MessageRole): string {
-    return role.toString();
+    return EnumUtils.messageRoleToString(role);
   }
   
   /**
    * Convert MessageStatus enum to string for database
    */
   static messageStatusToString(status: MessageStatus): string {
-    return status.toString();
+    return EnumUtils.messageStatusToString(status);
   }
   
   /**
    * Convert string to TokenEnforcementMode enum
    */
   static stringToTokenEnforcementMode(value: string): TokenEnforcementMode {
-    const normalizedValue = value.trim().toLowerCase();
-    
-    switch (normalizedValue) {
-      case 'none':
-        return TokenEnforcementMode.None;
-      case 'warn':
-        return TokenEnforcementMode.Warn;
-      case 'soft':
-        return TokenEnforcementMode.Soft;
-      case 'hard':
-        return TokenEnforcementMode.Hard;
-      case 'always':
-        return TokenEnforcementMode.Always;
-      case 'never':
-        return TokenEnforcementMode.Never;
-      case 'role_based':
-      case 'rolebased':
-        return TokenEnforcementMode.RoleBased;
-      case 'mode_based':
-      case 'modebased':
-        return TokenEnforcementMode.ModeBased;
-      case 'strict':
-        return TokenEnforcementMode.Strict;
-      default:
-        return TokenEnforcementMode.Warn;
-    }
+    return EnumUtils.stringToTokenEnforcementMode(value);
   }
   
   /**
    * Convert string to TaskType enum
    */
   static stringToTaskType(value: string): TaskType {
-    const normalizedValue = value.trim().toLowerCase();
-    
-    switch (normalizedValue) {
-      case 'chat':
-        return TaskType.Chat;
-      case 'generation':
-        return TaskType.Generation;
-      case 'completion':
-        return TaskType.Completion;
-      case 'summarization':
-        return TaskType.Summarization;
-      case 'translation':
-        return TaskType.Translation;
-      case 'analysis':
-        return TaskType.Analysis;
-      case 'extraction':
-        return TaskType.Extraction;
-      case 'classification':
-        return TaskType.Classification;
-      case 'transformation':
-        return TaskType.Transformation;
-      case 'recommendation':
-        return TaskType.Recommendation;
-      case 'structured_output':
-        return TaskType.StructuredOutput;
-      case 'question_answering':
-        return TaskType.QuestionAnswering;
-      case 'image_generation':
-        return TaskType.ImageGeneration;
-      case 'code_generation':
-        return TaskType.CodeGeneration;
-      case 'admin_query':
-        return TaskType.AdminQuery;
-      default:
-        return TaskType.Chat;
-    }
+    return EnumUtils.stringToTaskType(value);
   }
   
   /**
    * Safely parse a string to TokenEnforcementMode with fallback
    */
   static safeParse(enumName: string, value: string, fallback: string = ''): any {
-    try {
-      if (enumName === 'TokenEnforcementMode') {
-        return this.stringToTokenEnforcementMode(value);
-      } else if (enumName === 'ChatMode') {
-        return this.stringToChatMode(value);
-      } else if (enumName === 'TaskType') {
-        return this.stringToTaskType(value);
-      }
-      return value;
-    } catch (error) {
-      return fallback || value;
-    }
+    return EnumUtils.safeParse(enumName, value, fallback);
   }
 }

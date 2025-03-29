@@ -20,54 +20,14 @@ export function databaseStringToChatMode(mode: string): ChatMode {
  * Get label for chat mode (for display in UI)
  */
 export function getChatModeLabel(mode: ChatMode): string {
-  switch (mode) {
-    case ChatMode.Chat:
-      return 'Chat';
-    case ChatMode.Dev:
-    case ChatMode.Editor:
-      return 'Developer';
-    case ChatMode.Image:
-      return 'Image';
-    case ChatMode.Training:
-      return 'Training';
-    case ChatMode.Planning:
-      return 'Planning';
-    case ChatMode.Code:
-      return 'Code';
-    case ChatMode.Document:
-      return 'Document';
-    case ChatMode.Audio:
-      return 'Audio';
-    default:
-      return 'Chat';
-  }
+  return EnumUtils.getChatModeLabel(mode);
 }
 
 /**
  * Get icon name for chat mode
  */
 export function getChatModeIcon(mode: ChatMode): string {
-  switch (mode) {
-    case ChatMode.Chat:
-      return 'message-circle';
-    case ChatMode.Dev:
-    case ChatMode.Editor:
-      return 'code';
-    case ChatMode.Image:
-      return 'image';
-    case ChatMode.Training:
-      return 'graduation-cap';
-    case ChatMode.Planning:
-      return 'clipboard-list';
-    case ChatMode.Code:
-      return 'terminal';
-    case ChatMode.Document:
-      return 'file-text';
-    case ChatMode.Audio:
-      return 'headphones';
-    default:
-      return 'message-circle';
-  }
+  return EnumUtils.getChatModeIcon(mode);
 }
 
 /**

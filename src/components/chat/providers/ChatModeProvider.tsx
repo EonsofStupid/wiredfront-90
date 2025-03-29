@@ -2,7 +2,7 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useChatStore } from '../store/chatStore';
 import { logger } from '@/services/chat/LoggingService';
-import { ChatMode, databaseModeToUiMode } from '@/types/chat/enums';
+import { ChatMode } from '@/types/chat/enums';
 import { EnumUtils } from '@/lib/enums';
 
 type ChatModeContextType = {
@@ -11,7 +11,7 @@ type ChatModeContextType = {
 };
 
 // Define UI chat mode as a union type
-export type UiChatMode = 'standard' | 'editor' | 'image' | 'training';
+export type UiChatMode = 'standard' | 'editor' | 'image' | 'training' | 'planning' | 'code' | 'document' | 'audio';
 
 const ChatModeContext = createContext<ChatModeContextType>({
   mode: 'standard',
@@ -38,12 +38,12 @@ export function ChatModeProvider({ children, isEditorPage }: ChatModeProviderPro
         setMode(ChatMode.Dev);
       }
     } else {
-      // Convert database mode to UI mode using our mapping
+      // Convert database mode to UI mode using EnumUtils
       const chatModeEnum = typeof currentMode === 'string' 
         ? EnumUtils.stringToChatMode(currentMode) 
         : currentMode;
         
-      newMode = databaseModeToUiMode[chatModeEnum] as UiChatMode || 'standard';
+      newMode = EnumUtils.chatModeToUiMode(chatModeEnum) as UiChatMode || 'standard';
     }
     
     setLocalMode(newMode);

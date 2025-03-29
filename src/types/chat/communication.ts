@@ -53,6 +53,7 @@ export enum TaskType {
   CodeGeneration = 'code_generation',
   Transformation = 'transformation',
   Recommendation = 'recommendation',
+  Conversation = 'conversation', // Alias for 'chat' for backward compatibility
   Other = 'other'
 }
 

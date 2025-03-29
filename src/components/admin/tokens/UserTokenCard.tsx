@@ -3,15 +3,18 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Coins, Plus } from 'lucide-react';
-import { tokenEnforcementModeToLabel } from '@/utils/token-utils';
+import { getTokenStatusColor } from '@/utils/token-utils';
 
 interface UserTokenCardProps {
   balance: number;
+  limit?: number;
   onAddTokens?: (amount: number) => Promise<void>;
   isSubmitting?: boolean;
 }
 
-export function UserTokenCard({ balance, onAddTokens, isSubmitting }: UserTokenCardProps) {
+export function UserTokenCard({ balance, limit, onAddTokens, isSubmitting }: UserTokenCardProps) {
+  const statusColor = getTokenStatusColor(balance, limit);
+  
   return (
     <Card>
       <CardHeader>
@@ -19,7 +22,10 @@ export function UserTokenCard({ balance, onAddTokens, isSubmitting }: UserTokenC
           <Coins className="mr-2 h-5 w-5 text-yellow-500" />
           Token Balance
         </CardTitle>
-        <CardDescription>You have {balance} tokens available</CardDescription>
+        <CardDescription>
+          You have <span className={statusColor}>{balance}</span> tokens available
+          {limit && <> out of {limit}</>}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <p className="text-muted-foreground">

@@ -64,7 +64,8 @@ export const taskTypeToUiTaskType: Partial<Record<TaskType, UiTaskType>> = {
   [TaskType.Summarization]: 'summarization',
   [TaskType.CodeGeneration]: 'coding',
   [TaskType.Translation]: 'translation',
-  [TaskType.Analysis]: 'analysis'
+  [TaskType.Analysis]: 'analysis',
+  [TaskType.Conversation]: 'chat'
 };
 
 /**

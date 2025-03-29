@@ -117,6 +117,7 @@ export enum TaskType {
   QuestionAnswering = 'question_answering',
   ImageGeneration = 'image_generation',
   CodeGeneration = 'code_generation',
+  Conversation = 'conversation', // Alias for Chat for backward compatibility
   Other = 'other'
 }
 

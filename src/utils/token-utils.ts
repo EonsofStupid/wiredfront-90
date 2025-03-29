@@ -1,5 +1,6 @@
 
 import { TokenEnforcementMode } from "@/types/chat/enums";
+import { EnumUtils } from "@/lib/enums";
 
 /**
  * Get the appropriate status color for a token balance
@@ -61,35 +62,30 @@ export function getEnforcementModeColor(mode: TokenEnforcementMode): string {
 
 /**
  * Get user-friendly label for token enforcement mode
+ * Using EnumUtils for consistency
  * @param mode Token enforcement mode
  * @returns Human-readable label
  */
 export function getEnforcementModeLabel(mode: TokenEnforcementMode): string {
-  switch (mode) {
-    case TokenEnforcementMode.None:
-      return "None";
-    case TokenEnforcementMode.Warn:
-      return "Warning Only";
-    case TokenEnforcementMode.Soft:
-      return "Soft Enforcement";
-    case TokenEnforcementMode.Hard:
-      return "Hard Enforcement";
-    case TokenEnforcementMode.Always:
-      return "Always Enforce";
-    case TokenEnforcementMode.Never:
-      return "Never Enforce";
-    case TokenEnforcementMode.RoleBased:
-      return "Role-Based";
-    case TokenEnforcementMode.ModeBased:
-      return "Mode-Based";
-    case TokenEnforcementMode.Strict:
-      return "Strict Enforcement";
-    default:
-      return "Unknown";
-  }
+  const infoMap = {
+    [TokenEnforcementMode.None]: 'None',
+    [TokenEnforcementMode.Warn]: 'Warning Only',
+    [TokenEnforcementMode.Soft]: 'Soft Enforcement',
+    [TokenEnforcementMode.Hard]: 'Hard Enforcement',
+    [TokenEnforcementMode.Always]: 'Always Enforce',
+    [TokenEnforcementMode.Never]: 'Never Enforce',
+    [TokenEnforcementMode.RoleBased]: 'Role-Based',
+    [TokenEnforcementMode.ModeBased]: 'Mode-Based',
+    [TokenEnforcementMode.Strict]: 'Strict Enforcement'
+  };
+  
+  return infoMap[mode] || 'Unknown';
 }
 
-// Mapping of enforcement modes to labels for use in components
+/**
+ * Mapping of enforcement modes to labels for use in components
+ * Using the same values as getEnforcementModeLabel for consistency
+ */
 export const tokenEnforcementModeToLabel: Record<TokenEnforcementMode, string> = {
   [TokenEnforcementMode.None]: 'None',
   [TokenEnforcementMode.Warn]: 'Warning Only',

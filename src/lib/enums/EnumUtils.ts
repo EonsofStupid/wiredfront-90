@@ -19,7 +19,7 @@ export class EnumUtils {
    * Convert string to ChatMode enum with fallback
    */
   static stringToChatMode(mode: string): ChatMode {
-    const normalizedMode = mode?.toLowerCase().trim();
+    const normalizedMode = mode?.toLowerCase().trim() || '';
     
     switch (normalizedMode) {
       case 'chat':
@@ -76,30 +76,7 @@ export class EnumUtils {
    * Convert database string to ChatMode enum
    */
   static databaseStringToChatMode(mode: string): ChatMode {
-    const normalizedMode = mode?.toLowerCase().trim();
-    
-    switch (normalizedMode) {
-      case 'chat':
-        return ChatMode.Chat;
-      case 'dev':
-      case 'editor':
-      case 'development':
-        return ChatMode.Dev;
-      case 'image':
-        return ChatMode.Image;
-      case 'training':
-        return ChatMode.Training;
-      case 'planning':
-        return ChatMode.Planning;
-      case 'code':
-        return ChatMode.Code;
-      case 'document':
-        return ChatMode.Document;
-      case 'audio':
-        return ChatMode.Audio;
-      default:
-        return ChatMode.Chat;
-    }
+    return this.stringToChatMode(mode);
   }
 
   /**
@@ -190,7 +167,7 @@ export class EnumUtils {
    * Convert string to MessageType with fallback
    */
   static stringToMessageType(type: string): MessageType {
-    const normalizedType = type?.toLowerCase().trim();
+    const normalizedType = type?.toLowerCase().trim() || '';
     
     switch (normalizedType) {
       case 'text':
@@ -222,7 +199,7 @@ export class EnumUtils {
    * Convert string to MessageRole with fallback
    */
   static stringToMessageRole(role: string): MessageRole {
-    const normalizedRole = role?.toLowerCase().trim();
+    const normalizedRole = role?.toLowerCase().trim() || '';
     
     switch (normalizedRole) {
       case 'user':
@@ -275,7 +252,7 @@ export class EnumUtils {
    * Convert string to TaskType enum with fallback
    */
   static stringToTaskType(type: string): TaskType {
-    const normalizedType = type?.toLowerCase().trim();
+    const normalizedType = type?.toLowerCase().trim() || '';
     
     switch (normalizedType) {
       case 'chat':
@@ -316,6 +293,8 @@ export class EnumUtils {
         return TaskType.ImageGeneration;
       case 'code_generation':
         return TaskType.CodeGeneration;
+      case 'conversation':
+        return TaskType.Chat; // Alias for backward compatibility
       default:
         return TaskType.Other; // Default fallback
     }
@@ -325,7 +304,7 @@ export class EnumUtils {
    * Convert string to ProviderType enum with fallback
    */
   static stringToProviderType(provider: string): ProviderType {
-    const normalizedProvider = provider?.toLowerCase().trim();
+    const normalizedProvider = provider?.toLowerCase().trim() || '';
     
     switch (normalizedProvider) {
       case 'openai':
@@ -354,7 +333,7 @@ export class EnumUtils {
    * Convert string to VectorDbType enum with fallback
    */
   static stringToVectorDbType(db: string): VectorDbType {
-    const normalizedDb = db?.toLowerCase().trim();
+    const normalizedDb = db?.toLowerCase().trim() || '';
     
     switch (normalizedDb) {
       case 'pinecone':
@@ -404,6 +383,40 @@ export class EnumUtils {
   }
 
   /**
+   * Convert UI chat mode to database mode
+   */
+  static uiModeToChatMode(uiMode: string): ChatMode {
+    return this.stringToChatMode(uiMode);
+  }
+
+  /**
+   * Convert database chat mode to UI mode
+   */
+  static chatModeToUiMode(mode: ChatMode): string {
+    switch (mode) {
+      case ChatMode.Chat:
+        return 'standard';
+      case ChatMode.Dev:
+      case ChatMode.Editor:
+        return 'editor';
+      case ChatMode.Image:
+        return 'image';
+      case ChatMode.Training:
+        return 'training';
+      case ChatMode.Planning:
+        return 'planning';
+      case ChatMode.Code:
+        return 'code';
+      case ChatMode.Document:
+        return 'document';
+      case ChatMode.Audio:
+        return 'audio';
+      default:
+        return 'standard';
+    }
+  }
+
+  /**
    * Get icon name for a ChatMode
    */
   static getChatModeIcon(mode: ChatMode): string {
@@ -434,7 +447,7 @@ export class EnumUtils {
    * Convert string to MessageStatus with fallback
    */
   static stringToMessageStatus(status: string): MessageStatus {
-    const normalizedStatus = status?.toLowerCase().trim();
+    const normalizedStatus = status?.toLowerCase().trim() || '';
     
     switch (normalizedStatus) {
       case 'pending':
@@ -467,5 +480,29 @@ export class EnumUtils {
    */
   static messageStatusToString(status: MessageStatus): string {
     return status.toString();
+  }
+  
+  /**
+   * Safely parse a string to any enum type with fallback
+   */
+  static safeParse(enumName: string, value: string, fallback: string = ''): any {
+    try {
+      if (enumName === 'TokenEnforcementMode') {
+        return this.stringToTokenEnforcementMode(value);
+      } else if (enumName === 'ChatMode') {
+        return this.stringToChatMode(value);
+      } else if (enumName === 'TaskType') {
+        return this.stringToTaskType(value);
+      } else if (enumName === 'MessageType') {
+        return this.stringToMessageType(value);
+      } else if (enumName === 'MessageRole') {
+        return this.stringToMessageRole(value);
+      } else if (enumName === 'MessageStatus') {
+        return this.stringToMessageStatus(value);
+      }
+      return value;
+    } catch (error) {
+      return fallback || value;
+    }
   }
 }
