@@ -74,3 +74,8 @@ export interface ProviderApiKey {
   usageCount?: number;
   metadata?: Record<string, any>;
 }
+
+/**
+ * Legacy ChatProvider type alias for backward compatibility
+ */
+export type ChatProvider = Provider;

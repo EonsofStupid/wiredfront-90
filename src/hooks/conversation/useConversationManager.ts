@@ -63,18 +63,18 @@ export function useConversationManager() {
         throw error;
       }
       
-      // Convert database conversations to application conversations
-      const convertedConversations = data.map(dbConversationToConversation);
-      setConversations(convertedConversations);
+      // Convert database records to Conversation type with proper enum conversion
+      const conversations = (data as any[]).map(dbConversationToConversation);
       
+      setConversations(conversations);
       logger.info(`Loaded ${data.length} conversations`);
       
-      return convertedConversations;
+      return Promise.resolve();
     } catch (err) {
       const errorObj = err instanceof Error ? err : new Error(String(err));
       setError(errorObj);
       logger.error('Failed to fetch conversations', { error: err });
-      return [];
+      return Promise.resolve();
     } finally {
       setIsLoading(false);
     }
@@ -93,9 +93,10 @@ export function useConversationManager() {
       
       const conversationId = uuidv4();
       
-      // Convert params to database format
+      // Convert to database-friendly format
       const dbParams = createParamsToDbParams(params, userData.user.id, conversationId);
       
+      // Insert into database
       const { error } = await supabase
         .from('chat_conversations')
         .insert(dbParams);
@@ -104,13 +105,10 @@ export function useConversationManager() {
         throw error;
       }
       
-      // Create the conversation object for the application
-      const newConversation = dbConversationToConversation({
-        ...dbParams,
-        tokens_used: null
-      });
+      // Create the conversation object with proper enum types
+      const conversation = dbConversationToConversation(dbParams as any);
       
-      setConversations(prev => [newConversation, ...prev]);
+      setConversations(prev => [conversation, ...prev]);
       setCurrentConversationId(conversationId);
       
       logger.info('Created new conversation', { conversationId });
@@ -163,7 +161,7 @@ export function useConversationManager() {
   // Update a conversation
   const updateConversation = useCallback(async (conversationId: string, updates: UpdateConversationParams) => {
     try {
-      // Convert updates to database format
+      // Convert to database format
       const dbUpdates = updateParamsToDbParams(updates);
       
       const { error } = await supabase
@@ -246,8 +244,8 @@ export function useConversationManager() {
         clearMessages();
       }
       
-      // Then delete from the database
-      Promise.resolve().then(async () => {
+      // Then delete from the database in a separate effect
+      (async () => {
         try {
           // First, delete all messages in the conversation
           const { error: messagesError } = await supabase
@@ -276,7 +274,7 @@ export function useConversationManager() {
           logger.error('Failed to delete conversation from database', { error: err });
           toast.error('Failed to delete conversation');
         }
-      });
+      })();
       
       return true;
     } catch (err) {
@@ -285,91 +283,18 @@ export function useConversationManager() {
     }
   }, [currentConversationId, clearMessages]);
 
-  // Clear all conversations
-  const clearConversations = useCallback(async () => {
-    try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData?.user) {
-        throw new Error('User not authenticated');
-      }
-      
-      const { error } = await supabase
-        .from('chat_conversations')
-        .delete()
-        .eq('user_id', userData.user.id);
-      
-      if (error) {
-        throw error;
-      }
-      
-      setConversations([]);
-      setCurrentConversationId(null);
-      clearMessages();
-      
-      logger.info('Cleared all conversations');
-      toast.success('All conversations cleared');
-      return true;
-    } catch (err) {
-      logger.error('Failed to clear conversations', { error: err });
-      toast.error('Failed to clear conversations');
-      return false;
-    }
-  }, [clearMessages]);
-
-  // Cleanup inactive conversations (older than 30 days)
-  const cleanupInactiveConversations = useCallback(async () => {
-    try {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
-      const { error } = await supabase
-        .from('chat_conversations')
-        .delete()
-        .lt('last_accessed', thirtyDaysAgo.toISOString());
-      
-      if (error) {
-        throw error;
-      }
-      
-      // Refresh conversations to get updated list
-      await loadConversations();
-      
-      logger.info('Cleaned up inactive conversations');
-      toast.success('Inactive conversations cleaned up');
-      return true;
-    } catch (err) {
-      logger.error('Failed to cleanup inactive conversations', { error: err });
-      toast.error('Failed to cleanup inactive conversations');
-      return false;
-    }
-  }, [loadConversations]);
-
-  // Filter active and archived conversations
-  const activeConversations = conversations.filter(c => !c.archived);
-  const archivedConversations = conversations.filter(c => c.archived);
-
   return {
-    // State
     conversations,
-    activeConversations,
-    archivedConversations,
     currentConversationId,
     currentConversation,
     isLoading,
     error,
-    
-    // Core operations
     loadConversations,
     createConversation,
     switchConversation,
     updateConversation,
     archiveConversation,
     deleteConversation,
-    setCurrentConversationId,
-    refreshConversations: loadConversations,
-    
-    // Cleanup utilities
-    clearConversations,
-    cleanupInactiveConversations
+    setCurrentConversationId
   };
 }

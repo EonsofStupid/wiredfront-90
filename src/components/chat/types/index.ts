@@ -23,3 +23,6 @@ export {
   ChatPosition,
   TaskType
 } from '@/types/chat/enums';
+
+// Explicitly re-export with alias to avoid ambiguity
+export { dbStringToChatMode as dbModeToChatMode } from './chat-modes';

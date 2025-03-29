@@ -58,4 +58,6 @@ export interface FeatureActions extends FeatureToggleActions, ProviderActions, P
   setModel: (model: string) => void;
   toggleDocked: () => void;
   setChatId: (id: string | null) => void;
+  setUserInput: (input: string) => void;
+  resetChatState: () => void;
 }

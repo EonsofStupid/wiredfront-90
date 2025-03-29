@@ -13,7 +13,7 @@ import { logger } from '@/services/chat/LoggingService';
 export const createToggleActions = (
   set: SetState<ChatState>,
   get: GetState<ChatState>
-): Pick<FeatureActions, 'toggleFeature' | 'enableFeature' | 'disableFeature' | 'setFeatureState' | 'togglePosition' | 'setPosition' | 'updateProviders' | 'updateChatProvider'> => {
+): Pick<FeatureActions, 'toggleFeature' | 'enableFeature' | 'disableFeature' | 'setFeatureState' | 'togglePosition' | 'setPosition' | 'updateChatProvider' | 'updateAvailableProviders'> => {
   return {
     ...createFeatureToggleActions(set, get),
     ...createProviderActions(set, get),

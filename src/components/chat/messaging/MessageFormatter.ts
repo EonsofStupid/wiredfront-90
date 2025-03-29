@@ -1,79 +1,84 @@
 
 import { marked } from 'marked';
-import { markedHighlight } from 'marked-highlight';
-import DOMPurify from 'dompurify';
 import hljs from 'highlight.js';
+import DOMPurify from 'dompurify';
+import { logger } from '@/services/chat/LoggingService';
 
 /**
- * Format message content with markdown and syntax highlighting
+ * Configure marked options
  */
-export const formatMessage = (content: string): string => {
-  // Set up marked with syntax highlighting
-  marked.use(
-    markedHighlight({
-      langPrefix: 'hljs language-',
-      highlight(code, lang) {
-        const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-        return hljs.highlight(code, { language }).value;
-      }
-    })
-  );
-  
-  // Set up custom renderer for links to open in new tab
-  const renderer = new marked.Renderer();
-  renderer.link = (href, title, text) => {
-    return `<a href="${href}" target="_blank" rel="noopener noreferrer" title="${title || ''}">${text}</a>`;
-  };
-  
-  marked.setOptions({
-    renderer,
-    gfm: true,
-    breaks: true,
-    smartLists: true
-  });
-  
-  // Convert markdown to HTML
-  const html = marked.parse(content);
-  
-  // Sanitize HTML to prevent XSS
-  return DOMPurify.sanitize(html);
-};
+marked.setOptions({
+  renderer: new marked.Renderer(),
+  highlight: function(code, lang) {
+    try {
+      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+      return hljs.highlight(code, { language }).value;
+    } catch (e) {
+      logger.error('Highlighting error:', e);
+      return code;
+    }
+  },
+  langPrefix: 'hljs language-',
+  pedantic: false,
+  gfm: true,
+  breaks: true,
+  sanitize: false,
+  headerIds: true,
+  mangle: true
+});
+
+/**
+ * Format a text message with Markdown
+ */
+export async function formatMessage(content: string): Promise<string> {
+  try {
+    // First parse markdown
+    const markedOutput = await Promise.resolve(marked(content));
+    
+    // Then sanitize HTML
+    const sanitized = DOMPurify.sanitize(markedOutput, {
+      ALLOWED_TAGS: [
+        'a', 'b', 'blockquote', 'br', 'code', 'div', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'hr', 'i', 'img', 'li', 'ol', 'p', 'pre', 's', 'span', 'strong', 'table', 'tbody',
+        'td', 'th', 'thead', 'tr', 'u', 'ul'
+      ],
+      ALLOWED_ATTR: ['href', 'class', 'style', 'src', 'alt', 'title', 'target', 'rel']
+    });
+    
+    return sanitized;
+  } catch (error) {
+    logger.error('Error formatting message', error);
+    return content;
+  }
+}
+
+/**
+ * Format code block for syntax highlighting
+ */
+export function formatCodeBlock(code: string, language: string = 'typescript'): string {
+  try {
+    const highlightedCode = hljs.highlight(code, { language }).value;
+    return highlightedCode;
+  } catch (error) {
+    logger.error('Error formatting code block', error);
+    return code;
+  }
+}
 
 /**
  * Extract code blocks from a message
  */
-export const extractCodeBlocks = (content: string): { language: string; code: string }[] => {
-  const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
-  const codeBlocks: { language: string; code: string }[] = [];
-  
+export function extractCodeBlocks(content: string): { language: string; code: string }[] {
+  const codeBlockRegex = /```([\w-]*)\n([\s\S]*?)```/g;
+  const matches: { language: string; code: string }[] = [];
   let match;
+  
   while ((match = codeBlockRegex.exec(content)) !== null) {
-    codeBlocks.push({
+    matches.push({
       language: match[1] || 'plaintext',
       code: match[2]
     });
   }
   
-  return codeBlocks;
-};
-
-/**
- * Format code with syntax highlighting
- */
-export const formatCode = (code: string, language = 'plaintext'): string => {
-  try {
-    const lang = hljs.getLanguage(language) ? language : 'plaintext';
-    return hljs.highlight(code, { language: lang }).value;
-  } catch (e) {
-    console.error('Error highlighting code:', e);
-    return code;
-  }
-};
-
-export const MessageFormatter = {
-  formatMessage,
-  extractCodeBlocks,
-  formatCode
-};
-
-export default MessageFormatter;
+  return matches;
+}

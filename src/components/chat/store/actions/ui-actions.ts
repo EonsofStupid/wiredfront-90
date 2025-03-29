@@ -10,7 +10,7 @@ type SetState<T> = (
 type GetState<T> = () => T;
 
 /**
- * Create UI state actions for the chat store
+ * Create UI-related actions for the chat store
  */
 export const createUIActions = (
   set: SetState<ChatState>,
@@ -18,34 +18,34 @@ export const createUIActions = (
 ) => {
   return {
     /**
-     * Toggle the chat visibility
+     * Toggle the chat panel open/closed
      */
     toggleChat: () => {
-      const isOpen = get().isOpen;
-      set({ isOpen: !isOpen });
-      logger.info('Chat visibility toggled', { isOpen: !isOpen });
+      const isCurrentlyOpen = get().isOpen;
+      set({ isOpen: !isCurrentlyOpen });
+      logger.info('Chat toggled', { isOpen: !isCurrentlyOpen });
     },
     
     /**
-     * Toggle the minimized state
+     * Toggle the minimized state of the chat
      */
     toggleMinimize: () => {
-      const isMinimized = get().isMinimized;
-      set({ isMinimized: !isMinimized });
-      logger.info('Minimized state toggled', { isMinimized: !isMinimized });
+      const isCurrentlyMinimized = get().isMinimized;
+      set({ isMinimized: !isCurrentlyMinimized });
+      logger.info('Chat minimized state toggled', { isMinimized: !isCurrentlyMinimized });
     },
     
     /**
      * Toggle the sidebar visibility
      */
     toggleSidebar: () => {
-      const showSidebar = get().showSidebar;
-      set({ showSidebar: !showSidebar });
-      logger.info('Sidebar visibility toggled', { showSidebar: !showSidebar });
+      const isCurrentlySidebarShown = get().showSidebar;
+      set({ showSidebar: !isCurrentlySidebarShown });
+      logger.info('Sidebar toggled', { showSidebar: !isCurrentlySidebarShown });
     },
     
     /**
-     * Reset the user input
+     * Reset the user input field
      */
     resetInput: () => {
       set({ userInput: '' });
@@ -53,10 +53,11 @@ export const createUIActions = (
     },
     
     /**
-     * Set an error message
+     * Set the error state
      */
-    setError: (error: string | null) => {
+    setError: (error: Error | null) => {
       set({ error });
+      
       if (error) {
         logger.error('Chat error set', { error });
       } else {
@@ -67,50 +68,42 @@ export const createUIActions = (
     /**
      * Set the current session
      */
-    setCurrentSession: (sessionId: string | null) => {
-      set({ currentSession: sessionId });
-      logger.info('Current session set', { sessionId });
+    setCurrentSession: (session: any) => {
+      set({ currentSession: session });
+      logger.info('Current session set', { sessionId: session?.id });
     },
     
     /**
-     * Set session loading state
+     * Set loading states
      */
     setSessionLoading: (isLoading: boolean) => {
-      set((state) => ({
+      set(state => ({
         ui: {
           ...state.ui,
           sessionLoading: isLoading
         }
       }));
-      logger.info('Session loading state set', { isLoading });
+      logger.debug('Session loading state set', { isLoading });
     },
     
-    /**
-     * Set message loading state
-     */
     setMessageLoading: (isLoading: boolean) => {
-      set((state) => ({
+      set(state => ({
         ui: {
           ...state.ui,
           messageLoading: isLoading
         }
       }));
-      logger.info('Message loading state set', { isLoading });
+      logger.debug('Message loading state set', { isLoading });
     },
     
-    /**
-     * Set provider loading state
-     */
     setProviderLoading: (isLoading: boolean) => {
-      set((state) => ({
+      set(state => ({
         ui: {
           ...state.ui,
           providerLoading: isLoading
         }
       }));
-      logger.info('Provider loading state set', { isLoading });
+      logger.debug('Provider loading state set', { isLoading });
     }
   };
 };
-
-export type UIActions = ReturnType<typeof createUIActions>;

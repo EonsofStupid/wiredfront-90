@@ -4,6 +4,7 @@ import { Conversation } from '@/types/chat/conversation';
 import { ChatMode } from '@/types/chat/enums';
 import { EnumUtils } from '@/lib/enums/EnumUtils';
 import { logger } from './LoggingService';
+import { Json } from '@/integrations/supabase/types';
 
 /**
  * Fetch all conversations for the current user
@@ -28,7 +29,7 @@ export const fetchConversations = async (): Promise<Conversation[]> => {
     // Convert database mode to ChatMode enum
     const conversations = data.map((item: any) => ({
       ...item,
-      mode: EnumUtils.databaseStringToChatMode(item.mode)
+      mode: EnumUtils.stringToChatMode(item.mode)
     })) as Conversation[];
     
     return conversations;
@@ -76,7 +77,7 @@ export const createConversation = async (params: Partial<Conversation> = {}): Pr
     
     const { error } = await supabase
       .from('chat_conversations')
-      .insert(conversationData);
+      .insert(conversationData as any);
     
     if (error) {
       throw error;
@@ -111,7 +112,7 @@ export const updateConversation = async (
       .update({
         ...dbUpdates,
         updated_at: new Date().toISOString()
-      })
+      } as any)
       .eq('id', id);
     
     if (error) {
