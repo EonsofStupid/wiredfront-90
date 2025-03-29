@@ -48,7 +48,7 @@ export class EnumUtils {
   /**
    * Convert ChatMode enum to database string representation
    */
-  static chatModeForDatabase(mode: ChatMode): string {
+  static chatModeToString(mode: ChatMode): string {
     switch (mode) {
       case ChatMode.Chat:
         return 'chat';
@@ -70,6 +70,13 @@ export class EnumUtils {
       default:
         return 'chat';
     }
+  }
+
+  /**
+   * Alias for chatModeToString - for consistency with other methods
+   */
+  static chatModeForDatabase(mode: ChatMode): string {
+    return this.chatModeToString(mode);
   }
 
   /**

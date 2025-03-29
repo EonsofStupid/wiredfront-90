@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { CreateConversationParams, UpdateConversationParams, Conversation } from '@/types/chat/conversation';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from './LoggingService';
-import { chatModeToString, stringToChatMode } from '@/components/chat/types/enums-mapper';
+import { EnumUtils } from '@/lib/enums';
 
 /**
  * Create a new conversation in the database
@@ -19,7 +19,7 @@ export const createConversation = async (params: CreateConversationParams): Prom
     const conversationId = uuidv4();
     
     // Convert ChatMode enum to string for database
-    const dbMode = params.mode ? chatModeToString(params.mode) : 'chat';
+    const dbMode = params.mode ? EnumUtils.chatModeToString(params.mode) : 'chat';
     
     const conversation = {
       id: conversationId,
@@ -63,7 +63,7 @@ export const updateConversation = async (conversationId: string, updates: Update
     // Convert ChatMode enum to string for database if it exists
     const dbUpdates: any = { ...updates };
     if (updates.mode) {
-      dbUpdates.mode = chatModeToString(updates.mode);
+      dbUpdates.mode = EnumUtils.chatModeToString(updates.mode);
     }
     
     const { error } = await supabase
@@ -147,7 +147,7 @@ export const fetchConversations = async (): Promise<Conversation[]> => {
     // Convert string modes from DB to ChatMode enum
     const conversations = data.map(conv => ({
       ...conv,
-      mode: stringToChatMode(conv.mode as string)
+      mode: EnumUtils.stringToChatMode(conv.mode as string)
     })) as Conversation[];
     
     return conversations;
@@ -177,7 +177,7 @@ export const fetchConversation = async (conversationId: string): Promise<Convers
     // Convert string mode from DB to ChatMode enum
     const conversation = {
       ...data,
-      mode: stringToChatMode(data.mode as string)
+      mode: EnumUtils.stringToChatMode(data.mode as string)
     } as Conversation;
     
     return conversation;

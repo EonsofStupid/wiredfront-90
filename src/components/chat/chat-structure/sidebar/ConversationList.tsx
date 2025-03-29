@@ -1,107 +1,123 @@
 
-import React from 'react';
-import { useConversationManager } from '../../hooks/conversation';
-import { Conversation } from '@/types/chat/conversation';
-import { cn } from '@/lib/utils';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Archive, Trash, RefreshCw } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { PlusCircle, Search, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ConversationItem } from './ConversationItem';
+import { useConversationManager } from '@/components/chat/hooks/conversation/useConversationManager';
+import { Conversation } from '@/types/chat/conversation';
+import { ChatMode } from '@/types/chat/enums';
 import { EnumUtils } from '@/lib/enums';
 
-interface ConversationListProps {
-  conversations: Conversation[];
-  currentConversationId: string | null;
-  isArchived: boolean;
-}
-
-export function ConversationList({ 
-  conversations, 
-  currentConversationId,
-  isArchived
-}: ConversationListProps) {
+export function ConversationList() {
   const { 
-    switchConversation,
-    archiveConversation,
-    deleteConversation
+    activeConversations, 
+    createConversation, 
+    switchConversation, 
+    currentConversationId 
   } = useConversationManager();
   
-  if (conversations.length === 0) {
-    return (
-      <div className="p-4 text-center text-muted-foreground text-sm">
-        {isArchived ? 'No archived conversations' : 'No active conversations'}
-      </div>
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredConversations, setFilteredConversations] = useState<Conversation[]>([]);
+  
+  // Filter conversations based on search query
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredConversations(activeConversations);
+      return;
+    }
+    
+    const filtered = activeConversations.filter(
+      conv => conv.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }
+    setFilteredConversations(filtered);
+  }, [searchQuery, activeConversations]);
+  
+  // Handle new conversation click
+  const handleNewConversation = async () => {
+    await createConversation();
+  };
+  
+  // Create a specialized conversation
+  const createSpecializedChat = async (mode: ChatMode) => {
+    await createConversation({
+      mode,
+      title: `New ${EnumUtils.getChatModeLabel(mode)} Chat`
+    });
+  };
   
   return (
-    <div className="space-y-1 p-2">
-      {conversations.map((conversation) => {
-        const isActive = currentConversationId === conversation.id;
-        const modeLabel = EnumUtils.chatModeToUiMode(
-          typeof conversation.mode === 'string'
-            ? EnumUtils.stringToChatMode(conversation.mode)
-            : conversation.mode
-        );
+    <div className="flex flex-col h-full">
+      <div className="p-4 border-b">
+        <Button 
+          onClick={handleNewConversation}
+          className="w-full justify-start bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+        >
+          <PlusCircle className="mr-2 h-4 w-4" />
+          New Chat
+        </Button>
         
-        return (
-          <div 
-            key={conversation.id}
-            className={cn(
-              "relative group rounded-md",
-              isActive && "bg-accent"
-            )}
+        <div className="mt-2 flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="flex-1 text-xs"
+            onClick={() => createSpecializedChat(ChatMode.Dev)}
           >
+            Dev
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="flex-1 text-xs"
+            onClick={() => createSpecializedChat(ChatMode.Image)}
+          >
+            Image
+          </Button>
+        </div>
+      </div>
+      
+      <div className="p-4 border-b">
+        <div className="relative">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search conversations..."
+            className="pl-8"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
             <Button
-              variant={isActive ? "default" : "ghost"}
-              size="sm"
-              className="w-full justify-start text-left h-auto py-2 px-3"
-              onClick={() => switchConversation(conversation.id)}
+              variant="ghost"
+              size="icon"
+              className="absolute right-0 top-0 h-9 w-9"
+              onClick={() => setSearchQuery('')}
             >
-              <div className="truncate">
-                <span>{conversation.title || 'Untitled'}</span>
-                <div className="text-xs opacity-70 mt-0.5 flex items-center gap-1">
-                  <span className="capitalize">{modeLabel}</span>
-                  <span>•</span>
-                  <span>{new Date(conversation.created_at).toLocaleDateString()}</span>
-                </div>
-              </div>
+              <X className="h-4 w-4" />
             </Button>
-            
-            <div className={cn(
-              "absolute right-1 top-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1",
-              isActive && "opacity-70"
-            )}>
-              {isArchived ? (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => archiveConversation(conversation.id, false)}
-                >
-                  <RefreshCw className="h-3 w-3" />
-                </Button>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => archiveConversation(conversation.id, true)}
-                >
-                  <Archive className="h-3 w-3" />
-                </Button>
-              )}
-              
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={() => deleteConversation(conversation.id)}
-              >
-                <Trash className="h-3 w-3" />
-              </Button>
+          )}
+        </div>
+      </div>
+      
+      <ScrollArea className="flex-1">
+        <div className="p-2">
+          {filteredConversations.length > 0 ? (
+            filteredConversations.map((conversation) => (
+              <ConversationItem
+                key={conversation.id}
+                conversation={conversation}
+                isActive={conversation.id === currentConversationId}
+                onClick={() => switchConversation(conversation.id)}
+              />
+            ))
+          ) : (
+            <div className="p-4 text-center text-sm text-muted-foreground">
+              {searchQuery ? 'No matching conversations' : 'No conversations found'}
             </div>
-          </div>
-        );
-      })}
+          )}
+        </div>
+      </ScrollArea>
     </div>
   );
 }

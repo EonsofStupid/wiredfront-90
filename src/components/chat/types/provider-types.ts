@@ -1,53 +1,50 @@
 
-/**
- * Provider model definition
- */
-export interface ProviderModel {
-  id: string;
-  name: string;
-  displayName: string;
-  description?: string;
-  maxTokens?: number;
-  contextWindow?: number;
-  supportedModes: string[];
-  isDefault?: boolean;
-  tokenizingMethod?: string;
-  pricing?: {
-    input: number;
-    output: number;
-    unit: string;
-  };
-}
+import { ProviderType } from '@/types/chat/communication';
 
 /**
- * Chat provider interface
+ * Interface for AI providers
  */
 export interface Provider {
   id: string;
   name: string;
-  displayName: string;
+  type: ProviderType;
   description?: string;
-  apiType: string;
-  models: ProviderModel[];
-  isEnabled: boolean;
-  isDefault?: boolean;
-  category: 'chat' | 'image' | 'audio' | 'video' | 'embedding' | 'integration';
-  capabilities?: {
-    streaming?: boolean;
-    functions?: boolean;
-    tokenCounting?: boolean;
-    vision?: boolean;
-  };
-  endpoints?: Record<string, string>;
-  maxRequestTokens?: number;
-  baseUrl?: string;
-  configSchema?: Record<string, any>;
-  metadata?: Record<string, any>;
   icon?: string;
-  type?: string; // Added for backward compatibility
+  isEnabled?: boolean;
+  isDefault?: boolean;
+  models?: ProviderModel[];
+  apiKey?: string;
+  endpointUrl?: string;
+  category?: 'chat' | 'image' | 'audio' | 'embeddings';
+  features?: string[];
 }
 
 /**
- * Export as ChatProvider for backward compatibility
+ * Interface for provider models
  */
-export type ChatProvider = Provider;
+export interface ProviderModel {
+  id: string;
+  name: string;
+  description?: string;
+  contextWindow?: number;
+  maxTokens?: number;
+  isEnabled?: boolean;
+  isDefault?: boolean;
+  isStreaming?: boolean;
+}
+
+/**
+ * Validates a provider object
+ */
+export const validateProvider = (provider: Provider): boolean => {
+  if (!provider || typeof provider !== 'object') {
+    return false;
+  }
+  
+  // Check for required fields
+  if (!provider.id || !provider.name) {
+    return false;
+  }
+  
+  return true;
+};

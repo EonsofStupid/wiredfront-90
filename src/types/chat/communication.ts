@@ -1,8 +1,7 @@
-
-import { TaskType } from './enums';
+import { ChatMode, MessageRole, MessageType } from './enums';
 
 /**
- * Provider types enum
+ * Provider types supported by the system
  */
 export enum ProviderType {
   OpenAI = 'openai',
@@ -17,7 +16,7 @@ export enum ProviderType {
 }
 
 /**
- * Vector database types enum
+ * Vector database types supported by the system
  */
 export enum VectorDbType {
   Pinecone = 'pinecone',
@@ -26,9 +25,38 @@ export enum VectorDbType {
   Milvus = 'milvus',
   Supabase = 'supabase',
   ChromaDB = 'chromadb',
-  Faiss = 'faiss',
-  Custom = 'custom'
+  Faiss = 'faiss'
 }
+
+/**
+ * Task types for AI operations
+ */
+export enum TaskType {
+  Chat = 'chat',
+  Generation = 'generation',
+  Completion = 'completion',
+  Summarization = 'summarization',
+  Translation = 'translation',
+  Analysis = 'analysis',
+  Extraction = 'extraction',
+  Classification = 'classification',
+  Transformation = 'transformation',
+  Recommendation = 'recommendation',
+  StructuredOutput = 'structured_output',
+  AdminQuery = 'admin_query',
+  SystemDiagnostic = 'system_diagnostic',
+  CacheQuery = 'cache_query',
+  VectorIndex = 'vector_index',
+  ModelValidation = 'model_validation',
+  QuestionAnswering = 'question_answering',
+  ImageGeneration = 'image_generation',
+  CodeGeneration = 'code_generation',
+  Conversation = 'conversation', // Alias for Chat for backward compatibility
+  Other = 'other'
+}
+
+// Re-export TaskType for consistency and to fix imports
+export { TaskType as TaskType };
 
 /**
  * Extended task types (for internal code organization)

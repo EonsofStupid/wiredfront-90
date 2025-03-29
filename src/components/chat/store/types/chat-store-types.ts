@@ -1,98 +1,97 @@
 
-import { 
-  ChatMode, 
-  ChatPosition,
-  MessageStatus
-} from '@/types/chat/enums';
-import { Message } from '@/components/chat/types/message-types';
+import { ChatMode, ChatPosition, MessageStatus } from '@/types/chat/enums';
+import { Message } from '@/types/chat/message';
+import { Conversation } from '@/types/chat/conversation';
 import { Provider } from '@/components/chat/types/provider-types';
-import { Features } from '@/components/chat/types/feature-types';
 
-export type ModelFetchStatus = 'idle' | 'loading' | 'success' | 'error';
-
+// UI Chat Mode representation
 export type UiChatMode = 'standard' | 'editor' | 'image' | 'training' | 'planning' | 'code' | 'document' | 'audio';
 
-/**
- * Structure of a chat window state
- */
+// Re-export the Provider type
+export type ChatProvider = Provider;
+
+// Chat window state
 export interface ChatWindowState {
   isMinimized: boolean;
-  position: ChatPosition;
-  showSidebar: boolean;
-  scale: number;
+  isVisible: boolean;
+  height: number;
+  width: number;
 }
 
-/**
- * Structure of a chat session
- */
+// Chat session state
 export interface ChatSession {
-  id: string;
-  title: string;
-  created_at: string;
-  last_accessed: string;
+  id: string | null;
   messages: Message[];
-  status: MessageStatus;
+  startTime: number | null;
   mode: ChatMode;
-  provider_id?: string;
-  archived?: boolean;
 }
 
-/**
- * Chat UI state
- */
-export interface ChatUIState {
-  sessionLoading: boolean;
-  messageLoading: boolean;
-  providerLoading: boolean;
-}
-
-/**
- * Main chat state interface
- */
+// Chat state interface
 export interface ChatState {
-  initialized: boolean;
-  messages: Message[];
-  userInput: string;
-  isWaitingForResponse: boolean;
-  selectedModel: string;
-  selectedMode: 'chat' | 'dev' | 'image' | 'training';
-  modelFetchStatus: ModelFetchStatus;
-  error: string | null;
-  chatId: string | null;
-  docked: boolean;
+  // UI state
   isOpen: boolean;
   isMinimized: boolean;
+  userInput: string;
   position: ChatPosition;
-  startTime: number;
-  features: Features;
-  currentMode: ChatMode;
-  availableProviders: Provider[];
-  currentProvider: Provider | null;
+  error: string | null;
   
+  // Session state
+  messages: Message[];
+  startTime: number | null;
+  currentSession: string | null;
+  sessions: Record<string, ChatSession>;
+  
+  // Provider state
+  currentProvider: Provider | null;
+  availableProviders: Provider[];
   providers: {
+    currentProvider: Provider | null;
     availableProviders: Provider[];
-    currentProvider?: Provider | null;
   };
   
-  showSidebar: boolean;
-  scale: number;
-  ui: ChatUIState;
+  // Feature flags
+  features: {
+    voice: boolean;
+    rag: boolean;
+    darkMode: boolean;
+    imageGeneration: boolean;
+    multiFile: boolean;
+    ragSupport: boolean;
+    githubSync: boolean;
+    knowledgeBase: boolean;
+    tokenEnforcement: boolean;
+    standardChat: boolean;
+    training: boolean;
+  };
   
-  // For token management, optional
-  tokenBalance?: number;
+  // Current modes
+  currentMode: ChatMode;
   
-  // Required store actions
+  // Custom UI state
+  customStyles: Record<string, string>;
+  
+  // Actions - these will be implemented by action creators
   resetChatState: () => void;
   setUserInput: (input: string) => void;
   toggleChat: () => void;
   toggleMinimize: () => void;
-  toggleSidebar: () => void;
-  toggleDocked: () => void;
-  setPosition: (position: ChatPosition) => void;
-  setChatId: (chatId: string | null) => void;
-  setMode: (mode: ChatMode | string) => void;
-  initializeChat: () => void;
-  setSessionLoading: (loading: boolean) => void;
-  setMessageLoading: (loading: boolean) => void;
-  setProviderLoading: (loading: boolean) => void;
+  resetInput: () => void;
+  setError: (error: string | null) => void;
+  setCurrentSession: (sessionId: string | null) => void;
+}
+
+// Define conversation store state
+export interface ConversationState {
+  conversations: Conversation[];
+  currentConversationId: string | null;
+  isLoading: boolean;
+  error: Error | null;
+  
+  // Required actions
+  fetchConversations: () => Promise<void>;
+  createConversation: (params?: any) => string;
+  updateConversation: (id: string, updates: any) => Promise<boolean>;
+  archiveConversation: (id: string) => boolean;
+  deleteConversation: (id: string) => boolean;
+  setCurrentConversationId: (id: string | null) => void;
 }
