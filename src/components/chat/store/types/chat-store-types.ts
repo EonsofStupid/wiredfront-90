@@ -34,12 +34,17 @@ export interface ChatState {
   userInput: string;
   position: ChatPosition;
   error: string | null;
+  docked: boolean;
+  showSidebar: boolean;
+  scale: number;
   
   // Session state
   messages: Message[];
   startTime: number | null;
   currentSession: string | null;
   sessions: Record<string, ChatSession>;
+  chatId: string | null;
+  isWaitingForResponse: boolean;
   
   // Provider state
   currentProvider: Provider | null;
@@ -47,6 +52,18 @@ export interface ChatState {
   providers: {
     currentProvider: Provider | null;
     availableProviders: Provider[];
+  };
+  
+  // Selection state
+  selectedModel: string;
+  selectedMode: string;
+  
+  // UI status
+  modelFetchStatus: 'idle' | 'loading' | 'success' | 'error';
+  ui: {
+    sessionLoading: boolean;
+    messageLoading: boolean;
+    providerLoading: boolean;
   };
   
   // Feature flags
@@ -62,6 +79,9 @@ export interface ChatState {
     tokenEnforcement: boolean;
     standardChat: boolean;
     training: boolean;
+    codeAssistant: boolean;
+    notifications: boolean;
+    modeSwitch: boolean;
   };
   
   // Current modes
@@ -75,9 +95,18 @@ export interface ChatState {
   setUserInput: (input: string) => void;
   toggleChat: () => void;
   toggleMinimize: () => void;
+  toggleSidebar: () => void;
+  toggleDocked: () => void;
   resetInput: () => void;
   setError: (error: string | null) => void;
   setCurrentSession: (sessionId: string | null) => void;
+  setChatId: (id: string | null) => void;
+  setMode: (mode: ChatMode | string) => void;
+  setPosition: (position: ChatPosition) => void;
+  initializeChat: () => void;
+  setSessionLoading: (isLoading: boolean) => void;
+  setMessageLoading: (isLoading: boolean) => void;
+  setProviderLoading: (isLoading: boolean) => void;
 }
 
 // Define conversation store state

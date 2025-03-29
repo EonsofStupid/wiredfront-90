@@ -1,6 +1,6 @@
 
 import { ChatMode } from '@/types/chat/enums';
-import { EnumUtils } from '@/lib/enums';
+import { EnumUtils } from '@/lib/enums/EnumUtils';
 
 /**
  * Convert a ChatMode enum to a database string representation

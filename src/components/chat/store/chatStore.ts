@@ -15,61 +15,89 @@ type FullChatStore = ChatState &
   ReturnType<typeof createUIActions>;
 
 const initialState: ChatState = {
+  // Basic state
   initialized: false,
+  isOpen: false,
+  isMinimized: false,
+  docked: true,
+  showSidebar: false,
+  scale: 1,
+  
+  // Input state
   messages: [],
   userInput: '',
   isWaitingForResponse: false,
+  
+  // Selection state
   selectedModel: 'gpt-4',
   selectedMode: 'chat',
+  
+  // UI status
   modelFetchStatus: 'idle',
   error: null,
+  
+  // Session state
   chatId: null,
-  docked: true,
-  isOpen: false,
-  isMinimized: false,
-  position: ChatPosition.BottomRight,
   startTime: Date.now(),
+  currentSession: null,
+  sessions: {},
+  
+  // Position state
+  position: ChatPosition.BottomRight,
+  
+  // Features
   features: {
     voice: true,
     rag: true,
-    modeSwitch: true,
-    notifications: true,
-    github: true,
-    codeAssistant: true,
+    darkMode: true,
+    imageGeneration: true,
+    multiFile: true,
     ragSupport: true,
     githubSync: true,
     knowledgeBase: true,
     tokenEnforcement: false,
     standardChat: true,
-    imageGeneration: true,
-    training: true
+    training: true,
+    codeAssistant: true,
+    notifications: true,
+    modeSwitch: true
   },
+  
+  // Current mode
   currentMode: ChatMode.Chat,
+  
+  // Provider state
   availableProviders: [],
   currentProvider: null,
   
   providers: {
-    availableProviders: [],
+    currentProvider: null,
+    availableProviders: []
   },
   
-  showSidebar: false,
-  scale: 1,
+  // UI state
   ui: {
     sessionLoading: false,
     messageLoading: false,
     providerLoading: false,
   },
   
-  // Required actions
+  // Custom styles
+  customStyles: {},
+  
+  // Required actions - these will be implemented by action creators 
   resetChatState: () => {},
   setUserInput: () => {},
   toggleChat: () => {},
   toggleMinimize: () => {},
   toggleSidebar: () => {},
   toggleDocked: () => {},
-  setPosition: () => {},
+  resetInput: () => {},
+  setError: () => {},
+  setCurrentSession: () => {},
   setChatId: () => {},
   setMode: () => {},
+  setPosition: () => {},
   initializeChat: () => {},
   setSessionLoading: () => {},
   setMessageLoading: () => {},
@@ -154,11 +182,11 @@ export const useChatStore = create<FullChatStore>()(
           availableProviders: get().availableProviders,
           currentProvider: get().currentProvider,
           features: get().features,
-        }, false, { type: 'chat/resetState' });
+        });
       },
       
       setUserInput: (input: string) => {
-        set({ userInput: input }, false, { type: 'chat/setUserInput', input });
+        set({ userInput: input });
       },
       
       ...createInitializationActions(set, get),

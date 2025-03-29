@@ -1,13 +1,15 @@
 
-import { SetState, GetState } from 'zustand';
-import { createToggleActions } from './feature/toggle';
-import { createPositionActions } from './feature/toggle/position-actions';
-import { createProviderActions } from './feature/provider-actions';
-import { createTokenActions } from './token/token-actions';
 import { ChatState } from '../types/chat-store-types';
 import { ChatMode } from '@/types/chat/enums';
-import { EnumUtils } from '@/lib/enums';
+import { EnumUtils } from '@/lib/enums/EnumUtils';
 import { logger } from '@/services/chat/LoggingService';
+
+type SetState<T> = (
+  partial: T | Partial<T> | ((state: T) => T | Partial<T>),
+  replace?: boolean
+) => void;
+
+type GetState<T> = () => T;
 
 /**
  * Create feature actions for the chat store
@@ -16,18 +18,7 @@ export const createFeatureActions = (
   set: SetState<ChatState>,
   get: GetState<ChatState>
 ) => {
-  // Create feature action slices
-  const toggleActions = createToggleActions(set, get);
-  const positionActions = createPositionActions(set, get);
-  const providerActions = createProviderActions(set, get);
-  const tokenActions = createTokenActions(set, get);
-  
   return {
-    ...toggleActions,
-    ...positionActions,
-    ...providerActions,
-    ...tokenActions,
-
     /**
      * Set the current chat mode
      */
@@ -47,6 +38,33 @@ export const createFeatureActions = (
     setChatId: (chatId: string | null) => {
       set({ chatId });
       logger.info('Chat ID set', { chatId });
+    },
+    
+    /**
+     * Toggle the chat position
+     */
+    togglePosition: () => {
+      const currentPosition = get().position;
+      const newPosition = currentPosition === 'bottom-right' ? 'bottom-left' : 'bottom-right';
+      set({ position: newPosition });
+      logger.info('Chat position toggled', { newPosition });
+    },
+    
+    /**
+     * Set the chat position
+     */
+    setPosition: (position: any) => {
+      set({ position });
+      logger.info('Chat position set', { position });
+    },
+    
+    /**
+     * Toggle the docked state
+     */
+    toggleDocked: () => {
+      const isDocked = get().docked;
+      set({ docked: !isDocked });
+      logger.info('Docked state toggled', { isDocked: !isDocked });
     },
     
     /**
@@ -93,6 +111,42 @@ export const createFeatureActions = (
         feature: featureKey, 
         enabled: !get().features[featureKey] 
       });
+    },
+    
+    /**
+     * Update current provider
+     */
+    updateChatProvider: (provider: any) => {
+      set({ 
+        currentProvider: provider,
+        providers: {
+          ...get().providers,
+          currentProvider: provider
+        }
+      });
+      logger.info('Current provider updated', { provider });
+    },
+    
+    /**
+     * Update available providers
+     */
+    updateAvailableProviders: (providers: any[]) => {
+      set({ 
+        availableProviders: providers,
+        providers: {
+          ...get().providers,
+          availableProviders: providers
+        }
+      });
+      logger.info('Available providers updated', { count: providers.length });
+    },
+    
+    /**
+     * Set the current selected model
+     */
+    setModel: (model: string) => {
+      set({ selectedModel: model });
+      logger.info('Selected model set', { model });
     }
   };
 };

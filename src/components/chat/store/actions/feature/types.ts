@@ -25,7 +25,9 @@ export type FeatureKey =
   | 'tokenEnforcement'
   | 'standardChat'
   | 'imageGeneration'
-  | 'training';
+  | 'training'
+  | 'darkMode'
+  | 'multiFile';
 
 // Feature toggle actions interface
 export interface FeatureToggleActions {
@@ -37,9 +39,8 @@ export interface FeatureToggleActions {
 
 // Provider actions interface
 export interface ProviderActions {
-  setAvailableProviders: (providers: Provider[]) => void;
-  setCurrentProvider: (provider: Provider | null) => void;
-  clearProviders: () => void;
+  updateChatProvider: (provider: Provider | null) => void;
+  updateAvailableProviders: (providers: Provider[]) => void;
 }
 
 // Position actions interface
@@ -50,7 +51,6 @@ export interface PositionActions {
 
 // Mode actions interface
 export interface ModeActions {
-  toggleMode: () => void;
   setMode: (mode: string | ChatMode) => void;
 }
 
@@ -58,6 +58,5 @@ export interface ModeActions {
 export interface FeatureActions extends FeatureToggleActions, ProviderActions, PositionActions, ModeActions {
   setModel: (model: string) => void;
   toggleDocked: () => void;
-  setDocked: (docked: boolean) => void;
-  setTokenBalance: (balance: number) => void;
+  setChatId: (id: string | null) => void;
 }

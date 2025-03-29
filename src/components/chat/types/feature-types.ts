@@ -12,7 +12,9 @@ export type FeatureKey =
   | 'tokenEnforcement'
   | 'standardChat'      // For standard chat mode
   | 'imageGeneration'   // For image generation
-  | 'training';         // For training mode
+  | 'training'          // For training mode
+  | 'darkMode'          // For dark/light theme switch
+  | 'multiFile';        // For multi-file operations
 
 export interface Features {
   voice: boolean;
@@ -28,4 +30,6 @@ export interface Features {
   standardChat: boolean;
   imageGeneration: boolean;
   training: boolean;
+  darkMode: boolean;
+  multiFile: boolean;
 }

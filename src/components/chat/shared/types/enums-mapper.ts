@@ -1,6 +1,6 @@
 
 import { ChatMode, TokenEnforcementMode, UIEnforcementMode, TaskType } from '@/types/chat/enums';
-import { EnumUtils } from '@/lib/enums';
+import { EnumUtils } from '@/lib/enums/EnumUtils';
 
 /**
  * UI mode representation (used in UI components)

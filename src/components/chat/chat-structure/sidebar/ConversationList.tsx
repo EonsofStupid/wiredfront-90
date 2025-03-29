@@ -1,123 +1,82 @@
 
-import React, { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { PlusCircle, Search, X } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { ConversationItem } from './ConversationItem';
-import { useConversationManager } from '@/components/chat/hooks/conversation/useConversationManager';
+import React from 'react';
 import { Conversation } from '@/types/chat/conversation';
-import { ChatMode } from '@/types/chat/enums';
-import { EnumUtils } from '@/lib/enums';
+import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { ConversationItem } from './ConversationItem';
+import { EnumUtils } from '@/lib/enums/EnumUtils';
 
-export function ConversationList() {
-  const { 
-    activeConversations, 
-    createConversation, 
-    switchConversation, 
-    currentConversationId 
-  } = useConversationManager();
+interface ConversationListProps {
+  conversations: Conversation[];
+  currentConversationId: string | null;
+  isArchived?: boolean;
+  onSelectConversation: (id: string) => void;
+}
+
+export function ConversationList({
+  conversations,
+  currentConversationId,
+  isArchived = false,
+  onSelectConversation
+}: ConversationListProps) {
+  if (conversations.length === 0) {
+    return (
+      <div className="py-4 text-center text-sm text-muted-foreground">
+        {isArchived 
+          ? "No archived conversations found" 
+          : "No active conversations yet"
+        }
+      </div>
+    );
+  }
+
+  // Sort conversations by last accessed (recent first)
+  const sortedConversations = [...conversations].sort((a, b) => {
+    const dateA = new Date(a.last_accessed || a.created_at).getTime();
+    const dateB = new Date(b.last_accessed || b.created_at).getTime();
+    return dateB - dateA;
+  });
+
+  // Group conversations by mode
+  const groupedConversations: Record<string, Conversation[]> = {};
   
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filteredConversations, setFilteredConversations] = useState<Conversation[]>([]);
-  
-  // Filter conversations based on search query
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredConversations(activeConversations);
-      return;
+  sortedConversations.forEach(conversation => {
+    const mode = typeof conversation.mode === 'string' 
+      ? conversation.mode 
+      : EnumUtils.chatModeToString(conversation.mode);
+    
+    const modeLabel = EnumUtils.getChatModeLabel(
+      typeof conversation.mode === 'string' 
+        ? EnumUtils.stringToChatMode(conversation.mode) 
+        : conversation.mode
+    );
+    
+    if (!groupedConversations[mode]) {
+      groupedConversations[mode] = [];
     }
     
-    const filtered = activeConversations.filter(
-      conv => conv.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setFilteredConversations(filtered);
-  }, [searchQuery, activeConversations]);
-  
-  // Handle new conversation click
-  const handleNewConversation = async () => {
-    await createConversation();
-  };
-  
-  // Create a specialized conversation
-  const createSpecializedChat = async (mode: ChatMode) => {
-    await createConversation({
-      mode,
-      title: `New ${EnumUtils.getChatModeLabel(mode)} Chat`
-    });
-  };
-  
+    groupedConversations[mode].push(conversation);
+  });
+
   return (
-    <div className="flex flex-col h-full">
-      <div className="p-4 border-b">
-        <Button 
-          onClick={handleNewConversation}
-          className="w-full justify-start bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
-          New Chat
-        </Button>
-        
-        <div className="mt-2 flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="flex-1 text-xs"
-            onClick={() => createSpecializedChat(ChatMode.Dev)}
-          >
-            Dev
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="flex-1 text-xs"
-            onClick={() => createSpecializedChat(ChatMode.Image)}
-          >
-            Image
-          </Button>
-        </div>
-      </div>
-      
-      <div className="p-4 border-b">
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search conversations..."
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-0 top-0 h-9 w-9"
-              onClick={() => setSearchQuery('')}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      </div>
-      
-      <ScrollArea className="flex-1">
-        <div className="p-2">
-          {filteredConversations.length > 0 ? (
-            filteredConversations.map((conversation) => (
+    <ScrollArea className={cn("h-full", isArchived ? "opacity-75" : "")}>
+      <div className="px-1 py-2">
+        {Object.entries(groupedConversations).map(([mode, modeConversations]) => (
+          <div key={mode} className="mb-3">
+            <div className="px-2 mb-1 text-xs font-semibold text-muted-foreground">
+              {EnumUtils.getChatModeLabel(EnumUtils.stringToChatMode(mode))}
+            </div>
+            {modeConversations.map(conversation => (
               <ConversationItem
                 key={conversation.id}
                 conversation={conversation}
                 isActive={conversation.id === currentConversationId}
-                onClick={() => switchConversation(conversation.id)}
+                onClick={() => onSelectConversation(conversation.id)}
               />
-            ))
-          ) : (
-            <div className="p-4 text-center text-sm text-muted-foreground">
-              {searchQuery ? 'No matching conversations' : 'No conversations found'}
-            </div>
-          )}
-        </div>
-      </ScrollArea>
-    </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </ScrollArea>
   );
 }

@@ -1,3 +1,4 @@
+
 import { ChatMode, MessageRole, MessageType } from './enums';
 
 /**
@@ -30,9 +31,18 @@ export enum VectorDbType {
 
 /**
  * Task types for AI operations
+ * Re-exported from the enums file to maintain a single source of truth
  */
-export enum TaskType {
+export { TaskType } from './enums';
+
+/**
+ * Extended task types (for internal code organization)
+ * These extend the base TaskType but include more specialized operations
+ */
+export enum ExtendedTaskType {
+  // Standard task types from TaskType enum
   Chat = 'chat',
+  Conversation = 'conversation',
   Generation = 'generation',
   Completion = 'completion',
   Summarization = 'summarization',
@@ -51,41 +61,9 @@ export enum TaskType {
   QuestionAnswering = 'question_answering',
   ImageGeneration = 'image_generation',
   CodeGeneration = 'code_generation',
-  Conversation = 'conversation', // Alias for Chat for backward compatibility
-  Other = 'other'
-}
-
-// Re-export TaskType for consistency and to fix imports
-export { TaskType as TaskType };
-
-/**
- * Extended task types (for internal code organization)
- */
-export enum ExtendedTaskType {
-  // Standard task types from the main enum
-  Chat = TaskType.Chat,
-  Conversation = TaskType.Conversation,
-  Generation = TaskType.Generation,
-  Completion = TaskType.Completion,
-  Summarization = TaskType.Summarization,
-  Translation = TaskType.Translation,
-  Analysis = TaskType.Analysis,
-  Extraction = TaskType.Extraction,
-  Classification = TaskType.Classification,
-  Transformation = TaskType.Transformation,
-  Recommendation = TaskType.Recommendation,
-  StructuredOutput = TaskType.StructuredOutput,
-  AdminQuery = TaskType.AdminQuery,
-  SystemDiagnostic = TaskType.SystemDiagnostic,
-  CacheQuery = TaskType.CacheQuery,
-  VectorIndex = TaskType.VectorIndex,
-  ModelValidation = TaskType.ModelValidation,
-  QuestionAnswering = TaskType.QuestionAnswering,
-  ImageGeneration = TaskType.ImageGeneration,
-  CodeGeneration = TaskType.CodeGeneration,
-  Other = TaskType.Other,
+  Other = 'other',
   
-  // Extended task types for more granular operations
+  // Extended specialized task types
   CodeExplanation = 'code_explanation',
   BugFix = 'bug_fix',
   CodeReview = 'code_review',
@@ -125,6 +103,7 @@ export interface MessageEnvelope {
   input?: string;
   vectorInfo?: Record<string, any>;
   cacheInfo?: Record<string, any>;
+  traceId?: string;
 }
 
 /**
@@ -145,6 +124,8 @@ export interface ResponseEnvelope {
     total: number;
     prompt: number;
     completion: number;
+    input?: number;
+    output?: number;
   };
   processingTimeMs?: number;
   fallbacksUsed?: string[];
@@ -152,15 +133,25 @@ export interface ResponseEnvelope {
     used: boolean;
     count: number;
     sources: string[];
+    searchPerformed?: boolean;
+    chunksRetrieved?: number;
+    vectorDb?: string;
   };
   cacheInfo?: {
     hit: boolean;
     key: string;
+    cacheHit?: boolean;
+    cacheTier?: string;
   };
   fineTuneMetadata?: {
     version: string;
     params: Record<string, any>;
+    markedForFineTune?: boolean;
+    quality?: number;
   };
+  output?: string;
+  provider?: string;
+  traceId?: string;
 }
 
 /**
