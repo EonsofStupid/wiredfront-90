@@ -12,7 +12,7 @@ export const useTokenActions = () => {
   return {
     addTokens: tokenStore.addTokens,
     spendTokens: tokenStore.spendTokens,
-    setTokens: tokenStore.setTokens,
+    setTokens: tokenStore.setTokenBalance,
     setTokenBalance: tokenStore.setTokenBalance,
     setEnforcementMode: tokenStore.setEnforcementMode,
     setEnforcementEnabled: tokenStore.setEnforcementEnabled,

@@ -2604,61 +2604,40 @@ export type Database = {
         }
         Relationships: []
       }
-      token_transaction_log: {
-        Row: {
-          amount: number
-          created_at: string | null
-          description: string | null
-          id: string
-          metadata: Json | null
-          transaction_type: string
-          user_id: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          metadata?: Json | null
-          transaction_type: string
-          user_id: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          metadata?: Json | null
-          transaction_type?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       token_transactions: {
         Row: {
           amount: number
+          cost: number | null
           created_at: string | null
           description: string | null
+          feature: string | null
           id: string
           metadata: Json | null
+          provider: string | null
           transaction_type: string
           user_id: string
         }
         Insert: {
           amount: number
+          cost?: number | null
           created_at?: string | null
           description?: string | null
+          feature?: string | null
           id?: string
           metadata?: Json | null
+          provider?: string | null
           transaction_type: string
           user_id: string
         }
         Update: {
           amount?: number
+          cost?: number | null
           created_at?: string | null
           description?: string | null
+          feature?: string | null
           id?: string
           metadata?: Json | null
+          provider?: string | null
           transaction_type?: string
           user_id?: string
         }
@@ -2666,43 +2645,58 @@ export type Database = {
       }
       token_usage: {
         Row: {
+          chat_mode: string | null
           context: Json | null
           cost: number | null
           feature_key: string | null
           id: string
           input_tokens: number | null
+          is_cached: boolean | null
+          is_free_query: boolean | null
+          latency_ms: number | null
           model: string
           output_tokens: number | null
           provider: string
           session_id: string | null
+          task_type: string | null
           timestamp: string | null
           total_tokens: number | null
           user_id: string
         }
         Insert: {
+          chat_mode?: string | null
           context?: Json | null
           cost?: number | null
           feature_key?: string | null
           id?: string
           input_tokens?: number | null
+          is_cached?: boolean | null
+          is_free_query?: boolean | null
+          latency_ms?: number | null
           model: string
           output_tokens?: number | null
           provider: string
           session_id?: string | null
+          task_type?: string | null
           timestamp?: string | null
           total_tokens?: number | null
           user_id: string
         }
         Update: {
+          chat_mode?: string | null
           context?: Json | null
           cost?: number | null
           feature_key?: string | null
           id?: string
           input_tokens?: number | null
+          is_cached?: boolean | null
+          is_free_query?: boolean | null
+          latency_ms?: number | null
           model?: string
           output_tokens?: number | null
           provider?: string
           session_id?: string | null
+          task_type?: string | null
           timestamp?: string | null
           total_tokens?: number | null
           user_id?: string
@@ -2907,101 +2901,77 @@ export type Database = {
         }
         Relationships: []
       }
-      user_token_balances: {
-        Row: {
-          balance: number | null
-          created_at: string | null
-          enforcement_mode: string | null
-          enforcement_settings: Json | null
-          free_query_limit: number | null
-          id: string
-          last_reset: string | null
-          tier: string | null
-          total_earned: number | null
-          total_spent: number | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          balance?: number | null
-          created_at?: string | null
-          enforcement_mode?: string | null
-          enforcement_settings?: Json | null
-          free_query_limit?: number | null
-          id?: string
-          last_reset?: string | null
-          tier?: string | null
-          total_earned?: number | null
-          total_spent?: number | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          balance?: number | null
-          created_at?: string | null
-          enforcement_mode?: string | null
-          enforcement_settings?: Json | null
-          free_query_limit?: number | null
-          id?: string
-          last_reset?: string | null
-          tier?: string | null
-          total_earned?: number | null
-          total_spent?: number | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_tokens: {
         Row: {
           balance: number | null
+          cost_per_token: number | null
           created_at: string | null
+          daily_limit: number | null
           enforcement_mode: string | null
           enforcement_settings: Json | null
           free_query_limit: number | null
           id: string
           last_reset: string | null
           last_updated: string | null
+          monthly_limit: number | null
+          next_reset_date: string | null
           queries_used: number | null
+          reset_frequency: string | null
           tier: string | null
           tokens_per_query: number | null
           total_earned: number | null
           total_spent: number | null
           updated_at: string | null
+          usage_by_feature: Json | null
+          usage_by_provider: Json | null
           user_id: string
         }
         Insert: {
           balance?: number | null
+          cost_per_token?: number | null
           created_at?: string | null
+          daily_limit?: number | null
           enforcement_mode?: string | null
           enforcement_settings?: Json | null
           free_query_limit?: number | null
           id?: string
           last_reset?: string | null
           last_updated?: string | null
+          monthly_limit?: number | null
+          next_reset_date?: string | null
           queries_used?: number | null
+          reset_frequency?: string | null
           tier?: string | null
           tokens_per_query?: number | null
           total_earned?: number | null
           total_spent?: number | null
           updated_at?: string | null
+          usage_by_feature?: Json | null
+          usage_by_provider?: Json | null
           user_id: string
         }
         Update: {
           balance?: number | null
+          cost_per_token?: number | null
           created_at?: string | null
+          daily_limit?: number | null
           enforcement_mode?: string | null
           enforcement_settings?: Json | null
           free_query_limit?: number | null
           id?: string
           last_reset?: string | null
           last_updated?: string | null
+          monthly_limit?: number | null
+          next_reset_date?: string | null
           queries_used?: number | null
+          reset_frequency?: string | null
           tier?: string | null
           tokens_per_query?: number | null
           total_earned?: number | null
           total_spent?: number | null
           updated_at?: string | null
+          usage_by_feature?: Json | null
+          usage_by_provider?: Json | null
           user_id?: string
         }
         Relationships: []

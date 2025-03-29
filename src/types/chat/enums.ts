@@ -65,6 +65,7 @@ export enum MessageStatus {
 
 /**
  * Token enforcement modes
+ * These values must match the database representation in user_tokens.enforcement_mode
  */
 export enum TokenEnforcementMode {
   None = 'none',        // No enforcement
