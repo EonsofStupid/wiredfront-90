@@ -1,5 +1,6 @@
 
 import { ChatMode, TokenEnforcementMode, UIEnforcementMode } from '@/types/chat/enums';
+import { tokenEnforcementModeInfo } from '@/utils/token-utils';
 
 /**
  * UI mode representation (used in UI components)
@@ -33,59 +34,9 @@ export const databaseModeToUiMode: Record<ChatMode, UiChatMode> = {
 
 /**
  * Mapping from TokenEnforcementMode to UI metadata
+ * Reusing the definitions from token-utils.ts
  */
-export const tokenToUIEnforcementMode: Record<TokenEnforcementMode, {
-  label: string;
-  color: string;
-  description: string;
-}> = {
-  [TokenEnforcementMode.None]: {
-    label: 'Not Enforced',
-    color: 'text-gray-500',
-    description: 'Token limits are not being enforced'
-  },
-  [TokenEnforcementMode.Warn]: {
-    label: 'Warning Only',
-    color: 'text-yellow-500',
-    description: 'You will be warned when you exceed token limits, but operations will not be blocked'
-  },
-  [TokenEnforcementMode.Soft]: {
-    label: 'Soft Enforcement',
-    color: 'text-orange-500',
-    description: 'Some functionality will be limited when you exceed token limits'
-  },
-  [TokenEnforcementMode.Hard]: {
-    label: 'Hard Enforcement',
-    color: 'text-red-500',
-    description: 'Operations will be blocked when you exceed token limits'
-  },
-  // Legacy values
-  [TokenEnforcementMode.Always]: {
-    label: 'Always Enforced',
-    color: 'text-red-500',
-    description: 'Token limits are always enforced'
-  },
-  [TokenEnforcementMode.Never]: {
-    label: 'Never Enforced',
-    color: 'text-gray-500',
-    description: 'Token limits are never enforced'
-  },
-  [TokenEnforcementMode.RoleBased]: {
-    label: 'Role-Based',
-    color: 'text-blue-500',
-    description: 'Token enforcement depends on your user role'
-  },
-  [TokenEnforcementMode.ModeBased]: {
-    label: 'Mode-Based',
-    color: 'text-purple-500',
-    description: 'Token enforcement depends on the current chat mode'
-  },
-  [TokenEnforcementMode.Strict]: {
-    label: 'Strict',
-    color: 'text-red-700',
-    description: 'Token limits are strictly enforced with no exceptions'
-  }
-};
+export const tokenToUIEnforcementMode = tokenEnforcementModeInfo;
 
 /**
  * Mapping from UI enforcement mode to token enforcement mode

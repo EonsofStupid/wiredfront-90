@@ -117,6 +117,3 @@ export interface TokenEnforcementConfig {
   warningThreshold: number; // Percentage (0-100) at which to show warnings
   limitAction: 'block' | 'warn' | 'degrade'; // What to do when limit is reached
 }
-
-// Re-export TokenEnforcementMode for convenience
-export { TokenEnforcementMode } from '../chat/enums';

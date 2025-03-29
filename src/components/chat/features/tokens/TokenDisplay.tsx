@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useTokenStore } from '../../store/token/store';
+import { useTokenStore } from '@/stores/token';
 import { Coins } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';

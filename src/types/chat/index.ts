@@ -8,5 +8,5 @@ export * from './bridge';
 export * from './communication';
 export * from './chat-types';
 
-// Import and re-export token types from their new location
+// Re-export token types for convenience
 export * from '../token';

@@ -45,7 +45,7 @@ export function useTokenManagement() {
   const hasEnoughTokens = (amount = 1) => {
     // If token enforcement is disabled, always return true
     if (!features.tokenEnforcement || !tokenStore.isEnforcementEnabled || 
-        tokenStore.enforcementMode === TokenEnforcementMode.Never) {
+        tokenStore.enforcementMode === TokenEnforcementMode.None) {
       return true;
     }
     
@@ -61,7 +61,7 @@ export function useTokenManagement() {
   const handleSpendTokens = async (amount = 1) => {
     // If token enforcement is disabled, allow the operation
     if (!features.tokenEnforcement || !tokenStore.isEnforcementEnabled || 
-        tokenStore.enforcementMode === TokenEnforcementMode.Never) {
+        tokenStore.enforcementMode === TokenEnforcementMode.None) {
       return true;
     }
     

@@ -1,3 +1,4 @@
 
 export * from './TokenDisplay';
-export * from './TokenWarning';
+// Re-export the TokenWarning from the main location to maintain backward compatibility
+export { TokenWarning } from '@/components/tokens/TokenWarning';
