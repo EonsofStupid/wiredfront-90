@@ -39,7 +39,7 @@ export function useConversationManager() {
       await loadConversations();
     };
     fetchData();
-  }, [loadConversations]);
+  }, []);
 
   // Filter active and archived conversations
   useEffect(() => {
@@ -73,11 +73,6 @@ export function useConversationManager() {
     return true;
   }, [setCurrentConversationId]);
 
-  // Refresh conversations from the server
-  const refreshConversations = useCallback(async () => {
-    await loadConversations();
-  }, [loadConversations]);
-
   // Handle conversation cleanup
   const { 
     cleanupInactiveConversations, 
@@ -86,7 +81,7 @@ export function useConversationManager() {
     currentConversationId,
     clearMessages,
     createConversation,
-    refreshConversations
+    () => loadConversations()
   );
 
   return {
@@ -105,7 +100,9 @@ export function useConversationManager() {
     updateConversation,
     archiveConversation,
     deleteConversation,
-    refreshConversations,
+    refreshConversations: async () => {
+      await loadConversations();
+    },
     
     // Cleanup utilities
     cleanupInactiveConversations,

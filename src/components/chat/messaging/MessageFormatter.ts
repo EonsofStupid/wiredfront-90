@@ -28,7 +28,8 @@ export const formatMessage = (content: string): string => {
   marked.setOptions({
     renderer,
     gfm: true,
-    breaks: true
+    breaks: true,
+    smartLists: true
   });
   
   // Convert markdown to HTML

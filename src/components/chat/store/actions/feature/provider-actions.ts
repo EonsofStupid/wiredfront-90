@@ -1,8 +1,8 @@
 
+import { SetState, GetState } from 'zustand';
 import { ChatState } from '../../types/chat-store-types';
 import { Provider } from '@/components/chat/types';
 import { logger } from '@/services/chat/LoggingService';
-import { SetState, GetState } from './types';
 
 /**
  * Create provider-related actions for the chat store
@@ -57,34 +57,6 @@ export const createProviderActions = (
       }
     });
     logger.info('Provider data cleared');
-  },
-  
-  /**
-   * For compatibility with old API
-   */
-  updateProviders: (providers: Provider[]) => {
-    set({ 
-      providers: {
-        ...get().providers,
-        availableProviders: providers
-      },
-      availableProviders: providers
-    });
-    logger.info('Providers updated', { count: providers.length });
-  },
-  
-  /**
-   * For compatibility with old API
-   */
-  updateChatProvider: (provider: Provider | null) => {
-    set({ 
-      currentProvider: provider,
-      providers: {
-        ...get().providers,
-        currentProvider: provider
-      }
-    });
-    logger.info('Chat provider updated', { provider: provider?.name || 'none' });
   }
 });
 

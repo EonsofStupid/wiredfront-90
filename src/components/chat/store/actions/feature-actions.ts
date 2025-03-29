@@ -1,13 +1,13 @@
 
-import { ChatState } from '../types/chat-store-types';
+import { SetState, GetState } from 'zustand';
 import { createToggleActions } from './feature/toggle';
 import { createPositionActions } from './feature/toggle/position-actions';
 import { createProviderActions } from './feature/provider-actions';
 import { createTokenActions } from './token/token-actions';
+import { ChatState } from '../types/chat-store-types';
 import { ChatMode } from '@/types/chat/enums';
 import { EnumUtils } from '@/lib/enums';
 import { logger } from '@/services/chat/LoggingService';
-import { SetState, GetState } from './feature/types';
 
 /**
  * Create feature actions for the chat store

@@ -6,14 +6,14 @@ import { EnumUtils } from '@/lib/enums';
  * Convert a ChatMode enum to a database string representation
  */
 export function chatModeForDatabase(mode: ChatMode): string {
-  return EnumUtils.chatModeToString(mode);
+  return EnumUtils.chatModeForDatabase(mode);
 }
 
 /**
  * Convert a database string to a ChatMode enum value
  */
 export function databaseStringToChatMode(mode: string): ChatMode {
-  return EnumUtils.stringToChatMode(mode);
+  return EnumUtils.databaseStringToChatMode(mode);
 }
 
 /**
