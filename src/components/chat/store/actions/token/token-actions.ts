@@ -1,67 +1,31 @@
 
-import { ChatState } from '../../../types/chat-store-types';
-import { TokenBalance } from '@/components/chat/types/token-types';
-import { logger } from '@/services/chat/LoggingService';
-
-// Define SetState and GetState types specifically for this file
-type SetState<T> = (
-  partial: T | Partial<T> | ((state: T) => T | Partial<T>),
-  replace?: boolean
-) => void;
-
-type GetState<T> = () => T;
+import { useTokenStore } from '@/stores/token';
+import { TokenEnforcementMode } from '@/components/chat/types/chat/enums';
 
 /**
- * Creates token-related actions for the chat store
+ * Adapter class that forwards token actions to the main token store
+ * This ensures backwards compatibility with code using the chat-specific token actions
  */
-export const createTokenActions = (
-  set: SetState<ChatState>,
-  get: GetState<ChatState>
-) => {
+export const useTokenActions = () => {
+  const tokenStore = useTokenStore();
+  
   return {
-    /**
-     * Update the token balance
-     */
-    setTokenBalance: (balance: TokenBalance) => {
-      logger.info('Setting token balance', { balance });
-      
-      set({
-        tokenBalance: balance
-      });
-    },
-    
-    /**
-     * Increment token balance
-     */
-    incrementTokens: (amount: number) => {
-      logger.info(`Incrementing tokens by ${amount}`);
-      
-      const currentBalance = get().tokenBalance;
-      
-      set({
-        tokenBalance: currentBalance ? {
-          ...currentBalance,
-          balance: currentBalance.balance + amount,
-          totalEarned: currentBalance.totalEarned + amount
-        } : undefined
-      });
-    },
-    
-    /**
-     * Decrement token balance
-     */
-    decrementTokens: (amount: number) => {
-      logger.info(`Decrementing tokens by ${amount}`);
-      
-      const currentBalance = get().tokenBalance;
-      
-      set({
-        tokenBalance: currentBalance ? {
-          ...currentBalance,
-          balance: Math.max(0, currentBalance.balance - amount),
-          totalSpent: currentBalance.totalSpent + amount
-        } : undefined
-      });
-    }
+    addTokens: tokenStore.addTokens,
+    spendTokens: tokenStore.spendTokens,
+    setTokens: tokenStore.setBalance,
+    setTokenBalance: tokenStore.setBalance,
+    setEnforcementMode: tokenStore.setEnforcementMode,
+    setEnforcementEnabled: tokenStore.setEnforcementEnabled,
+    initialize: tokenStore.initialize,
+    fetchTokenData: tokenStore.fetchTokenData,
+    resetTokens: tokenStore.resetTokens,
+    resetQueriesUsed: tokenStore.resetQueriesUsed,
+    updateTokenSettings: tokenStore.updateTokenSettings,
+    setWarningThreshold: tokenStore.setWarningThreshold,
+    setResetDate: tokenStore.setResetDate,
+    setBalance: tokenStore.setBalance
   };
 };
+
+// Re-export token enforcement mode for legacy compatibility
+export { TokenEnforcementMode };
