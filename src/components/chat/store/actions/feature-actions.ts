@@ -1,11 +1,11 @@
-import { StateCreator } from 'zustand';
+
 import { ChatState } from '../types/chat-store-types';
 import { createToggleActions } from './feature/toggle';
 import { ChatMode } from '@/components/chat/types/chat/enums';
 import { logger } from '@/services/chat/LoggingService';
 
 export const createFeatureActions = (
-  set: StateCreator<ChatState>['setState'],
+  set: (state: Partial<ChatState>) => void,
   get: () => ChatState,
   api: any
 ) => {
@@ -25,6 +25,7 @@ export const createFeatureActions = (
     
     // Provider actions
     updateChatProvider: toggleActions.updateChatProvider,
+    updateAvailableProviders: toggleActions.updateAvailableProviders,
     
     // Mode actions
     setMode: (mode: string | ChatMode) => {

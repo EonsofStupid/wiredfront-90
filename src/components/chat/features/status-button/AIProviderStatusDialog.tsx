@@ -1,279 +1,154 @@
+
 import React, { useState, useEffect } from 'react';
-import {
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter
-} from '@/components/ui/dialog';
+import { Dialog, DialogHeader, DialogTitle, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Bot, Check, RefreshCw, History } from 'lucide-react';
-import { useAIProviders } from '@/hooks/chat/useAIProviders';
-import { ChatProvider } from '@/components/chat/store/types/chat-store-types';
-import { logger } from '@/services/chat/LoggingService';
-import { AIProviderService } from '@/services/chat/AIProviderService';
+import { Spinner } from '@/components/chat/shared/Spinner';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { AlertCircle, CheckCircle, AlertTriangle } from 'lucide-react';
+import { useAIProviders } from '@/hooks/chat/useAIProviders';
 import { useProviderChanges } from '@/hooks/useProviderChanges';
-import { formatDistanceToNow } from 'date-fns';
+import { Provider } from '@/components/chat/types/provider-types';
 
-type ProviderType = 'openai' | 'anthropic' | 'gemini' | 'huggingface' | 'pinecone' | 
-  'weaviate' | 'openrouter' | 'replicate' | 'sonnet' | 'elevenlabs' | 'whisper' | 'github';
+interface AIProviderStatusDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
 
-export function AIProviderStatusDialog() {
-  const { providers, selectedProvider, isLoading, refreshProviders } = useAIProviders();
-  const { 
-    changeProvider, 
-    isChanging, 
-    changeHistory, 
-    isLoadingHistory, 
-    fetchProviderChanges, 
-    rollbackToProvider 
-  } = useProviderChanges();
-  const [testingProvider, setTestingProvider] = useState<string | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
+export const AIProviderStatusDialog = ({ open, onOpenChange }: AIProviderStatusDialogProps) => {
+  const { providers, isLoading, error, fetchProviders } = useAIProviders();
+  const { currentProvider, changeProvider, refreshProviders } = useProviderChanges();
+  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      refreshProviders();
-      fetchProviderChanges();
+    if (open) {
+      fetchProviders();
     }
-  }, [isOpen, refreshProviders, fetchProviderChanges]);
+  }, [open, fetchProviders]);
 
-  const handleProviderSelect = async (providerId: string) => {
+  useEffect(() => {
+    if (currentProvider && providers.length > 0) {
+      setSelectedProvider(currentProvider);
+    } else if (providers.length > 0) {
+      setSelectedProvider(providers[0]);
+    }
+  }, [currentProvider, providers]);
+
+  const handleChangeProvider = async (provider: Provider) => {
     try {
-      const success = await changeProvider(providerId);
+      if (!provider.isEnabled) {
+        toast.error(`Provider ${provider.name} is disabled`);
+        return;
+      }
+      
+      const success = await changeProvider(provider.id);
       if (success) {
-        toast.success("AI provider updated successfully");
-        logger.info("AI provider changed", { id: providerId });
+        toast.success(`Switched to ${provider.name}`);
+        setSelectedProvider(provider);
       } else {
-        toast.error("Failed to update AI provider");
+        toast.error(`Failed to switch to ${provider.name}`);
       }
     } catch (error) {
-      toast.error("Failed to update AI provider");
-      logger.error("Error changing AI provider", error);
+      toast.error('Error changing provider');
     }
   };
 
-  const handleRollback = async (historyEntryId: string) => {
-    try {
-      const success = await rollbackToProvider(historyEntryId);
-      if (success) {
-        toast.success("Successfully rolled back to previous provider");
-        refreshProviders();
-      } else {
-        toast.error("Failed to roll back provider");
-      }
-    } catch (error) {
-      toast.error("Error rolling back provider");
-      logger.error("Error rolling back provider", error);
-    }
+  const handleRefresh = () => {
+    fetchProviders();
+    refreshProviders();
   };
 
-  const testProviderConnection = async (providerId: string) => {
-    setTestingProvider(providerId);
-    try {
-      const result = await AIProviderService.testProviderConnection(providerId);
-      if (result.success) {
-        toast.success(`Connection to provider successful: ${result.message}`);
-      } else {
-        toast.error(`Connection failed: ${result.message}`);
-      }
-      logger.info("Provider connection test", { id: providerId, success: result.success });
-    } catch (error) {
-      toast.error("Error testing provider connection");
-      logger.error("Error testing provider connection", error);
-    } finally {
-      setTestingProvider(null);
-    }
-  };
-
-  const groupedProviders = providers.reduce<Record<ProviderType, ChatProvider[]>>((acc, provider) => {
-    const type = provider.type as ProviderType;
-    if (!acc[type]) {
-      acc[type] = [];
-    }
-    acc[type].push(provider);
-    return acc;
-  }, {} as Record<ProviderType, ChatProvider[]>);
-
-  const getProviderTypeDisplayName = (type: ProviderType): string => {
-    const displayNames: Record<ProviderType, string> = {
-      'openai': 'OpenAI',
-      'anthropic': 'Anthropic',
-      'gemini': 'Google Gemini',
-      'huggingface': 'Hugging Face',
-      'pinecone': 'Pinecone',
-      'weaviate': 'Weaviate',
-      'openrouter': 'OpenRouter',
-      'replicate': 'Replicate',
-      'sonnet': 'Adept Sonnet',
-      'elevenlabs': 'Eleven Labs',
-      'whisper': 'Whisper',
-      'github': 'GitHub'
-    };
-    return displayNames[type] || type.charAt(0).toUpperCase() + type.slice(1);
-  };
+  if (isLoading) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <div className="flex flex-col items-center justify-center py-8">
+            <Spinner size="lg" />
+            <p className="mt-4">Loading providers...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
-    <DialogContent className="chat-dialog-content max-w-2xl">
-      <DialogHeader>
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-2">
-            <Bot className="h-5 w-5" />
-            <DialogTitle>AI Provider Settings</DialogTitle>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            AI Provider Status
+            <Button variant="ghost" size="icon" onClick={handleRefresh} className="h-6 w-6">
+              <span className="sr-only">Refresh</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+            </Button>
+          </DialogTitle>
+        </DialogHeader>
+        
+        {error ? (
+          <div className="bg-destructive/10 p-4 rounded-md flex items-center gap-3">
+            <AlertCircle className="text-destructive" />
+            <p className="text-destructive">Failed to load providers: {error.message}</p>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setShowHistory(!showHistory)}
-          >
-            <History className="h-4 w-4 mr-2" />
-            {showHistory ? 'Hide History' : 'Show History'}
-          </Button>
-        </div>
-        <DialogDescription>
-          Select which AI provider to use for chat, code, and image generation
-        </DialogDescription>
-      </DialogHeader>
-
-      {!showHistory ? (
-        <div className="max-h-[60vh] overflow-y-auto pr-2">
-          {isLoading ? (
-            <div className="flex items-center justify-center p-8">
-              <RefreshCw className="h-6 w-6 animate-spin" />
-              <span className="ml-2">Loading providers...</span>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {Object.entries(groupedProviders).map(([type, typeProviders]) => (
-                <div key={type} className="space-y-2">
-                  <h3 className="text-sm font-medium flex items-center gap-1">
-                    {getProviderTypeDisplayName(type as ProviderType)}
-                  </h3>
-                  <div className="grid grid-cols-1 gap-2">
-                    {typeProviders.map(provider => (
-                      <div 
-                        key={provider.id} 
-                        className={`
-                          flex items-center justify-between p-3 rounded-md border 
-                          ${selectedProvider?.id === provider.id ? 'border-primary bg-primary/5' : 'border-border'}
-                          hover:border-primary/50 transition-colors
-                        `}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="bg-primary/10 p-2 rounded-md">
-                            <Bot className="h-4 w-4 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-sm">{provider.name}</p>
-                            <p className="text-xs text-muted-foreground">{type}</p>
-                          </div>
-                          {provider.isDefault && (
-                            <Badge variant="outline" className="ml-2 text-xs">Default</Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => testProviderConnection(provider.id)}
-                            disabled={testingProvider === provider.id}
-                          >
-                            {testingProvider === provider.id ? (
-                              <RefreshCw className="h-3 w-3 animate-spin mr-1" />
-                            ) : (
-                              "Test"
-                            )}
-                          </Button>
-                          <Button
-                            variant={selectedProvider?.id === provider.id ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => handleProviderSelect(provider.id)}
-                            disabled={selectedProvider?.id === provider.id || isChanging}
-                          >
-                            {selectedProvider?.id === provider.id ? (
-                              <>
-                                <Check className="h-3 w-3 mr-1" />
-                                Selected
-                              </>
-                            ) : isChanging ? (
-                              <RefreshCw className="h-3 w-3 animate-spin mr-1" />
-                            ) : (
-                              "Select"
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="max-h-[60vh] overflow-y-auto pr-2">
-          <h3 className="text-sm font-medium mb-4">Provider Change History</h3>
-          {isLoadingHistory ? (
-            <div className="flex items-center justify-center p-8">
-              <RefreshCw className="h-6 w-6 animate-spin" />
-              <span className="ml-2">Loading history...</span>
-            </div>
-          ) : changeHistory.length === 0 ? (
-            <div className="text-center p-6 border rounded-md bg-muted/10">
-              <p className="text-muted-foreground">No provider changes have been recorded yet</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {changeHistory.map(entry => (
-                <div key={entry.id} className="p-3 border rounded-md">
-                  <div className="flex justify-between">
-                    <div>
-                      <p className="text-sm font-medium">
-                        {entry.new_provider} 
-                        <span className="text-xs text-muted-foreground ml-2">
-                          {entry.old_provider ? `(from ${entry.old_provider})` : '(initial)'}
-                        </span>
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(entry.changed_at), { addSuffix: true })}
-                      </p>
-                      {entry.reason && (
-                        <p className="text-xs">
-                          Reason: {entry.reason}
+        ) : (
+          <>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Select the AI provider you want to use for generating responses.
+              </p>
+              
+              <div className="grid grid-cols-1 gap-3">
+                {providers.map((provider) => (
+                  <div
+                    key={provider.id}
+                    className={`border rounded-lg p-3 cursor-pointer flex items-center justify-between ${
+                      selectedProvider?.id === provider.id ? 'bg-primary/10 border-primary/50' : ''
+                    } ${!provider.isEnabled ? 'opacity-50' : ''}`}
+                    onClick={() => provider.isEnabled && handleChangeProvider(provider)}
+                  >
+                    <div className="flex items-center gap-3">
+                      {provider.iconUrl ? (
+                        <img src={provider.iconUrl} alt={provider.name} className="w-6 h-6" />
+                      ) : (
+                        <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                      )}
+                      <div>
+                        <h4 className="font-medium">{provider.name}</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {provider.type}
                         </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      {provider.isEnabled ? (
+                        <Badge variant="outline" className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800">
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          Active
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800">
+                          <AlertTriangle className="w-3 h-3 mr-1" />
+                          Disabled
+                        </Badge>
+                      )}
+                      
+                      {selectedProvider?.id === provider.id && (
+                        <Badge>Selected</Badge>
                       )}
                     </div>
-                    {entry.old_provider && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleRollback(entry.id)}
-                        disabled={isChanging}
-                      >
-                        Roll Back
-                      </Button>
-                    )}
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          )}
-        </div>
-      )}
-
-      <DialogFooter>
-        {showHistory ? (
-          <Button onClick={() => setShowHistory(false)}>Back to Providers</Button>
-        ) : (
-          <Button onClick={refreshProviders}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh Providers
-          </Button>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Close
+              </Button>
+            </DialogFooter>
+          </>
         )}
-      </DialogFooter>
-    </DialogContent>
+      </DialogContent>
+    </Dialog>
   );
-}
+};

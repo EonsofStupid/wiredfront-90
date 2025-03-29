@@ -1,104 +1,65 @@
 
-import { ChatMode } from '@/components/chat/types/chat/enums';
+import { ChatMode } from './chat/enums';
 import { EnumUtils } from '@/lib/enums/EnumUtils';
 
 /**
- * Convert a ChatMode enum to a database string representation
+ * Default chat mode configuration
  */
-export function chatModeForDatabase(mode: ChatMode): string {
-  return EnumUtils.chatModeForDatabase(mode);
-}
-
-/**
- * Convert a database string to a ChatMode enum value
- */
-export function databaseStringToChatMode(mode: string): ChatMode {
-  return EnumUtils.databaseStringToChatMode(mode);
-}
-
-/**
- * Get label for chat mode (for display in UI)
- */
-export function getChatModeLabel(mode: ChatMode): string {
-  return EnumUtils.getChatModeLabel(mode);
-}
-
-/**
- * Get icon name for chat mode
- */
-export function getChatModeIcon(mode: ChatMode): string {
-  return EnumUtils.getChatModeIcon(mode);
-}
-
-/**
- * Standard interface for chat modes
- */
-export interface ChatModeDefinition {
-  id: ChatMode;
-  name: string;
-  description: string;
-  icon: string;
-  route?: string;
-  requiredFeatures?: string[];
-}
-
-/**
- * Default chat modes available in the application
- */
-export const DEFAULT_CHAT_MODES: ChatModeDefinition[] = [
+export const DEFAULT_CHAT_MODES = [
   {
     id: ChatMode.Chat,
     name: 'Chat',
-    description: 'Standard chat interface',
-    icon: 'message-circle'
+    description: 'General chat assistant',
+    icon: EnumUtils.getChatModeIcon(ChatMode.Chat),
+    requiredFeatures: ['standardChat']
   },
   {
     id: ChatMode.Dev,
     name: 'Developer',
-    description: 'Coding assistant and editor integration',
-    icon: 'code',
-    route: '/editor'
+    description: 'Code and development assistance',
+    icon: EnumUtils.getChatModeIcon(ChatMode.Dev),
+    requiredFeatures: ['codeAssistant']
   },
   {
     id: ChatMode.Image,
     name: 'Image',
-    description: 'Image generation and manipulation',
-    icon: 'image',
-    route: '/gallery'
+    description: 'Image generation and editing',
+    icon: EnumUtils.getChatModeIcon(ChatMode.Image),
+    requiredFeatures: ['imageGeneration']
   },
   {
     id: ChatMode.Training,
     name: 'Training',
-    description: 'Educational mode with guided learning',
-    icon: 'graduation-cap',
-    route: '/training'
+    description: 'Learning and education assistance',
+    icon: EnumUtils.getChatModeIcon(ChatMode.Training),
+    requiredFeatures: ['training']
   },
   {
     id: ChatMode.Planning,
     name: 'Planning',
-    description: 'Task and project planning',
-    icon: 'clipboard-list',
-    route: '/planning'
+    description: 'Structured planning assistance',
+    icon: EnumUtils.getChatModeIcon(ChatMode.Planning),
+    requiredFeatures: ['standardChat']
   },
   {
     id: ChatMode.Code,
     name: 'Code',
-    description: 'Focused code generation',
-    icon: 'terminal',
-    route: '/code'
+    description: 'Focused code assistance',
+    icon: EnumUtils.getChatModeIcon(ChatMode.Code),
+    requiredFeatures: ['codeAssistant']
   },
   {
     id: ChatMode.Document,
     name: 'Document',
     description: 'Document analysis and generation',
-    icon: 'file-text',
-    route: '/documents'
+    icon: EnumUtils.getChatModeIcon(ChatMode.Document),
+    requiredFeatures: ['standardChat']
   },
   {
     id: ChatMode.Audio,
     name: 'Audio',
-    description: 'Audio transcription and processing',
-    icon: 'headphones',
-    route: '/audio'
+    description: 'Audio transcription and analysis',
+    icon: EnumUtils.getChatModeIcon(ChatMode.Audio),
+    requiredFeatures: ['voice']
   }
 ];

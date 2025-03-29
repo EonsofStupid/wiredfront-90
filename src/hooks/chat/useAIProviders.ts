@@ -12,7 +12,8 @@ export function useAIProviders() {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const { updateChatProvider, updateAvailableProviders } = useChatStore();
+  const { updateChatProvider } = useChatStore();
+  const { updateAvailableProviders } = useChatStore();
   
   // Fetch providers on component mount
   useEffect(() => {
@@ -36,7 +37,7 @@ export function useAIProviders() {
       }
       
       // Convert to Provider type
-      const providersData = data.map(provider => ({
+      const providersData: Provider[] = data.map(provider => ({
         id: provider.id,
         name: provider.display_name || provider.name,
         type: provider.provider_type,
@@ -47,7 +48,7 @@ export function useAIProviders() {
         apiEndpoint: provider.base_url || undefined,
         iconUrl: provider.icon_url || undefined,
         models: []
-      })) as Provider[];
+      }));
       
       setProviders(providersData);
       

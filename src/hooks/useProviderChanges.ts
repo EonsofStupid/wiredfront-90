@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/auth';
 import { logger } from '@/services/chat/LoggingService';
 import { useChatStore } from '@/components/chat/store/chatStore';
-import { ChatProvider } from '@/components/chat/store/types/chat-store-types';
+import { Provider } from '@/components/chat/types/provider-types';
 
 /**
  * Hook to manage and track AI provider changes
@@ -14,9 +14,10 @@ export function useProviderChanges() {
   const { 
     currentProvider, 
     availableProviders,
-    updateCurrentProvider, 
-    updateAvailableProviders 
+    updateChatProvider 
   } = useChatStore();
+  const { updateAvailableProviders } = useChatStore();
+  
   const [isChanging, setIsChanging] = useState(false);
   const [changeHistory, setChangeHistory] = useState<any[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -71,7 +72,7 @@ export function useProviderChanges() {
       setIsChanging(true);
       try {
         // Update the current provider
-        updateCurrentProvider(provider);
+        updateChatProvider(provider);
         
         // Log the change to the database
         await supabase.from('provider_change_log').insert({
@@ -103,7 +104,7 @@ export function useProviderChanges() {
         // Attempt to roll back to the previous provider
         if (previousProvider) {
           try {
-            updateCurrentProvider(previousProvider);
+            updateChatProvider(previousProvider);
             logger.info(`Rolled back to provider ${previousProvider.name} due to error`);
           } catch (rollbackError) {
             logger.error('Error rolling back provider change:', rollbackError);
@@ -115,7 +116,7 @@ export function useProviderChanges() {
         setIsChanging(false);
       }
     },
-    [user, isChanging, availableProviders, currentProvider, updateCurrentProvider, fetchProviderChanges]
+    [user, isChanging, availableProviders, currentProvider, updateChatProvider, fetchProviderChanges]
   );
 
   /**

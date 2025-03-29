@@ -12,13 +12,13 @@ export type FeatureKey =
   | 'ragSupport'
   | 'githubSync'
   | 'knowledgeBase'
-  | 'tokenEnforcementMode'
+  | 'tokenEnforcement'
+  | 'tokenEnforcementMode'  // Added to align with feature toggles
   | 'standardChat'
   | 'imageGeneration'
   | 'training'
   | 'darkMode'
-  | 'multiFile'
-  | 'tokenEnforcement';
+  | 'multiFile';
 
 /**
  * Feature configuration interface

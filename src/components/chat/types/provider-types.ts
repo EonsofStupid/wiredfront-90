@@ -1,27 +1,18 @@
 
-import { TaskType } from './chat/enums';
+/**
+ * Available provider categories
+ */
+export type ProviderCategory = "image" | "audio" | "text" | "video" | "multimodal";
 
 /**
- * AI provider interface
+ * Available provider types
  */
-export interface Provider {
-  id: string;
-  name: string;
-  description?: string;
-  icon?: string;
-  isDefault?: boolean;
-  isActive?: boolean;
-  capabilities?: string[];
-  availableModels?: Model[];
-  currentModel?: string;
-  supportedTasks?: TaskType[];
-  supportsStreaming?: boolean;
-  maxTokens?: number;
-  costPerToken?: number;
-  apiType?: string;
-  category?: 'text' | 'image' | 'audio' | 'video' | 'multimodal';
-  metadata?: Record<string, any>;
-}
+export type ProviderType = "openai" | "anthropic" | "google" | "custom" | "local" | "azure" | "huggingface" | "replicate" | "stability";
+
+/**
+ * Available provider API auth types
+ */
+export type ProviderAuthType = "apiKey" | "oauth" | "basic" | "none" | "custom";
 
 /**
  * Model interface
@@ -29,30 +20,53 @@ export interface Provider {
 export interface Model {
   id: string;
   name: string;
-  provider: string;
-  maxTokens: number;
-  description?: string;
-  contextWindow?: number;
-  capabilities?: string[];
-  costPerInputToken?: number;
-  costPerOutputToken?: number;
-  supportedTasks?: TaskType[];
-  supportsStreaming?: boolean;
-  isActive?: boolean;
+  contextSize?: number;
+  inputCost?: number;
+  outputCost?: number;
+  category?: ProviderCategory;
+  supportedFeatures?: string[];
 }
 
 /**
- * Provider settings interface
+ * Provider interface
  */
-export interface ProviderSettings {
+export interface Provider {
+  id: string;
+  name: string;
+  type: ProviderType;
+  category: string;
+  description: string;
+  isDefault?: boolean;
+  isEnabled: boolean;
+  apiEndpoint?: string;
+  iconUrl?: string;
+  models: Model[];
+}
+
+/**
+ * Provider Authentication information
+ */
+export interface ProviderAuth {
+  id: string;
+  provider: string;
+  authType: ProviderAuthType;
+  apiKey?: string;
+  isConfigured: boolean;
+  isActive: boolean;
+  expiresAt?: string;
+  validationStatus?: 'valid' | 'invalid' | 'expired' | 'pending';
+  lastValidated?: string;
+}
+
+/**
+ * Provider Configuration
+ */
+export interface ProviderConfig {
+  id: string;
   provider: Provider;
-  model: string;
-  temperature?: number;
-  maxTokens?: number;
-  topP?: number;
-  frequencyPenalty?: number;
-  presencePenalty?: number;
-  stopSequences?: string[];
-  supportsFunctions?: boolean;
-  supportsVision?: boolean;
+  auth?: ProviderAuth;
+  defaultModel?: string;
+  customEndpoint?: string;
+  options?: Record<string, any>;
+  isDefault?: boolean;
 }

@@ -1,60 +1,51 @@
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { createContext, useState, useContext, ReactNode } from 'react';
 import { ChatMode } from '@/components/chat/types/chat/enums';
-import { ModeConfig, ModeContextType, CHAT_MODES } from './types';
+import { ModeContextType, ModeConfig, CHAT_MODES } from './types';
+import { EnumUtils } from '@/lib/enums';
 
+// Create context
 const ModeContext = createContext<ModeContextType | undefined>(undefined);
 
 interface ModeProviderProps {
   children: ReactNode;
-  defaultMode?: ChatMode;
+  isEditorPage?: boolean;
+  initialMode?: ChatMode;
 }
 
-export const ModeProvider: React.FC<ModeProviderProps> = ({ 
-  children, 
-  defaultMode = ChatMode.Chat
-}) => {
-  const [currentMode, setCurrentMode] = useState<ChatMode>(defaultMode);
-  const location = useLocation();
-  const isEditorPage = location.pathname === '/editor';
-  
-  // Auto-switch mode based on route
-  useEffect(() => {
-    if (isEditorPage && currentMode !== ChatMode.Dev) {
-      setCurrentMode(ChatMode.Dev);
-    } else if (location.pathname === '/gallery' && currentMode !== ChatMode.Image) {
-      setCurrentMode(ChatMode.Image);
-    } else if (location.pathname === '/training' && currentMode !== ChatMode.Training) {
-      setCurrentMode(ChatMode.Training);
-    } else if (location.pathname === '/' && 
-               currentMode !== ChatMode.Chat && 
-               currentMode !== ChatMode.Dev && 
-               currentMode !== ChatMode.Image && 
-               currentMode !== ChatMode.Training) {
-      setCurrentMode(ChatMode.Chat);
+export function ModeProvider({
+  children,
+  isEditorPage = false,
+  initialMode = ChatMode.Chat
+}: ModeProviderProps) {
+  const [currentMode, setCurrentMode] = useState<ChatMode>(initialMode);
+
+  const setMode = (mode: ChatMode | string) => {
+    if (typeof mode === 'string') {
+      setCurrentMode(EnumUtils.stringToChatMode(mode));
+    } else {
+      setCurrentMode(mode);
     }
-  }, [isEditorPage, currentMode, location.pathname]);
-  
-  // Convert configs from record to array
-  const availableModes = Object.values(CHAT_MODES) as ModeConfig[];
-  
+  };
+
+  const value: ModeContextType = {
+    currentMode,
+    setMode,
+    availableModes: CHAT_MODES,
+    isEditorPage
+  };
+
   return (
-    <ModeContext.Provider value={{ 
-      currentMode, 
-      setMode: setCurrentMode, 
-      isEditorPage,
-      availableModes
-    }}>
+    <ModeContext.Provider value={value}>
       {children}
     </ModeContext.Provider>
   );
-};
+}
 
-export const useMode = () => {
+export function useMode(): ModeContextType {
   const context = useContext(ModeContext);
   if (context === undefined) {
     throw new Error('useMode must be used within a ModeProvider');
   }
   return context;
-};
+}

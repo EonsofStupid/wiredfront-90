@@ -7,6 +7,7 @@ import { createUIActions } from './actions/ui-actions';
 import { ChatState } from './types/chat-store-types';
 import { logger } from '@/services/chat/LoggingService';
 import { ChatMode, ChatPosition } from '@/components/chat/types/chat/enums';
+import { FeatureKey } from '../types/feature-types';
 
 // Define the full store type with all action slices
 type FullChatStore = ChatState & 
@@ -56,12 +57,14 @@ const initialState: ChatState = {
     githubSync: true,
     knowledgeBase: true,
     tokenEnforcement: false,
+    tokenEnforcementMode: false,
     standardChat: true,
     training: true,
     codeAssistant: true,
     notifications: true,
-    modeSwitch: true
-  },
+    modeSwitch: true,
+    github: false
+  } as Record<FeatureKey, boolean>,
   
   // Current mode
   currentMode: ChatMode.Chat,
@@ -190,7 +193,7 @@ export const useChatStore = create<FullChatStore>()(
       },
       
       ...createInitializationActions(set, get),
-      ...createFeatureActions(set, get),
+      ...createFeatureActions(set, get, null),
       ...createUIActions(set, get),
     }),
     {

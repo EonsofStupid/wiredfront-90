@@ -13,7 +13,7 @@ import {
   SendMessageOptions 
 } from '@/components/chat/types/chat/bridge';
 
-export {
+export type {
   ChatBridgeEvent,
   ChatBridgeInterface,
   ChatBridgeState,
@@ -32,8 +32,8 @@ export interface ChatBridgeContextType {
   clearMessages: () => Promise<void>;
   getState: () => ChatBridgeState;
   setState: (state: Partial<ChatBridgeState>) => void;
-  setMode: (mode: ChatMode) => void;
-  getMode: () => ChatMode;
+  setMode: (mode: ChatMode) => boolean;
+  getCurrentMode: () => ChatMode;
   updateSettings: (settings: Partial<ChatSettings>) => void;
   getSettings: () => ChatSettings;
   getProvider: () => string | null;

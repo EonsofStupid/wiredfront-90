@@ -1,44 +1,67 @@
 
-import { ChatState } from '../../types/chat-store-types';
-import { SetState, GetState } from '../feature/types';
+import { ChatState } from '../../../types/chat-store-types';
+import { TokenBalance } from '@/components/chat/types/token-types';
+import { logger } from '@/services/chat/LoggingService';
+
+// Define SetState and GetState types specifically for this file
+type SetState<T> = (
+  partial: T | Partial<T> | ((state: T) => T | Partial<T>),
+  replace?: boolean
+) => void;
+
+type GetState<T> = () => T;
 
 /**
- * Create token-related actions for the chat store
+ * Creates token-related actions for the chat store
  */
 export const createTokenActions = (
   set: SetState<ChatState>,
   get: GetState<ChatState>
-) => ({
-  /**
-   * Set the current token balance
-   */
-  setTokenBalance: (balance: number) => {
-    set({ tokenBalance: balance });
-  },
-  
-  /**
-   * Deduct tokens from the balance
-   */
-  deductTokens: (amount: number) => {
-    const currentBalance = get().tokenBalance || 0;
-    const newBalance = Math.max(0, currentBalance - amount);
+) => {
+  return {
+    /**
+     * Update the token balance
+     */
+    setTokenBalance: (balance: TokenBalance) => {
+      logger.info('Setting token balance', { balance });
+      
+      set({
+        tokenBalance: balance
+      });
+    },
     
-    set({ tokenBalance: newBalance });
+    /**
+     * Increment token balance
+     */
+    incrementTokens: (amount: number) => {
+      logger.info(`Incrementing tokens by ${amount}`);
+      
+      const currentBalance = get().tokenBalance;
+      
+      set({
+        tokenBalance: currentBalance ? {
+          ...currentBalance,
+          balance: currentBalance.balance + amount,
+          totalEarned: currentBalance.totalEarned + amount
+        } : undefined
+      });
+    },
     
-    return newBalance;
-  },
-  
-  /**
-   * Add tokens to the balance
-   */
-  addTokens: (amount: number) => {
-    const currentBalance = get().tokenBalance || 0;
-    const newBalance = currentBalance + amount;
-    
-    set({ tokenBalance: newBalance });
-    
-    return newBalance;
-  }
-});
-
-export type TokenActions = ReturnType<typeof createTokenActions>;
+    /**
+     * Decrement token balance
+     */
+    decrementTokens: (amount: number) => {
+      logger.info(`Decrementing tokens by ${amount}`);
+      
+      const currentBalance = get().tokenBalance;
+      
+      set({
+        tokenBalance: currentBalance ? {
+          ...currentBalance,
+          balance: Math.max(0, currentBalance.balance - amount),
+          totalSpent: currentBalance.totalSpent + amount
+        } : undefined
+      });
+    }
+  };
+};
