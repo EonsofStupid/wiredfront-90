@@ -1,6 +1,6 @@
 
 import { EnumUtils } from '..';
-import { ChatMode, ChatPosition, TokenEnforcementMode, MessageRole, MessageType, MessageStatus } from '@/types/chat/enums';
+import { ChatMode, ChatPosition, TokenEnforcementMode, MessageRole, MessageType, MessageStatus } from '@/components/chat/types/chat/enums';
 
 describe('EnumUtils', () => {
   it('converts string to ChatMode enum', () => {

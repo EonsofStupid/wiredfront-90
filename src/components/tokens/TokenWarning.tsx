@@ -4,7 +4,7 @@ import { AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useTokenStore } from '@/stores/token';
 import { Button } from '@/components/ui/button';
-import { TokenEnforcementMode } from '@/types/chat/enums';
+import { TokenEnforcementMode } from '@/components/chat/types/chat/enums';
 
 interface TokenWarningProps {
   balance: number;

@@ -1,5 +1,5 @@
 
-import { ChatMode } from '@/types/chat/enums';
+import { ChatMode } from '@/components/chat/types/chat/enums';
 
 export interface ModeConfig {
   id: ChatMode;

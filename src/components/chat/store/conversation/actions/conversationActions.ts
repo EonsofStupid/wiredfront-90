@@ -5,7 +5,7 @@ import { Conversation, CreateConversationParams } from '../../../types/conversat
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
-import { ChatMode } from '@/types/chat/enums';
+import { ChatMode } from '@/components/chat/types/chat/enums';
 
 /**
  * Creates conversation actions for the conversation store

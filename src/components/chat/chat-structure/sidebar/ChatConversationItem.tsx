@@ -8,10 +8,10 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Conversation } from '@/types/chat/conversation';
+import { Conversation } from '@/components/chat/types/chat/conversation';
 import { cn } from '@/lib/utils';
 import { EnumUtils } from '@/lib/enums';
-import { ChatMode } from '@/types/chat/enums';
+import { ChatMode } from '@/components/chat/types/chat/enums';
 
 interface ChatConversationItemProps {
   conversation: Conversation;

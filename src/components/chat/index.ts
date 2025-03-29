@@ -19,4 +19,4 @@ export { ChatContainer } from './ChatContainer';
 export { ChatToggleButton } from './shared/ChatToggleButton';
 
 // Types 
-export * from '@/types/chat';
+export * from '@/components/chat/types/chat';

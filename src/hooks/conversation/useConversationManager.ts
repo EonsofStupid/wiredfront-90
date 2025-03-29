@@ -8,11 +8,11 @@ import {
   dbConversationToConversation,
   createParamsToDbParams,
   updateParamsToDbParams
-} from '@/types/chat/conversation';
+} from '@/components/chat/types/chat/conversation';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/services/chat/LoggingService';
 import { useMessageStore } from '@/components/chat/messaging/MessageManager';
-import { ChatMode } from '@/types/chat/enums';
+import { ChatMode } from '@/components/chat/types/chat/enums';
 import { toast } from 'sonner';
 
 /**

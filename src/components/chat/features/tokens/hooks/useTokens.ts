@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTokenStore } from '@/stores/token';
 import { useChatBridge } from '@/modules/ChatBridge';
-import { TokenEnforcementMode } from '@/types/chat/enums';
+import { TokenEnforcementMode } from '@/components/chat/types/chat/enums';
 import { TokenAnalytics, TokenResetConfig } from '@/types/token';
 import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';

@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
-import { Conversation, CreateConversationParams, ConversationOperationResult } from '@/types/chat/conversation';
+import { Conversation, CreateConversationParams, ConversationOperationResult } from '@/components/chat/types/chat/conversation';
 import { logger } from '@/services/chat/LoggingService';
 
 /**

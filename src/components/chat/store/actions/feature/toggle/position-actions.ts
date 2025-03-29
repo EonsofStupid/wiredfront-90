@@ -1,6 +1,6 @@
 
 import { ChatState } from '../../../types/chat-store-types';
-import { ChatPosition } from '@/types/chat/enums';
+import { ChatPosition } from '@/components/chat/types/chat/enums';
 import { SetState, GetState } from '../types';
 import { logger } from '@/services/chat/LoggingService';
 

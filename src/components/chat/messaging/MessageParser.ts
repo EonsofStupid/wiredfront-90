@@ -1,5 +1,5 @@
 
-import { MessageType, MessageRole } from '@/types/chat/enums';
+import { MessageType, MessageRole } from '@/components/chat/types/chat/enums';
 
 /**
  * Parse message content to extract structured information

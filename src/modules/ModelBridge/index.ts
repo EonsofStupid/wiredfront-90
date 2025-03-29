@@ -1,7 +1,7 @@
 
 import { logger } from '@/services/chat/LoggingService';
 import { logPrompt, logSimplePrompt } from '@/modules/PromptLogger';
-import { MessageEnvelope, ResponseEnvelope, TaskType, ProviderType } from '@/types/chat/communication';
+import { MessageEnvelope, ResponseEnvelope, TaskType, ProviderType } from '@/components/chat/types/chat/communication';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface ModelOptions {

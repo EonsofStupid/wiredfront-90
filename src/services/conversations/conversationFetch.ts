@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Conversation, ConversationOperationResult } from '@/types/chat/conversation';
+import { Conversation, ConversationOperationResult } from '@/components/chat/types/chat/conversation';
 import { logger } from '@/services/chat/LoggingService';
 
 /**

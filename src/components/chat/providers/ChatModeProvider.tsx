@@ -2,7 +2,7 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useChatStore } from '../store/chatStore';
 import { logger } from '@/services/chat/LoggingService';
-import { ChatMode } from '@/types/chat/enums';
+import { ChatMode } from '@/components/chat/types/chat/enums';
 import { EnumUtils } from '@/lib/enums';
 import { UiChatMode } from '../store/types/chat-store-types';
 

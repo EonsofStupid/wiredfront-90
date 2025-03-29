@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Coins, AlertTriangle, Info } from 'lucide-react';
 import { getTokenStatusColor } from '@/utils/token-utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { TokenEnforcementMode } from '@/types/chat/enums';
+import { TokenEnforcementMode } from '@/components/chat/types/chat/enums';
 import { Button } from '@/components/ui/button';
 
 interface EditorModeTokenDisplayProps {

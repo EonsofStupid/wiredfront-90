@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { ChatMode } from '@/types/chat/enums';
+import { ChatMode } from '@/components/chat/types/chat/enums';
 import { ModeConfig, ModeContextType, CHAT_MODES } from './types';
 
 const ModeContext = createContext<ModeContextType | undefined>(undefined);

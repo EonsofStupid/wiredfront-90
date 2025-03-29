@@ -1,5 +1,5 @@
 
-import { ChatMode, ChatPosition } from '@/types/chat/enums';
+import { ChatMode, ChatPosition } from '@/components/chat/types/chat/enums';
 import { FeatureKey } from '@/components/chat/types/feature-types';
 import { Provider } from '@/components/chat/types/provider-types';
 

@@ -3,8 +3,8 @@ import { useCallback } from 'react';
 import { useConversationStore } from '@/components/chat/store/conversation/store';
 import { useChatBridge } from '@/components/chat/chatBridge';
 import { useMessageStore } from '@/components/chat/messaging/MessageManager';
-import { Conversation, CreateConversationParams } from '@/types/chat/conversation';
-import { ChatMode } from '@/types/chat/enums';
+import { Conversation, CreateConversationParams } from '@/components/chat/types/chat/conversation';
+import { ChatMode } from '@/components/chat/types/chat/enums';
 import { toast } from 'sonner';
 
 /**

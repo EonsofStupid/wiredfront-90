@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { logger } from '@/services/chat/LoggingService';
-import { TokenEnforcementMode } from '@/types/chat/enums';
+import { TokenEnforcementMode } from '@/components/chat/types/chat/enums';
 
 interface TokenState {
   // Token balance and limits

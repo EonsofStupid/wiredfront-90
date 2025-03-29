@@ -1,6 +1,6 @@
 
 import { useTokenStore } from '@/stores/token';
-import { TokenEnforcementMode } from '@/types/chat/enums';
+import { TokenEnforcementMode } from '@/components/chat/types/chat/enums';
 
 /**
  * Adapter class that forwards token actions to the main token store

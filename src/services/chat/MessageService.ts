@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Message, MessageCreateParams, MessageUpdateParams } from '@/types/chat/message';
-import { MessageType, MessageStatus, MessageRole } from '@/types/chat/enums';
+import { Message, MessageCreateParams, MessageUpdateParams } from '@/components/chat/types/chat/message';
+import { MessageType, MessageStatus, MessageRole } from '@/components/chat/types/chat/enums';
 import { logger } from './LoggingService';
 import { EnumUtils } from '@/lib/enums';
 import { 

@@ -29,4 +29,4 @@ export {
   TokenEnforcementMode,
   TaskType,
   UIEnforcementMode
-} from '@/types/chat/enums';
+} from '@/components/chat/types/chat/enums';

@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { atom, useAtom } from 'jotai';
 import { cn } from '@/lib/utils';
-import { MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
+import { MessageRole, MessageStatus, MessageType } from '@/components/chat/types/chat/enums';
 import { Spinner } from '@/components/chat/shared/Spinner';
 import { Avatar } from '@/components/ui/avatar';
 import { MessageActions } from './MessageActions';

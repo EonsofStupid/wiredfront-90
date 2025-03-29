@@ -6,8 +6,8 @@ import {
   MessageType,
   TaskType,
   TokenEnforcementMode 
-} from '@/types/chat/enums';
-import { chatModeToDbString, dbStringToChatMode } from '@/types/chat/conversation';
+} from '@/components/chat/types/chat/enums';
+import { chatModeToDbString, dbStringToChatMode } from '@/components/chat/types/chat/conversation';
 
 /**
  * Type representing UI-friendly chat modes

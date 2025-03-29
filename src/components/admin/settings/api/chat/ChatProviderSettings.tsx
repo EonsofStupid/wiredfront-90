@@ -18,9 +18,9 @@ import {
 import { SettingsContainer } from "../../layout/SettingsContainer";
 import { toast } from "sonner";
 import { useChatBridge } from "@/modules/ChatBridge";
-import { ChatPosition } from "@/types/chat/enums";
+import { ChatPosition } from "@/components/chat/types/enums";
 import { EnumUtils } from "@/lib/enums";
-import { Provider } from "@/types/chat/providers";
+import { Provider } from "@/components/chat/types/providers";
 
 // Define provider types aligned with central types
 type ChatProviderType = 'openai' | 'anthropic' | 'gemini' | 'local' | 'perplexity' | 'llama';

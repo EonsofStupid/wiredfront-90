@@ -10,7 +10,7 @@ import { useErrorBoundary } from '../../hooks/useErrorBoundary';
 import { MessageSkeleton } from '../../shared/MessageSkeleton';
 import { logger } from '@/services/chat/LoggingService';
 import { useChatStore } from '../../store/chatStore';
-import { MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
+import { MessageRole, MessageStatus, MessageType } from '@/components/chat/types/chat/enums';
 
 interface MessageModuleProps {
   scrollRef: React.RefObject<HTMLDivElement>;

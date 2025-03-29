@@ -2,7 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import { useChatStore } from '../../store/chatStore';
 import { useMessageStore } from '../../messaging/MessageManager';
-import { MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
+import { MessageRole, MessageStatus, MessageType } from '@/components/chat/types/chat/enums';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';

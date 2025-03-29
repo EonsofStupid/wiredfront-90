@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Conversation } from '@/types/chat/conversation';
+import { Conversation } from '@/components/chat/types/chat/conversation';
 import { ConversationItem } from './ConversationItem';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { EnumUtils } from '@/lib/enums/EnumUtils';

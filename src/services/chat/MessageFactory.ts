@@ -4,12 +4,12 @@ import {
   Message,
   MessageCreateParams,
   MessageUpdateParams 
-} from '@/types/chat/message';
+} from '@/components/chat/types/chat/message';
 import {
   MessageRole,
   MessageStatus,
   MessageType
-} from '@/types/chat/enums';
+} from '@/components/chat/types/chat/enums';
 import { toJson } from '@/utils/json';
 import { logger } from '@/services/chat/LoggingService';
 

@@ -6,7 +6,7 @@ import {
   ChatMode, 
   ChatPosition,
   TokenEnforcementMode
-} from '@/types/chat/enums';
+} from '@/components/chat/types/chat/enums';
 
 export type UiChatMode = 'standard' | 'editor' | 'image' | 'training' | 'planning' | 'code' | 'document' | 'audio';
 

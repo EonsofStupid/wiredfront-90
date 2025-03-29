@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { TokenEnforcementMode } from '@/types/chat/enums';
+import { TokenEnforcementMode } from '@/components/chat/types/chat/enums';
 
 /**
  * Base schema for token record from the database

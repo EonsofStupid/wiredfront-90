@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { ChatMode } from '@/types/chat/enums';
+import { ChatMode } from '@/components/chat/types/chat/enums';
 import { useChatStore } from '../store/chatStore';
 
 interface SessionMetadata {

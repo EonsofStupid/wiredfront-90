@@ -1,7 +1,7 @@
 
 import { logger } from '@/services/chat/LoggingService';
 import { supabase } from '@/integrations/supabase/client';
-import { VectorDbType } from '@/types/chat/communication';
+import { VectorDbType } from '@/components/chat/types/chat/communication';
 
 // Supported vector store types
 export type VectorStoreType = 'supabase' | 'pinecone' | 'qdrant' | 'weaviate' | 'chromadb' | 'local';

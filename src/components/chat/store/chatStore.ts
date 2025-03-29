@@ -6,7 +6,7 @@ import { createFeatureActions } from './actions/feature-actions';
 import { createUIActions } from './actions/ui-actions';
 import { ChatState } from './types/chat-store-types';
 import { logger } from '@/services/chat/LoggingService';
-import { ChatMode, ChatPosition } from '@/types/chat/enums';
+import { ChatMode, ChatPosition } from '@/components/chat/types/chat/enums';
 
 // Define the full store type with all action slices
 type FullChatStore = ChatState & 

@@ -9,7 +9,7 @@ import {
   deleteConversation as apiDeleteConversation,
   fetchConversations as apiFetchConversations
 } from '@/services/conversations';
-import { CreateConversationParams, UpdateConversationParams } from '@/types/chat/conversation';
+import { CreateConversationParams, UpdateConversationParams } from '@/components/chat/types/chat/conversation';
 
 /**
  * Create conversation actions for the store

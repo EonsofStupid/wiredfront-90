@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { useChatStore } from '../store/chatStore';
-import { ChatPosition } from '@/types/chat/enums';
+import { ChatPosition } from '@/components/chat/types/chat/enums';
 import { cn } from '@/lib/utils';
 
 export function ChatPositionToggle() {

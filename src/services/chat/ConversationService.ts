@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Conversation } from '@/types/chat/conversation';
-import { ChatMode } from '@/types/chat/enums';
+import { Conversation } from '@/components/chat/types/chat/conversation';
+import { ChatMode } from '@/components/chat/types/chat/enums';
 import { EnumUtils } from '@/lib/enums/EnumUtils';
 import { logger } from './LoggingService';
 import { Json } from '@/integrations/supabase/types';

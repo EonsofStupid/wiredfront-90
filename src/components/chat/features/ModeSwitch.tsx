@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useChatStore } from '../store/chatStore';
-import { ChatMode } from '@/types/chat/enums';
+import { ChatMode } from '@/components/chat/types/chat/enums';
 import { useConversationManager } from '@/hooks/conversation';
 import { Code, ImageIcon, MessageSquare } from 'lucide-react';
 import { EnumUtils } from '@/lib/enums';

@@ -2,12 +2,12 @@
 import React, { useState } from 'react';
 import { useChatStore } from '../../store/chatStore';
 import { useConversationManager } from '../../hooks/conversation/useConversationManager';
-import { Conversation } from '@/types/chat/conversation';
+import { Conversation } from '@/components/chat/types/chat/conversation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { MessageSquarePlus } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ChatMode } from '@/types/chat/enums';
+import { ChatMode } from '@/components/chat/types/chat/enums';
 import { ConversationList } from './ConversationList';
 import { EnumUtils } from '@/lib/enums/EnumUtils';
 

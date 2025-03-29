@@ -12,7 +12,7 @@ import {
   TokenTransaction,
   TokenUsage
 } from '@/types/token';
-import { TokenEnforcementMode } from '@/types/chat/enums';
+import { TokenEnforcementMode } from '@/components/chat/types/chat/enums';
 import { toast } from 'sonner';
 import { tokenStateSchema, tokenDbSchema, tokenUpdateSchema } from '@/schemas/token';
 import { validateWithZod } from '@/utils/validation';

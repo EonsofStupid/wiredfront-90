@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { MessagesSquare, Code, ImageIcon, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useChatStore } from '../store/chatStore';
-import { ChatMode } from '@/types/chat/enums';
+import { ChatMode } from '@/components/chat/types/chat/enums';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function ChatHeaderTopNav() {

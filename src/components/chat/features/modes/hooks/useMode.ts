@@ -1,7 +1,7 @@
 
 import { useContext } from 'react';
 import { ModeConfig } from '@/modules/ModeManager/types';
-import { ChatMode } from '@/types/chat/enums';
+import { ChatMode } from '@/components/chat/types/chat/enums';
 import { useChatBridge } from '@/modules/ChatBridge';
 import { DEFAULT_CHAT_MODES } from '@/components/chat/types/chat-modes';
 

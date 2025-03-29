@@ -1,5 +1,5 @@
 
-import { Conversation } from '@/types/chat/conversation';
+import { Conversation } from '@/components/chat/types/chat/conversation';
 import { useConversationStore } from './store';
 import { useEffect, useMemo } from 'react';
 

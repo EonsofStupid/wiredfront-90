@@ -5,7 +5,7 @@ import { ChatHeader } from "../header/ChatHeader";
 import { ChatContent } from "../content/ChatContent";
 import { useChatWindowResize } from "../../hooks/useChatWindowResize";
 import { useChatStore } from "../../store/chatStore";
-import { ChatMode } from "@/types/chat/enums";
+import { ChatMode } from "@/components/chat/types/chat/enums";
 import { cn } from "@/lib/utils";
 import { useTokenStore } from "../../store/token";
 

@@ -1,5 +1,5 @@
 
-import { TokenEnforcementMode } from "@/types/chat/enums";
+import { TokenEnforcementMode } from "@/components/chat/types/chat/enums";
 import { EnumUtils } from "@/lib/enums";
 import { TokenAnalytics } from "@/types/token";
 

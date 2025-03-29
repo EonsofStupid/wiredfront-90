@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { FeatureKey } from "@/components/chat/types/feature-types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ChatPosition } from "@/types/chat/enums";
+import { ChatPosition } from "@/components/chat/types/chat/enums";
 
 export const ChatFeatureSettings = () => {
   const { position, togglePosition, docked, toggleDocked } = useChatStore();

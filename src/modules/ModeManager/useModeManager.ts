@@ -1,10 +1,10 @@
 
 import { useState, useCallback, useMemo } from 'react';
-import { ChatMode } from '@/types/chat/enums';
+import { ChatMode } from '@/components/chat/types/chat/enums';
 import { EnumUtils } from '@/lib/enums/EnumUtils';
 import { useChatStore } from '@/components/chat/store/chatStore';
 import { useNavigate } from 'react-router-dom';
-import { TaskType } from '@/types/chat/communication';
+import { TaskType } from '@/components/chat/types/chat/communication';
 
 /**
  * Hook for managing chat modes and mode switching

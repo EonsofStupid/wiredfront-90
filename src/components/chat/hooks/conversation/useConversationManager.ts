@@ -5,7 +5,7 @@ import { logger } from '@/services/chat/LoggingService';
 import { useMessageStore } from '@/components/chat/messaging/MessageManager';
 import { useState, useEffect, useCallback } from 'react';
 import { useConversationCleanup } from './useConversationCleanup';
-import { Conversation, CreateConversationParams } from '@/types/chat/conversation';
+import { Conversation, CreateConversationParams } from '@/components/chat/types/chat/conversation';
 
 /**
  * Main hook for managing conversations and related actions

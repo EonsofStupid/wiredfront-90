@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/select';
 import { Code, ImageIcon, MessageSquare } from 'lucide-react';
 import { useChatBridge } from '@/components/chat/bridge/ChatBridgeProvider';
-import { ChatMode } from '@/types/chat/enums';
+import { ChatMode } from '@/components/chat/types/chat/enums';
 import { EnumUtils } from '@/lib/enums';
 
 export type UIMode = 'standard' | 'editor' | 'image' | 'training';

@@ -6,7 +6,7 @@ import {
   MessageType,
   TokenEnforcementMode,
   TaskType
-} from '@/types/chat/enums';
+} from '@/components/chat/types/chat/enums';
 import { EnumUtils } from './EnumUtils';
 
 /**

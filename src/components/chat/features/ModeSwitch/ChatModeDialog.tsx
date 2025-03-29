@@ -10,7 +10,7 @@ import { useLocation } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/services/chat/LoggingService";
-import { ChatMode } from "@/types/chat/enums";
+import { ChatMode } from "@/components/chat/types/chat/enums";
 
 interface ChatModeDialogProps {
   open: boolean;

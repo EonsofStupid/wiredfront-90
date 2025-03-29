@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MessageRole } from '@/types/chat/enums';
+import { MessageRole } from '@/components/chat/types/chat/enums';
 
 interface MessageSkeletonProps {
   role?: MessageRole;

@@ -1,8 +1,7 @@
-
-import { ChatMode, ChatPosition } from '@/types/chat/enums';
-import { ChatBridgeState, SendMessageOptions } from '@/types/chat/bridge';
-import { Conversation } from '@/types/chat/conversation';
-import { Provider } from '@/types/chat/providers';
+import { ChatMode, ChatPosition } from '@/components/chat/types/enums';
+import { ChatBridgeState, SendMessageOptions } from '@/components/chat/types/bridge';
+import { Conversation } from '@/components/chat/types/conversation';
+import { Provider } from '@/components/chat/types/providers';
 import { logger } from '@/services/chat/LoggingService';
 
 export class ChatBridge {

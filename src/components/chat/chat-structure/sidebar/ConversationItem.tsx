@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Conversation } from '@/types/chat/conversation';
-import { ChatMode } from '@/types/chat/enums';
+import { Conversation } from '@/components/chat/types/chat/conversation';
+import { ChatMode } from '@/components/chat/types/chat/enums';
 import { EnumUtils } from '@/lib/enums/EnumUtils';
 import { MessageCircle, Code, Image, GraduationCap, ClipboardList, FileText, Headphones, Archive, Trash2, History } from 'lucide-react';
 import { cn } from '@/lib/utils';

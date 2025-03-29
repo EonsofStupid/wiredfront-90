@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { TokenEnforcementMode } from '@/types/chat/enums';
+import { TokenEnforcementMode } from '@/components/chat/types/chat/enums';
 import { tokenEnforcementModeToLabel } from '@/utils/token-utils';
 import { Loader2 } from 'lucide-react';
 import { EnumUtils } from '@/lib/enums/EnumUtils';

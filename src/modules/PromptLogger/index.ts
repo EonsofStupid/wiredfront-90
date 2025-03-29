@@ -1,7 +1,7 @@
 
 import { logger } from '@/services/chat/LoggingService';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageEnvelope, ResponseEnvelope, TaskType } from '@/types/chat/communication';
+import { MessageEnvelope, ResponseEnvelope, TaskType } from '@/components/chat/types/chat/communication';
 
 export interface PromptLogEntry {
   traceId: string;

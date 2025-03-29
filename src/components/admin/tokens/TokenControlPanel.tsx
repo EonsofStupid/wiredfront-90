@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTokenStore } from '@/stores/token';
 import { useRoleStore } from '@/stores/role';
-import { TokenEnforcementMode } from '@/types/chat/enums';
+import { TokenEnforcementMode } from '@/components/chat/types/chat/enums';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Coins } from 'lucide-react';

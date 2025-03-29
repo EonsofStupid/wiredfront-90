@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/auth';
 import { toast } from 'sonner';
 import { logger } from '@/services/chat/LoggingService';
 import { useCombinedFeatureFlag } from './useFeatureFlags';
-import { TokenEnforcementMode } from '@/types/chat/enums';
+import { TokenEnforcementMode } from '@/components/chat/types/chat/enums';
 import { withTokenErrorBoundary } from '@/components/tokens/TokenErrorBoundary';
 import { EnumUtils } from '@/lib/enums/EnumUtils';
 

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Conversation } from '@/types/chat/conversation';
+import { Conversation } from '@/components/chat/types/chat/conversation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import { Loader2 } from 'lucide-react';
