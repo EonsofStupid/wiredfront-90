@@ -1,77 +1,82 @@
 
-import { useState, useEffect } from 'react';
-import { AIProviderService } from '@/services/chat/AIProviderService';
-import { ChatProvider } from '@/components/chat/store/types/chat-store-types';
-import { logger } from '@/services/chat/LoggingService';
+import { useCallback, useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useChatStore } from '@/components/chat/store';
+import { ChatProvider } from '@/components/chat/store/types/chat-store-types';
+import { toast } from 'sonner';
+import { logger } from '@/services/chat/LoggingService';
 
 /**
- * Hook for managing AI providers in the chat interface
+ * Hook for managing AI providers
  */
 export function useAIProviders() {
+  const { currentProvider, setCurrentProvider, setAvailableProviders } = useChatStore();
   const [providers, setProviders] = useState<ChatProvider[]>([]);
+  const [selectedProvider, setSelectedProvider] = useState<ChatProvider | null>(currentProvider);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedProvider, setSelectedProvider] = useState<ChatProvider | null>(null);
-  const { updateCurrentProvider, updateAvailableProviders } = useChatStore();
-  
-  // Load providers when component mounts
+  const [error, setError] = useState<Error | null>(null);
+
+  // Fetch providers on first load
   useEffect(() => {
-    loadProviders();
+    fetchProviders();
   }, []);
-  
-  // Load available providers from the service
-  const loadProviders = async () => {
-    setIsLoading(true);
+
+  // Update selected provider when the store's current provider changes
+  useEffect(() => {
+    if (currentProvider) {
+      setSelectedProvider(currentProvider);
+    }
+  }, [currentProvider]);
+
+  /**
+   * Fetch all available AI providers
+   */
+  const fetchProviders = useCallback(async () => {
     try {
-      const allProviders = await AIProviderService.getAllProviders();
-      setProviders(allProviders);
+      setIsLoading(true);
       
-      // Also update the providers in the global store
-      updateAvailableProviders(allProviders);
+      const { data, error } = await supabase
+        .from('ai_providers')
+        .select('*')
+        .order('name');
+        
+      if (error) throw error;
       
-      // Set default provider
-      const defaultProvider = allProviders.find(p => p.isDefault) || 
-                             (allProviders.length > 0 ? allProviders[0] : null);
-      if (defaultProvider) {
+      const typedProviders = data as ChatProvider[];
+      setProviders(typedProviders);
+      setAvailableProviders(typedProviders);
+      
+      // If we have providers but no current provider set, use the default one
+      if (typedProviders.length > 0 && !currentProvider) {
+        const defaultProvider = typedProviders.find(p => p.isDefault) || typedProviders[0];
+        setCurrentProvider(defaultProvider);
         setSelectedProvider(defaultProvider);
-        updateCurrentProvider(defaultProvider);
       }
       
-      logger.info("Loaded AI providers", { count: allProviders.length });
-    } catch (error) {
-      logger.error("Error loading AI providers", error);
+      return typedProviders;
+    } catch (err) {
+      const errorObj = err instanceof Error ? err : new Error(String(err));
+      setError(errorObj);
+      toast.error('Failed to load AI providers');
+      logger.error('Failed to fetch AI providers', { error: err });
+      return [];
     } finally {
       setIsLoading(false);
     }
-  };
-  
-  // Select a specific provider
-  const selectProvider = async (providerId: string) => {
-    const provider = providers.find(p => p.id === providerId);
-    if (!provider) return;
-    
-    setSelectedProvider(provider);
-    updateCurrentProvider(provider);
-    logger.info("Selected AI provider", { id: provider.id, type: provider.type });
-  };
-  
-  // Track usage of the current provider
-  const trackProviderUsage = async (operation: 'query' | 'index' | 'image', metrics: any) => {
-    if (!selectedProvider) return;
-    
-    await AIProviderService.trackProviderUsage(
-      selectedProvider.id,
-      operation,
-      metrics
-    );
-  };
-  
+  }, [currentProvider, setAvailableProviders, setCurrentProvider]);
+
+  /**
+   * Refresh providers list
+   */
+  const refreshProviders = useCallback(() => {
+    return fetchProviders();
+  }, [fetchProviders]);
+
   return {
     providers,
     selectedProvider,
     isLoading,
-    refreshProviders: loadProviders,
-    selectProvider,
-    trackProviderUsage
+    error,
+    refreshProviders
   };
 }

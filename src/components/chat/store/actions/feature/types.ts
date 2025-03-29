@@ -6,7 +6,8 @@ import { Provider } from '@/components/chat/types/provider-types';
 // Zustand setState and getState types
 export type SetState<T> = (
   partial: T | Partial<T> | ((state: T) => T | Partial<T>),
-  replace?: boolean
+  replace?: boolean,
+  action?: any
 ) => void;
 
 export type GetState<T> = () => T;
@@ -22,7 +23,8 @@ export type FeatureKey =
   | 'ragSupport'
   | 'githubSync'
   | 'knowledgeBase'
-  | 'tokenEnforcement';
+  | 'tokenEnforcement'
+  | 'training';
 
 // Feature toggle actions interface
 export interface FeatureToggleActions {

@@ -1,98 +1,111 @@
 
-import { 
-  ChatMode, 
-  ChatPosition,
-  MessageStatus
-} from '@/types/chat/enums';
-import { Message } from '@/components/chat/types/message-types';
 import { Provider } from '@/components/chat/types/provider-types';
-import { Features } from '@/components/chat/types/feature-types';
+import { ChatMode, ChatPosition, MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
+import { Conversation } from '@/components/chat/types/conversation-types';
+import { Message } from '@/components/chat/types/message-types';
 
-export type ModelFetchStatus = 'idle' | 'loading' | 'success' | 'error';
-
-export type UiChatMode = 'standard' | 'editor' | 'image' | 'training' | 'planning' | 'code' | 'document' | 'audio';
-
-/**
- * Structure of a chat window state
- */
-export interface ChatWindowState {
-  isMinimized: boolean;
-  position: ChatPosition;
-  showSidebar: boolean;
-  scale: number;
+// Provider type for the chat store
+export interface ChatProvider extends Provider {
+  id: string;
+  name: string;
+  type: string;
+  description?: string;
+  isDefault?: boolean;
+  isAvailable?: boolean;
+  models?: string[];
+  capabilities?: string[];
+  icon?: string;
+  metadata?: Record<string, any>;
 }
 
-/**
- * Structure of a chat session
- */
+// Chat session type
 export interface ChatSession {
   id: string;
   title: string;
-  created_at: string;
-  last_accessed: string;
+  created: string;
+  updated: string;
   messages: Message[];
-  status: MessageStatus;
-  mode: ChatMode;
-  provider_id?: string;
-  archived?: boolean;
 }
 
-/**
- * Chat UI state
- */
-export interface ChatUIState {
-  sessionLoading: boolean;
-  messageLoading: boolean;
-  providerLoading: boolean;
+// Chat window state
+export interface ChatWindowState {
+  width: number;
+  height: number;
+  position: ChatPosition;
+  isMinimized: boolean;
+  isOpen: boolean;
+  showSidebar: boolean;
+  scale: number;
 }
 
-/**
- * Main chat state interface
- */
+// Base feature flags
+export interface FeatureFlags {
+  voice: boolean;
+  rag: boolean;
+  modeSwitch: boolean;
+  notifications: boolean;
+  github: boolean;
+  codeAssistant: boolean;
+  ragSupport: boolean;
+  githubSync: boolean;
+  knowledgeBase: boolean;
+  tokenEnforcement: boolean;
+}
+
+// Chat store state interface
 export interface ChatState {
-  initialized: boolean;
-  messages: Message[];
-  userInput: string;
-  isWaitingForResponse: boolean;
-  selectedModel: string;
-  selectedMode: 'chat' | 'dev' | 'image' | 'training';
-  modelFetchStatus: ModelFetchStatus;
-  error: string | null;
-  chatId: string | null;
-  docked: boolean;
+  // Window state
   isOpen: boolean;
   isMinimized: boolean;
   position: ChatPosition;
-  startTime: number;
-  features: Features;
-  currentMode: ChatMode;
-  availableProviders: Provider[];
-  currentProvider: Provider | null;
-  
-  providers: {
-    availableProviders: Provider[];
-    currentProvider?: Provider | null;
-  };
-  
-  showSidebar: boolean;
   scale: number;
-  ui: ChatUIState;
+  showSidebar: boolean;
   
-  // For token management, optional
-  tokenBalance?: number;
+  // Session state
+  chatId: string | null;
+  currentMode: ChatMode;
+  selectedModel: string | null;
   
-  // Required store actions
-  resetChatState: () => void;
-  setUserInput: (input: string) => void;
+  // Features
+  features: FeatureFlags;
+  
+  // Providers
+  providers: {
+    availableProviders: ChatProvider[];
+    currentProvider: ChatProvider | null;
+  };
+  currentProvider: ChatProvider | null;
+  availableProviders: ChatProvider[];
+  
+  // Status
+  isLoading: boolean;
+  isSessionLoading: boolean;
+  error: Error | null;
+  
+  // Tokens
+  tokenBalance: number | null;
+  
+  // Actions
   toggleChat: () => void;
   toggleMinimize: () => void;
   toggleSidebar: () => void;
-  toggleDocked: () => void;
-  setPosition: (position: ChatPosition) => void;
-  setChatId: (chatId: string | null) => void;
+  setScale: (scale: number) => void;
+  setChatId: (id: string | null) => void;
   setMode: (mode: ChatMode | string) => void;
+  togglePosition: () => void;
+  setPosition: (position: ChatPosition) => void;
   initializeChat: () => void;
-  setSessionLoading: (loading: boolean) => void;
-  setMessageLoading: (loading: boolean) => void;
-  setProviderLoading: (loading: boolean) => void;
+  setIsLoading: (isLoading: boolean) => void;
+  setSessionLoading: (isLoading: boolean) => void;
+  setError: (error: Error | null) => void;
+  resetChatState: () => void;
+  toggleFeature: (feature: keyof FeatureFlags) => void;
+  enableFeature: (feature: keyof FeatureFlags) => void;
+  disableFeature: (feature: keyof FeatureFlags) => void;
+  setFeatureState: (feature: keyof FeatureFlags, enabled: boolean) => void;
+  
+  // Token actions
+  setTokenBalance: (balance: number) => void;
+  addTokens: (amount: number) => number;
+  deductTokens: (amount: number) => number;
 }

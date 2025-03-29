@@ -1,52 +1,43 @@
 
-import { ChatState } from '../../../types/store-types';
-import { SetState, GetState } from '../types';
+import { ChatState } from '../../../types/chat-store-types';
 import { ChatPosition } from '@/types/chat/enums';
 import { logger } from '@/services/chat/LoggingService';
+import { SetState, GetState } from '../types';
 
 /**
- * Creates UI position-related actions for the chat store
+ * Create position-related actions for the chat store
  */
 export const createPositionActions = (
   set: SetState<ChatState>,
   get: GetState<ChatState>
-) => {
-  return {
-    /**
-     * Toggle the chat position between left and right
-     */
-    togglePosition: () => {
-      const currentPosition = get().position;
-      
-      const newPosition = currentPosition === ChatPosition.BottomRight 
-        ? ChatPosition.BottomLeft 
-        : ChatPosition.BottomRight;
-      
-      logger.debug('Toggling chat position', { from: currentPosition, to: newPosition });
-      
-      set({ position: newPosition }, false, { type: 'chat/togglePosition' });
-      
-      // Save the position preference to local storage
-      try {
-        localStorage.setItem('chat-position', newPosition);
-      } catch (e) {
-        logger.error('Failed to save position preference', e);
-      }
-    },
+) => ({
+  /**
+   * Toggle between bottom left and bottom right positions
+   */
+  togglePosition: () => {
+    const currentPosition = get().position;
+    let newPosition: ChatPosition;
     
-    /**
-     * Set the chat position explicitly
-     */
-    setPosition: (position: ChatPosition) => {
-      logger.debug('Setting chat position', { position });
-      set({ position }, false, { type: 'chat/setPosition', position });
-      
-      // Save the position preference to local storage
-      try {
-        localStorage.setItem('chat-position', position);
-      } catch (e) {
-        logger.error('Failed to save position preference', e);
-      }
+    if (currentPosition === ChatPosition.BottomRight) {
+      newPosition = ChatPosition.BottomLeft;
+    } else {
+      newPosition = ChatPosition.BottomRight;
     }
-  };
-};
+    
+    set({ position: newPosition });
+    logger.info('Chat position toggled', { 
+      from: currentPosition, 
+      to: newPosition 
+    });
+  },
+  
+  /**
+   * Set a specific position
+   */
+  setPosition: (position: ChatPosition) => {
+    set({ position });
+    logger.info('Chat position set', { position });
+  }
+});
+
+export type PositionActions = ReturnType<typeof createPositionActions>;

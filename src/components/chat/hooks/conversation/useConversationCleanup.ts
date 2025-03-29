@@ -11,20 +11,28 @@ export function useConversationCleanup(
   currentConversationId: string | null,
   clearMessages: () => void,
   createConversation: (params?: CreateConversationParams) => Promise<string>,
-  loadConversations: () => Promise<void>
+  refreshConversations: () => Promise<void>
 ) {
   // Cleanup inactive conversations (older than 30 days)
-  const cleanupInactiveConversations = useCallback(async () => {
+  const cleanupInactiveConversations = useCallback(async (
+    maxInactive?: number,
+    shouldCreateNew?: boolean
+  ) => {
     try {
       logger.info('Cleaning up inactive conversations');
       
       const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - (maxInactive || 30));
       
       // This would be implemented in a service
       
       // After cleanup, refresh conversations list
-      await loadConversations();
+      await refreshConversations();
+      
+      // Create a new conversation if needed
+      if (shouldCreateNew && !currentConversationId) {
+        await createConversation();
+      }
       
       toast.success('Inactive conversations cleaned up');
       return true;
@@ -33,7 +41,7 @@ export function useConversationCleanup(
       toast.error('Failed to cleanup inactive conversations');
       return false;
     }
-  }, [loadConversations]);
+  }, [currentConversationId, createConversation, refreshConversations]);
 
   // Clear all conversations
   const clearConversations = useCallback(async () => {
@@ -41,12 +49,10 @@ export function useConversationCleanup(
       logger.info('Clearing all conversations');
       
       // Clear the current conversation
-      if (currentConversationId) {
-        clearMessages();
-      }
+      clearMessages();
       
-      // Create a new conversation
-      await createConversation();
+      // Refresh the conversations list
+      await refreshConversations();
       
       toast.success('All conversations cleared');
       return true;
@@ -55,7 +61,7 @@ export function useConversationCleanup(
       toast.error('Failed to clear conversations');
       return false;
     }
-  }, [currentConversationId, clearMessages, createConversation]);
+  }, [clearMessages, refreshConversations]);
 
   return {
     cleanupInactiveConversations,

@@ -1,27 +1,30 @@
 
 import { 
-  MessageType, 
-  MessageRole, 
-  MessageStatus, 
   ChatMode, 
-  ChatPosition,
-  TokenEnforcementMode
+  ChatPosition, 
+  TokenEnforcementMode, 
+  MessageRole, 
+  MessageType,
+  MessageStatus,
+  TaskType,
+  UIEnforcementMode
 } from '@/types/chat/enums';
 
-export type UiChatMode = 'standard' | 'editor' | 'image' | 'training' | 'planning' | 'code' | 'document' | 'audio';
+// UiChatMode type definition for UI presentation
+export type UiChatMode = 'chat' | 'dev' | 'image' | 'training' | 'planning' | 'code' | 'editor' | 'document' | 'audio';
 
 /**
- * Utility methods for handling enums in the application
+ * Utility class for handling enums
  */
 export const EnumUtils = {
-  /**
-   * Convert a string to a ChatMode enum value
-   */
-  stringToChatMode: (mode: string): ChatMode => {
-    switch (mode?.toLowerCase()) {
+  // ChatMode conversions
+  stringToChatMode: (mode: string | ChatMode): ChatMode => {
+    if (typeof mode !== 'string') return mode;
+    
+    switch (mode.toLowerCase()) {
       case 'chat': return ChatMode.Chat;
-      case 'dev': 
-      case 'editor': return ChatMode.Dev;
+      case 'dev': return ChatMode.Dev;
+      case 'editor': return ChatMode.Editor;
       case 'image': return ChatMode.Image;
       case 'training': return ChatMode.Training;
       case 'planning': return ChatMode.Planning;
@@ -31,21 +34,11 @@ export const EnumUtils = {
       default: return ChatMode.Chat;
     }
   },
-
-  /**
-   * Convert a ChatMode enum value to a string
-   */
+  
   chatModeToString: (mode: ChatMode): string => {
-    return mode.toString();
-  },
-
-  /**
-   * Convert a ChatMode enum value to a UI mode
-   */
-  chatModeToUiMode: (mode: ChatMode): UiChatMode => {
     switch (mode) {
-      case ChatMode.Chat: return 'standard';
-      case ChatMode.Dev:
+      case ChatMode.Chat: return 'chat';
+      case ChatMode.Dev: return 'dev';
       case ChatMode.Editor: return 'editor';
       case ChatMode.Image: return 'image';
       case ChatMode.Training: return 'training';
@@ -53,149 +46,168 @@ export const EnumUtils = {
       case ChatMode.Code: return 'code';
       case ChatMode.Document: return 'document';
       case ChatMode.Audio: return 'audio';
-      default: return 'standard';
+      default: return 'chat';
     }
   },
-
-  /**
-   * Convert a UI mode to a ChatMode enum value
-   */
-  uiModeToChatMode: (mode: UiChatMode): ChatMode => {
-    switch (mode) {
-      case 'standard': return ChatMode.Chat;
-      case 'editor': return ChatMode.Dev;
-      case 'image': return ChatMode.Image;
-      case 'training': return ChatMode.Training;
-      case 'planning': return ChatMode.Planning;
-      case 'code': return ChatMode.Code;
-      case 'document': return ChatMode.Document;
-      case 'audio': return ChatMode.Audio;
-      default: return ChatMode.Chat;
-    }
+  
+  chatModeToUiMode: (mode: ChatMode): UiChatMode => {
+    return EnumUtils.chatModeToString(mode) as UiChatMode;
   },
-
-  /**
-   * Convert a string to a ChatPosition enum value
-   */
-  stringToChatPosition: (position: string): ChatPosition => {
-    switch (position?.toLowerCase()) {
+  
+  // Database conversions
+  chatModeForDatabase: (mode: ChatMode): string => {
+    return EnumUtils.chatModeToString(mode);
+  },
+  
+  databaseStringToChatMode: (mode: string): ChatMode => {
+    return EnumUtils.stringToChatMode(mode);
+  },
+  
+  // Chat position conversions
+  stringToChatPosition: (position: string | ChatPosition): ChatPosition => {
+    if (typeof position !== 'string') return position;
+    
+    switch (position.toLowerCase()) {
       case 'bottom-right': return ChatPosition.BottomRight;
       case 'bottom-left': return ChatPosition.BottomLeft;
       case 'top-right': return ChatPosition.TopRight;
       case 'top-left': return ChatPosition.TopLeft;
+      case 'docked': return ChatPosition.Docked;
       default: return ChatPosition.BottomRight;
     }
   },
-
-  /**
-   * Convert a string to a MessageRole enum value
-   */
-  stringToMessageRole: (role: string): MessageRole => {
-    switch (role?.toLowerCase()) {
+  
+  // Token enforcement mode conversions
+  stringToTokenEnforcementMode: (mode: string | TokenEnforcementMode): TokenEnforcementMode => {
+    if (typeof mode !== 'string') return mode;
+    
+    switch (mode.toLowerCase()) {
+      case 'none': return TokenEnforcementMode.None;
+      case 'warn': return TokenEnforcementMode.Warn;
+      case 'block': return TokenEnforcementMode.Block;
+      default: return TokenEnforcementMode.None;
+    }
+  },
+  
+  // UI enforcement mode conversions
+  stringToUIEnforcementMode: (mode: string | UIEnforcementMode): UIEnforcementMode => {
+    if (typeof mode !== 'string') return mode;
+    
+    switch (mode.toLowerCase()) {
+      case 'none': return UIEnforcementMode.None;
+      case 'warn': return UIEnforcementMode.Warn;
+      case 'block': return UIEnforcementMode.Block;
+      default: return UIEnforcementMode.None;
+    }
+  },
+  
+  // Message role conversions
+  stringToMessageRole: (role: string | MessageRole): MessageRole => {
+    if (typeof role !== 'string') return role;
+    
+    switch (role.toLowerCase()) {
       case 'user': return MessageRole.User;
       case 'assistant': return MessageRole.Assistant;
       case 'system': return MessageRole.System;
-      case 'error': return MessageRole.Error;
-      case 'tool': return MessageRole.Tool;
       case 'function': return MessageRole.Function;
+      case 'tool': return MessageRole.Tool;
       default: return MessageRole.User;
     }
   },
-
-  /**
-   * Convert a MessageRole enum value to a display label
-   */
-  getMessageRoleLabel: (role: MessageRole): string => {
-    switch (role) {
-      case MessageRole.User: return 'You';
-      case MessageRole.Assistant: return 'Assistant';
-      case MessageRole.System: return 'System';
-      case MessageRole.Error: return 'Error';
-      case MessageRole.Tool: return 'Tool';
-      case MessageRole.Function: return 'Function';
-      default: return 'Unknown';
-    }
-  },
-
-  /**
-   * Convert a string to a MessageType enum value
-   */
-  stringToMessageType: (type: string): MessageType => {
-    switch (type?.toLowerCase()) {
+  
+  // Message type conversions
+  stringToMessageType: (type: string | MessageType): MessageType => {
+    if (typeof type !== 'string') return type;
+    
+    switch (type.toLowerCase()) {
       case 'text': return MessageType.Text;
-      case 'command': return MessageType.Command;
-      case 'system': return MessageType.System;
       case 'image': return MessageType.Image;
-      case 'training': return MessageType.Training;
       case 'code': return MessageType.Code;
-      case 'file': return MessageType.File;
-      case 'audio': return MessageType.Audio;
-      case 'link': return MessageType.Link;
-      case 'document': return MessageType.Document;
+      case 'error': return MessageType.Error;
+      case 'system': return MessageType.System;
+      case 'tool': return MessageType.Tool;
       default: return MessageType.Text;
     }
   },
-
-  /**
-   * Convert a MessageType enum value to a string
-   */
-  messageTypeToString: (type: MessageType): string => {
-    return type.toString();
+  
+  // Message status conversions
+  stringToMessageStatus: (status: string | MessageStatus): MessageStatus => {
+    if (typeof status !== 'string') return status;
+    
+    switch (status.toLowerCase()) {
+      case 'sending': return MessageStatus.Sending;
+      case 'sent': return MessageStatus.Sent;
+      case 'delivered': return MessageStatus.Delivered;
+      case 'error': return MessageStatus.Error;
+      default: return MessageStatus.Sending;
+    }
   },
-
-  /**
-   * Get a display label for a MessageType
-   */
+  
+  // Task type conversions
+  stringToTaskType: (task: string | TaskType): TaskType => {
+    if (typeof task !== 'string') return task;
+    
+    switch (task.toLowerCase()) {
+      case 'fetch': return TaskType.Fetch;
+      case 'query': return TaskType.Query;
+      case 'generation': return TaskType.Generation;
+      case 'code': return TaskType.Code;
+      case 'system': return TaskType.System;
+      default: return TaskType.System;
+    }
+  },
+  
+  // UI labels
+  getChatModeLabel: (mode: ChatMode): string => {
+    switch (mode) {
+      case ChatMode.Chat: return 'Chat';
+      case ChatMode.Dev: return 'Developer';
+      case ChatMode.Editor: return 'Editor';
+      case ChatMode.Image: return 'Image';
+      case ChatMode.Training: return 'Training';
+      case ChatMode.Planning: return 'Planning';
+      case ChatMode.Code: return 'Code';
+      case ChatMode.Document: return 'Document';
+      case ChatMode.Audio: return 'Audio';
+      default: return 'Chat';
+    }
+  },
+  
+  getMessageRoleLabel: (role: MessageRole): string => {
+    switch (role) {
+      case MessageRole.User: return 'User';
+      case MessageRole.Assistant: return 'Assistant';
+      case MessageRole.System: return 'System';
+      case MessageRole.Function: return 'Function';
+      case MessageRole.Tool: return 'Tool';
+      default: return 'User';
+    }
+  },
+  
   getMessageTypeLabel: (type: MessageType): string => {
     switch (type) {
       case MessageType.Text: return 'Text';
-      case MessageType.Command: return 'Command';
-      case MessageType.System: return 'System';
       case MessageType.Image: return 'Image';
-      case MessageType.Training: return 'Training';
       case MessageType.Code: return 'Code';
-      case MessageType.File: return 'File';
-      case MessageType.Audio: return 'Audio';
-      case MessageType.Link: return 'Link';
-      case MessageType.Document: return 'Document';
-      default: return 'Unknown';
+      case MessageType.Error: return 'Error';
+      case MessageType.System: return 'System';
+      case MessageType.Tool: return 'Tool';
+      default: return 'Text';
     }
   },
-
-  /**
-   * Convert a string to a MessageStatus enum value
-   */
-  stringToMessageStatus: (status: string): MessageStatus => {
-    switch (status?.toLowerCase()) {
-      case 'pending': return MessageStatus.Pending;
-      case 'sending': return MessageStatus.Sending;
-      case 'sent': return MessageStatus.Sent;
-      case 'received': return MessageStatus.Received;
-      case 'error': return MessageStatus.Error;
-      case 'failed': return MessageStatus.Failed;
-      case 'retrying': return MessageStatus.Retrying;
-      case 'cached': return MessageStatus.Cached;
-      case 'canceled': return MessageStatus.Canceled;
-      case 'delivered': return MessageStatus.Delivered;
-      default: return MessageStatus.Pending;
-    }
-  },
-
-  /**
-   * Convert a string to a TokenEnforcementMode enum value
-   */
-  stringToTokenEnforcementMode: (mode: string): TokenEnforcementMode => {
-    switch (mode?.toLowerCase()) {
-      case 'none': return TokenEnforcementMode.None;
-      case 'warn': return TokenEnforcementMode.Warn;
-      case 'soft': return TokenEnforcementMode.Soft;
-      case 'hard': return TokenEnforcementMode.Hard;
-      case 'always': return TokenEnforcementMode.Always;
-      case 'never': return TokenEnforcementMode.Never;
-      case 'role_based': return TokenEnforcementMode.RoleBased;
-      case 'mode_based': return TokenEnforcementMode.ModeBased;
-      case 'strict': return TokenEnforcementMode.Strict;
-      default: return TokenEnforcementMode.None;
+  
+  getChatModeIcon: (mode: ChatMode): string => {
+    switch (mode) {
+      case ChatMode.Chat: return 'message-circle';
+      case ChatMode.Dev: return 'code';
+      case ChatMode.Editor: return 'edit';
+      case ChatMode.Image: return 'image';
+      case ChatMode.Training: return 'graduation-cap';
+      case ChatMode.Planning: return 'clipboard-list';
+      case ChatMode.Code: return 'terminal';
+      case ChatMode.Document: return 'file-text';
+      case ChatMode.Audio: return 'headphones';
+      default: return 'message-circle';
     }
   }
 };
