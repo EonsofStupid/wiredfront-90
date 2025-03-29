@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
 import { TokenEnforcementMode } from '@/types/chat/enums';
 
-const initialState: Omit<TokenState, 'addTokens' | 'spendTokens' | 'setTokenBalance' | 'setEnforcementMode' | 'setEnforcementEnabled' | 'resetTokens' | 'resetQueriesUsed' | 'updateTokenSettings'> = {
+const initialState: Omit<TokenState, keyof ReturnType<typeof createTokenActions>> = {
   balance: 0,
   lastUpdated: new Date().toISOString(),
   tokensPerQuery: 1,

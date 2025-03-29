@@ -1,8 +1,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTokenStore } from '@/components/chat/store/token';
-import { useChatBridge } from '@/components/chat/bridge/ChatBridgeProvider';
-import { TokenEnforcementMode } from '@/types/chat/tokens';
+import { useChatBridge } from '@/modules/ChatBridge';
+import { TokenEnforcementMode } from '@/types/chat/enums';
 import { toast } from 'sonner';
 
 export const useTokens = () => {

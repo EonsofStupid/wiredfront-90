@@ -2,7 +2,7 @@
 import { TokenState, SetState, GetState } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/services/chat/LoggingService';
-import { TokenEnforcementMode } from '@/types/chat/tokens';
+import { TokenEnforcementMode } from '@/types/chat/enums';
 import { toJson } from '@/utils/json';
 
 /**
@@ -16,7 +16,7 @@ export const createTokenActions = (
     /**
      * Add tokens to the user's balance
      */
-    addTokens: async (amount: number): Promise<boolean> => {
+    addTokens: async (amount: number, reason?: string): Promise<boolean> => {
       try {
         const { data: userData } = await supabase.auth.getUser();
         if (!userData?.user) {
@@ -45,11 +45,11 @@ export const createTokenActions = (
           lastUpdated: new Date().toISOString()
         });
         
-        logger.info('Added tokens', { amount, newBalance });
+        logger.info('Added tokens', { amount, newBalance, reason });
         
         return true;
       } catch (error) {
-        logger.error('Failed to add tokens', { error, amount });
+        logger.error('Failed to add tokens', { error, amount, reason });
         return false;
       }
     },
@@ -57,7 +57,7 @@ export const createTokenActions = (
     /**
      * Spend tokens from the user's balance
      */
-    spendTokens: async (amount: number): Promise<boolean> => {
+    spendTokens: async (amount: number, reason?: string): Promise<boolean> => {
       try {
         const { data: userData } = await supabase.auth.getUser();
         if (!userData?.user) {
@@ -66,13 +66,24 @@ export const createTokenActions = (
         
         const currentBalance = get().balance;
         
-        // Check if user has enough tokens
+        // Check if user has enough tokens based on enforcement mode
         if (currentBalance < amount) {
-          logger.warn('Insufficient tokens', { currentBalance, requestedAmount: amount });
-          return false;
+          if (get().enforcementMode === TokenEnforcementMode.Hard) {
+            logger.warn('Insufficient tokens for hard enforcement', { 
+              currentBalance, 
+              requestedAmount: amount 
+            });
+            return false;
+          }
+          // In soft or warn mode, we'll continue but log the issue
+          logger.warn('Insufficient tokens but allowing due to enforcement mode', {
+            currentBalance,
+            requestedAmount: amount,
+            enforcementMode: get().enforcementMode
+          });
         }
         
-        const newBalance = currentBalance - amount;
+        const newBalance = Math.max(0, currentBalance - amount);
         
         // Update the database
         const { error } = await supabase
@@ -94,11 +105,11 @@ export const createTokenActions = (
           queriesUsed: get().queriesUsed + 1
         });
         
-        logger.info('Spent tokens', { amount, newBalance });
+        logger.info('Spent tokens', { amount, newBalance, reason });
         
         return true;
       } catch (error) {
-        logger.error('Failed to spend tokens', { error, amount });
+        logger.error('Failed to spend tokens', { error, amount, reason });
         return false;
       }
     },
@@ -106,7 +117,7 @@ export const createTokenActions = (
     /**
      * Set the token balance to a specific value
      */
-    setTokenBalance: async (balance: number): Promise<boolean> => {
+    setTokenBalance: async (amount: number): Promise<boolean> => {
       try {
         const { data: userData } = await supabase.auth.getUser();
         if (!userData?.user) {
@@ -118,7 +129,7 @@ export const createTokenActions = (
           .from('user_tokens')
           .upsert({
             user_id: userData.user.id,
-            balance,
+            balance: amount,
             updated_at: new Date().toISOString()
           });
         
@@ -128,15 +139,15 @@ export const createTokenActions = (
         
         // Update the store
         set({
-          balance,
+          balance: amount,
           lastUpdated: new Date().toISOString()
         });
         
-        logger.info('Set token balance', { balance });
+        logger.info('Set token balance', { amount });
         
         return true;
       } catch (error) {
-        logger.error('Failed to set token balance', { error, balance });
+        logger.error('Failed to set token balance', { error, amount });
         return false;
       }
     },
@@ -171,21 +182,109 @@ export const createTokenActions = (
     },
     
     /**
-     * Reset the token balance
+     * Set tokens (alias for setTokenBalance for compatibility)
      */
-    resetTokens: async (): Promise<boolean> => {
-      logger.info('Resetting token balance');
-      
-      set({
-        balance: 0,
-        lastUpdated: new Date().toISOString()
-      });
-      
-      return true;
+    setTokens: async (amount: number, reason?: string): Promise<boolean> => {
+      return await get().setTokenBalance(amount);
     },
     
     /**
-     * Reset the queries used counter
+     * Initialize token data
+     */
+    initialize: async (): Promise<void> => {
+      logger.info('Initializing token data');
+      
+      try {
+        set({ isLoading: true });
+        
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData?.user) {
+          logger.warn('No authenticated user when initializing tokens');
+          set({ isLoading: false });
+          return;
+        }
+        
+        const { data, error } = await supabase
+          .from('user_tokens')
+          .select('*')
+          .eq('user_id', userData.user.id)
+          .single();
+        
+        if (error) {
+          if (error.code === 'PGRST116') {
+            // No record exists, create default
+            logger.info('Creating default token record');
+            set({ isLoading: false });
+            return;
+          }
+          throw error;
+        }
+        
+        if (data) {
+          set({
+            id: data.id,
+            balance: data.balance,
+            used: data.used,
+            limit: data.limit,
+            resetDate: data.reset_date,
+            enforcementMode: data.enforcement_mode || TokenEnforcementMode.None,
+            isLoading: false,
+            lastUpdated: new Date().toISOString()
+          });
+        }
+      } catch (error) {
+        logger.error('Error initializing token data', { error });
+        set({ isLoading: false, error: error as Error });
+      }
+    },
+    
+    /**
+     * Fetch token data from the database
+     */
+    fetchTokenData: async (): Promise<void> => {
+      await get().initialize();
+    },
+    
+    /**
+     * Reset token balance
+     */
+    resetTokens: async (): Promise<boolean> => {
+      try {
+        const defaultBalance = 1000; // Default balance for reset
+        
+        set({
+          balance: defaultBalance,
+          lastUpdated: new Date().toISOString()
+        });
+        
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData?.user) {
+          return false;
+        }
+        
+        const { error } = await supabase
+          .from('user_tokens')
+          .upsert({
+            user_id: userData.user.id,
+            balance: defaultBalance,
+            updated_at: new Date().toISOString()
+          });
+        
+        if (error) {
+          throw error;
+        }
+        
+        logger.info('Reset token balance', { newBalance: defaultBalance });
+        
+        return true;
+      } catch (error) {
+        logger.error('Failed to reset tokens', { error });
+        return false;
+      }
+    },
+    
+    /**
+     * Reset queries used counter
      */
     resetQueriesUsed: () => {
       logger.info('Resetting queries used counter');
@@ -202,22 +301,6 @@ export const createTokenActions = (
       logger.info('Updating token settings', { settings });
       
       set({ ...settings });
-    },
-    
-    /**
-     * Initialize token data
-     */
-    initialize: async (): Promise<void> => {
-      // Implementation of initialize would fetch initial token data
-      logger.info('Initializing token data');
-    },
-    
-    /**
-     * Fetch token data from the database
-     */
-    fetchTokenData: async (): Promise<void> => {
-      // Implementation of fetchTokenData would refresh token data from DB
-      logger.info('Fetching token data');
     },
     
     /**
@@ -239,19 +322,12 @@ export const createTokenActions = (
     },
     
     /**
-     * Set token balance
+     * Set token balance directly
      */
     setBalance: (amount: number) => {
       logger.info('Setting token balance directly', { amount });
       
       set({ balance: amount });
-    },
-    
-    /**
-     * Set token amount (alias for setTokenBalance for backward compatibility)
-     */
-    setTokens: async (amount: number, reason?: string): Promise<boolean> => {
-      return await get().setTokenBalance(amount);
     }
   };
 };
