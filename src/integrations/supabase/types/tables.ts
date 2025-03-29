@@ -1,6 +1,8 @@
 import { Json } from './database';
 import { MessageType, ChatMode, TokenEnforcementMode } from './enums';
 
+export type SettingType = 'string' | 'number' | 'boolean' | 'json' | 'array';
+
 export interface Tables {
   messages: {
     Row: {

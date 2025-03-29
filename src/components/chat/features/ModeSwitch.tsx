@@ -1,77 +1,114 @@
 
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { useChatStore } from '../store/chatStore';
-import { useChatBridge } from '../chatBridge';
 import { ChatMode } from '@/types/chat/enums';
-import { toast } from 'sonner';
+import { useConversationManager } from '@/hooks/conversation';
+import { Code, ImageIcon, MessageSquare } from 'lucide-react';
+import { EnumUtils } from '@/lib/enums';
 
-interface ChatModeDialogProps {
+export interface ChatModeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export function ChatModeDialog({ open, onOpenChange }: ChatModeDialogProps) {
-  const { currentMode } = useChatStore();
-  const chatBridge = useChatBridge();
-
-  const handleModeChange = (mode: ChatMode) => {
-    chatBridge.setMode(mode);
-    toast.success(`Chat mode switched to ${mode}`);
-    onOpenChange(false);
+  const navigate = useNavigate();
+  const { currentMode, setMode, features } = useChatStore();
+  const { createConversation } = useConversationManager();
+  const [isProcessing, setIsProcessing] = useState(false);
+  
+  const handleModeSelect = async (newMode: ChatMode) => {
+    try {
+      setIsProcessing(true);
+      
+      // Create a new conversation with the selected mode
+      await createConversation({
+        mode: newMode,
+        title: `New ${EnumUtils.chatModeToUiMode(newMode)} conversation`
+      });
+      
+      // Update the current mode
+      setMode(newMode);
+      
+      // Navigate to the appropriate page
+      switch (newMode) {
+        case ChatMode.Dev:
+        case ChatMode.Editor:
+          navigate('/editor');
+          break;
+        case ChatMode.Image:
+          navigate('/gallery');
+          break;
+        default:
+          // Default to home for other modes
+          navigate('/');
+          break;
+      }
+      
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Failed to switch mode:', error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
-
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Select Chat Mode</DialogTitle>
           <DialogDescription>
-            Choose the chat mode that best suits your current task
+            Choose the AI mode you want to use for your conversation
           </DialogDescription>
         </DialogHeader>
         
-        <RadioGroup defaultValue={currentMode} className="grid gap-4 py-4">
-          <div className="flex items-center space-x-2 border p-4 rounded-md hover:bg-accent">
-            <RadioGroupItem value="chat" id="chat-mode" onClick={() => handleModeChange(ChatMode.Chat)} />
-            <Label htmlFor="chat-mode" className="flex flex-col gap-1">
-              <span className="font-medium">Standard Chat</span>
-              <span className="text-sm text-muted-foreground">General conversation and assistance</span>
-            </Label>
-          </div>
+        <div className="grid grid-cols-3 gap-4 py-4">
+          {features.standardChat && (
+            <Button
+              variant="outline"
+              className="flex flex-col items-center h-auto p-4 gap-2"
+              onClick={() => handleModeSelect(ChatMode.Chat)}
+              disabled={isProcessing}
+            >
+              <MessageSquare className="h-8 w-8" />
+              <span>Chat</span>
+            </Button>
+          )}
           
-          <div className="flex items-center space-x-2 border p-4 rounded-md hover:bg-accent">
-            <RadioGroupItem value="dev" id="dev-mode" onClick={() => handleModeChange(ChatMode.Dev)} />
-            <Label htmlFor="dev-mode" className="flex flex-col gap-1">
-              <span className="font-medium">Developer Mode</span>
-              <span className="text-sm text-muted-foreground">Code assistance and development</span>
-            </Label>
-          </div>
+          {features.codeAssistant && (
+            <Button
+              variant="outline"
+              className="flex flex-col items-center h-auto p-4 gap-2"
+              onClick={() => handleModeSelect(ChatMode.Dev)}
+              disabled={isProcessing}
+            >
+              <Code className="h-8 w-8" />
+              <span>Code</span>
+            </Button>
+          )}
           
-          <div className="flex items-center space-x-2 border p-4 rounded-md hover:bg-accent">
-            <RadioGroupItem value="image" id="image-mode" onClick={() => handleModeChange(ChatMode.Image)} />
-            <Label htmlFor="image-mode" className="flex flex-col gap-1">
-              <span className="font-medium">Image Generation</span>
-              <span className="text-sm text-muted-foreground">Create and modify images</span>
-            </Label>
-          </div>
-          
-          <div className="flex items-center space-x-2 border p-4 rounded-md hover:bg-accent">
-            <RadioGroupItem value="training" id="training-mode" onClick={() => handleModeChange(ChatMode.Training)} />
-            <Label htmlFor="training-mode" className="flex flex-col gap-1">
-              <span className="font-medium">Training Mode</span>
-              <span className="text-sm text-muted-foreground">Learning and educational assistance</span>
-            </Label>
-          </div>
-        </RadioGroup>
-        
-        <div className="flex justify-end">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
+          {features.imageGeneration && (
+            <Button
+              variant="outline"
+              className="flex flex-col items-center h-auto p-4 gap-2"
+              onClick={() => handleModeSelect(ChatMode.Image)}
+              disabled={isProcessing}
+            >
+              <ImageIcon className="h-8 w-8" />
+              <span>Image</span>
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

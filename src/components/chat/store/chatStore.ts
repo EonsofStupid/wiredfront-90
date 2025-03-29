@@ -40,6 +40,9 @@ const initialState: ChatState = {
     githubSync: true,
     knowledgeBase: true,
     tokenEnforcement: false,
+    standardChat: true,
+    imageGeneration: true,
+    training: true
   },
   currentMode: ChatMode.Chat,
   availableProviders: [],

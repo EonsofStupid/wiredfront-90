@@ -8,7 +8,7 @@ export * from './enums-mapper';
 export * from './feature-types';
 
 // For backward compatibility
-export type { Provider as ChatProvider } from './provider-types';
+export type { Provider } from './provider-types';
 export type { ConversationMetadata } from './conversation-types';
 export type { Message, MessageMetadata } from './message-types';
 

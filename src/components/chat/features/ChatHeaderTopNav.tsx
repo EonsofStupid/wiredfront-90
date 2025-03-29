@@ -1,98 +1,117 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageSquare, Code, Image, Graduation } from 'lucide-react';
+import { MessagesSquare, Code, ImageIcon, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { useChatStore } from '../store/chatStore';
 import { ChatMode } from '@/types/chat/enums';
-import { useFeatureFlags } from '@/hooks/useFeatureFlags';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function ChatHeaderTopNav() {
   const navigate = useNavigate();
-  const { currentMode, setMode } = useChatStore();
-  const { isEnabled } = useFeatureFlags();
+  const { currentMode, setMode, features } = useChatStore();
   
-  const handleModeClick = (mode: ChatMode, path: string) => {
+  const handleModeChange = (mode: ChatMode) => {
     setMode(mode);
-    navigate(path);
+    
+    switch (mode) {
+      case ChatMode.Dev:
+      case ChatMode.Editor:
+        navigate('/editor');
+        break;
+      case ChatMode.Image:
+        navigate('/gallery');
+        break;
+      default:
+        // Default to home for other modes
+        navigate('/');
+        break;
+    }
   };
-
-  // Function to check if a mode is active
-  const isActive = (mode: ChatMode): boolean => {
-    return currentMode === mode;
-  };
-
-  // Common button classes
-  const buttonClass = "h-6 w-6 rounded-sm";
   
   return (
-    <div className="flex items-center space-x-1 mr-2">
-      {/* Standard Chat Mode */}
-      {isEnabled('standardChat') && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            buttonClass,
-            isActive(ChatMode.Chat) && "bg-gradient-to-r from-blue-500/30 to-cyan-500/30"
-          )}
-          onClick={() => handleModeClick(ChatMode.Chat, '/')}
-          title="Chat Mode"
-          data-testid="chat-mode-button"
-        >
-          <MessageSquare className="h-3.5 w-3.5" />
-        </Button>
-      )}
-      
-      {/* Dev Mode */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className={cn(
-          buttonClass,
-          isActive(ChatMode.Dev) && "bg-gradient-to-r from-purple-500/30 to-blue-500/30"
+    <TooltipProvider>
+      <div className="flex items-center space-x-1">
+        {features.standardChat && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => handleModeChange(ChatMode.Chat)}
+                data-active={currentMode === ChatMode.Chat}
+                data-testid="chat-mode-button"
+              >
+                <MessagesSquare className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Standard Chat</p>
+            </TooltipContent>
+          </Tooltip>
         )}
-        onClick={() => handleModeClick(ChatMode.Dev, '/editor')}
-        title="Developer Mode"
-        data-testid="dev-mode-button"
-      >
-        <Code className="h-3.5 w-3.5" />
-      </Button>
-      
-      {/* Image Mode */}
-      {isEnabled('imageGeneration') && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            buttonClass,
-            isActive(ChatMode.Image) && "bg-gradient-to-r from-pink-500/30 to-purple-500/30"
-          )}
-          onClick={() => handleModeClick(ChatMode.Image, '/gallery')}
-          title="Image Mode"
-          data-testid="image-mode-button"
-        >
-          <Image className="h-3.5 w-3.5" />
-        </Button>
-      )}
-      
-      {/* Training Mode */}
-      {isEnabled('training') && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            buttonClass,
-            isActive(ChatMode.Training) && "bg-gradient-to-r from-amber-500/30 to-orange-500/30"
-          )}
-          onClick={() => handleModeClick(ChatMode.Training, '/training')}
-          title="Training Mode"
-          data-testid="training-mode-button"
-        >
-          <Graduation className="h-3.5 w-3.5" />
-        </Button>
-      )}
-    </div>
+        
+        {features.codeAssistant && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => handleModeChange(ChatMode.Dev)}
+                data-active={currentMode === ChatMode.Dev || currentMode === ChatMode.Editor}
+                data-testid="dev-mode-button"
+              >
+                <Code className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Code Assistant</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+        
+        {features.imageGeneration && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => handleModeChange(ChatMode.Image)}
+                data-active={currentMode === ChatMode.Image}
+                data-testid="image-mode-button"
+              >
+                <ImageIcon className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Image Generation</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+        
+        {features.training && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => handleModeChange(ChatMode.Training)}
+                data-active={currentMode === ChatMode.Training}
+                data-testid="training-mode-button"
+              >
+                <GraduationCap className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Training Mode</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </div>
+    </TooltipProvider>
   );
 }
