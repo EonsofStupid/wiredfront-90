@@ -11,7 +11,7 @@ export type SetState<T> = (
 
 export type GetState<T> = () => T;
 
-// Feature key type
+// Feature key type from chat feature-types
 export type FeatureKey = 
   | 'voice'
   | 'rag'
@@ -22,7 +22,10 @@ export type FeatureKey =
   | 'ragSupport'
   | 'githubSync'
   | 'knowledgeBase'
-  | 'tokenEnforcement';
+  | 'tokenEnforcement'
+  | 'standardChat'
+  | 'imageGeneration'
+  | 'training';
 
 // Feature toggle actions interface
 export interface FeatureToggleActions {
@@ -34,8 +37,9 @@ export interface FeatureToggleActions {
 
 // Provider actions interface
 export interface ProviderActions {
-  updateProviders: (providers: Provider[]) => void;
-  updateChatProvider: (provider: Provider | null) => void;
+  setAvailableProviders: (providers: Provider[]) => void;
+  setCurrentProvider: (provider: Provider | null) => void;
+  clearProviders: () => void;
 }
 
 // Position actions interface

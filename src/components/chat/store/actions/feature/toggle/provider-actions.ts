@@ -2,7 +2,7 @@
 import { ChatState } from '../../../types/chat-store-types';
 import { SetState, GetState } from '../types';
 import { logger } from '@/services/chat/LoggingService';
-import { Provider } from '@/components/chat/types';
+import { Provider } from '@/components/chat/types/provider-types';
 
 /**
  * Validates a provider object
@@ -24,8 +24,8 @@ export const validateProvider = (provider: Provider): boolean => {
  * Creates provider actions for the chat store
  */
 export const createProviderActions = (
-  set: (state: Partial<ChatState> | ((state: ChatState) => Partial<ChatState>), replace?: boolean, action?: any) => void,
-  get: () => ChatState
+  set: SetState<ChatState>,
+  get: GetState<ChatState>
 ) => ({
   /**
    * Update the list of available providers
@@ -42,21 +42,27 @@ export const createProviderActions = (
         ...get().providers,
         availableProviders: validProviders
       }
-    }, false, { type: 'providers/updateAll' });
+    });
   },
   
   /**
    * Update the current chat provider
    */
-  updateChatProvider: (provider: Provider) => {
+  updateChatProvider: (provider: Provider | null) => {
     // Validate the provider first
-    if (!validateProvider(provider)) {
+    if (provider && !validateProvider(provider)) {
       logger.error('Invalid provider', { provider });
       return;
     }
     
-    logger.info('Updating chat provider', { providerId: provider.id });
+    logger.info('Updating chat provider', { providerId: provider?.id || 'none' });
     
-    set({ currentProvider: provider }, false, { type: 'providers/setCurrent' });
+    set({ 
+      currentProvider: provider,
+      providers: {
+        ...get().providers,
+        currentProvider: provider
+      }
+    });
   }
 });

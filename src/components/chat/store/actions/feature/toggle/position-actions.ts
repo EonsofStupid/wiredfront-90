@@ -1,5 +1,5 @@
 
-import { ChatState } from '../../../types/store-types';
+import { ChatState } from '../../../types/chat-store-types';
 import { SetState, GetState } from '../types';
 import { ChatPosition } from '@/types/chat/enums';
 import { logger } from '@/services/chat/LoggingService';
@@ -24,7 +24,7 @@ export const createPositionActions = (
       
       logger.debug('Toggling chat position', { from: currentPosition, to: newPosition });
       
-      set({ position: newPosition }, false, { type: 'chat/togglePosition' });
+      set({ position: newPosition });
       
       // Save the position preference to local storage
       try {
@@ -39,7 +39,7 @@ export const createPositionActions = (
      */
     setPosition: (position: ChatPosition) => {
       logger.debug('Setting chat position', { position });
-      set({ position }, false, { type: 'chat/setPosition', position });
+      set({ position });
       
       // Save the position preference to local storage
       try {

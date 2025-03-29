@@ -1,11 +1,11 @@
 
 import { SetState, GetState } from 'zustand';
 import { ChatState } from '../../types/chat-store-types';
-import { Provider } from '@/components/chat/types';
+import { Provider } from '@/components/chat/types/provider-types';
 import { logger } from '@/services/chat/LoggingService';
 
 /**
- * Create provider-related actions for the chat store
+ * Creates provider-related actions for the chat store
  */
 export const createProviderActions = (
   set: SetState<ChatState>,
@@ -16,11 +16,11 @@ export const createProviderActions = (
    */
   setAvailableProviders: (providers: Provider[]) => {
     set({ 
+      availableProviders: providers,
       providers: {
         ...get().providers,
         availableProviders: providers
-      },
-      availableProviders: providers
+      }
     });
     logger.info('Available providers updated', { 
       count: providers.length,
