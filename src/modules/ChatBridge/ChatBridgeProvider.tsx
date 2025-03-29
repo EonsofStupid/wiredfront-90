@@ -1,46 +1,46 @@
 
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { ChatBridge } from './ChatBridge';
+import React, { createContext, useEffect } from 'react';
+import { chatBridge } from './ChatBridge';
+import { ChatBridgeInterface } from '@/components/chat/types/chat/bridge';
+import { logger } from '@/services/chat/LoggingService';
 
-// Context for the chat bridge
-export const ChatBridgeContext = createContext<ChatBridge | undefined>(undefined);
+// Create a context for the ChatBridge
+export const ChatBridgeContext = createContext<ChatBridgeInterface | null>(null);
 
 interface ChatBridgeProviderProps {
-  children: ReactNode;
-  userSettings?: Record<string, any>; // Optional user settings from parent app
-  adminSettings?: Record<string, any>; // Optional admin settings from parent app
+  children: React.ReactNode;
+  userSettings?: Record<string, any>;
+  adminSettings?: Record<string, any>;
 }
 
 /**
- * ChatBridgeProvider serves as the isolation boundary between the chat client
- * and the rest of the application. All communication goes through the ChatBridge.
+ * Provider component for ChatBridge
+ * Makes the ChatBridge instance available throughout the application
  */
-export const ChatBridgeProvider: React.FC<ChatBridgeProviderProps> = ({ 
+export function ChatBridgeProvider({ 
   children, 
-  userSettings, 
-  adminSettings 
-}) => {
-  // Create a new ChatBridge instance
-  const [chatBridge] = useState(() => new ChatBridge());
-  
-  // Apply any user or admin settings passed from parent application
+  userSettings,
+  adminSettings
+}: ChatBridgeProviderProps) {
+  // Apply user settings to ChatBridge on mount and when changed
   useEffect(() => {
     if (userSettings) {
-      chatBridge.setUserSettings(userSettings);
-      console.log('ChatBridge: User settings applied', userSettings);
+      logger.info('Applying user settings to ChatBridge');
+      chatBridge.updateSettings(userSettings);
     }
-  }, [chatBridge, userSettings]);
+  }, [userSettings]);
 
+  // Apply admin settings to ChatBridge on mount and when changed
   useEffect(() => {
     if (adminSettings) {
+      logger.info('Applying admin settings to ChatBridge');
       chatBridge.setAdminSettings(adminSettings);
-      console.log('ChatBridge: Admin settings applied', adminSettings);
     }
-  }, [chatBridge, adminSettings]);
-  
+  }, [adminSettings]);
+
   return (
     <ChatBridgeContext.Provider value={chatBridge}>
       {children}
     </ChatBridgeContext.Provider>
   );
-};
+}

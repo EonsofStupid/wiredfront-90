@@ -1,361 +1,308 @@
 
-import { ChatMode, MessageRole } from '@/types/enums';
-import { EventEmitter } from '@/utils/event-emitter';
-import { v4 as uuid } from 'uuid';
-import { Provider } from '@/types/provider-types';
+import { v4 as uuidv4 } from 'uuid';
+import { create } from 'zustand';
+import EventEmitter from '@/utils/event-emitter';
 import { logger } from '@/services/chat/LoggingService';
-import { 
-  SendMessageOptions, 
-  ChatSettings, 
-  ChatBridgeState, 
-  ChatBridgeEvent,
-  ChatBridgeInterface
-} from '@/components/chat/types/chat/bridge';
+import { useChatFeatures } from '@/stores/features/chat/chatFeatures';
+import { MessageRole, ChatMode } from '@/types/enums';
+import { ChatBridgeInterface, ChatBridgeEvent, EventHandler, SendMessageOptions, ChatBridgeState, ChatSettings } from '@/components/chat/types/chat/bridge';
 
 /**
- * ChatBridge provides a unified interface for interacting with AI providers
+ * ChatBridge class - central communication interface between chat UI and app
  */
-export class ChatBridge implements ChatBridgeInterface {
-  private bridgeId: string;
-  private eventEmitter: EventEmitter;
-  private state: ChatBridgeState = {
-    isOpen: false,
-    isMinimized: false,
-    currentMode: ChatMode.Chat,
-    userInput: '',
-    isWaitingResponse: false,
-    currentProviderId: null,
-    currentConversationId: null,
-    features: {},
-    position: 'bottom-right',
-    docked: true,
-    isMessageLoading: false
-  };
-  
+class ChatBridge implements ChatBridgeInterface {
+  private eventEmitter: EventEmitter = new EventEmitter();
   private settings: ChatSettings = {
     apiProvider: 'openai',
     temperature: 0.7,
-    maxTokens: 1000,
+    maxTokens: 2048,
     uiPreferences: {
-      theme: 'system',
+      theme: 'dark',
       fontSize: 'medium',
       enterSends: true,
-      showTimestamps: false
+      showTimestamps: true,
     },
     advancedSettings: {
       codeBlock: {
         copyButton: true,
-        lineNumbers: true
+        lineNumbers: true,
       },
       streaming: true,
       useMarkdown: true,
-      quickResponses: true
-    }
+      quickResponses: false,
+    },
   };
-  
+
   constructor() {
-    this.bridgeId = uuid();
-    this.eventEmitter = new EventEmitter();
-    
-    logger.info('ChatBridge initialized', { bridgeId: this.bridgeId });
-  }
-  
-  /**
-   * Send a message to the AI provider
-   */
-  public async sendMessage(message: string, options?: SendMessageOptions): Promise<string> {
-    if (!message.trim()) {
-      throw new Error('Message cannot be empty');
-    }
-    
-    const messageId = uuid();
-    const mode = options?.mode || this.state.currentMode;
-    const conversationId = options?.conversationId || this.state.currentConversationId;
-    const providerId = options?.providerId || this.state.currentProviderId;
-    
-    this.setState({ isWaitingResponse: true });
-    
-    try {
-      // Here we would integrate with the actual AI service
-      logger.info('Sending message', {
-        messageId,
-        mode,
-        conversationId,
-        providerId,
-        isRetry: options?.isRetry || false
-      });
-      
-      // For now, just simulate a response
-      setTimeout(() => {
-        this.eventEmitter.emit('message:received', {
-          id: uuid(),
-          content: `Response to: ${message}`,
-          role: MessageRole.Assistant,
-          metadata: { provider: this.settings.apiProvider }
-        });
-        
-        this.setState({ isWaitingResponse: false });
-      }, 1000);
-      
-      // Emit sent event
-      this.eventEmitter.emit('message:sent', {
-        id: messageId,
-        content: message,
-        role: MessageRole.User,
-        metadata: { mode }
-      });
-      
-      return messageId;
-    } catch (error) {
-      this.setState({ isWaitingResponse: false });
-      this.eventEmitter.emit('message:error', {
-        error,
-        messageId
-      });
-      throw error;
-    }
-  }
-  
-  /**
-   * Get conversation messages
-   */
-  public async getMessages(conversationId?: string, limit?: number): Promise<any[]> {
-    const targetConversationId = conversationId || this.state.currentConversationId;
-    if (!targetConversationId) {
-      return [];
-    }
-    
-    // Here we would fetch actual messages
-    // For now, return empty array
-    return [];
-  }
-  
-  /**
-   * Clear all messages
-   */
-  public async clearMessages(): Promise<void> {
-    this.eventEmitter.emit('session:cleared', {
-      conversationId: this.state.currentConversationId
-    });
-  }
-  
-  /**
-   * Get current state
-   */
-  public getState(): ChatBridgeState {
-    return { ...this.state };
-  }
-  
-  /**
-   * Update state partially
-   */
-  public setState(updates: Partial<ChatBridgeState>): void {
-    const oldState = { ...this.state };
-    this.state = { ...this.state, ...updates };
-    
-    // Emit state changed event
-    this.eventEmitter.emit('state:changed', {
-      oldState,
-      newState: this.state
-    });
-    
-    // Additional events for specific state changes
-    if (updates.currentMode !== undefined && updates.currentMode !== oldState.currentMode) {
-      this.eventEmitter.emit('mode:changed', {
-        oldMode: oldState.currentMode,
-        newMode: updates.currentMode
-      });
-    }
-    
-    if (updates.isMessageLoading !== undefined) {
-      logger.warn('isMessageLoading is deprecated, use isWaitingResponse instead');
-    }
-  }
-  
-  /**
-   * Set current chat mode
-   */
-  public setMode(mode: ChatMode): boolean {
-    if (this.state.currentMode === mode) {
-      return false;
-    }
-    
-    this.setState({ currentMode: mode });
-    return true;
-  }
-  
-  /**
-   * Get current chat mode
-   */
-  public getCurrentMode(): ChatMode {
-    return this.state.currentMode;
-  }
-  
-  /**
-   * Update chat settings
-   */
-  public updateSettings(updates: Partial<ChatSettings>): void {
-    this.settings = { ...this.settings, ...updates };
-    this.eventEmitter.emit('settings:updated', {
-      settings: this.settings
-    });
-  }
-  
-  /**
-   * Get chat settings
-   */
-  public getSettings(): ChatSettings {
-    return { ...this.settings };
+    logger.info('ChatBridge initialized');
+
+    // Initialize any required services
+    this.initServices();
   }
 
   /**
-   * Get user settings (for compatibility)
+   * Initialize required services
    */
-  public getUserSettings(): any {
-    return this.getSettings();
+  private initServices() {
+    // Initialize chat features
+    useChatFeatures.getState().initialize();
   }
-  
+
   /**
-   * Get current provider
+   * Send a message to the chat interface
    */
-  public getProvider(): string | null {
-    return this.state.currentProviderId;
-  }
-  
-  /**
-   * Set current provider
-   */
-  public setProvider(providerId: string): void {
-    if (this.state.currentProviderId === providerId) {
-      return;
+  async sendMessage(message: string, options: SendMessageOptions = {}): Promise<string> {
+    const messageId = uuidv4();
+    
+    logger.info('Message sent via ChatBridge', {
+      messageId,
+      mode: options.mode || this.getCurrentMode(),
+      length: message.length
+    });
+    
+    // Get chat features for validation
+    const chatFeatures = useChatFeatures.getState().features;
+    
+    // Check if message can be sent based on current features
+    const mode = options.mode || this.getCurrentMode();
+    
+    // Validate mode against features
+    if (
+      (mode === ChatMode.Training && !chatFeatures.training) ||
+      (mode === ChatMode.Image && !chatFeatures.imageGeneration) ||
+      (mode === ChatMode.Code && !chatFeatures.codeAssistant)
+    ) {
+      logger.warn(`Message rejected: ${mode} mode is disabled`, { mode });
+      throw new Error(`${mode} mode is currently disabled`);
     }
     
-    const oldProviderId = this.state.currentProviderId;
-    this.setState({ currentProviderId: providerId });
-    
-    this.eventEmitter.emit('provider:changed', {
-      oldProviderId,
-      newProviderId: providerId
+    // Emit message sent event
+    this.emit('message:sent', {
+      id: messageId,
+      content: message,
+      role: MessageRole.User,
+      mode,
+      options
     });
+    
+    return messageId;
   }
-  
+
   /**
-   * Register event handler
+   * Get messages from the current conversation
    */
-  public on<T = any>(event: ChatBridgeEvent, handler: (payload: T) => void): () => void {
-    this.eventEmitter.on(event, handler);
-    return () => this.eventEmitter.off(event, handler);
+  async getMessages(conversationId?: string, limit: number = 50): Promise<any[]> {
+    // This would typically fetch from a store or service
+    logger.debug('getMessages called via ChatBridge', { conversationId, limit });
+    return [];
   }
-  
+
   /**
-   * Unregister event handler
+   * Clear all messages in the current conversation
    */
-  public off<T = any>(event: ChatBridgeEvent, handler: (payload: T) => void): void {
+  async clearMessages(): Promise<void> {
+    logger.info('Messages cleared via ChatBridge');
+    this.emit('session:cleared', null);
+    return;
+  }
+
+  /**
+   * Get current ChatBridge state
+   */
+  getState(): ChatBridgeState {
+    // Get chat features
+    const chatFeatures = useChatFeatures.getState().features;
+    
+    return {
+      isOpen: false,
+      isMinimized: false,
+      currentMode: ChatMode.Chat,
+      userInput: '',
+      isWaitingResponse: false,
+      currentProviderId: null,
+      currentConversationId: null,
+      features: chatFeatures,
+      position: 'bottom-right',
+      docked: true,
+      isMessageLoading: false
+    };
+  }
+
+  /**
+   * Update ChatBridge state
+   */
+  setState(state: Partial<ChatBridgeState>): void {
+    logger.debug('ChatBridge state updated', state);
+    this.emit('state:changed', state);
+  }
+
+  /**
+   * Set chat mode
+   */
+  setMode(mode: ChatMode): boolean {
+    logger.info('Chat mode changed', { mode });
+    this.emit('mode:changed', { mode });
+    return true;
+  }
+
+  /**
+   * Get current chat mode
+   */
+  getCurrentMode(): ChatMode {
+    return ChatMode.Chat; // Default, would be fetched from a store in practice
+  }
+
+  /**
+   * Update chat settings
+   */
+  updateSettings(settings: Partial<ChatSettings>): void {
+    this.settings = {
+      ...this.settings,
+      ...settings
+    };
+    
+    logger.debug('Chat settings updated', settings);
+    this.emit('settings:updated', this.settings);
+  }
+
+  /**
+   * Get current chat settings
+   */
+  getSettings(): ChatSettings {
+    return this.settings;
+  }
+
+  /**
+   * Get current provider ID
+   */
+  getProvider(): string | null {
+    return this.settings.apiProvider;
+  }
+
+  /**
+   * Set provider ID
+   */
+  setProvider(providerId: string): void {
+    this.settings.apiProvider = providerId;
+    logger.info('Chat provider changed', { providerId });
+    this.emit('provider:changed', { providerId });
+  }
+
+  /**
+   * Register an event handler
+   */
+  on<T = any>(event: ChatBridgeEvent, handler: EventHandler<T>): () => void {
+    return this.eventEmitter.on(event, handler);
+  }
+
+  /**
+   * Remove an event handler
+   */
+  off<T = any>(event: ChatBridgeEvent, handler: EventHandler<T>): void {
     this.eventEmitter.off(event, handler);
   }
-  
+
   /**
-   * Emit custom event
+   * Emit an event
    */
-  public emit<T = any>(event: ChatBridgeEvent, payload: T): void {
+  emit<T = any>(event: ChatBridgeEvent, payload: T): void {
     this.eventEmitter.emit(event, payload);
   }
 
   /**
-   * Toggle feature flag
+   * Toggle a feature on or off
    */
-  public toggleFeature(key: string): void {
-    const features = { ...this.state.features };
-    features[key] = !features[key];
-    this.setState({ features });
+  toggleFeature(key: string): void {
+    const chatFeatures = useChatFeatures.getState();
+    if (key in chatFeatures.features) {
+      chatFeatures.toggleFeature(key as any);
+      logger.info('Feature toggled via ChatBridge', { feature: key });
+    }
   }
 
   /**
-   * Toggle position of chat
+   * Toggle chat position
    */
-  public togglePosition(): void {
-    const currentPosition = this.state.position;
-    const newPosition = currentPosition === 'bottom-right' ? 'bottom-left' : 'bottom-right';
-    this.setState({ position: newPosition });
+  togglePosition(): void {
+    logger.info('Position toggled via ChatBridge');
+    this.emit('state:changed', { position: 'toggled' });
   }
 
   /**
    * Toggle docked state
    */
-  public toggleDocked(): void {
-    this.setState({ docked: !this.state.docked });
+  toggleDocked(): void {
+    logger.info('Docked state toggled via ChatBridge');
+    this.emit('state:changed', { docked: 'toggled' });
   }
 
   /**
    * Update token information
    */
-  public updateTokens(value: any): void {
-    // This would update token information
-    logger.info('Updating tokens', { value });
+  updateTokens(value: any): void {
+    logger.info('Token information updated via ChatBridge');
   }
 
   /**
    * Set admin settings
    */
-  public setAdminSettings(settings: any): void {
-    logger.info('Setting admin settings', { settings });
-    // Implementation would depend on the specific settings
+  setAdminSettings(settings: any): void {
+    logger.info('Admin settings updated via ChatBridge');
   }
 
   /**
    * Send a custom event
    */
-  public sendEvent(event: string, payload?: any): void {
-    logger.info('Sending custom event', { event, payload });
-    this.eventEmitter.emit(event as any, payload);
+  sendEvent(event: string, payload?: any): void {
+    logger.info('Custom event sent via ChatBridge', { event, payload });
+    this.eventEmitter.emit(event, payload);
   }
 
   /**
    * Create a new conversation
    */
-  public createConversation(params: any): void {
-    logger.info('Creating conversation', { params });
-    // Implementation would create a conversation
+  createConversation(params: any): void {
+    logger.info('New conversation created via ChatBridge', params);
+    this.emit('conversation:changed', { action: 'create', ...params });
   }
 
   /**
    * Switch to a different conversation
    */
-  public switchConversation(id: string): void {
-    logger.info('Switching conversation', { id });
-    this.setState({ currentConversationId: id });
-    this.eventEmitter.emit('conversation:changed', { id });
+  switchConversation(id: string): void {
+    logger.info('Switched conversation via ChatBridge', { conversationId: id });
+    this.emit('conversation:changed', { action: 'switch', conversationId: id });
   }
 
   /**
    * Archive a conversation
    */
-  public archiveConversation(id: string): void {
-    logger.info('Archiving conversation', { id });
-    // Implementation would archive the conversation
+  archiveConversation(id: string): void {
+    logger.info('Archived conversation via ChatBridge', { conversationId: id });
+    this.emit('conversation:changed', { action: 'archive', conversationId: id });
   }
 
   /**
    * Delete a conversation
    */
-  public deleteConversation(id: string): void {
-    logger.info('Deleting conversation', { id });
-    // Implementation would delete the conversation
+  deleteConversation(id: string): void {
+    logger.info('Deleted conversation via ChatBridge', { conversationId: id });
+    this.emit('conversation:changed', { action: 'delete', conversationId: id });
   }
-
+  
   /**
-   * Toggle chat open/closed state
+   * Toggle chat open/close
    */
-  public toggleChat(): void {
-    this.setState({ isOpen: !this.state.isOpen });
-  }
-
-  /**
-   * Update chat settings (for compatibility)
-   */
-  public updateChatSettings(settings: any): void {
-    this.updateSettings(settings);
+  toggleChat(): void {
+    logger.info('Chat toggled via ChatBridge');
+    this.emit('state:changed', { isOpen: 'toggled' });
   }
 }
 
+// Singleton instance of ChatBridge
 export const chatBridge = new ChatBridge();
+
+// Zustand store for ChatBridge (alternative access method)
+export const useChatBridgeStore = create<{ bridge: ChatBridge }>()(() => ({
+  bridge: chatBridge
+}));

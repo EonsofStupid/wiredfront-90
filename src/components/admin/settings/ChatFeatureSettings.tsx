@@ -1,27 +1,27 @@
+
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useChatStore } from "@/components/chat/store/chatStore";
 import { ArrowLeftRight, Pin, PinOff, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
-import { useFeatureFlags } from "@/hooks/useFeatureFlags";
-import { FeatureKey } from "@/types/feature-types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ChatPosition } from "@/types/enums";
+import { useChatFeatures, useChatFeature } from "@/stores/features/chat/chatFeatures";
+import { useChatBridge } from "@/modules/ChatBridge/useChatBridge";
 
 export const ChatFeatureSettings = () => {
-  const { position, togglePosition, docked, toggleDocked } = useChatStore();
-  const { features, toggleFeature, isUpdating } = useFeatureFlags();
+  const chatBridge = useChatBridge();
+  const { resetFeatures } = useChatFeatures();
+  
+  // Get current position and docked state from ChatBridge
+  const state = chatBridge.getState();
+  const position = state.position === 'bottom-right' ? ChatPosition.BottomRight : ChatPosition.BottomLeft;
+  const docked = state.docked;
 
   const handleReset = () => {
-    // Reset all features to default
-    if (!features.codeAssistant) toggleFeature('codeAssistant' as FeatureKey);
-    if (!features.ragSupport) toggleFeature('ragSupport' as FeatureKey);
-    if (!features.githubSync) toggleFeature('githubSync' as FeatureKey);
-    if (!features.notifications) toggleFeature('notifications' as FeatureKey);
-    
+    resetFeatures();
     toast.success("Chat features reset to defaults");
   };
 
@@ -58,7 +58,7 @@ export const ChatFeatureSettings = () => {
               </div>
               <Button 
                 variant="outline" 
-                onClick={togglePosition}
+                onClick={() => chatBridge.togglePosition()}
                 className="flex items-center gap-2"
               >
                 <ArrowLeftRight className="h-4 w-4" />
@@ -75,7 +75,7 @@ export const ChatFeatureSettings = () => {
               </div>
               <Button 
                 variant="outline" 
-                onClick={toggleDocked}
+                onClick={() => chatBridge.toggleDocked()}
                 className="flex items-center gap-2"
               >
                 {docked ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
@@ -87,100 +87,39 @@ export const ChatFeatureSettings = () => {
           <div className="space-y-4">
             <h3 className="text-sm font-medium">Features</h3>
             
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="codeAssistant">Code Assistant</Label>
-                <p className="text-sm text-muted-foreground">
-                  Enable code assistance features
-                </p>
-              </div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Switch 
-                    id="codeAssistant" 
-                    checked={features.codeAssistant} 
-                    onCheckedChange={() => toggleFeature('codeAssistant' as FeatureKey)}
-                    disabled={isUpdating}
-                  />
-                </TooltipTrigger>
-                <TooltipContent>
-                  {features.codeAssistant ? 'Disable' : 'Enable'} code assistance
-                </TooltipContent>
-              </Tooltip>
-            </div>
+            <ChatFeatureToggle 
+              id="codeAssistant"
+              label="Code Assistant"
+              description="Enable code assistance features"
+              featureKey="codeAssistant"
+            />
             
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="ragSupport">RAG Support</Label>
-                <p className="text-sm text-muted-foreground">
-                  Enable retrieval augmented generation
-                </p>
-              </div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Switch 
-                    id="ragSupport" 
-                    checked={features.ragSupport} 
-                    onCheckedChange={() => toggleFeature('ragSupport' as FeatureKey)}
-                    disabled={isUpdating}
-                  />
-                </TooltipTrigger>
-                <TooltipContent>
-                  {features.ragSupport ? 'Disable' : 'Enable'} RAG support
-                </TooltipContent>
-              </Tooltip>
-            </div>
+            <ChatFeatureToggle 
+              id="ragSupport"
+              label="RAG Support"
+              description="Enable retrieval augmented generation"
+              featureKey="ragSupport"
+            />
             
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="githubSync">GitHub Sync</Label>
-                <p className="text-sm text-muted-foreground">
-                  Enable GitHub integration in editor mode
-                </p>
-              </div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Switch 
-                    id="githubSync" 
-                    checked={features.githubSync} 
-                    onCheckedChange={() => toggleFeature('githubSync' as FeatureKey)}
-                    disabled={isUpdating}
-                  />
-                </TooltipTrigger>
-                <TooltipContent>
-                  {features.githubSync ? 'Disable' : 'Enable'} GitHub sync
-                </TooltipContent>
-              </Tooltip>
-            </div>
+            <ChatFeatureToggle 
+              id="imageGeneration"
+              label="Image Generation"
+              description="Enable AI image generation"
+              featureKey="imageGeneration"
+            />
             
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="notifications">Notifications</Label>
-                <p className="text-sm text-muted-foreground">
-                  Enable notification features
-                </p>
-              </div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Switch 
-                    id="notifications" 
-                    checked={features.notifications} 
-                    onCheckedChange={() => toggleFeature('notifications' as FeatureKey)}
-                    disabled={isUpdating}
-                  />
-                </TooltipTrigger>
-                <TooltipContent>
-                  {features.notifications ? 'Disable' : 'Enable'} notifications
-                </TooltipContent>
-              </Tooltip>
-            </div>
+            <ChatFeatureToggle 
+              id="notifications"
+              label="Notifications"
+              description="Enable notification features"
+              featureKey="notifications"
+            />
           </div>
           
           <Button 
             onClick={handleReset} 
             variant="outline" 
             className="w-full"
-            disabled={isUpdating}
           >
             <RotateCcw className="h-4 w-4 mr-2" />
             Reset to Defaults
@@ -190,5 +129,38 @@ export const ChatFeatureSettings = () => {
     </TooltipProvider>
   );
 }
+
+// Reusable component for chat feature toggles
+const ChatFeatureToggle = ({ id, label, description, featureKey }: { 
+  id: string; 
+  label: string; 
+  description: string; 
+  featureKey: string; 
+}) => {
+  const { enabled, toggle } = useChatFeature(featureKey as any);
+
+  return (
+    <div className="flex items-center justify-between">
+      <div className="space-y-0.5">
+        <Label htmlFor={id}>{label}</Label>
+        <p className="text-sm text-muted-foreground">
+          {description}
+        </p>
+      </div>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Switch 
+            id={id} 
+            checked={enabled} 
+            onCheckedChange={toggle}
+          />
+        </TooltipTrigger>
+        <TooltipContent>
+          {enabled ? 'Disable' : 'Enable'} {label.toLowerCase()}
+        </TooltipContent>
+      </Tooltip>
+    </div>
+  );
+};
 
 export default ChatFeatureSettings;
