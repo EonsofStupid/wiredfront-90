@@ -1,5 +1,5 @@
 
-import { TokenEnforcementMode } from '@/components/chat/types/chat-modes';
+import { TokenEnforcementMode } from '@/types/chat/enums';
 
 export interface TokenControlState {
   balance: number;

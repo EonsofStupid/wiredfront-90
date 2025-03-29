@@ -1,104 +1,124 @@
 
-import { ChatMode, MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
-import { UiChatMode, databaseModeToUiMode, uiModeToChatMode } from '@/components/chat/types/enums-mapper';
-import { chatModeForDatabase, databaseStringToChatMode } from '@/components/chat/types/chat-modes';
-import { EnumUtilsExtensions } from './EnumUtilsExtensions';
+import { ChatMode, ChatPosition, TokenEnforcementMode, TaskType } from '@/types/chat/enums';
 
 /**
- * Utility functions for working with enums in the application
+ * Utility functions for working with enums
  */
 export class EnumUtils {
   /**
-   * Validate that a value is a member of an enum
-   * @param enumName The name of the enum to validate against
-   * @param value The value to validate
-   * @returns The value if valid, or throws an error
+   * Convert a string to ChatMode enum value
    */
-  static validate(enumName: string, value: string): string {
-    // This is a simple implementation - in a real app we would check against actual enums
-    return value;
-  }
+  static stringToChatMode(mode: string | ChatMode): ChatMode {
+    // If already a ChatMode enum value, return as is
+    if (typeof mode !== 'string') {
+      return mode;
+    }
 
-  /**
-   * Safely parse a value into an enum with a fallback
-   * @param enumName The name of the enum to parse into
-   * @param value The value to parse
-   * @param fallback The fallback value if parsing fails
-   * @returns The parsed enum value or the fallback
-   */
-  static safeParse(enumName: string, value: string, fallback: string): string {
-    return EnumUtilsExtensions.safeParse(enumName, value, fallback);
-  }
-
-  /**
-   * Flexibly parse a string into an enum value, handling casing and whitespace
-   * @param enumName The name of the enum to parse into
-   * @param value The value to parse
-   * @returns The parsed enum value or null if not found
-   */
-  static flexibleParse(enumName: string, value: string): string | null {
-    const normalizedValue = value.trim().toLowerCase();
+    const normalizedMode = mode.toLowerCase().trim();
     
-    // Implementation would vary based on the enum
-    // Here's a simple example for ChatMode
-    if (enumName === 'ChatMode') {
-      return EnumUtilsExtensions.stringToChatMode(normalizedValue).toString();
+    switch (normalizedMode) {
+      case 'chat':
+        return ChatMode.Chat;
+      case 'dev':
+      case 'editor':
+      case 'development':
+        return ChatMode.Dev;
+      case 'image':
+        return ChatMode.Image;
+      case 'training':
+        return ChatMode.Training;
+      case 'planning':
+        return ChatMode.Planning;
+      case 'code':
+        return ChatMode.Code;
+      default:
+        return ChatMode.Chat;
     }
+  }
+
+  /**
+   * Convert a string to ChatPosition enum value
+   */
+  static stringToChatPosition(position: string | ChatPosition): ChatPosition {
+    // If already a ChatPosition enum value, return as is
+    if (typeof position !== 'string') {
+      return position;
+    }
+
+    const normalizedPosition = position.toLowerCase().trim();
     
-    return null;
-  }
-
-  /**
-   * Get all values of an enum
-   * @param enumName The name of the enum to get values for
-   * @returns Array of enum values
-   */
-  static values(enumName: string): string[] {
-    // Implementation would vary based on the enum
-    // Here's a simple example
-    switch (enumName) {
-      case 'ChatMode':
-        return ['chat', 'dev', 'image', 'training', 'editor', 'planning', 'code'];
-      case 'UserRole':
-        return ['admin', 'user', 'guest', 'moderator'];
-      case 'ChatTier':
-        return ['free', 'basic', 'pro', 'enterprise'];
+    switch (normalizedPosition) {
+      case 'bottom-right':
+        return ChatPosition.BottomRight;
+      case 'bottom-left':
+        return ChatPosition.BottomLeft;
       default:
-        return [];
+        return ChatPosition.BottomRight;
     }
   }
 
   /**
-   * Get metadata (labels, descriptions) for enum values
-   * @param enumName The name of the enum to get metadata for
-   * @returns Array of enum metadata objects
+   * Convert a string to TokenEnforcementMode enum value
    */
-  static meta(enumName: string): Array<{value: string, label: string}> {
-    // Implementation would vary based on the enum
-    switch (enumName) {
-      case 'ChatTier':
-        return [
-          { value: 'free', label: 'Free Tier' },
-          { value: 'basic', label: 'Basic Tier' },
-          { value: 'pro', label: 'Professional Tier' },
-          { value: 'enterprise', label: 'Enterprise Tier' }
-        ];
+  static stringToTokenEnforcementMode(mode: string | TokenEnforcementMode): TokenEnforcementMode {
+    // If already a TokenEnforcementMode enum value, return as is
+    if (typeof mode !== 'string') {
+      return mode;
+    }
+
+    const normalizedMode = mode.toLowerCase().trim();
+    
+    switch (normalizedMode) {
+      case 'never':
+        return TokenEnforcementMode.Never;
+      case 'warn':
+        return TokenEnforcementMode.Warn;
+      case 'soft':
+        return TokenEnforcementMode.Soft;
+      case 'hard':
+        return TokenEnforcementMode.Hard;
+      case 'always':
+        return TokenEnforcementMode.Always;
+      case 'role_based':
+      case 'role-based':
+        return TokenEnforcementMode.RoleBased;
+      case 'mode_based':
+      case 'mode-based':
+        return TokenEnforcementMode.ModeBased;
+      case 'strict':
+        return TokenEnforcementMode.Strict;
       default:
-        return this.values(enumName).map(value => ({
-          value,
-          label: value.charAt(0).toUpperCase() + value.slice(1)
-        }));
+        return TokenEnforcementMode.Never;
     }
   }
 
-  // Add all extension methods to the main class
-  static uiModeToChatMode = EnumUtilsExtensions.uiModeToChatMode;
-  static chatModeToUiMode = EnumUtilsExtensions.chatModeToUiMode;
-  static stringToChatMode = EnumUtilsExtensions.stringToChatMode;
-  static chatModeForDatabase = EnumUtilsExtensions.chatModeForDatabase;
-  static databaseStringToChatMode = EnumUtilsExtensions.databaseStringToChatMode;
-  static messageTypeToString = EnumUtilsExtensions.messageTypeToString;
-  static messageRoleToString = EnumUtilsExtensions.messageRoleToString;
-  static messageStatusToString = EnumUtilsExtensions.messageStatusToString;
-  static stringToEnforcementMode = EnumUtilsExtensions.stringToEnforcementMode;
+  /**
+   * Convert a string to database-friendly format for a chat mode
+   */
+  static chatModeToDatabase(mode: ChatMode): string {
+    return mode.toString().toLowerCase();
+  }
+
+  /**
+   * Get user-friendly label for a chat mode
+   */
+  static getChatModeLabel(mode: ChatMode): string {
+    switch (mode) {
+      case ChatMode.Chat:
+        return 'Chat';
+      case ChatMode.Dev:
+      case ChatMode.Editor:
+        return 'Developer';
+      case ChatMode.Image:
+        return 'Image';
+      case ChatMode.Training:
+        return 'Training';
+      case ChatMode.Planning:
+        return 'Planning';
+      case ChatMode.Code:
+        return 'Code';
+      default:
+        return 'Chat';
+    }
+  }
 }

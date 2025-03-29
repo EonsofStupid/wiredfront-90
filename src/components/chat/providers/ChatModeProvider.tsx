@@ -10,7 +10,7 @@ type ChatModeContextType = {
   isEditorPage: boolean;
 };
 
-// Use the type from enums.ts directly
+// Define UI chat mode as a union type
 export type UiChatMode = 'standard' | 'editor' | 'image' | 'training';
 
 const ChatModeContext = createContext<ChatModeContextType>({

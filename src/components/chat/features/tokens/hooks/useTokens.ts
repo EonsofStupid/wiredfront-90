@@ -34,7 +34,7 @@ export const useTokens = () => {
   const addTokens = useCallback(async (amount: number) => {
     try {
       // Update local store first for immediate feedback
-      tokenStore.addTokens(amount, "add");
+      await tokenStore.addTokens(amount, "add");
       
       // Sync with bridge
       await chatBridge.updateTokens(amount, { reason: "add" });
@@ -61,7 +61,7 @@ export const useTokens = () => {
       }
       
       // Update local store first for immediate feedback
-      tokenStore.spendTokens(amount, "spend");
+      await tokenStore.spendTokens(amount, "spend");
       
       // Sync with bridge
       await chatBridge.updateTokens(-amount, { reason: "spend" });
@@ -78,7 +78,7 @@ export const useTokens = () => {
   const setTokens = useCallback(async (amount: number) => {
     try {
       // Update local store first for immediate feedback
-      tokenStore.setTokens(amount, "set");
+      await tokenStore.setTokens(amount, "set");
       
       // Sync with bridge
       await chatBridge.updateTokens(amount, { reason: "set" });
@@ -123,9 +123,9 @@ export const useTokens = () => {
     limit: tokenStore.limit,
     used: tokenStore.used,
     enforcementMode: tokenStore.enforcementMode,
-    usagePercent: tokenStore.usagePercent,
-    isLowBalance: tokenStore.isLowBalance,
-    isTokensExhausted: tokenStore.isTokensExhausted,
+    usagePercent: tokenStore.limit ? Math.min(100, (tokenStore.used || 0) / tokenStore.limit * 100) : 0,
+    isLowBalance: tokenStore.limit ? (tokenStore.balance / tokenStore.limit) < 0.1 : false,
+    isTokensExhausted: tokenStore.balance <= 0,
     addTokens,
     spendTokens,
     setTokens,

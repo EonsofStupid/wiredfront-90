@@ -1,14 +1,13 @@
 
 import { ChatMode } from './enums';
-import { Json } from '@/integrations/supabase/types';
 
 /**
- * Conversation interface representing a chat session
+ * Conversation object structure
  */
 export interface Conversation {
   id: string;
-  user_id: string;
   title: string;
+  user_id: string;
   mode: ChatMode;
   provider_id: string | null;
   created_at: string;
@@ -23,26 +22,43 @@ export interface Conversation {
 }
 
 /**
- * Parameters for creating a new conversation
+ * Parameters for conversation creation
  */
 export interface CreateConversationParams {
   title?: string;
   mode?: ChatMode;
-  provider_id?: string;
-  project_id?: string;
+  provider_id?: string | null;
   metadata?: Record<string, any>;
   context?: Record<string, any>;
+  project_id?: string | null;
 }
 
 /**
- * Parameters for updating an existing conversation
+ * Parameters for conversation updates
  */
 export interface UpdateConversationParams {
   title?: string;
   mode?: ChatMode;
-  provider_id?: string;
-  project_id?: string;
+  provider_id?: string | null;
+  project_id?: string | null;
   metadata?: Record<string, any>;
   context?: Record<string, any>;
   archived?: boolean;
+}
+
+/**
+ * Result type for conversation operations
+ */
+export interface ConversationOperationResult {
+  success: boolean;
+  data?: any;
+  error?: string;
+  conversationId?: string;
+}
+
+/**
+ * Get database-compatible mode string
+ */
+export function getChatModeForDatabase(mode: ChatMode): string {
+  return mode.toString().toLowerCase();
 }

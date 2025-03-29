@@ -1,28 +1,28 @@
 
-// src/lib/enums/__tests__/index.test.ts
-import { EnumUtils } from "../index";
+import { EnumUtils } from '..';
+import { ChatMode, ChatPosition, TokenEnforcementMode } from '@/types/chat/enums';
 
-describe("EnumUtils", () => {
-  it("validates enum", () => {
-    expect(EnumUtils.validate("ChatMode", "dev")).toBe("dev");
+describe('EnumUtils', () => {
+  it('converts string to ChatMode enum', () => {
+    expect(EnumUtils.stringToChatMode('chat')).toBe(ChatMode.Chat);
+    expect(EnumUtils.stringToChatMode('dev')).toBe(ChatMode.Dev);
   });
-
-  it("safe parses with fallback", () => {
-    expect(EnumUtils.safeParse("UserRole", "superstar", "guest")).toBe("guest");
+  
+  it('handles ChatMode enum input', () => {
+    expect(EnumUtils.stringToChatMode(ChatMode.Image)).toBe(ChatMode.Image);
   });
-
-  it("flexibly parses sloppy input", () => {
-    expect(EnumUtils.flexibleParse("ChatMode", "  Dev ")).toBe("dev");
+  
+  it('converts string to ChatPosition enum', () => {
+    expect(EnumUtils.stringToChatPosition('bottom-right')).toBe(ChatPosition.BottomRight);
   });
-
-  it("lists all values", () => {
-    const roles = EnumUtils.values("UserRole");
-    expect(roles).toContain("admin");
+  
+  it('converts string to TokenEnforcementMode enum', () => {
+    expect(EnumUtils.stringToTokenEnforcementMode('never')).toBe(TokenEnforcementMode.Never);
+    expect(EnumUtils.stringToTokenEnforcementMode('warn')).toBe(TokenEnforcementMode.Warn);
   });
-
-  it("generates meta with labels", () => {
-    const metadata = EnumUtils.meta("ChatTier");
-    expect(metadata[0]).toHaveProperty("value");
-    expect(metadata[0]).toHaveProperty("label");
+  
+  it('gets chat mode label', () => {
+    expect(EnumUtils.getChatModeLabel(ChatMode.Dev)).toBe('Developer');
+    expect(EnumUtils.getChatModeLabel(ChatMode.Image)).toBe('Image');
   });
 });

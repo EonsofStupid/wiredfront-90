@@ -160,8 +160,8 @@ export const createTokenActions = (
       
       set({
         enforcementMode: mode,
-        enforcementEnabled: mode !== TokenEnforcementMode.None, // Enable enforcement if not "none"
-        isEnforcementEnabled: mode !== TokenEnforcementMode.None
+        enforcementEnabled: mode !== TokenEnforcementMode.Never, // Enable enforcement if not "none"
+        isEnforcementEnabled: mode !== TokenEnforcementMode.Never
       });
     },
     
@@ -175,7 +175,7 @@ export const createTokenActions = (
         enforcementEnabled: enabled,
         isEnforcementEnabled: enabled,
         // If enabling enforcement, set mode to 'warn' if it was 'none'
-        enforcementMode: enabled && get().enforcementMode === TokenEnforcementMode.None 
+        enforcementMode: enabled && get().enforcementMode === TokenEnforcementMode.Never 
           ? TokenEnforcementMode.Warn 
           : get().enforcementMode
       });
@@ -224,12 +224,12 @@ export const createTokenActions = (
           set({
             id: data.id,
             balance: data.balance,
-            used: data.used,
-            limit: data.limit,
-            resetDate: data.reset_date,
-            enforcementMode: data.enforcement_mode || TokenEnforcementMode.None,
-            isLoading: false,
-            lastUpdated: new Date().toISOString()
+            lastUpdated: new Date().toISOString(),
+            // Map database fields to our state
+            enforcementMode: data.enforcement_mode ? 
+              data.enforcement_mode as TokenEnforcementMode : 
+              TokenEnforcementMode.Never,
+            isLoading: false
           });
         }
       } catch (error) {

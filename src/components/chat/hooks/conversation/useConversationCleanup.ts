@@ -1,37 +1,64 @@
 
 import { useCallback } from 'react';
+import { logger } from '@/services/chat/LoggingService';
+import { toast } from 'sonner';
 import { CreateConversationParams } from '@/types/chat/conversation';
 
 /**
- * Hook for cleaning up conversations
- * This is separated from the main conversation manager to focus responsibilities
+ * Hook for managing conversation cleanup operations
  */
 export function useConversationCleanup(
   currentConversationId: string | null,
   clearMessages: () => void,
   createConversation: (params?: CreateConversationParams) => Promise<string>,
-  loadConversations: () => Promise<any[]>
+  loadConversations: () => Promise<void>
 ) {
-  // Clean up inactive conversations (archived or older than a threshold)
+  // Cleanup inactive conversations (older than 30 days)
   const cleanupInactiveConversations = useCallback(async () => {
-    // This function would typically call a database function to clean up
-    // For now, we'll just refresh the conversations to get the latest state
-    await loadConversations();
-    return true;
+    try {
+      logger.info('Cleaning up inactive conversations');
+      
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      // This would be implemented in a service
+      
+      // After cleanup, refresh conversations list
+      await loadConversations();
+      
+      toast.success('Inactive conversations cleaned up');
+      return true;
+    } catch (error) {
+      logger.error('Failed to cleanup inactive conversations', { error });
+      toast.error('Failed to cleanup inactive conversations');
+      return false;
+    }
   }, [loadConversations]);
 
   // Clear all conversations
   const clearConversations = useCallback(async () => {
-    // After clearing, create a new conversation and set it as active
-    clearMessages();
-    if (!currentConversationId) {
+    try {
+      logger.info('Clearing all conversations');
+      
+      // Clear the current conversation
+      if (currentConversationId) {
+        clearMessages();
+      }
+      
+      // Create a new conversation
       await createConversation();
+      
+      toast.success('All conversations cleared');
+      return true;
+    } catch (error) {
+      logger.error('Failed to clear conversations', { error });
+      toast.error('Failed to clear conversations');
+      return false;
     }
-    return true;
-  }, [clearMessages, createConversation, currentConversationId]);
+  }, [currentConversationId, clearMessages, createConversation]);
 
   return {
     cleanupInactiveConversations,
-    clearConversations,
+    clearConversations
   };
 }

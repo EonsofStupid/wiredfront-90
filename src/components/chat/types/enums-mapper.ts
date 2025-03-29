@@ -1,15 +1,12 @@
 
-// Enum mappers to handle transitions between different enum representations
-import { ChatMode, ChatPosition, MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
-import { TokenEnforcementMode } from '@/types/chat/tokens';
+import { ChatMode, ChatPosition, TokenEnforcementMode } from '@/types/chat/enums';
 
-// Type definition for UI mode
-export type UiChatMode = 'standard' | 'editor' | 'image' | 'training' | 'planning' | 'code';
-
-// Mapping from database mode (ChatMode enum) to UI representation
-export const databaseModeToUiMode: Record<ChatMode, UiChatMode> = {
-  [ChatMode.Chat]: 'standard',
-  [ChatMode.Dev]: 'editor',
+/**
+ * Maps chat modes to their database string representations
+ */
+export const chatModeToDatabase: Record<ChatMode, string> = {
+  [ChatMode.Chat]: 'chat',
+  [ChatMode.Dev]: 'dev',
   [ChatMode.Editor]: 'editor',
   [ChatMode.Image]: 'image',
   [ChatMode.Training]: 'training',
@@ -17,27 +14,60 @@ export const databaseModeToUiMode: Record<ChatMode, UiChatMode> = {
   [ChatMode.Code]: 'code'
 };
 
-// Mapping from UI mode to database mode (ChatMode enum)
-export const uiModeToChatMode: Record<UiChatMode, ChatMode> = {
-  'standard': ChatMode.Chat,
-  'editor': ChatMode.Dev,
-  'image': ChatMode.Image,
-  'training': ChatMode.Training,
-  'planning': ChatMode.Planning,
-  'code': ChatMode.Code
+/**
+ * Maps chat modes to display labels
+ */
+export const chatModeToLabel: Record<ChatMode, string> = {
+  [ChatMode.Chat]: 'Chat',
+  [ChatMode.Dev]: 'Developer',
+  [ChatMode.Editor]: 'Editor',
+  [ChatMode.Image]: 'Image',
+  [ChatMode.Training]: 'Training',
+  [ChatMode.Planning]: 'Planning',
+  [ChatMode.Code]: 'Code'
 };
 
-// Mapping strings to chat modes
-export const stringToChatMode = (mode: string): ChatMode => {
-  const lowerMode = mode.trim().toLowerCase();
+/**
+ * Maps chat modes to icon names
+ */
+export const chatModeToIcon: Record<ChatMode, string> = {
+  [ChatMode.Chat]: 'message-circle',
+  [ChatMode.Dev]: 'code',
+  [ChatMode.Editor]: 'code',
+  [ChatMode.Image]: 'image',
+  [ChatMode.Training]: 'graduation-cap',
+  [ChatMode.Planning]: 'clipboard-list',
+  [ChatMode.Code]: 'terminal'
+};
+
+/**
+ * Maps chat positions to their string representations
+ */
+export const chatPositionToString: Record<ChatPosition, string> = {
+  [ChatPosition.BottomRight]: 'bottom-right',
+  [ChatPosition.BottomLeft]: 'bottom-left'
+};
+
+/**
+ * Maps chat positions to display labels
+ */
+export const chatPositionToLabel: Record<ChatPosition, string> = {
+  [ChatPosition.BottomRight]: 'Bottom Right',
+  [ChatPosition.BottomLeft]: 'Bottom Left'
+};
+
+/**
+ * Maps database strings to chat modes
+ */
+export const databaseStringToChatMode = (mode: string): ChatMode => {
+  const normalizedMode = mode.toLowerCase().trim();
   
-  switch (lowerMode) {
+  switch (normalizedMode) {
     case 'chat':
-    case 'standard':
       return ChatMode.Chat;
     case 'dev':
-    case 'developer':
     case 'editor':
+    case 'development':
       return ChatMode.Dev;
     case 'image':
       return ChatMode.Image;
@@ -52,92 +82,62 @@ export const stringToChatMode = (mode: string): ChatMode => {
   }
 };
 
-// Mapping from chat position enum to CSS classes
-export const positionToClasses: Record<ChatPosition, string> = {
-  [ChatPosition.BottomRight]: 'bottom-right',
-  [ChatPosition.BottomLeft]: 'bottom-left',
-  [ChatPosition.Custom]: 'custom'
-};
-
-// Mapping from message role enum to CSS classes
-export const messageRoleToClasses: Record<MessageRole, string> = {
-  [MessageRole.User]: 'user',
-  [MessageRole.Assistant]: 'assistant',
-  [MessageRole.System]: 'system',
-  [MessageRole.Error]: 'error',
-  [MessageRole.Tool]: 'tool',
-  [MessageRole.Function]: 'function'
-};
-
-// Mapping from message status enum to user-friendly labels
-export const messageStatusToLabel: Record<MessageStatus, string> = {
-  [MessageStatus.Pending]: 'Pending',
-  [MessageStatus.Sending]: 'Sending...',
-  [MessageStatus.Sent]: 'Sent',
-  [MessageStatus.Received]: 'Received',
-  [MessageStatus.Error]: 'Error',
-  [MessageStatus.Failed]: 'Failed',
-  [MessageStatus.Retrying]: 'Retrying',
-  [MessageStatus.Cached]: 'Cached',
-  [MessageStatus.Canceled]: 'Canceled',
-  [MessageStatus.Delivered]: 'Delivered'
-};
-
-// Mapping from message type enum to icon names
-export const messageTypeToIcon: Record<MessageType, string> = {
-  [MessageType.Text]: 'message-square',
-  [MessageType.Command]: 'terminal',
-  [MessageType.Code]: 'code',
-  [MessageType.Image]: 'image',
-  [MessageType.Audio]: 'mic',
-  [MessageType.File]: 'file',
-  [MessageType.Link]: 'link',
-  [MessageType.System]: 'info',
-  [MessageType.Training]: 'graduation-cap'
-};
-
-// Helper function to convert message type to string
-export const messageTypeToString = (type: MessageType): string => {
-  return type.toString();
-};
-
-// Helper to convert chat mode to database string
-export const chatModeToString = (mode: ChatMode): string => {
-  return mode.toString();
-};
-
-// Mapping from token enforcement mode to user-friendly labels
+/**
+ * Maps token enforcement modes to display labels
+ */
 export const tokenEnforcementModeToLabel: Record<TokenEnforcementMode, string> = {
-  [TokenEnforcementMode.None]: 'Disabled',
-  [TokenEnforcementMode.Warn]: 'Warning Only',
-  [TokenEnforcementMode.Soft]: 'Soft Limit',
-  [TokenEnforcementMode.Hard]: 'Hard Limit'
+  [TokenEnforcementMode.Never]: 'Never',
+  [TokenEnforcementMode.Warn]: 'Warn',
+  [TokenEnforcementMode.Soft]: 'Soft',
+  [TokenEnforcementMode.Hard]: 'Hard',
+  [TokenEnforcementMode.Always]: 'Always',
+  [TokenEnforcementMode.RoleBased]: 'Role-Based',
+  [TokenEnforcementMode.ModeBased]: 'Mode-Based',
+  [TokenEnforcementMode.Strict]: 'Strict'
 };
 
-// UI-friendly mapping for token enforcement modes
-export const tokenToUIEnforcementMode: Record<TokenEnforcementMode, {
-  label: string;
-  description: string;
-  color: string;
-}> = {
-  [TokenEnforcementMode.None]: {
-    label: 'Disabled',
-    description: 'No token limits enforced',
+/**
+ * Maps token enforcement modes to descriptions and visual styles
+ */
+export const tokenEnforcementModeInfo: Record<TokenEnforcementMode, { label: string; description: string; color: string }> = {
+  [TokenEnforcementMode.Never]: {
+    label: 'Never',
+    description: 'No token enforcement',
     color: 'text-gray-500'
   },
   [TokenEnforcementMode.Warn]: {
-    label: 'Warning Only',
-    description: 'Users are warned when reaching limits',
+    label: 'Warn',
+    description: 'Shows warnings but allows usage',
     color: 'text-yellow-500'
   },
   [TokenEnforcementMode.Soft]: {
-    label: 'Soft Limit',
-    description: 'Functionality degrades when limits reached',
+    label: 'Soft',
+    description: 'Shows errors but allows usage with degraded results',
     color: 'text-orange-500'
   },
   [TokenEnforcementMode.Hard]: {
-    label: 'Hard Limit',
-    description: 'Features blocked when limits reached',
+    label: 'Hard',
+    description: 'Prevents usage when tokens are depleted',
     color: 'text-red-500'
+  },
+  [TokenEnforcementMode.Always]: {
+    label: 'Always',
+    description: 'Always enforces token limits without exceptions',
+    color: 'text-red-700'
+  },
+  [TokenEnforcementMode.RoleBased]: {
+    label: 'Role-Based',
+    description: 'Enforcement varies by user role',
+    color: 'text-blue-500'
+  },
+  [TokenEnforcementMode.ModeBased]: {
+    label: 'Mode-Based',
+    description: 'Enforcement varies by chat mode',
+    color: 'text-purple-500'
+  },
+  [TokenEnforcementMode.Strict]: {
+    label: 'Strict',
+    description: 'Strict enforcement with detailed logging',
+    color: 'text-red-600'
   }
 };
