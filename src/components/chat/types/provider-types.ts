@@ -1,44 +1,52 @@
 
-import { ProviderModel, Provider as BaseProvider } from '@/types/chat/providers';
-
-// Re-export the base provider model type to ensure consistency
-export type { ProviderModel };
-
 /**
- * Extended provider interface for the chat components
- * This extends the base Provider type with additional UI-specific properties
+ * Provider model definition
  */
-export interface Provider extends BaseProvider {
-  displayName: string;  // UI-friendly name (may be different from internal name)
-  isDefault?: boolean;  // Whether this is the default provider for new chats
-}
-
-/**
- * Provider selection interface for UI
- */
-export interface ProviderSelection {
-  provider: Provider;
-  model: ProviderModel;
-}
-
-/**
- * Convert a base provider to an enhanced UI provider
- */
-export const enhanceProvider = (provider: BaseProvider): Provider => {
-  return {
-    ...provider,
-    displayName: provider.displayName || provider.name,
-    isDefault: provider.isDefault || false
+export interface ProviderModel {
+  id: string;
+  name: string;
+  displayName: string;
+  description?: string;
+  maxTokens?: number;
+  contextWindow?: number;
+  supportedModes: string[];
+  isDefault?: boolean;
+  tokenizingMethod?: string;
+  pricing?: {
+    input: number;
+    output: number;
+    unit: string;
   };
-};
+}
 
 /**
- * Adapt a base provider to the enhanced UI provider interface
+ * Chat provider interface
  */
-export const adaptProvider = (provider: BaseProvider): Provider => enhanceProvider(provider);
+export interface Provider {
+  id: string;
+  name: string;
+  displayName: string;
+  description?: string;
+  apiType: string;
+  models: ProviderModel[];
+  isEnabled: boolean;
+  isDefault?: boolean;
+  category: 'chat' | 'image' | 'audio' | 'video' | 'embedding';
+  capabilities?: {
+    streaming?: boolean;
+    functions?: boolean;
+    tokenCounting?: boolean;
+    vision?: boolean;
+  };
+  endpoints?: Record<string, string>;
+  maxRequestTokens?: number;
+  baseUrl?: string;
+  configSchema?: Record<string, any>;
+  metadata?: Record<string, any>;
+  icon?: string;
+}
 
 /**
- * Adapt multiple base providers to enhanced UI providers
+ * Export as ChatProvider for backward compatibility
  */
-export const adaptProviders = (providers: BaseProvider[]): Provider[] => 
-  providers.map(enhanceProvider);
+export type ChatProvider = Provider;

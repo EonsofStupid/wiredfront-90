@@ -5,7 +5,7 @@ import { logger } from '@/services/chat/LoggingService';
 import { useMessageStore } from '@/components/chat/messaging/MessageManager';
 import { useState, useEffect, useCallback } from 'react';
 import { useConversationCleanup } from './useConversationCleanup';
-import { Conversation, CreateConversationParams } from '@/types/chat/conversation';
+import { Conversation, CreateConversationParams } from '@/components/chat/types/conversation-types';
 
 /**
  * Main hook for managing conversations and related actions
@@ -19,7 +19,7 @@ export function useConversationManager() {
     updateConversation,
     archiveConversation,
     deleteConversation,
-    loadConversations,
+    fetchConversations: loadConversations,
     isLoading,
     error
   } = useConversationStore();
@@ -35,8 +35,11 @@ export function useConversationManager() {
 
   // Load conversations on mount
   useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
+    const fetchData = async () => {
+      await loadConversations();
+    };
+    fetchData();
+  }, []);
 
   // Filter active and archived conversations
   useEffect(() => {
@@ -78,7 +81,7 @@ export function useConversationManager() {
     currentConversationId,
     clearMessages,
     createConversation,
-    loadConversations
+    () => loadConversations()
   );
 
   return {
@@ -97,7 +100,9 @@ export function useConversationManager() {
     updateConversation,
     archiveConversation,
     deleteConversation,
-    refreshConversations: loadConversations,
+    refreshConversations: async () => {
+      await loadConversations();
+    },
     
     // Cleanup utilities
     cleanupInactiveConversations,

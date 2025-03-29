@@ -1,46 +1,59 @@
 
-import { ChatState } from '../../../types/chat-store-types';
-import { ChatMode } from '@/types/chat/enums';
+import { ChatMode, ChatPosition } from '@/types/chat/enums';
+import { ChatState } from '../../types/chat-store-types';
+import { Provider } from '@/components/chat/types/provider-types';
 
-// Define types for state management functions
+// Zustand setState and getState types
 export type SetState<T> = (
   partial: T | Partial<T> | ((state: T) => T | Partial<T>),
-  replace?: boolean,
-  action?: string | { type: string; [key: string]: any }
+  replace?: boolean
 ) => void;
 
 export type GetState<T> = () => T;
 
-// Define feature action keys
-export type FeatureKey = keyof ChatState['features'] | string;
+// Feature key type
+export type FeatureKey = 
+  | 'voice'
+  | 'rag'
+  | 'modeSwitch'
+  | 'notifications'
+  | 'github'
+  | 'codeAssistant'
+  | 'ragSupport'
+  | 'githubSync'
+  | 'knowledgeBase'
+  | 'tokenEnforcement';
 
-// Common feature actions
-export interface FeatureActions {
-  // Feature toggle actions
-  toggleFeature: (key: FeatureKey) => void;
-  enableFeature: (key: FeatureKey) => void;
-  disableFeature: (key: FeatureKey) => void;
-  setFeatureState: (key: FeatureKey, enabled: boolean) => void;
+// Feature toggle actions interface
+export interface FeatureToggleActions {
+  toggleFeature: (feature: FeatureKey) => void;
+  enableFeature: (feature: FeatureKey) => void;
+  disableFeature: (feature: FeatureKey) => void;
+  setFeatureState: (feature: FeatureKey, enabled: boolean) => void;
+}
 
-  // Position actions
+// Provider actions interface
+export interface ProviderActions {
+  updateProviders: (providers: Provider[]) => void;
+  updateChatProvider: (provider: Provider | null) => void;
+}
+
+// Position actions interface
+export interface PositionActions {
   togglePosition: () => void;
-  setPosition: (position: any) => void;
-  
-  // Mode actions
+  setPosition: (position: ChatPosition) => void;
+}
+
+// Mode actions interface
+export interface ModeActions {
   toggleMode: () => void;
-  setMode: (mode: ChatMode | string) => void;
-  
-  // Model actions
+  setMode: (mode: string | ChatMode) => void;
+}
+
+// Feature actions interface
+export interface FeatureActions extends FeatureToggleActions, ProviderActions, PositionActions, ModeActions {
   setModel: (model: string) => void;
-  
-  // Token actions
-  setTokenBalance: (balance: number) => void;
-  
-  // Dock actions
   toggleDocked: () => void;
   setDocked: (docked: boolean) => void;
-  
-  // Provider actions
-  updateProviders: (providers: any[]) => void;
-  updateChatProvider: (provider: any) => void;
+  setTokenBalance: (balance: number) => void;
 }

@@ -4,14 +4,12 @@ import { useChatStore } from '../store/chatStore';
 import { logger } from '@/services/chat/LoggingService';
 import { ChatMode } from '@/types/chat/enums';
 import { EnumUtils } from '@/lib/enums';
+import { UiChatMode } from '../store/types/chat-store-types';
 
 type ChatModeContextType = {
   mode: UiChatMode;
   isEditorPage: boolean;
 };
-
-// Define UI chat mode as a union type
-export type UiChatMode = 'standard' | 'editor' | 'image' | 'training' | 'planning' | 'code' | 'document' | 'audio';
 
 const ChatModeContext = createContext<ChatModeContextType>({
   mode: 'standard',

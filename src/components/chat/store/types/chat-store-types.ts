@@ -1,131 +1,123 @@
 
-import { ChatPosition } from '@/types/chat/enums';
-import { UiChatMode } from '@/components/chat/types/chat-modes';
-import { Provider } from '@/types/chat/providers';
+import { ChatMode, ChatPosition } from '@/types/chat/enums';
+import { Message } from '@/components/chat/types/message-types';
+import { Provider } from '@/components/chat/types/provider-types';
 
-/**
- * Chat feature/capability toggle keys
- */
-export enum FeatureKey {
-  // UI features
-  MINIMIZE = 'minimize',
-  RESIZE = 'resize',
-  DOCK = 'dock',
-  CLOSE = 'close',
-  SETTINGS = 'settings',
-  
-  // Functional features
-  CODE_EXECUTION = 'codeExecution',
-  IMAGE_GENERATION = 'imageGeneration',
-  TRAINING_MODE = 'trainingMode', 
-  OFFLINE_MODE = 'offlineMode',
-  VOICE_INPUT = 'voiceInput',
-  FILE_UPLOAD = 'fileUpload',
-  
-  // External integrations
-  GITHUB_INTEGRATION = 'githubIntegration',
-  DATABASE_ACCESS = 'databaseAccess',
-  API_ACCESS = 'apiAccess'
-}
+// Export ChatProvider for backward compatibility
+export type { Provider as ChatProvider } from '@/components/chat/types/provider-types';
 
-/**
- * Chat UI state
- */
+// Define UI chat mode as a union type
+export type UiChatMode = 'standard' | 'editor' | 'image' | 'training' | 'planning' | 'code' | 'document' | 'audio';
+
+// Chat UI state interface
 export interface ChatUIState {
   isOpen: boolean;
   isMinimized: boolean;
   isDocked: boolean;
-  position: ChatPosition | { x: number; y: number };
-  activeTab: string;
+  position: ChatPosition;
+  scale: number;
+  showSidebar: boolean;
+  sessionLoading: boolean;
   messageLoading: boolean;
-  error: string | null;
+  providerLoading: boolean;
 }
 
 /**
- * Provider state
- */
-export interface ProviderState {
-  currentProvider: Provider | null;
-  availableProviders: Provider[];
-  isLoading: boolean;
-  error: string | null;
-}
-
-/**
- * Base chat state
+ * Main chat store state type
  */
 export interface ChatState {
-  // Core state
-  currentMode: UiChatMode;
-  tokenBalance: number;
+  // Initialization
+  initialized: boolean;
   
-  // Child states
-  ui: ChatUIState;
-  providers: ProviderState;
-  features: Record<string, boolean>;
+  // Messages and input
+  messages: Message[];
+  userInput: string;
+  isWaitingForResponse: boolean;
   
-  // Actions will be added by middleware
-}
-
-/**
- * Actions for UI state management
- */
-export interface ChatUIActions {
+  // Selection state
+  selectedModel: string;
+  selectedMode: string;
+  
+  // UI status
+  modelFetchStatus: 'idle' | 'loading' | 'success' | 'error';
+  error: Error | null;
+  
+  // Session state
+  chatId: string | null;
+  docked: boolean;
+  isOpen: boolean;
+  isMinimized: boolean;
+  position: ChatPosition;
+  startTime: number;
+  
+  // Features
+  features: Record<FeatureKey, boolean>;
+  currentMode: ChatMode;
+  
+  // Providers
+  availableProviders: Provider[];
+  currentProvider: Provider | null;
+  providers: {
+    availableProviders: Provider[];
+  };
+  
+  // UI state
+  showSidebar: boolean;
+  scale: number;
+  ui: {
+    sessionLoading: boolean;
+    messageLoading: boolean;
+    providerLoading: boolean;
+  };
+  
+  // Optional token balance
+  tokenBalance?: number;
+  
+  // Required actions
+  resetChatState: () => void;
+  setUserInput: (input: string) => void;
   toggleChat: () => void;
   toggleMinimize: () => void;
+  toggleSidebar: () => void;
   toggleDocked: () => void;
-  setPosition: (position: ChatPosition | { x: number; y: number }) => void;
-  setActiveTab: (tab: string) => void;
-  setError: (error: string | null) => void;
-  setMessageLoading: (loading: boolean) => void;
+  setPosition: (position: ChatPosition) => void;
+  setChatId: (id: string | null) => void;
+  setMode: (mode: string | ChatMode) => void;
+  initializeChat: () => void;
+  setSessionLoading: (isLoading: boolean) => void;
+  setMessageLoading: (isLoading: boolean) => void;
+  setProviderLoading: (isLoading: boolean) => void;
 }
 
 /**
- * Actions for provider management
+ * Feature keys for the chat store
  */
-export interface ProviderActions {
-  setCurrentProvider: (provider: Provider | null) => void; 
-  updateChatProvider: (provider: Provider) => void;
-  updateAvailableProviders: (providers: Provider[]) => void;
+export type FeatureKey = 
+  | 'voice'
+  | 'rag'
+  | 'modeSwitch'
+  | 'notifications'
+  | 'github'
+  | 'codeAssistant'
+  | 'ragSupport'
+  | 'githubSync'
+  | 'knowledgeBase'
+  | 'tokenEnforcement';
+
+/**
+ * Represents a chat session in memory
+ */
+export interface ChatSession {
+  id: string;
+  title: string;
+  created_at: string;
+  last_accessed: string;
+  message_count: number;
+  messages?: Message[];
+  metadata?: Record<string, any>;
 }
 
 /**
- * Actions for mode management
+ * Possible chat window states
  */
-export interface ModeActions {
-  setMode: (mode: UiChatMode) => void;
-}
-
-/**
- * Actions for feature management
- */
-export interface FeatureActions {
-  enableFeature: (feature: string) => void;
-  disableFeature: (feature: string) => void;
-  toggleFeature: (feature: string) => void;
-  setFeatureState: (feature: string, enabled: boolean) => void;
-}
-
-/**
- * Actions for token management
- */
-export interface TokenActions {
-  setTokenBalance: (balance: number) => void;
-  addTokens: (amount: number) => void;
-  spendTokens: (amount: number) => void;
-}
-
-/**
- * All chat actions combined
- */
-export interface ChatActions extends 
-  ChatUIActions, 
-  ProviderActions, 
-  ModeActions, 
-  FeatureActions,
-  TokenActions {}
-
-/**
- * Complete chat store type (state + actions)
- */
-export type FullChatStore = ChatState & ChatActions;
+export type ChatWindowState = 'open' | 'minimized' | 'closed';

@@ -3,14 +3,14 @@ import { ChatState } from '../types/chat-store-types';
 import { createToggleActions } from './feature/toggle';
 import { ChatMode } from '@/types/chat/enums';
 import { logger } from '@/services/chat/LoggingService';
-import { FeatureActions } from './feature/types';
+import { FeatureActions, SetState, GetState } from './feature/types';
 
 /**
  * Creates feature-related actions for the chat store
  */
 export const createFeatureActions = (
-  set: (state: Partial<ChatState> | ((state: ChatState) => Partial<ChatState>), replace?: boolean, action?: any) => void,
-  get: () => ChatState
+  set: SetState<ChatState>,
+  get: GetState<ChatState>
 ): FeatureActions => {
   // Get toggle-specific actions
   const toggleActions = createToggleActions(set, get);
@@ -39,7 +39,7 @@ export const createFeatureActions = (
       
       set({
         currentMode: newMode
-      }, false, { type: 'chat/toggleMode' });
+      });
     },
     
     setMode: (mode: string | ChatMode) => {
@@ -56,16 +56,16 @@ export const createFeatureActions = (
       
       set({
         currentMode: validMode
-      }, false, { type: 'chat/setMode' });
+      });
     },
     
     // Model actions
     setModel: (model: string) => {
       logger.info('Setting selected model', { model });
       
-      set({
+      set((state) => ({
         selectedModel: model
-      }, false, { type: 'chat/setModel' });
+      }));
     },
     
     // Dock actions
@@ -73,9 +73,9 @@ export const createFeatureActions = (
       const isDocked = get().docked;
       logger.info('Toggling docked state', { from: isDocked, to: !isDocked });
       
-      set({
-        docked: !isDocked
-      }, false, { type: 'chat/toggleDocked' });
+      set((state) => ({
+        docked: !state.docked
+      }));
     },
     
     setDocked: (docked: boolean) => {
@@ -83,7 +83,7 @@ export const createFeatureActions = (
       
       set({
         docked
-      }, false, { type: 'chat/setDocked' });
+      });
     },
     
     // Token actions
@@ -92,7 +92,7 @@ export const createFeatureActions = (
       
       set({
         tokenBalance: balance
-      }, false, { type: 'chat/setTokenBalance' });
+      });
     }
   };
 };

@@ -2,62 +2,69 @@
 import { MessageRole, MessageStatus, MessageType } from '@/types/chat/enums';
 
 /**
- * Core message interface
+ * Message interface representing a chat message
  */
 export interface Message {
   id: string;
+  conversation_id: string;
+  chat_session_id?: string;
+  user_id: string;
   role: MessageRole;
   content: string;
   type: MessageType;
-  user_id: string | null;
   metadata: Record<string, any>;
+  message_status: MessageStatus;
   created_at: string;
   updated_at: string;
-  conversation_id: string;
-  chat_session_id: string;
-  is_minimized: boolean;
-  position: Record<string, any>;
-  window_state: Record<string, any>;
   last_accessed: string;
+  parent_message_id?: string;
   retry_count: number;
-  message_status: MessageStatus;
-  parent_message_id?: string;
 }
 
 /**
- * Message creation parameters
+ * Parameters for creating a new message
  */
-export interface MessageCreateParams {
-  content: string;
+export interface CreateMessageParams {
   role: MessageRole;
-  type?: MessageType;
-  metadata?: Record<string, any>;
+  content: string;
   conversation_id: string;
+  user_id: string;
+  type?: MessageType;
+  chat_session_id?: string;
+  metadata?: Record<string, any>;
   parent_message_id?: string;
-}
-
-/**
- * Message update parameters
- */
-export interface MessageUpdateParams {
-  content?: string;
-  type?: MessageType;
-  metadata?: Record<string, any>;
   message_status?: MessageStatus;
+  retry_count?: number;
 }
 
 /**
- * Message display properties
+ * Metadata associated with a message
  */
-export interface MessageDisplayProps {
-  id: string;
-  role: MessageRole;
-  content: string;
-  type?: MessageType;
-  status?: MessageStatus;
+export interface MessageMetadata {
+  source?: 'user' | 'api' | 'system';
+  tokens?: number;
+  error?: boolean;
+  errorType?: string;
+  errorMessage?: string;
+  processingTime?: number;
+  model?: string;
+  provider?: string;
+  promptTemplate?: string;
+  promptLength?: number;
+  responseLength?: number;
+  context?: {
+    documents?: string[];
+    relevance?: number;
+  };
+  custom?: Record<string, any>;
+}
+
+/**
+ * Message for display in UI with additional properties
+ */
+export interface UIMessage extends Message {
   isLoading?: boolean;
-  timestamp?: string;
-  metadata?: Record<string, any>;
-  isEditable?: boolean;
-  isExpandable?: boolean;
+  isError?: boolean;
+  isEditing?: boolean;
+  isSelected?: boolean;
 }

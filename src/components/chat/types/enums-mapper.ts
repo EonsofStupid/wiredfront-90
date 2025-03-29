@@ -11,7 +11,9 @@ export const chatModeToDatabase: Record<ChatMode, string> = {
   [ChatMode.Image]: 'image',
   [ChatMode.Training]: 'training',
   [ChatMode.Planning]: 'planning',
-  [ChatMode.Code]: 'code'
+  [ChatMode.Code]: 'code',
+  [ChatMode.Document]: 'document',
+  [ChatMode.Audio]: 'audio'
 };
 
 /**
@@ -24,7 +26,9 @@ export const chatModeToLabel: Record<ChatMode, string> = {
   [ChatMode.Image]: 'Image',
   [ChatMode.Training]: 'Training',
   [ChatMode.Planning]: 'Planning',
-  [ChatMode.Code]: 'Code'
+  [ChatMode.Code]: 'Code',
+  [ChatMode.Document]: 'Document',
+  [ChatMode.Audio]: 'Audio'
 };
 
 /**
@@ -37,7 +41,9 @@ export const chatModeToIcon: Record<ChatMode, string> = {
   [ChatMode.Image]: 'image',
   [ChatMode.Training]: 'graduation-cap',
   [ChatMode.Planning]: 'clipboard-list',
-  [ChatMode.Code]: 'terminal'
+  [ChatMode.Code]: 'terminal',
+  [ChatMode.Document]: 'file-text',
+  [ChatMode.Audio]: 'headphones'
 };
 
 /**
@@ -45,7 +51,9 @@ export const chatModeToIcon: Record<ChatMode, string> = {
  */
 export const chatPositionToString: Record<ChatPosition, string> = {
   [ChatPosition.BottomRight]: 'bottom-right',
-  [ChatPosition.BottomLeft]: 'bottom-left'
+  [ChatPosition.BottomLeft]: 'bottom-left',
+  [ChatPosition.TopRight]: 'top-right',
+  [ChatPosition.TopLeft]: 'top-left'
 };
 
 /**
@@ -53,7 +61,9 @@ export const chatPositionToString: Record<ChatPosition, string> = {
  */
 export const chatPositionToLabel: Record<ChatPosition, string> = {
   [ChatPosition.BottomRight]: 'Bottom Right',
-  [ChatPosition.BottomLeft]: 'Bottom Left'
+  [ChatPosition.BottomLeft]: 'Bottom Left',
+  [ChatPosition.TopRight]: 'Top Right',
+  [ChatPosition.TopLeft]: 'Top Left'
 };
 
 /**
@@ -77,15 +87,25 @@ export const databaseStringToChatMode = (mode: string): ChatMode => {
       return ChatMode.Planning;
     case 'code':
       return ChatMode.Code;
+    case 'document':
+      return ChatMode.Document;
+    case 'audio':
+      return ChatMode.Audio;
     default:
       return ChatMode.Chat;
   }
 };
 
 /**
+ * Maps UI chat mode to database enum
+ */
+export const stringToChatMode = databaseStringToChatMode;
+
+/**
  * Maps token enforcement modes to display labels
  */
 export const tokenEnforcementModeToLabel: Record<TokenEnforcementMode, string> = {
+  [TokenEnforcementMode.None]: 'None',
   [TokenEnforcementMode.Never]: 'Never',
   [TokenEnforcementMode.Warn]: 'Warn',
   [TokenEnforcementMode.Soft]: 'Soft',
@@ -100,6 +120,11 @@ export const tokenEnforcementModeToLabel: Record<TokenEnforcementMode, string> =
  * Maps token enforcement modes to descriptions and visual styles
  */
 export const tokenEnforcementModeInfo: Record<TokenEnforcementMode, { label: string; description: string; color: string }> = {
+  [TokenEnforcementMode.None]: {
+    label: 'None',
+    description: 'No token enforcement',
+    color: 'text-gray-400'
+  },
   [TokenEnforcementMode.Never]: {
     label: 'Never',
     description: 'No token enforcement',

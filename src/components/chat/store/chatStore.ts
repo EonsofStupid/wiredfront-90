@@ -4,8 +4,9 @@ import { devtools } from 'zustand/middleware';
 import { createInitializationActions } from './actions/initialization-actions';
 import { createFeatureActions } from './actions/feature-actions';
 import { createUIActions } from './actions/ui-actions';
-import { ChatState } from '../types';
+import { ChatState } from './types/chat-store-types';
 import { logger } from '@/services/chat/LoggingService';
+import { ChatMode, ChatPosition } from '@/types/chat/enums';
 
 // Define the full store type with all action slices
 type FullChatStore = ChatState & 
@@ -26,7 +27,7 @@ const initialState: ChatState = {
   docked: true,
   isOpen: false,
   isMinimized: false,
-  position: 'bottom-right',
+  position: ChatPosition.BottomRight,
   startTime: Date.now(),
   features: {
     voice: true,
@@ -40,7 +41,7 @@ const initialState: ChatState = {
     knowledgeBase: true,
     tokenEnforcement: false,
   },
-  currentMode: 'chat',
+  currentMode: ChatMode.Chat,
   availableProviders: [],
   currentProvider: null,
   
@@ -138,7 +139,7 @@ export const clearMiddlewareStorage = () => {
 
 export const useChatStore = create<FullChatStore>()(
   devtools(
-    (set, get, api) => ({
+    (set, get) => ({
       ...initialState,
       
       resetChatState: () => {

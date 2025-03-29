@@ -2,7 +2,7 @@
 import { useCallback } from 'react';
 import { logger } from '@/services/chat/LoggingService';
 import { toast } from 'sonner';
-import { CreateConversationParams } from '@/types/chat/conversation';
+import { CreateConversationParams } from '@/components/chat/types/conversation-types';
 
 /**
  * Hook for managing conversation cleanup operations
