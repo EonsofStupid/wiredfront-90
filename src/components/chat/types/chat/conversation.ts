@@ -124,6 +124,16 @@ export interface ConversationMetadata {
 }
 
 /**
+ * Conversation operation result
+ */
+export interface ConversationOperationResult {
+  success: boolean;
+  conversationId?: string;
+  error?: string;
+  message?: string;
+}
+
+/**
  * Convert ChatMode to database string
  */
 export function chatModeToDbString(mode: ChatMode): string {

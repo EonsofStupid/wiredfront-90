@@ -1,5 +1,5 @@
 
-import { TokenEnforcementMode } from './enums';
+import { TokenEnforcementMode, UIEnforcementMode } from './enums';
 
 /**
  * Token balance information
@@ -83,4 +83,21 @@ export interface TokenOperationResult {
   error?: string;
   message?: string;
   tokens?: TokenBalance;
+}
+
+/**
+ * Token analytics data
+ */
+export interface TokenAnalytics {
+  totalUsed: number;
+  totalLimit: number;
+  percentUsed: number;
+  usageTrends?: Array<{
+    date: string;
+    tokens: number;
+    cost: number;
+  }>;
+  modelBreakdown?: Record<string, number>;
+  featureBreakdown?: Record<string, number>;
+  lastUpdated: Date;
 }

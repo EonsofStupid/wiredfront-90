@@ -4,7 +4,8 @@ import {
   TokenUsage,
   TokenUsageStats,
   TokenSettings,
-  TokenOperationResult
+  TokenOperationResult,
+  TokenAnalytics
 } from './chat/token';
 import { TokenEnforcementMode, UIEnforcementMode } from './chat/enums';
 
@@ -14,7 +15,8 @@ export type {
   TokenUsage,
   TokenUsageStats,
   TokenSettings,
-  TokenOperationResult
+  TokenOperationResult,
+  TokenAnalytics
 };
 
 // Re-export token-related enums

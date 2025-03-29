@@ -7,10 +7,11 @@ export * from './token';
 export * from './communication';
 export * from './bridge';
 
-// Re-export other type definitions to maintain compatibility
-export * from './conversation-types';
-export * from './message';
-export * from './enums-mapper';
+// Re-export type definitions from chat directory
+export * from './chat/conversation';
+export * from './chat/message';
+export * from './chat/enums';
+export * from './chat/chat-modes';
 
 // Re-export the aliases for easier imports and backward compatibility
 import * as ChatEnums from './chat/enums';
@@ -18,11 +19,13 @@ import * as ChatMessage from './chat/message';
 import * as ChatConversation from './chat/conversation';
 import * as ChatBridge from './chat/bridge';
 import * as ChatToken from './chat/token';
+import * as ChatModes from './chat/chat-modes';
 
 export {
   ChatEnums,
   ChatMessage,
   ChatConversation,
   ChatBridge,
-  ChatToken
+  ChatToken,
+  ChatModes
 };
