@@ -1,4 +1,4 @@
-import { ChatMode } from '/enums';
+import { ChatMode, MessageRole } from '@/components/chat/types/enums';
 
 /**
  * Chat bridge events
