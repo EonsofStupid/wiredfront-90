@@ -1,71 +1,60 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useChatStore } from '@/components/chat/store/chatStore';
-import { Provider, mapDbProviderToProvider } from '@/components/chat/types/provider-types';
-import { logger } from '@/services/chat/LoggingService';
+import { Provider, ProviderType, AvailableProviderRecord } from '@/components/chat/types/provider-types';
 
 /**
- * Hook for managing AI providers
+ * Hook for fetching and managing AI providers
  */
-export function useAIProviders() {
+export const useAIProviders = () => {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const { updateChatProvider, updateAvailableProviders } = useChatStore();
-  
-  // Fetch providers on component mount
-  useEffect(() => {
-    fetchProviders();
-  }, []);
-  
-  // Fetch providers from the database
-  const fetchProviders = useCallback(async () => {
+
+  // Load providers from database
+  const fetchProviders = async () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      // Get a list of available providers from the API
       const { data, error } = await supabase
         .from('available_providers')
         .select('*')
-        .order('name');
+        .order('name', { ascending: true });
       
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       
-      // Convert to Provider type
-      const providersData: Provider[] = data.map(provider => mapDbProviderToProvider(provider));
+      // Transform database records to Provider interface
+      const transformedProviders = data.map((record: AvailableProviderRecord) => ({
+        id: record.id,
+        name: record.name,
+        type: record.provider_type as ProviderType,
+        isDefault: false, // We'll set this separately since it's not in the database schema
+        isEnabled: record.is_enabled,
+        category: record.provider_type === 'image' ? 'image' :
+                  record.provider_type === 'integration' ? 'integration' : 'chat',
+        description: record.display_name || record.name,
+        models: []
+      }));
       
-      setProviders(providersData);
-      
-      // Update the store with the available providers
-      updateAvailableProviders(providersData);
-      
-      // Set the default provider if available
-      const defaultProvider = providersData.find(p => p.isDefault);
-      if (defaultProvider) {
-        updateChatProvider(defaultProvider);
-      }
-      
-      logger.info('Loaded providers', { count: providersData.length });
-      
-      return providersData;
+      setProviders(transformedProviders);
     } catch (err) {
-      const errorObj = err instanceof Error ? err : new Error(String(err));
-      setError(errorObj);
-      logger.error('Failed to fetch providers', { error: err });
-      return [];
+      setError(err instanceof Error ? err : new Error('Failed to fetch providers'));
+      console.error('Error fetching providers:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [updateAvailableProviders, updateChatProvider]);
-  
+  };
+
+  // Initial load
+  useEffect(() => {
+    fetchProviders();
+  }, []);
+
   return {
     providers,
     isLoading,
     error,
     fetchProviders
   };
-}
+};

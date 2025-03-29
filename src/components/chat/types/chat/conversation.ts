@@ -1,5 +1,6 @@
 
 import { ChatMode } from './enums';
+import { Json } from '@/integrations/supabase/types';
 
 /**
  * Conversation interface representing a chat conversation
@@ -45,6 +46,7 @@ export interface DbConversation {
  * Parameters for creating a new conversation
  */
 export interface CreateConversationParams {
+  id?: string;
   title?: string;
   mode?: ChatMode;
   provider_id?: string | null;
@@ -93,8 +95,8 @@ export interface DbUpdateConversationParams {
   mode?: string;
   provider_id?: string | null;
   project_id?: string | null;
-  metadata?: Record<string, any>;
-  context?: Record<string, any>;
+  metadata?: Record<string, any> | Json;
+  context?: Record<string, any> | Json;
   archived?: boolean;
   updated_at: string;
 }

@@ -1,75 +1,78 @@
 
-import { ChatMode, MessageRole, MessageStatus, MessageType, TaskType } from './chat/enums';
+import { ChatMode, MessageRole, MessageType, TaskType } from './chat/enums';
 
 /**
- * Message envelope for AI service communication
+ * Communication request interface
  */
-export interface MessageEnvelope {
+export interface CommunicationRequest {
   id: string;
-  model: string;
-  messages: Array<{
-    role: MessageRole;
-    content: string;
-    name?: string;
-    function_call?: any;
-  }>;
-  user?: string;
-  timestamp: number;
+  mode: ChatMode;
+  content: string;
+  taskType: TaskType;
+  role: MessageRole;
+  messageType?: MessageType;
   conversationId?: string;
-  systemPrompt?: string;
-  stream?: boolean;
-  mode?: ChatMode;
-  taskType?: TaskType;
-  sessionId?: string;
-  input?: string;
-  temperature?: number;
-  maxTokens?: number;
-  fallbackLevel?: number;
-  adminFlags?: Record<string, boolean>;
+  modelId?: string;
+  providerId?: string;
+  metadata?: Record<string, any>;
+  timestamp: number;
 }
 
 /**
- * Response envelope from AI service
+ * Communication response interface
  */
-export interface ResponseEnvelope {
+export interface CommunicationResponse {
   id: string;
-  model: string;
+  requestId: string;
   content: string;
   role: MessageRole;
+  messageType: MessageType;
+  status: 'success' | 'error' | 'partial' | 'stream';
   timestamp: number;
+  metadata?: Record<string, any>;
   error?: string;
-  provider?: string;
-  completionTokens?: number;
-  promptTokens?: number;
-  totalTokens?: number;
-  traceId?: string;
-  tokensUsed?: {
-    prompt: number;
-    completion: number;
-    total: number;
-    input?: number;
-    output?: number;
-  };
-  processingTimeMs?: number;
-  cacheInfo?: {
-    hit: boolean;
-    key: string;
-    cacheHit?: boolean;
-    cacheTier?: string;
-  };
-  vectorInfo?: {
-    used: boolean;
-    count: number;
-    sources: string[];
-    searchPerformed?: boolean;
-    chunksRetrieved?: number;
-    vectorDb?: string;
-  };
-  fallbacksUsed?: string[];
-  fineTuneMetadata?: {
-    version: string;
-    params: Record<string, any>;
-    markedForFineTune?: boolean;
-    quality?: number;
-  };
+}
+
+/**
+ * Message stream chunk interface
+ */
+export interface MessageStreamChunk {
+  id: string;
+  requestId: string;
+  content: string;
+  isDone: boolean;
+  timestamp: number;
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Communication error interface
+ */
+export interface CommunicationError {
+  code: string;
+  message: string;
+  details?: any;
+}
+
+/**
+ * AI model capabilities
+ */
+export interface ModelCapabilities {
+  maxTokens: number;
+  supportedMessageTypes: MessageType[];
+  supportedTaskTypes: TaskType[];
+  features: string[];
+  streaming: boolean;
+}
+
+/**
+ * Model settings interface
+ */
+export interface ModelSettings {
+  temperature: number;
+  maxTokens?: number;
+  topP?: number;
+  frequencyPenalty?: number;
+  presencePenalty?: number;
+  stopSequences?: string[];
 }

@@ -1,6 +1,6 @@
 
 import { ChatMode } from './enums';
-import { EnumUtils } from '@/lib/enums';
+import { EnumUtils } from '@/lib/enums/EnumUtils';
 
 /**
  * UI-friendly chat mode type

@@ -1,40 +1,86 @@
-import { useConversationManager } from '@/hooks/conversation';
+
+import { useState, useEffect, useCallback } from 'react';
+import { useConversationManager } from '@/hooks/conversation/useConversationManager';
+import { CreateConversationParams } from '@/components/chat/types/chat/conversation';
+import { ChatMode } from '@/components/chat/types/chat/enums';
 
 /**
- * Legacy compatibility hook that maps the new conversation hooks to the old session interface
+ * Hook that manages chat sessions
  */
 export function useSessionManager() {
-  const { 
-    conversations, 
-    currentConversationId, 
-    currentConversation, 
-    createConversation, 
-    switchConversation, 
-    updateConversation, 
-    archiveConversation, 
-    deleteConversation, 
-    isLoading, 
-    error, 
-    refreshConversations, 
-    cleanupInactiveConversations, 
-    clearConversations 
+  const {
+    conversations,
+    currentConversationId,
+    currentConversation,
+    isLoading,
+    error,
+    loadConversations,
+    createConversation,
+    updateConversation,
+    archiveConversation,
+    deleteConversation,
+    setCurrentConversationId,
+    cleanupInactiveConversations,
+    clearConversations,
+    refreshConversations
   } = useConversationManager();
-
+  
+  // Ensure we have a conversation
+  useEffect(() => {
+    const ensureConversation = async () => {
+      if (conversations.length === 0 && !isLoading) {
+        await createConversation();
+      } else if (conversations.length > 0 && !currentConversationId) {
+        setCurrentConversationId(conversations[0].id);
+      }
+    };
+    
+    ensureConversation();
+  }, [conversations, isLoading, currentConversationId, createConversation, setCurrentConversationId]);
+  
+  // Create new session
+  const createNewSession = useCallback((params?: CreateConversationParams) => {
+    return createConversation(params);
+  }, [createConversation]);
+  
+  // Switch to an existing session
+  const switchSession = useCallback((sessionId: string) => {
+    setCurrentConversationId(sessionId);
+    return true;
+  }, [setCurrentConversationId]);
+  
+  // Update session
+  const updateSession = useCallback((sessionId: string, updates: { title?: string, mode?: ChatMode }) => {
+    return updateConversation(sessionId, updates);
+  }, [updateConversation]);
+  
+  // Delete session
+  const deleteSession = useCallback((sessionId: string) => {
+    return deleteConversation(sessionId);
+  }, [deleteConversation]);
+  
+  // Refresh sessions
+  const refreshSessions = useCallback(() => {
+    return loadConversations();
+  }, [loadConversations]);
+  
   return {
-    // Renamed props from sessions to conversations (but keeping old names for back-compat)
+    // State
     sessions: conversations,
     currentSessionId: currentConversationId,
     currentSession: currentConversation,
-    // Functions with renamed signatures
     isLoading,
     error,
-    refreshSessions: refreshConversations,
-    createSession: createConversation,
-    switchSession: switchConversation,
-    updateSession: updateConversation,
-    archiveSession: archiveConversation,
-    deleteSession: deleteConversation,
-    clearSessions: clearConversations,
-    cleanupInactiveSessions: cleanupInactiveConversations
+    
+    // Operations
+    createNewSession,
+    switchSession,
+    updateSession,
+    deleteSession,
+    refreshSessions,
+    
+    // Cleanup
+    cleanupInactiveSessions: cleanupInactiveConversations,
+    clearSessions: clearConversations
   };
 }

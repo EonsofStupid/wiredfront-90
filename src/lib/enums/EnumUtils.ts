@@ -7,7 +7,7 @@ import {
   TaskType,
   TokenEnforcementMode,
   UIEnforcementMode
-} from '@/components/chat/types/chat/enums';
+} from '@/components/chat/types/chat/chat-modes';
 
 /**
  * UI mode representation (used in UI components)
@@ -24,6 +24,8 @@ export class EnumUtils {
    * @returns ChatMode enum value
    */
   static stringToChatMode(mode: string): ChatMode {
+    if (!mode) return ChatMode.Chat;
+    
     switch (mode.toLowerCase()) {
       case 'chat': return ChatMode.Chat;
       case 'dev': 
@@ -44,6 +46,24 @@ export class EnumUtils {
    * @returns String representation
    */
   static chatModeToString(mode: ChatMode): string {
+    return mode.toString();
+  }
+
+  /**
+   * Convert database string to ChatMode enum (alias for stringToChatMode)
+   * @param mode Database string for mode
+   * @returns ChatMode enum
+   */
+  static databaseStringToChatMode(mode: string): ChatMode {
+    return this.stringToChatMode(mode);
+  }
+
+  /**
+   * Convert ChatMode to database string format
+   * @param mode ChatMode enum
+   * @returns String for database
+   */
+  static chatModeForDatabase(mode: ChatMode): string {
     return mode.toString();
   }
 
@@ -132,6 +152,8 @@ export class EnumUtils {
    * @returns MessageRole enum
    */
   static stringToMessageRole(role: string): MessageRole {
+    if (!role) return MessageRole.User;
+    
     switch (role.toLowerCase()) {
       case 'user': return MessageRole.User;
       case 'assistant': return MessageRole.Assistant;
@@ -144,11 +166,22 @@ export class EnumUtils {
   }
 
   /**
+   * Convert MessageRole to string
+   * @param role MessageRole enum
+   * @returns String representation
+   */
+  static messageRoleToString(role: MessageRole): string {
+    return role.toString();
+  }
+
+  /**
    * Convert string to MessageType enum
    * @param type String representation of message type
    * @returns MessageType enum
    */
   static stringToMessageType(type: string): MessageType {
+    if (!type) return MessageType.Text;
+    
     switch (type.toLowerCase()) {
       case 'text': return MessageType.Text;
       case 'command': return MessageType.Command;
@@ -174,11 +207,79 @@ export class EnumUtils {
   }
 
   /**
+   * Convert string to MessageStatus enum
+   * @param status String representation
+   * @returns MessageStatus enum
+   */
+  static stringToMessageStatus(status: string): MessageStatus {
+    if (!status) return MessageStatus.Pending;
+    
+    switch (status.toLowerCase()) {
+      case 'pending': return MessageStatus.Pending;
+      case 'sending': return MessageStatus.Sending;
+      case 'sent': return MessageStatus.Sent;
+      case 'received': return MessageStatus.Received;
+      case 'error': return MessageStatus.Error;
+      case 'failed': return MessageStatus.Failed;
+      case 'retrying': return MessageStatus.Retrying;
+      case 'cached': return MessageStatus.Cached;
+      case 'canceled': return MessageStatus.Canceled;
+      case 'delivered': return MessageStatus.Delivered;
+      default: return MessageStatus.Pending;
+    }
+  }
+
+  /**
+   * Convert MessageStatus to string
+   * @param status MessageStatus enum
+   * @returns String representation
+   */
+  static messageStatusToString(status: MessageStatus): string {
+    return status.toString();
+  }
+
+  /**
+   * Get a display label for a MessageType
+   */
+  static getMessageTypeLabel(type: MessageType): string {
+    switch (type) {
+      case MessageType.Text: return 'Text';
+      case MessageType.Command: return 'Command';
+      case MessageType.System: return 'System';
+      case MessageType.Image: return 'Image';
+      case MessageType.Training: return 'Training';
+      case MessageType.Code: return 'Code';
+      case MessageType.File: return 'File';
+      case MessageType.Audio: return 'Audio';
+      case MessageType.Link: return 'Link';
+      case MessageType.Document: return 'Document';
+      default: return 'Unknown';
+    }
+  }
+
+  /**
+   * Get a display label for a MessageRole
+   */
+  static getMessageRoleLabel(role: MessageRole): string {
+    switch (role) {
+      case MessageRole.User: return 'You';
+      case MessageRole.Assistant: return 'Assistant';
+      case MessageRole.System: return 'System';
+      case MessageRole.Error: return 'Error';
+      case MessageRole.Tool: return 'Tool';
+      case MessageRole.Function: return 'Function';
+      default: return 'Unknown';
+    }
+  }
+
+  /**
    * Convert string to TaskType enum
    * @param type String representation of task type
    * @returns TaskType enum
    */
   static stringToTaskType(type: string): TaskType {
+    if (!type) return TaskType.Chat;
+    
     switch (type.toLowerCase()) {
       case 'chat': return TaskType.Chat;
       case 'generation': return TaskType.Generation;
@@ -220,6 +321,8 @@ export class EnumUtils {
    * @returns TokenEnforcementMode enum
    */
   static stringToTokenEnforcementMode(mode: string): TokenEnforcementMode {
+    if (!mode) return TokenEnforcementMode.Soft;
+    
     switch (mode.toLowerCase()) {
       case 'none': return TokenEnforcementMode.None;
       case 'warn': return TokenEnforcementMode.Warn;
@@ -244,15 +347,6 @@ export class EnumUtils {
   }
 
   /**
-   * Convert chat mode enum to database string format
-   * @param mode ChatMode enum
-   * @returns String for database
-   */
-  static chatModeForDatabase(mode: ChatMode): string {
-    return mode.toString();
-  }
-
-  /**
    * Safely parse any enum value with fallback
    * @param enumName Target enum name
    * @param value String value to parse
@@ -267,6 +361,8 @@ export class EnumUtils {
         return this.stringToMessageType(value);
       case 'MessageRole':
         return this.stringToMessageRole(value);
+      case 'MessageStatus':
+        return this.stringToMessageStatus(value);
       case 'TaskType':
         return this.stringToTaskType(value);
       case 'TokenEnforcementMode':

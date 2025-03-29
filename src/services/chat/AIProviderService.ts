@@ -1,167 +1,171 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { logger } from "@/services/chat/LoggingService";
-import { Provider } from "@/components/chat/types/provider-types";
+import { supabase } from '@/integrations/supabase/client';
+import { Provider, ProviderType, stringToProviderType, AvailableProviderRecord } from '@/components/chat/types/provider-types';
+import { v4 as uuidv4 } from 'uuid';
 
-interface ProviderUsageMetrics {
-  tokensUsed?: number;
-  latencyMs?: number;
-  vectorsAdded?: number;
-  [key: string]: any;
-}
+/**
+ * Fetch available providers from the database
+ */
+export const getAvailableProviders = async (): Promise<Provider[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('available_providers')
+      .select('*')
+      .order('name', { ascending: true });
+    
+    if (error) throw error;
+    
+    // Map database records to Provider interface
+    const providers: Provider[] = data.map((provider: any) => ({
+      id: provider.id,
+      name: provider.name,
+      type: stringToProviderType(provider.provider_type),
+      isDefault: provider.is_default || false,
+      isEnabled: provider.is_enabled,
+      category: provider.provider_type === 'image' ? 'image' : 
+               provider.provider_type === 'integration' ? 'integration' : 'chat',
+      description: provider.display_name || provider.name,
+      models: []
+    }));
+    
+    return providers;
+  } catch (error) {
+    console.error('Failed to fetch available providers:', error);
+    return [];
+  }
+};
 
-export class AIProviderService {
-  /**
-   * Get all available AI providers from the database
-   */
-  static async getAllProviders(): Promise<Provider[]> {
-    try {
-      const { data, error } = await supabase
-        .from('available_providers')
-        .select('*')
-        .eq('is_enabled', true)
-        .order('is_default', { ascending: false });
-        
-      if (error) throw error;
-      
-      return data?.map(config => ({
-        id: config.id,
-        name: config.display_name || config.name,
-        type: config.provider_type,
-        isDefault: config.is_default || false,
-        isEnabled: config.is_enabled,
-        category: this.getCategoryForProvider(config.provider_type),
-        description: '',
-        models: []
-      })) || [];
-    } catch (error) {
-      logger.error("Error fetching AI providers", error);
-      return [];
-    }
+/**
+ * Get provider by ID
+ */
+export const getProviderById = async (id: string): Promise<Provider | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('available_providers')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) throw error;
+    if (!data) return null;
+    
+    return {
+      id: data.id,
+      name: data.name,
+      type: stringToProviderType(data.provider_type),
+      isDefault: data.is_default || false,
+      isEnabled: data.is_enabled,
+      category: data.provider_type === 'image' ? 'image' : 
+               data.provider_type === 'integration' ? 'integration' : 'chat',
+      description: data.display_name || data.name,
+      models: []
+    };
+  } catch (error) {
+    console.error(`Failed to fetch provider with ID ${id}:`, error);
+    return null;
   }
-  
-  /**
-   * Get the default provider for a specific category
-   */
-  static async getDefaultProvider(category: 'chat' | 'image' | 'integration'): Promise<Provider | null> {
-    try {
-      const providers = await this.getAllProviders();
-      
-      const categoryProviders = providers.filter(p => p.category === category);
-      
-      // First try to find a default provider for the category
-      const defaultProvider = categoryProviders.find(p => p.isDefault);
-      if (defaultProvider) return defaultProvider;
-      
-      // If no default, return the first enabled provider in this category
-      const firstEnabled = categoryProviders.find(p => p.isEnabled);
-      return firstEnabled || null;
-    } catch (error) {
-      logger.error("Error getting default provider", error);
-      return null;
-    }
+};
+
+/**
+ * Create a new provider
+ */
+export const createProvider = async (provider: Partial<AvailableProviderRecord>): Promise<string | null> => {
+  try {
+    const providerData = {
+      ...provider,
+      id: provider.id || uuidv4(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    const { error } = await supabase
+      .from('available_providers')
+      .insert(providerData);
+    
+    if (error) throw error;
+    
+    return providerData.id;
+  } catch (error) {
+    console.error('Failed to create provider:', error);
+    return null;
   }
-  
-  /**
-   * Set a provider as the default for its category
-   */
-  static async setDefaultProvider(providerId: string): Promise<boolean> {
-    try {
-      // Fix: Use update method instead of rpc since set_default_api_config doesn't exist
-      const { data: provider, error: getError } = await supabase
-        .from('available_providers')
-        .select('id, provider_type')
-        .eq('id', providerId)
-        .single();
-        
-      if (getError) throw getError;
-      
-      // First set all providers of the same type to not default
-      const { error: updateAllError } = await supabase
-        .from('available_providers')
-        .update({ is_default: false })
-        .eq('provider_type', provider.provider_type);
-        
-      if (updateAllError) throw updateAllError;
-      
-      // Then set the selected provider as default
-      const { error: updateError } = await supabase
-        .from('available_providers')
-        .update({ is_default: true })
-        .eq('id', providerId);
-        
-      if (updateError) throw updateError;
-      
-      return true;
-    } catch (error) {
-      logger.error("Error setting default provider", error);
-      return false;
-    }
+};
+
+/**
+ * Update an existing provider
+ */
+export const updateProvider = async (id: string, updates: Partial<AvailableProviderRecord>): Promise<boolean> => {
+  try {
+    const providerUpdates = {
+      ...updates,
+      updated_at: new Date().toISOString()
+    };
+    
+    const { error } = await supabase
+      .from('available_providers')
+      .update(providerUpdates)
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    return true;
+  } catch (error) {
+    console.error(`Failed to update provider with ID ${id}:`, error);
+    return false;
   }
-  
-  /**
-   * Track usage of an AI provider
-   */
-  static async trackProviderUsage(
-    providerId: string,
-    operation: 'query' | 'index' | 'image',
-    metrics: ProviderUsageMetrics,
-    projectId?: string
-  ): Promise<void> {
-    try {
-      await supabase.functions.invoke('track-rag-usage', {
-        body: {
-          operation,
-          metrics,
-          providerId,
-          projectId
-        }
-      });
-      
-      logger.info(`Tracked ${operation} usage for provider`, { providerId, metrics });
-    } catch (error) {
-      logger.error("Error tracking provider usage", error);
-    }
+};
+
+/**
+ * Delete a provider
+ */
+export const deleteProvider = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('available_providers')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    return true;
+  } catch (error) {
+    console.error(`Failed to delete provider with ID ${id}:`, error);
+    return false;
   }
-  
-  /**
-   * Test connection to a specific provider
-   */
-  static async testProviderConnection(providerId: string): Promise<{
-    success: boolean;
-    message: string;
-    details?: any;
-  }> {
-    try {
-      const { data, error } = await supabase.functions.invoke('test-ai-connection', {
-        body: { configId: providerId }
-      });
-      
-      if (error) throw error;
-      
-      return {
-        success: data?.success || false,
-        message: data?.message || 'Connection test completed',
-        details: data?.details
-      };
-    } catch (error) {
-      logger.error("Error testing provider connection", error);
-      return {
-        success: false,
-        message: `Error: ${error.message}`
-      };
-    }
+};
+
+/**
+ * Set a provider as default
+ */
+export const setDefaultProvider = async (id: string): Promise<boolean> => {
+  try {
+    // First, unset current default provider
+    await supabase
+      .from('available_providers')
+      .update({ is_default: false })
+      .neq('id', id);
+    
+    // Then set the new default provider
+    const { error } = await supabase
+      .from('available_providers')
+      .update({ is_default: true })
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    return true;
+  } catch (error) {
+    console.error(`Failed to set provider ${id} as default:`, error);
+    return false;
   }
-  
-  /**
-   * Determine the category for a provider type
-   */
-  private static getCategoryForProvider(type: string): 'chat' | 'image' | 'integration' {
-    if (['openai', 'anthropic', 'gemini', 'perplexity', 'openrouter'].includes(type)) {
-      return 'chat';
-    } else if (['dalle', 'stabilityai', 'replicate'].includes(type)) {
-      return 'image';
-    }
-    return 'integration';
-  }
-}
+};
+
+// Export all functions as a service object
+export const AIProviderService = {
+  getAvailableProviders,
+  getProviderById,
+  createProvider,
+  updateProvider,
+  deleteProvider,
+  setDefaultProvider
+};

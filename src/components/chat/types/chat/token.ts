@@ -101,3 +101,54 @@ export interface TokenAnalytics {
   featureBreakdown?: Record<string, number>;
   lastUpdated: Date;
 }
+
+/**
+ * Database token model mapping
+ */
+export interface DbTokenRecord {
+  id: string;
+  user_id: string;
+  balance: number;
+  total_earned: number;
+  total_spent: number;
+  last_reset: string | null;
+  created_at: string;
+  updated_at: string;
+  last_updated: string;
+  queries_used: number;
+  free_query_limit: number;
+  tokens_per_query: number;
+  enforcement_settings: Record<string, any>;
+  cost_per_token: number;
+  daily_limit: number | null;
+  monthly_limit: number | null;
+  next_reset_date: string | null;
+  usage_by_provider: Record<string, number>;
+  usage_by_feature: Record<string, number>;
+  tier: string;
+  enforcement_mode: string;
+  reset_frequency: string;
+}
+
+/**
+ * Map database token record to TokenBalance
+ */
+export function mapDbRecordToTokenBalance(dbRecord: DbTokenRecord): TokenBalance {
+  return {
+    id: dbRecord.id,
+    userId: dbRecord.user_id,
+    balance: dbRecord.balance,
+    used: dbRecord.total_spent,
+    limit: dbRecord.monthly_limit || 0,
+    resetDate: dbRecord.next_reset_date ? new Date(dbRecord.next_reset_date) : null,
+    enforcementMode: TokenEnforcementMode[dbRecord.enforcement_mode as keyof typeof TokenEnforcementMode] || TokenEnforcementMode.Soft,
+    resetPeriod: (dbRecord.reset_frequency as 'daily' | 'weekly' | 'monthly' | 'never') || 'monthly',
+    lastUpdated: new Date(dbRecord.last_updated),
+    costPerToken: dbRecord.cost_per_token,
+    dailyLimit: dbRecord.daily_limit || 0,
+    freeQueries: dbRecord.free_query_limit,
+    freeQueriesUsed: dbRecord.queries_used,
+    isEnforced: dbRecord.enforcement_mode !== 'none' && dbRecord.enforcement_mode !== 'never',
+    isLimited: !!dbRecord.monthly_limit || !!dbRecord.daily_limit
+  };
+}

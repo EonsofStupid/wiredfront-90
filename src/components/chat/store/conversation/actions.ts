@@ -1,167 +1,79 @@
 
-import { ConversationState } from './types';
-import { v4 as uuidv4 } from 'uuid';
-import { logger } from '@/services/chat/LoggingService';
-import { 
-  createConversation as apiCreateConversation,
-  updateConversation as apiUpdateConversation,
-  archiveConversation as apiArchiveConversation,
-  deleteConversation as apiDeleteConversation,
-  fetchConversations as apiFetchConversations
+import {
+  fetchConversations as fetchConversationsService,
+  createConversation as createConversationService,
+  archiveConversation as archiveConversationService,
+  updateConversation as updateConversationService,
+  deleteConversation as deleteConversationService
 } from '@/services/conversations';
-import { CreateConversationParams, UpdateConversationParams } from '@/components/chat/types/chat/conversation';
 
-/**
- * Create conversation actions for the store
- */
-export const createConversationActions = (
-  set: any,
-  get: any
-) => {
-  return {
-    // Fetch all conversations for the current user
-    fetchConversations: async () => {
-      try {
-        set({ isLoading: true, error: null });
-        const conversations = await apiFetchConversations();
-        set({ conversations, isLoading: false });
-        return conversations;
-      } catch (error) {
-        logger.error('Failed to fetch conversations', error);
-        set({ 
-          error: error instanceof Error ? error : new Error('Failed to fetch conversations'),
-          isLoading: false
-        });
-        return [];
-      }
-    },
+import { logger } from '@/services/chat/LoggingService';
+import { Conversation, CreateConversationParams } from '@/components/chat/types/chat/conversation';
 
-    // Create a new conversation
-    createConversation: (params: CreateConversationParams = {}) => {
-      try {
-        // Generate a UUID for the conversation
-        const conversationId = uuidv4();
-        
-        // Create conversation in the database (async)
-        apiCreateConversation({
-          ...params,
-          id: conversationId
-        }).catch(error => {
-          logger.error('Failed to create conversation in database', error);
-        });
-        
-        // Create conversation in local state immediately
-        const now = new Date().toISOString();
-        const newConversation = {
-          id: conversationId,
-          title: params.title || 'New Conversation',
-          user_id: 'current-user', // Will be replaced with actual user ID
-          mode: params.mode || 'chat',
-          provider_id: params.provider_id || null,
-          created_at: now,
-          updated_at: now,
-          last_accessed: now,
-          tokens_used: 0,
-          project_id: params.project_id || null,
-          metadata: params.metadata || {},
-          context: params.context || {},
-          archived: false,
-          message_count: 0
-        };
-        
-        set(state => ({
-          conversations: [newConversation, ...state.conversations]
-        }));
-        
-        logger.info('Created new conversation', { conversationId });
-        return conversationId;
-      } catch (error) {
-        logger.error('Failed to create conversation', error);
-        return '';
-      }
-    },
+// Re-export conversation services
+export { 
+  fetchConversationsService,
+  createConversationService,
+  archiveConversationService,
+  updateConversationService,
+  deleteConversationService
+};
 
-    // Update an existing conversation
-    updateConversation: async (id: string, params: UpdateConversationParams) => {
-      try {
-        // Update conversation in the database
-        const success = await apiUpdateConversation(id, params);
-        
-        if (success) {
-          // Update conversation in local state
-          set(state => ({
-            conversations: state.conversations.map(conv => 
-              conv.id === id 
-                ? { ...conv, ...params, updated_at: new Date().toISOString() } 
-                : conv
-            )
-          }));
-        }
-        
-        return success;
-      } catch (error) {
-        logger.error('Failed to update conversation', error);
-        return false;
-      }
-    },
+// Create a new conversation
+export const createConversation = async (params: CreateConversationParams): Promise<string | null> => {
+  try {
+    const conversationId = await createConversationService(params);
+    return conversationId;
+  } catch (error) {
+    logger.error('Failed to create conversation', { error });
+    return null;
+  }
+};
 
-    // Archive a conversation
-    archiveConversation: (id: string) => {
-      try {
-        // Archive conversation in the database (async)
-        apiArchiveConversation(id).catch(error => {
-          logger.error('Failed to archive conversation in database', error);
-        });
-        
-        // Update local state immediately
-        set(state => ({
-          conversations: state.conversations.map(conv => 
-            conv.id === id 
-              ? { ...conv, archived: true, updated_at: new Date().toISOString() } 
-              : conv
-          )
-        }));
-        
-        // If this was the current conversation, clear it
-        if (get().currentConversationId === id) {
-          set({ currentConversationId: null });
-        }
-        
-        return true;
-      } catch (error) {
-        logger.error('Failed to archive conversation', error);
-        return false;
-      }
-    },
+// Update an existing conversation
+export const updateConversation = async (
+  id: string, 
+  updates: Partial<Conversation>
+): Promise<boolean> => {
+  try {
+    // Note: Conversation type needs to be mapped to database-friendly values
+    await updateConversationService(id, updates as any);
+    return true;
+  } catch (error) {
+    logger.error('Failed to update conversation', { error, id });
+    return false;
+  }
+};
 
-    // Delete a conversation
-    deleteConversation: (id: string) => {
-      try {
-        // Delete conversation in the database (async)
-        apiDeleteConversation(id).catch(error => {
-          logger.error('Failed to delete conversation from database', error);
-        });
-        
-        // Update local state immediately
-        set(state => ({
-          conversations: state.conversations.filter(conv => conv.id !== id)
-        }));
-        
-        // If this was the current conversation, clear it
-        if (get().currentConversationId === id) {
-          set({ currentConversationId: null });
-        }
-        
-        return true;
-      } catch (error) {
-        logger.error('Failed to delete conversation', error);
-        return false;
-      }
-    },
+// Archive a conversation (mark as archived)
+export const archiveConversation = async (id: string): Promise<boolean> => {
+  try {
+    await archiveConversationService(id);
+    return true;
+  } catch (error) {
+    logger.error('Failed to archive conversation', { error, id });
+    return false;
+  }
+};
 
-    // Set the current conversation ID
-    setCurrentConversationId: (id: string | null) => {
-      set({ currentConversationId: id });
-    }
-  };
+// Delete a conversation completely
+export const deleteConversation = async (id: string): Promise<boolean> => {
+  try {
+    await deleteConversationService(id);
+    return true;
+  } catch (error) {
+    logger.error('Failed to delete conversation', { error, id });
+    return false;
+  }
+};
+
+// Fetch all conversations
+export const fetchConversations = async (): Promise<Conversation[]> => {
+  try {
+    const conversations = await fetchConversationsService();
+    return conversations;
+  } catch (error) {
+    logger.error('Failed to fetch conversations', { error });
+    return [];
+  }
 };

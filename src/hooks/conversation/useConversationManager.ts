@@ -7,7 +7,8 @@ import {
   UpdateConversationParams,
   dbConversationToConversation,
   createParamsToDbParams,
-  updateParamsToDbParams
+  updateParamsToDbParams,
+  conversationToDbConversation
 } from '@/components/chat/types/chat/conversation';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/services/chat/LoggingService';
@@ -91,7 +92,7 @@ export function useConversationManager() {
         throw new Error('User not authenticated');
       }
       
-      const conversationId = uuidv4();
+      const conversationId = params.id || uuidv4();
       
       // Convert to database-friendly format
       const dbParams = createParamsToDbParams(params, userData.user.id, conversationId);
@@ -255,7 +256,7 @@ export function useConversationManager() {
           
           if (messagesError) {
             logger.warn('Failed to delete conversation messages', { error: messagesError });
-            // Continue with deletion anyway
+            // Continue w
           }
           
           // Then delete the conversation itself
@@ -272,7 +273,7 @@ export function useConversationManager() {
           toast.success('Conversation deleted');
         } catch (err) {
           logger.error('Failed to delete conversation from database', { error: err });
-          toast.error('Failed to delete conversation');
+          toast.error('Error deleting conversation data');
         }
       })();
       
@@ -283,18 +284,55 @@ export function useConversationManager() {
     }
   }, [currentConversationId, clearMessages]);
 
+  // Cleanup helper functions
+  const cleanupInactiveConversations = useCallback(async () => {
+    const activeConversations = conversations.filter(c => !c.archived);
+    if (activeConversations.length <= 1) return;
+    
+    const currentId = currentConversationId;
+    
+    // Archive all conversations except the current one
+    for (const conversation of activeConversations) {
+      if (conversation.id !== currentId) {
+        archiveConversation(conversation.id);
+      }
+    }
+  }, [conversations, currentConversationId, archiveConversation]);
+  
+  const clearConversations = useCallback(async () => {
+    // Delete all conversations
+    for (const conversation of conversations) {
+      deleteConversation(conversation.id);
+    }
+    
+    // Create a new conversation
+    createConversation();
+  }, [conversations, deleteConversation, createConversation]);
+
   return {
+    // State
     conversations,
-    currentConversationId,
+    activeConversations: conversations.filter(c => !c.archived),
+    archivedConversations: conversations.filter(c => c.archived),
     currentConversation,
+    currentConversationId,
     isLoading,
     error,
-    loadConversations,
+    
+    // Core operations
     createConversation,
     switchConversation,
     updateConversation,
     archiveConversation,
     deleteConversation,
+    loadConversations,
+    refreshConversations: loadConversations,
+    
+    // Cleanup utilities
+    cleanupInactiveConversations,
+    clearConversations,
+    
+    // State setter
     setCurrentConversationId
   };
 }
